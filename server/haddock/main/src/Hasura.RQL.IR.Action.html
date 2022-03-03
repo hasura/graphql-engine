@@ -1,0 +1,119 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.IR.Action</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldG"><span class="hs-identifier">ActionFieldG</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldsG"><span class="hs-identifier">ActionFieldsG</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFields"><span class="hs-identifier">ActionFields</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionRemoteRelationshipSelect"><span class="hs-identifier">ActionRemoteRelationshipSelect</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#_ACFExpression"><span class="hs-identifier">_ACFExpression</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#_ACFNestedObject"><span class="hs-identifier">_ACFNestedObject</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#_ACFRemote"><span class="hs-identifier">_ACFRemote</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#_ACFScalar"><span class="hs-identifier">_ACFScalar</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens.TH</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">makePrisms</span></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Kind</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Type</span></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier">FieldName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#Fields"><span class="hs-identifier">Fields</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">data</span><span> </span><span id="ActionFieldG"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldG"><span class="hs-identifier hs-var">ActionFieldG</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688049836"><span class="annot"><a href="#local-6989586621688049836"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="ACFScalar"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ACFScalar"><span class="hs-identifier hs-var">ACFScalar</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ACFRemote"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ACFRemote"><span class="hs-identifier hs-var">ACFRemote</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionRemoteRelationshipSelect"><span class="hs-identifier hs-type">ActionRemoteRelationshipSelect</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688049836"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ACFExpression"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ACFExpression"><span class="hs-identifier hs-var">ACFExpression</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ACFNestedObject"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ACFNestedObject"><span class="hs-identifier hs-var">ACFNestedObject</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldsG"><span class="hs-identifier hs-type">ActionFieldsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688049836"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688049828"><span id="local-6989586621688049830"><span class="annot"><span class="annottext">ActionFieldG r -&gt; ActionFieldG r -&gt; Bool
+(ActionFieldG r -&gt; ActionFieldG r -&gt; Bool)
+-&gt; (ActionFieldG r -&gt; ActionFieldG r -&gt; Bool)
+-&gt; Eq (ActionFieldG r)
+forall r. Eq r =&gt; ActionFieldG r -&gt; ActionFieldG r -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ActionFieldG r -&gt; ActionFieldG r -&gt; Bool
+$c/= :: forall r. Eq r =&gt; ActionFieldG r -&gt; ActionFieldG r -&gt; Bool
+== :: ActionFieldG r -&gt; ActionFieldG r -&gt; Bool
+$c== :: forall r. Eq r =&gt; ActionFieldG r -&gt; ActionFieldG r -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688049821"><span id="local-6989586621688049823"><span id="local-6989586621688049825"><span class="annot"><span class="annottext">Int -&gt; ActionFieldG r -&gt; ShowS
+[ActionFieldG r] -&gt; ShowS
+ActionFieldG r -&gt; String
+(Int -&gt; ActionFieldG r -&gt; ShowS)
+-&gt; (ActionFieldG r -&gt; String)
+-&gt; ([ActionFieldG r] -&gt; ShowS)
+-&gt; Show (ActionFieldG r)
+forall r. Show r =&gt; Int -&gt; ActionFieldG r -&gt; ShowS
+forall r. Show r =&gt; [ActionFieldG r] -&gt; ShowS
+forall r. Show r =&gt; ActionFieldG r -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ActionFieldG r] -&gt; ShowS
+$cshowList :: forall r. Show r =&gt; [ActionFieldG r] -&gt; ShowS
+show :: ActionFieldG r -&gt; String
+$cshow :: forall r. Show r =&gt; ActionFieldG r -&gt; String
+showsPrec :: Int -&gt; ActionFieldG r -&gt; ShowS
+$cshowsPrec :: forall r. Show r =&gt; Int -&gt; ActionFieldG r -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">type</span><span> </span><span id="ActionFieldsG"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldsG"><span class="hs-identifier hs-var">ActionFieldsG</span></a></span></span><span> </span><span id="local-6989586621688049819"><span class="annot"><a href="#local-6989586621688049819"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#Fields"><span class="hs-identifier hs-type">Fields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldG"><span class="hs-identifier hs-type">ActionFieldG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688049819"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">type</span><span> </span><span id="ActionFields"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFields"><span class="hs-identifier hs-var">ActionFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldsG"><span class="hs-identifier hs-type">ActionFieldsG</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">data</span><span> </span><span id="ActionRemoteRelationshipSelect"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionRemoteRelationshipSelect"><span class="hs-identifier hs-var">ActionRemoteRelationshipSelect</span></a></span></span><span> </span><span id="local-6989586621688049817"><span class="annot"><a href="#local-6989586621688049817"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionRemoteRelationshipSelect"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionRemoteRelationshipSelect"><span class="hs-identifier hs-var">ActionRemoteRelationshipSelect</span></a></span></span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | The fields on the table that are required for the join condition</span><span>
+</span><span id="line-32"></span><span>    </span><span class="hs-comment">-- of the remote relationship</span><span>
+</span><span id="line-33"></span><span>    </span><span id="_arrsLHSJoinFields"><span class="annot"><span class="annottext">ActionRemoteRelationshipSelect r -&gt; HashMap FieldName Name
+</span><a href="Hasura.RQL.IR.Action.html#_arrsLHSJoinFields"><span class="hs-identifier hs-var hs-var">_arrsLHSJoinFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>    </span><span class="hs-comment">-- | The field that captures the relationship</span><span>
+</span><span id="line-35"></span><span>    </span><span class="hs-comment">-- r ~ (RemoteRelationshipField UnpreparedValue) when the AST is emitted by the parser.</span><span>
+</span><span id="line-36"></span><span>    </span><span class="hs-comment">-- r ~ Void when an execution tree is constructed so that a backend is</span><span>
+</span><span id="line-37"></span><span>    </span><span class="hs-comment">-- absolved of dealing with remote relationships.</span><span>
+</span><span id="line-38"></span><span>    </span><span id="_arrsRelationship"><span class="annot"><span class="annottext">ActionRemoteRelationshipSelect r -&gt; r
+</span><a href="Hasura.RQL.IR.Action.html#_arrsRelationship"><span class="hs-identifier hs-var hs-var">_arrsRelationship</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621688049817"><span class="hs-identifier hs-type">r</span></a></span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688049810"><span id="local-6989586621688049812"><span class="annot"><span class="annottext">ActionRemoteRelationshipSelect r
+-&gt; ActionRemoteRelationshipSelect r -&gt; Bool
+(ActionRemoteRelationshipSelect r
+ -&gt; ActionRemoteRelationshipSelect r -&gt; Bool)
+-&gt; (ActionRemoteRelationshipSelect r
+    -&gt; ActionRemoteRelationshipSelect r -&gt; Bool)
+-&gt; Eq (ActionRemoteRelationshipSelect r)
+forall r.
+Eq r =&gt;
+ActionRemoteRelationshipSelect r
+-&gt; ActionRemoteRelationshipSelect r -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ActionRemoteRelationshipSelect r
+-&gt; ActionRemoteRelationshipSelect r -&gt; Bool
+$c/= :: forall r.
+Eq r =&gt;
+ActionRemoteRelationshipSelect r
+-&gt; ActionRemoteRelationshipSelect r -&gt; Bool
+== :: ActionRemoteRelationshipSelect r
+-&gt; ActionRemoteRelationshipSelect r -&gt; Bool
+$c== :: forall r.
+Eq r =&gt;
+ActionRemoteRelationshipSelect r
+-&gt; ActionRemoteRelationshipSelect r -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688049804"><span id="local-6989586621688049806"><span id="local-6989586621688049808"><span class="annot"><span class="annottext">Int -&gt; ActionRemoteRelationshipSelect r -&gt; ShowS
+[ActionRemoteRelationshipSelect r] -&gt; ShowS
+ActionRemoteRelationshipSelect r -&gt; String
+(Int -&gt; ActionRemoteRelationshipSelect r -&gt; ShowS)
+-&gt; (ActionRemoteRelationshipSelect r -&gt; String)
+-&gt; ([ActionRemoteRelationshipSelect r] -&gt; ShowS)
+-&gt; Show (ActionRemoteRelationshipSelect r)
+forall r.
+Show r =&gt;
+Int -&gt; ActionRemoteRelationshipSelect r -&gt; ShowS
+forall r. Show r =&gt; [ActionRemoteRelationshipSelect r] -&gt; ShowS
+forall r. Show r =&gt; ActionRemoteRelationshipSelect r -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ActionRemoteRelationshipSelect r] -&gt; ShowS
+$cshowList :: forall r. Show r =&gt; [ActionRemoteRelationshipSelect r] -&gt; ShowS
+show :: ActionRemoteRelationshipSelect r -&gt; String
+$cshow :: forall r. Show r =&gt; ActionRemoteRelationshipSelect r -&gt; String
+showsPrec :: Int -&gt; ActionRemoteRelationshipSelect r -&gt; ShowS
+$cshowsPrec :: forall r.
+Show r =&gt;
+Int -&gt; ActionRemoteRelationshipSelect r -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span class="hs-special">$(</span><span id="local-6989586621688049836"><span id="_ACFScalar"><span id="_ACFRemote"><span id="_ACFNestedObject"><span id="_ACFExpression"><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActionFieldG</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span></pre></body></html>
