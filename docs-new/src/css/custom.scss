@@ -169,6 +169,7 @@
   --ifm-toc-link-color: var(--ifm-color-content);
 
   --ifm-table-stripe-background: var(--color-gray-4);
+  --ifm-pre-background:var(--color-gray-4);
   --ifm-code-background:var(--color-gray-4);
   --ifm-code-font-size:0.875rem; /* 14px */
 
@@ -423,6 +424,14 @@ code {
 pre {
   code {
     background-color: var(--ifm-code-background);
+  }
+}
+
+.alert {
+  pre {
+    code {
+      --ifm-code-background: var(--color-gray-4);
+    }
   }
 }
 
