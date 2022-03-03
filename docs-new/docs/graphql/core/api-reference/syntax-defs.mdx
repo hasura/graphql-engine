@@ -1279,10 +1279,11 @@ HGE provides the following functions that can be used in the template:
 
 ## BodyTransform {#bodytransform}
 
-| Key      | required | Schema              | Description                                                                                            |
-|----------|----------|---------------------|--------------------------------------------------------------------------------------------------------|
-| action   | true     | remove \| transform | The action to perform on the request body.                                                             |
-| template | false    | String              | The transformation template to be applied to the body. This is required if the action is *transform*.  |
+| Key           | required | Schema              | Description                                                                                            |
+|---------------|----------|---------------------|--------------------------------------------------------------------------------------------------------|
+| action        | true     | remove \| transform | The action to perform on the request body.                                                             |
+| template      | false    | String              | The transformation template to be applied to the body. This is required if the action is *transform*.  |
+| form_template | false    | Object ([String](/graphql/core/databases/postgres/postgresql-types.mdx#string) : [String](/graphql/core/databases/postgres/postgresql-types.mdx#string))              | The key/value pairs to be used in a `x-www-url-formencoded` body. The values can be transfomation templates.  |
 
 
 ## TemplateEngine {#templateengine}
