@@ -15,7 +15,6 @@
 
   .helpful-icon {
     margin: 0 12px;
-    cursor: pointer;
     display: flex;
     svg {
       path, circle {
@@ -26,6 +25,9 @@
       path, circle {
         stroke: var(--ifm-link-color);
       }
+    }
+    &.no_response {
+      cursor: pointer;
     }
   }
 }

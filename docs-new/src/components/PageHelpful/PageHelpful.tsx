@@ -28,7 +28,7 @@ const PageHelpful = () => {
         <Fragment>
           <div
             className={`${styles["helpful-icon"]} ${
-              hasResponse && isHelpful ? styles["active"] : ""
+              hasResponse ? isHelpful ? styles.active : "" : styles.no_response
             }`}
             onClick={() => recordResponse(true)}
           >
@@ -36,7 +36,7 @@ const PageHelpful = () => {
           </div>
           <div
             className={`${styles["helpful-icon"]} ${
-              hasResponse && !isHelpful ? styles["active"] : ""
+              hasResponse ? !isHelpful ? styles.active : "" : styles.no_response
             }`}
             onClick={() => recordResponse(false)}
           >
