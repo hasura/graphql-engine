@@ -9,6 +9,7 @@
 ### Bug fixes and improvements
 (Add entries below in the order of server, console, cli, docs, others)
 
+- server: add metadata inconsistency information in `reload_metadata` API call
 - server: add custom function for case insensitive lookup in session variable in request transformation
 - server: Webhook Tranforms can now produce `x-www-url-formencoded` bodies.
 - server: Webhook Transforms can now delete request/response bodies explicitly.
