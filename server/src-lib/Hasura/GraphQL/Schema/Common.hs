@@ -42,6 +42,7 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Types qualified as ET (GraphQLQueryType)
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.Prelude
+import Hasura.RQL.IR.Action qualified as IR
 import Hasura.RQL.IR.Root qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types
@@ -77,9 +78,9 @@ type ConnectionFields b = IR.ConnectionFields b (IR.RemoteRelationshipField P.Un
 
 type EdgeFields b = IR.EdgeFields b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
 
-type AnnotatedActionFields b = IR.ActionFieldsG b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
+type AnnotatedActionFields = IR.ActionFieldsG (IR.RemoteRelationshipField P.UnpreparedValue)
 
-type AnnotatedActionField b = IR.ActionFieldG b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
+type AnnotatedActionField = IR.ActionFieldG (IR.RemoteRelationshipField P.UnpreparedValue)
 
 data RemoteRelationshipQueryContext = RemoteRelationshipQueryContext
   { _rrscIntrospectionResultOriginal :: !IntrospectionResult,
@@ -126,7 +127,7 @@ parsedSelectionsToFields ::
   -- | how to handle @__typename@ fields
   (Text -> a) ->
   OMap.InsOrdHashMap G.Name (P.ParsedSelection a) ->
-  IR.Fields a
+  Fields a
 parsedSelectionsToFields mkTypename =
   OMap.toList
     >>> map (FieldName . G.unName *** P.handleTypename (mkTypename . G.unName))

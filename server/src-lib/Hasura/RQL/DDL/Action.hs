@@ -22,7 +22,6 @@ import Data.Dependent.Map qualified as DMap
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
-import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NEList
 import Data.Text.Extended
 import Hasura.Base.Error
@@ -177,24 +176,6 @@ resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = d
               throw400 ConstraintError $
                 "Async action relations cannot be used with object fields : " <> commaSeparated (dquote . _ofdName <$> nestedObjects)
     pure aot
-  -- checking if there is any relation which is not in output type of action
-  let checkNestedObjRelationship :: (QErrM m) => HashSet G.Name -> AnnotatedObjectFieldType -> m ()
-      checkNestedObjRelationship seenObjectTypes = \case
-        AOFTScalar _ -> pure ()
-        AOFTEnum _ -> pure ()
-        AOFTObject objectTypeName -> do
-          unless (objectTypeName `Set.member` seenObjectTypes) $ do
-            -- avoid infinite loop for recursive types
-            ObjectTypeDefinition {..} <-
-              _aotDefinition <$> Map.lookup objectTypeName _actObjects
-                `onNothing` throw500 ("Custom object type " <> objectTypeName <<> " not found")
-            when (isJust _otdRelationships) $
-              throw400 ConstraintError $ "Relationship cannot be defined for nested object " <> _otdName <<> ". Relationship can be used only for top level object " <> outputBaseType <<> "."
-            for_ _otdFields $ checkNestedObjRelationship (Set.insert objectTypeName seenObjectTypes) . snd . _ofdType
-      outFields = case outputObject of
-        AOTObject aot -> NEList.toList $ _otdFields $ _aotDefinition aot
-        AOTScalar _ -> []
-  for_ (outFields) $ checkNestedObjRelationship mempty . snd . _ofdType
   resolvedWebhook <- resolveWebhook env _adHandler
   pure
     ( ActionDefinition

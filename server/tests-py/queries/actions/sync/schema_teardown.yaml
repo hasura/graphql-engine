@@ -46,6 +46,10 @@ args:
     clear_data: true
 - type: drop_action
   args:
+    name: get_user_by_email_nested_join
+    clear_data: true
+- type: drop_action
+  args:
     name: intentional_error
     clear_data: true
 - type: drop_action

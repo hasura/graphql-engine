@@ -143,6 +143,17 @@ args:
       - name: other_addresses
         type: '[Address]'
 
+    - name: NestedJoinObject
+      fields:
+      - name: id
+        type: Int!
+      - name: user_id
+        type: UserId
+      - name: address
+        type: Address
+      - name: addresses
+        type: '[Address]'
+
     - name: DirectRecursiveType
       fields:
       - name: id
@@ -360,6 +371,17 @@ args:
                   {{ end }}
                 {{ end }}
             }
+
+- type: create_action
+  args:
+    name: get_user_by_email_nested_join
+    definition:
+      type: query
+      arguments:
+      - name: email
+        type: String!
+      output_type: NestedJoinObject!
+      handler: http://127.0.0.1:5593/get-user-by-email-nested
 
 - type: create_action
   args:

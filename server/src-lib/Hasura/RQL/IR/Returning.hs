@@ -19,6 +19,7 @@ import Hasura.EncJSON
 import Hasura.Prelude
 import Hasura.RQL.IR.Select
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common
 import Hasura.SQL.Backend
 
 data MutFldG (b :: BackendType) (r :: Type) v

@@ -1,5 +1,14 @@
-type: run_sql
+type: bulk
 args:
-  cascade: true
-  sql: |
-    DROP TABLE "user";
+- type: untrack_table
+  args:
+    cascade: true
+    table:
+      name: user
+      schema: public
+
+- type: run_sql
+  args:
+    cascade: true
+    sql: |
+      DROP TABLE "user";

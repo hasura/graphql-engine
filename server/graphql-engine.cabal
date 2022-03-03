@@ -622,6 +622,7 @@ library
                      , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Update
                      , Hasura.RQL.DML.Types
+                     , Hasura.RQL.IR.Action
                      , Hasura.RQL.IR.BoolExp
                      , Hasura.RQL.IR.Conflict
                      , Hasura.RQL.IR.Delete
