@@ -1,9 +1,10 @@
 # Hasura GraphQL Engine Changelog
 
 ## Next release
-(Add highlights/major features below)
 
 ### Bug fixes and improvements
+
+## v2.2.2
 
 - server: fix regression where remote relationships would get exposed over Relay, which is unsupported
 
