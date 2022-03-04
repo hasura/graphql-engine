@@ -27,7 +27,7 @@ const config = {
           routeBasePath: "/",
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl: ({ docPath }) => `https://github.com/hasura/graphql-engine/edit/main/docs-new/${docPath}`,
-          docItemComponent: require.resolve('./src/components/CustomDocItem/CustomDocItem.tsx'),
+          docItemComponent: require.resolve('./src/components/CustomDocItem/index.tsx'),
           exclude: ['**/*.wip', 'migration-guide'],
           breadcrumbs: true,
           // showLastUpdateAuthor: true,

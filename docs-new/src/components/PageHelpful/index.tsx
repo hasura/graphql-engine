@@ -2,7 +2,7 @@ import React, { Fragment, useState } from "react";
 import { saTrack } from "@site/src/utils/segmentAnalytics";
 import HappyFace from "@site/static/icons/happy.svg";
 import SadFace from "@site/static/icons/sad.svg";
-import styles from "./PageHelpful.module.scss";
+import styles from "./styles.module.scss";
 
 const PageHelpful = () => {
   const [isHelpful, setIsHelpful] = useState<boolean>();

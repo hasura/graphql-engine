@@ -1,10 +1,9 @@
 import React from 'react';
-import styles from './GraphQLWithHasuraBanner.module.scss';
-
+import Link from '@docusaurus/Link';
 import ArrowRight from "@site/static/icons/arrow_right.svg";
 import Star from "@site/static/img/star.svg";
 import hasuraFree from "@site/static/img/hasura-free.png";
-import Link from '@docusaurus/Link';
+import styles from './styles.module.scss';
 
 const GraphQLWithHasuraBanner = () => {
   return (

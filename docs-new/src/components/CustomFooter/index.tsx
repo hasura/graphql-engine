@@ -9,7 +9,7 @@ import TwitterIcon from "@site/static/icons/twitter.svg";
 import DiscordIcon from "@site/static/icons/discord.svg";
 import LinkedInIcon from "@site/static/icons/linkedin.svg";
 import YoutubeIcon from "@site/static/icons/youtube.svg";
-import styles from "./CustomFooter.module.scss";
+import styles from "./styles.module.scss";
 
 const CustomFooter = () => (
 <footer className={styles["custom-footer-wrapper"]}>

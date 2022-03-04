@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import useIsBrowser from '@docusaurus/useIsBrowser';
-import styles from "./Paperform.module.scss";
 import BrowserOnly from "@docusaurus/BrowserOnly";
+import styles from "./styles.module.scss";
 
 export default function Paperform({ formId, styleClassName="" }) {
   const isBrowser = useIsBrowser();
