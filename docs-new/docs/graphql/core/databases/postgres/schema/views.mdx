@@ -160,7 +160,7 @@ min, max, etc.) over a group of rows in a table.
 Let’s say we want to fetch the average article rating for each author in
 the following schema:
 
-```plpgsql
+```plsql
 author(id integer, name text, city text, email text, phone integer, address text)
 
 article(id integer, title text, content text, rating integer, author_id integer)
@@ -169,7 +169,7 @@ article(id integer, title text, content text, rating integer, author_id integer)
 A view that averages the rating of articles for each author can be
 created using the following SQL query:
 
-```SQL
+```sql
 CREATE VIEW author_average_rating AS
   SELECT author_id, avg(rating)
     FROM article
@@ -184,14 +184,14 @@ wouldn't want to expose.
 Let's say, we want to expose the following `author` table without the
 fields `email`, `phone` and `address`:
 
-```plpgsql
+```plsql
 author(id integer, name text, city text, email text, phone integer, address text)
 ```
 
 A view that only exposes the non-sensitive fields of the `author` table
 can be created using the following SQL query:
 
-```SQL
+```sql
 CREATE VIEW author_public AS
   SELECT id, name, city
     FROM author

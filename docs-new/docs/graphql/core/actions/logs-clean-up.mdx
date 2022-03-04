@@ -37,19 +37,19 @@ There is a specific table for action logs that is managed by Hasura:
 
 ## Option 1: Delete log of a particular action invocation
 
-```SQL
+```sql
 DELETE FROM hdb_catalog.hdb_action_log WHERE id = '<async-action-id>';
 ```
 
 ## Option 2: Delete all logs of a specific action
 
-```SQL
+```sql
 DELETE FROM hdb_catalog.hdb_action_log WHERE action_name = '<action-name>';
 ```
 
 ## Option 3: Delete all logs
 
-```SQL
+```sql
 DELETE FROM hdb_catalog.hdb_action_log;
 ```
 
@@ -58,14 +58,14 @@ DELETE FROM hdb_catalog.hdb_action_log;
 If you wish to keep recent data and only clear data before a particular time period
 you can add the following time clause to your query's where clause:
 
-```SQL
+```sql
 -- units can be 'minutes', 'hours', 'days', 'months', 'years'
 created_at < now() - interval '<x> <units>'
 ```
 
 For example: to delete all logs older than 3 months:
 
-```SQL
+```sql
 DELETE FROM hdb_catalog.hdb_action_log WHERE created_at < NOW() - INTERVAL '3 months';
 ```
 

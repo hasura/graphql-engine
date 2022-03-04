@@ -31,7 +31,7 @@ Once these packages are installed, import them as follows in the file
 where you have currently initialised your client (usually your `App.js`
 file).
 
-```js
+```javascript
 // Remove the apollo-boost import and change to this:
 import ApolloClient from "apollo-client";
 // Setup the network "links"
@@ -45,7 +45,7 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 Below these imports initialise your client to fetch subscriptions along
 with query and mutation.
 
-```js
+```javascript
 const httpLink = new HttpLink({
   uri: "http://<your-app>/v1/graphql", // use https for secure endpoint
 });
@@ -85,7 +85,7 @@ few things that you might miss out on.
 Below is an example where you can convert a query to subscription and
 see what changes need to be made when doing so.
 
-```js
+```javascript
 <Query
   query = {
     gql`
@@ -143,7 +143,7 @@ subscriptions.
 If all the 3 changes are not made, **it works like a query instead of a
 subscription** since the code that sets up apollo-link doesn't work.
 
-```js
+```javascript
 const link = split(
   // split based on operation type
   ({ query }) => {

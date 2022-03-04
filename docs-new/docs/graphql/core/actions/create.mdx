@@ -223,7 +223,7 @@ A handler is an HTTP webhook where you can perform the custom logic for the acti
 In this case, we will just return an access token, but typically you would want to run all the business logic that the action demands.
 NodeJS/Express code for this handler would look something like:
 
-```js
+```javascript
 const handler = (req, resp) => {
   // You can access their arguments input at req.body.input
   const { username, password } = req.body.input;
@@ -473,7 +473,7 @@ A handler is an HTTP webhook where you can perform the custom logic for the acti
 
 In this case, it is the addition of the numbers. NodeJS/Express code for this handler would look something like:
 
-```js
+```javascript
 const handler = (req, resp) => {
   // You can access their arguments input at req.body.input
   const { numbers } = req.body.input;

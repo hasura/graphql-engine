@@ -46,7 +46,7 @@ We can achieve this via the following steps:
 [Create a view](/graphql/core/databases/postgres/schema/views.mdx#pg-create-views) called `user_private` with columns
 `(user_id, email, phone, address)`:
 
-```SQL
+```sql
 CREATE VIEW user_private AS
   SELECT id AS user_id, email, phone, address
     FROM user_info;

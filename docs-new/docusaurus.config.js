@@ -345,7 +345,7 @@ const config = {
       prism: {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
-        additionalLanguages: ['rest', 'http', 'haskell', 'plsql', 'docker']
+        additionalLanguages: ['rest', 'http', 'haskell', 'plsql', 'docker', 'nginx', 'markdown'],
       },
       algolia: {
         // If Algolia did not provide you any appId, use 'BH4D9OD16A'
