@@ -395,14 +395,6 @@
   }
 }
 
-.docusaurus-highlight-code-line {
-  background-color: rgba(0, 0, 0, 0.1);
-  display: block;
-  margin: 0 calc(-1 * var(--ifm-pre-padding));
-  padding: 0 var(--ifm-pre-padding);
-}
-
-
 .admonition {
   .admonition-heading h5 {
     text-transform: capitalize;
@@ -433,6 +425,13 @@ pre {
       --ifm-code-background: var(--color-gray-4);
     }
   }
+}
+
+.docusaurus-highlight-code-line {
+  background-color: var(--color-gray-12);
+  display: block;
+  margin: 0 calc(-1 * var(--ifm-pre-padding));
+  padding: 0 var(--ifm-pre-padding);
 }
 
 .theme-edit-this-page {

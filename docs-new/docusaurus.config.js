@@ -26,7 +26,7 @@ const config = {
         docs: {
           routeBasePath: "/",
           sidebarPath: require.resolve('./sidebars.js'),
-          editUrl: 'https://github.com/hasura/graphql-engine/edit/main/docs-new/',
+          editUrl: ({ docPath }) => `https://github.com/hasura/graphql-engine/edit/main/docs-new/${docPath}`,
           docItemComponent: require.resolve('./src/components/CustomDocItem/CustomDocItem.tsx'),
           exclude: ['**/*.wip', 'migration-guide'],
           breadcrumbs: true,
@@ -84,6 +84,24 @@ const config = {
         defaultMode: 'light',
         disableSwitch: false,
         respectPrefersColorScheme: true,
+      },
+      prism: {
+        theme: lightCodeTheme,
+        darkTheme: darkCodeTheme,
+        additionalLanguages: ['rest', 'http', 'haskell', 'plsql', 'docker', 'nginx', 'markdown'],
+      },
+      algolia: {
+        // If Algolia did not provide you any appId, use 'BH4D9OD16A'
+        appId: 'NS6GBGYACO',
+        // Public API key: it is safe to commit it
+        apiKey: '8f0f11e3241b59574c5dd32af09acdc8',
+        indexName: 'hasura-graphql',
+        // Optional: see doc section below
+        // contextualSearch: true,
+        // Optional: Specify domains where the navigation should occur through window.location instead on history.push. Useful when our Algolia config crawls multiple documentation sites and we want to navigate with window.location.href to them.
+        // externalUrlRegex: 'external\\.com|domain\\.com',
+        // Optional: Algolia search parameters
+        // searchParameters: {},
       },
       // announcementBar: {
       //   id: 'announcementBar-2', // Increment on change
@@ -342,24 +360,6 @@ const config = {
       //   ],
       //   copyright: `Copyright © ${new Date().getFullYear()} Hasura Inc. All rights reserved`,
       // },
-      prism: {
-        theme: lightCodeTheme,
-        darkTheme: darkCodeTheme,
-        additionalLanguages: ['rest', 'http', 'haskell', 'plsql', 'docker', 'nginx', 'markdown'],
-      },
-      algolia: {
-        // If Algolia did not provide you any appId, use 'BH4D9OD16A'
-        appId: 'NS6GBGYACO',
-        // Public API key: it is safe to commit it
-        apiKey: '8f0f11e3241b59574c5dd32af09acdc8',
-        indexName: 'hasura-graphql',
-        // Optional: see doc section below
-        // contextualSearch: true,
-        // Optional: Specify domains where the navigation should occur through window.location instead on history.push. Useful when our Algolia config crawls multiple documentation sites and we want to navigate with window.location.href to them.
-        // externalUrlRegex: 'external\\.com|domain\\.com',
-        // Optional: Algolia search parameters
-        // searchParameters: {},
-      },
     }),
 };
 
