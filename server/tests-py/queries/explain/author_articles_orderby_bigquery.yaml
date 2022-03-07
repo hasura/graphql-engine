@@ -1,0 +1,31 @@
+description: Check SQL generation for array relationship with order by clause
+url: /v1/graphql/explain
+status: 200
+response:
+- field: hasura_author
+  sql: "SELECT `t_author1`.`id` AS `id`,\n       ARRAY(SELECT AS STRUCT `title`, `content`\
+    \ FROM `ar_articles1`.agg) AS `articles`\nFROM `hasura`.`author` AS `t_author1`\n\
+    LEFT OUTER JOIN (SELECT `t_article1`.`author_id` AS `author_id`,\n           \
+    \             ARRAY_AGG(STRUCT(`t_article1`.`title` AS `title`,\n            \
+    \                             `t_article1`.`content` AS `content`) ORDER BY (`t_article1`.`id`)\
+    \ DESC\n                                  LIMIT @param0) AS `agg`\n          \
+    \       FROM (SELECT `t_article1`.`title` AS `title`,\n                      \
+    \        `t_article1`.`content` AS `content`,\n                              `t_article1`.`author_id`\
+    \ AS `author_id`,\n                              `t_article1`.`id` AS `id`,\n\
+    \                              ROW_NUMBER() OVER(PARTITION BY `t_article1`.`author_id`\
+    \ ORDER BY (`t_article1`.`id`) DESC NULLS LAST) AS `idx1`\n                  \
+    \     FROM `hasura`.`article` AS `t_article1`\n                       ORDER BY\
+    \ (`t_article1`.`id`) DESC NULLS LAST) AS `t_article1`\n                 GROUP\
+    \ BY `t_article1`.`author_id`)\nAS `ar_articles1`\nON (`ar_articles1`.`author_id`\
+    \ = `t_author1`.`id`)\nLIMIT @param0"
+query:
+  query:
+    query: |
+      query {
+        hasura_author{
+          articles(order_by: {id: desc}){
+            title
+            content
+          }
+        }
+      }
