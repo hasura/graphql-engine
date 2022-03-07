@@ -17,6 +17,7 @@ where
 import Control.Monad.Validate
 import Data.HashMap.Strict qualified as HM
 import Data.Int qualified as Int
+import Data.List.Extended (appendToNonEmpty)
 import Data.List.NonEmpty qualified as NE
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
@@ -975,9 +976,13 @@ fieldSourceProjections keepJoinField =
         -- Haskell-native joining.  They will be removed by upstream
         -- code if keepJoinField is True
         ( [ FieldNameProjection
-              (Aliased {aliasedThing = right, aliasedAlias = fieldNameText right})
-            | (_left, right) <- joinOn join',
-              keepJoinField
+              ( Aliased
+                  { aliasedThing = right,
+                    aliasedAlias = fieldNameText right
+                  }
+              )
+            | keepJoinField,
+              (_left, right) <- joinOn join'
           ]
             <>
             -- Below:
@@ -1334,7 +1339,7 @@ fromArrayRelationSelectG annRelationSelectG = do
                                   fmap
                                     (aliasToFieldProjection (fromAlias (selectFrom select)))
                                     (selectProjections select),
-                                arrayAggOrderBy = Nothing,
+                                arrayAggOrderBy = selectOrderBy select,
                                 arrayAggTop = selectTop select
                                 -- The sub-select takes care of caring about global top.
                                 --
@@ -1352,6 +1357,17 @@ fromArrayRelationSelectG annRelationSelectG = do
                           { selectProjections =
                               selectProjections select
                                 <> NE.fromList joinFieldProjections
+                                `appendToNonEmpty` foldMap @Maybe
+                                  ( map \OrderBy {orderByFieldName} ->
+                                      FieldNameProjection
+                                        Aliased
+                                          { aliasedThing = orderByFieldName,
+                                            aliasedAlias = fieldName orderByFieldName
+                                          }
+                                  )
+                                  (toList <$> selectOrderBy select)
+                                -- Above: Select "order by" fields as they're being used
+                                -- inside `ARRAY_AGG` function (as ORDER BY clause)
                                 <> pure
                                   ( WindowProjection
                                       ( Aliased

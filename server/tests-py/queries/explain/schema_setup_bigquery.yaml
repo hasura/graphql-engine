@@ -1,0 +1,20 @@
+type: bulk
+args:
+- type: bigquery_run_sql
+  args:
+    source: bigquery
+    sql: |
+      CREATE TABLE `hasura.author` (
+        `id` INT64,
+        `name` STRING,
+        `created_at` TIMESTAMP
+      );
+      CREATE TABLE `hasura.article` (
+        `id` INT64,
+        `title` STRING,
+        `content` STRING,
+        `author_id` INT64,
+        `is_published` BOOL,
+        `published_on` DATETIME,
+        `created_at` TIMESTAMP
+      );

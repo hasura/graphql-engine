@@ -1,0 +1,26 @@
+type: bulk
+args:
+
+- type: bigquery_drop_relationship
+  args:
+    source: bigquery
+    table:
+      dataset: hasura
+      name: author
+    relationship: articles
+
+- type: bigquery_untrack_table
+  args:
+    source: bigquery
+    table:
+      dataset: hasura
+      name: article
+    cascade: true
+
+- type: bigquery_untrack_table
+  args:
+    source: bigquery
+    table:
+      dataset: hasura
+      name: author
+    cascade: true

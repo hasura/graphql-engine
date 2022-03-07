@@ -6,6 +6,7 @@ module Data.List.Extended
     getOverlapWith,
     hasNoDuplicates,
     longestCommonPrefix,
+    appendToNonEmpty,
     module L,
   )
 where
@@ -52,3 +53,7 @@ longestCommonPrefix [] = []
 longestCommonPrefix (x : xs) = foldr prefix x xs
   where
     prefix l1 l2 = map fst $ takeWhile (uncurry (==)) $ zip l1 l2
+
+appendToNonEmpty :: NE.NonEmpty a -> [a] -> NE.NonEmpty a
+appendToNonEmpty (neHead NE.:| neList) list =
+  neHead NE.:| (neList <> list)
