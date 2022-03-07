@@ -67,7 +67,7 @@ This is similar to using hash in the url (`#sub-section`) to directly link to a 
 
 While the top level can be added as `id` attribute in metadata. The sub-section (h2's, h3's and stuff) can have id's with special mdx syntax `{#id-for-sub-section}`
 
-![Referencing sub-section in rst vs markdown](/img/migration-guide/link-sub-section-ids.png)
+![Referencing sub-section in rst vs markdown](/img/rst-vs-mdx-guide/link-sub-section-ids.png)
 
 :::
 
@@ -80,12 +80,6 @@ While the top level can be added as `id` attribute in metadata. The sub-section 
 this Will actually resolve to a link with label. Label is the title of the document with respective id.
 
 So the MDX, should be with the label (please always refer live docs site to see how this link looks in UI - lable + url)
-
-```markdown
-[Getting Started with Hasura Cloud](/graphql/cloud/getting-started/index.mdx)
-```
-
-The Result UI: [Getting Started with Hasura Cloud](/graphql/cloud/getting-started/index.mdx)
 
 :::
 
@@ -112,11 +106,11 @@ Find `/folder1/subfolder2/doc3.mdx` and replace with `/folder1/newsubfolder4/doc
 Since MDX doesn't yet support direct document referencing with `id/ref` unlike sphinx, we need to settle with root relative path linking for now.
 
 ```
-[MDX Root Relative Link](/migration-guide/index.mdx#contents-covered)
+[MDX Root Relative Link](/rst-vs-mdx-guide/index.mdx#contents-covered)
 ```
 
 
-> [MDX Root Relative Link](/migration-guide/index.mdx#contents-covered)
+> [MDX Root Relative Link](/rst-vs-mdx-guide/index.mdx#contents-covered)
 
 :::tip Don't forget the extension!
 
@@ -133,7 +127,7 @@ Use Docusaurus [Links](https://docusaurus.io/docs/docusaurus-core#link) for link
 import Link from '@docusaurus/Link';
 
 // Internal Link
-<Link to="/migration-guide/links#root-relative-links">Root Relative Links</Link>
+<Link to="/rst-vs-mdx-guide/links#root-relative-links">Root Relative Links</Link>
 
 // External Link
 <Link to="https://hasura.io">Hasura</Link>

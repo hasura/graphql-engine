@@ -1,0 +1,276 @@
+# Docs page structure
+
+## Meta information
+
+The following meta information should be added at the beginning of each docs page: `description` and `keywords`.
+
+An example:
+
+```
+.. meta::
+   :description: Data validations in Hasura
+   :keywords: hasura, docs, schema, data validation
+
+---
+description: Data validations in Hasura
+keywords:
+  - hasura
+  - docs
+  - schema
+  - data validation
+---
+```
+
+## Reference
+
+Before the page title, add a reference that can be used to link to this page.
+
+An example:
+
+```
+.. _data_validations:
+```
+
+*Note*: References can also be added above any title within the docs page in order to link to a specific section directly.
+
+## Page title
+
+Add the main title for each docs page.
+
+An example:
+
+```
+# Data validations
+```
+
+## Table of contents
+This is auto generated on the right sidebar
+control via toc_max_heading_level, toc_min_heading_level
+TOCInline
+
+Ensure every newly added page has a "Table of contents" section with the appropriate depth.
+
+```
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 2
+  :local:
+```
+
+## Introduction
+
+Add an `Introduction` section:
+
+```
+## Introduction
+```
+
+In the section, give a short overview of what the page is about.
+
+## General guidelines
+
+### Content
+- Add appropriate cross-links in content to assist users. i.e. if you refer to some functionality that is documented in some other docs page, add a link to that page. e.g. if you have a statement like "create a relationship between tables
+X and Y ...", make "create a relationship" a link to the `Create relationships` page.
+- Try to make each section within a page self-sufficient. i.e. avoid structuring all pages as step-by-step guides
+unless it really is the intent. This ensures that we can refer to sections externally (from other docs pages, console, 
+etc.) and expect that the user will be able to follow the section without being lost on the context that was set in earlier sections of the page. Adding statements such as "As we have described in the above section ..." might help to set up the needed context.
+
+### Header section
+
+- Page titles should be self-sufficient. Users might not have the context of the hierarchy of the page in the docs tree. A user can land on a page via search as well. e.g. Say you are adding a new deployment guide for AWS under 
+`Guides -> Deployment -> AWS`. The title of this page should not be just `AWS` but instead `AWS deployment guide for 
+Hasura GraphQL engine`. It's ok to alias it to just `AWS` in the sidebar as there the user has the context of the page hierarchy.
+- Ensure heading underlines are the same length as the headings. Short underlines will throw warnings during builds.
+- Use bold in headings in place of string literals for aesthetics (i.e. ** in place of ``).
+- The nesting of headings is as follows:
+
+```
+# Main page title
+
+## First heading
+
+### Second heading
+
+#### Third heading
+
+##### Fourth heading
+
+###### Fifth heading
+```
+
+### References / links
+
+#### Internal links
+
+When linking to other docs pages, use *references* (`:ref:`) rather than relative links in order to avoid broken links.
+
+use root (`docs`) relative links with extension
+
+An example:
+
+```
+:ref:`data validation <data_validation>`
+[data validation](/graphql/core/data-validation.mdx)
+```
+
+In this example, `data validation` is the link text, and `<data_validation>` is the reference to which the link will point.
+update link there
+
+#### External links
+
+When linking to external pages, make sure to add a double `_` in the end to avoid Duplicate explicit target name warnings. 
+no need above
+
+An example:
+
+``Google <https://www.google.com/>__``
+[Google](https://www.google.com/)
+
+*Note*: If you link to an external resource, make sure to link to the most current version of the same, e.g. `https://www.postgresql.org/docs/current/intro-whatis.html` rather than `https://www.postgresql.org/docs/9.6/intro-whatis.html`.
+
+### Images
+
+Add images using the `thumbnail` directive to allow click-to-zoom.
+
+An example:
+
+```
+.. thumbnail:: /img/graphql/manual/schema/validation-add-check-constraint.png
+   :alt: Add check constraint
+   :width: 700px
+import Thumbnail from "@site/src/components/Thumbnail";
+
+<Thumbnail
+  src="/img/graphql/manual/schema/validation-add-check-constraint.png"
+  alt="Add check constraint"
+  width="700px"
+/>
+```
+
+- Add an `alt` prop for all images
+- To adjust the image size, use the `width` prop
+
+#### Style elements for emphasizing
+
+If you have screenshots in your docs page and you want to emphasize something, please use this colour code: `#ec1c74`.
+
+Generally, if you want to show selecting something, use borders. If you want to show clicking on a button, use arrows. 
+
+### Notes / Admonitions
+
+A note can be added in order to draw attention to something like limitations or to link to external reference documentation. It has the title "Notes".
+
+An example:
+
+```
+.. note::
+  Please checkout the [Postgres documentation](https://www.postgresql.org/docs/current/functions-comparison.html) for more information.
+
+:::info Note
+
+Please checkout the [Postgres documentation](https://www.postgresql.org/docs/current/functions-comparison.html) for more information.
+
+:::
+
+```
+
+An admonition is the same as a note, but its title can be defined. 
+
+Add an admonition as follows:
+
+```
+.. admonition:: Supported by
+  Scheduled triggers are supported by `v.1.3.0` and above.
+
+:::info Other Title
+
+Scheduled triggers are supported by `v.1.3.0` and above.
+
+:::
+
+:::tip Supported by
+
+Scheduled triggers are supported by `v.1.3.0` and above.
+
+:::
+
+:::caution Deprecation
+
+Scheduled triggers are supported by `v.1.3.0` and above.
+
+:::
+
+:::danger Security Vulnerability
+
+Scheduled triggers are supported by `v.1.3.0` and above.
+
+:::
+
+```
+
+*Note*: Make sure to leave an intentional empty line before and after each `:::` in admonitions - beginning and end both.
+
+*Note*: Make sure to place the note/admonition in a place where the user will see it at the appropriate time.
+
+### Code blocks
+
+While adding code blocks ensure the right language type is set. Sometimes adding placeholders breaks the language's
+syntax in which case you'll have to set the language type to `none` to avoid warnings during builds.
+
+### GraphQL request examples
+
+Our docs have a GraphiQL extension that allows displaying GraphQL requests in the GraphiQL UI.
+
+- Use a tab-width of 2 for nesting the requests and responses for optimal use 
+of the space and maintaining consistency.
+- Nest query arguments for logical readability. Unfortunately, GraphiQL prettify does not do a good job of doing this 
+by default.
+- Ensure that the order of fields in the responses is the same as in the requests for better readability.
+
+Use it as follows:
+
+```
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      author_by_pk(id: 1) {
+        id
+        name
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author_by_pk": {
+          "id": 1,
+          "name": "Justin"
+        }
+      }
+    }
+import GraphiQLIDE from "@site/src/components/GraphiQLIDE";
+<GraphiQLIDE
+viewOnly
+query={`query {
+  author_by_pk(id: 1) {
+    id
+    name
+  }
+}`}
+response={`{
+  "data": {
+    "author_by_pk": {
+      "id": 1,
+      "name": "Justin"
+    }
+  }
+}`}
+/>
+```
+
+You dont have to worry about indentatio when adding components for better spacing in string literals
+
+## Run docs build
+
+Run the docs build in the end again with `yarn build` and make sure there are no errors/warnings because of any inconsitencies etc.

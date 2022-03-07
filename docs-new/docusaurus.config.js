@@ -28,7 +28,7 @@ const config = {
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl: ({ docPath }) => `https://github.com/hasura/graphql-engine/edit/master/docs-new/docs/${docPath}`,
           docItemComponent: require.resolve('./src/components/CustomDocItem/index.tsx'),
-          exclude: ['**/*.wip', 'migration-guide'],
+          exclude: ['**/*.wip'],
           breadcrumbs: true,
           // showLastUpdateAuthor: true,
           // showLastUpdateTime: true,
@@ -49,6 +49,22 @@ const config = {
   ],
   plugins: [
     'docusaurus-plugin-sass',
+    [
+      'content-docs',
+      /** @type {import('@docusaurus/plugin-content-docs').Options} */
+      ({
+        id: 'wiki',
+        path: 'wiki',
+        routeBasePath: "wiki",
+        editUrl: ({ docPath }) => `https://github.com/hasura/graphql-engine/edit/master/docs-new/docs/${docPath}`,
+        editCurrentVersion: true,
+        // disableVersioning: true,
+        breadcrumbs: false,
+        sidebarPath: require.resolve('./sidebarsWiki.js'),
+        showLastUpdateAuthor: true,
+        showLastUpdateTime: true,
+      }),
+    ],
     [
       path.resolve(__dirname, './src/plugins/docusaurus-plugin-segment-analytics'),
       {
