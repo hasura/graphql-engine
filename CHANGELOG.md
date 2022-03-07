@@ -6,6 +6,10 @@
 
 - server: fix regression where remote relationships would get exposed over Relay, which is unsupported
 
+## v2.2.2
+
+- server: fix regression where remote relationships would get exposed over Relay, which is unsupported
+
 ## v2.4.0-beta.1
 
 ### Bug fixes and improvements
