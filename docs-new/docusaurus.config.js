@@ -26,7 +26,7 @@ const config = {
         docs: {
           routeBasePath: "/",
           sidebarPath: require.resolve('./sidebars.js'),
-          editUrl: ({ docPath }) => `https://github.com/hasura/graphql-engine/edit/main/docs-new/${docPath}`,
+          editUrl: ({ docPath }) => `https://github.com/hasura/graphql-engine/edit/master/docs-new/docs/${docPath}`,
           docItemComponent: require.resolve('./src/components/CustomDocItem/index.tsx'),
           exclude: ['**/*.wip', 'migration-guide'],
           breadcrumbs: true,
@@ -118,28 +118,22 @@ const config = {
         },
         items: [
           {
-            type: 'docsVersionDropdown',
+            type: 'dropdown',
+            label: 'Docs',
             position: 'left',
-            dropdownActiveClassDisabled: true,
-            dropdownItemsAfter: [
+            items: [
               {
-                href: 'https://hasura.io/docs/1.0/graphql/core/index.html',
-                label: 'v1.x',
+                type: 'doc',
+                docId: 'graphql/core/index',
+                label: 'Core',
+              },
+              {
+                type: 'docSidebar',
+                sidebarId: 'cloudDocsSidebar',
+                label: 'Cloud',
               },
             ],
           },
-          // {
-          //   type: 'doc',
-          //   position: 'left',
-          //   docId: 'graphql/core/index',
-          //   label: 'Docs',
-          // },
-          // {
-          //    type: 'docSidebar',
-          //    position: 'left',
-          //    sidebarId: 'cloudDocsSidebar',
-          //    label: 'Cloud Docs',
-          // },
           {
             to: 'https://hasura.io/products/',
             label: 'Product',
@@ -156,6 +150,17 @@ const config = {
             position: 'left',
           },
           {
+            type: 'docsVersionDropdown',
+            position: 'right',
+            dropdownActiveClassDisabled: true,
+            dropdownItemsAfter: [
+              {
+                href: 'https://hasura.io/docs/1.0/graphql/core/index.html',
+                label: 'v1.x',
+              },
+            ],
+          },
+          {
             type: 'search',
             position: 'right',
           },
@@ -167,7 +172,7 @@ const config = {
           },
           {
             to: 'https://hasura.io/pricing/',
-            label: 'Prcing',
+            label: 'Pricing',
             position: 'right',
           },
           {
