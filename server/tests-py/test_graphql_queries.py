@@ -1349,14 +1349,14 @@ class TestGraphQLExplainCommon:
             resp_sql = resp_json[0]['sql']
             exp_sql = conf['response'][0]['sql']
 
-            p = (resp_sql == exp_sql) and overwrite_expectations
-            if not p:
+            p = (resp_sql == exp_sql)
+            if (not p) and overwrite_expectations:
                 with open(f, 'w') as outfile:
                     conf['response'][0]['sql'] = resp_json[0]['sql']
                     yaml.YAML(typ='rt').dump(conf, outfile) # , default_flow_style=False)
 
             # Outputing response for embedding in test
-            assert resp_sql == exp_sql, \
+            assert p, \
                 f"Unexpected explain SQL in response:\n{textwrap.indent(json.dumps(resp_json, indent=2), '  ')}"
 
         elif explain_query_type == "subscription":
@@ -1365,14 +1365,14 @@ class TestGraphQLExplainCommon:
             resp_sql = resp_json['sql']
             exp_sql = conf['response']['sql']
 
-            p = (resp_sql == exp_sql) and overwrite_expectations
-            if not p:
+            p = (resp_sql == exp_sql)
+            if (not p) and overwrite_expectations:
                 with open(f, 'w') as outfile:
                     conf['response']['sql'] = resp_json['sql']
                     yaml.YAML().dump(conf, outfile)
 
             # Outputing response for embedding in test
-            assert resp_sql == exp_sql, \
+            assert p, \
                 f"Unexpected explain SQL in response:\n{textwrap.indent(json.dumps(resp_json, indent=2), '  ')}"
         else:
             assert False, "Test programmer error"
