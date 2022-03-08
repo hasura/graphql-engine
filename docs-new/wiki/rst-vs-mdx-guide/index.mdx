@@ -1,36 +1,17 @@
 ---
+description: A brief intro to RST vs MDX Guide format
 sidebar_label: Get Started
 sidebar_position: 1
 slug: index
-description: hillo
 ---
 
-# HGE Docs Migration Guide
+# reStructured Text vs Markdown Guide
 
-This page will act as a migration guide for the docs migration.
+Since we moved our docs from `reStructured` to `markdown`. This page will act as a reference guide for the syntactical differences of `rst` and `mdx` for authors who are comfortable with rst.
 
-This page will cover all the factors that require a clarification during the migration process. If missed any, please let us know.
+This page will cover all the factors that require to comfortably write a doc page. If missed any, please let us know.
 
-
-## How to Start the Migration?
-
-> Used an auto transform tool [Pandoc](https://pandoc.org) to transform `reStructiredText` to `GitHub flavoured markdown` and added the resultant markdown content in respective `.txt` files.
-
-You will be working in the `/docs-new/docs/graphql` directory. Here you can find the `.txt` files already added from auto-transform result. So, you don't have to create any new files.
-
-Below is the steps to complete the migration cylcle for each doc file.
-
-- Update the extension and migrate content.
-
-1. Convert the transformed `.rst.txt` to `.mdx` extension for the file to be able to show up in sidebar and UI.
-
-2. Use this migration guide for syntactical and usage reference.
-
-3. Validate content and cleanup misc divs that are populated during auto transform and any invalid mdx data.
-
-4. The misc populated divs exist to ease adding metadata and any sphinx directives that can't be auto transformed to markdown. Please cross referene the actual RST file for content validation.
-
-- Verify content correctness (compare against the current live version of [Hasura docs](https://hasura.io/docs/)) and preview in UI.
+Please read about the [doc page structure here](/page-structure.mdx).
 
 
 :::tip
@@ -40,21 +21,25 @@ Please go through the [FAQs](/rst-vs-mdx-guide/faqs.mdx) section to understand t
 :::
 
 
-## Migration Guide Format
+## Guide Format
 
 ### Tabs
-Most of this guide will inculde tabs for syntax migration examples wherever applicable.
+Most of this guide will inculde tabs for syntactical examples wherever applicable.
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 <Tabs>
-  <TabItem value="sphinx" label="Sphinx - RST" default>
-    Snippets from current docs in RST syntax will be shown in this tab which needs to be migrated to mdx
-  </TabItem>
-  <TabItem value="docusaurus" label="Docusaurus - MDX">
-    MDX Snippet which is migrated from RST will be added in this tab.
-  </TabItem>
+<TabItem value="sphinx" label="Sphinx - RST" default>
+
+Snippets in `RST` syntax will be shown in this tab.
+
+</TabItem>
+<TabItem value="docusaurus" label="Docusaurus - MDX">
+
+Snippets in `MDX` syntax will be shown in this tab.
+
+</TabItem>
 </Tabs>
 
 <br />
@@ -63,16 +48,10 @@ import TabItem from '@theme/TabItem';
 Whereever Tab system is quite difficult to understand/implement. The `Sphinx - RST` and `Docusaurus - MDX` will just be normal sections with headings in respective order.
 
 #### Sphinx - RST
-Snippets from current docs in RST syntax will be shown in this tab which needs to be migrated to mdx
+Snippets in `RST` syntax will be shown in this tab.
 
 #### Docusaurus - MDX
-MDX Snippet which is migrated from RST will be added in this tab.
-
-:::note
-
-Please note that all code snippets in this guide are directly taken from current docs in RST format and migrated to MDX to provide an example.
-
-:::
+Snippets in `MDX` syntax will be shown in this tab.
 
 <br />
 
@@ -89,12 +68,14 @@ Admonitions are used wherever applicable to provide reference / helpful links an
 ## Contents Covered
 Below are primary topics/syntaxes/extensions that are covered in this guide.
 
+- [Headings & Ids](/rst-vs-mdx-guide/headings.mdx)
 - [Metadata + Frontmatter](/rst-vs-mdx-guide/metadata.mdx)
-- [Links](/rst-vs-mdx-guide/links.mdx)
-- [Admonitions](/rst-vs-mdx-guide/admonitions.mdx)
 - [Table of Contents](/rst-vs-mdx-guide/table-of-contents.mdx)
-- [Code Blocks with Line Highlighting](/rst-vs-mdx-guide/code-blocks.mdx)
-- [Tabs](/rst-vs-mdx-guide/tabs.mdx)
-- [GraphiQL IDE](/rst-vs-mdx-guide/graphiql-ide.mdx)
+- [Links](/rst-vs-mdx-guide/links.mdx)
 - [Thumbnail](/rst-vs-mdx-guide/thumbnail.mdx)
+- [Notes / Admonitions](/rst-vs-mdx-guide/admonitions.mdx)
+- [Code Blocks with Line Highlighting](/rst-vs-mdx-guide/code-blocks.mdx)
+- [GraphiQL IDE](/rst-vs-mdx-guide/graphiql-ide.mdx)
+- [Tabs](/rst-vs-mdx-guide/tabs.mdx)
 - [List Tables](/rst-vs-mdx-guide/list-tables.mdx)
+- [FAQs](/rst-vs-mdx-guide/faqs.mdx)

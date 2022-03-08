@@ -1,6 +1,6 @@
 # Contributing
 
-Hasura GraphQL engine docs are built using [Docusaurus 2](https://docusaurus.io/) and are return in MDX.
+Hasura GraphQL engine docs are built using [Docusaurus 2](https://docusaurus.io/) and are written in MDX.
 
 ## Docs issues in the repo
 

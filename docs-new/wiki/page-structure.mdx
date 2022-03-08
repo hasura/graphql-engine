@@ -6,11 +6,7 @@ The following meta information should be added at the beginning of each docs pag
 
 An example:
 
-```
-.. meta::
-   :description: Data validations in Hasura
-   :keywords: hasura, docs, schema, data validation
-
+```markdown
 ---
 description: Data validations in Hasura
 keywords:
@@ -21,17 +17,15 @@ keywords:
 ---
 ```
 
-## Reference
+## React component imports
 
-Before the page title, add a reference that can be used to link to this page.
+Please add any React component imports right below the frontmatter and beore starting the main doc content.
 
-An example:
-
-```
-.. _data_validations:
+```jsx
+import Thumbnail from "@site/src/components/Thumbnail";
 ```
 
-*Note*: References can also be added above any title within the docs page in order to link to a specific section directly.
+Read more about adding new component and how to import in the "TODO: Working with React" section.
 
 ## Page title
 
@@ -43,19 +37,23 @@ An example:
 # Data validations
 ```
 
+You can also add `title` frontmatter.
+
+```markdown
+---
+title: Data validations
+---
+```
+
+By default the title will be the label for sidebar item. So, to use a shorten/different label for sidebar use the `sidebar_label` frontmatter to override.
+
+
 ## Table of contents
-This is auto generated on the right sidebar
-control via toc_max_heading_level, toc_min_heading_level
-TOCInline
+This is auto generated on the right sidebar.
+And the depth can be controlled via `toc_max_heading_level`, `toc_min_heading_level` frontmatter.
 
-Ensure every newly added page has a "Table of contents" section with the appropriate depth.
+Please refer `Table of Contents` section to understand more about hwo to render this manually in between content and filtering items etc.,
 
-```
-.. contents:: Table of contents
-  :backlinks: none
-  :depth: 2
-  :local:
-```
 
 ## Introduction
 
@@ -80,9 +78,9 @@ etc.) and expect that the user will be able to follow the section without being 
 
 - Page titles should be self-sufficient. Users might not have the context of the hierarchy of the page in the docs tree. A user can land on a page via search as well. e.g. Say you are adding a new deployment guide for AWS under 
 `Guides -> Deployment -> AWS`. The title of this page should not be just `AWS` but instead `AWS deployment guide for 
-Hasura GraphQL engine`. It's ok to alias it to just `AWS` in the sidebar as there the user has the context of the page hierarchy.
+Hasura GraphQL engine`. It's ok to alias it to just `AWS` in the sidebar (`sidebar_label: AWS`) as there the user has the context of the page hierarchy.
 - Ensure heading underlines are the same length as the headings. Short underlines will throw warnings during builds.
-- Use bold in headings in place of string literals for aesthetics (i.e. ** in place of ``).
+- Use bold in headings in place of string literals for aesthetics (i.e. ** in place of \`).
 - The nesting of headings is as follows:
 
 ```
@@ -103,42 +101,38 @@ Hasura GraphQL engine`. It's ok to alias it to just `AWS` in the sidebar as ther
 
 #### Internal links
 
-When linking to other docs pages, use *references* (`:ref:`) rather than relative links in order to avoid broken links.
+When linking to other docs pages, use *root relative file paths* (`/graphql/core/data-validation.mdx`) rather than *relative links* (`../../path/to/file.mdx`) in order to avoid broken links.
+Why? when files are moved around, we just need to replace old path with new path - no relative `../../../` resolution required.
 
-use root (`docs`) relative links with extension
+Please read the `Links` section for more details on how to work with Links.
 
 An example:
 
 ```
-:ref:`data validation <data_validation>`
 [data validation](/graphql/core/data-validation.mdx)
 ```
 
-In this example, `data validation` is the link text, and `<data_validation>` is the reference to which the link will point.
-update link there
+In this example, `data validation` is the link text, and `/graphql/core/data-validation.mdx` is the file path which will be resolved as link by docusaurus.
+
 
 #### External links
 
-When linking to external pages, make sure to add a double `_` in the end to avoid Duplicate explicit target name warnings. 
-no need above
+External links are no different in syntax, replace the file paths with external links and that's it.
 
 An example:
 
-``Google <https://www.google.com/>__``
+`[Google](https://www.google.com/)`
 [Google](https://www.google.com/)
 
 *Note*: If you link to an external resource, make sure to link to the most current version of the same, e.g. `https://www.postgresql.org/docs/current/intro-whatis.html` rather than `https://www.postgresql.org/docs/9.6/intro-whatis.html`.
 
 ### Images
 
-Add images using the `thumbnail` directive to allow click-to-zoom.
+Add images using the `Thumbnail` component to allow click-to-zoom.
 
 An example:
 
-```
-.. thumbnail:: /img/graphql/manual/schema/validation-add-check-constraint.png
-   :alt: Add check constraint
-   :width: 700px
+```jsx
 import Thumbnail from "@site/src/components/Thumbnail";
 
 <Thumbnail
@@ -164,8 +158,6 @@ A note can be added in order to draw attention to something like limitations or 
 An example:
 
 ```
-.. note::
-  Please checkout the [Postgres documentation](https://www.postgresql.org/docs/current/functions-comparison.html) for more information.
 
 :::info Note
 
@@ -180,9 +172,6 @@ An admonition is the same as a note, but its title can be defined.
 Add an admonition as follows:
 
 ```
-.. admonition:: Supported by
-  Scheduled triggers are supported by `v.1.3.0` and above.
-
 :::info Other Title
 
 Scheduled triggers are supported by `v.1.3.0` and above.
@@ -211,6 +200,16 @@ Scheduled triggers are supported by `v.1.3.0` and above.
 
 *Note*: Make sure to leave an intentional empty line before and after each `:::` in admonitions - beginning and end both.
 
+```diff {1,3,5,7}
++
+:::
++
+Make sure to place the note/admonition in a place where the user will see it at the appropriate time.
++
+:::
++
+```
+
 *Note*: Make sure to place the note/admonition in a place where the user will see it at the appropriate time.
 
 ### Code blocks
@@ -230,26 +229,9 @@ by default.
 
 Use it as follows:
 
-```
-.. graphiql::
-  :view_only:
-  :query:
-    query {
-      author_by_pk(id: 1) {
-        id
-        name
-      }
-    }
-  :response:
-    {
-      "data": {
-        "author_by_pk": {
-          "id": 1,
-          "name": "Justin"
-        }
-      }
-    }
+```jsx
 import GraphiQLIDE from "@site/src/components/GraphiQLIDE";
+
 <GraphiQLIDE
 viewOnly
 query={`query {

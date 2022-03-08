@@ -104,7 +104,8 @@ In this case, `1` is index for this section.
 ```jsx {3}
 // Render only the "Partial (Sub) Table of Contents" and its subitems if any.
 <TOCInline
-  toc={[ toc[1] ]}
+  toc={toc}
+  filterTOC={tocTree => ([ tocTree[1] ])}
 /> // Note that the prop value is inside an array "[ toc[2], ... ]".
 ```
 
@@ -119,11 +120,12 @@ The children alone of a subitem can be rendered too. Read more about the TOCItem
 ```jsx {3}
 // Render only the subitems(children) of "Partial (Sub) Table of Contents".
 <TOCInline
-  toc={toc[1].children}
+  toc={toc}
+  filterTOC={tocTree => toc[1].children}
 /> // Note that the prop value is now not an explicit array as children is a list.
 ```
 
-<TOCInline toc={toc[1].children} />
+<TOCInline toc={toc} filterTOC={tocTree => tocTree[1].children} />
 
 :::caution
 

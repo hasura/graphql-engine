@@ -59,43 +59,9 @@ Link label will by default be title of page. For custom link labels, the syntax 
   </TabItem>
 </Tabs>
 
-:::info A quick note on id's in reStructuredText
-
-Similar to how a top level id will resolve to file/document, a sub-section can also have id's and they resolve to a section within the document.
-
-This is similar to using hash in the url (`#sub-section`) to directly link to a section in the page.
-
-While the top level can be added as `id` attribute in metadata. The sub-section (h2's, h3's and stuff) can have id's with special mdx syntax `{#id-for-sub-section}`
-
-![Referencing sub-section in rst vs markdown](/img/rst-vs-mdx-guide/link-sub-section-ids.png)
-
-:::
-
-:::caution
-
-```rst
-:ref:`cloud_getting_started`
-```
-
-this Will actually resolve to a link with label. Label is the title of the document with respective id.
-
-So the MDX, should be with the label (please always refer live docs site to see how this link looks in UI - lable + url)
-
-:::
-
-:::danger be cautious with URL slug
-
-If we add an `id` metadata for the document, the url slug for this page will be overridden to `id` as opposed to default filename. Thus requiring us to set a slug if we intend to leave it default.
-
-So, we can skip the top level id in metadata as it is by default the filename without extension.
-
-Read more about it from [Docusaurus Document Id Section](https://docusaurus.io/docs/docs-introduction#document-id)
-
-:::
-
 ### Root Relative Links
 
-While relative paths works absolutely fine, this can easily lead to an absolute mess when files are move around. Thus requiring manual effort to fix the paths.
+While relative paths works absolutely fine, this can easily lead to an absolute mess when files are moved around. Thus requiring manual effort to fix the paths.
 
 To avoid this scenario, we can use root relative paths. The path will still break when moved around, but it is lot easier to find and replace. Find with old path and replace with new path.
 
@@ -115,6 +81,28 @@ Since MDX doesn't yet support direct document referencing with `id/ref` unlike s
 :::tip Don't forget the extension!
 
 Make sure to include file extension as MDX links are parsed as a file path and will be resolved correctly.
+
+:::
+
+:::info A quick note on id's in reStructuredText
+
+Similar to how a top level id will resolve to file/document, a sub-section can also have id's and they resolve to a section within the document.
+
+This is similar to using hash in the url (`#sub-section`) to directly link to a section in the page.
+
+While the top level can just be a direct file path. The sub-section (h2's, h3's and stuff) can have id's with special mdx syntax `{#id-for-sub-section}`
+
+![Referencing sub-section in rst vs markdown](/img/rst-vs-mdx-guide/link-sub-section-ids.png)
+
+:::
+
+:::danger be cautious with URL slug
+
+If we add an `id` metadata for the document, the url slug for this page will be overridden to `id` as opposed to default filename. Thus requiring us to set a slug if we intend to leave it default.
+
+So, we can skip the top level id in metadata as it is by default the filename without extension.
+
+Read more about it from [Docusaurus Document Id Section](https://docusaurus.io/docs/docs-introduction#document-id)
 
 :::
 
