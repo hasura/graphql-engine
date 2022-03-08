@@ -219,3 +219,7 @@ are not met.
   format your code. `ormolu -ei '*.hs'` will format all files with a `.hs`
   extension in the current directory.
 - Consistent style: Consider the [style guide](./STYLE.md) when writing new code.
+
+## Testing
+
+Please see [testing-guidelines](./testing-guidelines.md) for details on how to add tests.
