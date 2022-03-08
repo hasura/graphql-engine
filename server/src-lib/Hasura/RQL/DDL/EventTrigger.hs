@@ -27,7 +27,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
-import Hasura.RQL.DDL.WebhookTransforms (MetadataRequestTransform, MetadataResponseTransform)
+import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types
 import Hasura.RQL.Types.Eventing.Backend
 import Hasura.SQL.AnyBackend qualified as AB
@@ -48,7 +48,7 @@ data CreateEventTriggerQuery (b :: BackendType) = CreateEventTriggerQuery
     _cetqWebhookFromEnv :: !(Maybe Text),
     _cetqHeaders :: !(Maybe [HeaderConf]),
     _cetqReplace :: !Bool,
-    _cetqRequestTransform :: !(Maybe MetadataRequestTransform),
+    _cetqRequestTransform :: !(Maybe RequestTransform),
     _cetqResponseTrasnform :: !(Maybe MetadataResponseTransform)
   }
 

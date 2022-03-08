@@ -54,7 +54,8 @@ import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.DDL.RemoteSchema
 import Hasura.RQL.DDL.ScheduledTrigger
 import Hasura.RQL.DDL.Schema
-import Hasura.RQL.DDL.WebhookTransforms
+import Hasura.RQL.DDL.Webhook.Transform
+import Hasura.RQL.DDL.Webhook.Transform.Class (mkReqTransformCtx)
 import Hasura.RQL.Types
 import Hasura.RQL.Types.Eventing.Backend (BackendEventTrigger (..))
 import Hasura.SQL.AnyBackend qualified as AB
@@ -493,7 +494,7 @@ runTestWebhookTransform ::
   (QErrM m) =>
   TestWebhookTransform ->
   m EncJSON
-runTestWebhookTransform (TestWebhookTransform env headers urlE payload mt _ sv) = do
+runTestWebhookTransform (TestWebhookTransform env headers urlE payload rt _ sv) = do
   url <- case urlE of
     URL url' -> interpolateFromEnv env url'
     EnvVar var ->
@@ -512,8 +513,9 @@ runTestWebhookTransform (TestWebhookTransform env headers urlE payload mt _ sv) 
     initReq <- hoistEither $ first RequestInitializationError $ HTTP.mkRequestEither unwrappedUrl
 
     let req = initReq & HTTP.body .~ pure (J.encode payload) & HTTP.headers .~ headers'
-        reqTransform = mkRequestTransform mt
-        reqTransformCtx = buildReqTransformCtx unwrappedUrl sv
+        reqTransform = requestFields rt
+        engine = templateEngine rt
+        reqTransformCtx = mkReqTransformCtx unwrappedUrl sv engine
     hoistEither $ first (RequestTransformationError req) $ applyRequestTransform reqTransformCtx reqTransform req
 
   case result of

@@ -42,7 +42,7 @@ import Data.Time.Format.ISO8601
 import Database.PG.Query qualified as Q
 import Hasura.Incremental
 import Hasura.Prelude
-import Hasura.RQL.DDL.WebhookTransforms (MetadataRequestTransform, MetadataResponseTransform)
+import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types.Action (InputWebhook (..))
 import Hasura.RQL.Types.Common (NonNegativeDiffTime, unsafeNonNegativeDiffTime)
 import Hasura.RQL.Types.EventTrigger
@@ -108,7 +108,7 @@ data CronTriggerMetadata = CronTriggerMetadata
     ctHeaders :: ![HeaderConf],
     ctIncludeInMetadata :: !Bool,
     ctComment :: !(Maybe Text),
-    ctRequestTransform :: !(Maybe MetadataRequestTransform),
+    ctRequestTransform :: !(Maybe RequestTransform),
     ctResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Show, Eq, Generic)
@@ -144,7 +144,7 @@ data CreateCronTrigger = CreateCronTrigger
     cctIncludeInMetadata :: !Bool,
     cctComment :: !(Maybe Text),
     cctReplace :: !Bool,
-    cctRequestTransform :: !(Maybe MetadataRequestTransform),
+    cctRequestTransform :: !(Maybe RequestTransform),
     cctResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Show, Eq, Generic)
@@ -189,7 +189,7 @@ data CreateScheduledEvent = CreateScheduledEvent
     cseHeaders :: ![HeaderConf],
     cseRetryConf :: !STRetryConf,
     cseComment :: !(Maybe Text),
-    cseRequestTransform :: !(Maybe MetadataRequestTransform),
+    cseRequestTransform :: !(Maybe RequestTransform),
     cseResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Show, Eq, Generic)
@@ -315,7 +315,7 @@ data OneOffScheduledEvent = OneOffScheduledEvent
     _ooseCreatedAt :: !UTCTime,
     _ooseNextRetryAt :: !(Maybe UTCTime),
     _ooseComment :: !(Maybe Text),
-    _ooseRequestTransform :: !(Maybe MetadataRequestTransform),
+    _ooseRequestTransform :: !(Maybe RequestTransform),
     _ooseResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Show, Eq)

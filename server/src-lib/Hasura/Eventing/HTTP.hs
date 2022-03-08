@@ -63,7 +63,8 @@ import Hasura.HTTP (HttpException (..), addDefaultHeaders)
 import Hasura.Logging
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
-import Hasura.RQL.DDL.WebhookTransforms
+import Hasura.RQL.DDL.Webhook.Transform
+import Hasura.RQL.DDL.Webhook.Transform.Class (mkReqTransformCtx)
 import Hasura.RQL.Types.Common (ResolvedWebhook (..))
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
@@ -153,7 +154,8 @@ data RequestDetails = RequestDetails
     _rdOriginalSize :: Int64,
     _rdTransformedRequest :: Maybe HTTP.Request,
     _rdTransformedSize :: Maybe Int64,
-    _rdReqTransformCtx :: ReqTransformCtx
+    _rdReqTransformCtx :: Maybe RequestTransformCtx,
+    _rdSessionVars :: Maybe SessionVariables
   }
 
 extractRequest :: RequestDetails -> HTTP.Request
@@ -309,15 +311,14 @@ mkRequest headers timeout payload mRequestTransform (ResolvedWebhook webhook) =
                   _ -> Nothing
            in case mRequestTransform of
                 Nothing ->
-                  let reqTransformCtx = buildReqTransformCtx webhook sessionVars req
-                   in pure $ RequestDetails req (LBS.length payload) Nothing Nothing reqTransformCtx
-                Just reqTransform ->
-                  let reqTransformCtx = buildReqTransformCtx webhook sessionVars
-                   in case applyRequestTransform reqTransformCtx reqTransform req of
+                  pure $ RequestDetails req (LBS.length payload) Nothing Nothing Nothing sessionVars
+                Just RequestTransform {..} ->
+                  let reqTransformCtx = mkReqTransformCtx webhook sessionVars templateEngine
+                   in case applyRequestTransform reqTransformCtx requestFields req of
                         Left err -> throwError $ TransformationError body err
                         Right transformedReq ->
                           let transformedReqSize = HTTP.getReqSize transformedReq
-                           in pure $ RequestDetails req (LBS.length payload) (Just transformedReq) (Just transformedReqSize) (reqTransformCtx req)
+                           in pure $ RequestDetails req (LBS.length payload) (Just transformedReq) (Just transformedReqSize) (Just $ reqTransformCtx req) sessionVars
 
 invokeRequest ::
   ( MonadReader r m,
@@ -329,9 +330,10 @@ invokeRequest ::
   ) =>
   RequestDetails ->
   Maybe ResponseTransform ->
+  Maybe SessionVariables ->
   ((Either (HTTPErr a) (HTTPResp a)) -> RequestDetails -> m ()) ->
   m (HTTPResp a)
-invokeRequest reqDetails@RequestDetails {..} respTransform' logger = do
+invokeRequest reqDetails@RequestDetails {..} respTransform' sessionVars logger = do
   let finalReq = fromMaybe _rdOriginalRequest _rdTransformedRequest
       reqBody = fromMaybe J.Null $ view HTTP.body finalReq >>= J.decode @J.Value
   manager <- asks getter
@@ -348,7 +350,8 @@ invokeRequest reqDetails@RequestDetails {..} respTransform' logger = do
         -- If we fail to decode the body then carry on without performing a transformation
         Nothing -> pure resp
         Just respBody ->
-          let respTransformCtx = buildRespTransformCtx _rdReqTransformCtx respBody
+          let engine = respTransformTemplateEngine respTransform
+              respTransformCtx = buildRespTransformCtx _rdReqTransformCtx sessionVars engine respBody
            in case applyResponseTransform respTransform respTransformCtx of
                 Left err -> do
                   -- Log The Response Transformation Error

@@ -71,7 +71,7 @@ import Hasura.HTTP (getHTTPExceptionStatus)
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
-import Hasura.RQL.DDL.WebhookTransforms
+import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.Types
 import Hasura.RQL.Types.Eventing.Backend
 import Hasura.SQL.AnyBackend qualified as AB
@@ -391,9 +391,8 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx {..} 
                   ep = createEventPayload retryConf e
                   payload = J.encode $ J.toJSON ep
                   extraLogCtx = ExtraLogContext (epId ep) (Just $ etiName eti)
-                  requestTransform = mkRequestTransform <$> etiRequestTransform eti
+                  requestTransform = etiRequestTransform eti
                   responseTransform = mkResponseTransform <$> etiResponseTransform eti
-
               eitherReqRes <-
                 runExceptT $
                   mkRequest headers httpTimeout payload requestTransform webhook >>= \reqDetails -> do
@@ -409,7 +408,7 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx {..} 
                       bracket_
                         (liftIO $ EKG.Gauge.inc $ smNumEventHTTPWorkers serverMetrics)
                         (liftIO $ EKG.Gauge.dec $ smNumEventHTTPWorkers serverMetrics)
-                        (invokeRequest reqDetails responseTransform logger')
+                        (invokeRequest reqDetails responseTransform (_rdSessionVars reqDetails) logger')
                     pure (request, resp)
               case eitherReqRes of
                 Right (req, resp) ->

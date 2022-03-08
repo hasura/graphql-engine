@@ -4,6 +4,7 @@
 
 ### Bug fixes and improvements
 
+- server: Redesigns internal implementation of webhook transforms.
 - server: improve SQL generation for BigQuery backend queries involving `Orderby`.
 - server: fix regression where remote relationships would get exposed over Relay, which is unsupported
 

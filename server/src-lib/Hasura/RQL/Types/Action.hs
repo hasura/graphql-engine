@@ -77,7 +77,7 @@ import Hasura.Base.Error
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
-import Hasura.RQL.DDL.WebhookTransforms (MetadataRequestTransform, MetadataResponseTransform)
+import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.IR.Action
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
@@ -179,7 +179,7 @@ data ActionDefinition a b = ActionDefinition
     -- the default timeout of 30 seconds will be used
     _adTimeout :: !Timeout,
     _adHandler :: !b,
-    _adRequestTransform :: !(Maybe MetadataRequestTransform),
+    _adRequestTransform :: !(Maybe RequestTransform),
     _adResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
@@ -332,7 +332,7 @@ data AnnActionExecution (r :: Type) = AnnActionExecution
     _aaeHeaders :: ![HeaderConf],
     _aaeForwardClientHeaders :: !Bool,
     _aaeTimeOut :: !Timeout,
-    _aaeRequestTransform :: !(Maybe MetadataRequestTransform),
+    _aaeRequestTransform :: !(Maybe RequestTransform),
     _aaeResponseTransform :: !(Maybe MetadataResponseTransform)
   }
 
