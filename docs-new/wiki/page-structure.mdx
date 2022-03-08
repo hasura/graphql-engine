@@ -25,7 +25,8 @@ Please add any React component imports right below the frontmatter and beore sta
 import Thumbnail from "@site/src/components/Thumbnail";
 ```
 
-Read more about adding new component and how to import in the "TODO: Working with React" section.
+Note: When importing components from `src/` directory, please do not use relative paths. Docusaurus provides a global variable `@site` which is resolved to root of app - absolute import.
+So, doing `@site/src/components/Thumbnail` is same as `../../../src/components/Thumbnail`.
 
 ## Page title
 
@@ -49,10 +50,11 @@ By default the title will be the label for sidebar item. So, to use a shorten/di
 
 
 ## Table of contents
+
 This is auto generated on the right sidebar.
 And the depth can be controlled via `toc_max_heading_level`, `toc_min_heading_level` frontmatter.
 
-Please refer `Table of Contents` section to understand more about hwo to render this manually in between content and filtering items etc.,
+Please refer [Table of Contents](/rst-vs-mdx-guide/table-of-contents.mdx) section to understand more about hwo to render this manually in between content and filtering items etc.,
 
 
 ## Introduction
@@ -104,7 +106,7 @@ Hasura GraphQL engine`. It's ok to alias it to just `AWS` in the sidebar (`sideb
 When linking to other docs pages, use *root relative file paths* (`/graphql/core/data-validation.mdx`) rather than *relative links* (`../../path/to/file.mdx`) in order to avoid broken links.
 Why? when files are moved around, we just need to replace old path with new path - no relative `../../../` resolution required.
 
-Please read the `Links` section for more details on how to work with Links.
+Please read the [Links](/rst-vs-mdx-guide/links.mdx) section for more details on how to work with Links.
 
 An example:
 
@@ -202,7 +204,7 @@ Scheduled triggers are supported by `v.1.3.0` and above.
 
 ```diff {1,3,5,7}
 +
-:::
+:::info Note
 +
 Make sure to place the note/admonition in a place where the user will see it at the appropriate time.
 +
@@ -233,7 +235,6 @@ Use it as follows:
 import GraphiQLIDE from "@site/src/components/GraphiQLIDE";
 
 <GraphiQLIDE
-viewOnly
 query={`query {
   author_by_pk(id: 1) {
     id
