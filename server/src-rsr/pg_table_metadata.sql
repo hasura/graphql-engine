@@ -1,6 +1,6 @@
 SELECT
-  schema.nspname AS table_schema,
-  "table".relname AS table_name,
+  "table".table_schema,
+  "table".table_name,
 
   -- This field corresponds to the `DBTableMetadata` Haskell type
   jsonb_build_object(
@@ -21,10 +21,26 @@ SELECT
     'extra_table_metadata', '[]'::json
   )::json AS info
 
+-- tracked tables
+-- $1 parameter provides JSON array of tracked tables
+FROM
+  ( SELECT "tracked"."name" AS "table_name",
+           "tracked"."schema" AS "table_schema"
+      FROM jsonb_to_recordset($1::jsonb) AS "tracked"("schema" text, "name" text)
+  ) "tracked_table"
+
 -- table & schema
-FROM pg_catalog.pg_class "table"
-JOIN pg_catalog.pg_namespace schema
-  ON schema.oid = "table".relnamespace
+LEFT JOIN
+  ( SELECT "table".oid,
+           "table".relkind,
+           "table".relname AS "table_name",
+           "schema".nspname AS "table_schema"
+      FROM pg_catalog.pg_class "table"
+      JOIN pg_catalog.pg_namespace "schema"
+          ON schema.oid = "table".relnamespace
+  ) "table"
+  ON  "table"."table_name" = "tracked_table"."table_name"
+  AND "table"."table_schema" = "tracked_table"."table_schema"
 
 -- description
 LEFT JOIN pg_catalog.pg_description description
@@ -181,11 +197,11 @@ LEFT JOIN
     ) foreign_key
     GROUP BY foreign_key.table_schema, foreign_key.table_name
   ) foreign_key_constraints
-    ON "table".relname = foreign_key_constraints.table_name
-       AND schema.nspname = foreign_key_constraints.table_schema
+    ON "table".table_name = foreign_key_constraints.table_name
+       AND "table".table_schema = foreign_key_constraints.table_schema
 
 -- all these identify table-like things
 WHERE "table".relkind IN ('r', 't', 'v', 'm', 'f', 'p')
   -- and tables not from any system schemas
-  AND schema.nspname NOT LIKE 'pg_%'
-  AND schema.nspname NOT IN ('information_schema', 'hdb_catalog', 'hdb_lib', '_timescaledb_internal');
+  AND "table".table_schema NOT LIKE 'pg_%'
+  AND "table".table_schema NOT IN ('information_schema', 'hdb_catalog', 'hdb_lib', '_timescaledb_internal');

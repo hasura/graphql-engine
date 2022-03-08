@@ -10,7 +10,7 @@ instance BackendMetadata 'BigQuery where
   buildComputedFieldInfo = BigQuery.buildComputedFieldInfo
   fetchAndValidateEnumValues = BigQuery.fetchAndValidateEnumValues
   resolveSourceConfig = BigQuery.resolveSourceConfig
-  resolveDatabaseMetadata = BigQuery.resolveSource
+  resolveDatabaseMetadata _ = BigQuery.resolveSource
   parseBoolExpOperations = BigQuery.parseBoolExpOperations
   buildFunctionInfo = BigQuery.buildFunctionInfo
   updateColumnInEventTrigger = BigQuery.updateColumnInEventTrigger

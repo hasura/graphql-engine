@@ -4,6 +4,7 @@
 
 ### Bug fixes and improvements
 
+- server: improve performance of fetching postgres catalog metadata for tables and functions
 - server: Queries present in query collections, such as allow-list, and rest-endpoints are now validated (against the schema)
 - server: Redesigns internal implementation of webhook transforms.
 - server: improve SQL generation for BigQuery backend queries involving `Orderby`.

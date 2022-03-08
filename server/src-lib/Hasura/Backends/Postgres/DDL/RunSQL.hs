@@ -27,7 +27,7 @@ import Hasura.Backends.Postgres.DDL.Source
     fetchFunctionMetadata,
     fetchTableMetadata,
   )
-import Hasura.Backends.Postgres.SQL.Types
+import Hasura.Backends.Postgres.SQL.Types hiding (FunctionName, TableName)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
@@ -120,35 +120,35 @@ of queries may not modify the schema at all. As a (fairly stupid) heuristic, we
 check if the query contains any keywords for DDL operations, and if not, we skip
 the metadata check as well. -}
 
-fetchMeta ::
+-- | Fetch metadata of tracked tables/functions and build @'TableMeta'/@'FunctionMeta'
+-- to calculate diff later in @'withMetadataCheck'.
+fetchTablesFunctionsMetadata ::
   (ToMetadataFetchQuery pgKind, BackendMetadata ('Postgres pgKind), MonadTx m) =>
   TableCache ('Postgres pgKind) ->
-  FunctionCache ('Postgres pgKind) ->
+  [TableName ('Postgres pgKind)] ->
+  [FunctionName ('Postgres pgKind)] ->
   m ([TableMeta ('Postgres pgKind)], [FunctionMeta ('Postgres pgKind)])
-fetchMeta tables functions = do
-  tableMetaInfos <- fetchTableMetadata
-  functionMetaInfos <- fetchFunctionMetadata
-
-  let getFunctionMetas function =
-        let mkFunctionMeta rawInfo =
-              FunctionMeta (rfiOid rawInfo) function (rfiFunctionType rawInfo)
-         in maybe [] (map mkFunctionMeta) $ M.lookup function functionMetaInfos
-
-      mkComputedFieldMeta computedField =
-        let function = _cffName $ _cfiFunction computedField
-         in map (ComputedFieldMeta (_cfiName computedField)) $ getFunctionMetas function
-
-      tableMetas = flip map (M.toList tableMetaInfos) $ \(table, tableMetaInfo) ->
+fetchTablesFunctionsMetadata tableCache tables functions = do
+  tableMetaInfos <- fetchTableMetadata tables
+  functionMetaInfos <- fetchFunctionMetadata functions
+  pure (buildTableMeta tableMetaInfos functionMetaInfos, buildFunctionMeta functionMetaInfos)
+  where
+    buildTableMeta tableMetaInfos functionMetaInfos =
+      flip map (M.toList tableMetaInfos) $ \(table, tableMetaInfo) ->
         TableMeta table tableMetaInfo $
-          fromMaybe [] $
-            M.lookup table tables <&> \tableInfo ->
-              let tableCoreInfo = _tiCoreInfo tableInfo
-                  computedFields = getComputedFieldInfos $ _tciFieldInfoMap tableCoreInfo
-               in concatMap mkComputedFieldMeta computedFields
+          foldMap @Maybe (concatMap (mkComputedFieldMeta functionMetaInfos) . getComputedFields) (M.lookup table tableCache)
 
-      functionMetas = concatMap getFunctionMetas $ M.keys functions
+    buildFunctionMeta functionMetaInfos =
+      concatMap (getFunctionMetas functionMetaInfos) functions
 
-  pure (tableMetas, functionMetas)
+    mkComputedFieldMeta functionMetaInfos computedField =
+      let function = _cffName $ _cfiFunction computedField
+       in map (ComputedFieldMeta (_cfiName computedField)) $ getFunctionMetas functionMetaInfos function
+
+    getFunctionMetas functionMetaInfos function =
+      let mkFunctionMeta rawInfo =
+            FunctionMeta (rfiOid rawInfo) function (rfiFunctionType rawInfo)
+       in foldMap @Maybe (map mkFunctionMeta) $ M.lookup function functionMetaInfos
 
 -- | Used as an escape hatch to run raw SQL against a database.
 runRunSQL ::
@@ -188,7 +188,7 @@ runRunSQL q@RunSQL {..} = do
         rawSqlErrHandler txe =
           (err400 PostgresError "query execution failed") {qeInternal = Just $ ExtraInternal $ toJSON txe}
 
--- | @'withMetadataCheck' cascade action@ runs @action@ and checks if the schema changed as a
+-- | @'withMetadataCheck' source cascade txAccess runSQLQuery@ executes @runSQLQuery@ and checks if the schema changed as a
 -- result. If it did, it checks to ensure the changes do not violate any integrity constraints, and
 -- if not, incorporates them into the schema cache.
 -- TODO(antoine): shouldn't this be generalized?
@@ -208,86 +208,243 @@ withMetadataCheck ::
   Q.TxAccess ->
   Q.TxET QErr m a ->
   m a
-withMetadataCheck source cascade txAccess action = do
-  SourceInfo _ preActionTables preActionFunctions sourceConfig _ _ <- askSourceInfo @('Postgres pgKind) source
+withMetadataCheck source cascade txAccess runSQLQuery = do
+  SourceInfo _ tableCache functionCache sourceConfig _ _ <- askSourceInfo @('Postgres pgKind) source
 
-  (actionResult, metadataUpdater) <-
-    liftEitherM $
-      runExceptT $
-        runTx (_pscExecCtx sourceConfig) txAccess $ do
-          -- Drop event triggers so no interference is caused to the sql query
-          forM_ (M.elems preActionTables) $ \tableInfo -> do
-            let eventTriggers = _tiEventTriggerInfoMap tableInfo
-            forM_ (M.keys eventTriggers) (liftTx . dropTriggerQ)
+  let dropTriggersAndRunSQL = do
+        -- We need to drop existing event triggers so that no interference is caused to the sql query execution
+        dropExistingEventTriggers tableCache
+        runSQLQuery
 
-          -- Get the metadata before the sql query, everything, need to filter this
-          (preActionTableMeta, preActionFunctionMeta) <- fetchMeta preActionTables preActionFunctions
-
-          -- Run the action
-          actionResult <- action
-
-          -- Get the metadata after the sql query
-          (postActionTableMeta, postActionFunctionMeta) <- fetchMeta preActionTables preActionFunctions
-
-          let preActionTableMeta' = filter (flip M.member preActionTables . tmTable) preActionTableMeta
-              tablesDiff = getTablesDiff preActionTableMeta' postActionTableMeta
-              FunctionsDiff droppedFuncs alteredFuncs = getFunctionsDiff preActionFunctionMeta postActionFunctionMeta
-              overloadedFuncs = getOverloadedFunctions (M.keys preActionFunctions) postActionFunctionMeta
-
-          -- Do not allow overloading functions
-          unless (null overloadedFuncs) $
-            throw400 NotSupported $
-              "the following tracked function(s) cannot be overloaded: "
-                <> commaSeparated overloadedFuncs
-
-          -- Report back with an error if cascade is not set
-          indirectDeps <- getIndirectDependencies source tablesDiff
-          when (indirectDeps /= [] && not cascade) $ reportDependentObjectsExist indirectDeps
-
-          metadataUpdater <- execWriterT $ do
-            -- Purge all the indirect dependents from state
-            for_ indirectDeps \case
-              SOSourceObj sourceName objectID -> do
-                AB.dispatchAnyBackend @BackendMetadata objectID $ purgeDependentObject sourceName >=> tell
-              _ ->
-                pure ()
-
-            -- Purge all dropped functions
-            let purgedFuncs = flip mapMaybe indirectDeps \case
-                  SOSourceObj _ objectID
-                    | Just (SOIFunction qf) <- AB.unpackAnyBackend @('Postgres pgKind) objectID ->
-                      Just qf
-                  _ -> Nothing
-            for_ (droppedFuncs \\ purgedFuncs) $
-              tell . dropFunctionInMetadata @('Postgres pgKind) source
-
-            -- Process altered functions
-            forM_ alteredFuncs $ \(qf, newTy) -> do
-              when (newTy == FTVOLATILE) $
-                throw400 NotSupported $
-                  "type of function " <> qf <<> " is altered to \"VOLATILE\" which is not supported now"
-
-            -- update the metadata with the changes
-            processTablesDiff source preActionTables tablesDiff
-
-          pure (actionResult, metadataUpdater)
+  -- Run SQL query and metadata checker in a transaction
+  (queryResult, metadataUpdater) <- runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cascade dropTriggersAndRunSQL
 
   -- Build schema cache with updated metadata
   withNewInconsistentObjsCheck $
     buildSchemaCacheWithInvalidations mempty {ciSources = HS.singleton source} metadataUpdater
 
-  postActionSchemaCache <- askSchemaCache
+  postRunSQLSchemaCache <- askSchemaCache
 
-  -- Recreate event triggers in hdb_catalog
-  let postActionTables = fromMaybe mempty $ unsafeTableCache @('Postgres pgKind) source $ scSources postActionSchemaCache
-  serverConfigCtx <- askServerConfigCtx
+  -- Recreate event triggers in hdb_catalog. Event triggers are dropped before executing @'runSQLQuery'.
+  recreateEventTriggers sourceConfig postRunSQLSchemaCache
+
+  pure queryResult
+  where
+    dropExistingEventTriggers :: TableCache ('Postgres pgKind) -> Q.TxET QErr m ()
+    dropExistingEventTriggers tableCache =
+      forM_ (M.elems tableCache) $ \tableInfo -> do
+        let eventTriggers = _tiEventTriggerInfoMap tableInfo
+        forM_ (M.keys eventTriggers) (liftTx . dropTriggerQ)
+
+    recreateEventTriggers :: PGSourceConfig -> SchemaCache -> m ()
+    recreateEventTriggers sourceConfig schemaCache = do
+      let tables = fromMaybe mempty $ unsafeTableCache @('Postgres pgKind) source $ scSources schemaCache
+      serverConfigCtx <- askServerConfigCtx
+      liftEitherM $
+        runPgSourceWriteTx sourceConfig $
+          forM_ (M.elems tables) $ \(TableInfo coreInfo _ eventTriggers _) -> do
+            let table = _tciName coreInfo
+                columns = getCols $ _tciFieldInfoMap coreInfo
+            forM_ (M.toList eventTriggers) $ \(triggerName, eti) -> do
+              let opsDefinition = etiOpsDef eti
+              flip runReaderT serverConfigCtx $ mkAllTriggersQ triggerName table columns opsDefinition
+
+-- | @'runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cascadeDependencies tx' checks for
+-- changes in GraphQL Engine metadata when a @'tx' is executed on the database alters Postgres
+-- schema of tables and functions. If any indirect dependencies (Eg. remote table dependence of a relationship) are
+-- found and @'cascadeDependencies' is False, then an exception is raised.
+runTxWithMetadataCheck ::
+  forall m a (pgKind :: PostgresKind).
+  ( BackendMetadata ('Postgres pgKind),
+    ToMetadataFetchQuery pgKind,
+    CacheRWM m,
+    MonadIO m,
+    MonadBaseControl IO m,
+    MonadError QErr m
+  ) =>
+  SourceName ->
+  SourceConfig ('Postgres pgKind) ->
+  Q.TxAccess ->
+  TableCache ('Postgres pgKind) ->
+  FunctionCache ('Postgres pgKind) ->
+  Bool ->
+  Q.TxET QErr m a ->
+  m (a, MetadataModifier)
+runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cascadeDependencies tx =
   liftEitherM $
-    runPgSourceWriteTx sourceConfig $
-      forM_ (M.elems postActionTables) $ \(TableInfo coreInfo _ eventTriggers _) -> do
-        let table = _tciName coreInfo
-            columns = getCols $ _tciFieldInfoMap coreInfo
-        forM_ (M.toList eventTriggers) $ \(triggerName, eti) -> do
-          let opsDefinition = etiOpsDef eti
-          flip runReaderT serverConfigCtx $ mkAllTriggersQ triggerName table columns opsDefinition
+    runExceptT $
+      runTx (_pscExecCtx sourceConfig) txAccess $ do
+        -- Running in a transaction helps to rollback the @'tx' execution in case of any exceptions
 
-  pure actionResult
+        -- Before running the @'tx', fetch metadata of existing tables and functions from Postgres.
+        let tableNames = M.keys tableCache
+            computedFieldFunctions = concatMap getComputedFieldFunctions (M.elems tableCache)
+            functionNames = M.keys functionCache <> computedFieldFunctions
+        (preTxTablesMeta, preTxFunctionsMeta) <- fetchTablesFunctionsMetadata tableCache tableNames functionNames
+
+        -- Since the @'tx' may alter table/function names we use the OIDs of underlying tables
+        -- (sourced from 'pg_class' for tables and 'pg_proc' for functions), which remain unchanged in the
+        -- case if a table/function is renamed.
+        let tableOids = map (_ptmiOid . tmInfo) preTxTablesMeta
+            functionOids = map fmOid preTxFunctionsMeta
+
+        -- Run the transaction
+        txResult <- tx
+
+        (postTxTablesMeta, postTxFunctionMeta) <-
+          uncurry (fetchTablesFunctionsMetadata tableCache)
+            -- Fetch names of tables and functions using OIDs which also contains renamed items
+            =<< fetchTablesFunctionsFromOids tableOids functionOids
+
+        -- Calculate the tables diff (dropped & altered tables)
+        let tablesDiff = getTablesDiff preTxTablesMeta postTxTablesMeta
+            -- Calculate the functions diff. For calculating diff for functions, only consider
+            -- query/mutation functions and exclude functions underpinning computed fields.
+            -- Computed field functions are being processed under each table diff.
+            -- See @'getTablesDiff' and @'processTablesDiff'
+            excludeComputedFieldFunctions = filter ((`M.member` functionCache) . fmFunction)
+            functionsDiff =
+              getFunctionsDiff
+                (excludeComputedFieldFunctions preTxFunctionsMeta)
+                (excludeComputedFieldFunctions postTxFunctionMeta)
+
+        dontAllowFunctionOverloading $
+          getOverloadedFunctions
+            (M.keys functionCache)
+            (excludeComputedFieldFunctions postTxFunctionMeta)
+
+        -- Update metadata with schema change caused by @'tx'
+        metadataUpdater <- execWriterT do
+          -- Collect indirect dependencies of altered tables
+          tableIndirectDeps <- getIndirectDependencies source tablesDiff
+
+          -- If table indirect dependencies exist and cascading is not enabled then report an exception
+          when (tableIndirectDeps /= [] && not cascadeDependencies) $ reportDependentObjectsExist tableIndirectDeps
+
+          -- Purge all the table dependents
+          purgeDependencies tableIndirectDeps
+
+          -- Collect function names from purged table dependencies
+          let purgedFunctions = collectFunctionsInDeps tableIndirectDeps
+              FunctionsDiff droppedFunctions alteredFunctions = functionsDiff
+
+          -- Drop functions in metadata. Exclude functions that were already dropped as part of table indirect dependencies
+          purgeFunctionsFromMetadata $ droppedFunctions \\ purgedFunctions
+
+          -- If any function type is altered to VOLATILE then raise an exception
+          dontAllowFunctionAlteredVolatile alteredFunctions
+
+          -- Propagate table changes to metadata
+          processTablesDiff source tableCache tablesDiff
+
+        pure (txResult, metadataUpdater)
+  where
+    dontAllowFunctionOverloading ::
+      MonadError QErr n =>
+      [FunctionName ('Postgres pgKind)] ->
+      n ()
+    dontAllowFunctionOverloading overloadedFunctions =
+      unless (null overloadedFunctions) $
+        throw400 NotSupported $
+          "the following tracked function(s) cannot be overloaded: "
+            <> commaSeparated overloadedFunctions
+
+    dontAllowFunctionAlteredVolatile ::
+      MonadError QErr n =>
+      [(FunctionName ('Postgres pgKind), FunctionVolatility)] ->
+      n ()
+    dontAllowFunctionAlteredVolatile alteredFunctions =
+      forM_ alteredFunctions $ \(qf, newTy) -> do
+        when (newTy == FTVOLATILE) $
+          throw400 NotSupported $
+            "type of function " <> qf <<> " is altered to \"VOLATILE\" which is not supported now"
+
+    purgeDependencies ::
+      MonadError QErr n =>
+      [SchemaObjId] ->
+      WriterT MetadataModifier n ()
+    purgeDependencies deps =
+      for_ deps \case
+        SOSourceObj sourceName objectID -> do
+          AB.dispatchAnyBackend @BackendMetadata objectID $ purgeDependentObject sourceName >=> tell
+        _ ->
+          -- Ignore non-source dependencies
+          pure ()
+
+    purgeFunctionsFromMetadata ::
+      Monad n =>
+      [FunctionName ('Postgres pgKind)] ->
+      WriterT MetadataModifier n ()
+    purgeFunctionsFromMetadata functions =
+      for_ functions $ tell . dropFunctionInMetadata @('Postgres pgKind) source
+
+    collectFunctionsInDeps :: [SchemaObjId] -> [FunctionName ('Postgres pgKind)]
+    collectFunctionsInDeps deps =
+      flip mapMaybe deps \case
+        SOSourceObj _ objectID
+          | Just (SOIFunction qf) <- AB.unpackAnyBackend @('Postgres pgKind) objectID ->
+            Just qf
+        _ -> Nothing
+
+-- | Fetch list of tables and functions with provided oids
+fetchTablesFunctionsFromOids ::
+  (MonadIO m) =>
+  [OID] ->
+  [OID] ->
+  Q.TxET QErr m ([TableName ('Postgres pgKind)], [FunctionName ('Postgres pgKind)])
+fetchTablesFunctionsFromOids tableOids functionOids =
+  ((Q.getAltJ *** Q.getAltJ) . Q.getRow)
+    <$> Q.withQE
+      defaultTxErrorHandler
+      [Q.sql|
+    SELECT
+      COALESCE(
+        ( SELECT
+            json_agg(
+              row_to_json(
+                (
+                  SELECT e
+                    FROM ( SELECT "table".relname AS "name",
+                                  "schema".nspname AS "schema"
+                    ) AS e
+                )
+              )
+            ) AS "item"
+            FROM jsonb_to_recordset($1::jsonb) AS oid_table("oid" int)
+                 JOIN pg_catalog.pg_class "table" ON ("table".oid = "oid_table".oid)
+                 JOIN pg_catalog.pg_namespace "schema" ON ("schema".oid = "table".relnamespace)
+        ),
+        '[]'
+      ) AS "tables",
+
+      COALESCE(
+        ( SELECT
+            json_agg(
+              row_to_json(
+                (
+                  SELECT e
+                    FROM ( SELECT "function".proname AS "name",
+                                  "schema".nspname AS "schema"
+                    ) AS e
+                )
+              )
+            ) AS "item"
+            FROM jsonb_to_recordset($2::jsonb) AS oid_table("oid" int)
+                 JOIN pg_catalog.pg_proc "function" ON ("function".oid = "oid_table".oid)
+                 JOIN pg_catalog.pg_namespace "schema" ON ("schema".oid = "function".pronamespace)
+        ),
+        '[]'
+      ) AS "functions"
+  |]
+      (Q.AltJ $ map mkOidObject tableOids, Q.AltJ $ map mkOidObject functionOids)
+      True
+  where
+    mkOidObject oid = object ["oid" .= oid]
+
+------ helpers ------------
+
+getComputedFields :: TableInfo ('Postgres pgKind) -> [ComputedFieldInfo ('Postgres pgKind)]
+getComputedFields = getComputedFieldInfos . _tciFieldInfoMap . _tiCoreInfo
+
+getComputedFieldFunctions :: TableInfo ('Postgres pgKind) -> [FunctionName ('Postgres pgKind)]
+getComputedFieldFunctions = map (_cffName . _cfiFunction) . getComputedFields

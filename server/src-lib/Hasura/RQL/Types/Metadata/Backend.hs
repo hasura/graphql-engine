@@ -15,6 +15,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
@@ -60,6 +61,7 @@ class
   -- | Function that introspects a database for tables, columns, functions etc.
   resolveDatabaseMetadata ::
     (MonadIO m, MonadBaseControl IO m, MonadResolveSource m) =>
+    SourceMetadata b ->
     SourceConfig b ->
     SourceTypeCustomization ->
     m (Either QErr (ResolvedSource b))

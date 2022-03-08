@@ -27,19 +27,23 @@ import Data.Aeson.TH
 import Data.Environment qualified as Env
 import Data.FileEmbed (makeRelativeToProject)
 import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.List.Extended qualified as LE
 import Data.List.NonEmpty qualified as NE
 import Data.Time.Clock (UTCTime)
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.DDL.Source.Version
-import Hasura.Backends.Postgres.SQL.Types
+import Hasura.Backends.Postgres.SQL.Types hiding (FunctionName)
 import Hasura.Base.Error
 import Hasura.Logging
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (..))
 import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.Metadata (SourceMetadata (..), TableMetadata (..), _cfmDefinition)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
@@ -134,16 +138,25 @@ logPGSourceCatalogMigrationLockedQueries logger sourceConfig = forever $ do
 resolveDatabaseMetadata ::
   forall pgKind m.
   (Backend ('Postgres pgKind), ToMetadataFetchQuery pgKind, MonadIO m, MonadBaseControl IO m) =>
+  SourceMetadata ('Postgres pgKind) ->
   SourceConfig ('Postgres pgKind) ->
   SourceTypeCustomization ->
   m (Either QErr (ResolvedSource ('Postgres pgKind)))
-resolveDatabaseMetadata sourceConfig sourceCustomization = runExceptT do
+resolveDatabaseMetadata sourceMetadata sourceConfig sourceCustomization = runExceptT do
   (tablesMeta, functionsMeta, pgScalars) <- runTx (_pscExecCtx sourceConfig) Q.ReadOnly $ do
-    tablesMeta <- fetchTableMetadata
-    functionsMeta <- fetchFunctionMetadata
+    tablesMeta <- fetchTableMetadata $ OMap.keys $ _smTables sourceMetadata
+    let allFunctions =
+          OMap.keys (_smFunctions sourceMetadata) -- Tracked functions
+            <> concatMap getComputedFieldFunctionsMetadata (OMap.elems $ _smTables sourceMetadata) -- Computed field functions
+    functionsMeta <- fetchFunctionMetadata allFunctions
     pgScalars <- fetchPgScalars
     pure (tablesMeta, functionsMeta, pgScalars)
   pure $ ResolvedSource sourceConfig sourceCustomization tablesMeta functionsMeta pgScalars
+  where
+    -- A helper function to list all functions underpinning computed fields from a table metadata
+    getComputedFieldFunctionsMetadata :: TableMetadata b -> [FunctionName b]
+    getComputedFieldFunctionsMetadata =
+      map (_cfdFunction . _cfmDefinition) . OMap.elems . _tmComputedFields
 
 -- | Initialise catalog tables for a source, including those required by the event delivery subsystem.
 initCatalogForSource ::
@@ -294,14 +307,15 @@ upMigrationsUntil43 =
 fetchTableMetadata ::
   forall pgKind m.
   (Backend ('Postgres pgKind), ToMetadataFetchQuery pgKind, MonadTx m) =>
+  [QualifiedTable] ->
   m (DBTablesMetadata ('Postgres pgKind))
-fetchTableMetadata = do
+fetchTableMetadata tables = do
   results <-
     liftTx $
       Q.withQE
         defaultTxErrorHandler
         (tableMetadata @pgKind)
-        ()
+        [Q.AltJ $ LE.uniques tables]
         True
   pure $
     Map.fromList $
@@ -309,14 +323,14 @@ fetchTableMetadata = do
         \(schema, table, Q.AltJ info) -> (QualifiedObject schema table, info)
 
 -- | Fetch Postgres metadata for all user functions
-fetchFunctionMetadata :: (MonadTx m) => m (DBFunctionsMetadata ('Postgres pgKind))
-fetchFunctionMetadata = do
+fetchFunctionMetadata :: (MonadTx m) => [QualifiedFunction] -> m (DBFunctionsMetadata ('Postgres pgKind))
+fetchFunctionMetadata functions = do
   results <-
     liftTx $
       Q.withQE
         defaultTxErrorHandler
         $(makeRelativeToProject "src-rsr/pg_function_metadata.sql" >>= Q.sqlFromFile)
-        ()
+        [Q.AltJ $ LE.uniques functions]
         True
   pure $
     Map.fromList $

@@ -1,6 +1,7 @@
 module Hasura.RQL.DDL.Schema.Diff
   ( TableMeta (..),
     FunctionMeta (..),
+    TablesDiff (..),
     FunctionsDiff (..),
     ComputedFieldMeta (..),
     getTablesDiff,

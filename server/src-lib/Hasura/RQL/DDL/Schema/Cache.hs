@@ -385,7 +385,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
           metadataObj = MetadataObject (MOSource sourceName) $ toJSON sourceName
           logAndResolveDatabaseMetadata :: SourceConfig b -> SourceTypeCustomization -> m (Either QErr (ResolvedSource b))
           logAndResolveDatabaseMetadata scConfig sType = do
-            resSource <- resolveDatabaseMetadata scConfig sType
+            resSource <- resolveDatabaseMetadata sourceMetadata scConfig sType
             for_ resSource $ liftIO . unLogger logger
             pure resSource
 
