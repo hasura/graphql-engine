@@ -21,7 +21,7 @@ data ActionFieldG (r :: Type)
   | ACFRemote (ActionRemoteRelationshipSelect r)
   | ACFExpression Text
   | ACFNestedObject G.Name !(ActionFieldsG r)
-  deriving (Eq, Show)
+  deriving (Eq, Show, Functor, Foldable, Traversable)
 
 type ActionFieldsG r = Fields (ActionFieldG r)
 
@@ -37,6 +37,6 @@ data ActionRemoteRelationshipSelect r = ActionRemoteRelationshipSelect
     -- absolved of dealing with remote relationships.
     _arrsRelationship :: r
   }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Functor, Foldable, Traversable)
 
 $(makePrisms ''ActionFieldG)

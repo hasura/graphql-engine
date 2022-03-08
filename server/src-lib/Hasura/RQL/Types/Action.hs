@@ -335,6 +335,7 @@ data AnnActionExecution (r :: Type) = AnnActionExecution
     _aaeRequestTransform :: !(Maybe RequestTransform),
     _aaeResponseTransform :: !(Maybe MetadataResponseTransform)
   }
+  deriving stock (Functor, Foldable, Traversable)
 
 data AnnActionMutationAsync = AnnActionMutationAsync
   { _aamaName :: !ActionName,
@@ -350,6 +351,7 @@ data AsyncActionQueryFieldG (r :: Type)
   | AsyncId
   | AsyncCreatedAt
   | AsyncErrors
+  deriving stock (Functor, Foldable, Traversable)
 
 type AsyncActionQueryFieldsG r = Fields (AsyncActionQueryFieldG r)
 
@@ -363,6 +365,7 @@ data AnnActionAsyncQuery (b :: BackendType) (r :: Type) = AnnActionAsyncQuery
     _aaaqForwardClientHeaders :: !Bool,
     _aaaqSource :: !(ActionSourceInfo b)
   }
+  deriving stock (Functor, Foldable, Traversable)
 
 data ActionExecContext = ActionExecContext
   { _aecManager :: !HTTP.Manager,

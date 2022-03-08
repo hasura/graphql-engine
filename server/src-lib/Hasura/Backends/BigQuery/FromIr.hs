@@ -131,7 +131,7 @@ bigQuerySourceConfigToFromIrConfig BigQuerySourceConfig {_scGlobalSelectLimit} =
 -- single object or an array.
 mkSQLSelect ::
   Rql.JsonAggSelect ->
-  Ir.AnnSelectG 'BigQuery Void (Ir.AnnFieldG 'BigQuery Void) Expression ->
+  Ir.AnnSelectG 'BigQuery (Ir.AnnFieldG 'BigQuery Void) Expression ->
   FromIr BigQuery.Select
 mkSQLSelect jsonAggSelect annSimpleSel = do
   select <- noExtraPartitionFields <$> fromSelectRows annSimpleSel
@@ -171,7 +171,7 @@ fromUnnestedJSON json columns _fields = do
         )
     )
 
-fromSelectRows :: Ir.AnnSelectG 'BigQuery Void (Ir.AnnFieldG 'BigQuery Void) Expression -> FromIr BigQuery.PartitionableSelect
+fromSelectRows :: Ir.AnnSelectG 'BigQuery (Ir.AnnFieldG 'BigQuery Void) Expression -> FromIr BigQuery.PartitionableSelect
 fromSelectRows annSelectG = do
   let Ir.AnnSelectG
         { _asnFields = fields,
@@ -325,7 +325,7 @@ simulateDistinctOn select distinctOnColumns orderByColumns = do
 
 fromSelectAggregate ::
   Maybe (EntityAlias, HashMap ColumnName ColumnName) ->
-  Ir.AnnSelectG 'BigQuery Void (Ir.TableAggregateFieldG 'BigQuery Void) Expression ->
+  Ir.AnnSelectG 'BigQuery (Ir.TableAggregateFieldG 'BigQuery Void) Expression ->
   FromIr BigQuery.Select
 fromSelectAggregate minnerJoinFields annSelectG = do
   selectFrom <-

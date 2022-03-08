@@ -53,6 +53,7 @@ data MutationDB (b :: BackendType) (r :: Type) v
 data ActionQuery (r :: Type)
   = AQQuery !(RQL.AnnActionExecution r)
   | AQAsync !(RQL.AnnActionAsyncQuery ('Postgres 'Vanilla) r)
+  deriving stock (Functor, Foldable, Traversable)
 
 data ActionMutation (r :: Type)
   = AMSync !(RQL.AnnActionExecution r)

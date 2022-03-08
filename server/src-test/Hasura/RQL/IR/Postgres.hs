@@ -123,7 +123,7 @@ genSchemaName textRange =
   choice [pure PG.publicSchema, PG.SchemaName <$> genArbitraryUnicodeText textRange]
 
 genAnnSelectG ::
-  forall m r f a.
+  forall m f a.
   MonadGen m =>
   Range Int ->
   m a ->
@@ -153,7 +153,7 @@ genAnnSelectG ::
   Range Int ->
   Range Int ->
   Range Int ->
-  m (AnnSelectG ('Postgres 'Vanilla) r f a)
+  m (AnnSelectG ('Postgres 'Vanilla) f a)
 genAnnSelectG textRange genA =
   IRGen.genAnnSelectG
     (genTableName textRange)

@@ -96,7 +96,7 @@ runFromIr fromIr = evalStateT (unFromIr fromIr) mempty
 
 mkSQLSelect ::
   IR.JsonAggSelect ->
-  IR.AnnSelectG 'MSSQL Void (IR.AnnFieldG 'MSSQL Void) Expression ->
+  IR.AnnSelectG 'MSSQL (IR.AnnFieldG 'MSSQL Void) Expression ->
   FromIr TSQL.Select
 mkSQLSelect jsonAggSelect annSimpleSel =
   case jsonAggSelect of
@@ -137,7 +137,7 @@ fromRootField =
 -- Top-level exported functions
 
 -- | Top/root-level 'Select'. All descendent/sub-translations are collected to produce a root TSQL.Select.
-fromSelectRows :: IR.AnnSelectG 'MSSQL Void (IR.AnnFieldG 'MSSQL Void) Expression -> FromIr TSQL.Select
+fromSelectRows :: IR.AnnSelectG 'MSSQL (IR.AnnFieldG 'MSSQL Void) Expression -> FromIr TSQL.Select
 fromSelectRows annSelectG = do
   selectFrom <-
     case from of
@@ -266,7 +266,7 @@ mkAggregateSelect Args {..} foreignKeyConditions filterExpression selectFrom agg
 
 fromSelectAggregate ::
   Maybe (EntityAlias, HashMap ColumnName ColumnName) ->
-  IR.AnnSelectG 'MSSQL Void (IR.TableAggregateFieldG 'MSSQL Void) Expression ->
+  IR.AnnSelectG 'MSSQL (IR.TableAggregateFieldG 'MSSQL Void) Expression ->
   FromIr TSQL.Select
 fromSelectAggregate
   mparentRelationship
