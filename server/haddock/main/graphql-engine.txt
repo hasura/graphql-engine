@@ -4875,305 +4875,494 @@ functionGraphQLName :: Backend b => FunctionName b -> Either QErr Name
 scalarTypeGraphQLName :: Backend b => ScalarType b -> Either QErr Name
 snakeCaseTableName :: Backend b => TableName b -> Text
 
+module Hasura.RQL.DDL.Webhook.Transform.Class
 
--- | Webhook Transformations are data transformations used to modify HTTP
---   Requests before those requests are executed or Responses after
---   requests are executed.
+-- | <a>Transform</a> describes how to reify a defunctionalized
+--   transformation for a particular request field.
+class Transform a where {
+    
+    -- | The associated type 'TransformFn a' is the defunctionalized version of
+    --   some transformation that should be applied to a given request field.
+    --   
+    --   In most cases it is some variation on a piece of template text
+    --   describing the transformation.
+    data family TransformFn a :: Type;
+}
+
+-- | <a>transform</a> is a function which takes <a>TransformFn</a> of
+--   <tt>a</tt> and reifies it into a function of the form:
 --   
---   <a>MetadataRequestTransform</a>/<a>MetadataResponseTransform</a>
---   values are stored in Metadata within the <tt>CreateAction</tt> and
---   <tt>CreateEventTriggerQuery</tt> Types and then converted into
---   <a>RequestTransform</a>/<a>ResponseTransform</a> values using
---   <a>mkRequestTransform</a>/<a>mkResponseTransform</a>.
---   
---   <tt>RequestTransforms</tt> and <tt>ResponseTransforms</tt> are applied
---   to an HTTP Request/Response using <a>applyRequestTransform</a> and
---   <a>applyResponseTransform</a>.
---   
---   In the case of body transformations, a user specified templating
---   script is applied.
-module Hasura.RQL.DDL.WebhookTransforms
-data ReqTransformCtx
-ReqTransformCtx :: Maybe Value -> Value -> Value -> Maybe Value -> HashMap Text (Value -> Either CustomFunctionError Value) -> ReqTransformCtx
-[tcUrl] :: ReqTransformCtx -> Maybe Value
-[tcBody] :: ReqTransformCtx -> Value
-[tcSessionVars] :: ReqTransformCtx -> Value
-[tcQueryParams] :: ReqTransformCtx -> Maybe Value
-[tcFunctions] :: ReqTransformCtx -> HashMap Text (Value -> Either CustomFunctionError Value)
-data RespTransformCtx
-RespTransformCtx :: Value -> Value -> RespTransformCtx
-[rtcBody] :: RespTransformCtx -> Value
-[rtcReqCtx] :: RespTransformCtx -> Value
+--   <pre>
+--   ReqTransformCtx -&gt; a -&gt; m a
+--   </pre>
+transform :: (Transform a, MonadError TransformErrorBundle m) => TransformFn a -> RequestTransformCtx -> a -> m a
 
--- | A set of data transformation functions and substitutions generated
---   from a <a>MetadataRequestTransform</a>. <a>Nothing</a> values mean use
---   the original request value, unless otherwise indicated.
-data RequestTransform
-RequestTransform :: Maybe (ReqTransformCtx -> Either TransformErrorBundle RequestMethod) -> Maybe (ReqTransformCtx -> Either TransformErrorBundle Text) -> Maybe (BodyTransform (ReqTransformCtx -> Either TransformErrorBundle Value) (ReqTransformCtx -> Either TransformErrorBundle ByteString)) -> Maybe (ReqTransformCtx -> Either TransformErrorBundle Query) -> Maybe (ReqTransformCtx -> Either TransformErrorBundle ([Header] -> [Header])) -> RequestTransform
+-- | We use collect all transformation failures as a '[J.Value]'.
+newtype TransformErrorBundle
+TransformErrorBundle :: [Value] -> TransformErrorBundle
+[tebMessages] :: TransformErrorBundle -> [Value]
 
--- | Change the request method to one provided here. Nothing means POST.
-[reqTransformRequestMethod] :: RequestTransform -> Maybe (ReqTransformCtx -> Either TransformErrorBundle RequestMethod)
+-- | A helper function for serializing transformation errors to JSON.
+throwErrorBundle :: MonadError TransformErrorBundle m => Text -> Maybe Value -> m a
 
--- | A function which contructs a new URL given the request context.
-[reqTransformRequestURL] :: RequestTransform -> Maybe (ReqTransformCtx -> Either TransformErrorBundle Text)
+-- | Common context that is made available to all request transformations.
+data RequestTransformCtx
+RequestTransformCtx :: Maybe Value -> Value -> Value -> Maybe Value -> TemplatingEngine -> HashMap Text (Value -> Either CustomFunctionError Value) -> RequestTransformCtx
+[rtcBaseUrl] :: RequestTransformCtx -> Maybe Value
+[rtcBody] :: RequestTransformCtx -> Value
+[rtcSessionVariables] :: RequestTransformCtx -> Value
+[rtcQueryParams] :: RequestTransformCtx -> Maybe Value
+[rtcEngine] :: RequestTransformCtx -> TemplatingEngine
+[rtcFunctions] :: RequestTransformCtx -> HashMap Text (Value -> Either CustomFunctionError Value)
 
--- | A function for transforming the request body.
-[reqTransformBody] :: RequestTransform -> Maybe (BodyTransform (ReqTransformCtx -> Either TransformErrorBundle Value) (ReqTransformCtx -> Either TransformErrorBundle ByteString))
+-- | A smart constructor for constructing the <a>RequestTransformCtx</a>
+mkReqTransformCtx :: Text -> Maybe SessionVariables -> TemplatingEngine -> Request -> RequestTransformCtx
 
--- | A function which contructs new query parameters given the request
---   context.
-[reqTransformQueryParams] :: RequestTransform -> Maybe (ReqTransformCtx -> Either TransformErrorBundle Query)
+-- | Common context that is made available to all response transformations.
+data ResponseTransformCtx
+ResponseTransformCtx :: Value -> Value -> HashMap Text (Value -> Either CustomFunctionError Value) -> TemplatingEngine -> ResponseTransformCtx
+[responseTransformBody] :: ResponseTransformCtx -> Value
+[responseTransformReqCtx] :: ResponseTransformCtx -> Value
+[responseTransformFunctions] :: ResponseTransformCtx -> HashMap Text (Value -> Either CustomFunctionError Value)
+[responseTransformEngine] :: ResponseTransformCtx -> TemplatingEngine
 
--- | A function which contructs new Headers given the request context.
-[reqTransformRequestHeaders] :: RequestTransform -> Maybe (ReqTransformCtx -> Either TransformErrorBundle ([Header] -> [Header]))
-
--- | A set of data transformation functions generated from a
---   <a>MetadataResponseTransform</a>. <a>Nothing</a> means use the
---   original response value.
-newtype ResponseTransform
-ResponseTransform :: Maybe (BodyTransform (RespTransformCtx -> Either TransformErrorBundle Value) (ReqTransformCtx -> Either TransformErrorBundle ByteString)) -> ResponseTransform
-[respTransformBody] :: ResponseTransform -> Maybe (BodyTransform (RespTransformCtx -> Either TransformErrorBundle Value) (ReqTransformCtx -> Either TransformErrorBundle ByteString))
-
--- | A de/serializable request transformation template which can be stored
---   in the metadata associated with an action<i>event trigger</i>etc. and
---   used to produce a <a>RequestTransform</a>.
---   
---   NOTE: This data type is _only_ intended to be parsed from and stored
---   as user metadata; no direct logical transformations should be done
---   upon it.
---   
---   NOTE: Users should convert this to <a>RequestTransform</a> as close as
---   possible to the call site that performs a transformed HTTP request, as
---   <a>RequestTransform</a> has a representation that makes it more
---   difficult to deserialize for debugging.
---   
---   Nothing values mean use the original request value, unless otherwise
---   indicated.
-data MetadataRequestTransform
-MetadataRequestTransform :: Version -> Maybe StringTemplateText -> Maybe StringTemplateText -> Maybe (BodyTransform TemplateText StringTemplateText) -> Maybe [(StringTemplateText, Maybe StringTemplateText)] -> Maybe TransformHeaders -> TemplatingEngine -> MetadataRequestTransform
-
--- | The Schema Version
-[mtVersion] :: MetadataRequestTransform -> Version
-
--- | Change the request method to one provided here. Nothing means POST.
-[mtRequestMethod] :: MetadataRequestTransform -> Maybe StringTemplateText
-
--- | Template script for transforming the URL.
-[mtRequestURL] :: MetadataRequestTransform -> Maybe StringTemplateText
-
--- | Template script for transforming the request body.
-[mtBodyTransform] :: MetadataRequestTransform -> Maybe (BodyTransform TemplateText StringTemplateText)
-
--- | A list of template scripts for constructing new Query Params.
-[mtQueryParams] :: MetadataRequestTransform -> Maybe [(StringTemplateText, Maybe StringTemplateText)]
-
--- | A list of template scripts for constructing headers.
-[mtRequestHeaders] :: MetadataRequestTransform -> Maybe TransformHeaders
-
--- | The template engine to use for transformations. Default: Kriti
-[mtTemplatingEngine] :: MetadataRequestTransform -> TemplatingEngine
-data MetadataResponseTransform
-MetadataResponseTransform :: Version -> Maybe (BodyTransform TemplateText StringTemplateText) -> TemplatingEngine -> MetadataResponseTransform
-
--- | The Schema Version
-[mrtVersion] :: MetadataResponseTransform -> Version
-
--- | Template script for transforming the response body.
-[mrtBodyTransform] :: MetadataResponseTransform -> Maybe (BodyTransform TemplateText StringTemplateText)
-
--- | The template engine to use for transformations. Default: Kriti
-[mrtTemplatingEngine] :: MetadataResponseTransform -> TemplatingEngine
-data BodyTransform a b
-Remove :: BodyTransform a b
-Transform :: a -> BodyTransform a b
-FormUrlEncoded :: HashMap Text b -> BodyTransform a b
-newtype RequestMethod
-RequestMethod :: CI Text -> RequestMethod
-
--- | Available Template Languages
+-- | Available templating engines.
 data TemplatingEngine
 Kriti :: TemplatingEngine
-renderTemplatingEngine :: TemplatingEngine -> Text
+
+-- | Validated textual transformation template.
+newtype Template
+Template :: Text -> Template
+[unTemplate] :: Template -> Text
+
+-- | A helper function for executing transformations from a <a>Template</a>
+--   and a <tt>RequestTrasformCtx</tt>.
+mkRequestTemplateTransform :: Template -> RequestTransformCtx -> Either TransformErrorBundle Value
+mkResponseTemplateTransform :: Template -> ResponseTransformCtx -> Either TransformErrorBundle Value
+
+-- | <tt>RequestTransform</tt> Versioning
 data Version
 V1 :: Version
 V2 :: Version
 
--- | Unparsed Kriti templating code
-newtype TemplateText
-TemplateText :: Text -> TemplateText
-[unTemplateText] :: TemplateText -> Text
+-- | Validated textual transformation template /for string interpolation
+--   only/.
+--   
+--   This is necessary due to Kriti not distinguishing between string
+--   literals and string templates.
+newtype UnescapedTemplate
+UnescapedTemplate :: Text -> UnescapedTemplate
+[getUnescapedTemplate] :: UnescapedTemplate -> Text
 
--- | Unparsed Kriti templating code for string interpolations only. NOTE:
---   WE are highly coupled to Kriti at this point and will likely need to
---   rethink Kriti string interpolation when we start adding other template
---   engines.
-newtype StringTemplateText
-StringTemplateText :: Text -> StringTemplateText
-[unStringTemplateText] :: StringTemplateText -> Text
+-- | Wrap an <a>UnescapedTemplate</a> with escaped double quotes.
+wrapUnescapedTemplate :: UnescapedTemplate -> Template
 
--- | This newtype exists solely to anchor a <tt>FromJSON</tt> instance and
---   is eliminated in the <a>TransformHeaders</a> <tt>FromJSON</tt>
+-- | A helper function for executing Kriti transformations from a
+--   <a>UnescapedTemplate</a> and a <tt>RequestTrasformCtx</tt>. The
+--   differennce from <a>mkRequestTemplateTransform</a> is that this
+--   function will wrap the template text in double quotes before running
+--   Kriti.
+mkUnescapedRequestTemplateTransform :: RequestTransformCtx -> UnescapedTemplate -> Either TransformErrorBundle ByteString
+
+-- | Run a Kriti transformation with an unescaped template in
+--   <a>Validation</a> instead of <a>Either</a>.
+validateUnescapedRequestTemplateTransform :: RequestTransformCtx -> UnescapedTemplate -> Validation TransformErrorBundle ByteString
+mkUnescapedResponseTemplateTransform :: ResponseTransformCtx -> UnescapedTemplate -> Either TransformErrorBundle ByteString
+validateUnescapedResponseTemplateTransform :: ResponseTransformCtx -> UnescapedTemplate -> Validation TransformErrorBundle ByteString
+
+-- | Encode a JSON Scalar Value as a <a>ByteString</a>. If a non-Scalar
+--   value is provided, will return a <tt>TrnasformErrorBundle</tt>
+encodeScalar :: MonadError TransformErrorBundle m => Value -> m ByteString
+instance Control.DeepSeq.NFData Hasura.RQL.DDL.Webhook.Transform.Class.TransformErrorBundle
+instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.Webhook.Transform.Class.TransformErrorBundle
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Webhook.Transform.Class.TransformErrorBundle
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Webhook.Transform.Class.TransformErrorBundle
+instance GHC.Base.Semigroup Hasura.RQL.DDL.Webhook.Transform.Class.TransformErrorBundle
+instance GHC.Base.Monoid Hasura.RQL.DDL.Webhook.Transform.Class.TransformErrorBundle
+instance GHC.Show.Show Hasura.RQL.DDL.Webhook.Transform.Class.TransformErrorBundle
+instance GHC.Generics.Generic Hasura.RQL.DDL.Webhook.Transform.Class.TransformErrorBundle
+instance GHC.Classes.Eq Hasura.RQL.DDL.Webhook.Transform.Class.TransformErrorBundle
+instance Control.DeepSeq.NFData Hasura.RQL.DDL.Webhook.Transform.Class.TemplatingEngine
+instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.Webhook.Transform.Class.TemplatingEngine
+instance GHC.Show.Show Hasura.RQL.DDL.Webhook.Transform.Class.TemplatingEngine
+instance GHC.Generics.Generic Hasura.RQL.DDL.Webhook.Transform.Class.TemplatingEngine
+instance GHC.Classes.Eq Hasura.RQL.DDL.Webhook.Transform.Class.TemplatingEngine
+instance GHC.Enum.Enum Hasura.RQL.DDL.Webhook.Transform.Class.TemplatingEngine
+instance GHC.Enum.Bounded Hasura.RQL.DDL.Webhook.Transform.Class.TemplatingEngine
+instance Control.DeepSeq.NFData Hasura.RQL.DDL.Webhook.Transform.Class.Template
+instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.Webhook.Transform.Class.Template
+instance Data.Aeson.Types.ToJSON.ToJSONKey Hasura.RQL.DDL.Webhook.Transform.Class.Template
+instance Data.Aeson.Types.FromJSON.FromJSONKey Hasura.RQL.DDL.Webhook.Transform.Class.Template
+instance Data.Hashable.Class.Hashable Hasura.RQL.DDL.Webhook.Transform.Class.Template
+instance GHC.Show.Show Hasura.RQL.DDL.Webhook.Transform.Class.Template
+instance GHC.Classes.Ord Hasura.RQL.DDL.Webhook.Transform.Class.Template
+instance GHC.Generics.Generic Hasura.RQL.DDL.Webhook.Transform.Class.Template
+instance GHC.Classes.Eq Hasura.RQL.DDL.Webhook.Transform.Class.Template
+instance Control.DeepSeq.NFData Hasura.RQL.DDL.Webhook.Transform.Class.Version
+instance Data.Hashable.Class.Hashable Hasura.RQL.DDL.Webhook.Transform.Class.Version
+instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.Webhook.Transform.Class.Version
+instance GHC.Show.Show Hasura.RQL.DDL.Webhook.Transform.Class.Version
+instance GHC.Generics.Generic Hasura.RQL.DDL.Webhook.Transform.Class.Version
+instance GHC.Classes.Eq Hasura.RQL.DDL.Webhook.Transform.Class.Version
+instance Control.DeepSeq.NFData Hasura.RQL.DDL.Webhook.Transform.Class.UnescapedTemplate
+instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.Webhook.Transform.Class.UnescapedTemplate
+instance Data.Aeson.Types.ToJSON.ToJSONKey Hasura.RQL.DDL.Webhook.Transform.Class.UnescapedTemplate
+instance Data.Aeson.Types.FromJSON.FromJSONKey Hasura.RQL.DDL.Webhook.Transform.Class.UnescapedTemplate
+instance Data.Hashable.Class.Hashable Hasura.RQL.DDL.Webhook.Transform.Class.UnescapedTemplate
+instance GHC.Show.Show Hasura.RQL.DDL.Webhook.Transform.Class.UnescapedTemplate
+instance GHC.Classes.Ord Hasura.RQL.DDL.Webhook.Transform.Class.UnescapedTemplate
+instance GHC.Generics.Generic Hasura.RQL.DDL.Webhook.Transform.Class.UnescapedTemplate
+instance GHC.Classes.Eq Hasura.RQL.DDL.Webhook.Transform.Class.UnescapedTemplate
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Webhook.Transform.Class.UnescapedTemplate
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Webhook.Transform.Class.UnescapedTemplate
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Webhook.Transform.Class.Version
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Webhook.Transform.Class.Version
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Webhook.Transform.Class.Template
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Webhook.Transform.Class.Template
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Webhook.Transform.Class.RequestTransformCtx
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Webhook.Transform.Class.TemplatingEngine
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Webhook.Transform.Class.TemplatingEngine
+
+module Hasura.RQL.DDL.Webhook.Transform.Url
+
+-- | The actual URL string we are transforming
+newtype Url
+Url :: Text -> Url
+[unUrl] :: Url -> Text
+
+-- | The defunctionalized transformation function on <a>Url</a>
+newtype UrlTransformAction
+ModifyUrl :: UnescapedTemplate -> UrlTransformAction
+instance GHC.Show.Show Hasura.RQL.DDL.Webhook.Transform.Url.Url
+instance GHC.Classes.Eq Hasura.RQL.DDL.Webhook.Transform.Url.Url
+instance Control.DeepSeq.NFData Hasura.RQL.DDL.Webhook.Transform.Url.UrlTransformAction
+instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.Webhook.Transform.Url.UrlTransformAction
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Webhook.Transform.Url.UrlTransformAction
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Webhook.Transform.Url.UrlTransformAction
+instance GHC.Show.Show Hasura.RQL.DDL.Webhook.Transform.Url.UrlTransformAction
+instance GHC.Generics.Generic Hasura.RQL.DDL.Webhook.Transform.Url.UrlTransformAction
+instance GHC.Classes.Eq Hasura.RQL.DDL.Webhook.Transform.Url.UrlTransformAction
+instance Control.DeepSeq.NFData (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Url.Url)
+instance Hasura.Incremental.Internal.Dependency.Cacheable (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Url.Url)
+instance Data.Aeson.Types.ToJSON.ToJSON (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Url.Url)
+instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Url.Url)
+instance GHC.Show.Show (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Url.Url)
+instance GHC.Classes.Eq (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Url.Url)
+instance GHC.Generics.Generic (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Url.Url)
+instance Hasura.RQL.DDL.Webhook.Transform.Class.Transform Hasura.RQL.DDL.Webhook.Transform.Url.Url
+
+module Hasura.RQL.DDL.Webhook.Transform.QueryParams
+
+-- | The actual query params we are transforming
+--   
+--   Necessary boilerplate because otherwise we end up with an orphan
 --   instance.
+newtype QueryParams
+QueryParams :: Query -> QueryParams
+[unQueryParams] :: QueryParams -> Query
+
+-- | The defunctionalized transformation <a>QueryParams</a>
+newtype QueryParamsTransformAction
+QueryParamsTransformAction :: [(UnescapedTemplate, Maybe UnescapedTemplate)] -> QueryParamsTransformAction
+instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.Webhook.Transform.QueryParams.QueryParamsTransformAction
+instance Control.DeepSeq.NFData Hasura.RQL.DDL.Webhook.Transform.QueryParams.QueryParamsTransformAction
+instance GHC.Classes.Eq Hasura.RQL.DDL.Webhook.Transform.QueryParams.QueryParamsTransformAction
+instance GHC.Show.Show Hasura.RQL.DDL.Webhook.Transform.QueryParams.QueryParamsTransformAction
+instance GHC.Generics.Generic Hasura.RQL.DDL.Webhook.Transform.QueryParams.QueryParamsTransformAction
+instance Data.Aeson.Types.ToJSON.ToJSON (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.QueryParams.QueryParams)
+instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.QueryParams.QueryParams)
+instance Hasura.Incremental.Internal.Dependency.Cacheable (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.QueryParams.QueryParams)
+instance Control.DeepSeq.NFData (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.QueryParams.QueryParams)
+instance GHC.Generics.Generic (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.QueryParams.QueryParams)
+instance GHC.Classes.Eq (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.QueryParams.QueryParams)
+instance GHC.Show.Show (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.QueryParams.QueryParams)
+instance Hasura.RQL.DDL.Webhook.Transform.Class.Transform Hasura.RQL.DDL.Webhook.Transform.QueryParams.QueryParams
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Webhook.Transform.QueryParams.QueryParamsTransformAction
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Webhook.Transform.QueryParams.QueryParamsTransformAction
+
+module Hasura.RQL.DDL.Webhook.Transform.Method
+
+-- | The actual request method we are transforming
+newtype Method
+Method :: CI Text -> Method
+
+-- | The defunctionalized transformation on <a>Method</a>.
+--   
+--   In this case our transformation simply replaces the <a>Method</a> with
+--   a new one.
+newtype MethodTransformAction
+ReplaceMethod :: Method -> MethodTransformAction
+instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.Webhook.Transform.Method.Method
+instance Control.DeepSeq.NFData Hasura.RQL.DDL.Webhook.Transform.Method.Method
+instance GHC.Classes.Eq Hasura.RQL.DDL.Webhook.Transform.Method.Method
+instance GHC.Show.Show Hasura.RQL.DDL.Webhook.Transform.Method.Method
+instance GHC.Generics.Generic Hasura.RQL.DDL.Webhook.Transform.Method.Method
+instance Control.DeepSeq.NFData Hasura.RQL.DDL.Webhook.Transform.Method.MethodTransformAction
+instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.Webhook.Transform.Method.MethodTransformAction
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Webhook.Transform.Method.MethodTransformAction
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Webhook.Transform.Method.MethodTransformAction
+instance GHC.Show.Show Hasura.RQL.DDL.Webhook.Transform.Method.MethodTransformAction
+instance GHC.Classes.Eq Hasura.RQL.DDL.Webhook.Transform.Method.MethodTransformAction
+instance GHC.Generics.Generic Hasura.RQL.DDL.Webhook.Transform.Method.MethodTransformAction
+instance Control.DeepSeq.NFData (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Method.Method)
+instance Hasura.Incremental.Internal.Dependency.Cacheable (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Method.Method)
+instance Data.Aeson.Types.ToJSON.ToJSON (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Method.Method)
+instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Method.Method)
+instance GHC.Show.Show (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Method.Method)
+instance GHC.Generics.Generic (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Method.Method)
+instance GHC.Classes.Eq (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Method.Method)
+instance Hasura.RQL.DDL.Webhook.Transform.Class.Transform Hasura.RQL.DDL.Webhook.Transform.Method.Method
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Webhook.Transform.Method.Method
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Webhook.Transform.Method.Method
+
+module Hasura.RQL.DDL.Webhook.Transform.Headers
+
+-- | The actual header data we are transforming.
+--   
+--   This newtype is necessary because otherwise we end up with an orphan
+--   instance.
+newtype Headers
+Headers :: [Header] -> Headers
+
+-- | The defunctionalized transformation on <a>Headers</a>
+newtype HeadersTransformAction
+ReplaceHeaders :: ReplaceHeaderFields -> HeadersTransformAction
+
+-- | The user can supply a set of header keys to be filtered from the
+--   request and a set of headers to be added to the request.
+data ReplaceHeaderFields
+ReplaceHeaderFields :: [(CI Text, UnescapedTemplate)] -> [CI Text] -> ReplaceHeaderFields
+[rhf_addHeaders] :: ReplaceHeaderFields -> [(CI Text, UnescapedTemplate)]
+[rhf_removeHeaders] :: ReplaceHeaderFields -> [CI Text]
+
+-- | This newtype exists solely to anchor a <a>FromJSON</a> instance and is
+--   eliminated in the <tt>TransformHeaders</tt> <a>FromJSON</a> instance.
 newtype HeaderKey
 HeaderKey :: CI Text -> HeaderKey
 [unHeaderKey] :: HeaderKey -> CI Text
-data TransformHeaders
-TransformHeaders :: [(CI Text, StringTemplateText)] -> [CI Text] -> TransformHeaders
-[addHeaders] :: TransformHeaders -> [(CI Text, StringTemplateText)]
-[removeHeaders] :: TransformHeaders -> [CI Text]
-newtype TransformErrorBundle
-TransformErrorBundle :: [Value] -> TransformErrorBundle
-[teMessages] :: TransformErrorBundle -> [Value]
+instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.Webhook.Transform.Headers.ReplaceHeaderFields
+instance Control.DeepSeq.NFData Hasura.RQL.DDL.Webhook.Transform.Headers.ReplaceHeaderFields
+instance GHC.Generics.Generic Hasura.RQL.DDL.Webhook.Transform.Headers.ReplaceHeaderFields
+instance GHC.Classes.Ord Hasura.RQL.DDL.Webhook.Transform.Headers.ReplaceHeaderFields
+instance GHC.Classes.Eq Hasura.RQL.DDL.Webhook.Transform.Headers.ReplaceHeaderFields
+instance GHC.Show.Show Hasura.RQL.DDL.Webhook.Transform.Headers.ReplaceHeaderFields
+instance Control.DeepSeq.NFData Hasura.RQL.DDL.Webhook.Transform.Headers.HeadersTransformAction
+instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.Webhook.Transform.Headers.HeadersTransformAction
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Webhook.Transform.Headers.HeadersTransformAction
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Webhook.Transform.Headers.HeadersTransformAction
+instance GHC.Show.Show Hasura.RQL.DDL.Webhook.Transform.Headers.HeadersTransformAction
+instance GHC.Classes.Eq Hasura.RQL.DDL.Webhook.Transform.Headers.HeadersTransformAction
+instance GHC.Generics.Generic Hasura.RQL.DDL.Webhook.Transform.Headers.HeadersTransformAction
+instance Control.DeepSeq.NFData (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Headers.Headers)
+instance Hasura.Incremental.Internal.Dependency.Cacheable (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Headers.Headers)
+instance Data.Aeson.Types.ToJSON.ToJSON (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Headers.Headers)
+instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Headers.Headers)
+instance GHC.Show.Show (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Headers.Headers)
+instance GHC.Generics.Generic (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Headers.Headers)
+instance GHC.Classes.Eq (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Headers.Headers)
+instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.Webhook.Transform.Headers.HeaderKey
+instance Control.DeepSeq.NFData Hasura.RQL.DDL.Webhook.Transform.Headers.HeaderKey
+instance GHC.Generics.Generic Hasura.RQL.DDL.Webhook.Transform.Headers.HeaderKey
+instance GHC.Classes.Ord Hasura.RQL.DDL.Webhook.Transform.Headers.HeaderKey
+instance GHC.Classes.Eq Hasura.RQL.DDL.Webhook.Transform.Headers.HeaderKey
+instance GHC.Show.Show Hasura.RQL.DDL.Webhook.Transform.Headers.HeaderKey
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Webhook.Transform.Headers.ReplaceHeaderFields
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Webhook.Transform.Headers.HeaderKey
+instance Hasura.RQL.DDL.Webhook.Transform.Class.Transform Hasura.RQL.DDL.Webhook.Transform.Headers.Headers
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Webhook.Transform.Headers.ReplaceHeaderFields
 
--- | Construct a <a>RequestTransform</a> from its metadata representation.
-mkRequestTransform :: MetadataRequestTransform -> RequestTransform
-mkResponseTransform :: MetadataResponseTransform -> ResponseTransform
+module Hasura.RQL.DDL.Webhook.Transform.Body
 
--- | Transform a String Template
-transformST :: TemplatingEngine -> ReqTransformCtx -> StringTemplateText -> Either TransformErrorBundle ByteString
-mkMethodTransform :: TemplatingEngine -> StringTemplateText -> ReqTransformCtx -> Either TransformErrorBundle RequestMethod
-mkQueryParamsTransform :: TemplatingEngine -> [(StringTemplateText, Maybe StringTemplateText)] -> ReqTransformCtx -> Either TransformErrorBundle Query
+-- | The actual JSON body we are performing a transformation on.
+data Body
+JSONBody :: Maybe Value -> Body
+RawBody :: ByteString -> Body
 
--- | Given a <a>TransformHeaders</a> and the <a>ReqTransformCtx</a>,
---   Construct a function to transform the existing headers.
-mkHeaderTransform :: TemplatingEngine -> TransformHeaders -> ReqTransformCtx -> Either TransformErrorBundle ([Header] -> [Header])
-mkUrlTransform :: TemplatingEngine -> StringTemplateText -> ReqTransformCtx -> Either TransformErrorBundle Text
+-- | Helper function for URI escaping <a>Text</a> values.
+escapeURIText :: Text -> Text
 
--- | Construct a Template Transformation function for Requests
-mkReqTemplateTransform :: TemplatingEngine -> TemplateText -> ReqTransformCtx -> Either TransformErrorBundle Value
+-- | Helper function for URI escaping <a>ByteString</a> values
+escapeURIBS :: ByteString -> ByteString
 
--- | Construct a Template Transformation function for Responses
-mkRespTemplateTransform :: TemplatingEngine -> TemplateText -> RespTransformCtx -> Either TransformErrorBundle Value
-buildReqTransformCtx :: Text -> Maybe SessionVariables -> Request -> ReqTransformCtx
-buildRespTransformCtx :: ReqTransformCtx -> ByteString -> RespTransformCtx
+-- | Fold a 'M.HashMap Text B.ByteString' into a <a>ByteString</a> encoded
+--   `x-www-form-urlencoded` request body.
+foldFormEncoded :: HashMap Text ByteString -> ByteString
+
+-- | The defunctionalized transformation function on <a>Body</a>.
+--   
+--   Our transformation function can either remove the body or modify it
+--   with a <a>Template</a>.
+data BodyTransformAction
+RemoveBody :: BodyTransformAction
+ModifyBody :: Template -> BodyTransformAction
+FormUrlEncoded :: HashMap Text UnescapedTemplate -> BodyTransformAction
+instance GHC.Show.Show Hasura.RQL.DDL.Webhook.Transform.Body.Body
+instance GHC.Classes.Eq Hasura.RQL.DDL.Webhook.Transform.Body.Body
+instance Control.DeepSeq.NFData Hasura.RQL.DDL.Webhook.Transform.Body.BodyTransformAction
+instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.Webhook.Transform.Body.BodyTransformAction
+instance GHC.Show.Show Hasura.RQL.DDL.Webhook.Transform.Body.BodyTransformAction
+instance GHC.Generics.Generic Hasura.RQL.DDL.Webhook.Transform.Body.BodyTransformAction
+instance GHC.Classes.Eq Hasura.RQL.DDL.Webhook.Transform.Body.BodyTransformAction
+instance Control.DeepSeq.NFData (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Body.Body)
+instance Hasura.Incremental.Internal.Dependency.Cacheable (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Body.Body)
+instance Data.Aeson.Types.ToJSON.ToJSON (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Body.Body)
+instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Body.Body)
+instance GHC.Show.Show (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Body.Body)
+instance GHC.Generics.Generic (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Body.Body)
+instance GHC.Classes.Eq (Hasura.RQL.DDL.Webhook.Transform.Class.TransformFn Hasura.RQL.DDL.Webhook.Transform.Body.Body)
+instance Hasura.RQL.DDL.Webhook.Transform.Class.Transform Hasura.RQL.DDL.Webhook.Transform.Body.Body
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Webhook.Transform.Body.BodyTransformAction
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Webhook.Transform.Body.BodyTransformAction
+
+
+-- | Webhook Transformations are data transformations used to modify HTTP
+--   Requests/Responses before requests are executed and after responses
+--   are received.
+--   
+--   Transformations are supplied by users as part of the Metadata for a
+--   particular Action or EventTrigger as a <a>RequestTransform</a> record.
+--   Per-field Transformations are stored as data (defunctionalized), often
+--   in the form of a Kriti template, and then converted into actual
+--   functions (reified) at runtime by the <a>Transform</a> typeclass.
+--   
+--   We take a Higher Kinded Data (HKD) approach to representing the
+--   transformations. <a>RequestFields</a> is an HKD which can represent
+--   the actual request data as 'RequestFields Identity' or the
+--   defunctionalized transforms as 'RequestFields (WithOptional
+--   TransformFn)'.
+--   
+--   We can then traverse over the entire <a>RequestFields</a> HKD to reify
+--   all the fields at once and apply them to our actual request data.
+--   
+--   NOTE: We don't literally use <a>traverse</a> or the HKD equivalent
+--   <a>btraverse</a>, but you can think of this operation morally as a
+--   traversal. See <a>applyRequestTransform</a> for implementation
+--   details.
+module Hasura.RQL.DDL.Webhook.Transform
+
+-- | <a>RequestTransform</a> is the metadata representation of a request
+--   transformation. It consists of a record of higher kinded data (HKD)
+--   along with some regular data. We seperate the HKD data into its own
+--   record field called <a>requestFields</a> which we nest inside our
+--   non-HKD record. The actual transformation operations are contained in
+--   the HKD.
+data RequestTransform
+RequestTransform :: Version -> RequestFields (WithOptional TransformFn) -> TemplatingEngine -> RequestTransform
+[version] :: RequestTransform -> Version
+[requestFields] :: RequestTransform -> RequestFields (WithOptional TransformFn)
+[templateEngine] :: RequestTransform -> TemplatingEngine
+
+-- | Defunctionalized Webhook Transformation
+--   
+--   We represent a defunctionalized request transformation by
+--   parameterizing our HKD with <a>WithOptional</a><tt>
+--   </tt><a>TransformFn</a>, which marks each of the fields as optional
+--   and supplies the appropriate transformation function to them if if
+--   they are provided. 'WithOptional _' is equivalent to 'Compose Maybe
+--   _'.
+type RequestTransformFn = RequestFields (WithOptional TransformFn)
+
+-- | Actual Request Data
+--   
+--   We represent the actual request data by parameterizing our HKD with
+--   <a>Identity</a>, which allows us to trivially unwrap the fields (which
+--   should exist after any transformations have been applied).
+type RequestData = RequestFields Identity
+
+-- | This is our HKD type. It is a record with fields for each component of
+--   an <a>Request</a> we wish to transform.
+data RequestFields f
+RequestFields :: f Method -> f Url -> f Body -> f QueryParams -> f Headers -> RequestFields f
+[method] :: RequestFields f -> f Method
+[url] :: RequestFields f -> f Url
+[body] :: RequestFields f -> f Body
+[queryParams] :: RequestFields f -> f QueryParams
+[requestHeaders] :: RequestFields f -> f Headers
+
+-- | A lens for mapping from an actual <a>Request</a> term to our HKD.
+request :: Lens' Request RequestData
 
 -- | Transform an <a>Request</a> with a <a>RequestTransform</a>.
 --   
 --   Note: we pass in the request url explicitly for use in the
---   <a>ReqTransformCtx</a>. We do this so that we can ensure that the url
---   is syntactically identical to what the use submits. If we use the
+--   <tt>ReqTransformCtx</tt>. We do this so that we can ensure that the
+--   url is syntactically identical to what the use submits. If we use the
 --   parsed request from the <a>Request</a> term then it is possible that
 --   the url is semantically equivalent but syntactically different. An
 --   example of this is the presence or lack of a trailing slash on the URL
 --   path. This important when performing string interpolation on the
 --   request url.
+applyRequestTransform :: MonadError TransformErrorBundle m => (Request -> RequestTransformCtx) -> RequestTransformFn -> Request -> m Request
+(.=?) :: ToJSON v => k -> Maybe v -> Maybe (k, Value)
+infixr 8 .=?
+
+-- | <a>WithOptional</a> has <a>Eq</a> and <a>Show</a> instances with
+--   difficult to satisfy constraints. <a>WithOptional</a> is isomorphic to
+--   'Compose Maybe f'.
 --   
---   Because of this requirement, we must ensure the sequence of
---   transformation applications. If a query param transformation occured
---   before the url transformation then the query param transformation
---   would be wiped out. applyRequestTransform :: T.Text -&gt;
---   RequestTransform -&gt; HTTP.Request -&gt; Maybe SessionVariables -&gt;
---   Either TransformErrorBundle HTTP.Request applyRequestTransform reqUrl
---   RequestTransform {..} reqData sessionVars =
-applyRequestTransform :: (Request -> ReqTransformCtx) -> RequestTransform -> Request -> Either TransformErrorBundle Request
+--   TODO(jkachmar): Add better documentation now that we've specialized
+--   this type.
+newtype WithOptional fn result
+WithOptional :: Maybe (fn result) -> WithOptional fn result
+[getOptional] :: WithOptional fn result -> Maybe (fn result)
+
+-- | A set of data transformation functions generated from a
+--   <a>MetadataResponseTransform</a>. <a>Nothing</a> means use the
+--   original response value.
+data ResponseTransform
+ResponseTransform :: Maybe (ResponseTransformCtx -> Either TransformErrorBundle Value) -> TemplatingEngine -> ResponseTransform
+[respTransformBody] :: ResponseTransform -> Maybe (ResponseTransformCtx -> Either TransformErrorBundle Value)
+[respTransformTemplateEngine] :: ResponseTransform -> TemplatingEngine
+data MetadataResponseTransform
+MetadataResponseTransform :: Version -> Maybe BodyTransformAction -> TemplatingEngine -> MetadataResponseTransform
+[mrtVersion] :: MetadataResponseTransform -> Version
+[mrtBodyTransform] :: MetadataResponseTransform -> Maybe BodyTransformAction
+[mrtTemplatingEngine] :: MetadataResponseTransform -> TemplatingEngine
+
+-- | A helper function for constructing the <tt>RespTransformCtx</tt>
+buildRespTransformCtx :: Maybe RequestTransformCtx -> Maybe SessionVariables -> TemplatingEngine -> ByteString -> ResponseTransformCtx
+
+-- | Construct a Template Transformation function for Responses
+mkRespTemplateTransform :: TemplatingEngine -> BodyTransformAction -> ResponseTransformCtx -> Either TransformErrorBundle Value
+mkResponseTransform :: MetadataResponseTransform -> ResponseTransform
 
 -- | At the moment we only transform the body of Responses. 'http-client'
 --   does not export the constructors for <tt>Response</tt>. If we want to
 --   transform then we will need additional <tt>apply</tt> functions.
-applyResponseTransform :: ResponseTransform -> RespTransformCtx -> Either TransformErrorBundle ByteString
-valueToString :: MonadError TransformErrorBundle m => Value -> m ByteString
-throwErrorBundle :: MonadError TransformErrorBundle m => Text -> Maybe Value -> m a
-(.=?) :: ToJSON v => k -> Maybe v -> Maybe (k, Value)
-infixr 8 .=?
-
--- | Wrap a template with escaped double quotes.
-wrapTemplate :: StringTemplateText -> StringTemplateText
-escapeURIText :: Text -> Text
-escapeURIBS :: ByteString -> ByteString
-foldForm :: HashMap Text ByteString -> ByteString
-instance (Hasura.Incremental.Internal.Dependency.Cacheable a, Hasura.Incremental.Internal.Dependency.Cacheable b) => Hasura.Incremental.Internal.Dependency.Cacheable (Hasura.RQL.DDL.WebhookTransforms.BodyTransform a b)
-instance (Control.DeepSeq.NFData a, Control.DeepSeq.NFData b) => Control.DeepSeq.NFData (Hasura.RQL.DDL.WebhookTransforms.BodyTransform a b)
-instance GHC.Generics.Generic (Hasura.RQL.DDL.WebhookTransforms.BodyTransform a b)
-instance GHC.Base.Functor (Hasura.RQL.DDL.WebhookTransforms.BodyTransform a)
-instance (GHC.Classes.Eq a, GHC.Classes.Eq b) => GHC.Classes.Eq (Hasura.RQL.DDL.WebhookTransforms.BodyTransform a b)
-instance (GHC.Show.Show a, GHC.Show.Show b) => GHC.Show.Show (Hasura.RQL.DDL.WebhookTransforms.BodyTransform a b)
-instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.WebhookTransforms.RequestMethod
-instance Control.DeepSeq.NFData Hasura.RQL.DDL.WebhookTransforms.RequestMethod
-instance GHC.Classes.Eq Hasura.RQL.DDL.WebhookTransforms.RequestMethod
-instance GHC.Show.Show Hasura.RQL.DDL.WebhookTransforms.RequestMethod
-instance GHC.Generics.Generic Hasura.RQL.DDL.WebhookTransforms.RequestMethod
-instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.WebhookTransforms.TemplatingEngine
-instance Control.DeepSeq.NFData Hasura.RQL.DDL.WebhookTransforms.TemplatingEngine
-instance GHC.Generics.Generic Hasura.RQL.DDL.WebhookTransforms.TemplatingEngine
-instance GHC.Enum.Bounded Hasura.RQL.DDL.WebhookTransforms.TemplatingEngine
-instance GHC.Enum.Enum Hasura.RQL.DDL.WebhookTransforms.TemplatingEngine
-instance GHC.Classes.Eq Hasura.RQL.DDL.WebhookTransforms.TemplatingEngine
-instance GHC.Show.Show Hasura.RQL.DDL.WebhookTransforms.TemplatingEngine
-instance Data.Hashable.Class.Hashable Hasura.RQL.DDL.WebhookTransforms.Version
-instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.WebhookTransforms.Version
-instance Control.DeepSeq.NFData Hasura.RQL.DDL.WebhookTransforms.Version
-instance GHC.Generics.Generic Hasura.RQL.DDL.WebhookTransforms.Version
-instance GHC.Classes.Eq Hasura.RQL.DDL.WebhookTransforms.Version
-instance GHC.Show.Show Hasura.RQL.DDL.WebhookTransforms.Version
-instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.WebhookTransforms.TemplateText
-instance Control.DeepSeq.NFData Hasura.RQL.DDL.WebhookTransforms.TemplateText
-instance Data.Aeson.Types.FromJSON.FromJSONKey Hasura.RQL.DDL.WebhookTransforms.TemplateText
-instance Data.Aeson.Types.ToJSON.ToJSONKey Hasura.RQL.DDL.WebhookTransforms.TemplateText
-instance Data.Hashable.Class.Hashable Hasura.RQL.DDL.WebhookTransforms.TemplateText
-instance GHC.Generics.Generic Hasura.RQL.DDL.WebhookTransforms.TemplateText
-instance GHC.Classes.Ord Hasura.RQL.DDL.WebhookTransforms.TemplateText
-instance GHC.Classes.Eq Hasura.RQL.DDL.WebhookTransforms.TemplateText
-instance GHC.Show.Show Hasura.RQL.DDL.WebhookTransforms.TemplateText
-instance Data.Aeson.Types.FromJSON.FromJSONKey Hasura.RQL.DDL.WebhookTransforms.StringTemplateText
-instance Data.Aeson.Types.ToJSON.ToJSONKey Hasura.RQL.DDL.WebhookTransforms.StringTemplateText
-instance Data.Hashable.Class.Hashable Hasura.RQL.DDL.WebhookTransforms.StringTemplateText
-instance GHC.Generics.Generic Hasura.RQL.DDL.WebhookTransforms.StringTemplateText
-instance GHC.Classes.Ord Hasura.RQL.DDL.WebhookTransforms.StringTemplateText
-instance GHC.Classes.Eq Hasura.RQL.DDL.WebhookTransforms.StringTemplateText
-instance GHC.Show.Show Hasura.RQL.DDL.WebhookTransforms.StringTemplateText
-instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.WebhookTransforms.MetadataResponseTransform
-instance Control.DeepSeq.NFData Hasura.RQL.DDL.WebhookTransforms.MetadataResponseTransform
-instance GHC.Generics.Generic Hasura.RQL.DDL.WebhookTransforms.MetadataResponseTransform
-instance GHC.Classes.Eq Hasura.RQL.DDL.WebhookTransforms.MetadataResponseTransform
-instance GHC.Show.Show Hasura.RQL.DDL.WebhookTransforms.MetadataResponseTransform
-instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.WebhookTransforms.HeaderKey
-instance Control.DeepSeq.NFData Hasura.RQL.DDL.WebhookTransforms.HeaderKey
-instance GHC.Generics.Generic Hasura.RQL.DDL.WebhookTransforms.HeaderKey
-instance GHC.Classes.Ord Hasura.RQL.DDL.WebhookTransforms.HeaderKey
-instance GHC.Classes.Eq Hasura.RQL.DDL.WebhookTransforms.HeaderKey
-instance GHC.Show.Show Hasura.RQL.DDL.WebhookTransforms.HeaderKey
-instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.WebhookTransforms.TransformHeaders
-instance Control.DeepSeq.NFData Hasura.RQL.DDL.WebhookTransforms.TransformHeaders
-instance GHC.Generics.Generic Hasura.RQL.DDL.WebhookTransforms.TransformHeaders
-instance GHC.Classes.Ord Hasura.RQL.DDL.WebhookTransforms.TransformHeaders
-instance GHC.Classes.Eq Hasura.RQL.DDL.WebhookTransforms.TransformHeaders
-instance GHC.Show.Show Hasura.RQL.DDL.WebhookTransforms.TransformHeaders
-instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.WebhookTransforms.MetadataRequestTransform
-instance Control.DeepSeq.NFData Hasura.RQL.DDL.WebhookTransforms.MetadataRequestTransform
-instance GHC.Generics.Generic Hasura.RQL.DDL.WebhookTransforms.MetadataRequestTransform
-instance GHC.Classes.Eq Hasura.RQL.DDL.WebhookTransforms.MetadataRequestTransform
-instance GHC.Show.Show Hasura.RQL.DDL.WebhookTransforms.MetadataRequestTransform
-instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.WebhookTransforms.TransformErrorBundle
-instance Control.DeepSeq.NFData Hasura.RQL.DDL.WebhookTransforms.TransformErrorBundle
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.WebhookTransforms.TransformErrorBundle
-instance GHC.Base.Monoid Hasura.RQL.DDL.WebhookTransforms.TransformErrorBundle
-instance GHC.Base.Semigroup Hasura.RQL.DDL.WebhookTransforms.TransformErrorBundle
-instance GHC.Generics.Generic Hasura.RQL.DDL.WebhookTransforms.TransformErrorBundle
-instance GHC.Classes.Eq Hasura.RQL.DDL.WebhookTransforms.TransformErrorBundle
-instance GHC.Show.Show Hasura.RQL.DDL.WebhookTransforms.TransformErrorBundle
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.WebhookTransforms.MetadataRequestTransform
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.WebhookTransforms.MetadataRequestTransform
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.WebhookTransforms.TransformHeaders
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.WebhookTransforms.TransformHeaders
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.WebhookTransforms.HeaderKey
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.WebhookTransforms.MetadataResponseTransform
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.WebhookTransforms.MetadataResponseTransform
-instance Control.DeepSeq.NFData Hasura.RQL.DDL.WebhookTransforms.StringTemplateText
-instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.WebhookTransforms.StringTemplateText
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.WebhookTransforms.StringTemplateText
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.WebhookTransforms.StringTemplateText
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.WebhookTransforms.TemplateText
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.WebhookTransforms.TemplateText
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.WebhookTransforms.Version
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.WebhookTransforms.Version
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.WebhookTransforms.TemplatingEngine
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.WebhookTransforms.TemplatingEngine
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.WebhookTransforms.RequestMethod
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.WebhookTransforms.RequestMethod
-instance Data.Bifunctor.Bifunctor Hasura.RQL.DDL.WebhookTransforms.BodyTransform
-instance (Data.Aeson.Types.ToJSON.ToJSON a, Data.Aeson.Types.ToJSON.ToJSON b) => Data.Aeson.Types.ToJSON.ToJSON (Hasura.RQL.DDL.WebhookTransforms.BodyTransform a b)
-instance (Data.Aeson.Types.FromJSON.FromJSON a, Data.Aeson.Types.FromJSON.FromJSON b) => Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DDL.WebhookTransforms.BodyTransform a b)
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.WebhookTransforms.ReqTransformCtx
+applyResponseTransform :: ResponseTransform -> ResponseTransformCtx -> Either TransformErrorBundle ByteString
+instance Barbies.Internal.ConstraintsB.ConstraintsB Hasura.RQL.DDL.Webhook.Transform.RequestFields
+instance Barbies.Internal.ApplicativeB.ApplicativeB Hasura.RQL.DDL.Webhook.Transform.RequestFields
+instance Barbies.Internal.TraversableB.TraversableB Hasura.RQL.DDL.Webhook.Transform.RequestFields
+instance Barbies.Internal.FunctorB.FunctorB Hasura.RQL.DDL.Webhook.Transform.RequestFields
+instance GHC.Generics.Generic (Hasura.RQL.DDL.Webhook.Transform.RequestFields f)
+instance Data.Aeson.Types.ToJSON.ToJSON (fn result) => Data.Aeson.Types.ToJSON.ToJSON (Hasura.RQL.DDL.Webhook.Transform.WithOptional fn result)
+instance Data.Aeson.Types.FromJSON.FromJSON (fn result) => Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DDL.Webhook.Transform.WithOptional fn result)
+instance GHC.Show.Show (fn result) => GHC.Show.Show (Hasura.RQL.DDL.Webhook.Transform.WithOptional fn result)
+instance GHC.Generics.Generic (Hasura.RQL.DDL.Webhook.Transform.WithOptional fn result)
+instance GHC.Base.Functor fn => GHC.Base.Functor (Hasura.RQL.DDL.Webhook.Transform.WithOptional fn)
+instance GHC.Classes.Eq (fn result) => GHC.Classes.Eq (Hasura.RQL.DDL.Webhook.Transform.WithOptional fn result)
+instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.Webhook.Transform.RequestTransform
+instance Control.DeepSeq.NFData Hasura.RQL.DDL.Webhook.Transform.RequestTransform
+instance GHC.Generics.Generic Hasura.RQL.DDL.Webhook.Transform.RequestTransform
+instance GHC.Classes.Eq Hasura.RQL.DDL.Webhook.Transform.RequestTransform
+instance GHC.Show.Show Hasura.RQL.DDL.Webhook.Transform.RequestTransform
+instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.RQL.DDL.Webhook.Transform.MetadataResponseTransform
+instance Control.DeepSeq.NFData Hasura.RQL.DDL.Webhook.Transform.MetadataResponseTransform
+instance GHC.Generics.Generic Hasura.RQL.DDL.Webhook.Transform.MetadataResponseTransform
+instance GHC.Classes.Eq Hasura.RQL.DDL.Webhook.Transform.MetadataResponseTransform
+instance GHC.Show.Show Hasura.RQL.DDL.Webhook.Transform.MetadataResponseTransform
+instance Barbies.Internal.ConstraintsB.AllBF GHC.Show.Show f Hasura.RQL.DDL.Webhook.Transform.RequestFields => GHC.Show.Show (Hasura.RQL.DDL.Webhook.Transform.RequestFields f)
+instance Barbies.Internal.ConstraintsB.AllBF GHC.Classes.Eq f Hasura.RQL.DDL.Webhook.Transform.RequestFields => GHC.Classes.Eq (Hasura.RQL.DDL.Webhook.Transform.RequestFields f)
+instance Barbies.Internal.ConstraintsB.AllBF Control.DeepSeq.NFData f Hasura.RQL.DDL.Webhook.Transform.RequestFields => Control.DeepSeq.NFData (Hasura.RQL.DDL.Webhook.Transform.RequestFields f)
+instance Barbies.Internal.ConstraintsB.AllBF Hasura.Incremental.Internal.Dependency.Cacheable f Hasura.RQL.DDL.Webhook.Transform.RequestFields => Hasura.Incremental.Internal.Dependency.Cacheable (Hasura.RQL.DDL.Webhook.Transform.RequestFields f)
+instance Hasura.Incremental.Internal.Dependency.Cacheable (fn result) => Hasura.Incremental.Internal.Dependency.Cacheable (Hasura.RQL.DDL.Webhook.Transform.WithOptional fn result)
+instance Control.DeepSeq.NFData (fn result) => Control.DeepSeq.NFData (Hasura.RQL.DDL.Webhook.Transform.WithOptional fn result)
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Webhook.Transform.MetadataResponseTransform
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Webhook.Transform.MetadataResponseTransform
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Webhook.Transform.RequestTransform
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Webhook.Transform.RequestTransform
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Webhook.Transform.RequestTransformFn
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Webhook.Transform.RequestTransformFn
 
 module Hasura.RQL.DDL.Headers
 data HeaderConf
@@ -5588,9 +5777,9 @@ RelDef :: !RelName -> !a -> !Maybe Text -> RelDef a
 [_rdName] :: RelDef a -> !RelName
 [_rdUsing] :: RelDef a -> !a
 [_rdComment] :: RelDef a -> !Maybe Text
-rdUsing :: forall a_a4ZKp a_a4ZRh. Lens (RelDef a_a4ZKp) (RelDef a_a4ZRh) a_a4ZKp a_a4ZRh
-rdName :: forall a_a4ZKp. Lens' (RelDef a_a4ZKp) RelName
-rdComment :: forall a_a4ZKp. Lens' (RelDef a_a4ZKp) (Maybe Text)
+rdUsing :: forall a_a57mA a_a57ts. Lens (RelDef a_a57mA) (RelDef a_a57ts) a_a57mA a_a57ts
+rdName :: forall a_a57mA. Lens' (RelDef a_a57mA) RelName
+rdComment :: forall a_a57mA. Lens' (RelDef a_a57mA) (Maybe Text)
 data RelManualConfig (b :: BackendType)
 RelManualConfig :: !TableName b -> !HashMap (Column b) (Column b) -> !Maybe InsertOrder -> RelManualConfig (b :: BackendType)
 [rmTable] :: RelManualConfig (b :: BackendType) -> !TableName b
@@ -5702,8 +5891,8 @@ FunctionArg :: !Maybe FunctionArgName -> !FunctionArgType b -> !HasDefault -> Fu
 data InputArgument a
 IAUserProvided :: !a -> InputArgument a
 IASessionVariables :: !FunctionArgName -> InputArgument a
-_IASessionVariables :: forall a_a5dMR. Prism' (InputArgument a_a5dMR) FunctionArgName
-_IAUserProvided :: forall a_a5ehz a_a5dMR. Prism (InputArgument a_a5ehz) (InputArgument a_a5dMR) a_a5ehz a_a5dMR
+_IASessionVariables :: forall a_a5lsh. Prism' (InputArgument a_a5lsh) FunctionArgName
+_IAUserProvided :: forall a_a5lWZ a_a5lsh. Prism (InputArgument a_a5lWZ) (InputArgument a_a5lsh) a_a5lWZ a_a5lsh
 type FunctionInputArgument b = InputArgument (FunctionArg b)
 
 -- | Indicates whether the user requested the corresponding function to be
@@ -5760,19 +5949,19 @@ FunctionInfo :: FunctionName b -> Name -> Name -> Name -> SystemDefined -> Funct
 [_fiPermissions] :: FunctionInfo (b :: BackendType) -> FunctionPermissionsMap
 [_fiJsonAggSelect] :: FunctionInfo (b :: BackendType) -> JsonAggSelect
 [_fiComment] :: FunctionInfo (b :: BackendType) -> Maybe Text
-fiVolatility :: forall b_a5eyD. Lens' (FunctionInfo b_a5eyD) FunctionVolatility
-fiSystemDefined :: forall b_a5eyD. Lens' (FunctionInfo b_a5eyD) SystemDefined
-fiSQLName :: forall b_a5eyD. Lens' (FunctionInfo b_a5eyD) (FunctionName b_a5eyD)
-fiReturnType :: forall b_a5eyD. Lens' (FunctionInfo b_a5eyD) (TableName b_a5eyD)
-fiPermissions :: forall b_a5eyD. Lens' (FunctionInfo b_a5eyD) FunctionPermissionsMap
-fiJsonAggSelect :: forall b_a5eyD. Lens' (FunctionInfo b_a5eyD) JsonAggSelect
-fiInputArgs :: forall b_a5eyD. Lens' (FunctionInfo b_a5eyD) (Seq (FunctionInputArgument b_a5eyD))
-fiGQLName :: forall b_a5eyD. Lens' (FunctionInfo b_a5eyD) Name
-fiGQLArgsName :: forall b_a5eyD. Lens' (FunctionInfo b_a5eyD) Name
-fiGQLAggregateName :: forall b_a5eyD. Lens' (FunctionInfo b_a5eyD) Name
-fiExposedAs :: forall b_a5eyD. Lens' (FunctionInfo b_a5eyD) FunctionExposedAs
-fiDescription :: forall b_a5eyD. Lens' (FunctionInfo b_a5eyD) (Maybe Text)
-fiComment :: forall b_a5eyD. Lens' (FunctionInfo b_a5eyD) (Maybe Text)
+fiVolatility :: forall b_a5me3. Lens' (FunctionInfo b_a5me3) FunctionVolatility
+fiSystemDefined :: forall b_a5me3. Lens' (FunctionInfo b_a5me3) SystemDefined
+fiSQLName :: forall b_a5me3. Lens' (FunctionInfo b_a5me3) (FunctionName b_a5me3)
+fiReturnType :: forall b_a5me3. Lens' (FunctionInfo b_a5me3) (TableName b_a5me3)
+fiPermissions :: forall b_a5me3. Lens' (FunctionInfo b_a5me3) FunctionPermissionsMap
+fiJsonAggSelect :: forall b_a5me3. Lens' (FunctionInfo b_a5me3) JsonAggSelect
+fiInputArgs :: forall b_a5me3. Lens' (FunctionInfo b_a5me3) (Seq (FunctionInputArgument b_a5me3))
+fiGQLName :: forall b_a5me3. Lens' (FunctionInfo b_a5me3) Name
+fiGQLArgsName :: forall b_a5me3. Lens' (FunctionInfo b_a5me3) Name
+fiGQLAggregateName :: forall b_a5me3. Lens' (FunctionInfo b_a5me3) Name
+fiExposedAs :: forall b_a5me3. Lens' (FunctionInfo b_a5me3) FunctionExposedAs
+fiDescription :: forall b_a5me3. Lens' (FunctionInfo b_a5me3) (Maybe Text)
+fiComment :: forall b_a5me3. Lens' (FunctionInfo b_a5me3) (Maybe Text)
 
 -- | Apply function name customization to function arguments, as detailed
 --   in 'rfcs/function-root-field-customisation.md'. We want the different
@@ -5936,14 +6125,14 @@ TriggerOpsDef :: !Maybe (SubscribeOpSpec b) -> !Maybe (SubscribeOpSpec b) -> !Ma
 [tdDelete] :: TriggerOpsDef (b :: BackendType) -> !Maybe (SubscribeOpSpec b)
 [tdEnableManual] :: TriggerOpsDef (b :: BackendType) -> !Maybe Bool
 data EventTriggerConf (b :: BackendType)
-EventTriggerConf :: !TriggerName -> !TriggerOpsDef b -> !Maybe InputWebhook -> !Maybe Text -> !RetryConf -> !Maybe [HeaderConf] -> !Maybe MetadataRequestTransform -> !Maybe MetadataResponseTransform -> EventTriggerConf (b :: BackendType)
+EventTriggerConf :: !TriggerName -> !TriggerOpsDef b -> !Maybe InputWebhook -> !Maybe Text -> !RetryConf -> !Maybe [HeaderConf] -> !Maybe RequestTransform -> !Maybe MetadataResponseTransform -> EventTriggerConf (b :: BackendType)
 [etcName] :: EventTriggerConf (b :: BackendType) -> !TriggerName
 [etcDefinition] :: EventTriggerConf (b :: BackendType) -> !TriggerOpsDef b
 [etcWebhook] :: EventTriggerConf (b :: BackendType) -> !Maybe InputWebhook
 [etcWebhookFromEnv] :: EventTriggerConf (b :: BackendType) -> !Maybe Text
 [etcRetryConf] :: EventTriggerConf (b :: BackendType) -> !RetryConf
 [etcHeaders] :: EventTriggerConf (b :: BackendType) -> !Maybe [HeaderConf]
-[etcRequestTransform] :: EventTriggerConf (b :: BackendType) -> !Maybe MetadataRequestTransform
+[etcRequestTransform] :: EventTriggerConf (b :: BackendType) -> !Maybe RequestTransform
 [etcResponseTransform] :: EventTriggerConf (b :: BackendType) -> !Maybe MetadataResponseTransform
 data RecreateEventTriggers
 RETRecreate :: RecreateEventTriggers
@@ -5980,7 +6169,7 @@ data ProcessEventError
 PESetRetry :: !UTCTime -> ProcessEventError
 PESetError :: ProcessEventError
 data EventTriggerInfo (b :: BackendType)
-EventTriggerInfo :: !TriggerName -> !TriggerOpsDef b -> !RetryConf -> !WebhookConfInfo -> ![EventHeaderInfo] -> !Maybe MetadataRequestTransform -> !Maybe MetadataResponseTransform -> EventTriggerInfo (b :: BackendType)
+EventTriggerInfo :: !TriggerName -> !TriggerOpsDef b -> !RetryConf -> !WebhookConfInfo -> ![EventHeaderInfo] -> !Maybe RequestTransform -> !Maybe MetadataResponseTransform -> EventTriggerInfo (b :: BackendType)
 [etiName] :: EventTriggerInfo (b :: BackendType) -> !TriggerName
 [etiOpsDef] :: EventTriggerInfo (b :: BackendType) -> !TriggerOpsDef b
 [etiRetryConf] :: EventTriggerInfo (b :: BackendType) -> !RetryConf
@@ -5995,7 +6184,7 @@ EventTriggerInfo :: !TriggerName -> !TriggerOpsDef b -> !RetryConf -> !WebhookCo
 -- | Custom headers can be added to an event trigger. Each webhook request
 --   will have these headers added.
 [etiHeaders] :: EventTriggerInfo (b :: BackendType) -> ![EventHeaderInfo]
-[etiRequestTransform] :: EventTriggerInfo (b :: BackendType) -> !Maybe MetadataRequestTransform
+[etiRequestTransform] :: EventTriggerInfo (b :: BackendType) -> !Maybe RequestTransform
 [etiResponseTransform] :: EventTriggerInfo (b :: BackendType) -> !Maybe MetadataResponseTransform
 type EventTriggerInfoMap b = HashMap TriggerName (EventTriggerInfo b)
 newtype FetchBatchSize
@@ -6132,10 +6321,10 @@ ActionRemoteRelationshipSelect :: HashMap FieldName Name -> r -> ActionRemoteRel
 --   an execution tree is constructed so that a backend is absolved of
 --   dealing with remote relationships.
 [_arrsRelationship] :: ActionRemoteRelationshipSelect r -> r
-_ACFNestedObject :: forall r_a5OIK. Prism' (ActionFieldG r_a5OIK) (Name, ActionFieldsG r_a5OIK)
-_ACFExpression :: forall r_a5OIK. Prism' (ActionFieldG r_a5OIK) Text
-_ACFRemote :: forall r_a5OIK. Prism' (ActionFieldG r_a5OIK) (ActionRemoteRelationshipSelect r_a5OIK)
-_ACFScalar :: forall r_a5OIK. Prism' (ActionFieldG r_a5OIK) Name
+_ACFNestedObject :: forall r_a5Woa. Prism' (ActionFieldG r_a5Woa) (Name, ActionFieldsG r_a5Woa)
+_ACFExpression :: forall r_a5Woa. Prism' (ActionFieldG r_a5Woa) Text
+_ACFRemote :: forall r_a5Woa. Prism' (ActionFieldG r_a5Woa) (ActionRemoteRelationshipSelect r_a5Woa)
+_ACFScalar :: forall r_a5Woa. Prism' (ActionFieldG r_a5Woa) Name
 instance GHC.Show.Show r => GHC.Show.Show (Hasura.RQL.IR.Action.ActionRemoteRelationshipSelect r)
 instance GHC.Classes.Eq r => GHC.Classes.Eq (Hasura.RQL.IR.Action.ActionRemoteRelationshipSelect r)
 instance GHC.Show.Show r => GHC.Show.Show (Hasura.RQL.IR.Action.ActionFieldG r)
@@ -6206,12 +6395,13 @@ HStatus :: !HTTPResp a -> HTTPErr (a :: TriggerTypes)
 HOther :: !String -> HTTPErr (a :: TriggerTypes)
 mkHTTPResp :: Response ByteString -> HTTPResp a
 data RequestDetails
-RequestDetails :: Request -> Int64 -> Maybe Request -> Maybe Int64 -> ReqTransformCtx -> RequestDetails
+RequestDetails :: Request -> Int64 -> Maybe Request -> Maybe Int64 -> Maybe RequestTransformCtx -> Maybe SessionVariables -> RequestDetails
 [_rdOriginalRequest] :: RequestDetails -> Request
 [_rdOriginalSize] :: RequestDetails -> Int64
 [_rdTransformedRequest] :: RequestDetails -> Maybe Request
 [_rdTransformedSize] :: RequestDetails -> Maybe Int64
-[_rdReqTransformCtx] :: RequestDetails -> ReqTransformCtx
+[_rdReqTransformCtx] :: RequestDetails -> Maybe RequestTransformCtx
+[_rdSessionVars] :: RequestDetails -> Maybe SessionVariables
 extractRequest :: RequestDetails -> Request
 data HTTPRespExtra (a :: TriggerTypes)
 HTTPRespExtra :: !Either (HTTPErr a) (HTTPResp a) -> !ExtraLogContext -> !RequestDetails -> !ResponseLogBehavior -> HTTPRespExtra (a :: TriggerTypes)
@@ -6239,7 +6429,7 @@ data TransformableRequestError a
 HTTPError :: Value -> HTTPErr a -> TransformableRequestError a
 TransformationError :: Value -> TransformErrorBundle -> TransformableRequestError a
 mkRequest :: MonadError (TransformableRequestError a) m => [Header] -> ResponseTimeout -> ByteString -> Maybe RequestTransform -> ResolvedWebhook -> m RequestDetails
-invokeRequest :: (MonadReader r m, MonadError (TransformableRequestError a) m, Has Manager r, Has (Logger Hasura) r, MonadIO m, MonadTrace m) => RequestDetails -> Maybe ResponseTransform -> (Either (HTTPErr a) (HTTPResp a) -> RequestDetails -> m ()) -> m (HTTPResp a)
+invokeRequest :: (MonadReader r m, MonadError (TransformableRequestError a) m, Has Manager r, Has (Logger Hasura) r, MonadIO m, MonadTrace m) => RequestDetails -> Maybe ResponseTransform -> Maybe SessionVariables -> (Either (HTTPErr a) (HTTPResp a) -> RequestDetails -> m ()) -> m (HTTPResp a)
 mkResp :: Int -> TByteString -> [HeaderConf] -> Response a
 mkClientErr :: TByteString -> Response a
 mkWebhookReq :: Value -> [HeaderConf] -> InvocationVersion -> WebhookRequest
@@ -7131,8 +7321,8 @@ CustomFunctionNames :: Name -> Name -> CustomFunctionNames
 data ComputedFieldReturn (b :: BackendType)
 CFRScalar :: !ScalarType b -> ComputedFieldReturn (b :: BackendType)
 CFRSetofTable :: !TableName b -> ComputedFieldReturn (b :: BackendType)
-_CFRSetofTable :: forall b_a6BQb. Prism' (ComputedFieldReturn b_a6BQb) (TableName b_a6BQb)
-_CFRScalar :: forall b_a6BQb. Prism' (ComputedFieldReturn b_a6BQb) (ScalarType b_a6BQb)
+_CFRSetofTable :: forall b_a6JG8. Prism' (ComputedFieldReturn b_a6JG8) (TableName b_a6JG8)
+_CFRScalar :: forall b_a6JG8. Prism' (ComputedFieldReturn b_a6JG8) (ScalarType b_a6JG8)
 data ComputedFieldFunction (b :: BackendType)
 ComputedFieldFunction :: !FunctionName b -> !Seq (FunctionArg b) -> !FunctionTableArgument -> !Maybe FunctionSessionArgument -> !Maybe PGDescription -> ComputedFieldFunction (b :: BackendType)
 [_cffName] :: ComputedFieldFunction (b :: BackendType) -> !FunctionName b
@@ -7147,11 +7337,11 @@ ComputedFieldInfo :: !XComputedField b -> !ComputedFieldName -> !ComputedFieldFu
 [_cfiFunction] :: ComputedFieldInfo (b :: BackendType) -> !ComputedFieldFunction b
 [_cfiReturnType] :: ComputedFieldInfo (b :: BackendType) -> !ComputedFieldReturn b
 [_cfiDescription] :: ComputedFieldInfo (b :: BackendType) -> !Maybe Text
-cfiXComputedFieldInfo :: forall b_a6CyF. Lens' (ComputedFieldInfo b_a6CyF) (XComputedField b_a6CyF)
-cfiReturnType :: forall b_a6CyF. Lens' (ComputedFieldInfo b_a6CyF) (ComputedFieldReturn b_a6CyF)
-cfiName :: forall b_a6CyF. Lens' (ComputedFieldInfo b_a6CyF) ComputedFieldName
-cfiFunction :: forall b_a6CyF. Lens' (ComputedFieldInfo b_a6CyF) (ComputedFieldFunction b_a6CyF)
-cfiDescription :: forall b_a6CyF. Lens' (ComputedFieldInfo b_a6CyF) (Maybe Text)
+cfiXComputedFieldInfo :: forall b_a6KoC. Lens' (ComputedFieldInfo b_a6KoC) (XComputedField b_a6KoC)
+cfiReturnType :: forall b_a6KoC. Lens' (ComputedFieldInfo b_a6KoC) (ComputedFieldReturn b_a6KoC)
+cfiName :: forall b_a6KoC. Lens' (ComputedFieldInfo b_a6KoC) ComputedFieldName
+cfiFunction :: forall b_a6KoC. Lens' (ComputedFieldInfo b_a6KoC) (ComputedFieldFunction b_a6KoC)
+cfiDescription :: forall b_a6KoC. Lens' (ComputedFieldInfo b_a6KoC) (Maybe Text)
 onlyScalarComputedFields :: [ComputedFieldInfo backend] -> [ComputedFieldInfo backend]
 instance GHC.Generics.Generic (Hasura.RQL.Types.ComputedField.ComputedFieldFunction b)
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.RQL.Types.ComputedField.ComputedFieldFunction b)
@@ -7248,8 +7438,8 @@ ColumnScalar :: !ScalarType b -> ColumnType (b :: BackendType)
 --   distinguish this case, since we treat it <i>completely</i> differently
 --   in the GraphQL schema.
 ColumnEnumReference :: !EnumReference b -> ColumnType (b :: BackendType)
-_ColumnEnumReference :: forall b_a6Pwa. Prism' (ColumnType b_a6Pwa) (EnumReference b_a6Pwa)
-_ColumnScalar :: forall b_a6Pwa. Prism' (ColumnType b_a6Pwa) (ScalarType b_a6Pwa)
+_ColumnEnumReference :: forall b_a6Xm7. Prism' (ColumnType b_a6Xm7) (EnumReference b_a6Xm7)
+_ColumnScalar :: forall b_a6Xm7. Prism' (ColumnType b_a6Xm7) (ScalarType b_a6Xm7)
 
 -- | A parser to parse a json value with enforcing column type
 type ValueParser b m v = CollectableType (ColumnType b) -> Value -> m v
@@ -7412,8 +7602,8 @@ data GExists (b :: BackendType) a
 GExists :: !TableName b -> !GBoolExp b a -> GExists (b :: BackendType) a
 [_geTable] :: GExists (b :: BackendType) a -> !TableName b
 [_geWhere] :: GExists (b :: BackendType) a -> !GBoolExp b a
-geWhere :: forall b_a7aw8 a_a7aw9 a_a7dkd. Lens (GExists b_a7aw8 a_a7aw9) (GExists b_a7aw8 a_a7dkd) (GBoolExp b_a7aw8 a_a7aw9) (GBoolExp b_a7aw8 a_a7dkd)
-geTable :: forall b_a7aw8 a_a7aw9. Lens' (GExists b_a7aw8 a_a7aw9) (TableName b_a7aw8)
+geWhere :: forall b_a7im7 a_a7im8 a_a7lac. Lens (GExists b_a7im7 a_a7im8) (GExists b_a7im7 a_a7lac) (GBoolExp b_a7im7 a_a7im8) (GBoolExp b_a7im7 a_a7lac)
+geTable :: forall b_a7im7 a_a7im8. Lens' (GExists b_a7im7 a_a7im8) (TableName b_a7im7)
 
 -- | We don't allow conditions across relationships in permissions: the
 --   type we use as the terms in GBoolExp is this one, ColExp, which only
@@ -7429,11 +7619,11 @@ ColExp :: !FieldName -> !Value -> ColExp
 newtype BoolExp (b :: BackendType)
 BoolExp :: GBoolExp b ColExp -> BoolExp (b :: BackendType)
 [unBoolExp] :: BoolExp (b :: BackendType) -> GBoolExp b ColExp
-_BoolFld :: forall b_a7awa a_a7awb. Prism' (GBoolExp b_a7awa a_a7awb) a_a7awb
-_BoolExists :: forall b_a7awa a_a7awb. Prism' (GBoolExp b_a7awa a_a7awb) (GExists b_a7awa a_a7awb)
-_BoolNot :: forall b_a7awa a_a7awb. Prism' (GBoolExp b_a7awa a_a7awb) (GBoolExp b_a7awa a_a7awb)
-_BoolOr :: forall b_a7awa a_a7awb. Prism' (GBoolExp b_a7awa a_a7awb) [GBoolExp b_a7awa a_a7awb]
-_BoolAnd :: forall b_a7awa a_a7awb. Prism' (GBoolExp b_a7awa a_a7awb) [GBoolExp b_a7awa a_a7awb]
+_BoolFld :: forall b_a7im9 a_a7ima. Prism' (GBoolExp b_a7im9 a_a7ima) a_a7ima
+_BoolExists :: forall b_a7im9 a_a7ima. Prism' (GBoolExp b_a7im9 a_a7ima) (GExists b_a7im9 a_a7ima)
+_BoolNot :: forall b_a7im9 a_a7ima. Prism' (GBoolExp b_a7im9 a_a7ima) (GBoolExp b_a7im9 a_a7ima)
+_BoolOr :: forall b_a7im9 a_a7ima. Prism' (GBoolExp b_a7im9 a_a7ima) [GBoolExp b_a7im9 a_a7ima]
+_BoolAnd :: forall b_a7im9 a_a7ima. Prism' (GBoolExp b_a7im9 a_a7ima) [GBoolExp b_a7im9 a_a7ima]
 
 -- | Permissions get translated into boolean expressions that are threaded
 --   throuhgout the parsers. For the leaf values of those permissions, we
@@ -7765,9 +7955,9 @@ PermDef :: !RoleName -> !a -> !Maybe Text -> PermDef a
 [_pdRole] :: PermDef a -> !RoleName
 [_pdPermission] :: PermDef a -> !a
 [_pdComment] :: PermDef a -> !Maybe Text
-pdRole :: forall a_a82G1. Lens' (PermDef a_a82G1) RoleName
-pdPermission :: forall a_a82G1 a_a82Zf. Lens (PermDef a_a82G1) (PermDef a_a82Zf) a_a82G1 a_a82Zf
-pdComment :: forall a_a82G1. Lens' (PermDef a_a82G1) (Maybe Text)
+pdRole :: forall a_a8aw0. Lens' (PermDef a_a8aw0) RoleName
+pdPermission :: forall a_a8aw0 a_a8aPe. Lens (PermDef a_a8aw0) (PermDef a_a8aPe) a_a8aw0 a_a8aPe
+pdComment :: forall a_a8aw0. Lens' (PermDef a_a8aw0) (Maybe Text)
 data InsPerm (b :: BackendType)
 InsPerm :: !BoolExp b -> !Maybe (ColumnValues b Value) -> !Maybe (PermColSpec b) -> !Maybe Bool -> InsPerm (b :: BackendType)
 [ipCheck] :: InsPerm (b :: BackendType) -> !BoolExp b
@@ -13509,8 +13699,8 @@ convertGraphQLField :: Eq var => GraphQLField Void var -> Field NoFragments var
 --   on the abstract type) that is common across all the member selection
 --   sets and used that as the base selection.
 reduceAbstractTypeSelectionSet :: Eq var => DeduplicatedSelectionSet Void var -> (ObjectSelectionSet Void var, HashMap Name (ObjectSelectionSet Void var))
-_FieldRemote :: forall r_ah86Z var_ah870. Prism' (Field r_ah86Z var_ah870) (SchemaRemoteRelationshipSelect r_ah86Z)
-_FieldGraphQL :: forall r_ah86Z var_ah9xh var_ah870. Prism (Field r_ah86Z var_ah9xh) (Field r_ah86Z var_ah870) (GraphQLField r_ah86Z var_ah9xh) (GraphQLField r_ah86Z var_ah870)
+_FieldRemote :: forall r_ahfX8 var_ahfX9. Prism' (Field r_ahfX8 var_ahfX9) (SchemaRemoteRelationshipSelect r_ahfX8)
+_FieldGraphQL :: forall r_ahfX8 var_ahhnq var_ahfX9. Prism (Field r_ahfX8 var_ahhnq) (Field r_ahfX8 var_ahfX9) (GraphQLField r_ahfX8 var_ahhnq) (GraphQLField r_ahfX8 var_ahfX9)
 instance Data.Traversable.Traversable Hasura.RQL.IR.RemoteSchema.SchemaRemoteRelationshipSelect
 instance Data.Foldable.Foldable Hasura.RQL.IR.RemoteSchema.SchemaRemoteRelationshipSelect
 instance GHC.Base.Functor Hasura.RQL.IR.RemoteSchema.SchemaRemoteRelationshipSelect
@@ -13751,10 +13941,10 @@ FIColumn :: !ColumnInfo b -> FieldInfo (b :: BackendType)
 FIRelationship :: !RelInfo b -> FieldInfo (b :: BackendType)
 FIComputedField :: !ComputedFieldInfo b -> FieldInfo (b :: BackendType)
 FIRemoteRelationship :: !RemoteFieldInfo (DBJoinField b) -> FieldInfo (b :: BackendType)
-_FIRemoteRelationship :: forall b_ahoSt. Prism' (FieldInfo b_ahoSt) (RemoteFieldInfo (DBJoinField b_ahoSt))
-_FIComputedField :: forall b_ahoSt. Prism' (FieldInfo b_ahoSt) (ComputedFieldInfo b_ahoSt)
-_FIRelationship :: forall b_ahoSt. Prism' (FieldInfo b_ahoSt) (RelInfo b_ahoSt)
-_FIColumn :: forall b_ahoSt. Prism' (FieldInfo b_ahoSt) (ColumnInfo b_ahoSt)
+_FIRemoteRelationship :: forall b_ahwIC. Prism' (FieldInfo b_ahwIC) (RemoteFieldInfo (DBJoinField b_ahwIC))
+_FIComputedField :: forall b_ahwIC. Prism' (FieldInfo b_ahwIC) (ComputedFieldInfo b_ahwIC)
+_FIRelationship :: forall b_ahwIC. Prism' (FieldInfo b_ahwIC) (RelInfo b_ahwIC)
+_FIColumn :: forall b_ahwIC. Prism' (FieldInfo b_ahwIC) (ColumnInfo b_ahwIC)
 type FieldInfoMap = HashMap FieldName
 fieldInfoName :: forall b. Backend b => FieldInfo b -> FieldName
 fieldInfoGraphQLName :: FieldInfo b -> Maybe Name
@@ -13826,10 +14016,10 @@ RolePermInfo :: !Maybe (InsPermInfo b) -> !Maybe (SelPermInfo b) -> !Maybe (UpdP
 [_permSel] :: RolePermInfo (b :: BackendType) -> !Maybe (SelPermInfo b)
 [_permUpd] :: RolePermInfo (b :: BackendType) -> !Maybe (UpdPermInfo b)
 [_permDel] :: RolePermInfo (b :: BackendType) -> !Maybe (DelPermInfo b)
-permUpd :: forall b_ahpA8. Lens' (RolePermInfo b_ahpA8) (Maybe (UpdPermInfo b_ahpA8))
-permSel :: forall b_ahpA8. Lens' (RolePermInfo b_ahpA8) (Maybe (SelPermInfo b_ahpA8))
-permIns :: forall b_ahpA8. Lens' (RolePermInfo b_ahpA8) (Maybe (InsPermInfo b_ahpA8))
-permDel :: forall b_ahpA8. Lens' (RolePermInfo b_ahpA8) (Maybe (DelPermInfo b_ahpA8))
+permUpd :: forall b_ahxqh. Lens' (RolePermInfo b_ahxqh) (Maybe (UpdPermInfo b_ahxqh))
+permSel :: forall b_ahxqh. Lens' (RolePermInfo b_ahxqh) (Maybe (SelPermInfo b_ahxqh))
+permIns :: forall b_ahxqh. Lens' (RolePermInfo b_ahxqh) (Maybe (InsPermInfo b_ahxqh))
+permDel :: forall b_ahxqh. Lens' (RolePermInfo b_ahxqh) (Maybe (DelPermInfo b_ahxqh))
 type RolePermInfoMap b = HashMap RoleName (RolePermInfo b)
 data ViewInfo
 ViewInfo :: !Bool -> !Bool -> !Bool -> ViewInfo
@@ -13844,10 +14034,10 @@ TableConfig :: !TableCustomRootFields -> !CustomColumnNames b -> !Maybe Name -> 
 [_tcCustomColumnNames] :: TableConfig b -> !CustomColumnNames b
 [_tcCustomName] :: TableConfig b -> !Maybe Name
 [_tcComment] :: TableConfig b -> !Comment
-tcCustomRootFields :: forall b_ahszZ. Lens' (TableConfig b_ahszZ) TableCustomRootFields
-tcCustomName :: forall b_ahszZ. Lens' (TableConfig b_ahszZ) (Maybe Name)
-tcCustomColumnNames :: forall b_ahszZ b_aht9p. Lens (TableConfig b_ahszZ) (TableConfig b_aht9p) (CustomColumnNames b_ahszZ) (CustomColumnNames b_aht9p)
-tcComment :: forall b_ahszZ. Lens' (TableConfig b_ahszZ) Comment
+tcCustomRootFields :: forall b_ahAq8. Lens' (TableConfig b_ahAq8) TableCustomRootFields
+tcCustomName :: forall b_ahAq8. Lens' (TableConfig b_ahAq8) (Maybe Name)
+tcCustomColumnNames :: forall b_ahAq8 b_ahAZy. Lens (TableConfig b_ahAq8) (TableConfig b_ahAZy) (CustomColumnNames b_ahAq8) (CustomColumnNames b_ahAZy)
+tcComment :: forall b_ahAq8. Lens' (TableConfig b_ahAq8) Comment
 emptyTableConfig :: TableConfig b
 data Constraint (b :: BackendType)
 Constraint :: !ConstraintName b -> !OID -> Constraint (b :: BackendType)
@@ -13857,8 +14047,8 @@ data PrimaryKey (b :: BackendType) a
 PrimaryKey :: !Constraint b -> !NESeq a -> PrimaryKey (b :: BackendType) a
 [_pkConstraint] :: PrimaryKey (b :: BackendType) a -> !Constraint b
 [_pkColumns] :: PrimaryKey (b :: BackendType) a -> !NESeq a
-pkConstraint :: forall b_ahta1 a_ahta2 b_ahuLj. Lens (PrimaryKey b_ahta1 a_ahta2) (PrimaryKey b_ahuLj a_ahta2) (Constraint b_ahta1) (Constraint b_ahuLj)
-pkColumns :: forall b_ahta1 a_ahta2 a_ahuLi. Lens (PrimaryKey b_ahta1 a_ahta2) (PrimaryKey b_ahta1 a_ahuLi) (NESeq a_ahta2) (NESeq a_ahuLi)
+pkConstraint :: forall b_ahB0a a_ahB0b b_ahCBs. Lens (PrimaryKey b_ahB0a a_ahB0b) (PrimaryKey b_ahCBs a_ahB0b) (Constraint b_ahB0a) (Constraint b_ahCBs)
+pkColumns :: forall b_ahB0a a_ahB0b a_ahCBr. Lens (PrimaryKey b_ahB0a a_ahB0b) (PrimaryKey b_ahB0a a_ahCBr) (NESeq a_ahB0b) (NESeq a_ahCBr)
 data ForeignKey (b :: BackendType)
 ForeignKey :: !Constraint b -> !TableName b -> !HashMap (Column b) (Column b) -> ForeignKey (b :: BackendType)
 [_fkConstraint] :: ForeignKey (b :: BackendType) -> !Constraint b
@@ -13884,17 +14074,17 @@ TableCoreInfo :: !TableName b -> !Maybe PGDescription -> !SystemDefined -> !Fiel
 [_tciEnumValues] :: TableCoreInfoG (b :: BackendType) field primaryKeyColumn -> !Maybe EnumValues
 [_tciCustomConfig] :: TableCoreInfoG (b :: BackendType) field primaryKeyColumn -> !TableConfig b
 [_tciExtraTableMetadata] :: TableCoreInfoG (b :: BackendType) field primaryKeyColumn -> !ExtraTableMetadata b
-tciViewInfo :: forall b_ahuLM field_ahuLN primaryKeyColumn_ahuLO. Lens' (TableCoreInfoG b_ahuLM field_ahuLN primaryKeyColumn_ahuLO) (Maybe ViewInfo)
-tciUniqueConstraints :: forall b_ahuLM field_ahuLN primaryKeyColumn_ahuLO. Lens' (TableCoreInfoG b_ahuLM field_ahuLN primaryKeyColumn_ahuLO) (HashSet (Constraint b_ahuLM))
-tciSystemDefined :: forall b_ahuLM field_ahuLN primaryKeyColumn_ahuLO. Lens' (TableCoreInfoG b_ahuLM field_ahuLN primaryKeyColumn_ahuLO) SystemDefined
-tciPrimaryKey :: forall b_ahuLM field_ahuLN primaryKeyColumn_ahuLO primaryKeyColumn_ahvVE. Lens (TableCoreInfoG b_ahuLM field_ahuLN primaryKeyColumn_ahuLO) (TableCoreInfoG b_ahuLM field_ahuLN primaryKeyColumn_ahvVE) (Maybe (PrimaryKey b_ahuLM primaryKeyColumn_ahuLO)) (Maybe (PrimaryKey b_ahuLM primaryKeyColumn_ahvVE))
-tciName :: forall b_ahuLM field_ahuLN primaryKeyColumn_ahuLO. Lens' (TableCoreInfoG b_ahuLM field_ahuLN primaryKeyColumn_ahuLO) (TableName b_ahuLM)
-tciForeignKeys :: forall b_ahuLM field_ahuLN primaryKeyColumn_ahuLO. Lens' (TableCoreInfoG b_ahuLM field_ahuLN primaryKeyColumn_ahuLO) (HashSet (ForeignKey b_ahuLM))
-tciFieldInfoMap :: forall b_ahuLM field_ahuLN primaryKeyColumn_ahuLO field_ahvVD. Lens (TableCoreInfoG b_ahuLM field_ahuLN primaryKeyColumn_ahuLO) (TableCoreInfoG b_ahuLM field_ahvVD primaryKeyColumn_ahuLO) (FieldInfoMap field_ahuLN) (FieldInfoMap field_ahvVD)
-tciExtraTableMetadata :: forall b_ahuLM field_ahuLN primaryKeyColumn_ahuLO. Lens' (TableCoreInfoG b_ahuLM field_ahuLN primaryKeyColumn_ahuLO) (ExtraTableMetadata b_ahuLM)
-tciEnumValues :: forall b_ahuLM field_ahuLN primaryKeyColumn_ahuLO. Lens' (TableCoreInfoG b_ahuLM field_ahuLN primaryKeyColumn_ahuLO) (Maybe EnumValues)
-tciDescription :: forall b_ahuLM field_ahuLN primaryKeyColumn_ahuLO. Lens' (TableCoreInfoG b_ahuLM field_ahuLN primaryKeyColumn_ahuLO) (Maybe PGDescription)
-tciCustomConfig :: forall b_ahuLM field_ahuLN primaryKeyColumn_ahuLO. Lens' (TableCoreInfoG b_ahuLM field_ahuLN primaryKeyColumn_ahuLO) (TableConfig b_ahuLM)
+tciViewInfo :: forall b_ahCBV field_ahCBW primaryKeyColumn_ahCBX. Lens' (TableCoreInfoG b_ahCBV field_ahCBW primaryKeyColumn_ahCBX) (Maybe ViewInfo)
+tciUniqueConstraints :: forall b_ahCBV field_ahCBW primaryKeyColumn_ahCBX. Lens' (TableCoreInfoG b_ahCBV field_ahCBW primaryKeyColumn_ahCBX) (HashSet (Constraint b_ahCBV))
+tciSystemDefined :: forall b_ahCBV field_ahCBW primaryKeyColumn_ahCBX. Lens' (TableCoreInfoG b_ahCBV field_ahCBW primaryKeyColumn_ahCBX) SystemDefined
+tciPrimaryKey :: forall b_ahCBV field_ahCBW primaryKeyColumn_ahCBX primaryKeyColumn_ahDLN. Lens (TableCoreInfoG b_ahCBV field_ahCBW primaryKeyColumn_ahCBX) (TableCoreInfoG b_ahCBV field_ahCBW primaryKeyColumn_ahDLN) (Maybe (PrimaryKey b_ahCBV primaryKeyColumn_ahCBX)) (Maybe (PrimaryKey b_ahCBV primaryKeyColumn_ahDLN))
+tciName :: forall b_ahCBV field_ahCBW primaryKeyColumn_ahCBX. Lens' (TableCoreInfoG b_ahCBV field_ahCBW primaryKeyColumn_ahCBX) (TableName b_ahCBV)
+tciForeignKeys :: forall b_ahCBV field_ahCBW primaryKeyColumn_ahCBX. Lens' (TableCoreInfoG b_ahCBV field_ahCBW primaryKeyColumn_ahCBX) (HashSet (ForeignKey b_ahCBV))
+tciFieldInfoMap :: forall b_ahCBV field_ahCBW primaryKeyColumn_ahCBX field_ahDLM. Lens (TableCoreInfoG b_ahCBV field_ahCBW primaryKeyColumn_ahCBX) (TableCoreInfoG b_ahCBV field_ahDLM primaryKeyColumn_ahCBX) (FieldInfoMap field_ahCBW) (FieldInfoMap field_ahDLM)
+tciExtraTableMetadata :: forall b_ahCBV field_ahCBW primaryKeyColumn_ahCBX. Lens' (TableCoreInfoG b_ahCBV field_ahCBW primaryKeyColumn_ahCBX) (ExtraTableMetadata b_ahCBV)
+tciEnumValues :: forall b_ahCBV field_ahCBW primaryKeyColumn_ahCBX. Lens' (TableCoreInfoG b_ahCBV field_ahCBW primaryKeyColumn_ahCBX) (Maybe EnumValues)
+tciDescription :: forall b_ahCBV field_ahCBW primaryKeyColumn_ahCBX. Lens' (TableCoreInfoG b_ahCBV field_ahCBW primaryKeyColumn_ahCBX) (Maybe PGDescription)
+tciCustomConfig :: forall b_ahCBV field_ahCBW primaryKeyColumn_ahCBX. Lens' (TableCoreInfoG b_ahCBV field_ahCBW primaryKeyColumn_ahCBX) (TableConfig b_ahCBV)
 
 -- | Fully-processed table info that includes non-column fields.
 type TableCoreInfo b = TableCoreInfoG b (FieldInfo b) (ColumnInfo b)
@@ -13905,10 +14095,10 @@ TableInfo :: TableCoreInfo b -> !RolePermInfoMap b -> !EventTriggerInfoMap b -> 
 [_tiRolePermInfoMap] :: TableInfo (b :: BackendType) -> !RolePermInfoMap b
 [_tiEventTriggerInfoMap] :: TableInfo (b :: BackendType) -> !EventTriggerInfoMap b
 [_tiAdminRolePermInfo] :: TableInfo (b :: BackendType) -> RolePermInfo b
-tiRolePermInfoMap :: forall b_ahvYh. Lens' (TableInfo b_ahvYh) (RolePermInfoMap b_ahvYh)
-tiEventTriggerInfoMap :: forall b_ahvYh. Lens' (TableInfo b_ahvYh) (EventTriggerInfoMap b_ahvYh)
-tiCoreInfo :: forall b_ahvYh. Lens' (TableInfo b_ahvYh) (TableCoreInfo b_ahvYh)
-tiAdminRolePermInfo :: forall b_ahvYh. Lens' (TableInfo b_ahvYh) (RolePermInfo b_ahvYh)
+tiRolePermInfoMap :: forall b_ahDOq. Lens' (TableInfo b_ahDOq) (RolePermInfoMap b_ahDOq)
+tiEventTriggerInfoMap :: forall b_ahDOq. Lens' (TableInfo b_ahDOq) (EventTriggerInfoMap b_ahDOq)
+tiCoreInfo :: forall b_ahDOq. Lens' (TableInfo b_ahDOq) (TableCoreInfo b_ahDOq)
+tiAdminRolePermInfo :: forall b_ahDOq. Lens' (TableInfo b_ahDOq) (RolePermInfo b_ahDOq)
 tiName :: Lens' (TableInfo b) (TableName b)
 tableInfoName :: TableInfo b -> TableName b
 type TableCoreCache b = HashMap (TableName b) (TableCoreInfo b)
@@ -14062,12 +14252,12 @@ SourceInfo :: !SourceName -> !TableCache b -> !FunctionCache b -> !SourceConfig 
 [_siConfiguration] :: SourceInfo b -> !SourceConfig b
 [_siQueryTagsConfig] :: SourceInfo b -> !Maybe QueryTagsConfig
 [_siCustomization] :: SourceInfo b -> !SourceCustomization
-siTables :: forall b_aib4s. Lens' (SourceInfo b_aib4s) (TableCache b_aib4s)
-siQueryTagsConfig :: forall b_aib4s. Lens' (SourceInfo b_aib4s) (Maybe QueryTagsConfig)
-siName :: forall b_aib4s. Lens' (SourceInfo b_aib4s) SourceName
-siFunctions :: forall b_aib4s. Lens' (SourceInfo b_aib4s) (FunctionCache b_aib4s)
-siCustomization :: forall b_aib4s. Lens' (SourceInfo b_aib4s) SourceCustomization
-siConfiguration :: forall b_aib4s. Lens' (SourceInfo b_aib4s) (SourceConfig b_aib4s)
+siTables :: forall b_aiiUB. Lens' (SourceInfo b_aiiUB) (TableCache b_aiiUB)
+siQueryTagsConfig :: forall b_aiiUB. Lens' (SourceInfo b_aiiUB) (Maybe QueryTagsConfig)
+siName :: forall b_aiiUB. Lens' (SourceInfo b_aiiUB) SourceName
+siFunctions :: forall b_aiiUB. Lens' (SourceInfo b_aiiUB) (FunctionCache b_aiiUB)
+siCustomization :: forall b_aiiUB. Lens' (SourceInfo b_aiiUB) SourceCustomization
+siConfiguration :: forall b_aiiUB. Lens' (SourceInfo b_aiiUB) (SourceConfig b_aiiUB)
 type BackendSourceInfo = AnyBackend SourceInfo
 type SourceCache = HashMap SourceName BackendSourceInfo
 unsafeSourceInfo :: forall b. HasTag b => BackendSourceInfo -> Maybe (SourceInfo b)
@@ -14150,11 +14340,11 @@ TypeRelationship :: !RelationshipName -> !RelType -> !SourceName -> !t -> !HashM
 [_trSource] :: TypeRelationship t f -> !SourceName
 [_trRemoteTable] :: TypeRelationship t f -> !t
 [_trFieldMapping] :: TypeRelationship t f -> !HashMap ObjectFieldName f
-trType :: forall t_aifcO f_aifcP. Lens' (TypeRelationship t_aifcO f_aifcP) RelType
-trSource :: forall t_aifcO f_aifcP. Lens' (TypeRelationship t_aifcO f_aifcP) SourceName
-trRemoteTable :: forall t_aifcO f_aifcP t_aifBK. Lens (TypeRelationship t_aifcO f_aifcP) (TypeRelationship t_aifBK f_aifcP) t_aifcO t_aifBK
-trName :: forall t_aifcO f_aifcP. Lens' (TypeRelationship t_aifcO f_aifcP) RelationshipName
-trFieldMapping :: forall t_aifcO f_aifcP f_aifBJ. Lens (TypeRelationship t_aifcO f_aifcP) (TypeRelationship t_aifcO f_aifBJ) (HashMap ObjectFieldName f_aifcP) (HashMap ObjectFieldName f_aifBJ)
+trType :: forall t_ain2X f_ain2Y. Lens' (TypeRelationship t_ain2X f_ain2Y) RelType
+trSource :: forall t_ain2X f_ain2Y. Lens' (TypeRelationship t_ain2X f_ain2Y) SourceName
+trRemoteTable :: forall t_ain2X f_ain2Y t_ainrT. Lens (TypeRelationship t_ain2X f_ain2Y) (TypeRelationship t_ainrT f_ain2Y) t_ain2X t_ainrT
+trName :: forall t_ain2X f_ain2Y. Lens' (TypeRelationship t_ain2X f_ain2Y) RelationshipName
+trFieldMapping :: forall t_ain2X f_ain2Y f_ainrS. Lens (TypeRelationship t_ain2X f_ain2Y) (TypeRelationship t_ain2X f_ainrS) (HashMap ObjectFieldName f_ain2Y) (HashMap ObjectFieldName f_ainrS)
 newtype ObjectTypeName
 ObjectTypeName :: Name -> ObjectTypeName
 [unObjectTypeName] :: ObjectTypeName -> Name
@@ -14398,7 +14588,7 @@ ActionMutation :: !ActionMutationKind -> ActionType
 _ActionMutation :: Prism' ActionType ActionMutationKind
 _ActionQuery :: Prism' ActionType ()
 data ActionDefinition a b
-ActionDefinition :: ![a] -> !GraphQLType -> !ActionType -> ![HeaderConf] -> !Bool -> !Timeout -> !b -> !Maybe MetadataRequestTransform -> !Maybe MetadataResponseTransform -> ActionDefinition a b
+ActionDefinition :: ![a] -> !GraphQLType -> !ActionType -> ![HeaderConf] -> !Bool -> !Timeout -> !b -> !Maybe RequestTransform -> !Maybe MetadataResponseTransform -> ActionDefinition a b
 [_adArguments] :: ActionDefinition a b -> ![a]
 [_adOutputType] :: ActionDefinition a b -> !GraphQLType
 [_adType] :: ActionDefinition a b -> !ActionType
@@ -14409,17 +14599,17 @@ ActionDefinition :: ![a] -> !GraphQLType -> !ActionType -> ![HeaderConf] -> !Boo
 --   of 30 seconds will be used
 [_adTimeout] :: ActionDefinition a b -> !Timeout
 [_adHandler] :: ActionDefinition a b -> !b
-[_adRequestTransform] :: ActionDefinition a b -> !Maybe MetadataRequestTransform
+[_adRequestTransform] :: ActionDefinition a b -> !Maybe RequestTransform
 [_adResponseTransform] :: ActionDefinition a b -> !Maybe MetadataResponseTransform
-adType :: forall a_aiBEc b_aiBEd. Lens' (ActionDefinition a_aiBEc b_aiBEd) ActionType
-adTimeout :: forall a_aiBEc b_aiBEd. Lens' (ActionDefinition a_aiBEc b_aiBEd) Timeout
-adResponseTransform :: forall a_aiBEc b_aiBEd. Lens' (ActionDefinition a_aiBEc b_aiBEd) (Maybe MetadataResponseTransform)
-adRequestTransform :: forall a_aiBEc b_aiBEd. Lens' (ActionDefinition a_aiBEc b_aiBEd) (Maybe MetadataRequestTransform)
-adOutputType :: forall a_aiBEc b_aiBEd. Lens' (ActionDefinition a_aiBEc b_aiBEd) GraphQLType
-adHeaders :: forall a_aiBEc b_aiBEd. Lens' (ActionDefinition a_aiBEc b_aiBEd) [HeaderConf]
-adHandler :: forall a_aiBEc b_aiBEd b_aiBZw. Lens (ActionDefinition a_aiBEc b_aiBEd) (ActionDefinition a_aiBEc b_aiBZw) b_aiBEd b_aiBZw
-adForwardClientHeaders :: forall a_aiBEc b_aiBEd. Lens' (ActionDefinition a_aiBEc b_aiBEd) Bool
-adArguments :: forall a_aiBEc b_aiBEd a_aiBZv. Lens (ActionDefinition a_aiBEc b_aiBEd) (ActionDefinition a_aiBZv b_aiBEd) [a_aiBEc] [a_aiBZv]
+adType :: forall a_aiJul b_aiJum. Lens' (ActionDefinition a_aiJul b_aiJum) ActionType
+adTimeout :: forall a_aiJul b_aiJum. Lens' (ActionDefinition a_aiJul b_aiJum) Timeout
+adResponseTransform :: forall a_aiJul b_aiJum. Lens' (ActionDefinition a_aiJul b_aiJum) (Maybe MetadataResponseTransform)
+adRequestTransform :: forall a_aiJul b_aiJum. Lens' (ActionDefinition a_aiJul b_aiJum) (Maybe RequestTransform)
+adOutputType :: forall a_aiJul b_aiJum. Lens' (ActionDefinition a_aiJul b_aiJum) GraphQLType
+adHeaders :: forall a_aiJul b_aiJum. Lens' (ActionDefinition a_aiJul b_aiJum) [HeaderConf]
+adHandler :: forall a_aiJul b_aiJum b_aiJPF. Lens (ActionDefinition a_aiJul b_aiJum) (ActionDefinition a_aiJul b_aiJPF) b_aiJum b_aiJPF
+adForwardClientHeaders :: forall a_aiJul b_aiJum. Lens' (ActionDefinition a_aiJul b_aiJum) Bool
+adArguments :: forall a_aiJul b_aiJum a_aiJPE. Lens (ActionDefinition a_aiJul b_aiJum) (ActionDefinition a_aiJPE b_aiJum) [a_aiJul] [a_aiJPE]
 type ResolvedActionDefinition = ActionDefinition (ArgumentDefinition (GType, NonObjectCustomType)) ResolvedWebhook
 data ActionPermissionInfo
 ActionPermissionInfo :: !RoleName -> ActionPermissionInfo
@@ -14465,7 +14655,7 @@ ASINoSource :: ActionSourceInfo b
 ASISource :: !SourceName -> !SourceConfig b -> ActionSourceInfo b
 getActionSourceInfo :: AnnotatedOutputType -> ActionSourceInfo ('Postgres 'Vanilla)
 data AnnActionExecution (r :: Type)
-AnnActionExecution :: !ActionName -> !GraphQLType -> !ActionFieldsG r -> !Value -> !ActionOutputFields -> !ResolvedWebhook -> ![HeaderConf] -> !Bool -> !Timeout -> !Maybe MetadataRequestTransform -> !Maybe MetadataResponseTransform -> AnnActionExecution (r :: Type)
+AnnActionExecution :: !ActionName -> !GraphQLType -> !ActionFieldsG r -> !Value -> !ActionOutputFields -> !ResolvedWebhook -> ![HeaderConf] -> !Bool -> !Timeout -> !Maybe RequestTransform -> !Maybe MetadataResponseTransform -> AnnActionExecution (r :: Type)
 [_aaeName] :: AnnActionExecution (r :: Type) -> !ActionName
 
 -- | output type
@@ -14483,7 +14673,7 @@ AnnActionExecution :: !ActionName -> !GraphQLType -> !ActionFieldsG r -> !Value 
 [_aaeHeaders] :: AnnActionExecution (r :: Type) -> ![HeaderConf]
 [_aaeForwardClientHeaders] :: AnnActionExecution (r :: Type) -> !Bool
 [_aaeTimeOut] :: AnnActionExecution (r :: Type) -> !Timeout
-[_aaeRequestTransform] :: AnnActionExecution (r :: Type) -> !Maybe MetadataRequestTransform
+[_aaeRequestTransform] :: AnnActionExecution (r :: Type) -> !Maybe RequestTransform
 [_aaeResponseTransform] :: AnnActionExecution (r :: Type) -> !Maybe MetadataResponseTransform
 data AnnActionMutationAsync
 AnnActionMutationAsync :: !ActionName -> !Bool -> !Value -> AnnActionMutationAsync
@@ -14666,7 +14856,7 @@ STRetryConf :: !Int -> !NonNegativeDiffTime -> !NonNegativeDiffTime -> !NonNegat
 [strcToleranceSeconds] :: STRetryConf -> !NonNegativeDiffTime
 defaultSTRetryConf :: STRetryConf
 data CronTriggerMetadata
-CronTriggerMetadata :: !TriggerName -> !InputWebhook -> !CronSchedule -> !Maybe Value -> !STRetryConf -> ![HeaderConf] -> !Bool -> !Maybe Text -> !Maybe MetadataRequestTransform -> !Maybe MetadataResponseTransform -> CronTriggerMetadata
+CronTriggerMetadata :: !TriggerName -> !InputWebhook -> !CronSchedule -> !Maybe Value -> !STRetryConf -> ![HeaderConf] -> !Bool -> !Maybe Text -> !Maybe RequestTransform -> !Maybe MetadataResponseTransform -> CronTriggerMetadata
 [ctName] :: CronTriggerMetadata -> !TriggerName
 [ctWebhook] :: CronTriggerMetadata -> !InputWebhook
 [ctSchedule] :: CronTriggerMetadata -> !CronSchedule
@@ -14675,10 +14865,10 @@ CronTriggerMetadata :: !TriggerName -> !InputWebhook -> !CronSchedule -> !Maybe 
 [ctHeaders] :: CronTriggerMetadata -> ![HeaderConf]
 [ctIncludeInMetadata] :: CronTriggerMetadata -> !Bool
 [ctComment] :: CronTriggerMetadata -> !Maybe Text
-[ctRequestTransform] :: CronTriggerMetadata -> !Maybe MetadataRequestTransform
+[ctRequestTransform] :: CronTriggerMetadata -> !Maybe RequestTransform
 [ctResponseTransform] :: CronTriggerMetadata -> !Maybe MetadataResponseTransform
 data CreateCronTrigger
-CreateCronTrigger :: !TriggerName -> !InputWebhook -> !CronSchedule -> !Maybe Value -> !STRetryConf -> ![HeaderConf] -> !Bool -> !Maybe Text -> !Bool -> !Maybe MetadataRequestTransform -> !Maybe MetadataResponseTransform -> CreateCronTrigger
+CreateCronTrigger :: !TriggerName -> !InputWebhook -> !CronSchedule -> !Maybe Value -> !STRetryConf -> ![HeaderConf] -> !Bool -> !Maybe Text -> !Bool -> !Maybe RequestTransform -> !Maybe MetadataResponseTransform -> CreateCronTrigger
 [cctName] :: CreateCronTrigger -> !TriggerName
 [cctWebhook] :: CreateCronTrigger -> !InputWebhook
 [cctCronSchedule] :: CreateCronTrigger -> !CronSchedule
@@ -14688,14 +14878,14 @@ CreateCronTrigger :: !TriggerName -> !InputWebhook -> !CronSchedule -> !Maybe Va
 [cctIncludeInMetadata] :: CreateCronTrigger -> !Bool
 [cctComment] :: CreateCronTrigger -> !Maybe Text
 [cctReplace] :: CreateCronTrigger -> !Bool
-[cctRequestTransform] :: CreateCronTrigger -> !Maybe MetadataRequestTransform
+[cctRequestTransform] :: CreateCronTrigger -> !Maybe RequestTransform
 [cctResponseTransform] :: CreateCronTrigger -> !Maybe MetadataResponseTransform
 newtype ScheduledTriggerName
 ScheduledTriggerName :: TriggerName -> ScheduledTriggerName
 [unName] :: ScheduledTriggerName -> TriggerName
 formatTime' :: UTCTime -> Text
 data CreateScheduledEvent
-CreateScheduledEvent :: !InputWebhook -> !UTCTime -> !Maybe Value -> ![HeaderConf] -> !STRetryConf -> !Maybe Text -> !Maybe MetadataRequestTransform -> !Maybe MetadataResponseTransform -> CreateScheduledEvent
+CreateScheduledEvent :: !InputWebhook -> !UTCTime -> !Maybe Value -> ![HeaderConf] -> !STRetryConf -> !Maybe Text -> !Maybe RequestTransform -> !Maybe MetadataResponseTransform -> CreateScheduledEvent
 [cseWebhook] :: CreateScheduledEvent -> !InputWebhook
 
 -- | The timestamp should be in the <a>8601
@@ -14706,7 +14896,7 @@ CreateScheduledEvent :: !InputWebhook -> !UTCTime -> !Maybe Value -> ![HeaderCon
 [cseHeaders] :: CreateScheduledEvent -> ![HeaderConf]
 [cseRetryConf] :: CreateScheduledEvent -> !STRetryConf
 [cseComment] :: CreateScheduledEvent -> !Maybe Text
-[cseRequestTransform] :: CreateScheduledEvent -> !Maybe MetadataRequestTransform
+[cseRequestTransform] :: CreateScheduledEvent -> !Maybe RequestTransform
 [cseResponseTransform] :: CreateScheduledEvent -> !Maybe MetadataResponseTransform
 
 -- | The <a>ScheduledEventType</a> data type is needed to differentiate
@@ -14753,7 +14943,7 @@ SESDead :: ScheduledEventStatus
 scheduledEventStatusToText :: ScheduledEventStatus -> Text
 textToScheduledEventStatus :: Text -> Maybe ScheduledEventStatus
 data OneOffScheduledEvent
-OneOffScheduledEvent :: !OneOffScheduledEventId -> !InputWebhook -> !UTCTime -> !STRetryConf -> !Maybe Value -> ![HeaderConf] -> !Text -> !Int -> !UTCTime -> !Maybe UTCTime -> !Maybe Text -> !Maybe MetadataRequestTransform -> !Maybe MetadataResponseTransform -> OneOffScheduledEvent
+OneOffScheduledEvent :: !OneOffScheduledEventId -> !InputWebhook -> !UTCTime -> !STRetryConf -> !Maybe Value -> ![HeaderConf] -> !Text -> !Int -> !UTCTime -> !Maybe UTCTime -> !Maybe Text -> !Maybe RequestTransform -> !Maybe MetadataResponseTransform -> OneOffScheduledEvent
 [_ooseId] :: OneOffScheduledEvent -> !OneOffScheduledEventId
 [_ooseWebhookConf] :: OneOffScheduledEvent -> !InputWebhook
 [_ooseScheduledTime] :: OneOffScheduledEvent -> !UTCTime
@@ -14765,7 +14955,7 @@ OneOffScheduledEvent :: !OneOffScheduledEventId -> !InputWebhook -> !UTCTime -> 
 [_ooseCreatedAt] :: OneOffScheduledEvent -> !UTCTime
 [_ooseNextRetryAt] :: OneOffScheduledEvent -> !Maybe UTCTime
 [_ooseComment] :: OneOffScheduledEvent -> !Maybe Text
-[_ooseRequestTransform] :: OneOffScheduledEvent -> !Maybe MetadataRequestTransform
+[_ooseRequestTransform] :: OneOffScheduledEvent -> !Maybe RequestTransform
 [_ooseResponseTransform] :: OneOffScheduledEvent -> !Maybe MetadataResponseTransform
 data CronEvent
 CronEvent :: !CronEventId -> !TriggerName -> !UTCTime -> !Text -> !Int -> !UTCTime -> !Maybe UTCTime -> CronEvent
@@ -16176,18 +16366,18 @@ TableMetadata :: !TableName b -> !Bool -> !TableConfig b -> !Relationships (ObjR
 [_tmUpdatePermissions] :: TableMetadata b -> !Permissions (UpdPermDef b)
 [_tmDeletePermissions] :: TableMetadata b -> !Permissions (DelPermDef b)
 [_tmEventTriggers] :: TableMetadata b -> !EventTriggers b
-tmUpdatePermissions :: forall b_akqjK. Lens' (TableMetadata b_akqjK) (Permissions (UpdPermDef b_akqjK))
-tmTable :: forall b_akqjK. Lens' (TableMetadata b_akqjK) (TableName b_akqjK)
-tmSelectPermissions :: forall b_akqjK. Lens' (TableMetadata b_akqjK) (Permissions (SelPermDef b_akqjK))
-tmRemoteRelationships :: forall b_akqjK. Lens' (TableMetadata b_akqjK) RemoteRelationships
-tmObjectRelationships :: forall b_akqjK. Lens' (TableMetadata b_akqjK) (Relationships (ObjRelDef b_akqjK))
-tmIsEnum :: forall b_akqjK. Lens' (TableMetadata b_akqjK) Bool
-tmInsertPermissions :: forall b_akqjK. Lens' (TableMetadata b_akqjK) (Permissions (InsPermDef b_akqjK))
-tmEventTriggers :: forall b_akqjK. Lens' (TableMetadata b_akqjK) (EventTriggers b_akqjK)
-tmDeletePermissions :: forall b_akqjK. Lens' (TableMetadata b_akqjK) (Permissions (DelPermDef b_akqjK))
-tmConfiguration :: forall b_akqjK. Lens' (TableMetadata b_akqjK) (TableConfig b_akqjK)
-tmComputedFields :: forall b_akqjK. Lens' (TableMetadata b_akqjK) (ComputedFields b_akqjK)
-tmArrayRelationships :: forall b_akqjK. Lens' (TableMetadata b_akqjK) (Relationships (ArrRelDef b_akqjK))
+tmUpdatePermissions :: forall b_aky9Q. Lens' (TableMetadata b_aky9Q) (Permissions (UpdPermDef b_aky9Q))
+tmTable :: forall b_aky9Q. Lens' (TableMetadata b_aky9Q) (TableName b_aky9Q)
+tmSelectPermissions :: forall b_aky9Q. Lens' (TableMetadata b_aky9Q) (Permissions (SelPermDef b_aky9Q))
+tmRemoteRelationships :: forall b_aky9Q. Lens' (TableMetadata b_aky9Q) RemoteRelationships
+tmObjectRelationships :: forall b_aky9Q. Lens' (TableMetadata b_aky9Q) (Relationships (ObjRelDef b_aky9Q))
+tmIsEnum :: forall b_aky9Q. Lens' (TableMetadata b_aky9Q) Bool
+tmInsertPermissions :: forall b_aky9Q. Lens' (TableMetadata b_aky9Q) (Permissions (InsPermDef b_aky9Q))
+tmEventTriggers :: forall b_aky9Q. Lens' (TableMetadata b_aky9Q) (EventTriggers b_aky9Q)
+tmDeletePermissions :: forall b_aky9Q. Lens' (TableMetadata b_aky9Q) (Permissions (DelPermDef b_aky9Q))
+tmConfiguration :: forall b_aky9Q. Lens' (TableMetadata b_aky9Q) (TableConfig b_aky9Q)
+tmComputedFields :: forall b_aky9Q. Lens' (TableMetadata b_aky9Q) (ComputedFields b_aky9Q)
+tmArrayRelationships :: forall b_aky9Q. Lens' (TableMetadata b_aky9Q) (Relationships (ArrRelDef b_aky9Q))
 mkTableMeta :: TableName b -> Bool -> TableConfig b -> TableMetadata b
 data FunctionMetadata b
 FunctionMetadata :: !FunctionName b -> !FunctionConfig -> ![FunctionPermissionInfo] -> !Maybe Text -> FunctionMetadata b
@@ -16195,10 +16385,10 @@ FunctionMetadata :: !FunctionName b -> !FunctionConfig -> ![FunctionPermissionIn
 [_fmConfiguration] :: FunctionMetadata b -> !FunctionConfig
 [_fmPermissions] :: FunctionMetadata b -> ![FunctionPermissionInfo]
 [_fmComment] :: FunctionMetadata b -> !Maybe Text
-fmPermissions :: forall b_akqVT. Lens' (FunctionMetadata b_akqVT) [FunctionPermissionInfo]
-fmFunction :: forall b_akqVT b_akrFw. Lens (FunctionMetadata b_akqVT) (FunctionMetadata b_akrFw) (FunctionName b_akqVT) (FunctionName b_akrFw)
-fmConfiguration :: forall b_akqVT. Lens' (FunctionMetadata b_akqVT) FunctionConfig
-fmComment :: forall b_akqVT. Lens' (FunctionMetadata b_akqVT) (Maybe Text)
+fmPermissions :: forall b_akyLZ. Lens' (FunctionMetadata b_akyLZ) [FunctionPermissionInfo]
+fmFunction :: forall b_akyLZ b_akzvC. Lens (FunctionMetadata b_akyLZ) (FunctionMetadata b_akzvC) (FunctionName b_akyLZ) (FunctionName b_akzvC)
+fmConfiguration :: forall b_akyLZ. Lens' (FunctionMetadata b_akyLZ) FunctionConfig
+fmComment :: forall b_akyLZ. Lens' (FunctionMetadata b_akyLZ) (Maybe Text)
 type Tables b = InsOrdHashMap (TableName b) (TableMetadata b)
 type Functions b = InsOrdHashMap (FunctionName b) (FunctionMetadata b)
 type RemoteSchemas = InsOrdHashMap RemoteSchemaName RemoteSchemaMetadata
@@ -16214,12 +16404,12 @@ SourceMetadata :: !SourceName -> !Tables b -> !Functions b -> !SourceConnConfigu
 [_smConfiguration] :: SourceMetadata b -> !SourceConnConfiguration b
 [_smQueryTags] :: SourceMetadata b -> !Maybe QueryTagsConfig
 [_smCustomization] :: SourceMetadata b -> !SourceCustomization
-smTables :: forall b_akrGe. Lens' (SourceMetadata b_akrGe) (Tables b_akrGe)
-smQueryTags :: forall b_akrGe. Lens' (SourceMetadata b_akrGe) (Maybe QueryTagsConfig)
-smName :: forall b_akrGe. Lens' (SourceMetadata b_akrGe) SourceName
-smFunctions :: forall b_akrGe. Lens' (SourceMetadata b_akrGe) (Functions b_akrGe)
-smCustomization :: forall b_akrGe. Lens' (SourceMetadata b_akrGe) SourceCustomization
-smConfiguration :: forall b_akrGe. Lens' (SourceMetadata b_akrGe) (SourceConnConfiguration b_akrGe)
+smTables :: forall b_akzwk. Lens' (SourceMetadata b_akzwk) (Tables b_akzwk)
+smQueryTags :: forall b_akzwk. Lens' (SourceMetadata b_akzwk) (Maybe QueryTagsConfig)
+smName :: forall b_akzwk. Lens' (SourceMetadata b_akzwk) SourceName
+smFunctions :: forall b_akzwk. Lens' (SourceMetadata b_akzwk) (Functions b_akzwk)
+smCustomization :: forall b_akzwk. Lens' (SourceMetadata b_akzwk) SourceCustomization
+smConfiguration :: forall b_akzwk. Lens' (SourceMetadata b_akzwk) (SourceConnConfiguration b_akzwk)
 mkSourceMetadata :: forall (b :: BackendType). Backend b => SourceName -> SourceConnConfiguration b -> SourceCustomization -> BackendSourceMetadata
 type BackendSourceMetadata = AnyBackend SourceMetadata
 toSourceMetadata :: forall b. Backend b => Prism' BackendSourceMetadata (SourceMetadata b)
@@ -16874,27 +17064,27 @@ insertFunctionArg :: FunctionArgName -> Int -> a -> FunctionArgsExpG a -> Functi
 data CountDistinct
 SelectCountDistinct :: CountDistinct
 SelectCountNonDistinct :: CountDistinct
-asnStrfyNum :: forall b_almew r_almex f_almey v_almez r_alWxn. Lens (AnnSelectG b_almew r_almex f_almey v_almez) (AnnSelectG b_almew r_alWxn f_almey v_almez) StringifyNumbers StringifyNumbers
-asnPerm :: forall b_almew r_almex f_almey v_almez r_alWxm. Lens (AnnSelectG b_almew r_almex f_almey v_almez) (AnnSelectG b_almew r_alWxm f_almey v_almez) (TablePermG b_almew v_almez) (TablePermG b_almew v_almez)
-asnFrom :: forall b_almew r_almex f_almey v_almez r_alWxl. Lens (AnnSelectG b_almew r_almex f_almey v_almez) (AnnSelectG b_almew r_alWxl f_almey v_almez) (SelectFromG b_almew v_almez) (SelectFromG b_almew v_almez)
-asnFields :: forall b_almew r_almex f_almey v_almez r_alWxj f_alWxk. Lens (AnnSelectG b_almew r_almex f_almey v_almez) (AnnSelectG b_almew r_alWxj f_alWxk v_almez) (Fields (f_almey v_almez)) (Fields (f_alWxk v_almez))
-asnArgs :: forall b_almew r_almex f_almey v_almez r_alWxi. Lens (AnnSelectG b_almew r_almex f_almey v_almez) (AnnSelectG b_almew r_alWxi f_almey v_almez) (SelectArgsG b_almew v_almez) (SelectArgsG b_almew v_almez)
-saWhere :: forall b_almee v_almef. Lens' (SelectArgsG b_almee v_almef) (Maybe (AnnBoolExp b_almee v_almef))
-saOrderBy :: forall b_almee v_almef. Lens' (SelectArgsG b_almee v_almef) (Maybe (NonEmpty (AnnotatedOrderByItemG b_almee v_almef)))
-saOffset :: forall b_almee v_almef. Lens' (SelectArgsG b_almee v_almef) (Maybe Int64)
-saLimit :: forall b_almee v_almef. Lens' (SelectArgsG b_almee v_almef) (Maybe Int)
-saDistinct :: forall b_almee v_almef. Lens' (SelectArgsG b_almee v_almef) (Maybe (NonEmpty (Column b_almee)))
-_AFExpression :: forall b_almdY r_almdZ v_alme0. Prism' (AnnFieldG b_almdY r_almdZ v_alme0) Text
-_AFNodeId :: forall b_almdY r_almdZ v_alme0. Prism' (AnnFieldG b_almdY r_almdZ v_alme0) (XRelay b_almdY, TableName b_almdY, PrimaryKeyColumns b_almdY)
-_AFRemote :: forall b_almdY r_almdZ v_alme0. Prism' (AnnFieldG b_almdY r_almdZ v_alme0) (RemoteRelationshipSelect b_almdY r_almdZ)
-_AFComputedField :: forall b_almdY r_almdZ v_alme0. Prism' (AnnFieldG b_almdY r_almdZ v_alme0) (XComputedField b_almdY, ComputedFieldName, ComputedFieldSelect b_almdY r_almdZ v_alme0)
-_AFArrayRelation :: forall b_almdY r_almdZ v_alme0. Prism' (AnnFieldG b_almdY r_almdZ v_alme0) (ArraySelectG b_almdY r_almdZ v_alme0)
-_AFObjectRelation :: forall b_almdY r_almdZ v_alme0. Prism' (AnnFieldG b_almdY r_almdZ v_alme0) (ObjectRelationSelectG b_almdY r_almdZ v_alme0)
-_AFColumn :: forall b_almdY r_almdZ v_alme0. Prism' (AnnFieldG b_almdY r_almdZ v_alme0) (AnnColumnField b_almdY v_alme0)
-_AOCComputedField :: forall b_alme7 v_alme8. Prism' (AnnotatedOrderByElement b_alme7 v_alme8) (ComputedFieldOrderBy b_alme7 v_alme8)
-_AOCArrayAggregation :: forall b_alme7 v_alme8. Prism' (AnnotatedOrderByElement b_alme7 v_alme8) (RelInfo b_alme7, AnnBoolExp b_alme7 v_alme8, AnnotatedAggregateOrderBy b_alme7)
-_AOCObjectRelation :: forall b_alme7 v_alme8. Prism' (AnnotatedOrderByElement b_alme7 v_alme8) (RelInfo b_alme7, AnnBoolExp b_alme7 v_alme8, AnnotatedOrderByElement b_alme7 v_alme8)
-_AOCColumn :: forall b_alme7 v_alme8. Prism' (AnnotatedOrderByElement b_alme7 v_alme8) (ColumnInfo b_alme7)
+asnStrfyNum :: forall b_alu4C r_alu4D f_alu4E v_alu4F r_am4nt. Lens (AnnSelectG b_alu4C r_alu4D f_alu4E v_alu4F) (AnnSelectG b_alu4C r_am4nt f_alu4E v_alu4F) StringifyNumbers StringifyNumbers
+asnPerm :: forall b_alu4C r_alu4D f_alu4E v_alu4F r_am4ns. Lens (AnnSelectG b_alu4C r_alu4D f_alu4E v_alu4F) (AnnSelectG b_alu4C r_am4ns f_alu4E v_alu4F) (TablePermG b_alu4C v_alu4F) (TablePermG b_alu4C v_alu4F)
+asnFrom :: forall b_alu4C r_alu4D f_alu4E v_alu4F r_am4nr. Lens (AnnSelectG b_alu4C r_alu4D f_alu4E v_alu4F) (AnnSelectG b_alu4C r_am4nr f_alu4E v_alu4F) (SelectFromG b_alu4C v_alu4F) (SelectFromG b_alu4C v_alu4F)
+asnFields :: forall b_alu4C r_alu4D f_alu4E v_alu4F r_am4np f_am4nq. Lens (AnnSelectG b_alu4C r_alu4D f_alu4E v_alu4F) (AnnSelectG b_alu4C r_am4np f_am4nq v_alu4F) (Fields (f_alu4E v_alu4F)) (Fields (f_am4nq v_alu4F))
+asnArgs :: forall b_alu4C r_alu4D f_alu4E v_alu4F r_am4no. Lens (AnnSelectG b_alu4C r_alu4D f_alu4E v_alu4F) (AnnSelectG b_alu4C r_am4no f_alu4E v_alu4F) (SelectArgsG b_alu4C v_alu4F) (SelectArgsG b_alu4C v_alu4F)
+saWhere :: forall b_alu4k v_alu4l. Lens' (SelectArgsG b_alu4k v_alu4l) (Maybe (AnnBoolExp b_alu4k v_alu4l))
+saOrderBy :: forall b_alu4k v_alu4l. Lens' (SelectArgsG b_alu4k v_alu4l) (Maybe (NonEmpty (AnnotatedOrderByItemG b_alu4k v_alu4l)))
+saOffset :: forall b_alu4k v_alu4l. Lens' (SelectArgsG b_alu4k v_alu4l) (Maybe Int64)
+saLimit :: forall b_alu4k v_alu4l. Lens' (SelectArgsG b_alu4k v_alu4l) (Maybe Int)
+saDistinct :: forall b_alu4k v_alu4l. Lens' (SelectArgsG b_alu4k v_alu4l) (Maybe (NonEmpty (Column b_alu4k)))
+_AFExpression :: forall b_alu44 r_alu45 v_alu46. Prism' (AnnFieldG b_alu44 r_alu45 v_alu46) Text
+_AFNodeId :: forall b_alu44 r_alu45 v_alu46. Prism' (AnnFieldG b_alu44 r_alu45 v_alu46) (XRelay b_alu44, TableName b_alu44, PrimaryKeyColumns b_alu44)
+_AFRemote :: forall b_alu44 r_alu45 v_alu46. Prism' (AnnFieldG b_alu44 r_alu45 v_alu46) (RemoteRelationshipSelect b_alu44 r_alu45)
+_AFComputedField :: forall b_alu44 r_alu45 v_alu46. Prism' (AnnFieldG b_alu44 r_alu45 v_alu46) (XComputedField b_alu44, ComputedFieldName, ComputedFieldSelect b_alu44 r_alu45 v_alu46)
+_AFArrayRelation :: forall b_alu44 r_alu45 v_alu46. Prism' (AnnFieldG b_alu44 r_alu45 v_alu46) (ArraySelectG b_alu44 r_alu45 v_alu46)
+_AFObjectRelation :: forall b_alu44 r_alu45 v_alu46. Prism' (AnnFieldG b_alu44 r_alu45 v_alu46) (ObjectRelationSelectG b_alu44 r_alu45 v_alu46)
+_AFColumn :: forall b_alu44 r_alu45 v_alu46. Prism' (AnnFieldG b_alu44 r_alu45 v_alu46) (AnnColumnField b_alu44 v_alu46)
+_AOCComputedField :: forall b_alu4d v_alu4e. Prism' (AnnotatedOrderByElement b_alu4d v_alu4e) (ComputedFieldOrderBy b_alu4d v_alu4e)
+_AOCArrayAggregation :: forall b_alu4d v_alu4e. Prism' (AnnotatedOrderByElement b_alu4d v_alu4e) (RelInfo b_alu4d, AnnBoolExp b_alu4d v_alu4e, AnnotatedAggregateOrderBy b_alu4d)
+_AOCObjectRelation :: forall b_alu4d v_alu4e. Prism' (AnnotatedOrderByElement b_alu4d v_alu4e) (RelInfo b_alu4d, AnnBoolExp b_alu4d v_alu4e, AnnotatedOrderByElement b_alu4d v_alu4e)
+_AOCColumn :: forall b_alu4d v_alu4e. Prism' (AnnotatedOrderByElement b_alu4d v_alu4e) (ColumnInfo b_alu4d)
 instance Data.Hashable.Class.Hashable Hasura.RQL.IR.Select.ConnectionSlice
 instance GHC.Generics.Generic Hasura.RQL.IR.Select.ConnectionSlice
 instance GHC.Classes.Eq Hasura.RQL.IR.Select.ConnectionSlice
@@ -17195,9 +17385,9 @@ InsertQueryP1 :: TableName b -> [Column b] -> [[SQLExpression b]] -> Maybe (OnCo
 [iqp1CheckCond] :: InsertQueryP1 (b :: BackendType) -> (AnnBoolExpSQL b, Maybe (AnnBoolExpSQL b))
 [iqp1Output] :: InsertQueryP1 (b :: BackendType) -> MutationOutput b
 [iqp1AllCols] :: InsertQueryP1 (b :: BackendType) -> [ColumnInfo b]
-_AIArrayRelationship :: forall b_amPRH v_amPRI. Prism' (AnnotatedInsert b_amPRH v_amPRI) (XNestedInserts b_amPRH, ArrRelIns b_amPRH v_amPRI)
-_AIObjectRelationship :: forall b_amPRH v_amPRI. Prism' (AnnotatedInsert b_amPRH v_amPRI) (XNestedInserts b_amPRH, ObjRelIns b_amPRH v_amPRI)
-_AIColumn :: forall b_amPRH v_amPRI. Prism' (AnnotatedInsert b_amPRH v_amPRI) (Column b_amPRH, v_amPRI)
+_AIArrayRelationship :: forall b_amXHN v_amXHO. Prism' (AnnotatedInsert b_amXHN v_amXHO) (XNestedInserts b_amXHN, ArrRelIns b_amXHN v_amXHO)
+_AIObjectRelationship :: forall b_amXHN v_amXHO. Prism' (AnnotatedInsert b_amXHN v_amXHO) (XNestedInserts b_amXHN, ObjRelIns b_amXHN v_amXHO)
+_AIColumn :: forall b_amXHN v_amXHO. Prism' (AnnotatedInsert b_amXHN v_amXHO) (Column b_amXHN, v_amXHO)
 getInsertColumns :: AnnotatedInsertRow b v -> [(Column b, v)]
 getInsertObjectRelationships :: AnnotatedInsertRow b v -> [ObjRelIns b v]
 getInsertArrayRelationships :: AnnotatedInsertRow b v -> [ArrRelIns b v]
@@ -17361,7 +17551,7 @@ rscInfo :: Lens' RemoteSchemaCtx RemoteSchemaInfo
 type RemoteSchemaMap = HashMap RemoteSchemaName RemoteSchemaCtx
 type DepMap = HashMap SchemaObjId (HashSet SchemaDependency)
 data CronTriggerInfo
-CronTriggerInfo :: !TriggerName -> !CronSchedule -> !Maybe Value -> !STRetryConf -> !ResolvedWebhook -> ![EventHeaderInfo] -> !Maybe Text -> !Maybe MetadataRequestTransform -> !Maybe MetadataResponseTransform -> CronTriggerInfo
+CronTriggerInfo :: !TriggerName -> !CronSchedule -> !Maybe Value -> !STRetryConf -> !ResolvedWebhook -> ![EventHeaderInfo] -> !Maybe Text -> !Maybe RequestTransform -> !Maybe MetadataResponseTransform -> CronTriggerInfo
 [ctiName] :: CronTriggerInfo -> !TriggerName
 [ctiSchedule] :: CronTriggerInfo -> !CronSchedule
 [ctiPayload] :: CronTriggerInfo -> !Maybe Value
@@ -17369,7 +17559,7 @@ CronTriggerInfo :: !TriggerName -> !CronSchedule -> !Maybe Value -> !STRetryConf
 [ctiWebhookInfo] :: CronTriggerInfo -> !ResolvedWebhook
 [ctiHeaders] :: CronTriggerInfo -> ![EventHeaderInfo]
 [ctiComment] :: CronTriggerInfo -> !Maybe Text
-[ctiRequestTransform] :: CronTriggerInfo -> !Maybe MetadataRequestTransform
+[ctiRequestTransform] :: CronTriggerInfo -> !Maybe RequestTransform
 [ctiResponseTransform] :: CronTriggerInfo -> !Maybe MetadataResponseTransform
 newtype SchemaCacheVer
 SchemaCacheVer :: Word64 -> SchemaCacheVer
@@ -20040,12 +20230,12 @@ data WebHookUrl
 EnvVar :: String -> WebHookUrl
 URL :: Text -> WebHookUrl
 data TestWebhookTransform
-TestWebhookTransform :: Environment -> [Header] -> WebHookUrl -> Value -> MetadataRequestTransform -> !Maybe MetadataResponseTransform -> Maybe SessionVariables -> TestWebhookTransform
+TestWebhookTransform :: Environment -> [Header] -> WebHookUrl -> Value -> RequestTransform -> !Maybe MetadataResponseTransform -> Maybe SessionVariables -> TestWebhookTransform
 [_twtEnv] :: TestWebhookTransform -> Environment
 [_twtHeaders] :: TestWebhookTransform -> [Header]
 [_twtWebhookUrl] :: TestWebhookTransform -> WebHookUrl
 [_twtPayload] :: TestWebhookTransform -> Value
-[_twtTransformer] :: TestWebhookTransform -> MetadataRequestTransform
+[_twtTransformer] :: TestWebhookTransform -> RequestTransform
 [_twtResponseTransformer] :: TestWebhookTransform -> !Maybe MetadataResponseTransform
 [_twtSessionVariables] :: TestWebhookTransform -> Maybe SessionVariables
 instance GHC.Classes.Eq Hasura.RQL.DDL.Metadata.Types.AllowInconsistentMetadata
@@ -20112,7 +20302,7 @@ runSetGraphqlSchemaIntrospectionOptions :: (MonadError QErr m, MetadataM m, Cach
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-CreateEventTriggerQuery :: !SourceName -> !TriggerName -> !TableName b -> !Maybe (SubscribeOpSpec b) -> !Maybe (SubscribeOpSpec b) -> !Maybe (SubscribeOpSpec b) -> !Maybe Bool -> !Maybe RetryConf -> !Maybe InputWebhook -> !Maybe Text -> !Maybe [HeaderConf] -> !Bool -> !Maybe MetadataRequestTransform -> !Maybe MetadataResponseTransform -> CreateEventTriggerQuery (b :: BackendType)
+CreateEventTriggerQuery :: !SourceName -> !TriggerName -> !TableName b -> !Maybe (SubscribeOpSpec b) -> !Maybe (SubscribeOpSpec b) -> !Maybe (SubscribeOpSpec b) -> !Maybe Bool -> !Maybe RetryConf -> !Maybe InputWebhook -> !Maybe Text -> !Maybe [HeaderConf] -> !Bool -> !Maybe RequestTransform -> !Maybe MetadataResponseTransform -> CreateEventTriggerQuery (b :: BackendType)
 [_cetqSource] :: CreateEventTriggerQuery (b :: BackendType) -> !SourceName
 [_cetqName] :: CreateEventTriggerQuery (b :: BackendType) -> !TriggerName
 [_cetqTable] :: CreateEventTriggerQuery (b :: BackendType) -> !TableName b
@@ -20125,7 +20315,7 @@ CreateEventTriggerQuery :: !SourceName -> !TriggerName -> !TableName b -> !Maybe
 [_cetqWebhookFromEnv] :: CreateEventTriggerQuery (b :: BackendType) -> !Maybe Text
 [_cetqHeaders] :: CreateEventTriggerQuery (b :: BackendType) -> !Maybe [HeaderConf]
 [_cetqReplace] :: CreateEventTriggerQuery (b :: BackendType) -> !Bool
-[_cetqRequestTransform] :: CreateEventTriggerQuery (b :: BackendType) -> !Maybe MetadataRequestTransform
+[_cetqRequestTransform] :: CreateEventTriggerQuery (b :: BackendType) -> !Maybe RequestTransform
 [_cetqResponseTrasnform] :: CreateEventTriggerQuery (b :: BackendType) -> !Maybe MetadataResponseTransform
 data DeleteEventTriggerQuery (b :: BackendType)
 DeleteEventTriggerQuery :: !SourceName -> !TriggerName -> DeleteEventTriggerQuery (b :: BackendType)
@@ -21184,7 +21374,7 @@ RetryContext :: !Int -> !STRetryConf -> RetryContext
 [_rctxTries] :: RetryContext -> !Int
 [_rctxConf] :: RetryContext -> !STRetryConf
 data ScheduledEventWebhookPayload
-ScheduledEventWebhookPayload :: !EventId -> !Maybe TriggerName -> !UTCTime -> !Value -> !Maybe Text -> !Maybe UTCTime -> !Maybe MetadataRequestTransform -> !Maybe MetadataResponseTransform -> ScheduledEventWebhookPayload
+ScheduledEventWebhookPayload :: !EventId -> !Maybe TriggerName -> !UTCTime -> !Value -> !Maybe Text -> !Maybe UTCTime -> !Maybe RequestTransform -> !Maybe MetadataResponseTransform -> ScheduledEventWebhookPayload
 [sewpId] :: ScheduledEventWebhookPayload -> !EventId
 [sewpName] :: ScheduledEventWebhookPayload -> !Maybe TriggerName
 [sewpScheduledTime] :: ScheduledEventWebhookPayload -> !UTCTime
@@ -21197,7 +21387,7 @@ ScheduledEventWebhookPayload :: !EventId -> !Maybe TriggerName -> !UTCTime -> !V
 --   generates the cron events, the <tt>created_at</tt> is just an
 --   implementation detail, so we don't send it
 [sewpCreatedAt] :: ScheduledEventWebhookPayload -> !Maybe UTCTime
-[sewpRequestTransform] :: ScheduledEventWebhookPayload -> !Maybe MetadataRequestTransform
+[sewpRequestTransform] :: ScheduledEventWebhookPayload -> !Maybe RequestTransform
 [sewpResponseTransform] :: ScheduledEventWebhookPayload -> !Maybe MetadataResponseTransform
 data ScheduledEventOp
 SEOpRetry :: !UTCTime -> ScheduledEventOp
@@ -23427,9 +23617,9 @@ QueryParametersInfo :: !HashMap Name (ColumnValue b) -> !Seq (ColumnValue b) -> 
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> !HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_awhKO. Lens' (QueryParametersInfo b_awhKO) (Seq (ColumnValue b_awhKO))
-qpiReusableVariableValues :: forall b_awhKO. Lens' (QueryParametersInfo b_awhKO) (HashMap Name (ColumnValue b_awhKO))
-qpiReferencedSessionVariables :: forall b_awhKO. Lens' (QueryParametersInfo b_awhKO) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_awpCl. Lens' (QueryParametersInfo b_awpCl) (Seq (ColumnValue b_awpCl))
+qpiReusableVariableValues :: forall b_awpCl. Lens' (QueryParametersInfo b_awpCl) (HashMap Name (ColumnValue b_awpCl))
+qpiReferencedSessionVariables :: forall b_awpCl. Lens' (QueryParametersInfo b_awpCl) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
@@ -24695,7 +24885,7 @@ resolveAsyncActionQuery :: UserInfo -> AnnActionAsyncQuery ('Postgres 'Vanilla) 
 --   functions is executed in a background thread. See Note [Async action
 --   architecture] above
 asyncActionsProcessor :: forall m. (MonadIO m, MonadBaseControl IO m, Forall (Pure m), HasReporter m, MonadMetadataStorage (MetadataStorageT m)) => Environment -> Logger Hasura -> IORef (RebuildableSchemaCache, SchemaCacheVer) -> TVar (Set LockedActionEventId) -> Manager -> Milliseconds -> Maybe GQLQueryText -> m (Forever m)
-callWebhook :: forall m r. (MonadIO m, MonadError QErr m, MonadTrace m, MonadReader r m, Has (Logger Hasura) r) => Environment -> Manager -> GraphQLType -> ActionOutputFields -> [Header] -> [HeaderConf] -> Bool -> ResolvedWebhook -> ActionWebhookPayload -> Timeout -> Maybe MetadataRequestTransform -> Maybe MetadataResponseTransform -> m (ActionWebhookResponse, ResponseHeaders)
+callWebhook :: forall m r. (MonadIO m, MonadError QErr m, MonadTrace m, MonadReader r m, Has (Logger Hasura) r) => Environment -> Manager -> GraphQLType -> ActionOutputFields -> [Header] -> [HeaderConf] -> Bool -> ResolvedWebhook -> ActionWebhookPayload -> Timeout -> Maybe RequestTransform -> Maybe MetadataResponseTransform -> m (ActionWebhookResponse, ResponseHeaders)
 processOutputSelectionSet :: ArgumentExp v -> GraphQLType -> [(PGCol, PGScalarType)] -> ActionFieldsG Void -> StringifyNumbers -> AnnSimpleSelectG ('Postgres 'Vanilla) Void v
 actionFieldToAnnField :: ActionFieldG Void -> AnnFieldG ('Postgres 'Vanilla) Void v
 mkJsonAggSelect :: GraphQLType -> JsonAggSelect
