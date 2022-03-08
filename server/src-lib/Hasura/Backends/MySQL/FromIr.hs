@@ -499,7 +499,7 @@ fieldSourceJoin =
 
 fromSelectAggregate ::
   Maybe (EntityAlias, HashMap Column Column) ->
-  IR.AnnSelectG 'MySQL Void (IR.TableAggregateFieldG 'MySQL Void) Expression ->
+  IR.AnnSelectG 'MySQL (IR.TableAggregateFieldG 'MySQL Void) Expression ->
   FromIr Select
 fromSelectAggregate mparentRelationship annSelectG = do
   selectFrom <-
@@ -689,7 +689,7 @@ isEmptyExpression (AndExpression []) = True
 isEmptyExpression (OrExpression []) = True
 isEmptyExpression _ = False
 
-fromSelectRows :: IR.AnnSelectG 'MySQL Void (IR.AnnFieldG 'MySQL Void) Expression -> FromIr Select
+fromSelectRows :: IR.AnnSelectG 'MySQL (IR.AnnFieldG 'MySQL Void) Expression -> FromIr Select
 fromSelectRows annSelectG = do
   selectFrom <-
     case from of
@@ -813,7 +813,7 @@ fromAnnFieldsG stringifyNumbers (IR.FieldName name, field) =
 
 mkSQLSelect ::
   IR.JsonAggSelect ->
-  IR.AnnSelectG 'MySQL Void (IR.AnnFieldG 'MySQL Void) Expression ->
+  IR.AnnSelectG 'MySQL (IR.AnnFieldG 'MySQL Void) Expression ->
   FromIr Select
 mkSQLSelect jsonAggSelect annSimpleSel = do
   case jsonAggSelect of

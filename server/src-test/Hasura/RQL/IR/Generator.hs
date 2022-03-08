@@ -32,7 +32,7 @@ import Hedgehog.Gen
 -- This generator shrinks "stringify nums" to 'False'. For more details on this
 -- generator, see: 'genFieds', 'genSelectFromG', 'genTablePermG', 'genSeletArgsG'.
 genAnnSelectG ::
-  forall m b r f a.
+  forall m b f a.
   MonadGen m =>
   Eq (ScalarType b) =>
   Eq (Column b) =>
@@ -73,7 +73,7 @@ genAnnSelectG ::
   Range Int ->
   Range Int ->
   Range Int ->
-  m (AnnSelectG b r f a)
+  m (AnnSelectG b f a)
 genAnnSelectG
   genTableName
   genFunctionName

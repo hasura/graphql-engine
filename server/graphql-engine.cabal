@@ -882,6 +882,7 @@ test-suite graphql-engine-tests
     Hasura.QuickCheck.Instances
     Hasura.RQL.IR.Generator
     Hasura.RQL.IR.Postgres
+    Hasura.RQL.IR.SelectSpec
     Hasura.RQL.MetadataSpec
     Hasura.RQL.PermissionSpec
     Hasura.RQL.Types.AllowlistSpec
