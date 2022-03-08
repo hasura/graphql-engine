@@ -2091,7 +2091,7 @@ RequestTransformation
    * - request_headers
      - false
      - :ref:`TransformHeaders`
-     - Transform headers as described here.
+     - Request Header Transformation
    * - template_engine
      - false
      - :ref:`TemplateEngine`

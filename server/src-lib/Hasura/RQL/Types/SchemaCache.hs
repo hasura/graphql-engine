@@ -136,7 +136,7 @@ import Hasura.Incremental
     selectKeyD,
   )
 import Hasura.Prelude
-import Hasura.RQL.DDL.WebhookTransforms
+import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.RemoteSchema
 import Hasura.RQL.Types.Action
@@ -273,7 +273,7 @@ data CronTriggerInfo = CronTriggerInfo
     ctiWebhookInfo :: !ResolvedWebhook,
     ctiHeaders :: ![EventHeaderInfo],
     ctiComment :: !(Maybe Text),
-    ctiRequestTransform :: !(Maybe MetadataRequestTransform),
+    ctiRequestTransform :: !(Maybe RequestTransform),
     ctiResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Show, Eq)

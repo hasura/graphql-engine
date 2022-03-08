@@ -138,7 +138,7 @@ import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.EventTrigger (getHeaderInfosFromConf)
 import Hasura.RQL.DDL.Headers
-import Hasura.RQL.DDL.WebhookTransforms
+import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.Types
 import Hasura.SQL.Types
 import Hasura.Tracing qualified as Tracing
@@ -378,7 +378,7 @@ processScheduledEvent logBehavior eventId eventHeaders retryCtx payload webhookU
             extraLogCtx = ExtraLogContext eventId (sewpName payload)
             webhookReqBodyJson = J.toJSON payload
             webhookReqBody = J.encode webhookReqBodyJson
-            requestTransform = mkRequestTransform <$> sewpRequestTransform payload
+            requestTransform = sewpRequestTransform payload
             responseTransform = mkResponseTransform <$> sewpResponseTransform payload
 
         eitherReqRes <-
@@ -386,7 +386,8 @@ processScheduledEvent logBehavior eventId eventHeaders retryCtx payload webhookU
             mkRequest headers httpTimeout webhookReqBody requestTransform webhookUrl >>= \reqDetails -> do
               let request = extractRequest reqDetails
                   logger e d = logHTTPForST e extraLogCtx d logBehavior
-              resp <- invokeRequest reqDetails responseTransform logger
+                  sessionVars = _rdSessionVars reqDetails
+              resp <- invokeRequest reqDetails responseTransform sessionVars logger
               pure (request, resp)
         case eitherReqRes of
           Right (req, resp) ->
