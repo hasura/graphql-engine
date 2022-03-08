@@ -245,12 +245,14 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx {..} 
         LA.forConcurrently (M.toList allSources) \(sourceName, sourceCache) ->
           AB.dispatchAnyBackend @BackendEventTrigger sourceCache \(SourceInfo _sourceName tableCache _functionCache sourceConfig _queryTagsConfig _sourceCustomization :: SourceInfo b) -> do
             let tables = M.elems tableCache
-            let eventTriggerCount = sum (M.size . _tiEventTriggerInfoMap <$> tables)
+                triggerMap = _tiEventTriggerInfoMap <$> tables
+                eventTriggerCount = sum (M.size <$> triggerMap)
+                triggerNames = concat $ M.keys <$> triggerMap
 
             -- only process events for this source if at least one event trigger exists
             if eventTriggerCount > 0
               then
-                ( runExceptT (fetchUndeliveredEvents @b sourceConfig sourceName maintenanceMode (FetchBatchSize fetchBatchSize)) >>= \case
+                ( runExceptT (fetchUndeliveredEvents @b sourceConfig sourceName triggerNames maintenanceMode (FetchBatchSize fetchBatchSize)) >>= \case
                     Right events -> do
                       _ <- liftIO $ EKG.Distribution.add (smNumEventsFetchedPerBatch serverMetrics) (fromIntegral $ length events)
                       eventsFetchedTime <- liftIO getCurrentTime

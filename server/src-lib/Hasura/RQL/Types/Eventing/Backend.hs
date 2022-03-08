@@ -59,10 +59,17 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
   --   remain locked. Now with a timestamp based lock, when the graphql-engine is started again it will also fetch
   --   events which have a `locked` value of older than 30 mins along with the undelivered events. So, this way
   --   no events remain in a `locked` state.
+  --
+  --   When fetching the events from the event_log table we also include the list of the triggers that exist in the metadata
+  --   at that point of time, because we have seen in some cases there are events that do not belong to any of the event triggers
+  --   present in the metadata and those are fetched only to be failed saying the said event trigger doesn't exist. So, to avoid
+  --   this (atleast, as much as possible) we get only the events of the event triggers we have in the metadata.
   fetchUndeliveredEvents ::
     (MonadIO m, MonadError QErr m) =>
     SourceConfig b ->
     SourceName ->
+    -- | List of trigger names which exist in the metadata
+    [TriggerName] ->
     MaintenanceMode ->
     FetchBatchSize ->
     m [Event b]
@@ -191,7 +198,7 @@ instance BackendEventTrigger ('Postgres 'Vanilla) where
 
 instance BackendEventTrigger ('Postgres 'Citus) where
   insertManualEvent _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
-  fetchUndeliveredEvents _ _ _ _ = throw400 NotSupported "Event triggers are not supported for Citus sources"
+  fetchUndeliveredEvents _ _ _ _ _ = throw400 NotSupported "Event triggers are not supported for Citus sources"
   setRetry _ _ _ _ = throw400 NotSupported "Event triggers are not supported for Citus sources"
   recordSuccess _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for Citus sources"
   getMaintenanceModeVersion _ = throw400 NotSupported "Event triggers are not supported for Citus sources"
@@ -204,7 +211,7 @@ instance BackendEventTrigger ('Postgres 'Citus) where
 
 instance BackendEventTrigger 'MSSQL where
   insertManualEvent _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for MS-SQL sources"
-  fetchUndeliveredEvents _ _ _ _ = throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
+  fetchUndeliveredEvents _ _ _ _ _ = throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
   setRetry _ _ _ _ = throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
   recordSuccess _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
   getMaintenanceModeVersion _ = throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
@@ -217,7 +224,7 @@ instance BackendEventTrigger 'MSSQL where
 
 instance BackendEventTrigger 'BigQuery where
   insertManualEvent _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
-  fetchUndeliveredEvents _ _ _ _ = throw400 NotSupported "Event triggers are not supported for BigQuery sources"
+  fetchUndeliveredEvents _ _ _ _ _ = throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   setRetry _ _ _ _ = throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   recordSuccess _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   getMaintenanceModeVersion _ = throw400 NotSupported "Event triggers are not supported for BigQuery sources"
@@ -230,7 +237,7 @@ instance BackendEventTrigger 'BigQuery where
 
 instance BackendEventTrigger 'MySQL where
   insertManualEvent _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
-  fetchUndeliveredEvents _ _ _ _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
+  fetchUndeliveredEvents _ _ _ _ _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
   setRetry _ _ _ _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
   recordSuccess _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
   getMaintenanceModeVersion _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
@@ -250,7 +257,7 @@ instance BackendEventTrigger 'MySQL where
 instance BackendEventTrigger 'DataWrapper where
   insertManualEvent _ _ _ _ _ _ =
     throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
-  fetchUndeliveredEvents _ _ _ _ =
+  fetchUndeliveredEvents _ _ _ _ _ =
     throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
   setRetry _ _ _ _ =
     throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
