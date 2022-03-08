@@ -22,8 +22,8 @@ community [Discord](https://discord.gg/vBPpJkS).
 
 ## Setup requirements
 
-- [Node](https://www.python.org/downloads/)
-- [Yarn](https://pip.pypa.io/en/stable/installing/)
+- [Node](https://nodejs.org/)
+- [Yarn](https://yarnpkg.com/getting-started)
 
 ## Steps for contributing
 
