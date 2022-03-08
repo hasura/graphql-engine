@@ -23,8 +23,7 @@ const getAccessText = (queryType: string) => {
 export interface ColumnPermissionsSectionProps {
   queryType: QueryType;
   roleName: string;
-  columns: string[];
-  defaultOpen?: boolean;
+  columns?: string[];
 }
 
 const useStatus = (disabled: boolean) => {
@@ -59,7 +58,6 @@ export const ColumnPermissionsSection: React.FC<ColumnPermissionsSectionProps> =
   roleName,
   queryType,
   columns,
-  defaultOpen,
 }) => {
   const { register, setValue } = useFormContext();
 
@@ -69,10 +67,10 @@ export const ColumnPermissionsSection: React.FC<ColumnPermissionsSectionProps> =
   const { data: status, isError } = useStatus(disabled);
 
   const onClick = () => {
-    columns.forEach(column => {
+    columns?.forEach(column => {
       const toggleAllOn = status !== 'All columns';
-      // if values length is 3 all are selected so toggle all off
-      // otherwise toggle all on
+      // if status is not all columns: toggle all on
+      // otherwise toggle all off
       setValue(`columns.${column}`, toggleAllOn);
     });
   };
@@ -82,7 +80,7 @@ export const ColumnPermissionsSection: React.FC<ColumnPermissionsSectionProps> =
   }
 
   return (
-    <Collapse defaultOpen={defaultOpen}>
+    <Collapse defaultOpen={!disabled}>
       <Collapse.Header
         title={`Column ${queryType} permissions`}
         tooltip={`Choose columns allowed to be ${getEdForm(queryType)}`}

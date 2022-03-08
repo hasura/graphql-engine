@@ -1,8 +1,9 @@
 import React from 'react';
 import { Story, Meta } from '@storybook/react';
 import { z } from 'zod';
-
 import { Form } from '@/new-components/Form';
+import { useTableMachine } from '../hooks/useTableMachine';
+
 import {
   InputCell,
   InputCellProps,
@@ -23,19 +24,28 @@ export default {
   parameters: { chromatic: { disableSnapshot: true } },
 } as Meta;
 
-export const InputCellComponent: Story<InputCellProps> = args => (
-  <InputCell {...args} />
-);
+export const InputCellComponent: Story<InputCellProps> = args => {
+  const machine = useTableMachine();
+
+  return <InputCell {...args} machine={machine} />;
+};
 InputCellComponent.args = {
   roleName: 'User',
+  isNewRole: true,
+  isSelectable: true,
+  isSelected: true,
 };
 
-export const InputCellComponentNewRole: Story<InputCellProps> = args => (
-  <InputCell {...args} />
-);
+export const InputCellComponentNewRole: Story<InputCellProps> = args => {
+  const machine = useTableMachine();
+
+  return <InputCell {...args} machine={machine} />;
+};
 InputCellComponentNewRole.args = {
   roleName: '',
   isNewRole: true,
+  isSelectable: true,
+  isSelected: true,
 };
 
 export const EditableCellComponent: Story<EditableCellProps> = args => (
