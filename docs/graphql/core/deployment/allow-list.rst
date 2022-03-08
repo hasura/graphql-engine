@@ -50,6 +50,9 @@ You can add or remove a operation in the allow-list in two ways:
 
 .. note::
 
+  * The allow list queries are validated against the schema. So, adding an invalid query will result in inconsistent
+    metadata error.
+
   * ``__typename`` introspection fields will be ignored when adding operations and comparing them to the allow-list.
 
   * Any introspection queries that your client apps require will have to be explicitly added to the allow-list

@@ -3,6 +3,7 @@ module Hasura.GraphQL.Analyse
     FieldAnalysis (..),
     FieldDef (..),
     analyzeGraphqlQuery,
+    getAllAnalysisErrs,
   )
 where
 
@@ -57,6 +58,24 @@ type FieldName = Name
 
 type VarName = Name
 
+analyzeGraphqlQuery :: ExecutableDefinition Name -> RemoteSchemaIntrospection -> Maybe (Analysis Name)
+analyzeGraphqlQuery (G.ExecutableDefinitionOperation (G.OperationDefinitionTyped td)) sc = do
+  let t = (G._todType td,) <$> G._todSelectionSet td
+      varDefs = G._todVariableDefinitions td
+      varMapList = map (\v -> (G._vdName v, (G._vdType v, G._vdDefaultValue v))) varDefs
+      varMap = Map.fromList varMapList
+      (fieldMap, errs) = getFieldsMap sc t
+  pure Analysis {_aFields = fieldMap, _aVars = varMap, _aErrs = errs}
+analyzeGraphqlQuery _ _ = Nothing
+
+getAllAnalysisErrs :: Analysis Name -> [Text]
+getAllAnalysisErrs Analysis {..} = _aErrs <> getFieldErrs (OMap.toList _aFields) []
+  where
+    getFieldErrs :: [(G.Name, (FieldDef, Maybe (FieldAnalysis G.Name)))] -> [Text] -> [Text]
+    getFieldErrs [] lst = lst
+    getFieldErrs ((_, (_, Just FieldAnalysis {..})) : xs) lst = _fErrs <> (getFieldErrs (OMap.toList _fFields) []) <> (getFieldErrs xs lst)
+    getFieldErrs ((_, (_, Nothing)) : xs) lst = getFieldErrs xs lst
+
 -- | inserts in field map, if there is already a key, then take a union of the fields inside
 --   i.e. for the following graphql query:
 --      query MyQuery {
@@ -78,15 +97,6 @@ safeInsertInFieldMap ::
 safeInsertInFieldMap m (k, v) =
   OMap.insertWith (\(fdef, (f1)) (_, (f2)) -> (fdef, f1 <> f2)) k v m
 
-analyzeGraphqlQuery :: ExecutableDefinition Name -> RemoteSchemaIntrospection -> Maybe (Analysis Name)
-analyzeGraphqlQuery (G.ExecutableDefinitionOperation (G.OperationDefinitionTyped td)) sc = do
-  let t = (G._todType td,) <$> G._todSelectionSet td
-      varDefs = G._todVariableDefinitions td
-      varMap = foldr (\G.VariableDefinition {..} m -> Map.insert _vdName (_vdType, _vdDefaultValue) m) mempty varDefs
-      (fieldMap, errs) = getFieldsMap sc t
-  pure Analysis {_aFields = fieldMap, _aVars = varMap, _aErrs = errs}
-analyzeGraphqlQuery _ _ = Nothing
-
 getFieldName :: Field frag var -> Name
 getFieldName f = fromMaybe (G._fName f) (G._fAlias f)
 
@@ -105,6 +115,12 @@ getFieldsMap rs ss =
   where
     fields = mapMaybe (\(o, s) -> (o,) <$> field s) ss
 
+getFieldsTypeM :: Name -> TypeDefinition possibleTypes inputType -> Maybe GType
+getFieldsTypeM fieldName operationDefinitionSum = do
+  operationDefinitionObject <- asObjectTypeDefinition operationDefinitionSum
+  fieldDefinition <- find ((== fieldName) . G._fldName) $ G._otdFieldsDefinition operationDefinitionObject
+  pure $ G._fldType fieldDefinition
+
 lookupRoot ::
   RemoteSchemaIntrospection ->
   (G.OperationType, G.Field frag var) ->
@@ -114,13 +130,36 @@ lookupRoot rs (ot, f) = do
       fieldName = G._fName f
       fieldTypeM = do
         operationDefinitionSum <- lookupRS rs rootFieldName
-        operationDefinitionObject <- asObjectTypeDefinition operationDefinitionSum
-        fieldDefinition <- find ((== fieldName) . G._fldName) $ G._otdFieldsDefinition operationDefinitionObject
-        pure $ G._fldType fieldDefinition
+        getFieldsTypeM fieldName operationDefinitionSum
 
   case fieldTypeM of
-    Nothing -> Right $ ["Couldn't find field " <> G.unName fieldName <> " in root field " <> G.unName rootFieldName]
+    Nothing ->
+      case isMetaField fieldName True of
+        Nothing -> Right $ ["Couldn't find field " <> G.unName fieldName <> " in root field " <> G.unName rootFieldName]
+        Just fld -> lookupDefinition rs fld f
     Just fieldType -> lookupDefinition rs fieldType f
+
+isMetaField :: Name -> Bool -> Maybe GType
+isMetaField nam isRoot = do
+  n <- fieldTypeMetaFields $ nam
+  case G.unName nam of
+    "__schema" -> if isRoot then Just $ mkGType n else Nothing
+    "__type" -> if isRoot then Just $ mkGType n else Nothing
+    "__typename" -> Just $ mkGType n
+    _ -> Nothing
+  where
+    mkGType :: Name -> GType
+    mkGType fName =
+      G.TypeNamed
+        (G.Nullability {unNullability = False})
+        fName
+
+fieldTypeMetaFields :: Name -> Maybe Name
+fieldTypeMetaFields nam
+  | (Just nam) == G.mkName "__schema" = G.mkName "__Schema"
+  | (Just nam) == G.mkName "__type" = G.mkName "__Type"
+  | (Just nam) == G.mkName "__typename" = G.mkName "String"
+  | otherwise = Nothing
 
 lookupDefinition ::
   RemoteSchemaIntrospection ->
@@ -173,8 +212,13 @@ getDefinition ::
 getDefinition rs td sels =
   (td,) $ case td of
     (G.TypeDefinitionObject otd) -> do
-      ps <- traverse (\sel -> fmap (mkFieldAnalysis rs sel) (lookupFieldBySelection sel (G._otdFieldsDefinition otd))) sels
-      pure $ fold $ catMaybes ps
+      ps <-
+        for
+          sels
+          \sel -> case (lookupFieldBySelection sel otd) of
+            Left txts -> pure $ FieldAnalysis mempty mempty txts
+            Right fd -> (mkFieldAnalysis rs sel fd)
+      pure $ fold ps
     _ -> Nothing
 
 itrListWith :: GType -> (Name -> p) -> p
@@ -219,6 +263,21 @@ mkFieldAnalysis rs (G.SelectionField f) fd = do
         _fErrs = fErrs
       }
 
-lookupFieldBySelection :: G.Selection frag0 var0 -> [G.FieldDefinition RemoteSchemaInputValueDefinition] -> Maybe (G.FieldDefinition RemoteSchemaInputValueDefinition)
-lookupFieldBySelection (G.SelectionField f) = find \d -> G._fName f == G._fldName d
-lookupFieldBySelection _ = const Nothing
+lookupFieldBySelection :: G.Selection frag0 var0 -> G.ObjectTypeDefinition RemoteSchemaInputValueDefinition -> Either [Text] (G.FieldDefinition RemoteSchemaInputValueDefinition)
+lookupFieldBySelection (G.SelectionField f) otd = case find (\d -> G._fName f == G._fldName d) lst of
+  Nothing -> case isMetaField (G._fName f) False of
+    Nothing -> Left ["Couldn't find definition for field " <> G.unName (getFieldName f) <> " in " <> G.unName (G._otdName otd)]
+    Just gt -> Right $ mkFieldDef (G._fName f) gt
+  Just fd -> Right fd
+  where
+    lst = G._otdFieldsDefinition otd
+    mkFieldDef :: G.Name -> GType -> G.FieldDefinition RemoteSchemaInputValueDefinition
+    mkFieldDef gName gt =
+      G.FieldDefinition
+        { _fldDescription = Nothing,
+          _fldName = gName,
+          _fldArgumentsDefinition = [],
+          _fldType = gt,
+          _fldDirectives = []
+        }
+lookupFieldBySelection _ _ = Left []

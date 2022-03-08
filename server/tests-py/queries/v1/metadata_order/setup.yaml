@@ -163,8 +163,8 @@ args:
       - name: query_2
         query: |
           query {
-            test2{
-              id
+            test2_select{
+              test2_id
             }
           }
 
@@ -184,7 +184,7 @@ args:
         query: |
           query {
             get_test2(args: {id: 1}){
-              id
+              test2_id
             }
           }
 

@@ -53,7 +53,7 @@ newtype GQLQuery = GQLQuery {unGQLQuery :: G.ExecutableDocument G.Name}
 
 newtype GQLQueryWithText
   = GQLQueryWithText (Text, GQLQuery)
-  deriving (Show, Eq, Ord, NFData, Generic, Cacheable)
+  deriving (Show, Eq, Ord, NFData, Generic, Cacheable, Hashable)
 
 instance FromJSON GQLQueryWithText where
   parseJSON v@(String t) = GQLQueryWithText . (t,) <$> parseJSON v
@@ -77,6 +77,8 @@ data ListedQuery = ListedQuery
 instance NFData ListedQuery
 
 instance Cacheable ListedQuery
+
+instance Hashable ListedQuery
 
 $(deriveJSON hasuraJSON ''ListedQuery)
 

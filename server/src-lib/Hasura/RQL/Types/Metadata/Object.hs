@@ -49,6 +49,7 @@ import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Permission
+import Hasura.RQL.Types.QueryCollection (CollectionName, ListedQuery (_lqName))
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session
@@ -95,6 +96,7 @@ data MetadataObjId
   | MOInheritedRole !RoleName
   | MOEndpoint !EndpointName
   | MOHostTlsAllowlist !String
+  | MOQueryCollectionsQuery !CollectionName !ListedQuery
   deriving (Show, Eq, Generic)
 
 $(makePrisms ''MetadataObjId)
@@ -115,6 +117,7 @@ moiTypeName = \case
   MOInheritedRole _ -> "inherited_role"
   MOEndpoint _ -> "rest_endpoint"
   MOHostTlsAllowlist _ -> "host_network_tls_allowlist"
+  MOQueryCollectionsQuery _ _ -> "query_collections"
   where
     handleSourceObj :: forall b. SourceMetadataObjId b -> Text
     handleSourceObj = \case
@@ -147,6 +150,7 @@ moiName objectId =
     MOInheritedRole inheritedRoleName -> "inherited role " <> toTxt inheritedRoleName
     MOEndpoint name -> toTxt name
     MOHostTlsAllowlist hostTlsAllowlist -> T.pack hostTlsAllowlist
+    MOQueryCollectionsQuery cName lq -> (toTxt . _lqName) lq <> " in " <> toTxt cName
   where
     handleSourceObj ::
       forall b.

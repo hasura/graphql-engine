@@ -1,6 +1,6 @@
 module Hasura.RQL.Types.Allowlist
   ( -- | The schema cache representation of the allowlist
-    InlinedAllowlist,
+    InlinedAllowlist (..),
     inlineAllowlist,
     AllowlistMode (..),
     allowlistAllowsQuery,
@@ -13,6 +13,7 @@ module Hasura.RQL.Types.Allowlist
     metadataAllowlistInsert,
     metadataAllowlistUpdateScope,
     metadataAllowlistAllCollections,
+    NormalizedQuery (..),
   )
 where
 

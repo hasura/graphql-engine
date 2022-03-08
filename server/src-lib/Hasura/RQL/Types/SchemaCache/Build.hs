@@ -24,7 +24,7 @@ module Hasura.RQL.Types.SchemaCache.Build
     buildSchemaCacheFor,
     buildSchemaCacheStrict,
     withNewInconsistentObjsCheck,
-    getInconsistentRestQueries,
+    getInconsistentQueryCollections,
   )
 where
 
@@ -39,7 +39,6 @@ import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashMap.Strict.Multi qualified as MultiMap
 import Data.List qualified as L
 import Data.Sequence qualified as Seq
-import Data.Set qualified as S
 import Data.Text.Extended
 import Data.Text.NonEmpty (unNonEmptyText)
 import Data.Trie qualified as Trie
@@ -47,8 +46,9 @@ import Database.MSSQL.Transaction qualified as MSSQL
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
-import Hasura.GraphQL.Analyse (Analysis (Analysis, _aErrs, _aFields), FieldAnalysis (FieldAnalysis, _fErrs, _fFields), FieldDef, analyzeGraphqlQuery)
+import Hasura.GraphQL.Analyse
 import Hasura.Prelude
+import Hasura.RQL.Types.Allowlist (NormalizedQuery, unNormalizedQuery)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.Metadata
@@ -349,7 +349,7 @@ withNewInconsistentObjsCheck action = do
 
   let diffInconsistentObjects = Map.difference `on` groupInconsistentMetadataById
       newInconsistentObjects =
-        L.nub $ concatMap toList $ Map.elems (currentObjects `diffInconsistentObjects` originalObjects)
+        hashNub $ concatMap toList $ Map.elems (currentObjects `diffInconsistentObjects` originalObjects)
   unless (null newInconsistentObjects) $
     throwError
       (err500 Unexpected "cannot continue due to newly found inconsistent metadata")
@@ -358,36 +358,61 @@ withNewInconsistentObjsCheck action = do
 
   pure result
 
--- | getInconsistentRestQueries is a helper function that runs the
--- static analysis over the saved queries for each endpoints and
--- reports any inconsistenties with the current schema.
-getInconsistentRestQueries :: Maybe RemoteSchemaIntrospection -> EndpointTrie GQLQueryWithText -> (EndpointMetadata GQLQueryWithText -> MetadataObject) -> [InconsistentMetadata]
-getInconsistentRestQueries Nothing _ _ = []
-getInconsistentRestQueries (Just rs) tMap getMetaObj = map (\(o, t) -> InconsistentObject t Nothing o) fE
+-- | getInconsistentQueryCollections is a helper function that runs the
+-- static analysis over the saved queries and reports any inconsistenties
+-- with the current schema.
+getInconsistentQueryCollections ::
+  Maybe RemoteSchemaIntrospection ->
+  QueryCollections ->
+  ((CollectionName, ListedQuery) -> MetadataObject) ->
+  EndpointTrie GQLQueryWithText ->
+  [NormalizedQuery] ->
+  [InconsistentMetadata]
+getInconsistentQueryCollections Nothing _ _ _ _ = []
+getInconsistentQueryCollections (Just rs) qcs lqToMetadataObj restEndpoints allowLst = map (\(o, t) -> InconsistentObject t Nothing o) fE
   where
-    methodList = concatMap S.toList $ concatMap MultiMap.elems $ Trie.elems tMap
-    endpoints = concatMap (\x -> map (x,) (mdDefinitions x)) methodList
-    mdDefinitions :: EndpointMetadata GQLQueryWithText -> [G.ExecutableDefinition G.Name]
-    mdDefinitions = G.getExecutableDefinitions . unGQLQuery . getGQLQuery . _edQuery . _ceDefinition
-    fE = lefts $ map (validateQuery rs) endpoints
+    zipLQwithDef :: (CollectionName, CreateCollection) -> [((CollectionName, ListedQuery), G.ExecutableDefinition G.Name)]
+    zipLQwithDef (cName, cc) =
+      let lqs = _cdQueries . _ccDefinition $ cc
+       in concatMap (\lq -> map ((cName, lq),) (G.getExecutableDefinitions . unGQLQuery . getGQLQuery . _lqQuery $ lq)) lqs
+    inAllowList :: [NormalizedQuery] -> (ListedQuery) -> Bool
+    inAllowList nqList (ListedQuery {..}) = any (\nq -> unNormalizedQuery nq == (unGQLQuery . getGQLQuery) _lqQuery) nqList
 
-    showErrLst = dquoteList . reverse
-    formatError (endpointName, analysisErrs) = endpointName <> " (" <> showErrLst analysisErrs <> ")"
-    validateQuery ::
-      RemoteSchemaIntrospection ->
-      (EndpointMetadata GQLQueryWithText, G.ExecutableDefinition G.Name) ->
-      Either (MetadataObject, Text) ()
-    validateQuery rSchema (eMeta, eDef) = do
-      let analysis = analyzeGraphqlQuery eDef rSchema
-          endpointName = unNonEmptyText $ unEndpointName (_ceName eMeta)
-      case analysis of
-        Nothing -> Left (getMetaObj eMeta, "Cannot analyse the GraphQL query for the REST endpoint: " <> endpointName)
-        Just Analysis {..} ->
-          let getFieldErrs :: [(G.Name, (FieldDef, Maybe (FieldAnalysis G.Name)))] -> [Text] -> [Text]
-              getFieldErrs [] lst = lst
-              getFieldErrs ((_, (_, Just FieldAnalysis {..})) : xs) lst = _fErrs <> (getFieldErrs (OMap.toList _fFields) []) <> (getFieldErrs xs lst)
-              getFieldErrs ((_, (_, Nothing)) : xs) lst = getFieldErrs xs lst
-              allErrs = _aErrs <> getFieldErrs (OMap.toList _aFields) []
-           in if (null allErrs)
-                then Right ()
-                else Left (getMetaObj eMeta, formatError (endpointName, allErrs))
+    inRESTEndpoints :: EndpointTrie GQLQueryWithText -> (ListedQuery) -> [Text]
+    inRESTEndpoints edTrie lq = map fst $ filter (queryIsFaulty) allQueries
+      where
+        methodMaps = Trie.elems edTrie
+        endpoints = concatMap snd $ concatMap (MultiMap.toList) methodMaps
+        allQueries :: [(Text, GQLQueryWithText)]
+        allQueries = map (\d -> (unNonEmptyText . unEndpointName . _ceName $ d, _edQuery . _ceDefinition $ d)) endpoints
+
+        queryIsFaulty :: (Text, GQLQueryWithText) -> Bool
+        queryIsFaulty (_, gqlQ) = (_lqQuery lq) == gqlQ
+
+    lqLst = concatMap zipLQwithDef (OMap.toList qcs)
+    fE = lefts $ map (validateQuery rs (lqToMetadataObj) formatError) lqLst
+    formatError (cName, lq) allErrs =
+      let msgInit = "In query collection \"" <> toTxt cName <> "\" the query \"" <> (toTxt . _lqName) lq <> "\" is invalid with the following error(s): "
+          lToTxt = dquoteList . reverse
+          faultyEndpoints = case inRESTEndpoints restEndpoints lq of
+            [] -> ""
+            ePoints -> ". This query is being used in the following REST endpoint(s): " <> lToTxt ePoints
+
+          isInAllowList = if inAllowList allowLst lq then ". This query is in allowlist." else ""
+       in msgInit <> lToTxt allErrs <> faultyEndpoints <> isInAllowList
+
+validateQuery ::
+  RemoteSchemaIntrospection ->
+  (a -> MetadataObject) ->
+  (a -> [Text] -> Text) ->
+  (a, G.ExecutableDefinition G.Name) ->
+  Either (MetadataObject, Text) ()
+validateQuery rSchema getMetaObj formatError (eMeta, eDef) = do
+  let analysis = analyzeGraphqlQuery eDef rSchema
+  case analysis of
+    Nothing -> Left (getMetaObj eMeta, formatError eMeta ["Cannot analyse the GraphQL query"])
+    Just a ->
+      let allErrs = getAllAnalysisErrs a
+       in if (null allErrs)
+            then Right ()
+            else Left (getMetaObj eMeta, formatError eMeta allErrs)

@@ -72,20 +72,15 @@
   response:
     internal:
     - definition:
-        definition:
-          query:
-            collection_name: temp_collection
-            query_name: temp_query
-        url: temp_rest_API
-        methods:
-        - GET
-        name: temp_rest_API
-        comment:
-      reason: "Inconsistent object: temp_rest_API (\"Couldn't find field temp_table\
-        \ in root field query_root\")"
-      name: rest_endpoint temp_rest_API
-      type: rest_endpoint
-    path: "$.args"
+        name: temp_query
+        query: query { temp_table { col1 col2 } }
+      reason: "Inconsistent object: In query collection \"temp_collection\" the query\
+        \ \"temp_query\" is invalid with the following error(s): \"Couldn't find field temp_table\
+        \ in root field query_root\". This query is being used in the following REST endpoint(s):\
+        \ \"temp_rest_API\""
+      name: query_collections temp_query in temp_collection
+      type: query_collections
+    path: $.args
     error: cannot continue due to newly found inconsistent metadata
     code: unexpected
 
@@ -93,20 +88,47 @@
   url: /v1/query
   status: 200
   query:
-    type: bulk
+    type: drop_rest_endpoint
     args:
-      - type: drop_rest_endpoint
-        args:
-          name: temp_rest_API
-      - type: drop_query_collection
-        args:
-          collection: temp_collection
-          cascade: false
+      name: temp_rest_API
   response:
-    - message: success
-    - message: success
+    message: success
 
-- description: cleanup 2 (drop the table)
+- description: untrack the table
+  url: /v1/query
+  status: 500
+  query:
+    type: untrack_table
+    args:
+      table:
+        schema: public
+        name: temp_table
+  response:
+    internal:
+    - definition:
+        name: temp_query
+        query: query { temp_table { col1 col2 } }
+      reason: "Inconsistent object: In query collection \"temp_collection\" the query\
+        \ \"temp_query\" is invalid with the following error(s): \"Couldn't find field\
+        \ temp_table in root field query_root\""
+      name: query_collections temp_query in temp_collection
+      type: query_collections
+    path: $.args
+    error: cannot continue due to newly found inconsistent metadata
+    code: unexpected
+
+- description: cleanup 2 (drop the query collection)
+  url: /v1/query
+  status: 200
+  query:
+    type: drop_query_collection
+    args:
+      collection: temp_collection
+      cascade: true
+  response:
+    message: success
+
+- description: cleanup 3 (drop the table)
   url: /v1/query
   status: 200
   query:

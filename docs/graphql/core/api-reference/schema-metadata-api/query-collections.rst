@@ -52,6 +52,12 @@ create_query_collection
         }
    }
 
+.. note::
+
+   The queries in query collections are validated against the schema. So, adding an invalid
+   query would result in inconsistent metadata error. As the query collection is used in allowlists and
+   REST endpoints, they are validated as well.
+
 .. _schema_metadata_create_query_collection_syntax:
 
 Args Syntax
