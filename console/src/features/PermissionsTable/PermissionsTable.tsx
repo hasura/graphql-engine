@@ -1,7 +1,4 @@
 import React from 'react';
-import { useWatch, useFormContext } from 'react-hook-form';
-import { z } from 'zod';
-import { Form } from '@/new-components/Form';
 import { FaInfo } from 'react-icons/fa';
 
 import { QUERY_TYPES, Operations } from '@/dataSources';
@@ -11,6 +8,7 @@ import { arrayDiff } from '../../components/Common/utils/jsUtils';
 import { useRolePermissions } from './hooks/usePermissions';
 import { PermissionsLegend } from './components/PermissionsLegend';
 import { EditableCell, InputCell } from './components/Cells';
+import { TableMachine } from './hooks';
 
 type QueryType = 'insert' | 'select' | 'update' | 'delete';
 
@@ -44,13 +42,7 @@ export const ViewPermissionsNote: React.FC<ViewPermissionsNoteProps> = ({
 export interface PermissionsTableProps {
   schemaName: string;
   tableName: string;
-  selected: Selection | null;
-  onChange: (input: any) => void;
-}
-
-export interface OnChangeArgs {
-  changeType: 'bulk' | 'open' | 'close';
-  data?: Selection | string[];
+  machine: ReturnType<TableMachine>;
 }
 
 export interface Selection {
@@ -63,43 +55,13 @@ export interface Selection {
 export const PermissionsTable: React.FC<PermissionsTableProps> = ({
   schemaName,
   tableName,
-  selected,
-  onChange,
+  machine,
 }) => {
-  const { control, setFocus } = useFormContext<TableFormOutput>();
-
-  const bulkSelected = useWatch({ control, name: 'bulkSelected' });
-  const newRoleName = useWatch({ control, name: 'newRoleName' });
-
+  const [state, send] = machine;
   const { supportedQueries, rolePermissions } = useRolePermissions({
     schema: schemaName,
     name: tableName,
   });
-
-  const clickHandler = ({
-    roleName,
-    queryType,
-    accessType,
-    isNewRole,
-  }: Selection) => {
-    if (queryType === selected?.queryType && roleName === selected?.roleName) {
-      return onChange({ changeType: 'close' });
-    }
-
-    if (isNewRole && !newRoleName) {
-      onChange({ changeType: 'close' });
-      return setFocus('newRoleName');
-    }
-
-    onChange({
-      changeType: 'open',
-      data: { roleName, queryType, accessType },
-    });
-  };
-
-  React.useEffect(() => {
-    onChange({ changeType: 'bulk', data: bulkSelected });
-  }, [bulkSelected, onChange]);
 
   return (
     <>
@@ -131,6 +93,8 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
                     roleName={roleName}
                     isNewRole={isNewRole}
                     isSelectable={bulkSelect.isSelectable}
+                    isSelected={state.context.bulkSelections.includes(roleName)}
+                    machine={machine}
                   />
 
                   {permissionTypes.map(({ permissionType, access }) => {
@@ -142,19 +106,31 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
                           key={permissionType}
                           isEditable={isEditable}
                           access={access}
-                          aria-label={`${newRoleName}-${permissionType}`}
+                          aria-label={`${state.context.newRoleName}-${permissionType}`}
                           isCurrentEdit={
-                            permissionType === selected?.queryType &&
-                            newRoleName === selected?.roleName
+                            permissionType ===
+                              state.context.selectedForm.queryType &&
+                            state.context.newRoleName ===
+                              state.context.selectedForm.roleName
                           }
-                          onClick={() =>
-                            clickHandler({
-                              roleName: newRoleName,
-                              queryType: permissionType,
-                              accessType: access,
-                              isNewRole: true,
-                            })
-                          }
+                          onClick={() => {
+                            if (state.context.newRoleName !== '') {
+                              send({
+                                type: 'FORM_OPEN',
+                                selectedForm: {
+                                  roleName: state.context.newRoleName,
+                                  queryType: permissionType,
+                                  accessType: access,
+                                  isNewRole: true,
+                                },
+                              });
+                            } else {
+                              send({
+                                type: 'NEW_ROLE_NAME',
+                                newRoleName: '',
+                              });
+                            }
+                          }}
                         />
                       );
                     }
@@ -166,14 +142,18 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
                         access={access}
                         aria-label={`${roleName}-${permissionType}`}
                         isCurrentEdit={
-                          permissionType === selected?.queryType &&
-                          roleName === selected?.roleName
+                          permissionType ===
+                            state.context.selectedForm.queryType &&
+                          roleName === state.context.selectedForm.roleName
                         }
                         onClick={() =>
-                          clickHandler({
-                            roleName,
-                            queryType: permissionType,
-                            accessType: access,
+                          send({
+                            type: 'FORM_OPEN',
+                            selectedForm: {
+                              roleName,
+                              queryType: permissionType,
+                              accessType: access,
+                            },
                           })
                         }
                       />
@@ -188,29 +168,3 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
     </>
   );
 };
-
-const schema = z.object({
-  selected: z.object({
-    queryType: z.string(),
-    roleName: z.string(),
-  }),
-  bulkSelected: z.optional(z.array(z.string())),
-  newRoleName: z.string(),
-});
-
-export type TableFormOutput = z.infer<typeof schema>;
-
-export const TableForm: React.FC = ({ children }) => (
-  <Form
-    schema={schema}
-    options={{
-      defaultValues: {
-        bulkSelected: undefined,
-        newRoleName: '',
-      },
-    }}
-    onSubmit={() => {}}
-  >
-    {() => children}
-  </Form>
-);

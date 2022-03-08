@@ -162,7 +162,7 @@ export const useRolePermissions = (table: QualifiedTable) => {
           roleName,
           currentRolePermissions,
           queryType,
-          currentTableSchema!.columns,
+          currentTableSchema?.columns || [],
           groupedComputedFields
         ),
       })),

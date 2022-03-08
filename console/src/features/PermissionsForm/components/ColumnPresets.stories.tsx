@@ -38,7 +38,6 @@ export const Insert: Story<ColumnPresetsSectionProps> = args => (
 Insert.args = {
   queryType: 'insert',
   columns,
-  defaultOpen: true,
 };
 
 export const Update: Story<ColumnPresetsSectionProps> = args => (

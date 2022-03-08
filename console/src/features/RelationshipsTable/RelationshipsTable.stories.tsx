@@ -763,7 +763,6 @@ export const WithCustomMetadata = ({ metadata, ...args }: any) => {
     <>
       {metadata?.metadata?.sources.map((source: any) =>
         source?.tables?.map((table: TableEntry) => {
-          console.log(table);
           if (
             table?.object_relationships ||
             table?.remote_relationships ||

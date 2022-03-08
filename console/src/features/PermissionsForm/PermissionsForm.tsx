@@ -190,12 +190,12 @@ export const PermissionsForm: React.FC<PermissionsFormProps> = ({
             <ColumnPermissionsSection
               roleName={roleName}
               queryType={queryType}
-              columns={columns!}
+              columns={columns}
             />
           )}
 
           {['insert', 'update'].includes(queryType) && (
-            <ColumnPresetsSection queryType={queryType} columns={columns!} />
+            <ColumnPresetsSection queryType={queryType} columns={columns} />
           )}
 
           {queryType === 'select' && (
