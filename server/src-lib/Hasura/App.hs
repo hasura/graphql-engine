@@ -59,7 +59,6 @@ import Data.ByteString.Lazy.Char8 qualified as BLC
 import Data.Environment qualified as Env
 import Data.FileEmbed (makeRelativeToProject)
 import Data.HashMap.Strict qualified as HM
-import Data.IORef (readIORef)
 import Data.Text qualified as T
 import Data.Time.Clock (UTCTime)
 import Data.Time.Clock qualified as Clock
@@ -107,6 +106,12 @@ import Hasura.Server.Limits
 import Hasura.Server.Logging
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Migrate (migrateCatalog)
+import Hasura.Server.SchemaCacheRef
+  ( SchemaCacheRef,
+    getSchemaCache,
+    initialiseSchemaCacheRef,
+    logInconsistentMetadata,
+  )
 import Hasura.Server.SchemaUpdate
 import Hasura.Server.Telemetry
 import Hasura.Server.Types
@@ -231,9 +236,7 @@ data GlobalCtx = GlobalCtx
   }
 
 readTlsAllowlist :: SchemaCacheRef -> IO [TlsAllow]
-readTlsAllowlist scRef = do
-  (rbsc, _) <- readIORef (_scrCache scRef)
-  pure $ scTlsAllowlist $ lastBuiltSchemaCache rbsc
+readTlsAllowlist scRef = scTlsAllowlist <$> getSchemaCache scRef
 
 initGlobalCtx ::
   (MonadIO m) =>
@@ -341,8 +344,9 @@ initialiseServeCtx ::
   Env.Environment ->
   GlobalCtx ->
   ServeOptions Hasura ->
+  ServerMetrics ->
   ManagedT m ServeCtx
-initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} = do
+initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} serverMetrics = do
   instanceId <- liftIO generateInstanceId
   latch <- liftIO newShutdownLatch
   loggers@(Loggers loggerCtx logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
@@ -402,7 +406,7 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} = do
       unLogger logger $ mkGenericStrLog LevelInfo "schema-sync" ("Schema sync enabled. Polling at " <> show i)
       void $ startSchemaSyncListenerThread logger metadataDbPool instanceId i metaVersionRef
 
-  schemaCacheRef <- initialiseCache rebuildableSchemaCache
+  schemaCacheRef <- initialiseSchemaCacheRef serverMetrics rebuildableSchemaCache
 
   srvMgr <- liftIO $ mkHttpManager (readTlsAllowlist schemaCacheRef) mempty
 
@@ -718,12 +722,12 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
           soReadOnlyMode
 
   -- Log Warning if deprecated environment variables are used
-  sources <- scSources <$> liftIO (getSCFromRef cacheRef)
+  sources <- scSources <$> liftIO (getSchemaCache cacheRef)
   liftIO $ logDeprecatedEnvVars logger env sources
 
   -- log inconsistent schema objects
-  inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)
-  liftIO $ logInconsObjs logger inconsObjs
+  inconsObjs <- scInconsistentObjs <$> liftIO (getSchemaCache cacheRef)
+  liftIO $ logInconsistentMetadata logger inconsObjs
 
   -- NOTE: `newLogTVar` is being used to make sure that the metadata logger runs only once
   --       while logging errors or any `inconsistent_metadata` logs.
@@ -762,7 +766,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
       -- start a background thread to create new cron events
       _cronEventsThread <-
         C.forkManagedT "runCronEventsGenerator" logger $
-          runCronEventsGenerator logger (getSCFromRef cacheRef)
+          runCronEventsGenerator logger (getSchemaCache cacheRef)
 
       startScheduledEventsPollerThread logger eventLogBehavior lockedEventsCtx cacheRef
     EventingDisabled ->
@@ -787,7 +791,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
 
         telemetryThread <-
           C.forkManagedT "runTelemetry" logger $
-            liftIO $ runTelemetry logger _scHttpManager (getSCFromRef cacheRef) dbId _scInstanceId pgVersion
+            liftIO $ runTelemetry logger _scHttpManager (getSchemaCache cacheRef) dbId _scInstanceId pgVersion
         return $ Just telemetryThread
       else return Nothing
 
@@ -915,7 +919,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
               logger
               eventLogBehavior
               _scHttpManager
-              (getSCFromRef cacheRef)
+              (getSchemaCache cacheRef)
               eventEngineCtx
               lockedEventsCtx
               serverMetrics
@@ -946,7 +950,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
               $ asyncActionsProcessor
                 env
                 logger
-                (_scrCache cacheRef)
+                (getSchemaCache cacheRef)
                 (leActionEvents lockedEventsCtx)
                 _scHttpManager
                 sleepTime
@@ -984,7 +988,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
             logger
             eventLogBehavior
             _scHttpManager
-            (getSCFromRef cacheRef)
+            (getSchemaCache cacheRef)
             lockedEventsCtx
 
 instance (Monad m) => Tracing.HasReporter (PGMetadataStorageAppT m)

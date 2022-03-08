@@ -536,6 +536,7 @@ library
                      , Hasura.Server.Middleware
                      , Hasura.Server.Cors
                      , Hasura.Server.CheckUpdates
+                     , Hasura.Server.SchemaCacheRef
                      , Hasura.Server.SchemaUpdate
                      , Hasura.Server.Migrate.Version
                      , Hasura.Server.Migrate.Internal

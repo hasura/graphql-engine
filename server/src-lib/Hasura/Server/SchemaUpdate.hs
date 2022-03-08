@@ -19,7 +19,6 @@ import Data.Aeson.Casing
 import Data.Aeson.TH
 import Data.HashMap.Strict qualified as HM
 import Data.HashSet qualified as HS
-import Data.IORef
 import Database.PG.Query qualified as Q
 import Hasura.Base.Error
 import Hasura.Logging
@@ -29,8 +28,12 @@ import Hasura.RQL.DDL.Schema (runCacheRWT)
 import Hasura.RQL.DDL.Schema.Catalog
 import Hasura.RQL.Types
 import Hasura.RQL.Types.Run
-import Hasura.Server.App (SchemaCacheRef (..), withSCUpdate)
 import Hasura.Server.Logging
+import Hasura.Server.SchemaCacheRef
+  ( SchemaCacheRef,
+    readSchemaCacheRef,
+    withSchemaCacheUpdate,
+  )
 import Hasura.Server.Types (InstanceId (..))
 import Hasura.Session
 import Network.HTTP.Client qualified as HTTP
@@ -318,8 +321,8 @@ refreshSchemaCache
   serverConfigCtx
   logTVar = do
     respErr <- runExceptT $
-      withSCUpdate cacheRef logger (Just logTVar) $ do
-        rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
+      withSchemaCacheUpdate cacheRef logger (Just logTVar) $ do
+        rebuildableCache <- liftIO $ fst <$> readSchemaCacheRef cacheRef
         (msg, cache, _) <- peelRun runCtx $
           runCacheRWT rebuildableCache $ do
             schemaCache <- askSchemaCache
