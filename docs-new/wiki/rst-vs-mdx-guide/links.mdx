@@ -69,12 +69,11 @@ To avoid this scenario, we can use root relative paths. The path will still brea
 Find `/folder1/subfolder2/doc3.mdx` and replace with `/folder1/newsubfolder4/doc5.mdx`
 ```
 
-Since MDX doesn't yet support direct document referencing with `id/ref` unlike sphinx, we need to settle with root relative path linking for now.
+Since MDX doesn't yet support direct document referencing with `id/ref` unlike sphinx, we need to settle with root relative path linking for now. The root relative link should start at `graphql` directory level.
 
 ```
 [MDX Root Relative Link](/rst-vs-mdx-guide/index.mdx#contents-covered)
 ```
-
 
 > [MDX Root Relative Link](/rst-vs-mdx-guide/index.mdx#contents-covered)
 
