@@ -331,7 +331,8 @@ data SchemaCache = SchemaCache
     scMetricsConfig :: !MetricsConfig,
     scMetadataResourceVersion :: !(Maybe MetadataResourceVersion),
     scSetGraphqlIntrospectionOptions :: !SetGraphqlIntrospectionOptions,
-    scTlsAllowlist :: ![TlsAllow]
+    scTlsAllowlist :: ![TlsAllow],
+    scQueryCollections :: !QueryCollections
   }
 
 -- WARNING: this can only be used for debug purposes, as it loses all
@@ -355,7 +356,8 @@ instance ToJSON SchemaCache where
         "metrics_config" .= toJSON scMetricsConfig,
         "metadata_resource_version" .= toJSON scMetadataResourceVersion,
         "set_graphql_introspection_options" .= toJSON scSetGraphqlIntrospectionOptions,
-        "tls_allowlist" .= toJSON scTlsAllowlist
+        "tls_allowlist" .= toJSON scTlsAllowlist,
+        "query_collection" .= toJSON scQueryCollections
       ]
 
 getAllRemoteSchemas :: SchemaCache -> [RemoteSchemaName]

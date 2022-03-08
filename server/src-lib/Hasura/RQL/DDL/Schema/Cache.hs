@@ -281,6 +281,9 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
       endpointObject :: EndpointMetadata q -> MetadataObject
       endpointObject md = MetadataObject (endpointObjId md) (toJSON $ OMap.lookup (_ceName md) $ _metaRestEndpoints metadata)
 
+      listedQueryObjects :: (CollectionName, ListedQuery) -> MetadataObject
+      listedQueryObjects (cName, lq) = MetadataObject (MOQueryCollectionsQuery cName lq) (toJSON lq)
+
       --  Cases of urls that generate invalid segments:
 
       hasInvalidSegments :: EndpointMetadata query -> Bool
@@ -299,8 +302,11 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
       ambiguousF' ep = MetadataObject (endpointObjId ep) (toJSON ep)
       ambiguousF mds = AmbiguousRestEndpoints (commaSeparated $ map _ceUrl mds) (map ambiguousF' mds)
       ambiguousRestEndpoints = map (ambiguousF . S.elems . snd) $ ambiguousPathsGrouped endpoints
+
       maybeRS = getSchemaIntrospection gqlContext
-      inconsistentRestQueries = getInconsistentRestQueries maybeRS endpoints endpointObject
+      queryCollections = _boQueryCollections resolvedOutputs
+      allowLists = HS.toList . iaGlobal . _boAllowlist $ resolvedOutputs
+      inconsistentQueryCollections = getInconsistentQueryCollections maybeRS queryCollections listedQueryObjects endpoints allowLists
 
   returnA
     -<
@@ -328,12 +334,13 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
               <> duplicateRestVariables
               <> invalidRestSegments
               <> ambiguousRestEndpoints
-              <> inconsistentRestQueries,
+              <> inconsistentQueryCollections,
           scApiLimits = _boApiLimits resolvedOutputs,
           scMetricsConfig = _boMetricsConfig resolvedOutputs,
           scMetadataResourceVersion = Nothing,
           scSetGraphqlIntrospectionOptions = _metaSetGraphqlIntrospectionOptions metadata,
-          scTlsAllowlist = _boTlsAllowlist resolvedOutputs
+          scTlsAllowlist = _boTlsAllowlist resolvedOutputs,
+          scQueryCollections = _boQueryCollections resolvedOutputs
         }
   where
     getSourceConfigIfNeeded ::
@@ -833,7 +840,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
               _boApiLimits = apiLimits,
               _boMetricsConfig = metricsConfig,
               _boRoles = mapFromL _rRoleName $ _unOrderedRoles orderedRoles,
-              _boTlsAllowlist = (networkTlsAllowlist networkConfig)
+              _boTlsAllowlist = (networkTlsAllowlist networkConfig),
+              _boQueryCollections = collections
             }
 
     mkEndpointMetadataObject (name, createEndpoint) =

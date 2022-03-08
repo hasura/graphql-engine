@@ -216,6 +216,12 @@ deleteMetadataObject = \case
   MOActionPermission name role -> boActions . ix name . aiPermissions %~ M.delete role
   MOInheritedRole name -> boRoles %~ M.delete name
   MOHostTlsAllowlist host -> removeHostFromAllowList host
+  MOQueryCollectionsQuery cName lq -> \bo@BuildOutputs {..} ->
+    bo
+      { _boEndpoints = removeEndpointsUsingQueryCollection lq _boEndpoints,
+        _boAllowlist = removeFromAllowList lq _boAllowlist,
+        _boQueryCollections = removeFromQueryCollections cName lq _boQueryCollections
+      }
   where
     removeHostFromAllowList hst bo =
       bo
@@ -243,3 +249,34 @@ deleteMetadataObject = \case
           MTOTrigger name -> tiEventTriggerInfoMap %~ M.delete name
           MTOPerm roleName permType -> withPermType permType \accessor ->
             tiRolePermInfoMap . ix roleName . permAccToLens accessor .~ Nothing
+
+    removeFromQueryCollections :: CollectionName -> ListedQuery -> QueryCollections -> QueryCollections
+    removeFromQueryCollections cName lq qc =
+      let collectionModifier :: CreateCollection -> CreateCollection
+          collectionModifier cc@CreateCollection {..} =
+            cc
+              { _ccDefinition =
+                  let oldQueries = _cdQueries _ccDefinition
+                   in _ccDefinition
+                        { _cdQueries = filter (/= lq) oldQueries
+                        }
+              }
+       in OMap.adjust collectionModifier cName qc
+
+    removeEndpointsUsingQueryCollection :: ListedQuery -> HashMap EndpointName (EndpointMetadata GQLQueryWithText) -> HashMap EndpointName (EndpointMetadata GQLQueryWithText)
+    removeEndpointsUsingQueryCollection lq endpointMap =
+      case maybeEndpoint of
+        Just (n, _) -> M.delete n endpointMap
+        Nothing -> endpointMap
+      where
+        q = _lqQuery lq
+        maybeEndpoint = find (\(_, def) -> (_edQuery . _ceDefinition) def == q) (M.toList endpointMap)
+
+    removeFromAllowList :: ListedQuery -> InlinedAllowlist -> InlinedAllowlist
+    removeFromAllowList lq aList =
+      let oldAList = iaGlobal aList
+          gqlQry = NormalizedQuery . unGQLQuery . getGQLQuery . _lqQuery $ lq
+          newAList = HS.delete gqlQry oldAList
+       in aList
+            { iaGlobal = newAList
+            }
