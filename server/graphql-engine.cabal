@@ -410,6 +410,8 @@ library
                      , Hasura.Backends.MSSQL.Types.Update
 
                      , Hasura.Backends.Postgres.Connection
+                     , Hasura.Backends.Postgres.Connection.MonadTx
+                     , Hasura.Backends.Postgres.Connection.Settings
                      , Hasura.Backends.Postgres.DDL
                      , Hasura.Backends.Postgres.DDL.BoolExp
                      , Hasura.Backends.Postgres.DDL.ComputedField
