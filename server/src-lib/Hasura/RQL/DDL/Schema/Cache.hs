@@ -21,6 +21,7 @@ module Hasura.RQL.DDL.Schema.Cache
 where
 
 import Control.Arrow.Extended
+import Control.Concurrent.Extended (forConcurrentlyEIO)
 import Control.Lens hiding ((.=))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Retry qualified as Retry
@@ -250,27 +251,19 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
   (resolvedOutputs, dependencyInconsistentObjects, resolvedDependencies) <-
     resolveDependencies -< (outputs, unresolvedDependencies)
 
-  -- Step 3: Build the GraphQL schema.
-  (gqlContext, gqlContextUnauth, inconsistentRemoteSchemas) <-
+  -- Steps 3 and 4: Build the regular and relay GraphQL schemas in parallel
+  [(gqlContext, gqlContextUnauth, inconsistentRemoteSchemas), (relayContext, relayContextUnauth, _)] <-
     bindA
-      -<
-        buildGQLContext
-          QueryHasura
-          (_boSources resolvedOutputs)
-          (_boRemoteSchemas resolvedOutputs)
-          (_boActions resolvedOutputs)
-          (_boCustomTypes resolvedOutputs)
-
-  -- Step 4: Build the relay GraphQL schema
-  (relayContext, relayContextUnauth, _) <-
-    bindA
-      -<
-        buildGQLContext
-          QueryRelay
-          (_boSources resolvedOutputs)
-          (_boRemoteSchemas resolvedOutputs)
-          (_boActions resolvedOutputs)
-          (_boCustomTypes resolvedOutputs)
+      -< do
+        cxt <- askServerConfigCtx
+        forConcurrentlyEIO 1 [QueryHasura, QueryRelay] $ \queryType -> do
+          buildGQLContext
+            cxt
+            queryType
+            (_boSources resolvedOutputs)
+            (_boRemoteSchemas resolvedOutputs)
+            (_boActions resolvedOutputs)
+            (_boCustomTypes resolvedOutputs)
 
   let duplicateVariables :: EndpointMetadata a -> Bool
       duplicateVariables m = any ((> 1) . length) $ group $ sort $ catMaybes $ splitPath Just (const Nothing) (_ceUrl m)

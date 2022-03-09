@@ -2,6 +2,7 @@
 
 module Main (main) where
 
+import Control.Concurrent.ExtendedSpec qualified as ConcurrentExtended
 import Control.Concurrent.MVar
 import Control.Natural ((:~>) (..))
 import Data.Aeson qualified as A
@@ -88,6 +89,7 @@ main =
 
 unitSpecs :: Spec
 unitSpecs = do
+  describe "Control.Concurrent.ExtendedSpec" ConcurrentExtended.spec
   describe "Data.HashMap.Strict.ExtendedSpec" HashMapExtendedSpec.spec
   describe "Data.NonNegativeInt" NonNegetiveIntSpec.spec
   describe "Data.Parser.CacheControl" CacheControlParser.spec
