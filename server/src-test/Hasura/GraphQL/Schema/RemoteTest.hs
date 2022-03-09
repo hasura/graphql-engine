@@ -12,15 +12,20 @@ import Hasura.GraphQL.Execute.Inline
 import Hasura.GraphQL.Execute.Remote (resolveRemoteVariable, runVariableCache)
 import Hasura.GraphQL.Execute.Resolve
 import Hasura.GraphQL.Namespace
+import Hasura.GraphQL.Parser.Column (UnpreparedValue)
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Parser.Schema
 import Hasura.GraphQL.Parser.TestUtils
 import Hasura.GraphQL.RemoteServer (identityCustomizer)
+import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Remote
 import Hasura.Prelude
 import Hasura.RQL.IR.RemoteSchema
+import Hasura.RQL.IR.Root
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.Session
 import Language.GraphQL.Draft.Parser qualified as G
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -98,16 +103,26 @@ mkTestVariableValues vars = runIdentity $
 
 buildQueryParsers ::
   RemoteSchemaIntrospection ->
-  IO (P.FieldParser TestMonad (G.Field G.NoFragments RemoteSchemaVariable))
+  IO (P.FieldParser TestMonad (GraphQLField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))
 buildQueryParsers introspection = do
   let introResult = IntrospectionResult introspection $$(G.litName "Query") Nothing Nothing
+      remoteSchemaInfo = RemoteSchemaInfo (ValidatedRemoteSchemaDef N.nullURI [] False 60 Nothing) identityCustomizer
+      sourceContext =
+        -- without relationships to sources, this won't be evaluated
+        ( adminRoleName :: RoleName,
+          mempty :: SourceCache,
+          undefined :: QueryContext,
+          mempty :: CustomizeRemoteFieldName,
+          mempty :: RemoteSchemaMap,
+          mempty :: MkTypename,
+          mempty :: MkRootFieldName
+        )
   ParsedIntrospection query _ _ <-
     runError $
-      buildRemoteParser introResult $
-        RemoteSchemaInfo (ValidatedRemoteSchemaDef N.nullURI [] False 60 Nothing) identityCustomizer
+      buildRemoteParser introResult remoteSchemaInfo
   pure $
     head query <&> \case
-      NotNamespaced remoteFld -> convertGraphQLField $ _rfField remoteFld
+      NotNamespaced remoteFld -> _rfField remoteFld
       Namespaced _ ->
         -- Shouldn't happen if we're using identityCustomizer
         -- TODO: add some tests for remote schema customization
@@ -132,7 +147,7 @@ run ::
   Text ->
   -- | variables
   LBS.ByteString ->
-  IO (G.Field G.NoFragments RemoteSchemaVariable)
+  IO (GraphQLField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable)
 run schema query variables = do
   parser <- buildQueryParsers $ mkTestRemoteSchema schema
   pure $
@@ -192,7 +207,7 @@ query($a: A!) {
   }
 }
 |]
-  let arg = head $ M.toList $ G._fArguments field
+  let arg = head $ M.toList $ _fArguments field
   arg
     `shouldBe` ( $$(G.litName "a"),
                  -- the parser did not create a new JSON variable, and forwarded the query variable unmodified
@@ -246,7 +261,7 @@ query($a: A) {
   }
 }
 |]
-  let arg = head $ M.toList $ G._fArguments field
+  let arg = head $ M.toList $ _fArguments field
   arg
     `shouldBe` ( $$(G.litName "a"),
                  -- fieldOptional has peeled the variable; all we see is a JSON blob, and in doubt
@@ -300,7 +315,7 @@ query($a: A!) {
   }
 }
 |]
-  let arg = head $ M.toList $ G._fArguments field
+  let arg = head $ M.toList $ _fArguments field
   arg
     `shouldBe` ( $$(G.litName "a"),
                  -- the preset has caused partial variable expansion, only up to where it's needed
@@ -333,7 +348,7 @@ testVariableSubstitutionCollision = it "ensures that remote variables are de-dup
       . traverse (resolveRemoteVariable dummyUserInfo)
       $ field
   let variableNames =
-        eField ^.. _Right . to G._fArguments . traverse . _VVariable . to vInfo . to getName . to G.unName
+        eField ^.. _Right . to _fArguments . traverse . _VVariable . to vInfo . to getName . to G.unName
   variableNames `shouldBe` ["hasura_json_var_1", "hasura_json_var_2"]
   where
     -- A schema whose values are representable as collections of JSON values.
