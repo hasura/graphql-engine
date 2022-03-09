@@ -141,12 +141,12 @@ const config = {
               {
                 type: 'doc',
                 docId: 'graphql/core/index',
-                label: 'Core',
+                label: 'Hasura GraphQL Engine',
               },
               {
                 type: 'docSidebar',
                 sidebarId: 'cloudDocsSidebar',
-                label: 'Cloud',
+                label: 'Hasura Cloud',
               },
             ],
           },
