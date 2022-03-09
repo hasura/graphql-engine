@@ -29,8 +29,8 @@ import { getConfirmation, capitalize } from '../../../Common/utils/jsUtils';
 import {
   findTable,
   findTableCheckConstraint,
+  getTableColumnConfig,
   getTableCustomRootFields,
-  getTableCustomColumnNames,
   getTableDef,
   getTableCustomName,
   generateTableDef,
@@ -38,6 +38,7 @@ import {
   escapeTableColumns,
   escapeTableName,
   currentDriver,
+  setCustomColumnNamesOnColumnConfig,
 } from '../../../../dataSources';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import {
@@ -305,21 +306,21 @@ export const setCustomRootFields = successCb => (dispatch, getState) => {
 
   const existingCustomName = getTableCustomName(table);
   const existingRootFields = getTableCustomRootFields(table);
-  const existingCustomColumnNames = getTableCustomColumnNames(table);
+  const existingColumnConfig = getTableColumnConfig(table);
   const migration = new Migration();
 
   migration.add(
     getSetCustomRootFieldsQuery(
       tableDef,
       sanitiseRootFields(newRootFields),
-      existingCustomColumnNames,
+      existingColumnConfig,
       customName,
       currentDataSource
     ),
     getSetCustomRootFieldsQuery(
       tableDef,
       existingRootFields,
-      existingCustomColumnNames,
+      existingColumnConfig,
       existingCustomName,
       currentDataSource
     )
@@ -2022,7 +2023,12 @@ export const setViewCustomColumnNames = (
 
   const existingCustomName = getTableCustomName(view);
   const existingCustomRootFields = getTableCustomRootFields(view);
-  const existingColumnNames = getTableCustomColumnNames(view);
+  const existingColumnConfig = getTableColumnConfig(view);
+
+  const newColumnConfig = setCustomColumnNamesOnColumnConfig(
+    existingColumnConfig,
+    sanitiseColumnNames(customColumnNames)
+  );
 
   const migration = new Migration();
 
@@ -2030,14 +2036,14 @@ export const setViewCustomColumnNames = (
     getSetCustomRootFieldsQuery(
       viewDef,
       existingCustomRootFields,
-      sanitiseColumnNames(customColumnNames),
+      newColumnConfig,
       existingCustomName || null,
       source
     ),
     getSetCustomRootFieldsQuery(
       viewDef,
       existingCustomRootFields,
-      existingColumnNames,
+      existingColumnConfig,
       existingCustomName,
       source
     )

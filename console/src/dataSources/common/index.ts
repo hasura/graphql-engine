@@ -5,10 +5,12 @@ import { FixMe } from '../../types';
 import {
   BaseTable,
   CheckConstraint,
+  ColumnConfig,
   CustomRootFields,
   CustomRootField,
   Relationship,
   Table,
+  NormalizedTable,
 } from '../types';
 
 export type Operations = 'insert' | 'select' | 'update' | 'delete';
@@ -310,12 +312,43 @@ export const setTableCustomRootFieldName = (
   return newName;
 };
 
+export const getTableColumnConfig = (table: NormalizedTable) =>
+  table?.configuration?.column_config || {};
+
+export const setCustomColumnNamesOnColumnConfig = (
+  columnConfig: ColumnConfig,
+  customColumnNames: Record<string, string>
+): ColumnConfig => {
+  const newColumnConfig = { ...columnConfig };
+
+  // Clone all ColumnConfigValues and clear the custom names
+  Object.keys(newColumnConfig).forEach(columnName => {
+    newColumnConfig[columnName] = { ...newColumnConfig[columnName] };
+    delete newColumnConfig[columnName].custom_name;
+  });
+
+  Object.entries(customColumnNames).forEach(([columnName, customName]) => {
+    const columnConfigValue = newColumnConfig[columnName] || {};
+    columnConfigValue.custom_name = customName;
+    newColumnConfig[columnName] = columnConfigValue;
+  });
+
+  return newColumnConfig;
+};
+
 export const getTableCustomColumnNames = (table: Table) => {
   if (table && table.configuration) {
-    return table.configuration.custom_column_names || {};
+    const columnConfig = table.configuration.column_config || {};
+    const customNames = Object.entries(columnConfig).map(([name, config]) => ({
+      [name]: config.custom_name,
+    }));
+    return Object.assign({}, ...customNames);
   }
   return {};
 };
+
+export const getTableCustomColumnName = (table: Table, columnName: string) =>
+  table?.configuration?.column_config?.[columnName]?.custom_name;
 
 export const findFKConstraint = (curTable: Table, column: string[]) => {
   const fkConstraints = curTable.foreign_key_constraints;

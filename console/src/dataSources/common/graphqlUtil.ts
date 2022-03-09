@@ -37,9 +37,9 @@ const generateSortClauseQueryString = (
   sorts: OrderBy[],
   tableConfiguration: TableConfig
 ): string | null => {
-  const customColumns = tableConfiguration?.custom_column_names ?? {};
+  const columnConfig = tableConfiguration?.column_config ?? {};
   const sortClausesArr = sorts.map((i: OrderBy) => {
-    return `${customColumns[i.column] ?? i.column}: ${i.type}`;
+    return `${columnConfig[i.column]?.custom_name ?? i.column}: ${i.type}`;
   });
   return sortClausesArr.length
     ? `order_by: {${sortClausesArr.join(',')}}`
@@ -53,10 +53,10 @@ export const getColQuery = (
   tableConfiguration: TableConfig
 ): string[] => {
   return cols.map(c => {
-    const customColumns = tableConfiguration?.custom_column_names ?? {};
-    if (typeof c === 'string') return customColumns[c] ?? c;
+    const columnConfig = tableConfiguration?.column_config ?? {};
+    if (typeof c === 'string') return columnConfig[c]?.custom_name ?? c;
     const rel = relationships.find((r: any) => r.rel_name === c.name);
-    return `${customColumns[c.name] ?? c.name} ${
+    return `${columnConfig[c.name]?.custom_name ?? c.name} ${
       rel?.rel_type === 'array' ? `(limit: ${limit})` : ''
     } {
         ${getColQuery(c.columns, limit, relationships, tableConfiguration).join(
@@ -87,16 +87,19 @@ export const generateWhereClauseQueryString = (
   tableConfiguration: TableConfig,
   getFormattedValue: (type: string, value: any) => string | number | undefined
 ): string | null => {
-  const customColumns = tableConfiguration?.custom_column_names ?? {};
+  const columnConfig = tableConfiguration?.column_config ?? {};
   const whereClausesArr = wheres.map((i: Record<string, any>) => {
     const columnName = Object.keys(i)[0];
     const RqlOperator = Object.keys(i[columnName])[0];
     const value = i[columnName][RqlOperator];
     const type = columnTypeInfo?.find(c => c.column_name === columnName)
       ?.data_type_name;
-    return `${customColumns[columnName] ?? columnName}: {${RqlToGraphQlOp(
-      RqlOperator
-    )}: ${getFormattedValue(type || 'varchar', value)} }`;
+    return `${
+      columnConfig[columnName]?.custom_name ?? columnName
+    }: {${RqlToGraphQlOp(RqlOperator)}: ${getFormattedValue(
+      type || 'varchar',
+      value
+    )} }`;
   });
   return whereClausesArr.length
     ? `where: {${whereClausesArr.join(',')}}`

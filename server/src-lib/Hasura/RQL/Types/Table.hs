@@ -3,7 +3,7 @@
 module Hasura.RQL.Types.Table
   ( CombinedSelPermInfo (..),
     Constraint (..),
-    CustomColumnNames,
+    ColumnConfig (..),
     CustomRootField (..),
     DBTableMetadata (..),
     DBTablesMetadata,
@@ -55,10 +55,10 @@ module Hasura.RQL.Types.Table
     pkConstraint,
     sortCols,
     tableInfoName,
-    tcCustomColumnNames,
     tcCustomName,
     tcCustomRootFields,
     tcComment,
+    tcColumnConfig,
     tciCustomConfig,
     tciDescription,
     tciEnumValues,
@@ -88,7 +88,7 @@ import Control.Lens hiding ((.=))
 import Data.Aeson.Casing
 import Data.Aeson.Extended
 import Data.Aeson.TH
-import Data.Aeson.Types (prependFailure, typeMismatch)
+import Data.Aeson.Types (Parser, prependFailure, typeMismatch)
 import Data.HashMap.Strict qualified as M
 import Data.HashMap.Strict.Extended qualified as M
 import Data.HashSet qualified as HS
@@ -618,13 +618,47 @@ isMutable :: (ViewInfo -> Bool) -> Maybe ViewInfo -> Bool
 isMutable _ Nothing = True
 isMutable f (Just vi) = f vi
 
-type CustomColumnNames b = HashMap (Column b) G.Name
+data ColumnConfig = ColumnConfig
+  { _ccfgCustomName :: Maybe G.Name,
+    _ccfgComment :: Comment
+  }
+  deriving stock (Eq, Show, Generic)
+
+instance NFData ColumnConfig
+
+instance Cacheable ColumnConfig
+
+instance ToJSON ColumnConfig where
+  toJSON ColumnConfig {..} =
+    object $
+      filter
+        ((/= Null) . snd)
+        [ "custom_name" .= _ccfgCustomName,
+          "comment" .= _ccfgComment
+        ]
+
+instance FromJSON ColumnConfig where
+  parseJSON = withObject "ColumnConfig" $ \obj ->
+    ColumnConfig
+      <$> obj .:? "custom_name"
+      <*> obj .:? "comment" .!= Automatic
+
+instance Semigroup ColumnConfig where
+  a <> b = ColumnConfig customName comment
+    where
+      customName = _ccfgCustomName a <|> _ccfgCustomName b
+      comment = case (_ccfgComment a, _ccfgComment b) of
+        (Automatic, explicit) -> explicit
+        (explicit, _) -> explicit
+
+instance Monoid ColumnConfig where
+  mempty = ColumnConfig Nothing Automatic
 
 data TableConfig b = TableConfig
-  { _tcCustomRootFields :: !TableCustomRootFields,
-    _tcCustomColumnNames :: !(CustomColumnNames b),
-    _tcCustomName :: !(Maybe G.Name),
-    _tcComment :: !Comment
+  { _tcCustomRootFields :: TableCustomRootFields,
+    _tcColumnConfig :: HashMap (Column b) ColumnConfig,
+    _tcCustomName :: Maybe G.Name,
+    _tcComment :: Comment
   }
   deriving (Generic)
 
@@ -636,9 +670,6 @@ instance (Backend b) => NFData (TableConfig b)
 
 instance (Backend b) => Cacheable (TableConfig b)
 
-instance Backend b => ToJSON (TableConfig b) where
-  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
-
 $(makeLenses ''TableConfig)
 
 emptyTableConfig :: (TableConfig b)
@@ -646,12 +677,38 @@ emptyTableConfig =
   TableConfig emptyCustomRootFields M.empty Nothing Automatic
 
 instance (Backend b) => FromJSON (TableConfig b) where
-  parseJSON = withObject "TableConfig" $ \obj ->
+  parseJSON = withObject "TableConfig" $ \obj -> do
     TableConfig
       <$> obj .:? "custom_root_fields" .!= emptyCustomRootFields
-      <*> obj .:? "custom_column_names" .!= M.empty
+      <*> parseColumnConfig obj
       <*> obj .:? "custom_name"
       <*> obj .:? "comment" .!= Automatic
+    where
+      -- custom_column_names is a deprecated property that has been replaced by column_config.
+      -- We merge custom_column_names into column_config transparently to maintain backwards
+      -- compatibility (with both the metadata API and the metadata JSON saved in the HGE DB)
+      -- custom_column_names can be removed once the deprecation period has expired and we get rid of it
+      parseColumnConfig :: Object -> Parser (HashMap (Column b) ColumnConfig)
+      parseColumnConfig obj = do
+        columnConfig <- obj .:? "column_config" .!= M.empty
+        legacyCustomColumnNames <- obj .:? "custom_column_names" .!= M.empty
+        let legacyColumnConfig = (\name -> ColumnConfig (Just name) Automatic) <$> legacyCustomColumnNames
+        pure $ M.unionWith (<>) columnConfig legacyColumnConfig -- columnConfig takes precedence over legacy
+
+instance (Backend b) => ToJSON (TableConfig b) where
+  toJSON TableConfig {..} =
+    object $
+      filter
+        ((/= Null) . snd)
+        [ "custom_root_fields" .= _tcCustomRootFields,
+          -- custom_column_names is a deprecated property that has been replaced by column_config.
+          -- We are retaining it here, sourcing its values from column_config, for backwards-compatibility
+          -- custom_column_names can be removed once the deprecation period has expired and we get rid of it
+          "custom_column_names" .= M.mapMaybe _ccfgCustomName _tcColumnConfig,
+          "column_config" .= M.filter (/= mempty) _tcColumnConfig,
+          "custom_name" .= _tcCustomName,
+          "comment" .= _tcComment
+        ]
 
 data Constraint (b :: BackendType) = Constraint
   { _cName :: !(ConstraintName b),

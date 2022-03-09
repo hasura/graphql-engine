@@ -278,7 +278,7 @@ data SetTableCustomFields = SetTableCustomFields
   { _stcfSource :: !SourceName,
     _stcfTable :: !QualifiedTable,
     _stcfCustomRootFields :: !TableCustomRootFields,
-    _stcfCustomColumnNames :: !(CustomColumnNames ('Postgres 'Vanilla))
+    _stcfCustomColumnNames :: !(HashMap (Column ('Postgres 'Vanilla)) G.Name)
   }
   deriving (Show, Eq)
 
@@ -294,7 +294,8 @@ runSetTableCustomFieldsQV2 ::
   (QErrM m, CacheRWM m, MetadataM m) => SetTableCustomFields -> m EncJSON
 runSetTableCustomFieldsQV2 (SetTableCustomFields source tableName rootFields columnNames) = do
   void $ askTabInfo @('Postgres 'Vanilla) source tableName -- assert that table is tracked
-  let tableConfig = TableConfig @('Postgres 'Vanilla) rootFields columnNames Nothing Automatic
+  let columnConfig = (\name -> mempty {_ccfgCustomName = Just name}) <$> columnNames
+  let tableConfig = TableConfig @('Postgres 'Vanilla) rootFields columnConfig Nothing Automatic
   buildSchemaCacheFor
     (MOSourceObjId source $ AB.mkAnyBackend $ SMOTable @('Postgres 'Vanilla) tableName)
     $ MetadataModifier $
@@ -508,7 +509,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
           let columns = _tciFieldInfoMap rawInfo
               enumReferences = resolveEnumReferences enumTables (_tciForeignKeys rawInfo)
           columnInfoMap <-
-            alignCustomColumnNames columns (_tcCustomColumnNames $ _tciCustomConfig rawInfo)
+            collectColumnConfiguration columns (_tciCustomConfig rawInfo)
               >>= traverse (processColumnInfo enumReferences (_tciName rawInfo))
           assertNoDuplicateFieldNames (Map.elems columnInfoMap)
 
@@ -525,29 +526,50 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
       Map.lookup (FieldName (toTxt columnName)) columnMap
         `onNothing` throw500 "column in primary key not in table!"
 
-    alignCustomColumnNames ::
+    collectColumnConfiguration ::
       (QErrM n) =>
       FieldInfoMap (RawColumnInfo b) ->
-      CustomColumnNames b ->
-      n (FieldInfoMap (RawColumnInfo b, G.Name))
-    alignCustomColumnNames columns customNames = do
-      let customNamesByFieldName = mapKeys (fromCol @b) customNames
-      flip Map.traverseWithKey (align columns customNamesByFieldName) \columnName -> \case
-        This column -> (column,) <$> textToName (getFieldNameTxt columnName)
-        These column customName -> pure (column, customName)
-        That customName ->
-          throw400 NotExists $
-            "the custom field name " <> customName
-              <<> " was given for the column " <> columnName
-              <<> ", but no such column exists"
+      TableConfig b ->
+      n (FieldInfoMap (RawColumnInfo b, G.Name, Maybe G.Description))
+    collectColumnConfiguration columns TableConfig {..} = do
+      let configByFieldName = mapKeys (fromCol @b) _tcColumnConfig
+      Map.traverseWithKey
+        (\fieldName -> pairColumnInfoAndConfig fieldName >=> extractColumnConfiguration fieldName)
+        (align columns configByFieldName)
+
+    pairColumnInfoAndConfig ::
+      QErrM n =>
+      FieldName ->
+      These (RawColumnInfo b) ColumnConfig ->
+      n (RawColumnInfo b, ColumnConfig)
+    pairColumnInfoAndConfig fieldName = \case
+      This column -> pure (column, mempty)
+      These column config -> pure (column, config)
+      That _ ->
+        throw400 NotExists $
+          "configuration was given for the column " <> fieldName <<> ", but no such column exists"
+
+    extractColumnConfiguration ::
+      QErrM n =>
+      FieldName ->
+      (RawColumnInfo b, ColumnConfig) ->
+      n (RawColumnInfo b, G.Name, Maybe G.Description)
+    extractColumnConfiguration fieldName (columnInfo, ColumnConfig {..}) = do
+      name <- _ccfgCustomName `onNothing` textToName (getFieldNameTxt fieldName)
+      pure (columnInfo, name, description)
+      where
+        description :: Maybe G.Description
+        description = case _ccfgComment of
+          Automatic -> rciDescription columnInfo
+          (Explicit explicitDesc) -> G.Description . toTxt <$> explicitDesc
 
     processColumnInfo ::
       (QErrM n) =>
       Map.HashMap (Column b) (NonEmpty (EnumReference b)) ->
       TableName b ->
-      (RawColumnInfo b, G.Name) ->
+      (RawColumnInfo b, G.Name, Maybe G.Description) ->
       n (ColumnInfo b)
-    processColumnInfo tableEnumReferences tableName (rawInfo, name) = do
+    processColumnInfo tableEnumReferences tableName (rawInfo, name, description) = do
       resolvedType <- resolveColumnType
       pure
         ColumnInfo
@@ -556,7 +578,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
             ciPosition = rciPosition rawInfo,
             ciType = resolvedType,
             ciIsNullable = rciIsNullable rawInfo,
-            ciDescription = rciDescription rawInfo,
+            ciDescription = description,
             ciMutability = rciMutability rawInfo
           }
       where

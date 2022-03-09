@@ -10,9 +10,11 @@
       configuration:
         custom_root_fields:
           select: Authors
-        custom_column_names:
-          id: AuthorId
-          name: AuthorName
+        column_config:
+          id:
+            custom_name: AuthorId
+          name:
+            custom_name: AuthorName
 
 - description: "Rename column 'id' and drop column 'name'"
   url: /v1/query

@@ -48,8 +48,9 @@ Expose columns with a different name in the GraphQL API
             dataset: hasura
             name: author
           configuration:
-            custom_column_names:
-              addr: address
+            column_config:
+              addr:
+                custom_name: address
 
     Apply the metadata by running:
 
@@ -61,7 +62,7 @@ Expose columns with a different name in the GraphQL API
 
     A custom field name can be set for a column via the following 2 methods:
 
-    1. Passing a :ref:`table_config` with the :ref:`CustomColumnNames` to the :ref:`metadata_bigquery_set_table_customization` API while tracking a table:
+    1. Passing a :ref:`table_config` with the :ref:`ColumnConfig` to the :ref:`metadata_bigquery_set_table_customization` API while tracking a table:
 
        .. code-block:: http
 
@@ -75,8 +76,10 @@ Expose columns with a different name in the GraphQL API
              "source": "<db_name>",
              "table": "authors",
              "configuration": {
-               "custom_column_names": {
-                 "id": "AuthorId"
+               "column_config": {
+                 "id": {
+                   "custom_name": "AuthorId"
+                 }
                }
              }
            }
@@ -140,8 +143,10 @@ Expose table root fields with a different name in the GraphQL API
              "source": "<db_name>",
              "table": "authors",
              "configuration": {
-               "custom_column_names": {
-                 "id": "AuthorId"
+               "column_config": {
+                 "id": {
+                   "custom_name": "AuthorId"
+                 }
                },
                "custom_root_fields": {
                  "select": "authors",
@@ -153,5 +158,3 @@ Expose table root fields with a different name in the GraphQL API
 
 
     2. Customization can be done at the time of creation using :ref:`metadata_bigquery_track_table` API also.
-
-

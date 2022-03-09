@@ -1,4 +1,5 @@
 import {
+  ColumnConfig,
   CustomRootFields,
   ActionDefinition,
   CustomTypes,
@@ -231,7 +232,7 @@ export const generateCreateActionQuery = (
 export const getSetCustomRootFieldsQuery = (
   tableDef: QualifiedTable,
   rootFields: CustomRootFields,
-  customColumnNames: Record<string, string>,
+  columnConfig: ColumnConfig,
   customTableName: string | null,
   source: string
 ) => {
@@ -243,7 +244,7 @@ export const getSetCustomRootFieldsQuery = (
     configuration: {
       custom_name: customNameValue,
       custom_root_fields: rootFields,
-      custom_column_names: customColumnNames,
+      column_config: columnConfig,
     },
   });
 };
@@ -330,11 +331,16 @@ export const getTrackTableQuery = ({
   customColumnNames?: Record<string, string>;
 }) => {
   const configuration: Partial<{
-    custom_column_names: Record<string, string>;
+    column_config: ColumnConfig;
     custom_name: string;
   }> = {};
   if (!isEmpty(customColumnNames)) {
-    configuration.custom_column_names = customColumnNames;
+    const newColumnConfigs = Object.entries(customColumnNames || {}).map(
+      ([column, columnCustomName]) => ({
+        [column]: { custom_name: columnCustomName },
+      })
+    );
+    configuration.column_config = Object.assign({}, ...newColumnConfigs);
   }
   if (customName) {
     configuration.custom_name = customName;

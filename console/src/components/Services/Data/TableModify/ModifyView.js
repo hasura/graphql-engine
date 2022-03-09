@@ -65,9 +65,7 @@ const ModifyView = props => {
   };
 
   React.useEffect(() => {
-    if (tableSchema.configuration) {
-      setCustomColumnNames(tableSchema.configuration.custom_column_names);
-    }
+    setCustomColumnNames(getTableCustomColumnNames(tableSchema));
   }, [tableSchema.configuration]);
 
   if (!tableSchema) {

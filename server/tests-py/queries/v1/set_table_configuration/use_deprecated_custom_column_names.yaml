@@ -1,4 +1,4 @@
-- description: Set select_by_pk root field and customise name column
+- description: Customise column names using deprecated custom_column_names
   url: /v1/query
   status: 200
   response:
@@ -8,33 +8,27 @@
     args:
       table: author
       configuration:
-        custom_root_fields:
-          select: Authors
-          select_by_pk: Author
-        column_config:
-          id:
-            custom_name: AuthorId
-          name:
-            custom_name: AuthorName
-          age:
-            custom_name: age
+        custom_column_names:
+          id: AuthorId
+          name: AuthorName
+          age: age
 
 - description: Check that above query has changed the schema
   url: /v1/graphql
   status: 200
   response:
     data:
-      Author:
+      author_by_pk:
         AuthorName: Clarke
   query:
     query: |
       query {
-          Author(AuthorId: 1){
+          author_by_pk(AuthorId: 1){
             AuthorName
           }
       }
 
-- description: Unset select_by_pk root field and remove custom column names
+- description: Remove custom column names
   url: /v1/query
   status: 200
   response:
@@ -43,9 +37,7 @@
     type: set_table_customization
     args:
       table: author
-      configuration:
-        custom_root_fields:
-          select: Authors
+      configuration: {}
 
 - description: Check that above query has changed the schema
   url: /v1/graphql

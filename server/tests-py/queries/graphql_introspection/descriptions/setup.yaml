@@ -66,6 +66,9 @@ args:
         delete_by_pk:
           name: DeleteByPkExplicitCommentInMetadata
           comment: Explicit comment on delete_by_pk
+      column_config:
+        name:
+          comment: Explicit comment on the name column
 
 - type: pg_add_computed_field
   args:
@@ -107,6 +110,9 @@ args:
           comment: ""
         delete_by_pk:
           name: null
+          comment: ""
+      column_config:
+        name:
           comment: ""
 
 - type: pg_add_computed_field

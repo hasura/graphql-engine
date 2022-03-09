@@ -24,6 +24,6 @@ response:
       - name: id
         description: null
       - name: name
-        description: null
+        description: Explicit comment on the name column
       - name: upper_name
         description: Such an explicit function comment, wow

@@ -38,8 +38,9 @@ args:
   args:
     table: {schema: custom, name: profiles}
     configuration:
-      custom_column_names:
-        name: profile_name
+      column_config:
+        name:
+          custom_name: profile_name
 
 - type: create_select_permission
   args:
@@ -60,4 +61,3 @@ args:
     definition:
       url: http://localhost:4000
       forward_client_headers: false
-

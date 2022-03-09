@@ -715,11 +715,11 @@ possiblyUpdateCustomColumnNames ::
   Column b ->
   Column b ->
   m ()
-possiblyUpdateCustomColumnNames source qt oCol nCol = do
-  let updateCustomColumns customColumns =
-        M.fromList $
-          flip map (M.toList customColumns) $
-            \(dbCol, val) -> (,val) $ if dbCol == oCol then nCol else dbCol
+possiblyUpdateCustomColumnNames source tableName oldColumn newColumn = do
   tell $
     MetadataModifier $
-      tableMetadataSetter @b source qt . tmConfiguration . tcCustomColumnNames %~ updateCustomColumns
+      tableMetadataSetter @b source tableName . tmConfiguration . tcColumnConfig %~ swapOldColumnForNewColumn
+  where
+    swapOldColumnForNewColumn :: HashMap (Column b) columnData -> HashMap (Column b) columnData
+    swapOldColumnForNewColumn customColumns =
+      M.fromList $ (\(dbCol, val) -> (,val) $ if dbCol == oldColumn then newColumn else dbCol) <$> M.toList customColumns

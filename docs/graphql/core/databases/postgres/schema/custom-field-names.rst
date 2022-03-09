@@ -46,8 +46,9 @@ Expose columns with a different name in the GraphQL API
             schema: public
             name: author
           configuration:
-            custom_column_names:
-              addr: address
+            column_config:
+              addr:
+                custom_name: address
 
     Apply the metadata by running:
 
@@ -59,7 +60,7 @@ Expose columns with a different name in the GraphQL API
 
     A custom field name can be set for a column via the following 2 methods:
 
-    1. passing a :ref:`table_config` with the :ref:`CustomColumnNames` to the :ref:`metadata_pg_track_table` API while tracking a table:
+    1. passing a :ref:`table_config` with the :ref:`ColumnConfig` to the :ref:`metadata_pg_track_table` API while tracking a table:
 
        .. code-block:: http
 
@@ -73,14 +74,16 @@ Expose columns with a different name in the GraphQL API
              "source": "<db_name>",
              "table": "author",
              "configuration": {
-               "custom_column_names": {
-                 "addr": "address"
+               "column_config": {
+                 "addr": {
+                   "custom_name": "address"
+                 }
                }
              }
            }
          }
 
-    2. using the :ref:`metadata_pg_set_table_customization` API to set the :ref:`CustomColumnNames`:
+    2. using the :ref:`metadata_pg_set_table_customization` API to set the :ref:`ColumnConfig`:
 
        .. code-block:: http
 
@@ -93,8 +96,10 @@ Expose columns with a different name in the GraphQL API
            "args": {
              "source": "<db_name>",
              "table": "author",
-             "custom_column_names": {
-               "addr": "address"
+             "column_config": {
+               "addr": {
+                 "custom_name": "address"
+               }
              }
            }
          }

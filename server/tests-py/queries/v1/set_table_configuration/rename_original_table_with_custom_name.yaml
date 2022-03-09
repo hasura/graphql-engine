@@ -10,7 +10,7 @@
       configuration:
         custom_name: author_alias
         custom_root_fields: {}
-        custom_column_names: {}
+        column_config: {}
 
 - description: Check that above query has changed the schema
   url: /v1/graphql
