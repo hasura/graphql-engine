@@ -421,6 +421,10 @@ pre {
   }
 }
 
+div[class*=codeBlockTitle_] {
+  background-color: var(--ifm-code-background) !important;
+}
+
 .alert {
   pre {
     code {

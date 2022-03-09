@@ -136,11 +136,11 @@ filterTOC={tocTree => ([ toc[2], ... ])} or filterTOC={tocTree => toc[1].childre
 
 :::danger `filterTOC` prop is not avaiable by default - it is custom implemented
 
-The `TOCInline` and `TOCItems` components are [swizzled](https://docusaurus.io/docs/swizzling) and custon logic is added.
+The `TOCInline` and `TOCItems` components are [swizzled](https://docusaurus.io/docs/swizzling) and custom logic is added.
 
-The custom added logic (`src/theme/..`) is indicated by comments - `// Customization START` and `// Customization END`. If reswizzled in future only these blocks need an update.
+The custom added logic (`src/theme/TOCInline`, `src/theme/TOCItems`) is indicated by comments - `// Customization START` and `// Customization END`. If reswizzled in future only these blocks need an update.
 
-[`toc` is a flat array](https://docusaurus.io/docs/markdown-features/inline-toc#custom-table-of-contents) and has no concept of nested tree children structure. This used to be available by default before `beta-16`.
+[`toc` is a flat array](https://docusaurus.io/docs/markdown-features/inline-toc#custom-table-of-contents) and has no concept of nested tree children structure. This behavior is changed in `2.0.0-beta.16`.
 Please check the [Breaking changes that forced us to swizzle](https://docusaurus.io/changelog/2.0.0-beta.16#-breaking-change)
 
 :::
