@@ -23,6 +23,7 @@ code; we automatically update it on every push to a branch of interest:
 
 * how to understand our [GraphQL schema](schema.md)
 * how to perform [database migrations](migration-guidelines.md)
+* how the [execution of remote joins](remote_joins_execution.md) works
 
 TODO: we can either list individual topics here, or point to architecture/ and have a README file there.
 

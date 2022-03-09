@@ -160,10 +160,10 @@ data RemoteFieldArgument = RemoteFieldArgument
   }
   deriving (Eq, Show)
 
-data RemoteSchemaSelect = RemoteSchemaSelect
+data RemoteSchemaSelect r = RemoteSchemaSelect
   { _rselArgs :: [RemoteFieldArgument],
     _rselResultCustomizer :: ResultCustomizer,
-    _rselSelection :: SelectionSet Void RemoteSchemaVariable,
+    _rselSelection :: SelectionSet r RemoteSchemaVariable,
     _rselFieldCall :: NonEmpty FieldCall,
     _rselRemoteSchema :: RemoteSchemaInfo
   }

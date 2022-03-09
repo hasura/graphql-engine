@@ -60,7 +60,7 @@ remoteRelationshipToSchemaField ::
   (MonadBuildSchemaBase r m n) =>
   Map.HashMap FieldName lhsJoinField ->
   RemoteSchemaFieldInfo ->
-  m (Maybe (FieldParser n IR.RemoteSchemaSelect))
+  m (Maybe (FieldParser n (IR.RemoteSchemaSelect (IR.RemoteRelationshipField UnpreparedValue))))
 remoteRelationshipToSchemaField lhsFields RemoteSchemaFieldInfo {..} = runMaybeT do
   remoteRelationshipQueryCtx <- asks $ qcRemoteRelationshipContext . getter
   RemoteRelationshipQueryContext roleIntrospectionResultOriginal _ remoteSchemaCustomizer <-

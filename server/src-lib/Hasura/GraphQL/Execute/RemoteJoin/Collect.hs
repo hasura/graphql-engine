@@ -4,12 +4,14 @@ module Hasura.GraphQL.Execute.RemoteJoin.Collect
     getRemoteJoinsMutationDB,
     getRemoteJoinsActionQuery,
     getRemoteJoinsActionMutation,
+    getRemoteJoinsGraphQLField,
   )
 where
 
-import Control.Lens (Traversal', preview, _2)
+import Control.Lens (Traversal', preview, (^?), _2)
 import Control.Monad.Writer
 import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashMap.Strict.NonEmpty (NEHashMap)
 import Data.HashMap.Strict.NonEmpty qualified as NEMap
 import Data.Text qualified as T
@@ -63,15 +65,15 @@ newtype Collector a = Collector {runCollector :: (a, Maybe RemoteJoins)}
 
 -- | Collect some remote joins appearing at the given field names in the current
 -- context.
-collect :: NEHashMap FieldName RemoteJoin -> Collector ()
+collect :: NEHashMap QualifiedFieldName RemoteJoin -> Collector ()
 collect = tell . Just . JoinTree . fmap Leaf
 
 -- | Keep track of the given field name in the current path from the root of the
 -- selection set.
-withField :: FieldName -> Collector a -> Collector a
-withField name = censor (fmap wrap)
+withField :: Maybe Text -> Text -> Collector a -> Collector a
+withField typeName fieldName = censor (fmap wrap)
   where
-    wrap rjs = JoinTree $ NEMap.singleton name (Tree rjs)
+    wrap rjs = JoinTree $ NEMap.singleton (QualifiedFieldName typeName fieldName) (Tree rjs)
 
 -- | Collects remote joins from the AST and also adds the necessary join fields
 getRemoteJoins ::
@@ -123,7 +125,7 @@ getRemoteJoinsMutationOutput =
         MOutSinglerowObject <$> transformAnnFields annFields
       where
         transfromMutationFields fields =
-          for fields $ \(fieldName, field') -> withField fieldName do
+          for fields $ \(fieldName, field') -> withField Nothing (getFieldNameTxt fieldName) do
             (fieldName,) <$> case field' of
               MCount -> pure MCount
               MExp t -> pure $ MExp t
@@ -186,7 +188,7 @@ getRemoteJoinsActionQuery = \case
        in (async {_aaaqFields = fields'}, remoteJoins)
 
     transformAsyncFields fields =
-      for fields $ \(fieldName, field) -> withField fieldName do
+      for fields $ \(fieldName, field) -> withField Nothing (getFieldNameTxt fieldName) do
         (fieldName,) <$> case field of
           AsyncTypename t -> pure $ AsyncTypename t
           AsyncOutput outputFields ->
@@ -217,7 +219,7 @@ transformAggregateSelect ::
   Collector (AnnAggregateSelectG b Void (UnpreparedValue b))
 transformAggregateSelect select@AnnSelectG {_asnFields = aggFields} = do
   transformedFields <- for aggFields \(fieldName, aggField) ->
-    withField fieldName $ case aggField of
+    withField Nothing (getFieldNameTxt fieldName) $ case aggField of
       TAFAgg agg -> pure (fieldName, TAFAgg agg)
       TAFExp t -> pure (fieldName, TAFExp t)
       TAFNodes nodesAgg annFields -> do
@@ -232,7 +234,7 @@ transformConnectionSelect ::
   Collector (ConnectionSelect b Void (UnpreparedValue b))
 transformConnectionSelect connSelect@ConnectionSelect {..} = do
   transformedFields <- for (_asnFields _csSelect) \(fieldName, connField) ->
-    withField fieldName $ case connField of
+    withField Nothing (getFieldNameTxt fieldName) $ case connField of
       ConnectionTypename t -> pure (fieldName, ConnectionTypename t)
       ConnectionPageInfo p -> pure (fieldName, ConnectionPageInfo p)
       ConnectionEdges edges -> do
@@ -246,7 +248,7 @@ transformConnectionSelect connSelect@ConnectionSelect {..} = do
       [(FieldName, EdgeField b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))] ->
       Collector [(FieldName, EdgeField b Void (UnpreparedValue b))]
     transformEdges edgeFields = for edgeFields \(fieldName, edgeField) ->
-      withField fieldName $ case edgeField of
+      withField Nothing (getFieldNameTxt fieldName) $ case edgeField of
         EdgeTypename t -> pure (fieldName, EdgeTypename t)
         EdgeCursor -> pure (fieldName, EdgeCursor)
         EdgeNode annFields -> do
@@ -274,16 +276,17 @@ createRemoteJoin joinColumnAliases remoteRelationship =
   case remoteRelationship of
     RemoteSchemaField RemoteSchemaSelect {..} ->
       let inputArgsToMap = Map.fromList . map (_rfaArgument &&& _rfaValue)
+          (transformedSchemaRelationship, schemaRelationshipJoins) =
+            getRemoteJoinsGraphQLSelectionSet _rselSelection
           remoteJoin =
-            RemoteJoinRemoteSchema $
-              RemoteSchemaJoin
-                (inputArgsToMap _rselArgs)
-                _rselResultCustomizer
-                (convertSelectionSet _rselSelection)
-                joinColumnAliases
-                _rselFieldCall
-                _rselRemoteSchema
-       in remoteJoin
+            RemoteSchemaJoin
+              (inputArgsToMap _rselArgs)
+              _rselResultCustomizer
+              transformedSchemaRelationship
+              joinColumnAliases
+              _rselFieldCall
+              _rselRemoteSchema
+       in RemoteJoinRemoteSchema remoteJoin schemaRelationshipJoins
     RemoteSourceField anySourceSelect ->
       AB.dispatchAnyBackend @Backend anySourceSelect \RemoteSourceSelect {..} ->
         let (transformedSourceRelationship, sourceRelationshipJoins) =
@@ -317,7 +320,7 @@ transformAnnFields ::
 transformAnnFields fields = do
   -- Produces a list of transformed fields that may or may not have an
   -- associated remote join.
-  annotatedFields <- for fields \(fieldName, field') -> withField fieldName do
+  annotatedFields <- for fields \(fieldName, field') -> withField Nothing (getFieldNameTxt fieldName) do
     (fieldName,) <$> case field' of
       -- AnnFields which do not need to be transformed.
       AFNodeId x qt pkeys -> pure (AFNodeId x qt pkeys, Nothing)
@@ -358,7 +361,7 @@ transformAnnFields fields = do
   let transformedFields = (fmap . fmap) fst annotatedFields
       remoteJoins =
         annotatedFields & mapMaybe \(fieldName, (_, mRemoteJoin)) ->
-          (fieldName,) <$> mRemoteJoin
+          (QualifiedFieldName Nothing (getFieldNameTxt fieldName),) <$> mRemoteJoin
 
   case NEMap.fromList remoteJoins of
     Nothing -> pure transformedFields
@@ -459,7 +462,7 @@ transformActionFields ::
 transformActionFields fields = do
   -- Produces a list of transformed fields that may or may not have an
   -- associated remote join.
-  annotatedFields <- for fields \(fieldName, field') -> withField fieldName do
+  annotatedFields <- for fields \(fieldName, field') -> withField Nothing (getFieldNameTxt fieldName) do
     (fieldName,) <$> case field' of
       -- ActionFields which do not need to be transformed.
       ACFScalar c -> pure (ACFScalar c, Nothing)
@@ -480,7 +483,7 @@ transformActionFields fields = do
   let transformedFields = (fmap . fmap) fst annotatedFields
       remoteJoins =
         annotatedFields & mapMaybe \(fieldName, (_, mRemoteJoin)) ->
-          (fieldName,) <$> mRemoteJoin
+          (QualifiedFieldName Nothing (getFieldNameTxt fieldName),) <$> mRemoteJoin
 
   case NEMap.fromList remoteJoins of
     Nothing -> pure transformedFields
@@ -571,3 +574,130 @@ getRemoteJoinsSourceRelation = runCollector . transformSourceRelation
         SourceRelationshipArray <$> transformSelect simpleSelect
       SourceRelationshipArrayAggregate aggregateSelect ->
         SourceRelationshipArrayAggregate <$> transformAggregateSelect aggregateSelect
+
+transformGraphQLSelectionSet ::
+  SelectionSet (RemoteRelationshipField UnpreparedValue) var ->
+  Collector (SelectionSet Void var)
+transformGraphQLSelectionSet = \case
+  SelectionSetNone -> pure SelectionSetNone
+  SelectionSetObject s -> SelectionSetObject <$> transformObjectSelectionSet Nothing s
+  SelectionSetUnion s -> SelectionSetUnion <$> transformAbstractTypeSelectionSet s
+  SelectionSetInterface s -> SelectionSetInterface <$> transformAbstractTypeSelectionSet s
+  where
+    transformAbstractTypeSelectionSet DeduplicatedSelectionSet {..} = do
+      transformedMemberSelectionSets <-
+        _atssMemberSelectionSets & Map.traverseWithKey \typeName objectSelectionSet ->
+          transformObjectSelectionSet (Just typeName) objectSelectionSet
+      pure
+        DeduplicatedSelectionSet
+          { _atssMemberSelectionSets = transformedMemberSelectionSets,
+            ..
+          }
+
+transformObjectSelectionSet ::
+  -- | The type name on which this selection set is defined; this is only
+  -- expected to be provided for unions and interfaces, not for regular objects,
+  -- as this is used to determine whether a selection set is potentially
+  -- "ambiguous" or not, and regular objects cannot. This will be used as the
+  -- type name in the 'QualifiedFieldName' key of the join tree if this
+  -- selection set or its subselections contain remote joins.
+  Maybe G.Name ->
+  ObjectSelectionSet (RemoteRelationshipField UnpreparedValue) var ->
+  Collector (ObjectSelectionSet Void var)
+transformObjectSelectionSet typename selectionSet = do
+  -- we need to keep track of whether any subfield contained a remote join
+  (annotatedFields, subfieldsContainRemoteJoins) <-
+    listens isJust $
+      flip OMap.traverseWithKey selectionSet \alias field ->
+        withField (G.unName <$> typename) (G.unName alias) do
+          case field of
+            FieldGraphQL f -> (,Nothing) <$> transformGraphQLField f
+            FieldRemote SchemaRemoteRelationshipSelect {..} -> do
+              pure
+                ( mkPlaceholderField alias,
+                  Just $ createRemoteJoin joinColumnAliases _srrsRelationship
+                )
+  let internalTypeAlias = $$(G.litName "__hasura_internal_typename")
+      remoteJoins = OMap.mapMaybe snd annotatedFields
+      additionalFields =
+        if
+            | isJust typename && (not (null remoteJoins) || subfieldsContainRemoteJoins) ->
+              -- We are in a situation in which the type name matters, and we know
+              -- that there is at least one remote join in this part of tree, meaning
+              -- we might need to branch on the typename when traversing the join
+              -- tree: we insert a custom field that will return the type name.
+              OMap.singleton internalTypeAlias $
+                mkGraphQLField
+                  (Just internalTypeAlias)
+                  $$(G.litName "__typename")
+                  mempty
+                  mempty
+                  SelectionSetNone
+            | otherwise ->
+              -- Either the typename doesn't matter, or this tree doesn't have remote
+              -- joins; this selection set isn't "ambiguous".
+              mempty
+      transformedFields = fmap fst annotatedFields <> additionalFields
+  case NEMap.fromList $ OMap.toList remoteJoins of
+    Nothing -> pure $ fmap FieldGraphQL transformedFields
+    Just neRemoteJoins -> do
+      collect $ NEMap.mapKeys (\fieldGName -> QualifiedFieldName (G.unName <$> typename) (G.unName fieldGName)) neRemoteJoins
+      pure $
+        fmap
+          FieldGraphQL
+          (transformedFields <> OMap.fromList [(_fAlias fld, fld) | fld <- toList phantomFields])
+  where
+    nameToField = FieldName . G.unName
+    allAliases = map (nameToField . fst) $ OMap.toList selectionSet
+
+    mkPlaceholderField alias =
+      mkGraphQLField (Just alias) $$(G.litName "__typename") mempty mempty SelectionSetNone
+
+    -- A map of graphql scalar fields (without any arguments) to their aliases
+    -- in the selection set. We do not yet support lhs join fields which take
+    -- arguments. To be consistent with that, we ignore fields with arguments
+    noArgsGraphQLFields =
+      Map.fromList $
+        flip mapMaybe (OMap.toList selectionSet) \(alias, field) -> case field of
+          FieldGraphQL f ->
+            if null (_fArguments f)
+              then Just (_fName f, FieldName $ G.unName alias)
+              else Nothing
+          FieldRemote _ -> Nothing
+
+    annotateLHSJoinField fieldName lhsJoinField =
+      let columnAlias =
+            getJoinColumnAlias fieldName lhsJoinField noArgsGraphQLFields allAliases
+       in ( mkGraphQLField
+              (Just $ G.unsafeMkName $ getFieldNameTxt $ getAliasFieldName columnAlias)
+              lhsJoinField
+              mempty
+              mempty
+              SelectionSetNone,
+            columnAlias
+          )
+
+    (joinColumnAliases, phantomFields) =
+      let lhsJoinFields =
+            Map.unions $ map _srrsLHSJoinFields $ mapMaybe (^? _FieldRemote) $ toList selectionSet
+          annotatedJoinColumns = Map.mapWithKey annotateLHSJoinField lhsJoinFields
+       in (fmap snd annotatedJoinColumns, fmap fst annotatedJoinColumns)
+
+transformGraphQLField ::
+  GraphQLField (RemoteRelationshipField UnpreparedValue) var ->
+  Collector (GraphQLField Void var)
+transformGraphQLField GraphQLField {..} = do
+  transformedSelectionSet <- transformGraphQLSelectionSet _fSelectionSet
+  pure $ GraphQLField {_fSelectionSet = transformedSelectionSet, ..}
+
+getRemoteJoinsGraphQLSelectionSet ::
+  SelectionSet (RemoteRelationshipField UnpreparedValue) var ->
+  (SelectionSet Void var, Maybe RemoteJoins)
+getRemoteJoinsGraphQLSelectionSet =
+  runCollector . transformGraphQLSelectionSet
+
+getRemoteJoinsGraphQLField ::
+  GraphQLField (RemoteRelationshipField UnpreparedValue) var ->
+  (GraphQLField Void var, Maybe RemoteJoins)
+getRemoteJoinsGraphQLField =
+  runCollector . transformGraphQLField

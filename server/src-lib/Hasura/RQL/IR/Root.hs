@@ -73,7 +73,7 @@ newtype MutationDBRoot r v b = MDBR (MutationDB b r (v b))
 -- either a remote schema or a database's table. See RemoteSourceSelect for
 -- explanation on 'vf'.
 data RemoteRelationshipField vf
-  = RemoteSchemaField RemoteSchemaSelect
+  = RemoteSchemaField (RemoteSchemaSelect (RemoteRelationshipField vf))
   | -- | AnyBackend is used here to capture a relationship to an arbitrary target
     RemoteSourceField (AB.AnyBackend (RemoteSourceSelect (RemoteRelationshipField vf) vf))
 
@@ -88,14 +88,14 @@ type MutationActionRoot v =
 type QueryRootField v =
   RootField
     (QueryDBRoot (RemoteRelationshipField v) v)
-    (RemoteSchemaRootField Void RQL.RemoteSchemaVariable)
+    (RemoteSchemaRootField (RemoteRelationshipField v) RQL.RemoteSchemaVariable)
     (QueryActionRoot v)
     JO.Value
 
 type MutationRootField v =
   RootField
     (MutationDBRoot (RemoteRelationshipField v) v)
-    (RemoteSchemaRootField Void RQL.RemoteSchemaVariable)
+    (RemoteSchemaRootField (RemoteRelationshipField v) RQL.RemoteSchemaVariable)
     (MutationActionRoot v)
     JO.Value
 
