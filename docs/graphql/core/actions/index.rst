@@ -158,6 +158,15 @@ They are especially useful for setting up serverless functions as resolvers.
 If you have an existing GraphQL API or if you're comfortable building a GraphQL server yourself,
 you can use :ref:`remote schemas <remote_schemas>` to add custom types and resolvers.
 
+**Technical differences**
+
+Remote schemas and Actions are both always defined the root level, but only remote schema
+can be used optionally as the target of relationships on existing types in the main graph.
+
+Actions may return types from the main graph by creating an relationship in the output
+to a type in the main graph.  Remote schemas can only return types from the remote schema. 
+
+
 Learn more
 ----------
 
