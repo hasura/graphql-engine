@@ -2,16 +2,18 @@ module Data.HashMap.Strict.Extended
   ( module M,
     catMaybes,
     fromListOn,
-    unionsAll,
     groupOn,
     groupOnNE,
     differenceOn,
     lpadZip,
-    unionsWith,
     isInverseOf,
+    unionWithM,
+    unionsAll,
+    unionsWith,
   )
 where
 
+import Control.Monad (foldM)
 import Data.Align qualified as A
 import Data.Foldable qualified as F
 import Data.Function (on)
@@ -26,11 +28,6 @@ catMaybes = M.mapMaybe id
 
 fromListOn :: (Eq k, Hashable k) => (v -> k) -> [v] -> HashMap k v
 fromListOn f = fromList . Prelude.map (\v -> (f v, v))
-
--- | Like 'M.unions', but keeping all elements in the result.
-unionsAll ::
-  (Eq k, Hashable k, Foldable t) => t (HashMap k v) -> HashMap k (NonEmpty v)
-unionsAll = F.foldl' (\a b -> unionWith (<>) a (fmap (:| []) b)) M.empty
 
 -- | Given a 'Foldable' sequence of values and a function that extracts a key from each value,
 -- returns a 'HashMap' that maps each key to a list of all values in the sequence for which the
@@ -64,20 +61,6 @@ lpadZip left =
       That b -> Just (Nothing, b)
       These a b -> Just (Just a, b)
 
--- | The union of a list of maps, with a combining operation:
---   (@'unionsWith' f == 'Prelude.foldl' ('unionWith' f) 'empty'@).
---
--- > unionsWith (++) [(fromList [(5, "a"), (3, "b")]), (fromList [(5, "A"), (7, "C")]), (fromList [(5, "A3"), (3, "B3")])]
--- >     == fromList [(3, "bB3"), (5, "aAA3"), (7, "C")]
---
--- copied from https://hackage.haskell.org/package/containers-0.6.4.1/docs/src/Data.Map.Internal.html#unionsWith
-unionsWith ::
-  (Foldable f, Hashable k, Ord k) =>
-  (a -> a -> a) ->
-  f (HashMap k a) ->
-  HashMap k a
-unionsWith f ts = F.foldl' (unionWith f) empty ts
-
 -- | Determines whether the left-hand-side and the right-hand-side are inverses of each other.
 --
 -- More specifically, for two maps @A@ and @B@, 'isInverseOf' is satisfied when both of the
@@ -97,3 +80,41 @@ lhs `isInverseOf` rhs = lhs `invertedBy` rhs && rhs `invertedBy` lhs
     a `invertedBy` b = and $ do
       (k, v) <- M.toList a
       pure $ M.lookup v b == Just k
+
+-- | The union of two maps.
+--
+-- If a key occurs in both maps, the provided function (first argument) will be
+-- used to compute the result. Unlike 'unionWith', 'unionWithA' performs the
+-- computation in an arbitratry monad.
+unionWithM ::
+  (Monad m, Eq k, Hashable k) =>
+  (v -> v -> m v) ->
+  HashMap k v ->
+  HashMap k v ->
+  m (HashMap k v)
+unionWithM f m1 m2 = foldM step m1 (toList m2)
+  where
+    step m (k, new) = case M.lookup k m of
+      Nothing -> pure $ insert k new m
+      Just old -> do
+        combined <- f new old
+        pure $ insert k combined m
+
+-- | Like 'M.unions', but keeping all elements in the result.
+unionsAll ::
+  (Eq k, Hashable k, Foldable t) => t (HashMap k v) -> HashMap k (NonEmpty v)
+unionsAll = F.foldl' (\a b -> unionWith (<>) a (fmap (:| []) b)) M.empty
+
+-- | The union of a list of maps, with a combining operation:
+--   (@'unionsWith' f == 'Prelude.foldl' ('unionWith' f) 'empty'@).
+--
+-- > unionsWith (++) [(fromList [(5, "a"), (3, "b")]), (fromList [(5, "A"), (7, "C")]), (fromList [(5, "A3"), (3, "B3")])]
+-- >     == fromList [(3, "bB3"), (5, "aAA3"), (7, "C")]
+--
+-- copied from https://hackage.haskell.org/package/containers-0.6.4.1/docs/src/Data.Map.Internal.html#unionsWith
+unionsWith ::
+  (Foldable f, Hashable k, Ord k) =>
+  (a -> a -> a) ->
+  f (HashMap k a) ->
+  HashMap k a
+unionsWith f ts = F.foldl' (unionWith f) empty ts
