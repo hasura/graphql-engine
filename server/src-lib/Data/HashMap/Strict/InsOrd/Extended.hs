@@ -1,8 +1,10 @@
 module Data.HashMap.Strict.InsOrd.Extended
   ( module OMap,
+    catMaybes,
     groupTuples,
     groupListWith,
     partition,
+    alterF,
   )
 where
 
@@ -11,6 +13,9 @@ import Data.Hashable (Hashable)
 import Data.List qualified as L
 import Data.Sequence.NonEmpty qualified as NE
 import Prelude
+
+catMaybes :: InsOrdHashMap k (Maybe v) -> InsOrdHashMap k v
+catMaybes = OMap.mapMaybe id
 
 groupTuples ::
   (Eq k, Hashable k, Foldable t) =>
@@ -39,3 +44,17 @@ partition predicate =
           else (left, OMap.insert key val right)
     )
     (mempty, mempty)
+
+-- | Alter a hashmap using a function that can fail, in which case the entire operation fails.
+-- (Maybe a version with the key also being passed to the function could be useful.)
+alterF ::
+  (Functor f, Eq k, Hashable k) =>
+  (Maybe v -> f (Maybe v)) ->
+  k ->
+  InsOrdHashMap k v ->
+  f (InsOrdHashMap k v)
+alterF f k m = alter' <$> f (OMap.lookup k m)
+  where
+    alter' = \case
+      Nothing -> OMap.delete k m
+      Just v -> OMap.insert k v m

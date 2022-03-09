@@ -1,0 +1,30 @@
+description: Increment author_id for the article which will re-assign the author
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    mutation {
+      update_article(_inc: {author_id: 1}, where: {id: {_eq: 1}}){
+        affected_rows
+        returning{
+          id
+          title
+          content
+          author{
+            id
+            name
+          }
+        }
+      }
+    }
+response:
+  data:
+    update_article:
+      affected_rows: 1
+      returning:
+      - id: 1
+        title: Article 1
+        content: Sample article content 1
+        author:
+          id: 2
+          name: Author 2

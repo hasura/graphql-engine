@@ -223,11 +223,26 @@ class TestMetadata:
     def test_webhook_transform_success(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_success.yaml')
 
+    def test_webhook_transform_success_remove_body(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_success_remove_body.yaml')
+
+    def test_webhook_transform_success_old_body_schema(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_success_old_body_schema.yaml')
+
+    def test_webhook_transform_success_form_urlencoded(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_success_form_urlencoded.yaml')
+
+    def test_webhook_transform_with_url_env_reference_success(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_env_reference_success.yaml')
+
     def test_webhook_transform_bad_parse(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_bad_parse.yaml')
 
     def test_webhook_transform_bad_eval(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_bad_eval.yaml')
+
+    def test_webhook_transform_custom_functions(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/test_webhook_transform_custom_functions.yaml')
 
     @pytest.mark.skipif(
         os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_1') == os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_2') or

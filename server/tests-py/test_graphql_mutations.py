@@ -512,6 +512,63 @@ class TestGraphqlUpdatePermissions:
     def dir(cls):
         return "queries/graphql_mutation/update/permissions"
 
+@pytest.mark.parametrize("backend", ['mssql'])
+@use_mutation_fixtures
+class TestGraphqlUpdateBasicMSSQL:
+
+    def test_set_author_name(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/author_set_name_mssql.yaml")
+
+    def test_article_inc(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/article_inc_mssql.yaml")
+
+    def test_author_no_operator(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/author_no_operator_mssql.yaml")
+
+    def test_article_column_multiple_operators(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/article_column_multiple_operators_mssql.yaml")
+
+    def test_author_by_pk(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/author_by_pk_mssql.yaml")
+
+    def test_author_by_pk_null(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/author_by_pk_null_mssql.yaml")
+
+    def test_numerics_inc(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/numerics_inc_mssql.yaml")
+
+    @classmethod
+    def dir(cls):
+        return "queries/graphql_mutation/update/basic"
+
+@pytest.mark.parametrize("backend", ['mssql'])
+@use_mutation_fixtures
+class TestGraphqlUpdatePermissionsMSSQL:
+
+    def test_user_update_author(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_update_author_mssql.yaml")
+
+    def test_user_update_author_other_userid(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_update_author_other_userid_mssql.yaml")
+
+    def test_user_can_update_unpublished_article(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_can_update_unpublished_article_mssql.yaml")
+
+    def test_user_cannot_update_published_article(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_cannot_update_published_article_mssql.yaml")
+
+    def test_user_cannot_update_id_col_article(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_cannot_update_id_col_article_mssql.yaml")
+
+    def test_user_cannot_update_another_users_article(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_cannot_update_another_users_article_mssql.yaml")
+
+    def test_user_cannot_publish(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/user_cannot_publish_mssql.yaml")
+
+    @classmethod
+    def dir(cls):
+        return "queries/graphql_mutation/update/permissions"
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @use_mutation_fixtures
@@ -810,8 +867,17 @@ class TestGraphQLInsertMSSQL:
     def test_insert_multiple_objects(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/insert_multiple_objects_mssql.yaml")
 
-    def test_insert_table_no_pk_fail(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + "/insert_table_no_pk_fail_mssql.yaml")
+    def test_insert_table_no_pk(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/insert_table_no_pk_mssql.yaml")
+
+    def test_constraint_violation(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/constraint_violation_mssql.yaml")
+
+    def test_insert_numeric_value_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/insert_numeric_value_fail_mssql.yaml")
+
+    def test_insert_invalid_datetime(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/insert_invalid_datetime_mssql.yaml")
 
 @pytest.mark.parametrize("backend", ['mssql'])
 @use_mutation_fixtures
@@ -827,3 +893,34 @@ class TestGraphqlInsertPermissionMSSQL:
 
     def test_insert_permission_columns_fail(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_user_role_columns_fail_mssql.yaml")
+
+    def test_user_role_if_matched_update(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/article_if_matched_user_role_mssql.yaml")
+
+    def test_restricted_role_if_matched_update(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/article_if_matched_restricted_role_mssql.yaml")
+
+
+
+@pytest.mark.parametrize("backend", ['mssql'])
+@use_mutation_fixtures
+class TestGraphqlInsertIfMatchedMSSQL:
+
+    def test_if_matched_update(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/article_if_matched_update.yaml")
+
+    def test_if_matched_no_update(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/article_if_matched_no_update.yaml")
+
+    def test_order_if_matched_where(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/order_if_matched_where.yaml')
+
+    def test_if_matched_no_match_columns(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/article_if_matched_no_match_columns.yaml")
+
+    def test_match_non_id_column(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/article_if_matched_match_non_id_column.yaml')
+
+    @classmethod
+    def dir(cls):
+        return "queries/graphql_mutation/insert/ifmatched"

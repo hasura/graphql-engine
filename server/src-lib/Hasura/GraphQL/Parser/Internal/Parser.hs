@@ -50,9 +50,6 @@ data FieldParser m a = FieldParser
   }
   deriving (Functor)
 
-instance HasDefinition (FieldParser m a) FieldInfo where
-  definitionLens f parser = definitionLens f (fDefinition parser) <&> \fDefinition -> parser {fDefinition}
-
 infixl 1 `bindField`
 
 bindField :: Monad m => FieldParser m a -> (a -> m b) -> FieldParser m b
@@ -88,17 +85,17 @@ nullable parser =
 
 -- | Decorate a schema field as NON_NULL
 nonNullableField :: forall m a. FieldParser m a -> FieldParser m a
-nonNullableField (FieldParser (Definition n u d (FieldInfo as t)) p) =
-  FieldParser (Definition n u d (FieldInfo as (nonNullableType t))) p
+nonNullableField (FieldParser (Definition n d (FieldInfo as t)) p) =
+  FieldParser (Definition n d (FieldInfo as (nonNullableType t))) p
 
 -- | Decorate a schema field as NULL
 nullableField :: forall m a. FieldParser m a -> FieldParser m a
-nullableField (FieldParser (Definition n u d (FieldInfo as t)) p) =
-  FieldParser (Definition n u d (FieldInfo as (nullableType t))) p
+nullableField (FieldParser (Definition n d (FieldInfo as t)) p) =
+  FieldParser (Definition n d (FieldInfo as (nullableType t))) p
 
 multipleField :: forall m a. FieldParser m a -> FieldParser m a
-multipleField (FieldParser (Definition n u d (FieldInfo as t)) p) =
-  FieldParser (Definition n u d (FieldInfo as (Nullable (TList t)))) p
+multipleField (FieldParser (Definition n d (FieldInfo as t)) p) =
+  FieldParser (Definition n d (FieldInfo as (TList Nullable t))) p
 
 -- | Decorate a schema field with reference to given @'G.GType'
 wrapFieldParser :: forall m a. G.GType -> FieldParser m a -> FieldParser m a
@@ -117,7 +114,7 @@ nullableParser :: forall m a. Parser 'Output m a -> Parser 'Output m a
 nullableParser parser = parser {pType = nullableType (pType parser)}
 
 multiple :: forall m a. Parser 'Output m a -> Parser 'Output m a
-multiple parser = parser {pType = Nullable $ TList $ pType parser}
+multiple parser = parser {pType = TList Nullable $ pType parser}
 
 -- | A variant of 'selectionSetObject' which doesn't implement any interfaces
 selectionSet ::
@@ -162,10 +159,9 @@ selectionSetObject ::
 selectionSetObject name description parsers implementsInterfaces =
   Parser
     { pType =
-        Nullable $
-          TNamed $
-            mkDefinition name description $
-              TIObject $ ObjectInfo (map fDefinition parsers) interfaces,
+        TNamed Nullable $
+          Definition name description $
+            TIObject $ ObjectInfo (map fDefinition parsers) interfaces,
       pParser = \input -> withPath (++ [Key "selectionSet"]) do
         -- Not all fields have a selection set, but if they have one, it
         -- must contain at least one field. The GraphQL parser returns a
@@ -219,10 +215,9 @@ selectionSetInterface ::
 selectionSetInterface name description fields objectImplementations =
   Parser
     { pType =
-        Nullable $
-          TNamed $
-            mkDefinition name description $
-              TIInterface $ InterfaceInfo (map fDefinition fields) objects,
+        TNamed Nullable $
+          Definition name description $
+            TIInterface $ InterfaceInfo (map fDefinition fields) objects,
       pParser = \input -> for objectImplementations (($ input) . pParser)
       -- Note: This is somewhat suboptimal, since it parses a query against every
       -- possible object implementing this interface, possibly duplicating work for
@@ -247,10 +242,9 @@ selectionSetUnion ::
 selectionSetUnion name description objectImplementations =
   Parser
     { pType =
-        Nullable $
-          TNamed $
-            mkDefinition name description $
-              TIUnion $ UnionInfo objects,
+        TNamed Nullable $
+          Definition name description $
+            TIUnion $ UnionInfo objects,
       pParser = \input -> for objectImplementations (($ input) . pParser)
     }
   where
@@ -289,7 +283,7 @@ rawSelection ::
 rawSelection name description argumentsParser resultParser =
   FieldParser
     { fDefinition =
-        mkDefinition name description $
+        Definition name description $
           FieldInfo (ifDefinitions argumentsParser) (pType resultParser),
       fParser = \Field {_fAlias, _fArguments, _fSelectionSet} -> do
         unless (null _fSelectionSet) $
@@ -312,6 +306,10 @@ rawSelection name description argumentsParser resultParser =
 
 -- | Builds a 'FieldParser' for a field that takes a subselection set, i.e. a
 -- field that returns an object.
+--
+-- For example, @subselection name _ args fields@ produces schema:
+--
+-- > name (args) { fields }
 --
 -- See also Note [The delicate balance of GraphQL kinds] in "Hasura.GraphQL.Parser.Schema".
 subselection ::
@@ -341,7 +339,7 @@ rawSubselection ::
 rawSubselection name description argumentsParser bodyParser =
   FieldParser
     { fDefinition =
-        mkDefinition name description $
+        Definition name description $
           FieldInfo (ifDefinitions argumentsParser) (pType bodyParser),
       fParser = \Field {_fAlias, _fArguments, _fSelectionSet} -> do
         -- check for extraneous arguments here, since the InputFieldsParser just

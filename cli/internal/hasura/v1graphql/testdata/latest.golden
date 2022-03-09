@@ -763,7 +763,24 @@
           "name": "query_root",
           "enumValues": null,
           "description": null,
-          "fields": []
+          "fields": [
+            {
+              "args": [],
+              "isDeprecated": false,
+              "deprecationReason": null,
+              "name": "no_queries_available",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              },
+              "description": "There are no queries available to the current role. Either there are no sources or remote schemas configured, or the current role doesn't have the required permissions."
+            }
+          ]
         }
       ],
       "mutationType": null

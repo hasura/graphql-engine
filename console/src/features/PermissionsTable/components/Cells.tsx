@@ -1,28 +1,43 @@
 import React from 'react';
-import { useFormContext } from 'react-hook-form';
+import { TableMachine } from '../hooks';
 import { PermissionsIcon } from './PermissionsIcons';
 
 export interface InputCellProps extends React.ComponentProps<'input'> {
   roleName: string;
   isNewRole: boolean;
   isSelectable: boolean;
+  isSelected: boolean;
+  machine: ReturnType<TableMachine>;
 }
 
 export const InputCell: React.FC<InputCellProps> = ({
   roleName,
   isNewRole,
   isSelectable,
+  isSelected,
+  machine,
 }) => {
-  const { register } = useFormContext();
+  const [state, send] = machine;
+  const inputRef = React.createRef<HTMLInputElement>();
+
+  React.useEffect(() => {
+    if (inputRef?.current && state.value === 'updateRoleName') {
+      inputRef.current.focus();
+    }
+  }, [inputRef, state.value]);
 
   if (isNewRole) {
     return (
       <td className="w-0 bg-gray-50 p-sm font-semibold text-muted">
         <input
+          ref={inputRef}
+          className="block w-64 h-input px-md shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
+          value={state.context.newRoleName}
           aria-label="create-new-role"
           placeholder="Create new role..."
-          className="block w-64 h-input px-md shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
-          {...register('newRoleName')}
+          onChange={e => {
+            send({ type: 'NEW_ROLE_NAME', newRoleName: e.target.value });
+          }}
         />
       </td>
     );
@@ -35,12 +50,14 @@ export const InputCell: React.FC<InputCellProps> = ({
           id={roleName}
           type="checkbox"
           value={roleName}
-          defaultChecked={false}
+          checked={isSelected}
           className={`rounded shadow-sm border border-gray-300 hover:border-gray-400 focus:ring-yellow-400 ${
             !isSelectable && 'cursor-not-allowed'
           }`}
           disabled={!isSelectable}
-          {...register('bulkSelected')}
+          onChange={() => {
+            send({ type: 'BULK_OPEN', roleName });
+          }}
         />
         <label className="flex items-center ml-sm" htmlFor={roleName}>
           {roleName}
@@ -64,7 +81,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
 }) => {
   if (!isEditable) {
     return (
-      <td className="cursor-pointer p-md whitespace-nowrap text-center">
+      <td className="p-md whitespace-nowrap text-center">
         <PermissionsIcon type={access} selected={isCurrentEdit} />
       </td>
     );

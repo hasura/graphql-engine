@@ -2,7 +2,10 @@ import React from 'react';
 import AceEditor from 'react-ace';
 import { OptionTypeBase } from 'react-select';
 
-import { getConfirmation } from '../../../Common/utils/jsUtils';
+import {
+  emptyStringToNull,
+  getConfirmation,
+} from '../../../Common/utils/jsUtils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import RawSqlButton from '../Common/Components/RawSqlButton';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
@@ -274,7 +277,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
 
         newState[i] = {
           ...newState[i],
-          comment: e.target.value,
+          comment: emptyStringToNull(e.target.value),
         };
 
         setComputedFieldsState(newState);
@@ -408,7 +411,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
             <div className="flex items-center mb-formlabel">
               <div className="flex items-center">
                 <h4 className="text-gray-600 font-semibold">
-                  Session Arguement:
+                  Session Argument:
                 </h4>
                 <Tooltip message="The function argument into which Hasura session variables will be passed" />
               </div>

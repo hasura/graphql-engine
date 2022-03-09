@@ -1,3 +1,8 @@
+-- | Postgres Execute Insert
+--
+-- Translates and executes IR to Postgres-specific SQL.
+--
+-- See 'Hasura.Backends.Postgres.Instances.Execute'.
 module Hasura.Backends.Postgres.Execute.Insert
   ( convertToSQLTransaction,
   )
@@ -20,6 +25,7 @@ import Hasura.Backends.Postgres.Translate.Insert qualified as PGT
 import Hasura.Backends.Postgres.Translate.Mutation qualified as PGT
 import Hasura.Backends.Postgres.Translate.Returning qualified as PGT
 import Hasura.Backends.Postgres.Translate.Select (PostgresAnnotatedFieldJSON)
+import Hasura.Backends.Postgres.Types.Insert
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
@@ -39,10 +45,10 @@ convertToSQLTransaction ::
     PostgresAnnotatedFieldJSON pgKind,
     MonadReader QueryTagsComment m
   ) =>
-  IR.AnnInsert ('Postgres pgKind) (Const Void) PG.SQLExp ->
+  IR.AnnInsert ('Postgres pgKind) Void PG.SQLExp ->
   UserInfo ->
   Seq.Seq Q.PrepArg ->
-  Bool ->
+  StringifyNumbers ->
   m EncJSON
 convertToSQLTransaction (IR.AnnInsert fieldName isSingle annIns mutationOutput) userInfo planVars stringifyNum =
   if null $ IR._aiInsObj annIns
@@ -68,12 +74,12 @@ insertMultipleObjects ::
   UserInfo ->
   IR.MutationOutput ('Postgres pgKind) ->
   Seq.Seq Q.PrepArg ->
-  Bool ->
+  StringifyNumbers ->
   m EncJSON
 insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput planVars stringifyNum =
   bool withoutRelsInsert withRelsInsert anyRelsToInsert
   where
-    IR.AnnIns insObjs table conflictClause checkCondition columnInfos defVals () = multiObjIns
+    IR.AnnIns insObjs table checkCondition columnInfos defVals (BackendInsert conflictClause) = multiObjIns
     allInsObjRels = concatMap IR.getInsertObjectRelationships insObjs
     allInsArrRels = concatMap IR.getInsertArrayRelationships insObjs
     anyRelsToInsert = not $ null allInsArrRels && null allInsObjRels
@@ -88,7 +94,7 @@ insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput plan
               table
               columnNames
               columnValues
-              (snd <$> conflictClause)
+              conflictClause
               checkCondition
               mutationOutput
               columnInfos
@@ -99,7 +105,7 @@ insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput plan
 
     withRelsInsert = do
       insertRequests <- indexedForM insObjs \obj -> do
-        let singleObj = IR.AnnIns (IR.Single obj) table conflictClause checkCondition columnInfos defVals ()
+        let singleObj = IR.AnnIns (IR.Single obj) table checkCondition columnInfos defVals (BackendInsert conflictClause)
         insertObject singleObj additionalColumns userInfo planVars stringifyNum
       let affectedRows = sum $ map fst insertRequests
           columnValues = mapMaybe snd insertRequests
@@ -126,7 +132,7 @@ insertObject ::
   [(PGCol, PG.SQLExp)] ->
   UserInfo ->
   Seq.Seq Q.PrepArg ->
-  Bool ->
+  StringifyNumbers ->
   m (Int, Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal))
 insertObject singleObjIns additionalColumns userInfo planVars stringifyNum = Tracing.trace ("Insert " <> qualifiedObjectToText table) do
   validateInsert (map fst columns) (map IR._riRelInfo objectRels) (map fst additionalColumns)
@@ -139,7 +145,7 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum = Tra
       objRelDeterminedCols = concatMap snd objInsRes
       finalInsCols = columns <> objRelDeterminedCols <> additionalColumns
 
-  cte <- mkInsertQ table (snd <$> onConflict) finalInsCols defaultValues checkCond
+  let cte = mkInsertQ table onConflict finalInsCols defaultValues checkCond
 
   PGE.MutateResp affRows colVals <-
     liftTx $
@@ -151,7 +157,7 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum = Tra
 
   return (totAffRows, colValM)
   where
-    IR.AnnIns (IR.Single annObj) table onConflict checkCond allColumns defaultValues () = singleObjIns
+    IR.AnnIns (IR.Single annObj) table checkCond allColumns defaultValues (BackendInsert onConflict) = singleObjIns
     columns = IR.getInsertColumns annObj
     objectRels = IR.getInsertObjectRelationships annObj
     arrayRels = IR.getInsertArrayRelationships annObj
@@ -172,15 +178,7 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum = Tra
     objToArr IR.RelIns {..} = IR.RelIns (singleToMulti _riAnnIns) _riRelInfo
 
     singleToMulti :: forall a b. IR.SingleObjIns b a -> IR.MultiObjIns b a
-    singleToMulti IR.AnnIns {..} =
-      IR.AnnIns
-        [IR.unSingle _aiInsObj]
-        _aiTableName
-        _aiConflictClause
-        _aiCheckCond
-        _aiTableCols
-        _aiDefVals
-        _aiExtraInsertData
+    singleToMulti annIns = annIns {IR._aiInsObj = [IR.unSingle $ IR._aiInsObj annIns]}
 
     withArrRels ::
       Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal) ->
@@ -217,7 +215,7 @@ insertObjRel ::
   ) =>
   Seq.Seq Q.PrepArg ->
   UserInfo ->
-  Bool ->
+  StringifyNumbers ->
   IR.ObjRelIns ('Postgres pgKind) PG.SQLExp ->
   m (Int, [(PGCol, PG.SQLExp)])
 insertObjRel planVars userInfo stringifyNum objRelIns =
@@ -253,7 +251,7 @@ insertArrRel ::
   [(PGCol, PG.SQLExp)] ->
   UserInfo ->
   Seq.Seq Q.PrepArg ->
-  Bool ->
+  StringifyNumbers ->
   IR.ArrRelIns ('Postgres pgKind) PG.SQLExp ->
   m Int
 insertArrRel resCols userInfo planVars stringifyNum arrRelIns =
@@ -306,14 +304,14 @@ validateInsert insCols objRels addCols = do
     insConflictCols = insCols `intersect` addCols
 
 mkInsertQ ::
-  (MonadError QErr m, Backend ('Postgres pgKind)) =>
+  Backend ('Postgres pgKind) =>
   QualifiedTable ->
-  Maybe (IR.ConflictClauseP1 ('Postgres pgKind) PG.SQLExp) ->
+  Maybe (IR.OnConflictClause ('Postgres pgKind) PG.SQLExp) ->
   [(PGCol, PG.SQLExp)] ->
   Map.HashMap PGCol PG.SQLExp ->
   (AnnBoolExpSQL ('Postgres pgKind), Maybe (AnnBoolExpSQL ('Postgres pgKind))) ->
-  m PG.CTE
-mkInsertQ table onConflictM insCols defVals (insCheck, updCheck) = do
+  PG.CTE
+mkInsertQ table onConflictM insCols defVals (insCheck, updCheck) =
   let sqlConflict = PGT.toSQLConflict table <$> onConflictM
       sqlExps = mkSQLRow defVals insCols
       valueExp = PG.ValuesExp [PG.TupleExp sqlExps]
@@ -329,7 +327,7 @@ mkInsertQ table onConflictM insCols defVals (insCheck, updCheck) = do
                 (PGT.toSQLBoolExp (PG.QualTable table) insCheck)
                 (fmap (PGT.toSQLBoolExp (PG.QualTable table)) updCheck)
             ]
-  pure $ PG.CTEInsert sqlInsert
+   in PG.CTEInsert sqlInsert
 
 fetchFromColVals ::
   MonadError QErr m =>
@@ -338,16 +336,16 @@ fetchFromColVals ::
   m [(PGCol, PG.SQLExp)]
 fetchFromColVals colVal reqCols =
   forM reqCols $ \ci -> do
-    let valM = Map.lookup (pgiColumn ci) colVal
+    let valM = Map.lookup (ciColumn ci) colVal
     val <-
       onNothing valM $
         throw500 $
           "column "
-            <> pgiColumn ci <<> " not found in given colVal"
+            <> ciColumn ci <<> " not found in given colVal"
     let pgColVal = case val of
           TENull -> PG.SENull
           TELit t -> PG.SELit t
-    return (pgiColumn ci, pgColVal)
+    return (ciColumn ci, pgColVal)
 
 mkSQLRow :: Map.HashMap PGCol PG.SQLExp -> [(PGCol, PG.SQLExp)] -> [PG.SQLExp]
 mkSQLRow defVals withPGCol = map snd $

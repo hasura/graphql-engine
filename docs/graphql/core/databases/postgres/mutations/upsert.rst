@@ -2,7 +2,7 @@
    :description: Use upsert mutations on Postgres with Hasura
    :keywords: hasura, docs, postgres, mutation, upsert
 
-.. _upsert:
+.. _pg_upsert:
 
 Postgres: Upsert mutation
 =========================
@@ -11,7 +11,7 @@ Postgres: Upsert mutation
   :backlinks: none
   :depth: 1
   :local:
-  
+
 Introduction
 ------------
 
@@ -27,7 +27,7 @@ Convert insert mutation to upsert
   Only tables with **update** permissions are **upsertable**. i.e. a table's update permissions are respected
   before updating an existing row in case of a conflict.
 
-To convert an :ref:`insert mutation <insert>` into an upsert, you need to use the ``on_conflict`` argument to specify:
+To convert an :ref:`insert mutation <pg_insert>` into an upsert, you need to use the ``on_conflict`` argument to specify:
 
 - a **unique or primary key constraint** using the ``constraint`` field, and
 - the **columns to be updated** in the case of a violation of that constraint using the ``update_columns`` field.
@@ -69,7 +69,7 @@ Update selected columns on conflict
 
 The ``update_columns`` field can be used to specify which columns to update in case a conflict occurs.
 
-**Example**: Insert a new object in the ``article`` table or, if the unique constraint ``article_title_key`` is 
+**Example**: Insert a new object in the ``article`` table or, if the unique constraint ``article_title_key`` is
 violated, update the ``content`` column of the existing article:
 
 .. graphiql::
@@ -80,7 +80,7 @@ violated, update the ``content`` column of the existing article:
         objects: [
           {
             title: "Article 1",
-            content: "Article 1 content",
+            content: "Updated article 1 content",
             published_on: "2018-10-12"
           }
         ],
@@ -105,7 +105,7 @@ violated, update the ``content`` column of the existing article:
             {
               "id": 1,
               "title": "Article 1",
-              "content": "Article 1 content",
+              "content": "Updated article 1 content",
               "published_on": "2018-06-15"
             }
           ]
@@ -118,11 +118,11 @@ Note that the ``published_on`` column is left unchanged as it wasn't present in 
 Update selected columns on conflict using a filter
 --------------------------------------------------
 
-A ``where`` condition can be added to the ``on_conflict`` clause to check a condition before making the update in case a 
+A ``where`` condition can be added to the ``on_conflict`` clause to check a condition before making the update in case a
 conflict occurs
 
 **Example**: Insert a new object in the ``article`` table, or if the unique key constraint ``article_title_key`` is
-violated, update the ``published_on`` columns specified in ``update_columns`` only if the previous ``published_on`` 
+violated, update the ``published_on`` column specified in ``update_columns`` only if the previous ``published_on``
 value is lesser than the new value:
 
 .. graphiql::
@@ -168,9 +168,10 @@ value is lesser than the new value:
 
 Ignore request on conflict
 --------------------------
-If ``update_columns`` is an **empty array** then on conflict the changes are ignored. 
 
-**Example**: Insert a new object into the author table or, if the unique constraint ``author_name_key`` is violated, 
+If ``update_columns`` is an **empty array** then on conflict the changes are ignored.
+
+**Example**: Insert a new object into the author table or, if the unique constraint ``author_name_key`` is violated,
 ignore the request.
 
 .. graphiql::
@@ -203,9 +204,10 @@ In this case, the insert mutation is ignored because there is a conflict and ``u
 
 Upsert in nested mutations
 --------------------------
+
 You can specify the ``on_conflict`` clause while inserting nested objects:
 
-**Example**: 
+**Example**:
 
 .. graphiql::
   :view_only:
@@ -243,14 +245,14 @@ You can specify the ``on_conflict`` clause while inserting nested objects:
     }
 
 
-.. _nested-upsert-caveats:
+.. _pg_nested_upsert_caveats:
 
 Nested upsert caveats
 ^^^^^^^^^^^^^^^^^^^^^
 
 .. note::
 
-  The process by which nested inserts/upserts are executed is documented :ref:`here <nested_inserts>`.
+  The process by which nested inserts/upserts are executed is documented :ref:`here <pg_nested_inserts>`.
 
   Nested upserts will fail when:
 

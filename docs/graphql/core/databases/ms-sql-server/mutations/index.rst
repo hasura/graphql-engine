@@ -31,14 +31,15 @@ The following types of mutation requests are possible:
 .. toctree::
   :maxdepth: 1
 
+  Insert <insert>
+  Upsert <upsert>
+  Update <update>
   Delete <delete>
+
 
 .. TODO: DBCOMPATIBILITY
 
   .. toctree::
     :maxdepth: 1
 
-    Insert <insert>
-    Upsert <upsert>
-    Update <update>
     multiple-mutations

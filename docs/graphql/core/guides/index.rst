@@ -18,6 +18,7 @@ Guides / Tutorials / Resources
 
    Data modelling guides <data-modelling/index>
    Postgres basics <postgres/index>
+   MS SQL Server basics <mssql/index>
    Docker networking <docker-networking>
    Sample apps & boilerplates <sample-apps/index>
    Integration/migration tutorials <integrations/index>
@@ -28,7 +29,6 @@ Guides / Tutorials / Resources
    Code Editor Integrations <code-editor-integrations/index>
    MySQL preview <mysql-preview>
    Updating to Hasura v2 <upgrade-hasura-v2>
-   FAQs <faq/index>
 
 .. note::
 

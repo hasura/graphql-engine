@@ -1,6 +1,6 @@
 SELECT
-  schema.nspname AS table_schema,
-  "table".relname AS table_name,
+  "table".table_schema,
+  "table".table_name,
 
   -- This field corresponds to the `DBTableMetadata` Haskell type
   jsonb_build_object(
@@ -29,10 +29,26 @@ SELECT
       END
   )::json AS info
 
+-- tracked tables
+-- $1 parameter provides JSON array of tracked tables
+FROM
+  ( SELECT "tracked"."name" AS "table_name",
+           "tracked"."schema" AS "table_schema"
+      FROM jsonb_to_recordset($1::jsonb) AS "tracked"("schema" text, "name" text)
+  ) "tracked_table"
+
 -- table & schema
-FROM pg_catalog.pg_class "table"
-JOIN pg_catalog.pg_namespace schema
-  ON schema.oid = "table".relnamespace
+LEFT JOIN
+  ( SELECT "table".oid,
+           "table".relkind,
+           "table".relname AS "table_name",
+           "schema".nspname AS "table_schema"
+      FROM pg_catalog.pg_class "table"
+           JOIN pg_catalog.pg_namespace "schema"
+               ON schema.oid = "table".relnamespace
+  ) "table"
+      ON  "table"."table_name" = "tracked_table"."table_name"
+      AND "table"."table_schema" = "tracked_table"."table_schema"
 
 -- description
 LEFT JOIN pg_catalog.pg_description description
@@ -47,9 +63,46 @@ LEFT JOIN LATERAL
       'position', "column".attnum,
       'type', coalesce(base_type.typname, "type".typname),
       'is_nullable', NOT "column".attnotnull,
-      'description', pg_catalog.col_description("table".oid, "column".attnum)
+      'description', pg_catalog.col_description("table".oid, "column".attnum),
+      'mutability', jsonb_build_object(
+        'is_insertable', NOT (identitypolyfill.attidentity = 'a' OR generatedpolyfill.attgenerated = 's'),
+        'is_updatable', NOT (identitypolyfill.attidentity = 'a' OR generatedpolyfill.attgenerated = 's'))
     )) AS info
     FROM pg_catalog.pg_attribute "column"
+    -- The columns 'pg_attribute.attidentity' and 'pg_attribute.attgenerated' are
+    -- not available in older versions of Postgres, because those versions do not
+    -- implement the concepts the catalog columns represent.
+    -- To support older versions we apply an aliasing hack that ensures
+    -- _something_ called e.g. attidentity is in scope.
+    -- Originally sourced from: https://stackoverflow.com/questions/18951071/postgres-return-a-default-value-when-a-column-doesnt-exist.
+    INNER JOIN
+    (
+      SELECT attrelid, attnum, attname, CASE WHEN attidentity_exists
+                                        THEN attidentity::text
+                                        ELSE ''::text
+                                        END as attidentity
+      FROM pg_catalog.pg_attribute
+      CROSS JOIN (SELECT current_setting('server_version_num')::int >= 100000)
+            AS attidentity(attidentity_exists)
+    ) AS identitypolyfill
+      ON  identitypolyfill.attrelid = "column".attrelid
+      AND identitypolyfill.attnum = "column".attnum
+      AND identitypolyfill.attname = "column".attname
+
+    INNER JOIN
+    (
+      SELECT attrelid, attnum, attname, CASE WHEN attgenerated_exists
+                                                 THEN attgenerated::text
+                                                 ELSE ''::text
+                                                 END as attgenerated
+      FROM pg_catalog.pg_attribute
+      CROSS JOIN (SELECT current_setting('server_version_num')::int >= 120000)
+            AS attgenerated(attgenerated_exists)
+    ) AS generatedpolyfill
+      ON  generatedpolyfill.attrelid = "column".attrelid
+      AND generatedpolyfill.attnum = "column".attnum
+      AND generatedpolyfill.attname = "column".attname
+
     LEFT JOIN pg_catalog.pg_type "type"
       ON "type".oid = "column".atttypid
     LEFT JOIN pg_catalog.pg_type base_type
@@ -147,18 +200,18 @@ LEFT JOIN LATERAL
                   AND q.ref_table_id = afc.attrelid
          GROUP BY q.table_schema, q.table_name, q.constraint_name
     ) foreign_key
-    WHERE foreign_key.table_schema = schema.nspname
-      AND foreign_key.table_name = "table".relname
+    WHERE foreign_key.table_schema = "table".table_schema
+      AND foreign_key.table_name = "table".table_name
   ) foreign_key_constraints ON true
 
 LEFT JOIN LATERAL
   ( SELECT citus_table_type, distribution_column, table_name
     FROM citus_tables extraMetadata
     -- DO NOT SUBMIT: Should we compare columns of type 'name' by casting to 'text'?
-    WHERE extraMetadata.table_name::text = "table".relname::text ) extraMetadata ON true
+    WHERE extraMetadata.table_name::text = "table".table_name::text ) extraMetadata ON true
 
 -- all these identify table-like things
 WHERE "table".relkind IN ('r', 't', 'v', 'm', 'f', 'p')
   -- and tables not from any system schemas
-  AND schema.nspname NOT LIKE 'pg_%'
-  AND schema.nspname NOT IN ('information_schema', 'hdb_catalog');
+  AND "table".table_schema NOT LIKE 'pg_%'
+  AND "table".table_schema NOT IN ('information_schema', 'hdb_catalog');

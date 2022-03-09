@@ -21,7 +21,9 @@ module Hasura.Prelude
     liftEitherM,
     hoistMaybe,
     hoistEither,
+    readJson,
     tshow,
+    hashNub,
 
     -- * Trace debugging
     ltrace,
@@ -33,7 +35,6 @@ module Hasura.Prelude
 
     -- * Map-related utilities
     mapFromL,
-    mapKeys,
     oMapFromL,
 
     -- * Measuring and working with moments and durations
@@ -87,13 +88,14 @@ import Data.Foldable as M
 import Data.Function as M (on, (&))
 import Data.Functor as M (($>), (<&>))
 import Data.Functor.Const as M (Const)
-import Data.HashMap.Strict as M (HashMap)
+import Data.HashMap.Strict as M (HashMap, mapKeys)
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd as M (InsOrdHashMap)
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet as M (HashSet)
+import Data.HashSet qualified as HSet
+import Data.Hashable (hashWithSalt)
 import Data.Hashable as M (Hashable)
-import Data.Hashable qualified as H
 import Data.List as M
   ( find,
     findIndex,
@@ -214,13 +216,6 @@ findWithIndex p l = do
 mapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> Map.HashMap k a
 mapFromL f = Map.fromList . map (\v -> (f v, v))
 
--- | re-key a map. In the case that @f@ is not injective you may end up with a
--- smaller map than what you started with.
---
--- This may be a code smell.
-mapKeys :: (Eq k2, Hashable k2) => (k1 -> k2) -> Map.HashMap k1 a -> Map.HashMap k2 a
-mapKeys f = Map.fromList . map (first f) . Map.toList
-
 oMapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> InsOrdHashMap k a
 oMapFromL f = OMap.fromList . map (\v -> (f v, v))
 
@@ -267,6 +262,9 @@ hoistEither = ExceptT . pure
 tshow :: Show a => a -> Text
 tshow = T.pack . show
 
+readJson :: (J.FromJSON a) => String -> Either String a
+readJson = J.eitherDecodeStrict . txtToBs . T.pack
+
 -- | Customized 'J.Options' which apply "snake case" to Generic or Template
 -- Haskell JSON derivations.
 --
@@ -276,7 +274,7 @@ hasuraJSON :: J.Options
 hasuraJSON = J.aesonPrefix J.snakeCase
 
 instance (Hashable a) => Hashable (Seq a) where
-  hashWithSalt i = H.hashWithSalt i . toList
+  hashWithSalt i = hashWithSalt i . toList
 
 -- | Given a structure with elements whose type is a 'Monoid', combine them via
 -- the monoid's @('<>')@ operator.
@@ -297,3 +295,12 @@ ltrace lbl x = Debug.trace (lbl <> ": " <> TL.unpack (PS.pShow x)) x
 ltraceM :: Applicative m => Show a => String -> a -> m ()
 ltraceM lbl x = Debug.traceM (lbl <> ": " <> TL.unpack (PS.pShow x))
 {-# WARNING ltraceM "ltraceM left in code" #-}
+
+-- | Remove duplicates from a list. Like 'nub' but runs in @O(n * log_16(n))@
+--   time and requires 'Hashable' and `Eq` instances. hashNub is faster than
+--   ordNub when there're not so many different values in the list.
+--
+-- >>> hashNub [1,3,2,9,4,1,5,7,3,3,1,2,5,4,3,2,1,0]
+-- [0,1,2,3,4,5,7,9]
+hashNub :: (Hashable a, Eq a) => [a] -> [a]
+hashNub = HSet.toList . HSet.fromList

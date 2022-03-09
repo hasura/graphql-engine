@@ -5,11 +5,11 @@
     X-Hasura-Role: published_only
   response:
     data:
-      hasura_test_article: []
+      hasura_article: []
   query:
     query: |
       query {
-        hasura_test_article (
+        hasura_article (
           where: { is_published: {_eq: false}}
         )  {
           id
@@ -24,14 +24,14 @@
     X-Hasura-Role: published_only
   response:
     data:
-      hasura_test_article:
+      hasura_article:
       - id: '2'
         title: Title 2
         is_published: true
   query:
     query: |
       query {
-        hasura_test_article {
+        hasura_article {
           id
           title
           is_published

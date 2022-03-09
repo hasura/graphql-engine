@@ -123,8 +123,8 @@ func TestClient_ReloadMetadata(t *testing.T) {
 		{
 			name: "can reload metadata v2",
 			want: `{
-  "message": "success"
-}`,
+				"message": "success"
+			}`,
 			fields: fields{
 				Client: testutil.NewHttpcClient(t, portHasuraV13, nil),
 				path:   "v1/query",
@@ -135,8 +135,9 @@ func TestClient_ReloadMetadata(t *testing.T) {
 		{
 			name: "can reload metadata v3",
 			want: `{
-  "message": "success"
-}`,
+				"is_consistent": true,
+				"message": "success"
+			}`,
 			fields: fields{
 				Client: testutil.NewHttpcClient(t, portHasuraLatest, nil),
 				path:   "v1/metadata",

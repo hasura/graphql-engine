@@ -7,6 +7,7 @@ module Hasura.RQL.DDL.RemoteSchema
     addRemoteSchemaP2Setup,
     runIntrospectRemoteSchema,
     dropRemoteSchemaPermissionInMetadata,
+    dropRemoteSchemaRemoteRelationshipInMetadata,
     runAddRemoteSchemaPermissions,
     runDropRemoteSchemaPermissions,
     runUpdateRemoteSchema,
@@ -14,7 +15,6 @@ module Hasura.RQL.DDL.RemoteSchema
 where
 
 import Control.Lens ((^.))
-import Control.Monad.Unique
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
@@ -28,13 +28,13 @@ import Hasura.RQL.DDL.RemoteSchema.Permission
 import Hasura.RQL.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
+import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 
 runAddRemoteSchema ::
   ( QErrM m,
     CacheRWM m,
     MonadIO m,
-    MonadUnique m,
     HasHttpManagerM m,
     MetadataM m,
     Tracing.MonadTrace m
@@ -52,7 +52,7 @@ runAddRemoteSchema env q@(AddRemoteSchemaQuery name defn comment) = do
   where
     -- NOTE: permissions here are empty, manipulated via a separate API with
     -- runAddRemoteSchemaPermissions below
-    remoteSchemaMeta = RemoteSchemaMetadata name defn comment mempty
+    remoteSchemaMeta = RemoteSchemaMetadata name defn comment mempty mempty
 
 doesRemoteSchemaPermissionExist :: Metadata -> RemoteSchemaName -> RoleName -> Bool
 doesRemoteSchemaPermissionExist metadata remoteSchemaName roleName =
@@ -125,7 +125,7 @@ addRemoteSchemaP1 name = do
         <> name <<> " already exists"
 
 addRemoteSchemaP2Setup ::
-  (QErrM m, MonadIO m, MonadUnique m, HasHttpManagerM m, Tracing.MonadTrace m) =>
+  (QErrM m, MonadIO m, HasHttpManagerM m, Tracing.MonadTrace m) =>
   Env.Environment ->
   AddRemoteSchemaQuery ->
   m RemoteSchemaCtx
@@ -201,6 +201,16 @@ dropRemoteSchemaPermissionInMetadata :: RemoteSchemaName -> RoleName -> Metadata
 dropRemoteSchemaPermissionInMetadata remoteSchemaName roleName =
   MetadataModifier $ metaRemoteSchemas . ix remoteSchemaName . rsmPermissions %~ filter ((/=) roleName . _rspmRole)
 
+dropRemoteSchemaRemoteRelationshipInMetadata :: RemoteSchemaName -> G.Name -> RelName -> MetadataModifier
+dropRemoteSchemaRemoteRelationshipInMetadata remoteSchemaName typeName relationshipName =
+  MetadataModifier $
+    metaRemoteSchemas
+      . ix remoteSchemaName
+      . rsmRemoteRelationships
+      . ix typeName
+      . rstrsRelationships
+      %~ OMap.delete relationshipName
+
 runIntrospectRemoteSchema ::
   (CacheRM m, QErrM m) => RemoteSchemaNameQuery -> m EncJSON
 runIntrospectRemoteSchema (RemoteSchemaNameQuery rsName) = do
@@ -213,7 +223,6 @@ runUpdateRemoteSchema ::
   ( QErrM m,
     CacheRWM m,
     MonadIO m,
-    MonadUnique m,
     HasHttpManagerM m,
     MetadataM m,
     Tracing.MonadTrace m
@@ -258,4 +267,4 @@ runUpdateRemoteSchema env (AddRemoteSchemaQuery name defn comment) = do
 
   pure successMsg
   where
-    remoteSchemaMeta perms = RemoteSchemaMetadata name defn comment perms
+    remoteSchemaMeta perms = RemoteSchemaMetadata name defn comment perms mempty

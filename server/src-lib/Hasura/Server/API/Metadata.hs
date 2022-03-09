@@ -9,7 +9,6 @@ module Hasura.Server.API.Metadata
 where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Control.Monad.Unique
 import Data.Aeson
 import Data.Aeson.Casing
 import Data.Aeson.Types qualified as A
@@ -49,7 +48,7 @@ import Hasura.SQL.AnyBackend
 import Hasura.SQL.Tag
 import Hasura.Server.API.Backend
 import Hasura.Server.API.Instances ()
-import Hasura.Server.Types (InstanceId (..), MaintenanceMode (..))
+import Hasura.Server.Types (InstanceId (..), MaintenanceMode (..), ReadOnlyMode (..))
 import Hasura.Server.Utils (APIVersion (..))
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
@@ -83,9 +82,9 @@ data RQLMetadataV1
   | RMSetRelationshipComment !(AnyBackend SetRelComment)
   | RMRenameRelationship !(AnyBackend RenameRel)
   | -- Tables remote relationships
-    RMCreateRemoteRelationship !(AnyBackend RemoteRelationship)
-  | RMUpdateRemoteRelationship !(AnyBackend RemoteRelationship)
-  | RMDeleteRemoteRelationship !(DeleteRemoteRelationship ('Postgres 'Vanilla))
+    RMCreateRemoteRelationship !(AnyBackend CreateFromSourceRelationship)
+  | RMUpdateRemoteRelationship !(AnyBackend CreateFromSourceRelationship)
+  | RMDeleteRemoteRelationship !(AnyBackend DeleteFromSourceRelationship)
   | -- Functions
     RMTrackFunction !(AnyBackend TrackFunctionV2)
   | RMUntrackFunction !(AnyBackend UnTrackFunction)
@@ -117,6 +116,7 @@ data RQLMetadataV1
   | RMDeleteScheduledEvent !DeleteScheduledEvent
   | RMGetScheduledEvents !GetScheduledEvents
   | RMGetEventInvocations !GetEventInvocations
+  | RMGetCronTriggers
   | -- Actions
     RMCreateAction !CreateAction
   | RMDropAction !DropAction
@@ -128,8 +128,9 @@ data RQLMetadataV1
   | RMDropQueryCollection !DropCollection
   | RMAddQueryToCollection !AddQueryToCollection
   | RMDropQueryFromCollection !DropQueryFromCollection
-  | RMAddCollectionToAllowlist !CollectionReq
-  | RMDropCollectionFromAllowlist !CollectionReq
+  | RMAddCollectionToAllowlist !AllowlistEntry
+  | RMDropCollectionFromAllowlist !DropCollectionFromAllowlist
+  | RMUpdateScopeOfCollectionInAllowlist !UpdateScopeOfCollectionInAllowlist
   | -- Rest endpoints
     RMCreateRestEndpoint !CreateEndpoint
   | RMDropRestEndpoint !DropEndpoint
@@ -187,6 +188,7 @@ instance FromJSON RQLMetadataV1 where
       "delete_scheduled_event" -> RMDeleteScheduledEvent <$> args
       "get_scheduled_events" -> RMGetScheduledEvents <$> args
       "get_event_invocations" -> RMGetEventInvocations <$> args
+      "get_cron_triggers" -> pure RMGetCronTriggers
       "create_action" -> RMCreateAction <$> args
       "drop_action" -> RMDropAction <$> args
       "update_action" -> RMUpdateAction <$> args
@@ -198,6 +200,7 @@ instance FromJSON RQLMetadataV1 where
       "drop_query_from_collection" -> RMDropQueryFromCollection <$> args
       "add_collection_to_allowlist" -> RMAddCollectionToAllowlist <$> args
       "drop_collection_from_allowlist" -> RMDropCollectionFromAllowlist <$> args
+      "update_scope_of_collection_in_allowlist" -> RMUpdateScopeOfCollectionInAllowlist <$> args
       "create_rest_endpoint" -> RMCreateRestEndpoint <$> args
       "drop_rest_endpoint" -> RMDropRestEndpoint <$> args
       "set_custom_types" -> RMSetCustomTypes <$> args
@@ -307,8 +310,8 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
       & liftEitherM
   -- set modified metadata in storage
   if queryModifiesMetadata _rqlMetadata
-    then case _sccMaintenanceMode serverConfigCtx of
-      MaintenanceModeDisabled -> do
+    then case (_sccMaintenanceMode serverConfigCtx, _sccReadOnlyMode serverConfigCtx) of
+      (MaintenanceModeDisabled, ReadOnlyModeDisabled) -> do
         -- set modified metadata in storage
         newResourceVersion <- setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
         -- notify schema cache sync
@@ -321,7 +324,11 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
             & liftEitherM
 
         pure (r, modSchemaCache')
-      MaintenanceModeEnabled ->
+      (MaintenanceModeEnabled, ReadOnlyModeDisabled) ->
+        throw500 "metadata cannot be modified in maintenance mode"
+      (MaintenanceModeDisabled, ReadOnlyModeEnabled) ->
+        throw400 NotSupported "metadata cannot be modified in read-only mode"
+      (MaintenanceModeEnabled, ReadOnlyModeEnabled) ->
         throw500 "metadata cannot be modified in maintenance mode"
     else pure (r, modSchemaCache)
 
@@ -338,6 +345,7 @@ queryModifiesMetadata = \case
       RMGetCatalogState _ -> False
       RMExportMetadata _ -> False
       RMGetEventInvocations _ -> False
+      RMGetCronTriggers -> False
       RMGetScheduledEvents _ -> False
       RMCreateScheduledEvent _ -> False
       RMDeleteScheduledEvent _ -> False
@@ -355,7 +363,6 @@ runMetadataQueryM ::
     CacheRWM m,
     Tracing.MonadTrace m,
     UserInfoM m,
-    MonadUnique m,
     HTTP.HasHttpManagerM m,
     MetadataM m,
     MonadMetadataStorageQueryAPI m,
@@ -379,7 +386,6 @@ runMetadataQueryV1M ::
     CacheRWM m,
     Tracing.MonadTrace m,
     UserInfoM m,
-    MonadUnique m,
     HTTP.HasHttpManagerM m,
     MetadataM m,
     MonadMetadataStorageQueryAPI m,
@@ -416,7 +422,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMRenameRelationship q -> dispatchMetadata runRenameRel q
   RMCreateRemoteRelationship q -> dispatchMetadata runCreateRemoteRelationship q
   RMUpdateRemoteRelationship q -> dispatchMetadata runUpdateRemoteRelationship q
-  RMDeleteRemoteRelationship q -> runDeleteRemoteRelationship q
+  RMDeleteRemoteRelationship q -> dispatchMetadata runDeleteRemoteRelationship q
   RMTrackFunction q -> dispatchMetadata runTrackFunctionV2 q
   RMUntrackFunction q -> dispatchMetadata runUntrackFunc q
   RMCreateFunctionPermission q -> dispatchMetadata runCreateFunctionPermission q
@@ -440,6 +446,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMDeleteScheduledEvent q -> runDeleteScheduledEvent q
   RMGetScheduledEvents q -> runGetScheduledEvents q
   RMGetEventInvocations q -> runGetEventInvocations q
+  RMGetCronTriggers -> runGetCronTriggers
   RMCreateAction q -> runCreateAction q
   RMDropAction q -> runDropAction q
   RMUpdateAction q -> runUpdateAction q
@@ -451,6 +458,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMDropQueryFromCollection q -> runDropQueryFromCollection q
   RMAddCollectionToAllowlist q -> runAddCollectionToAllowlist q
   RMDropCollectionFromAllowlist q -> runDropCollectionFromAllowlist q
+  RMUpdateScopeOfCollectionInAllowlist q -> runUpdateScopeOfCollectionInAllowlist q
   RMCreateRestEndpoint q -> runCreateEndpoint q
   RMDropRestEndpoint q -> runDropEndpoint q
   RMSetCustomTypes q -> runSetCustomTypes q

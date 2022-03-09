@@ -48,6 +48,26 @@ class HelloGraphQL(RequestHandler):
         res = hello_schema.execute(request.json['query'])
         return mkJSONResp(res)
 
+class HelloGraphQLEchoRequest(RequestHandler):
+    def get(self, request):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+
+    def post(self, request):
+        if not request.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = hello_schema.execute(request.json['query'])
+        respDict = res.to_dict()
+
+        # Return the result as it is, when we send an introspection query
+        if respDict.get('data',{}).get('__schema',{}):
+            return mkJSONResp(res)
+        # Edit the result to contain, the 'request payload' as part of the response.
+        # We can then use this to assert the request payload with the expected response.
+        else:
+            respDict.get('data', {})['hello'] = request.json
+            return Response(HTTPStatus.OK, res.to_dict(),
+                    {'Content-Type': 'application/json'})
+
 class HelloGraphQLExtensions(RequestHandler):
     def get(self, request):
         return Response(HTTPStatus.METHOD_NOT_ALLOWED)
@@ -354,6 +374,9 @@ character_search_results = {
  2: Human("Tatooine", r2, Character(7, "Luke Skywalker")),
 }
 
+class CharacterInputArgs(graphene.InputObjectType):
+    episode = graphene.Int(required=True)
+
 class CharacterIFaceQuery(graphene.ObjectType):
     hero = graphene.Field(
         Character,
@@ -366,11 +389,20 @@ class CharacterIFaceQuery(graphene.ObjectType):
         required=False
     )
 
+    hero_by_args = graphene.Field(
+        Character,
+        required=False,
+        arguments=CharacterInputArgs(required=True)
+    )
+
     def resolve_hero(_, info, episode):
         return all_characters.get(episode)
 
     def resolve_heroes(_, info):
         return all_characters.values()
+
+    def resolve_hero_by_args(_, info, arguments):
+        return all_characters.get(arguments.episode)
 
 schema = graphene.Schema(query=CharacterIFaceQuery, types=[Human, Droid])
 
@@ -727,7 +759,7 @@ class HeaderTest(graphene.ObjectType):
                 headers.get_all('Authorization') == ['Bearer abcdef'] and
                 len(headers.get_all('x-forwarded-host')) == 1 and
                 all(host in headers.get_all('x-forwarded-host') for host in hosts) and
-                headers.get_all('x-forwarded-user-agent') == ['python-requests/2.22.0']):
+                headers.get_all('x-forwarded-user-agent')[0].startswith('python-requests')):
             raise Exception('headers dont match. Received: ' + str(headers))
 
         return "Hello " + arg
@@ -796,6 +828,7 @@ class MessagesGraphQL(RequestHandler):
 handlers = MkHandlers({
     '/hello': HelloWorldHandler,
     '/hello-graphql': HelloGraphQL,
+    '/hello-echo-request-graphql': HelloGraphQLEchoRequest,
     '/hello-graphql-extensions': HelloGraphQLExtensions,
     '/user-graphql': UserGraphQL,
     '/country-graphql': CountryGraphQL,

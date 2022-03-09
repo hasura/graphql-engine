@@ -60,12 +60,9 @@ class TestActionsSync:
     def dir(cls):
         return 'queries/actions/sync'
 
-    def test_invalid_webhook_response(self, hge_ctx):
-        check_query_secret(hge_ctx, self.dir() + '/invalid_webhook_response.yaml')
-
     def test_null_response(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/null_response.yaml')
-        
+
     def test_expecting_object_response_got_null(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/expecting_object_response_got_null.yaml')
 
@@ -77,7 +74,22 @@ class TestActionsSync:
 
     def test_expecting_array_response_got_object(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/expecting_array_response.yaml')
-    
+
+    def test_expecting_scalar_output_type_success(self, hge_ctx):
+        check_query_secret(hge_ctx, self.dir() + '/get_scalar_action_output_type_success.yaml')
+
+    def test_expecting_scalar_string_output_type_got_object(self, hge_ctx):
+        check_query_secret(hge_ctx, self.dir() + '/expecting_scalar_response_got_object.yaml')
+
+    def test_expecting_object_output_type_success_got_scalar_string(self, hge_ctx):
+        check_query_secret(hge_ctx, self.dir() + '/expecting_object_response_got_scalar.yaml')
+
+    def test_scalar_response_action_transformed_output(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/scalar_response_action_transformed_output.yaml')
+
+    def test_object_response_action_transformed_output(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/object_response_action_transformed_output.yaml')
+
 
     # Webhook response validation tests. See https://github.com/hasura/graphql-engine/issues/3977
     def test_mirror_action_not_null(self, hge_ctx):
@@ -94,6 +106,39 @@ class TestActionsSync:
 
     def test_mirror_action_transformed_success(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/mirror_action_transformed_success.yaml')
+
+    def test_mirror_action_transformed_output_success(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/mirror_action_transformed_output_success.yaml')
+
+    def test_mirror_headers(self, hge_ctx):
+        query = """
+          query {
+            mirror_headers {
+              headers {
+                name
+                value
+              }
+            }
+          }
+        """
+        query_obj = {
+            "query": query
+        }
+        headers = {}
+        admin_secret = hge_ctx.hge_key
+        if admin_secret is not None:
+            headers['X-Hasura-Admin-Secret'] = admin_secret
+        code, resp, _ = hge_ctx.anyq('/v1/graphql', query_obj, headers)
+        assert code == 200, resp
+
+        resp_headers = resp['data']['mirror_headers']['headers']
+
+        user_agent_header = next((h['value'] for h in resp_headers if h['name'] == 'User-Agent'), None)
+        assert user_agent_header is not None
+        assert user_agent_header.startswith("hasura-graphql-engine/")
+
+    def test_results_list_transformed_output_success(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/results_list_transformed_output_success.yaml')
 
     #https://github.com/hasura/graphql-engine/issues/6631
     def test_create_users_output_type(self, hge_ctx):
@@ -203,6 +248,44 @@ class TestQueryActions:
         assert code == 200,resp
         check_query_f(hge_ctx, self.dir() + '/get_user_by_email_success.yaml')
 
+    def test_query_action_success_output_nested_object(self, hge_ctx):
+        gql_query = '''
+        mutation {
+          insert_user_one(object: {email: "clarke@gmail.com", name:"Clarke"}){
+            id
+          }
+        }
+        '''
+        query = {
+            'query': gql_query
+        }
+        headers = {}
+        admin_secret = hge_ctx.hge_key
+        if admin_secret is not None:
+            headers['X-Hasura-Admin-Secret'] = admin_secret
+        code, resp, _ = hge_ctx.anyq('/v1/graphql', query, headers)
+        assert code == 200,resp
+        check_query_f(hge_ctx, self.dir() + '/get_user_by_email_nested_success.yaml')
+
+    def test_query_action_success_output_nested_join(self, hge_ctx):
+        gql_query = '''
+        mutation {
+          insert_user_one(object: {email: "clarke@gmail.com", name:"Clarke"}){
+            id
+          }
+        }
+        '''
+        query = {
+            'query': gql_query
+        }
+        headers = {}
+        admin_secret = hge_ctx.hge_key
+        if admin_secret is not None:
+            headers['X-Hasura-Admin-Secret'] = admin_secret
+        code, resp, _ = hge_ctx.anyq('/v1/graphql', query, headers)
+        assert code == 200,resp
+        check_query_f(hge_ctx, self.dir() + '/get_user_by_email_nested_join_success.yaml')
+
     def test_query_action_success_output_list(self, hge_ctx):
         gql_query = '''
         mutation {
@@ -247,6 +330,9 @@ class TestQueryActions:
 
     def test_query_action_with_relationship(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/query_action_relationship_with_permission.yaml')
+
+    def test_query_action_recursive_output(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_action_recursive_output.yaml')
 
 def mk_headers_with_secret(hge_ctx, headers={}):
     admin_secret = hge_ctx.hge_key
@@ -545,6 +631,65 @@ class TestActionsAsync:
         }
         check_query_timeout(hge_ctx, conf, True, 10)
 
+    def test_create_user_nested_success(self, hge_ctx):
+        graphql_mutation = '''
+        mutation {
+          create_user_nested(email: "clarke@hasura.io", name: "Clarke")
+        }
+        '''
+        query = {
+            'query': graphql_mutation,
+            'variables': {}
+        }
+        status, resp, _ = hge_ctx.anyq('/v1/graphql', query, mk_headers_with_secret(hge_ctx))
+        assert status == 200, resp
+        assert 'data' in resp
+        action_id = resp['data']['create_user_nested']
+
+        query_async = '''
+        query ($action_id: uuid!){
+          create_user_nested(id: $action_id){
+            __typename
+            id
+            output {
+              __typename
+              userObj {
+                __typename
+                id
+              }
+            }
+          }
+        }
+        '''
+        query = {
+            'query': query_async,
+            'variables': {
+                'action_id': action_id
+            }
+        }
+        response = {
+            'data': {
+                'create_user_nested': {
+                    '__typename': 'create_user_nested',
+                    'id': action_id,
+                    'output': {
+                        '__typename': 'UserIdNested',
+                        'userObj': {
+                            '__typename': 'UserIdObj',
+                            'id': 1
+                        }
+                    }
+                }
+            }
+        }
+        conf = {
+            'url': '/v1/graphql',
+            'headers': {},
+            'query': query,
+            'status': 200,
+            'response': response
+        }
+        check_query_timeout(hge_ctx, conf, True, 10)
 
 def check_query_timeout(hge_ctx, conf, add_auth, timeout):
     wait_until = time.time() + timeout
@@ -558,6 +703,20 @@ def check_query_timeout(hge_ctx, conf, add_auth, timeout):
             else:
                 continue
         break
+
+@use_action_fixtures
+class TestCreateActionNestedTypeWithRelation:
+    @classmethod
+    def dir(cls):
+        return 'queries/actions/nested-relation'
+
+    # no toplevel, extensions with no error
+    def test_create_async_action_with_nested_output_and_relation_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_async_action_with_nested_output_and_relation.yaml')
+
+    # no toplevel, extensions with no error
+    def test_create_sync_action_with_nested_output_and_nested_relation(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_sync_action_with_nested_output_and_nested_relation.yaml')
 
 @pytest.mark.usefixtures('per_class_tests_db_state')
 class TestSetCustomTypes:

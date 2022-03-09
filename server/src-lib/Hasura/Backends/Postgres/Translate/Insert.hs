@@ -1,3 +1,6 @@
+-- | Postgres Translate Insert
+--
+-- Translates IR inserts to Postgres-specific SQL INSERT statements.
 module Hasura.Backends.Postgres.Translate.Insert
   ( mkInsertCTE,
     toSQLConflict,
@@ -38,15 +41,15 @@ mkInsertCTE (InsertQueryP1 tn cols vals conflict (insCheck, updCheck) _ _) =
 toSQLConflict ::
   Backend ('Postgres pgKind) =>
   QualifiedTable ->
-  ConflictClauseP1 ('Postgres pgKind) S.SQLExp ->
+  OnConflictClause ('Postgres pgKind) S.SQLExp ->
   S.SQLConflict
 toSQLConflict tableName = \case
-  CP1DoNothing ct -> S.DoNothing $ toSQLCT <$> ct
-  CP1Update ct inpCols preSet filtr ->
+  OCCDoNothing ct -> S.DoNothing $ toSQLCT <$> ct
+  OCCUpdate OnConflictClauseData {..} ->
     S.Update
-      (toSQLCT ct)
-      (S.buildUpsertSetExp inpCols preSet)
-      $ Just $ S.WhereFrag $ toSQLBoolExp (S.QualTable tableName) filtr
+      (toSQLCT cp1udConflictTarget)
+      (S.buildUpsertSetExp cp1udAffectedColumns cp1udValues)
+      $ Just $ S.WhereFrag $ toSQLBoolExp (S.QualTable tableName) cp1udFilter
   where
     toSQLCT ct = case ct of
       CTColumn pgCols -> S.SQLColumn pgCols
@@ -80,7 +83,7 @@ insertCheckConstraint boolExp =
 -- the @xmax@ system column.
 insertOrUpdateCheckExpr ::
   QualifiedTable ->
-  Maybe (ConflictClauseP1 ('Postgres pgKind) S.SQLExp) ->
+  Maybe (OnConflictClause ('Postgres pgKind) S.SQLExp) ->
   S.BoolExp ->
   Maybe S.BoolExp ->
   S.Extractor

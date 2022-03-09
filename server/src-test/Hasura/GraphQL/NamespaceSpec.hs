@@ -1,11 +1,16 @@
 module Hasura.GraphQL.NamespaceSpec (spec) where
 
 import Data.HashMap.Strict.InsOrd qualified as OMap
-import Hasura.Generator ()
 import Hasura.GraphQL.Namespace
+  ( NamespacedFieldMap,
+    flattenNamespaces,
+    namespacedField,
+    unflattenNamespaces,
+  )
 import Hasura.Prelude
-import Test.Hspec
-import Test.Hspec.QuickCheck
+import Hasura.QuickCheck.Instances ()
+import Test.Hspec (Spec, describe, shouldBe)
+import Test.Hspec.QuickCheck (prop)
 
 spec :: Spec
 spec = do

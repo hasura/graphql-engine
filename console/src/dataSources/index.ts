@@ -1,7 +1,6 @@
 /* eslint-disable import/no-mutable-exports */
 import { useState, useEffect } from 'react';
 import { DeepRequired } from 'ts-essentials';
-
 import { Path, get } from '../components/Common/utils/tsUtils';
 import { services } from './services';
 
@@ -22,6 +21,7 @@ import {
   GenerateBulkDeleteRowRequest,
   ViolationActions,
   IndexFormTips as IndexFormToolTips,
+  NormalizedTable,
 } from './types';
 import { PGFunction, FunctionState } from './services/postgresql/types';
 import { Operations } from './common';
@@ -84,14 +84,14 @@ export interface DataSourcesAPI {
     fSchema: string
   ): PGFunction | undefined;
   getGroupedTableComputedFields(
-    table: Table,
+    computedFields: ComputedField[],
     allFunctions: PGFunction[]
   ): {
     scalar: ComputedField[];
     table: ComputedField[];
   };
   isColumnAutoIncrement(col: TableColumn): boolean;
-  getTableSupportedQueries(table: Table): Operations[];
+  getTableSupportedQueries(table: NormalizedTable): Operations[];
   getColumnType(col: TableColumn): string;
   arrayToPostgresArray(arr: any[]): string;
   schemaListSql(schemas: string[]): string;
@@ -261,14 +261,37 @@ export interface DataSourcesAPI {
     defaultValue: any,
     constraintName: string
   ) => string;
-  getSetCommentSql: (
-    on: 'table' | 'column' | string,
-    tableName: string,
-    schemaName: string,
-    columnName: string,
-    comment: string,
-    columnType?: string
-  ) => string;
+  getAlterTableCommentSql: ({
+    tableName,
+    schemaName,
+    comment,
+  }: {
+    tableName: string;
+    schemaName: string;
+    comment: string;
+  }) => string;
+  getAlterColumnCommentSql: ({
+    tableName,
+    schemaName,
+    columnName,
+    columnType,
+    comment,
+  }: {
+    tableName: string;
+    schemaName: string;
+    comment: string;
+    columnName: string;
+    columnType?: string;
+  }) => string;
+  getAlterFunctionCommentSql: ({
+    functionName,
+    schemaName,
+    comment,
+  }: {
+    functionName: string;
+    schemaName: string;
+    comment: string;
+  }) => string;
   getAlterColumnTypeSql: (
     tableName: string,
     schemaName: string,
@@ -452,7 +475,7 @@ export const useDataSource = (): {
         handleDriverChange
       );
     };
-  });
+  }, []);
 
   return {
     driver,

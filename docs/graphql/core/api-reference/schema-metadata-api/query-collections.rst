@@ -2,10 +2,17 @@
    :description: Manage query collections with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, query collection
 
-.. _api_query_collections:
+.. _schema_metadata_api_query_collections:
 
 Schema/Metadata API Reference: Query collections (Deprecated)
 =============================================================
+
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
 .. contents:: Table of contents
   :backlinks: none
@@ -19,14 +26,7 @@ Group queries using query collections.
 
 Create/drop query collections and add/drop a query to a collection using the following query types.
 
-.. admonition:: Deprecation
-
-  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
-  :ref:`metadata API <metadata_apis>`.
-
-  Though for backwards compatibility, the schema/metadata APIs will continue to function.
-
-.. _create_query_collection:
+.. _schema_metadata_create_query_collection:
 
 create_query_collection
 -----------------------
@@ -52,7 +52,13 @@ create_query_collection
         }
    }
 
-.. _create_query_collection_syntax:
+.. note::
+
+   The queries in query collections are validated against the schema. So, adding an invalid
+   query would result in inconsistent metadata error. As the query collection is used in allowlists and
+   REST endpoints, they are validated as well.
+
+.. _schema_metadata_create_query_collection_syntax:
 
 Args Syntax
 ^^^^^^^^^^^
@@ -78,7 +84,7 @@ Args Syntax
      - Optional comment
 
 
-.. _drop_query_collection:
+.. _schema_metadata_drop_query_collection:
 
 drop_query_collection
 ---------------------
@@ -99,7 +105,7 @@ drop_query_collection
         }
    }
 
-.. _drop_query_collection_syntax:
+.. _schema_metadata_drop_query_collection_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -120,7 +126,7 @@ Args syntax
      - boolean
      - When set to ``true``, the collection (if present) is removed from the allowlist
 
-.. _add_query_to_collection:
+.. _schema_metadata_add_query_to_collection:
 
 add_query_to_collection
 -----------------------
@@ -142,7 +148,7 @@ add_query_to_collection
         }
    }
 
-.. _add_query_to_collection_syntax:
+.. _schema_metadata_add_query_to_collection_syntax:
 
 Args Syntax
 ^^^^^^^^^^^
@@ -167,7 +173,7 @@ Args Syntax
      - text
      - The GraphQL query text
 
-.. _drop_query_from_collection:
+.. _schema_metadata_drop_query_from_collection:
 
 drop_query_from_collection
 --------------------------
@@ -188,7 +194,7 @@ drop_query_from_collection
         }
    }
 
-.. _drop_query_from_collection_syntax:
+.. _schema_metadata_drop_query_from_collection_syntax:
 
 Args Syntax
 ^^^^^^^^^^^
@@ -209,7 +215,7 @@ Args Syntax
      - :ref:`QueryName`
      - Name of the query
 
-.. _add_collection_to_allowlist:
+.. _schema_metadata_add_collection_to_allowlist:
 
 add_collection_to_allowlist
 ---------------------------
@@ -229,7 +235,7 @@ add_collection_to_allowlist
         }
    }
 
-.. _add_collection_to_allowlist_syntax:
+.. _schema_metadata_add_collection_to_allowlist_syntax:
 
 Args Syntax
 ^^^^^^^^^^^
@@ -246,7 +252,7 @@ Args Syntax
      - :ref:`CollectionName`
      - Name of a query collection to be added to the allow-list
 
-.. _drop_collection_from_allowlist:
+.. _schema_metadata_drop_collection_from_allowlist:
 
 drop_collection_from_allowlist
 ------------------------------
@@ -266,7 +272,7 @@ drop_collection_from_allowlist
         }
    }
 
-.. _drop_collection_from_allowlist_syntax:
+.. _schema_metadata_drop_collection_from_allowlist_syntax:
 
 Args Syntax
 ^^^^^^^^^^^

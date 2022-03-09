@@ -1,6 +1,11 @@
+-- | Postgres Execute Mutation
+--
+-- Generic combinators for translating and excecuting IR mutation statements.
+-- Used by the specific mutation modules, e.g. 'Hasura.Backends.Postgres.Execute.Insert'.
+--
+-- See 'Hasura.Backends.Postgres.Instances.Execute'.
 module Hasura.Backends.Postgres.Execute.Mutation
-  ( MutationRemoteJoinCtx,
-    MutateResp (..),
+  ( MutateResp (..),
     --
     execDeleteQuery,
     execInsertQuery,
@@ -37,8 +42,6 @@ import Hasura.RQL.IR.Update
 import Hasura.RQL.Types
 import Hasura.SQL.Types
 import Hasura.Session
-import Network.HTTP.Client qualified as HTTP
-import Network.HTTP.Types qualified as N
 
 data MutateResp (b :: BackendType) a = MutateResp
   { _mrAffectedRows :: !Int,
@@ -56,14 +59,12 @@ instance (Backend b, ToJSON a) => ToJSON (MutateResp b a) where
 instance (Backend b, FromJSON a) => FromJSON (MutateResp b a) where
   parseJSON = genericParseJSON hasuraJSON
 
-type MutationRemoteJoinCtx = (HTTP.Manager, [N.Header], UserInfo)
-
 data Mutation (b :: BackendType) = Mutation
   { _mTable :: !QualifiedTable,
     _mQuery :: !(MutationCTE, DS.Seq Q.PrepArg),
     _mOutput :: !(MutationOutput b),
     _mCols :: ![ColumnInfo b],
-    _mStrfyNum :: !Bool
+    _mStrfyNum :: !StringifyNumbers
   }
 
 mkMutation ::
@@ -72,7 +73,7 @@ mkMutation ::
   (MutationCTE, DS.Seq Q.PrepArg) ->
   MutationOutput ('Postgres pgKind) ->
   [ColumnInfo ('Postgres pgKind)] ->
-  Bool ->
+  StringifyNumbers ->
   Mutation ('Postgres pgKind)
 mkMutation _userInfo table query output allCols strfyNum =
   Mutation table query output allCols strfyNum
@@ -107,7 +108,7 @@ execUpdateQuery ::
     PostgresAnnotatedFieldJSON pgKind,
     MonadReader QueryTagsComment m
   ) =>
-  Bool ->
+  StringifyNumbers ->
   UserInfo ->
   (AnnotatedUpdate ('Postgres pgKind), DS.Seq Q.PrepArg) ->
   m EncJSON
@@ -124,7 +125,7 @@ execDeleteQuery ::
     PostgresAnnotatedFieldJSON pgKind,
     MonadReader QueryTagsComment m
   ) =>
-  Bool ->
+  StringifyNumbers ->
   UserInfo ->
   (AnnDel ('Postgres pgKind), DS.Seq Q.PrepArg) ->
   m EncJSON
@@ -140,7 +141,7 @@ execInsertQuery ::
     PostgresAnnotatedFieldJSON pgKind,
     MonadReader QueryTagsComment m
   ) =>
-  Bool ->
+  StringifyNumbers ->
   UserInfo ->
   (InsertQueryP1 ('Postgres pgKind), DS.Seq Q.PrepArg) ->
   m EncJSON
@@ -207,7 +208,7 @@ executeMutationOutputQuery ::
   Maybe Int ->
   MutationCTE ->
   MutationOutput ('Postgres pgKind) ->
-  Bool ->
+  StringifyNumbers ->
   -- | Prepared params
   [Q.PrepArg] ->
   m EncJSON
@@ -231,7 +232,7 @@ mutateAndFetchCols ::
   QualifiedTable ->
   [ColumnInfo ('Postgres pgKind)] ->
   (MutationCTE, DS.Seq Q.PrepArg) ->
-  Bool ->
+  StringifyNumbers ->
   Q.TxE QErr (MutateResp ('Postgres pgKind) TxtEncodedVal)
 mutateAndFetchCols qt cols (cte, p) strfyNum = do
   let mutationTx :: Q.FromRes a => Q.TxE QErr a
@@ -243,11 +244,12 @@ mutateAndFetchCols qt cols (cte, p) strfyNum = do
     then withCheckPermission $ (first Q.getAltJ . Q.getRow) <$> mutationTx
     else (Q.getAltJ . runIdentity . Q.getRow) <$> mutationTx
   where
-    aliasIdentifier = Identifier $ qualifiedObjectToText qt <> "__mutation_result"
-    tabFrom = FromIdentifier aliasIdentifier
+    rawAliasIdentifier = qualifiedObjectToText qt <> "__mutation_result"
+    aliasIdentifier = Identifier rawAliasIdentifier
+    tabFrom = FromIdentifier $ FIIdentifier rawAliasIdentifier
     tabPerm = TablePerm annBoolExpTrue Nothing
     selFlds = flip map cols $
-      \ci -> (fromCol @('Postgres pgKind) $ pgiColumn ci, mkAnnColumnFieldAsText ci)
+      \ci -> (fromCol @('Postgres pgKind) $ ciColumn ci, mkAnnColumnFieldAsText ci)
 
     sqlText = Q.fromBuilder $ toSQL selectWith
     selectWith = S.SelectWith [(S.Alias aliasIdentifier, getMutationCTE cte)] select

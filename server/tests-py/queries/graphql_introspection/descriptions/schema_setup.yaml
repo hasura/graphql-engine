@@ -1,0 +1,68 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "automatic_comment_in_db" (
+        id serial primary key,
+        name text not null
+      );
+      COMMENT ON TABLE "automatic_comment_in_db" IS 'What a great comment in the DB';
+      CREATE FUNCTION automatic_comment_in_db_upper_name(r "automatic_comment_in_db")
+        RETURNS text
+        LANGUAGE 'sql'
+        STABLE
+      AS $BODY$
+        SELECT upper(r.name)
+      $BODY$;
+      COMMENT ON FUNCTION "automatic_comment_in_db_upper_name"("automatic_comment_in_db") IS 'What a great comment on the function in the DB';
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "automatic_no_comment_in_db" (
+        id serial primary key,
+        name text not null
+      );
+      CREATE FUNCTION automatic_no_comment_in_db_upper_name(r "automatic_no_comment_in_db")
+        RETURNS text
+        LANGUAGE 'sql'
+        STABLE
+      AS $BODY$
+        SELECT upper(r.name)
+      $BODY$;
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "explicit_comment_in_metadata" (
+        id serial primary key,
+        name text not null
+      );
+      COMMENT ON TABLE "explicit_comment_in_metadata" IS 'Fantastic comment, so good, so hidden';
+      CREATE FUNCTION explicit_comment_in_metadata_upper_name(r "explicit_comment_in_metadata")
+        RETURNS text
+        LANGUAGE 'sql'
+        STABLE
+      AS $BODY$
+        SELECT upper(r.name)
+      $BODY$;
+      COMMENT ON FUNCTION "explicit_comment_in_metadata_upper_name"("explicit_comment_in_metadata") IS 'Fantastic comment on the function, so good, so hidden';
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "explicit_no_comment_in_metadata" (
+        id serial primary key,
+        name text not null
+      );
+      COMMENT ON TABLE "explicit_no_comment_in_metadata" IS 'This would be a great comment, but you can''t see it';
+      CREATE FUNCTION explicit_no_comment_in_metadata_upper_name(r "explicit_no_comment_in_metadata")
+        RETURNS text
+        LANGUAGE 'sql'
+        STABLE
+      AS $BODY$
+        SELECT upper(r.name)
+      $BODY$;
+      COMMENT ON FUNCTION "explicit_no_comment_in_metadata_upper_name"("explicit_no_comment_in_metadata") IS 'This would be a great comment on the function, but you can''t see it';

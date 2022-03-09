@@ -33,29 +33,22 @@ fakeScalar =
     name -> error $ "no test value implemented for scalar " <> T.unpack name
 
 fakeInputFieldValue :: InputFieldInfo -> G.Value Variable
-fakeInputFieldValue = \case
-  IFOptional t _ -> fromT t
-  IFRequired nnt -> fromNNT nnt
+fakeInputFieldValue (InputFieldInfo t _) = go t
   where
-    fromT :: forall k. ('Input <: k) => Type k -> G.Value Variable
-    fromT = \case
-      NonNullable nnt -> fromNNT nnt
-      Nullable nnt -> fromNNT nnt
-    fromNNT :: forall k. ('Input <: k) => NonNullableType k -> G.Value Variable
-    fromNNT = \case
-      TList t -> G.VList [fromT t, fromT t]
-      TNamed (Definition name _ _ info) -> case info of
-        TIScalar -> fakeScalar name
-        TIEnum ei -> G.VEnum $ G.EnumValue $ dName $ NE.head ei
-        TIInputObject (InputObjectInfo oi) -> G.VObject $
+    go :: forall k. ('Input <: k) => Type k -> G.Value Variable
+    go = \case
+      TList _ t' -> G.VList [go t', go t']
+      TNamed _ (Definition name _ info) -> case (info, subKind @'Input @k) of
+        (TIScalar, _) -> fakeScalar name
+        (TIEnum ei, _) -> G.VEnum $ G.EnumValue $ dName $ NE.head ei
+        (TIInputObject (InputObjectInfo oi), _) -> G.VObject $
           M.fromList $ do
-            Definition fieldName _ _ fieldInfo <- oi
+            Definition fieldName _ fieldInfo <- oi
             pure (fieldName, fakeInputFieldValue fieldInfo)
-        _ -> error "impossible"
 
 fakeDirective :: DirectiveInfo -> G.Directive Variable
 fakeDirective DirectiveInfo {..} =
   G.Directive diName $
     M.fromList $
-      diArguments <&> \(Definition argName _ _ argInfo) ->
+      diArguments <&> \(Definition argName _ argInfo) ->
         (argName, fakeInputFieldValue argInfo)

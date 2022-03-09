@@ -4,6 +4,7 @@ module Hasura.RQL.Types.Table
   ( CombinedSelPermInfo (..),
     Constraint (..),
     CustomColumnNames,
+    CustomRootField (..),
     DBTableMetadata (..),
     DBTablesMetadata,
     DelPermInfo (..),
@@ -35,6 +36,7 @@ module Hasura.RQL.Types.Table
     fieldInfoGraphQLName,
     fieldInfoGraphQLNames,
     fieldInfoName,
+    getAllCustomRootFields,
     getCols,
     getColumnInfoM,
     getComputedFieldInfos,
@@ -42,7 +44,7 @@ module Hasura.RQL.Types.Table
     getRels,
     getRemoteFieldInfoName,
     isMutable,
-    isPGColInfo,
+    mkAdminRolePermInfo,
     permAccToLens,
     permAccToType,
     permDel,
@@ -56,6 +58,7 @@ module Hasura.RQL.Types.Table
     tcCustomColumnNames,
     tcCustomName,
     tcCustomRootFields,
+    tcComment,
     tciCustomConfig,
     tciDescription,
     tciEnumValues,
@@ -68,6 +71,7 @@ module Hasura.RQL.Types.Table
     tciUniqueConstraints,
     tciUniqueOrPrimaryKeyConstraints,
     tciViewInfo,
+    tiAdminRolePermInfo,
     tiCoreInfo,
     tiEventTriggerInfoMap,
     tiName,
@@ -84,6 +88,7 @@ import Control.Lens hiding ((.=))
 import Data.Aeson.Casing
 import Data.Aeson.Extended
 import Data.Aeson.TH
+import Data.Aeson.Types (prependFailure, typeMismatch)
 import Data.HashMap.Strict qualified as M
 import Data.HashMap.Strict.Extended qualified as M
 import Data.HashSet qualified as HS
@@ -103,24 +108,56 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Permission
-import Hasura.RQL.Types.Relationship
-import Hasura.RQL.Types.RemoteRelationship
+import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Relationships.Remote
 import Hasura.SQL.AnyBackend (runBackend)
 import Hasura.SQL.Backend
 import Hasura.Server.Utils (englishList)
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
+data CustomRootField = CustomRootField
+  { _crfName :: Maybe G.Name,
+    _crfComment :: Comment
+  }
+  deriving (Show, Eq, Generic)
+
+instance NFData CustomRootField
+
+instance Cacheable CustomRootField
+
+instance FromJSON CustomRootField where
+  parseJSON = \case
+    Null -> pure $ CustomRootField Nothing Automatic
+    String text -> pure $ CustomRootField (G.mkName text) Automatic
+    Object obj ->
+      CustomRootField
+        <$> (obj .:? "name")
+        <*> (obj .:? "comment" .!= Automatic)
+    val -> prependFailure "parsing CustomRootField failed, " (typeMismatch "Object, String or Null" val)
+
+instance ToJSON CustomRootField where
+  toJSON (CustomRootField Nothing Automatic) = Null
+  toJSON (CustomRootField (Just name) Automatic) = String $ G.unName name
+  toJSON (CustomRootField name comment) =
+    object
+      [ "name" .= name,
+        "comment" .= comment
+      ]
+
+defaultCustomRootField :: CustomRootField
+defaultCustomRootField = CustomRootField Nothing Automatic
+
 data TableCustomRootFields = TableCustomRootFields
-  { _tcrfSelect :: !(Maybe G.Name),
-    _tcrfSelectByPk :: !(Maybe G.Name),
-    _tcrfSelectAggregate :: !(Maybe G.Name),
-    _tcrfInsert :: !(Maybe G.Name),
-    _tcrfInsertOne :: !(Maybe G.Name),
-    _tcrfUpdate :: !(Maybe G.Name),
-    _tcrfUpdateByPk :: !(Maybe G.Name),
-    _tcrfDelete :: !(Maybe G.Name),
-    _tcrfDeleteByPk :: !(Maybe G.Name)
+  { _tcrfSelect :: CustomRootField,
+    _tcrfSelectByPk :: CustomRootField,
+    _tcrfSelectAggregate :: CustomRootField,
+    _tcrfInsert :: CustomRootField,
+    _tcrfInsertOne :: CustomRootField,
+    _tcrfUpdate :: CustomRootField,
+    _tcrfUpdateByPk :: CustomRootField,
+    _tcrfDelete :: CustomRootField,
+    _tcrfDeleteByPk :: CustomRootField
   }
   deriving (Show, Eq, Generic)
 
@@ -128,71 +165,76 @@ instance NFData TableCustomRootFields
 
 instance Cacheable TableCustomRootFields
 
-$(deriveToJSON hasuraJSON {omitNothingFields = True} ''TableCustomRootFields)
+instance ToJSON TableCustomRootFields where
+  toJSON TableCustomRootFields {..} =
+    object $
+      filter
+        ((/= Null) . snd)
+        [ "select" .= _tcrfSelect,
+          "select_by_pk" .= _tcrfSelectByPk,
+          "select_aggregate" .= _tcrfSelectAggregate,
+          "insert" .= _tcrfInsert,
+          "insert_one" .= _tcrfInsertOne,
+          "update" .= _tcrfUpdate,
+          "update_by_pk" .= _tcrfUpdateByPk,
+          "delete" .= _tcrfDelete,
+          "delete_by_pk" .= _tcrfDeleteByPk
+        ]
 
 instance FromJSON TableCustomRootFields where
   parseJSON = withObject "Object" $ \obj -> do
-    select <- obj .:? "select"
-    selectByPk <- obj .:? "select_by_pk"
-    selectAggregate <- obj .:? "select_aggregate"
-    insert <- obj .:? "insert"
-    insertOne <- obj .:? "insert_one"
-    update <- obj .:? "update"
-    updateByPk <- obj .:? "update_by_pk"
-    delete <- obj .:? "delete"
-    deleteByPk <- obj .:? "delete_by_pk"
-
-    let duplicateRootFields =
-          HS.toList $
-            duplicates $
-              catMaybes
-                [ select,
-                  selectByPk,
-                  selectAggregate,
-                  insert,
-                  insertOne,
-                  update,
-                  updateByPk,
-                  delete,
-                  deleteByPk
-                ]
-    for_ (nonEmpty duplicateRootFields) \duplicatedFields ->
-      fail $
-        T.unpack $
-          "the following custom root field names are duplicated: "
-            <> englishList "and" (toTxt <$> duplicatedFields)
-
-    pure $
+    tableCustomRootFields <-
       TableCustomRootFields
-        select
-        selectByPk
-        selectAggregate
-        insert
-        insertOne
-        update
-        updateByPk
-        delete
-        deleteByPk
+        <$> (obj .:? "select" .!= defaultCustomRootField)
+        <*> (obj .:? "select_by_pk" .!= defaultCustomRootField)
+        <*> (obj .:? "select_aggregate" .!= defaultCustomRootField)
+        <*> (obj .:? "insert" .!= defaultCustomRootField)
+        <*> (obj .:? "insert_one" .!= defaultCustomRootField)
+        <*> (obj .:? "update" .!= defaultCustomRootField)
+        <*> (obj .:? "update_by_pk" .!= defaultCustomRootField)
+        <*> (obj .:? "delete" .!= defaultCustomRootField)
+        <*> (obj .:? "delete_by_pk" .!= defaultCustomRootField)
+
+    let duplicateRootFields = HS.toList . duplicates . mapMaybe _crfName $ getAllCustomRootFields tableCustomRootFields
+    for_ (nonEmpty duplicateRootFields) \duplicatedFields ->
+      fail . T.unpack $
+        "the following custom root field names are duplicated: "
+          <> englishList "and" (toTxt <$> duplicatedFields)
+
+    pure tableCustomRootFields
 
 emptyCustomRootFields :: TableCustomRootFields
 emptyCustomRootFields =
   TableCustomRootFields
-    { _tcrfSelect = Nothing,
-      _tcrfSelectByPk = Nothing,
-      _tcrfSelectAggregate = Nothing,
-      _tcrfInsert = Nothing,
-      _tcrfInsertOne = Nothing,
-      _tcrfUpdate = Nothing,
-      _tcrfUpdateByPk = Nothing,
-      _tcrfDelete = Nothing,
-      _tcrfDeleteByPk = Nothing
+    { _tcrfSelect = defaultCustomRootField,
+      _tcrfSelectByPk = defaultCustomRootField,
+      _tcrfSelectAggregate = defaultCustomRootField,
+      _tcrfInsert = defaultCustomRootField,
+      _tcrfInsertOne = defaultCustomRootField,
+      _tcrfUpdate = defaultCustomRootField,
+      _tcrfUpdateByPk = defaultCustomRootField,
+      _tcrfDelete = defaultCustomRootField,
+      _tcrfDeleteByPk = defaultCustomRootField
     }
+
+getAllCustomRootFields :: TableCustomRootFields -> [CustomRootField]
+getAllCustomRootFields (TableCustomRootFields select selectByPk selectAgg insert insertOne update updateByPk delete deleteByPk) =
+  [ select,
+    selectByPk,
+    selectAgg,
+    insert,
+    insertOne,
+    update,
+    updateByPk,
+    delete,
+    deleteByPk
+  ]
 
 data FieldInfo (b :: BackendType)
   = FIColumn !(ColumnInfo b)
   | FIRelationship !(RelInfo b)
   | FIComputedField !(ComputedFieldInfo b)
-  | FIRemoteRelationship !(RemoteFieldInfo b)
+  | FIRemoteRelationship !(RemoteFieldInfo (DBJoinField b))
   deriving (Generic)
 
 deriving instance Backend b => Eq (FieldInfo b)
@@ -213,23 +255,22 @@ type FieldInfoMap = M.HashMap FieldName
 
 fieldInfoName :: forall b. Backend b => FieldInfo b -> FieldName
 fieldInfoName = \case
-  FIColumn info -> fromCol @b $ pgiColumn info
+  FIColumn info -> fromCol @b $ ciColumn info
   FIRelationship info -> fromRel $ riName info
   FIComputedField info -> fromComputedField $ _cfiName info
   FIRemoteRelationship info -> fromRemoteRelationship $ getRemoteFieldInfoName info
 
 fieldInfoGraphQLName :: FieldInfo b -> Maybe G.Name
 fieldInfoGraphQLName = \case
-  FIColumn info -> Just $ pgiName info
+  FIColumn info -> Just $ ciName info
   FIRelationship info -> G.mkName $ relNameToTxt $ riName info
   FIComputedField info -> G.mkName $ computedFieldNameToText $ _cfiName info
-  FIRemoteRelationship info -> G.mkName $ remoteRelationshipNameToText $ getRemoteFieldInfoName info
+  FIRemoteRelationship info -> G.mkName $ relNameToTxt $ getRemoteFieldInfoName info
 
-getRemoteFieldInfoName :: RemoteFieldInfo b -> RemoteRelationshipName
-getRemoteFieldInfoName =
-  \case
-    RFISchema schema -> _rfiName schema
-    RFISource source -> runBackend source _rsriName
+getRemoteFieldInfoName :: RemoteFieldInfo lhsJoinField -> RelName
+getRemoteFieldInfoName RemoteFieldInfo {_rfiRHS} = case _rfiRHS of
+  RFISchema schema -> _rrfiName schema
+  RFISource source -> runBackend source _rsfiName
 
 -- | Returns all the field names created for the given field. Columns, object relationships, and
 -- computed fields only ever produce a single field, but array relationships also contain an
@@ -250,17 +291,13 @@ getCols = mapMaybe (^? _FIColumn) . M.elems
 
 -- | Sort columns based on their ordinal position
 sortCols :: [ColumnInfo backend] -> [ColumnInfo backend]
-sortCols = sortBy (\l r -> compare (pgiPosition l) (pgiPosition r))
+sortCols = sortBy (\l r -> compare (ciPosition l) (ciPosition r))
 
 getRels :: FieldInfoMap (FieldInfo backend) -> [RelInfo backend]
 getRels = mapMaybe (^? _FIRelationship) . M.elems
 
 getComputedFieldInfos :: FieldInfoMap (FieldInfo backend) -> [ComputedFieldInfo backend]
 getComputedFieldInfos = mapMaybe (^? _FIComputedField) . M.elems
-
-isPGColInfo :: FieldInfo backend -> Bool
-isPGColInfo (FIColumn _) = True
-isPGColInfo _ = False
 
 data InsPermInfo (b :: BackendType) = InsPermInfo
   { ipiCols :: !(HS.HashSet (Column b)),
@@ -276,6 +313,12 @@ deriving instance
     Eq (BooleanOperators b (PartialSQLExp b))
   ) =>
   Eq (InsPermInfo b)
+
+deriving instance
+  ( Backend b,
+    Show (BooleanOperators b (PartialSQLExp b))
+  ) =>
+  Show (InsPermInfo b)
 
 instance
   ( Backend b,
@@ -384,6 +427,12 @@ deriving instance
   ) =>
   Eq (SelPermInfo b)
 
+deriving instance
+  ( Backend b,
+    Show (BooleanOperators b (PartialSQLExp b))
+  ) =>
+  Show (SelPermInfo b)
+
 instance
   ( Backend b,
     NFData (BooleanOperators b (PartialSQLExp b))
@@ -421,6 +470,12 @@ deriving instance
   ) =>
   Eq (UpdPermInfo b)
 
+deriving instance
+  ( Backend b,
+    Show (BooleanOperators b (PartialSQLExp b))
+  ) =>
+  Show (UpdPermInfo b)
+
 instance
   ( Backend b,
     NFData (BooleanOperators b (PartialSQLExp b))
@@ -454,6 +509,12 @@ deriving instance
     Eq (BooleanOperators b (PartialSQLExp b))
   ) =>
   Eq (DelPermInfo b)
+
+deriving instance
+  ( Backend b,
+    Show (BooleanOperators b (PartialSQLExp b))
+  ) =>
+  Show (DelPermInfo b)
 
 instance
   ( Backend b,
@@ -562,7 +623,8 @@ type CustomColumnNames b = HashMap (Column b) G.Name
 data TableConfig b = TableConfig
   { _tcCustomRootFields :: !TableCustomRootFields,
     _tcCustomColumnNames :: !(CustomColumnNames b),
-    _tcCustomName :: !(Maybe G.Name)
+    _tcCustomName :: !(Maybe G.Name),
+    _tcComment :: !Comment
   }
   deriving (Generic)
 
@@ -581,7 +643,7 @@ $(makeLenses ''TableConfig)
 
 emptyTableConfig :: (TableConfig b)
 emptyTableConfig =
-  TableConfig emptyCustomRootFields M.empty Nothing
+  TableConfig emptyCustomRootFields M.empty Nothing Automatic
 
 instance (Backend b) => FromJSON (TableConfig b) where
   parseJSON = withObject "TableConfig" $ \obj ->
@@ -589,6 +651,7 @@ instance (Backend b) => FromJSON (TableConfig b) where
       <$> obj .:? "custom_root_fields" .!= emptyCustomRootFields
       <*> obj .:? "custom_column_names" .!= M.empty
       <*> obj .:? "custom_name"
+      <*> obj .:? "comment" .!= Automatic
 
 data Constraint (b :: BackendType) = Constraint
   { _cName :: !(ConstraintName b),
@@ -699,7 +762,8 @@ tciUniqueOrPrimaryKeyConstraints info =
 data TableInfo (b :: BackendType) = TableInfo
   { _tiCoreInfo :: TableCoreInfo b,
     _tiRolePermInfoMap :: !(RolePermInfoMap b),
-    _tiEventTriggerInfoMap :: !(EventTriggerInfoMap b)
+    _tiEventTriggerInfoMap :: !(EventTriggerInfoMap b),
+    _tiAdminRolePermInfo :: RolePermInfo b
   }
   deriving (Generic)
 
@@ -819,7 +883,7 @@ askColumnType ::
   Text ->
   m (ColumnType backend)
 askColumnType m c msg =
-  pgiType <$> askColInfo m c msg
+  ciType <$> askColInfo m c msg
 
 askColInfo ::
   forall m backend.
@@ -846,3 +910,20 @@ askColInfo m c msg = do
               c <<> " is a " <> fieldType <> "; ",
               msg
             ]
+
+mkAdminRolePermInfo :: Backend b => TableCoreInfo b -> RolePermInfo b
+mkAdminRolePermInfo ti =
+  RolePermInfo (Just i) (Just s) (Just u) (Just d)
+  where
+    fields = _tciFieldInfoMap ti
+    pgCols = map ciColumn $ getCols fields
+    pgColsWithFilter = M.fromList $ map (,Nothing) pgCols
+    scalarComputedFields =
+      HS.fromList $ map _cfiName $ onlyScalarComputedFields $ getComputedFieldInfos fields
+    scalarComputedFields' = HS.toMap scalarComputedFields $> Nothing
+
+    tn = _tciName ti
+    i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue M.empty False mempty
+    s = SelPermInfo pgColsWithFilter scalarComputedFields' annBoolExpTrue Nothing True mempty
+    u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue Nothing M.empty mempty
+    d = DelPermInfo tn annBoolExpTrue mempty

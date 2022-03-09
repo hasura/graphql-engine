@@ -94,6 +94,28 @@ func (o *NetworkObject) Key() string {
 func (o *NetworkObject) Filename() string {
 	return "network.yaml"
 }
+
+func (o *NetworkObject) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+	rootFile := filepath.Join(o.BaseDirectory(), o.Filename())
+	files, err := metadataobject.DefaultGetFiles(rootFile)
+	if err != nil {
+		return nil, o.error(err)
+	}
+	return files, nil
+}
+
+func (o *NetworkObject) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: o, WriteDiffOpts: opts})
+	if err != nil {
+		return o.error(err)
+	}
+	return nil
+}
+
+func (o *NetworkObject) BaseDirectory() string {
+	return o.MetadataDir
+}
+
 func (o *NetworkObject) error(err error, additionalContext ...string) metadataobject.ErrParsingMetadataObject {
 	return metadataobject.NewErrParsingMetadataObject(o, err, additionalContext...)
 }

@@ -1,3 +1,8 @@
+-- | Postgres DDL EventTrigger
+--
+-- Used for creating event triggers for metadata changes.
+--
+-- See 'Hasura.RQL.DDL.Schema.Cache' and 'Hasura.RQL.Types.Eventing.Backend'.
 module Hasura.Backends.Postgres.DDL.EventTrigger
   ( insertManualEvent,
     redeliverEvent,
@@ -36,7 +41,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table ()
+import Hasura.RQL.Types.Table (PrimaryKey)
 import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Server.Migrate.Internal
@@ -46,24 +51,21 @@ import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Text.Shakespeare.Text qualified as ST
 
--- Corresponds to the 'OLD' and 'NEW' Postgres records; see
--- https://www.postgresql.org/docs/current/plpgsql-trigger.html
-data OpVar = OLD | NEW deriving (Show)
-
 fetchUndeliveredEvents ::
   (MonadIO m, MonadError QErr m) =>
   SourceConfig ('Postgres pgKind) ->
   SourceName ->
+  [TriggerName] ->
   MaintenanceMode ->
   FetchBatchSize ->
   m [Event ('Postgres pgKind)]
-fetchUndeliveredEvents sourceConfig sourceName maintenanceMode fetchBatchSize = do
+fetchUndeliveredEvents sourceConfig sourceName triggerNames maintenanceMode fetchBatchSize = do
   fetchEventsTxE <-
     case maintenanceMode of
       MaintenanceModeEnabled -> do
         maintenanceModeVersion <- liftIO $ runPgSourceReadTx sourceConfig getMaintenanceModeVersionTx
-        pure $ fmap (fetchEventsMaintenanceMode sourceName fetchBatchSize) maintenanceModeVersion
-      MaintenanceModeDisabled -> pure $ Right $ fetchEvents sourceName fetchBatchSize
+        pure $ fmap (fetchEventsMaintenanceMode sourceName triggerNames fetchBatchSize) maintenanceModeVersion
+      MaintenanceModeDisabled -> pure $ Right $ fetchEvents sourceName triggerNames fetchBatchSize
   case fetchEventsTxE of
     Left err -> throw500 $ "something went wrong while fetching events: " <> tshow err
     Right fetchEventsTx ->
@@ -184,8 +186,9 @@ createTableEventTrigger ::
   [ColumnInfo ('Postgres pgKind)] ->
   TriggerName ->
   TriggerOpsDef ('Postgres pgKind) ->
+  Maybe (PrimaryKey ('Postgres pgKind) (ColumnInfo ('Postgres pgKind))) ->
   m (Either QErr ())
-createTableEventTrigger serverConfigCtx sourceConfig table columns triggerName opsDefinition = runPgSourceWriteTx sourceConfig $ do
+createTableEventTrigger serverConfigCtx sourceConfig table columns triggerName opsDefinition _ = runPgSourceWriteTx sourceConfig $ do
   -- Clean all existing triggers
   liftTx $ dropTriggerQ triggerName -- executes DROP IF EXISTS.. sql
   -- Create the given triggers
@@ -307,8 +310,8 @@ getMaintenanceModeVersionTx = liftTx $ do
 -- limit. Process events approximately in created_at order, but we make no
 -- ordering guarentees; events can and will race. Nevertheless we want to
 -- ensure newer change events don't starve older ones.
-fetchEvents :: SourceName -> FetchBatchSize -> Q.TxE QErr [Event ('Postgres pgKind)]
-fetchEvents source (FetchBatchSize fetchBatchSize) =
+fetchEvents :: SourceName -> [TriggerName] -> FetchBatchSize -> Q.TxE QErr [Event ('Postgres pgKind)]
+fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) =
   map uncurryEvent
     <$> Q.listQE
       defaultTxErrorHandler
@@ -321,6 +324,7 @@ fetchEvents source (FetchBatchSize fetchBatchSize) =
                           and (l.locked IS NULL or l.locked < (NOW() - interval '30 minute'))
                           and (l.next_retry_at is NULL or l.next_retry_at <= now())
                           and l.archived = 'f'
+                          and l.trigger_name = ANY($2)
                     /* NB: this ordering is important for our index `event_log_fetch_events` */
                     /* (see `init_pg_source.sql`) */
                     ORDER BY locked NULLS FIRST, next_retry_at NULLS FIRST, created_at
@@ -328,23 +332,25 @@ fetchEvents source (FetchBatchSize fetchBatchSize) =
                     FOR UPDATE SKIP LOCKED )
       RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at
       |]
-      (Identity limit)
+      (limit, triggerNamesTxt)
       True
   where
-    uncurryEvent (id', sn, tn, trn, Q.AltJ payload, tries, created) =
+    uncurryEvent (id', sourceName, tableName, triggerName, Q.AltJ payload, tries, created) =
       Event
         { eId = id',
           eSource = source,
-          eTable = QualifiedObject sn tn,
-          eTrigger = TriggerMetadata trn,
+          eTable = QualifiedObject sourceName tableName,
+          eTrigger = TriggerMetadata triggerName,
           eEvent = payload,
           eTries = tries,
           eCreatedAt = created
         }
     limit = fromIntegral fetchBatchSize :: Word64
 
-fetchEventsMaintenanceMode :: SourceName -> FetchBatchSize -> MaintenanceModeVersion -> Q.TxE QErr [Event ('Postgres pgKind)]
-fetchEventsMaintenanceMode sourceName fetchBatchSize = \case
+    triggerNamesTxt = PGTextArray $ triggerNameToTxt <$> triggerNames
+
+fetchEventsMaintenanceMode :: SourceName -> [TriggerName] -> FetchBatchSize -> MaintenanceModeVersion -> Q.TxE QErr [Event ('Postgres pgKind)]
+fetchEventsMaintenanceMode sourceName triggerNames fetchBatchSize = \case
   PreviousMMVersion ->
     map uncurryEvent
       <$> Q.listQE
@@ -376,7 +382,7 @@ fetchEventsMaintenanceMode sourceName fetchBatchSize = \case
             eCreatedAt = created
           }
       limit = fromIntegral (_unFetchBatchSize fetchBatchSize) :: Word64
-  CurrentMMVersion -> fetchEvents sourceName fetchBatchSize
+  CurrentMMVersion -> fetchEvents sourceName triggerNames fetchBatchSize
 
 setSuccessTx :: Event ('Postgres pgKind) -> Maybe MaintenanceModeVersion -> Q.TxE QErr ()
 setSuccessTx e = \case
@@ -611,17 +617,17 @@ mkTriggerQ trn qt@(QualifiedObject schema table) allCols op (SubscribeOpSpec lis
       mkRowExp $ map (\col -> toExtractor (mkQId opVar strfyNum col) col) columns
 
     mkQId opVar strfyNum colInfo =
-      toJSONableExp strfyNum (pgiType colInfo) False $
-        SEQIdentifier $ QIdentifier (opToQual opVar) $ toIdentifier $ pgiColumn colInfo
+      toJSONableExp strfyNum (ciType colInfo) False $
+        SEQIdentifier $ QIdentifier (opToQual opVar) $ toIdentifier $ ciColumn colInfo
 
     -- Generate the SQL expression
     toExtractor sqlExp column
       -- If the column type is either 'Geography' or 'Geometry', then after applying the 'ST_AsGeoJSON' function
       -- to the column, alias the value of the expression with the column name else it uses `st_asgeojson` as
       -- the column name.
-      | isScalarColumnWhere isGeoType (pgiType column) = Extractor sqlExp (Just $ getAlias column)
+      | isScalarColumnWhere isGeoType (ciType column) = Extractor sqlExp (Just $ getAlias column)
       | otherwise = Extractor sqlExp Nothing
-    getAlias col = toAlias $ Identifier $ getPGColTxt (pgiColumn col)
+    getAlias col = toAlias $ Identifier $ getPGColTxt (ciColumn col)
 
 mkAllTriggersQ ::
   forall pgKind m.

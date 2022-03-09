@@ -4,18 +4,23 @@ import STContainer from '../Container';
 import Modify from './Modify';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import { ReduxState } from '../../../../../types';
-import { getCronTriggers } from '../../../../../metadata/selector';
+import { useGetCronTriggers } from '../Hooks/useGetCronTriggers';
 
 interface Props extends InjectedProps {}
 
 const ModifyContainer: React.FC<Props> = props => {
-  const {
-    dispatch,
-    cronTriggers,
-    triggerName,
-    readOnlyMode,
-    eventsLoading,
-  } = props;
+  const { data: cronTriggers, isLoading, error } = useGetCronTriggers();
+  console.log('>>>', useGetCronTriggers());
+  if (isLoading) {
+    return <span>Loading...</span>;
+  }
+  if (!cronTriggers) {
+    return <span>Could not find any cron triggers</span>;
+  }
+  if (error) {
+    return <span>There was an error, please try again later</span>;
+  }
+  const { dispatch, triggerName, readOnlyMode, eventsLoading } = props;
   return (
     <STContainer
       tabName="modify"
@@ -38,7 +43,6 @@ const mapStateToProps = (
   ownProps: { params: { triggerName: string } }
 ) => {
   return {
-    cronTriggers: getCronTriggers(state),
     readOnlyMode: state.main.readOnlyMode,
     triggerName: ownProps.params.triggerName,
     eventsLoading: state.events.loading,

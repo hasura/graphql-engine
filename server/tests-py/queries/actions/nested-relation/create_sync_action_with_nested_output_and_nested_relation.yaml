@@ -1,0 +1,45 @@
+- description: Create an action with PG scalars in input arguments
+  url: /v1/query
+  status: 200
+  response:
+  - message: success
+  - message: success
+  - message: success
+  - message: success
+  query:
+    type: bulk
+    args:
+    - type: set_custom_types
+      args:
+        objects:
+        - name: UserId
+          fields:
+          - name: id
+            type: Int!
+          relationships:
+          - name: user
+            type: object
+            remote_table: user
+            field_mapping:
+              id: id
+        - name: UserIdObj
+          fields:
+          - name: user_id
+            type: UserId
+    - type: create_action
+      args:
+        name: action_create
+        definition:
+          kind: synchronous
+          arguments:
+          - name: someInput
+            type: String!
+          output_type: UserIdObj
+          handler: http://some.random/endpoint
+    - type: drop_action
+      args:
+        name: action_create
+        clear_data: true
+    # clear custom types
+    - type: set_custom_types
+      args: {}

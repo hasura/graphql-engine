@@ -164,3 +164,122 @@ queries:
             }
           }
         }
+
+  ############################################################################
+  # The standard introspection query from server/src-rsr/introspection.json
+  # We don't expect a server to be hammered with these, but they are crucial
+  # for clients (like graphiql):
+
+  - name: full_introspection
+    <<: *k6_custom
+    options:
+      k6:
+        scenarios:
+          main:
+            # Since this is currently quite slow and we're not as interested in
+            # understanding a heavy load of introspection requests, just
+            # collect as many samples we can in a reasonable time frame, with
+            # one client:
+            executor: 'constant-vus'
+            vus: 1
+            duration: '120s'
+    query: |
+      query IntrospectionQuery {
+        __schema {
+          queryType {
+            name
+          }
+          mutationType {
+            name
+          }
+          subscriptionType {
+            name
+          }
+          types {
+            ...FullType
+          }
+          directives {
+            name
+            description
+            locations
+            args {
+              ...InputValue
+            }
+          }
+        }
+      }
+
+      fragment FullType on __Type {
+        kind
+        name
+        description
+        fields(includeDeprecated: true) {
+          name
+          description
+          args {
+            ...InputValue
+          }
+          type {
+            ...TypeRef
+          }
+          isDeprecated
+          deprecationReason
+        }
+        inputFields {
+          ...InputValue
+        }
+        interfaces {
+          ...TypeRef
+        }
+        enumValues(includeDeprecated: true) {
+          name
+          description
+          isDeprecated
+          deprecationReason
+        }
+        possibleTypes {
+          ...TypeRef
+        }
+      }
+
+      fragment InputValue on __InputValue {
+        name
+        description
+        type {
+          ...TypeRef
+        }
+        defaultValue
+      }
+
+      fragment TypeRef on __Type {
+        kind
+        name
+        ofType {
+          kind
+          name
+          ofType {
+            kind
+            name
+            ofType {
+              kind
+              name
+              ofType {
+                kind
+                name
+                ofType {
+                  kind
+                  name
+                  ofType {
+                    kind
+                    name
+                    ofType {
+                      kind
+                      name
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }

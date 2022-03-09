@@ -13,17 +13,22 @@ module Hasura.RQL.DDL.Metadata.Types
     ReplaceMetadataV1 (..),
     ReplaceMetadataV2 (..),
     AllowInconsistentMetadata (..),
+    WebHookUrl (..),
     TestWebhookTransform (..),
   )
 where
 
 import Data.Aeson
 import Data.Aeson.TH
+import Data.CaseInsensitive qualified as CI
+import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as H
+import Data.Text qualified as T
 import Hasura.Prelude
-import Hasura.RQL.DDL.RequestTransform (MetadataTransform)
+import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types
 import Hasura.Session (SessionVariables)
+import Network.HTTP.Client.Transformable qualified as HTTP
 
 data ClearMetadata
   = ClearMetadata
@@ -184,27 +189,50 @@ instance ToJSON ReplaceMetadata where
     RMReplaceMetadataV1 v1 -> toJSON v1
     RMReplaceMetadataV2 v2 -> toJSON v2
 
+data WebHookUrl = EnvVar String | URL T.Text
+  deriving (Eq)
+
+instance FromJSON WebHookUrl where
+  parseJSON (Object o) = do
+    var <- o .: "from_env"
+    pure $ EnvVar var
+  parseJSON (String str) = pure $ URL str
+  parseJSON _ = empty
+
+instance ToJSON WebHookUrl where
+  toJSON (EnvVar var) = object ["from_env" .= var]
+  toJSON (URL url) = toJSON url
+
 data TestWebhookTransform = TestWebhookTransform
-  { _twtWebhookUrl :: Text,
+  { _twtEnv :: Env.Environment,
+    _twtHeaders :: [HTTP.Header],
+    _twtWebhookUrl :: WebHookUrl,
     _twtPayload :: Value,
-    _twtTransformer :: MetadataTransform,
+    _twtTransformer :: RequestTransform,
+    _twtResponseTransformer :: !(Maybe MetadataResponseTransform),
     _twtSessionVariables :: Maybe SessionVariables
   }
   deriving (Eq)
 
 instance FromJSON TestWebhookTransform where
   parseJSON = withObject "TestWebhookTransform" $ \o -> do
+    env <- fmap (fromMaybe mempty) $ o .:? "env"
+    headers <- fmap (fmap (first (CI.mk))) $ o .:? "request_headers" .!= []
     url <- o .: "webhook_url"
     payload <- o .: "body"
-    transformer <- o .: "request_transform"
+    reqTransform <- o .: "request_transform"
+    respTransform <- o .:? "response_transform"
     sessionVars <- o .:? "session_variables"
-    pure $ TestWebhookTransform url payload transformer sessionVars
+    pure $ TestWebhookTransform env headers url payload reqTransform respTransform sessionVars
 
 instance ToJSON TestWebhookTransform where
-  toJSON (TestWebhookTransform url payload mt sv) =
+  toJSON (TestWebhookTransform env headers url payload mt mrt sv) =
     object
-      [ "webhook_url" .= url,
+      [ "env" .= env,
+        "request_headers" .= fmap (first CI.original) headers,
+        "webhook_url" .= url,
         "body" .= payload,
         "request_transform" .= mt,
+        "response_transform" .= mrt,
         "session_variables" .= sv
       ]

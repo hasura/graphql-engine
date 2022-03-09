@@ -1,6 +1,19 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 
--- | Types for Transact-SQL aka T-SQL; the language of SQL Server.
+-- | MSSQL Types Internal
+--
+-- Types for Transact-SQL aka T-SQL; the language of SQL Server.
+--
+-- In this module we define various MS SQL Server specific data types used for T-SQL generation.
+--
+-- These types are also used as underlying types in the @Backend 'MSSQL@ instance
+-- which is defined in "Hasura.Backends.MSSQL.Instances.Types".
+--
+-- We convert RQL IR ASTs to types defined here in the "Hasura.Backends.MSSQL.FromIr" module,
+-- and we implement pretty-printing for these types in the "Hasura.Backends.MSSQL.ToQuery" module.
+--
+-- NOTE: Various type class instances (including simple once such as Eq and Show) are implemented
+-- in the "Hasura.Backends.MSSQL.Types.Instances" module.
 module Hasura.Backends.MSSQL.Types.Internal
   ( Aggregate (..),
     Aliased (..),
@@ -10,6 +23,7 @@ module Hasura.Backends.MSSQL.Types.Internal
     ColumnType,
     Comment (..),
     Countable (..),
+    DataLength (..),
     Delete (..),
     DeleteOutput,
     EntityAlias (..),
@@ -18,7 +32,12 @@ module Hasura.Backends.MSSQL.Types.Internal
     For (..),
     ForJson (..),
     From (..),
-    FunctionName,
+    FunctionApplicationExpression (..),
+    MergeUsing (..),
+    MergeOn (..),
+    MergeWhenMatched (..),
+    MergeWhenNotMatched (..),
+    Merge (..),
     Insert (..),
     InsertOutput,
     Join (..),
@@ -27,6 +46,7 @@ module Hasura.Backends.MSSQL.Types.Internal
     JsonCardinality (..),
     JsonFieldSpec (..),
     JsonPath (..),
+    MethodApplicationExpression (..),
     NullsOrder (..),
     Op (..),
     OpenJson (..),
@@ -44,9 +64,12 @@ module Hasura.Backends.MSSQL.Types.Internal
     Select (..),
     SetIdentityInsert (..),
     TempTableName (..),
+    SomeTableName (..),
     TempTable (..),
     SetValue (..),
     SelectIntoTempTable (..),
+    SITTConstraints (..),
+    InsertValuesIntoTempTable (..),
     SpatialOp (..),
     TableName (..),
     Top (..),
@@ -70,7 +93,10 @@ module Hasura.Backends.MSSQL.Types.Internal
     scalarTypeDBName,
     snakeCaseTableName,
     stringTypes,
+    tempTableNameInserted,
+    tempTableNameValues,
     tempTableNameDeleted,
+    tempTableNameUpdated,
   )
 where
 
@@ -78,12 +104,14 @@ import Data.Aeson qualified as J
 import Data.Text.Encoding (encodeUtf8)
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Base.Error
+import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.SQL.Backend
 import Hasura.SQL.GeoJSON qualified as Geo
 import Hasura.SQL.WKT qualified as WKT
 import Language.GraphQL.Draft.Syntax qualified as G
+import Language.Haskell.TH.Syntax (Lift)
 
 --------------------------------------------------------------------------------
 -- Phantom pretend-generic types that are actually specific
@@ -97,56 +125,56 @@ type Value = ODBC.Value
 --------------------------------------------------------------------------------
 
 data UnifiedColumn = UnifiedColumn
-  { name :: !Text,
-    type' :: !ScalarType
+  { name :: Text,
+    type' :: ScalarType
   }
 
 data UnifiedTableName = UnifiedTableName
-  { schema :: !Text,
-    name :: !Text
+  { schema :: Text,
+    name :: Text
   }
 
 data UnifiedObjectRelationship = UnifiedObjectRelationship
-  { using :: !UnifiedUsing,
-    name :: !Text
+  { using :: UnifiedUsing,
+    name :: Text
   }
 
 data UnifiedArrayRelationship = UnifiedArrayRelationship
-  { using :: !UnifiedUsing,
-    name :: !Text
+  { using :: UnifiedUsing,
+    name :: Text
   }
 
-data UnifiedUsing = UnifiedUsing
-  { foreign_key_constraint_on :: !UnifiedOn
+newtype UnifiedUsing = UnifiedUsing
+  { foreign_key_constraint_on :: UnifiedOn
   }
 
 data UnifiedOn = UnifiedOn
-  { table :: !UnifiedTableName,
-    column :: !Text
+  { table :: UnifiedTableName,
+    column :: Text
   }
 
 -------------------------------------------------------------------------------
 -- AST types
 
 data BooleanOperators a
-  = ASTContains !a
-  | ASTCrosses !a
-  | ASTEquals !a
-  | ASTIntersects !a
-  | ASTOverlaps !a
-  | ASTTouches !a
-  | ASTWithin !a
+  = ASTContains a
+  | ASTCrosses a
+  | ASTEquals a
+  | ASTIntersects a
+  | ASTOverlaps a
+  | ASTTouches a
+  | ASTWithin a
 
 data Select = Select
-  { selectWith :: !(Maybe With),
-    selectTop :: !Top,
-    selectProjections :: ![Projection],
-    selectFrom :: !(Maybe From),
-    selectJoins :: ![Join],
-    selectWhere :: !Where,
-    selectFor :: !For,
-    selectOrderBy :: !(Maybe (NonEmpty OrderBy)),
-    selectOffset :: !(Maybe Expression)
+  { selectWith :: (Maybe With),
+    selectTop :: Top,
+    selectProjections :: [Projection],
+    selectFrom :: (Maybe From),
+    selectJoins :: [Join],
+    selectWhere :: Where,
+    selectFor :: For,
+    selectOrderBy :: (Maybe (NonEmpty OrderBy)),
+    selectOffset :: (Maybe Expression)
   }
 
 emptySelect :: Select
@@ -170,8 +198,8 @@ data Inserted = Inserted
 data Deleted = Deleted
 
 data Output t = Output
-  { outputType :: !t,
-    outputColumns :: ![OutputColumn]
+  { outputType :: t,
+    outputColumns :: [OutputColumn]
   }
 
 type InsertOutput = Output Inserted
@@ -179,10 +207,11 @@ type InsertOutput = Output Inserted
 newtype Values = Values [Expression]
 
 data Insert = Insert
-  { insertTable :: !TableName,
-    insertColumns :: ![ColumnName],
-    insertOutput :: !InsertOutput,
-    insertValues :: ![Values]
+  { insertTable :: TableName,
+    insertColumns :: [ColumnName],
+    insertOutput :: InsertOutput,
+    insertTempTable :: TempTable,
+    insertValues :: [Values]
   }
 
 data SetValue
@@ -190,17 +219,57 @@ data SetValue
   | SetOFF
 
 data SetIdentityInsert = SetIdentityInsert
-  { setTable :: !TableName,
+  { setTable :: SomeTableName,
     setValue :: !SetValue
   }
 
 type DeleteOutput = Output Deleted
 
 data Delete = Delete
-  { deleteTable :: !(Aliased TableName),
-    deleteOutput :: !DeleteOutput,
-    deleteTempTable :: !TempTable,
-    deleteWhere :: !Where
+  { deleteTable :: (Aliased TableName),
+    deleteOutput :: DeleteOutput,
+    deleteTempTable :: TempTable,
+    deleteWhere :: Where
+  }
+
+-- | MERGE statement.
+-- Used for upserts and is responsible for actually inserting or updating the data in the table.
+data Merge = Merge
+  { mergeTargetTable :: TableName,
+    mergeUsing :: MergeUsing,
+    mergeOn :: MergeOn,
+    mergeWhenMatched :: MergeWhenMatched,
+    mergeWhenNotMatched :: MergeWhenNotMatched,
+    mergeInsertOutput :: InsertOutput,
+    mergeOutputTempTable :: TempTable
+  }
+
+-- | The @USING@ section of a @MERGE@ statement.
+--   Specifies the temp table schema where the input values are.
+data MergeUsing = MergeUsing
+  { mergeUsingTempTable :: TempTableName,
+    mergeUsingColumns :: [ColumnName]
+  }
+
+-- | The @ON@ section of a @MERGE@ statement.
+--   Which columns to match on?
+data MergeOn = MergeOn
+  { mergeOnColumns :: [ColumnName]
+  }
+
+-- | The @WHEN MATCHED@ section of a @MERGE@ statement.
+--   Which columns to update when @match_columns@ match (including presets),
+--   and on which condition to actually update the values.
+data MergeWhenMatched = MergeWhenMatched
+  { mwmUpdateColumns :: [ColumnName],
+    mwmCondition :: Expression,
+    mwmUpdatePreset :: HashMap ColumnName Expression
+  }
+
+-- | The @WHEN MATCHED@ section of a @MERGE@ statement.
+--   Which columns to insert?
+newtype MergeWhenNotMatched = MergeWhenNotMatched
+  { mergeWhenNotMatchedInsertColumns :: [ColumnName]
   }
 
 -- | SELECT INTO temporary table statement without values.
@@ -208,24 +277,53 @@ data Delete = Delete
 data SelectIntoTempTable = SelectIntoTempTable
   { sittTempTableName :: TempTableName,
     sittColumns :: [UnifiedColumn],
-    sittFromTableName :: TableName
+    sittFromTableName :: TableName,
+    sittConstraints :: SITTConstraints
+  }
+
+-- | When creating a temporary table from an existing table schema,
+--   what should we do with the constraints (such as @IDENTITY@?)
+data SITTConstraints
+  = KeepConstraints
+  | RemoveConstraints
+
+-- | Simple insert into a temporary table.
+data InsertValuesIntoTempTable = InsertValuesIntoTempTable
+  { ivittTempTableName :: TempTableName,
+    ivittColumns :: [ColumnName],
+    ivittValues :: [Values]
   }
 
 -- | A temporary table name is prepended by a hash-sign
 newtype TempTableName = TempTableName Text
 
+tempTableNameInserted :: TempTableName
+tempTableNameInserted = TempTableName "inserted"
+
+tempTableNameValues :: TempTableName
+tempTableNameValues = TempTableName "values"
+
 tempTableNameDeleted :: TempTableName
 tempTableNameDeleted = TempTableName "deleted"
 
+tempTableNameUpdated :: TempTableName
+tempTableNameUpdated = TempTableName "updated"
+
+-- | A name of a regular table or temporary table
+data SomeTableName
+  = RegularTableName TableName
+  | TemporaryTableName TempTableName
+
 data TempTable = TempTable
-  { ttName :: !TempTableName,
-    ttColumns :: ![ColumnName]
+  { ttName :: TempTableName,
+    ttColumns :: [ColumnName]
   }
 
+-- | A version of `Select` without a `FROM` clause. This means it can only project expressions already selected in adjacent join clauses, hence the name @reselect@.
 data Reselect = Reselect
-  { reselectProjections :: ![Projection],
-    reselectFor :: !For,
-    reselectWhere :: !Where
+  { reselectProjections :: [Projection],
+    reselectFor :: For,
+    reselectWhere :: Where
   }
 
 data OrderBy = OrderBy
@@ -268,8 +366,8 @@ data Projection
   | StarProjection
 
 data Join = Join
-  { joinSource :: !JoinSource,
-    joinJoinAlias :: !JoinAlias
+  { joinSource :: JoinSource,
+    joinJoinAlias :: JoinAlias
   }
 
 data JoinSource
@@ -306,19 +404,30 @@ data Expression
     -- it.
     JsonQueryExpression Expression
   | ToStringExpression Expression
-  | -- expression.text(e1, e2, ..)
-    MethodExpression !Expression !Text ![Expression]
+  | MethodApplicationExpression Expression MethodApplicationExpression
+  | FunctionApplicationExpression FunctionApplicationExpression
   | -- | This is for getting actual atomic values out of a JSON
     -- string.
     JsonValueExpression Expression JsonPath
   | OpExpression Op Expression Expression
   | ListExpression [Expression]
   | STOpExpression SpatialOp Expression Expression
-  | CastExpression Expression Text
+  | CastExpression Expression ScalarType DataLength
   | -- | "CASE WHEN (expression) THEN (expression) ELSE (expression) END"
     ConditionalExpression Expression Expression Expression
   | -- | The 'DEFAULT' value. TODO: Make this as a part of @'ODBC.Value'.
     DefaultExpression
+
+-- | Data type describing the length of a datatype. Used in 'CastExpression's.
+data DataLength = DataLengthUnspecified | DataLengthInt Int | DataLengthMax
+
+-- | SQL functions application: @some_function(e1, e2, ..)@.
+data FunctionApplicationExpression
+  = FunExpISNULL Expression Expression -- ISNULL
+
+-- | Object expression method application: @(expression).text(e1, e2, ..)@
+data MethodApplicationExpression
+  = MethExpSTAsText -- STAsText
 
 data JsonPath
   = RootPath
@@ -327,13 +436,13 @@ data JsonPath
 
 data Aggregate
   = CountAggregate (Countable FieldName)
-  | OpAggregate !Text [Expression]
-  | TextAggregate !Text
+  | OpAggregate Text [Expression]
+  | TextAggregate Text
 
 data Countable name
   = StarCountable
-  | NonNullFieldCountable (NonEmpty name)
-  | DistinctCountable (NonEmpty name)
+  | NonNullFieldCountable name
+  | DistinctCountable name
 
 deriving instance Functor Countable
 
@@ -356,24 +465,21 @@ data JsonFieldSpec
   | UuidField Text (Maybe JsonPath)
 
 data Aliased a = Aliased
-  { aliasedThing :: !a,
-    aliasedAlias :: !Text
+  { aliasedThing :: a,
+    aliasedAlias :: Text
   }
 
-newtype SchemaName = SchemaName
-  { schemaNameParts :: [Text]
-  }
+newtype SchemaName = SchemaName {_unSchemaName :: Text}
+  deriving (Show, Eq, Ord, Data, J.ToJSON, J.FromJSON, NFData, Generic, Cacheable, IsString, Hashable, Lift)
 
 data TableName = TableName
   { tableName :: !Text,
-    tableSchema :: !Text
+    tableSchema :: !SchemaName
   }
-
-type FunctionName = Text -- TODO: Improve this type when SQL function support added to MSSQL
 
 data FieldName = FieldName
   { fieldName :: Text,
-    fieldNameEntity :: !Text
+    fieldNameEntity :: Text
   }
 
 data Comment = DueToPermission | RequestedSingleObject
@@ -433,10 +539,10 @@ data ScalarType
   | GuidType
   | GeographyType
   | GeometryType
-  | UnknownType !Text
+  | UnknownType Text
 
-scalarTypeDBName :: ScalarType -> Text
-scalarTypeDBName = \case
+scalarTypeDBName :: DataLength -> ScalarType -> Text
+scalarTypeDBName dataLength = \case
   CharType -> "char"
   NumericType -> "numeric"
   DecimalType -> "decimal"
@@ -446,14 +552,14 @@ scalarTypeDBName = \case
   RealType -> "real"
   DateType -> "date"
   Ss_time2Type -> "time"
-  VarcharType -> "varchar"
+  VarcharType -> "varchar" <> fromDataLength dataLength
   WcharType -> "nchar"
-  WvarcharType -> "nvarchar"
+  WvarcharType -> "nvarchar" <> fromDataLength dataLength
   WtextType -> "ntext"
   TextType -> "text"
   TimestampType -> "timestamp"
   BinaryType -> "binary"
-  VarbinaryType -> "varbinary"
+  VarbinaryType -> "varbinary" <> fromDataLength dataLength
   BigintType -> "bigint"
   TinyintType -> "tinyint"
   BitType -> "bit"
@@ -462,6 +568,12 @@ scalarTypeDBName = \case
   GeometryType -> "geometry"
   -- the input form for types that aren't explicitly supported is a string
   UnknownType t -> t
+
+fromDataLength :: DataLength -> Text
+fromDataLength = \case
+  DataLengthUnspecified -> ""
+  DataLengthInt len -> "(" <> tshow len <> ")"
+  DataLengthMax -> "(max)"
 
 mkMSSQLScalarTypeName :: MonadError QErr m => ScalarType -> m G.Name
 mkMSSQLScalarTypeName = \case
@@ -477,10 +589,10 @@ mkMSSQLScalarTypeName = \case
   -- boolean type
   BitType -> pure RQL.boolScalar
   scalarType ->
-    G.mkName (scalarTypeDBName scalarType)
+    G.mkName (scalarTypeDBName DataLengthUnspecified scalarType)
       `onNothing` throw400
         ValidationFailed
-        ( "cannot use SQL type " <> scalarTypeDBName scalarType <> " in the GraphQL schema because its name is not a "
+        ( "cannot use SQL type " <> scalarTypeDBName DataLengthUnspecified scalarType <> " in the GraphQL schema because its name is not a "
             <> "valid GraphQL identifier"
         )
 
@@ -557,7 +669,7 @@ getGQLTableName tn = do
       "cannot include " <> textName <> " in the GraphQL schema because it is not a valid GraphQL identifier"
 
 snakeCaseTableName :: TableName -> Text
-snakeCaseTableName TableName {tableName, tableSchema} =
+snakeCaseTableName (TableName tableName (SchemaName tableSchema)) =
   if tableSchema == "dbo"
     then tableName
     else tableSchema <> "_" <> tableName

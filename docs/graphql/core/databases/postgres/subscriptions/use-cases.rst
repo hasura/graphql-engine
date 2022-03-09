@@ -2,7 +2,7 @@
    :description: Use cases for Hasura subscriptions
    :keywords: hasura, docs, subscription, use case
 
-.. _subscription_use_cases:
+.. _pg_subscription_use_cases:
 
 Subscriptions sample use cases
 ==============================
@@ -17,7 +17,7 @@ Introduction
 
 The following are a few use cases for using subscriptions:
 
-.. _subscribe_field:
+.. _pg_subscribe_field:
 
 Subscribe to the latest value of a particular field
 ---------------------------------------------------
@@ -30,7 +30,7 @@ Example: Live location tracking
 
 Use subscriptions to show the current location of a vehicle on a map.
 
-Let's say we have the following database schema:
+Let's say we have the following database schema:  
 
 .. code-block:: sql
 
@@ -42,7 +42,7 @@ Let's say we have the following database schema:
   vehicle_location (
     id INT PRIMARY KEY,
     location TEXT,
-    timestamp TIMESTAMP,
+    time_stamp TIMESTAMP with time zone DEFAULT now(),
     /* used to create relationship 'locations' for vehicle */
     vehicle_id INT FOREIGN KEY REFERENCES vehicle(id)
   )
@@ -57,9 +57,9 @@ Now we can use the following subscription to fetch the latest location of a vehi
       vehicle(where: {id: {_eq: $vehicleId}}) {
         id
         vehicle_number
-        locations(order_by: {timestamp: desc}, limit: 1) {
+        locations(order_by: {time_stamp: desc}, limit: 1) {
           location
-          timestamp
+          time_stamp
         }
       }
     }
@@ -73,19 +73,19 @@ Now we can use the following subscription to fetch the latest location of a vehi
             "locations": [
               {
                 "location": "(12.93623,77.61701)",
-                "timestamp": "2018-09-05T06:52:44.383588+00:00"
+                "time_stamp": "2018-09-05T06:52:44.383588+00:00"
               }
             ]
           }
         ]
       }
     }
+  :variables:
+   {
+     "vehicleId": 3
+   }
 
-
-Check this `sample app <https://realtime-location-tracking.demo.hasura.app/>`__ for a working demo
-(`source code <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-location-tracking>`__).
-
-.. _subscribe_table:
+.. _pg_subscribe_table:
 
 Subscribe to changes to a table's entries
 -----------------------------------------
@@ -109,9 +109,9 @@ Let's say we have the following database schema:
 
   message (
     id INT PRIMARY KEY,
-    text TEXT,
-    timestamp TIMESTAMP,
-    /* used to create relationship 'author' for message */
+    texts TEXT,
+    time_stamp TIMESTAMP default now(),
+    /* used to create relationship 'author' with the 'user' table */
     user_id INT FOREIGN KEY REFERENCES user(id)
   )
 
@@ -121,9 +121,9 @@ Now we can use the following subscription to display the latest messages in a ch
   :view_only:
   :query:
     subscription getMessages {
-      message(order_by: {timestamp: desc}) {
-        text
-        timestamp
+      message(order_by: {time_stamp: desc}) {
+        texts
+        time_stamp
         author {
           username
         }
@@ -134,22 +134,22 @@ Now we can use the following subscription to display the latest messages in a ch
       "data": {
         "message": [
           {
-            "text": "I am fine.",
-            "timestamp": "2018-09-05T10:52:23.522223+00:00",
+            "texts": "I am fine, and you?",
+            "time_stamp": "2021-11-29T07:42:56.689135",
             "author": {
               "username": "Jane"
             }
           },
           {
-            "text": "Hi! How are you?",
-            "timestamp": "2018-09-05T10:52:04.75283+00:00",
+            "texts": "Hi! How are you?",
+            "time_stamp": "2021-11-29T07:42:19.506049",
             "author": {
-              "username": "Jose"
+              "username": "Musk"
             },
           },
           {
-            "text": "Hi!",
-            "timestamp": "2018-09-05T10:51:43.622839+00:00",
+            "texts": "Hi!",
+            "time_stamp": "2021-11-29T07:38:52.347136",
             "author": {
               "username": "Jane"
             }
@@ -158,16 +158,13 @@ Now we can use the following subscription to display the latest messages in a ch
       }
     }
 
-Check this `sample app <https://realtime-chat.demo.hasura.app/>`__ for a working demo
-(`source code <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-chat>`__).
-
-.. _subscribe_derived:
+.. _pg_subscribe_derived:
 
 Subscribe to the latest value of some derived data
 --------------------------------------------------
 
 In case you are interested in the latest value of some derived data, you can :ref:`create a view to query the derived
-data <custom_views>` and then use subscriptions to fetch the derived value and get its latest value
+data <pg_custom_views>` and then use subscriptions to fetch the derived value and get its latest value
 whenever it updates.
 
 Example: A poll dashboard
@@ -187,7 +184,7 @@ Let's say we have the following database schema:
   option (
     id INT PRIMARY KEY
     poll_id INT FOREIGN KEY REFERENCES poll(id)
-    text TEXT
+    texts TEXT
   )
 
   user (
@@ -199,7 +196,7 @@ Let's say we have the following database schema:
     id INT PRIMARY KEY,
     option_id INT FOREIGN KEY REFERENCES option(id),
     user_id INT FOREIGN KEY REFERENCES user(id),
-    timestamp TIMESTAMP
+    time_stamp TIMESTAMP
   )
 
 First, create a view ``poll_results`` to give the result of the poll:
@@ -214,7 +211,7 @@ First, create a view ``poll_results`` to give the result of the poll:
         (
           SELECT vote.option_id,
                  option.poll_id,
-                 option.text
+                 option.texts
             FROM (
               vote
                 LEFT JOIN option ON ((option.id = vote.option_id))
@@ -227,7 +224,7 @@ First, create a view ``poll_results`` to give the result of the poll:
 This view will have the following fields: ``poll_id``, ``option_id`` and ``votes``, i.e. it gives the number of votes
 received by each option for a poll.
 
-Next, :ref:`set up relationships <table_relationships>` ``poll`` and ``option`` between the ``poll_results`` view
+Next, :ref:`set up relationships <pg_table_relationships>` ``poll`` and ``option`` between the ``poll_results`` view
 and the ``poll`` and ``option`` tables using the ``poll_id`` and ``option_id`` fields respectively.
 
 Now we can use the following subscription to display the latest poll result:
@@ -241,8 +238,11 @@ Now we can use the following subscription to display the latest poll result:
         where: { poll_id: {_eq: $pollId} }
       ) {
         poll_id
+        poll {
+          question    
+        }
         option {
-          text
+          texts
         }
         votes
       }
@@ -253,42 +253,58 @@ Now we can use the following subscription to display the latest poll result:
         "poll_results": [
           {
             "poll_id": 1,
-            "votes": 1,
+            "poll":{
+              "question": "What's your favourite food?"
+            },
             "option": {
-              "text": "Pizza"
-            }
+              "texts": "Pizza"
+            },
+            "votes": 1
           },
           {
             "poll_id": 1,
-            "votes": 1,
+            "poll":{
+              "question": "What's your favourite food?"
+            },
             "option": {
-              "text": "Salad"
-            }
+              "texts": "Salad"
+            },
+            "votes": 1
           },
           {
             "poll_id": 1,
-            "votes": 2,
+            "poll":{
+              "question": "What's your favourite food?"
+            },
             "option": {
-              "text": "Sandwich"
-            }
+              "texts": "Sandwich"
+            },
+            "votes": 2
           },
           {
             "poll_id": 1,
-            "votes": 3,
+            "poll":{
+              "question": "What's your favourite food?"
+            },
             "option": {
-              "text": "Burger"
-            }
+              "texts": "Burger"
+            },           
+            "votes": 3
           },
           {
             "poll_id": 1,
-            "votes": 1,
+            "poll":{
+              "question": "What's your favourite food?"
+            },
             "option": {
-              "text": "Lasagna"
-            }
+              "texts": "Lasagna"
+            },
+            "votes": 1
           }
         ]
       }
     }
-
-Check this `sample app <https://realtime-poll.demo.hasura.app/>`__ for a working demo
-(`source code <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-poll>`__).
+  :variables:
+   {
+     "pollId": 1
+   }

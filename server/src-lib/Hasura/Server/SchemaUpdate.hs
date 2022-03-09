@@ -19,7 +19,6 @@ import Data.Aeson.Casing
 import Data.Aeson.TH
 import Data.HashMap.Strict qualified as HM
 import Data.HashSet qualified as HS
-import Data.IORef
 import Database.PG.Query qualified as Q
 import Hasura.Base.Error
 import Hasura.Logging
@@ -29,8 +28,12 @@ import Hasura.RQL.DDL.Schema (runCacheRWT)
 import Hasura.RQL.DDL.Schema.Catalog
 import Hasura.RQL.Types
 import Hasura.RQL.Types.Run
-import Hasura.Server.App (SchemaCacheRef (..), withSCUpdate)
 import Hasura.Server.Logging
+import Hasura.Server.SchemaCacheRef
+  ( SchemaCacheRef,
+    readSchemaCacheRef,
+    withSchemaCacheUpdate,
+  )
 import Hasura.Server.Types (InstanceId (..))
 import Hasura.Session
 import Network.HTTP.Client qualified as HTTP
@@ -318,39 +321,44 @@ refreshSchemaCache
   serverConfigCtx
   logTVar = do
     respErr <- runExceptT $
-      withSCUpdate cacheRef logger (Just logTVar) $ do
-        rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
+      withSchemaCacheUpdate cacheRef logger (Just logTVar) $ do
+        rebuildableCache <- liftIO $ fst <$> readSchemaCacheRef cacheRef
         (msg, cache, _) <- peelRun runCtx $
           runCacheRWT rebuildableCache $ do
             schemaCache <- askSchemaCache
-            let engineResourceVersion = fromMaybe 0 $ scMetadataResourceVersion schemaCache -- TODO: Can we remove the maybe from scMetadataResourceVersion?
-            unless (engineResourceVersion == resourceVersion) $ do
-              (metadata, latestResourceVersion) <- fetchMetadata
-              notifications <- fetchMetadataNotifications engineResourceVersion instanceId
+            case scMetadataResourceVersion schemaCache of
+              -- While starting up, the metadata resource version is set to nothing, so we want to set the version
+              -- without fetching the database metadata (as we have already fetched it during the startup, so, we
+              -- skip fetching it twice)
+              Nothing -> setMetadataResourceVersionInSchemaCache resourceVersion
+              Just engineResourceVersion ->
+                unless (engineResourceVersion == resourceVersion) $ do
+                  (metadata, latestResourceVersion) <- fetchMetadata
+                  notifications <- fetchMetadataNotifications engineResourceVersion instanceId
 
-              logDebug logger threadType $ "DEBUG: refreshSchemaCache Called: engineResourceVersion: " <> show engineResourceVersion <> ", fresh resource version: " <> show latestResourceVersion
-              case notifications of
-                [] -> do
-                  logInfo logger threadType $ object ["message" .= ("Schema Version changed with no notifications" :: Text)]
-                  setMetadataResourceVersionInSchemaCache latestResourceVersion
-                _ -> do
-                  let cacheInvalidations =
-                        if any ((== (engineResourceVersion + 1)) . fst) notifications
-                          then -- If (engineResourceVersion + 1) is in the list of notifications then
-                          -- we know that we haven't missed any.
-                            mconcat $ snd <$> notifications
-                          else -- Otherwise we may have missed some notifications so we need to invalidate the
-                          -- whole cache.
+                  logDebug logger threadType $ "DEBUG: refreshSchemaCache Called: engineResourceVersion: " <> show engineResourceVersion <> ", fresh resource version: " <> show latestResourceVersion
+                  case notifications of
+                    [] -> do
+                      logInfo logger threadType $ object ["message" .= ("Schema Version changed with no notifications" :: Text)]
+                      setMetadataResourceVersionInSchemaCache latestResourceVersion
+                    _ -> do
+                      let cacheInvalidations =
+                            if any ((== (engineResourceVersion + 1)) . fst) notifications
+                              then -- If (engineResourceVersion + 1) is in the list of notifications then
+                              -- we know that we haven't missed any.
+                                mconcat $ snd <$> notifications
+                              else -- Otherwise we may have missed some notifications so we need to invalidate the
+                              -- whole cache.
 
-                            CacheInvalidations
-                              { ciMetadata = True,
-                                ciRemoteSchemas = HS.fromList $ getAllRemoteSchemas schemaCache,
-                                ciSources = HS.fromList $ HM.keys $ scSources schemaCache
-                              }
-                  logInfo logger threadType $ object ["currentVersion" .= engineResourceVersion, "latestResourceVersion" .= latestResourceVersion]
-                  buildSchemaCacheWithOptions CatalogSync cacheInvalidations metadata
-                  setMetadataResourceVersionInSchemaCache latestResourceVersion
-                  logInfo logger threadType $ object ["message" .= ("Schema Version changed with notifications" :: Text)]
+                                CacheInvalidations
+                                  { ciMetadata = True,
+                                    ciRemoteSchemas = HS.fromList $ getAllRemoteSchemas schemaCache,
+                                    ciSources = HS.fromList $ HM.keys $ scSources schemaCache
+                                  }
+                      logInfo logger threadType $ object ["currentVersion" .= engineResourceVersion, "latestResourceVersion" .= latestResourceVersion]
+                      buildSchemaCacheWithOptions CatalogSync cacheInvalidations metadata
+                      setMetadataResourceVersionInSchemaCache latestResourceVersion
+                      logInfo logger threadType $ object ["message" .= ("Schema Version changed with notifications" :: Text)]
         pure (msg, cache)
     onLeft respErr (logError logger threadType . TEQueryError)
     where

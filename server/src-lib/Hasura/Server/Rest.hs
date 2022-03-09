@@ -9,7 +9,7 @@ import Data.Aeson hiding (json)
 import Data.Aeson qualified as J
 import Data.Align qualified as Align
 import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict.Extended qualified as M
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
 import Data.Text.Extended
@@ -67,7 +67,7 @@ resolveVar varName (These expectedVar providedVar) =
               | typeName == $$(G.litName "uuid") -> Right $ Just $ J.String l
               | typeName == idScalar -> Right $ Just $ J.String l -- "ID" -- Note: Console doesn't expose this as a column type.
               | otherwise -> case decoded of
-                (Just (J.Null)) -> Left $ "Null or missing value for non-nullable variable: " <> G.unName varName
+                (Just J.Null) -> Left $ "Null or missing value for non-nullable variable: " <> G.unName varName
                 (Just x@(J.Bool _))
                   | typeName == boolScalar -> pure $ Just x -- "Boolean"
                   | typeName == $$(G.litName "Bool") -> pure $ Just x
@@ -84,7 +84,9 @@ resolveVar varName (These expectedVar providedVar) =
     -- TODO: This is a fallthrough case and is still required
     --       but we can move checks for template variables being
     --       scalars into the schema-cache construction.
-    _ -> Left ("The variable type for the expected variable " <> toTxt @G.Name varName <> " was not supported.")
+    G.TypeList _ _ -> case providedVar of
+      Right r -> Right (Just r)
+      Left l -> Left ("The variable type for the expected variable " <> toTxt @G.Name varName <> ", with value " <> tshow l <> " is not supported.")
 
 mkPassthroughRequest :: EndpointMetadata GQLQueryWithText -> VariableValues -> GQLReq GQLQueryText
 mkPassthroughRequest queryx resolvedVariables =
@@ -153,7 +155,7 @@ runCustomEndpoint env execCtx requestId userInfo reqHeaders ipAddress RestReques
 
               resolvedVariablesMaybe <- joinedVars `onLeft` throw400 BadRequest
 
-              let resolvedVariables = M.mapMaybe id resolvedVariablesMaybe
+              let resolvedVariables = M.catMaybes resolvedVariablesMaybe
 
               -- Construct a graphql query by pairing the resolved variables
               -- with the query string from the schema cache, and pass it

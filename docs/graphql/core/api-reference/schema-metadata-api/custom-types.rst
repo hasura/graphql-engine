@@ -2,10 +2,17 @@
    :description: Define custom types with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, custom types
 
-.. _api_custom_types:
+.. _schema_metadata_api_custom_types:
 
 Schema/Metadata API Reference: Custom Types (Deprecated)
 ========================================================
+
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
 .. contents:: Table of contents
   :backlinks: none
@@ -15,16 +22,9 @@ Schema/Metadata API Reference: Custom Types (Deprecated)
 Introduction
 ------------
 
-**Custom Types** are user-defined GraphQL types which help to define :ref:`Actions <api_actions>`.
+**Custom Types** are user-defined GraphQL types which help to define :ref:`Actions <schema_metadata_api_actions>`.
 
-.. admonition:: Deprecation
-
-  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
-  :ref:`metadata API <metadata_apis>`.
-
-  Though for backwards compatibility, the schema/metadata APIs will continue to function.
-
-.. _set_custom_types:
+.. _schema_metadata_set_custom_types:
 
 set_custom_types
 ----------------
@@ -83,7 +83,7 @@ set_custom_types
    }
 
 
-.. _set_custom_types_syntax:
+.. _schema_metadata_set_custom_types_syntax:
 
 Args syntax
 ^^^^^^^^^^^

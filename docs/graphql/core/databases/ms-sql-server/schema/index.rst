@@ -31,6 +31,7 @@ MS SQL Server constructs.
   Tables basics <tables>
   Table relationships <table-relationships/index>
   Extend with views <views>
+  Default field values <default-values/index>
   Customise auto-generated fields <custom-field-names>
   Using an existing database <using-existing-database>
 
@@ -43,7 +44,6 @@ MS SQL Server constructs.
     Remote relationships <remote-relationships/index>
     Extend with views <views>
     Extend with SQL functions <custom-functions>
-    Default field values <default-values/index>
     Enum type fields <enums>
     Computed fields <computed-fields>
     Customise auto-generated fields <custom-field-names>

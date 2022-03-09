@@ -1,0 +1,74 @@
+- description: Update actions webhook to another route which returns object
+    response
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: update_action
+    args:
+      name: scalar_response
+      definition:
+        kind: synchronous
+        arguments:
+        - name: email
+          type: String!
+        - name: name
+          type: String!
+        output_type: String!
+        handler: http://127.0.0.1:5593/create-user
+
+- description: Run scalar-response sync action
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      mutation {
+        scalar_response(email: "clarke@gmail.com", name: "Clarke")
+      }
+
+  response:
+    errors:
+    - extensions:
+        internal:
+          error: unexpected response
+          response:
+            status: 200
+            body: 
+              id: 1
+            headers:
+            - value: application/json
+              name: Content-Type
+            - value: abcd
+              name: Set-Cookie
+          request:
+            body:
+              session_variables:
+                x-hasura-role: admin
+              input:
+                email: clarke@gmail.com
+                name: Clarke
+              action:
+                name: scalar_response
+              request_query: "mutation {\n  scalar_response(email: \"clarke@gmail.com\", name: \"\
+                Clarke\")\n}\n"
+            url: http://127.0.0.1:5593/create-user
+            headers: []
+            transformed_request:
+        path: $
+        code: unexpected
+      message: got object for the action webhook response, might want to check the action return type defined!
+- description: Revert action wehbook
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: update_action
+    args:
+      name: scalar_response
+      definition:
+        kind: synchronous
+        arguments:
+        output_type: String!
+        handler: http://127.0.0.1:5593/scalar-response

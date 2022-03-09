@@ -3,6 +3,7 @@ module Harness.Http
   ( get_,
     postValue_,
     healthCheck,
+    Http.RequestHeaders,
   )
 where
 
@@ -13,9 +14,9 @@ import Data.ByteString.Lazy.Char8 qualified as L8
 import Data.String
 import GHC.Stack
 import Harness.Constants qualified as Constants
+import Hasura.Prelude
 import Network.HTTP.Simple qualified as Http
 import Network.HTTP.Types qualified as Http
-import Prelude
 
 --------------------------------------------------------------------------------
 -- API
@@ -31,39 +32,39 @@ get_ url = do
 
 -- | Post the JSON to the given URL, and produces a very descriptive
 -- exception on failure.
-postValue_ :: HasCallStack => String -> Value -> IO Value
-postValue_ url value = do
+postValue_ :: HasCallStack => String -> Http.RequestHeaders -> Value -> IO Value
+postValue_ url headers value = do
   let request =
-        Http.setRequestMethod
-          Http.methodPost
-          (Http.setRequestBodyJSON value (fromString url))
+        Http.setRequestHeaders headers $
+          Http.setRequestMethod Http.methodPost $
+            Http.setRequestBodyJSON value (fromString url)
   response <- Http.httpLbs request
+  let requestBodyString = L8.unpack $ encode value
+      responseBodyString = L8.unpack $ Http.getResponseBody response
   if Http.getResponseStatusCode response == 200
-    then case eitherDecode (Http.getResponseBody response) of
-      Left err ->
-        error
-          ( unlines
-              [ "In request: " ++ url,
-                "With body:",
-                L8.unpack (encode value),
-                "Couldn't decode JSON body:",
-                err,
-                "Body was:",
-                L8.unpack (Http.getResponseBody response)
-              ]
-          )
-      Right val -> pure val
-    else
-      error
-        ( unlines
-            [ "Non-200 response code from HTTP request: ",
-              url,
+    then
+      eitherDecode (Http.getResponseBody response)
+        `onLeft` \err ->
+          reportError
+            [ "In request: " ++ url,
               "With body:",
-              L8.unpack (encode value),
-              "Response body is:",
-              L8.unpack (Http.getResponseBody response)
+              requestBodyString,
+              "Couldn't decode JSON body:",
+              err,
+              "Body was:",
+              responseBodyString
             ]
-        )
+    else
+      reportError
+        [ "Non-200 response code from HTTP request: ",
+          url,
+          "With body:",
+          requestBodyString,
+          "Response body is:",
+          responseBodyString
+        ]
+  where
+    reportError = error . unlines
 
 -- | Wait for a service to become healthy.
 healthCheck :: HasCallStack => String -> IO ()

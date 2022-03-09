@@ -62,10 +62,6 @@
   width: 80%;
 }
 
-.wrapperOnBoarding {
-  // width: 80% !important;
-}
-
 .panelGreyed {
   opacity: 0.1;
 }
@@ -74,21 +70,16 @@
   opacity: 0.1;
 }
 
-.panelInFocus {
-}
-
-.requestInFocus {
-}
-
 .apiRequestBody {
-  min-height: calc(100vh - 54px);
-  padding-bottom:32px;
+  min-height: calc(100vh - 400px);
+  height: 100%;
+  padding-bottom: 40px;
 }
 
 .apiExplorerWrapper {
   margin-top: 20px;
   display: flex;
-  height: $mainContainerHeight;
+  height: calc(100vh - 126px);
 
   .ApiRequestWrapperVH {
     height: 100%;

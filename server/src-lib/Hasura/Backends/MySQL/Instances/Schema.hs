@@ -18,6 +18,7 @@ import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Internal.Parser hiding (field)
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Build qualified as GSB
+import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Select
 import Hasura.Prelude
 import Hasura.RQL.IR
@@ -41,23 +42,21 @@ instance BackendSchema 'MySQL where
   jsonPathArg = jsonPathArg'
   orderByOperators = orderByOperators'
   comparisonExps = comparisonExps'
-  mkCountType = error "mkCountType: MySQL backend does not support this operation yet."
+  countTypeInput = mysqlCountTypeInput
   aggregateOrderByCountType = error "aggregateOrderByCountType: MySQL backend does not support this operation yet."
   computedField = error "computedField: MySQL backend does not support this operation yet."
   node = error "node: MySQL backend does not support this operation yet."
   columnDefaultValue = error "columnDefaultValue: MySQL backend does not support this operation yet."
-  getExtraInsertData = const ()
 
 mysqlTableArgs ::
   forall r m n.
   MonadBuildSchema 'MySQL r m n =>
   SourceName ->
   TableInfo 'MySQL ->
-  SelPermInfo 'MySQL ->
   m (InputFieldsParser n (IR.SelectArgsG 'MySQL (UnpreparedValue 'MySQL)))
-mysqlTableArgs sourceName tableInfo selectPermissions = do
-  whereParser <- tableWhereArg sourceName tableInfo selectPermissions
-  orderByParser <- tableOrderByArg sourceName tableInfo selectPermissions
+mysqlTableArgs sourceName tableInfo = do
+  whereParser <- tableWhereArg sourceName tableInfo
+  orderByParser <- tableOrderByArg sourceName tableInfo
   pure do
     whereArg <- whereParser
     orderByArg <- orderByParser
@@ -79,22 +78,19 @@ buildTableRelayQueryFields' ::
   TableInfo 'MySQL ->
   G.Name ->
   NESeq (ColumnInfo 'MySQL) ->
-  SelPermInfo 'MySQL ->
   m [a]
-buildTableRelayQueryFields' _sourceName _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
+buildTableRelayQueryFields' _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
   pure []
 
 buildTableInsertMutationFields' ::
   MonadBuildSchema 'MySQL r m n =>
+  Scenario ->
   SourceName ->
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
   G.Name ->
-  InsPermInfo 'MySQL ->
-  Maybe (SelPermInfo 'MySQL) ->
-  Maybe (UpdPermInfo 'MySQL) ->
   m [a]
-buildTableInsertMutationFields' _sourceName _tableName _tableInfo _gqlName _insPerms _selPerms _updPerms =
+buildTableInsertMutationFields' _scenario _sourceName _tableName _tableInfo _gqlName =
   pure []
 
 buildTableUpdateMutationFields' ::
@@ -103,10 +99,8 @@ buildTableUpdateMutationFields' ::
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
   G.Name ->
-  UpdPermInfo 'MySQL ->
-  Maybe (SelPermInfo 'MySQL) ->
   m [a]
-buildTableUpdateMutationFields' _sourceName _tableName _tableInfo _gqlName _updPerns _selPerms =
+buildTableUpdateMutationFields' _sourceName _tableName _tableInfo _gqlName =
   pure []
 
 buildTableDeleteMutationFields' ::
@@ -115,10 +109,8 @@ buildTableDeleteMutationFields' ::
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
   G.Name ->
-  DelPermInfo 'MySQL ->
-  Maybe (SelPermInfo 'MySQL) ->
   m [a]
-buildTableDeleteMutationFields' _sourceName _tableName _tableInfo _gqlName _delPerns _selPerms =
+buildTableDeleteMutationFields' _sourceName _tableName _tableInfo _gqlName =
   pure []
 
 buildFunctionQueryFields' ::
@@ -127,9 +119,8 @@ buildFunctionQueryFields' ::
   FunctionName 'MySQL ->
   FunctionInfo 'MySQL ->
   RQL.TableName 'MySQL ->
-  SelPermInfo 'MySQL ->
   m [a]
-buildFunctionQueryFields' _ _ _ _ _ =
+buildFunctionQueryFields' _ _ _ _ =
   pure []
 
 buildFunctionRelayQueryFields' ::
@@ -139,9 +130,8 @@ buildFunctionRelayQueryFields' ::
   FunctionInfo 'MySQL ->
   RQL.TableName 'MySQL ->
   NESeq (ColumnInfo 'MySQL) ->
-  SelPermInfo 'MySQL ->
   m [a]
-buildFunctionRelayQueryFields' _sourceName _functionName _functionInfo _tableName _pkeyColumns _selPerms =
+buildFunctionRelayQueryFields' _sourceName _functionName _functionInfo _tableName _pkeyColumns =
   pure []
 
 buildFunctionMutationFields' ::
@@ -150,9 +140,8 @@ buildFunctionMutationFields' ::
   FunctionName 'MySQL ->
   FunctionInfo 'MySQL ->
   RQL.TableName 'MySQL ->
-  SelPermInfo 'MySQL ->
   m [a]
-buildFunctionMutationFields' _ _ _ _ _ =
+buildFunctionMutationFields' _ _ _ _ =
   pure []
 
 bsParser :: MonadParse m => Parser 'Both m ByteString
@@ -185,7 +174,7 @@ columnParser' columnType (G.Nullability isNullable) =
       MySQL.Timestamp -> pure $ possiblyNullable scalarType $ MySQL.TimestampValue <$> P.string
       _ -> do
         name <- MySQL.mkMySQLScalarTypeName scalarType
-        let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
+        let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing P.TIScalar
         pure $
           Parser
             { pType = schemaType,
@@ -207,11 +196,11 @@ columnParser' columnType (G.Nullability isNullable) =
       | otherwise = id
     mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, RQL.ScalarValue 'MySQL)
     mkEnumValue (RQL.EnumValue value, EnumValueInfo description) =
-      ( P.mkDefinition value (G.Description <$> description) P.EnumValueInfo,
+      ( P.Definition value (G.Description <$> description) P.EnumValueInfo,
         MySQL.VarcharValue $ G.unName value
       )
     throughJSON scalarName =
-      let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition scalarName Nothing P.TIScalar
+      let schemaType = P.TNamed P.NonNullable $ P.Definition scalarName Nothing P.TIScalar
        in Parser
             { pType = schemaType,
               pParser =
@@ -248,7 +237,7 @@ orderByOperators' =
       )
     ]
   where
-    define name desc = P.mkDefinition name (Just desc) P.EnumValueInfo
+    define name desc = P.Definition name (Just desc) P.EnumValueInfo
 
 -- | TODO: Make this as thorough as the one for MSSQL/PostgreSQL
 comparisonExps' ::
@@ -285,3 +274,20 @@ comparisonExps' = P.memoize 'comparisonExps $ \columnType -> do
 offsetParser' :: MonadParse n => Parser 'Both n (SQLExpression 'MySQL)
 offsetParser' =
   MySQL.ValueExpression . MySQL.BigValue . fromIntegral <$> P.int
+
+mysqlCountTypeInput ::
+  MonadParse n =>
+  Maybe (Parser 'Both n (Column 'MySQL)) ->
+  InputFieldsParser n (IR.CountDistinct -> CountType 'MySQL)
+mysqlCountTypeInput = \case
+  Just columnEnum -> do
+    columns <- P.fieldOptional $$(G.litName "columns") Nothing $ P.list columnEnum
+    pure $ flip mkCountType columns
+  Nothing -> pure $ flip mkCountType Nothing
+  where
+    mkCountType :: IR.CountDistinct -> Maybe [Column 'MySQL] -> CountType 'MySQL
+    mkCountType _ Nothing = MySQL.StarCountable
+    mkCountType IR.SelectCountDistinct (Just cols) =
+      maybe MySQL.StarCountable MySQL.DistinctCountable $ nonEmpty cols
+    mkCountType IR.SelectCountNonDistinct (Just cols) =
+      maybe MySQL.StarCountable MySQL.NonNullFieldCountable $ nonEmpty cols

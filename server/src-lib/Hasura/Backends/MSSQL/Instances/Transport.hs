@@ -1,5 +1,10 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
+-- | MSSQL Instances Transport
+--
+-- Defines the MSSQL instance of 'BackendTransport' and how to
+-- interact with the database for running queries, mutations, subscriptions,
+-- and so on.
 module Hasura.Backends.MSSQL.Instances.Transport () where
 
 import Data.Aeson qualified as J
@@ -7,9 +12,11 @@ import Data.ByteString qualified as B
 import Data.String (fromString)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Text.Extended
+import Database.MSSQL.Transaction (singleRowQueryE)
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Instances.Execute
+import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Backends.MSSQL.ToQuery
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -100,21 +107,21 @@ runSubscription ::
   [(CohortId, CohortVariables)] ->
   m (DiffTime, Either QErr [(CohortId, B.ByteString)])
 runSubscription sourceConfig (MultiplexedQuery' reselect) variables = do
-  let pool = _mscConnectionPool sourceConfig
+  let mssqlExecCtx = _mscExecCtx sourceConfig
       multiplexed = multiplexRootReselect variables reselect
       query = toQueryFlat $ fromSelect multiplexed
-  withElapsedTime $ runExceptT $ executeMultiplexedQuery pool query
+  withElapsedTime $ runExceptT $ executeMultiplexedQuery mssqlExecCtx query
 
 executeMultiplexedQuery ::
   MonadIO m =>
-  MSSQLPool ->
+  MSSQLExecCtx ->
   ODBC.Query ->
   ExceptT QErr m [(CohortId, B.ByteString)]
-executeMultiplexedQuery pool query = do
+executeMultiplexedQuery mssqlExecCtx query = do
   let parseResult r = J.eitherDecodeStrict (encodeUtf8 r) `onLeft` \s -> throw400 ParseFailed (fromString s)
       convertFromJSON :: [CohortResult] -> [(CohortId, B.ByteString)]
       convertFromJSON = map \(CohortResult (cid, cresult)) -> (cid, encodeUtf8 cresult)
-  textResult <- run $ runJSONPathQuery pool query
+  textResult <- run $ mssqlRunReadOnly mssqlExecCtx $ singleRowQueryE defaultMSSQLTxErrorHandler query
   parsedResult <- parseResult textResult
   pure $ convertFromJSON parsedResult
 

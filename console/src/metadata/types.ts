@@ -83,23 +83,28 @@ export interface TableEntry {
  */
 export interface CustomRootFields {
   /** Customise the `<table-name>` root field */
-  select?: string;
+  select?: string | CustomRootField | null;
   /** Customise the `<table-name>_by_pk` root field */
-  select_by_pk?: string;
+  select_by_pk?: string | CustomRootField | null;
   /** Customise the `<table-name>_aggregate` root field */
-  select_aggregate?: string;
+  select_aggregate?: string | CustomRootField | null;
   /** Customise the `insert_<table-name>` root field */
-  insert?: string;
+  insert?: string | CustomRootField | null;
   /** Customise the `insert_<table-name>_one` root field */
-  insert_one?: string;
+  insert_one?: string | CustomRootField | null;
   /** Customise the `update_<table-name>` root field */
-  update?: string;
+  update?: string | CustomRootField | null;
   /** Customise the `update_<table-name>_by_pk` root field */
-  update_by_pk?: string;
+  update_by_pk?: string | CustomRootField | null;
   /** Customise the `delete_<table-name>` root field */
-  delete?: string;
+  delete?: string | CustomRootField | null;
   /** Customise the `delete_<table-name>_by_pk` root field */
-  delete_by_pk?: string;
+  delete_by_pk?: string | CustomRootField | null;
+}
+
+export interface CustomRootField {
+  name?: string | null;
+  comment?: string | null;
 }
 
 /**
@@ -589,6 +594,20 @@ export interface RemoteSchemaDef {
 /**
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-relationships.html#args-syntax
  */
+export interface RemoteDBRelationship {
+  /** Name of the remote relationship */
+  name: string;
+  /** Definition object */
+  definition: {
+    to_source: {
+      relationship_type: string;
+      source: string;
+      table: { schema: string; name: string };
+      field_mapping: Record<string, string>;
+    };
+  };
+}
+
 export interface RemoteRelationship {
   /** Name of the remote relationship */
   name: RemoteRelationshipName;
@@ -606,6 +625,13 @@ export interface RemoteRelationshipDef {
   remote_schema: RemoteSchemaName;
   /** The schema tree ending at the field in remote schema which needs to be joined with. */
   remote_field: RemoteField;
+
+  to_source: {
+    relationship_type: string;
+    source: string;
+    table: QualifiedTable;
+    field_mapping: Record<string, string>;
+  };
 }
 
 /**
@@ -831,21 +857,32 @@ export type RequestTransformContentType =
   | 'application/x-www-form-urlencoded';
 
 export type RequestTransformHeaders = {
-  addHeaders: Record<string, string>;
-  removeHeaders: string[];
+  add_headers?: Record<string, string>;
+  remove_headers?: string[];
 };
 
 export type RequestTransformTemplateEngine = 'Kriti';
 
-export interface RequestTransform {
+interface RequestTransformFields {
   method?: Nullable<RequestTransformMethod>;
   url?: Nullable<string>;
-  body?: Nullable<string>;
   content_type?: Nullable<RequestTransformContentType>;
   request_headers?: Nullable<RequestTransformHeaders>;
   query_params?: Nullable<Record<string, string>>;
   template_engine?: Nullable<RequestTransformTemplateEngine>;
 }
+
+interface RequestTransformV1 extends RequestTransformFields {
+  version: 1;
+  body?: string;
+}
+
+interface RequestTransformV2 extends RequestTransformFields {
+  version: 2;
+  body?: Record<string, Nullable<string>>;
+}
+
+export type RequestTransform = RequestTransformV1 | RequestTransformV2;
 
 /**
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#actiondefinition
@@ -976,7 +1013,7 @@ export interface HasuraMetadataV2 {
 
 export interface MetadataDataSource {
   name: string;
-  kind?: 'postgres' | 'mysql' | 'mssql' | 'bigquery' | 'citus';
+  kind: 'postgres' | 'mysql' | 'mssql' | 'bigquery' | 'citus';
   configuration?: {
     connection_info?: SourceConnectionInfo;
     // pro-only feature
@@ -1018,7 +1055,6 @@ type APILimit<T> = {
   global: T;
   per_role?: Record<string, T>;
 };
-
 export interface HasuraMetadataV3 {
   version: 3;
   sources: MetadataDataSource[];

@@ -14,7 +14,7 @@ export default {
   title: 'Permissions Form/Components/Column Section',
   component: ColumnPermissionsSection,
   decorators: [
-    (S: React.FC) => (
+    (StoryComponent: React.FC) => (
       <Form
         schema={schema}
         onSubmit={() => {}}
@@ -24,10 +24,14 @@ export default {
           },
         }}
       >
-        {() => <S />}
+        {() => <StoryComponent />}
       </Form>
     ),
   ],
+  parameters: {
+    // Disable storybook for playground stories
+    chromatic: { disableSnapshot: true },
+  },
 } as Meta;
 
 const columns = ['id', 'name', 'description'];
@@ -39,7 +43,6 @@ Insert.args = {
   roleName: 'two',
   queryType: 'insert',
   columns,
-  defaultOpen: true,
 };
 
 export const Select: Story<ColumnPermissionsSectionProps> = args => (
@@ -110,3 +113,13 @@ AllSelected.decorators = [
     </Form>
   ),
 ];
+
+export const Showcase: Story<ColumnPermissionsSectionProps> = args => (
+  <ColumnPermissionsSection {...args} />
+);
+Showcase.args = {
+  ...Insert.args,
+};
+Showcase.parameters = {
+  chromatic: { disableSnapshot: false },
+};

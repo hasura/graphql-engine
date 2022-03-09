@@ -67,8 +67,7 @@ peelVariableWith locationHasDefaultValue locationType = \case
 -- Furthermore, it's also worth noting that there's one tricky case where we
 -- might allow a nullable variable at a non-nullable location: when either side
 -- has a non-null default value. That's because GraphQL conflates nullability
--- and optionality (see Note [Optional fields and nullability] for more
--- details).
+-- and optionality. See also Note [When are fields optional?].
 typeCheck :: MonadParse m => Bool -> GType -> Variable -> m ()
 typeCheck locationHasDefaultValue locationType variable@Variable {vInfo, vType} =
   unless (isVariableUsageAllowed locationHasDefaultValue locationType variable) $

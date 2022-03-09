@@ -47,7 +47,7 @@ import Hasura.QueryTags
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Server.Types (RequestId (..))
+import Hasura.Server.Types (ReadOnlyMode (..), RequestId (..))
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -56,12 +56,13 @@ import Network.HTTP.Types qualified as HTTP
 
 -- | Execution context
 data ExecutionCtx = ExecutionCtx
-  { _ecxLogger :: !(L.Logger L.Hasura),
-    _ecxSqlGenCtx :: !SQLGenCtx,
-    _ecxSchemaCache :: !SchemaCache,
-    _ecxSchemaCacheVer :: !SchemaCacheVer,
-    _ecxHttpManager :: !HTTP.Manager,
-    _ecxEnableAllowList :: !Bool
+  { _ecxLogger :: L.Logger L.Hasura,
+    _ecxSqlGenCtx :: SQLGenCtx,
+    _ecxSchemaCache :: SchemaCache,
+    _ecxSchemaCacheVer :: SchemaCacheVer,
+    _ecxHttpManager :: HTTP.Manager,
+    _ecxEnableAllowList :: Bool,
+    _ecxReadOnlyMode :: ReadOnlyMode
   }
 
 getExecPlanPartial ::
@@ -162,7 +163,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
       ( RootFieldMap
           ( Either
               (ActionId, (PGSourceConfig, EA.AsyncActionQuerySourceExecution (UnpreparedValue ('Postgres 'Vanilla))))
-              (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue)))
+              (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void UnpreparedValue)))
           ),
         RootFieldMap (ActionId, ActionLogResponse -> Either QErr EncJSON)
       ) ->
@@ -171,7 +172,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
         ( RootFieldMap
             ( Either
                 (ActionId, (PGSourceConfig, EA.AsyncActionQuerySourceExecution (UnpreparedValue ('Postgres 'Vanilla))))
-                (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue)))
+                (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void UnpreparedValue)))
             ),
           RootFieldMap (ActionId, ActionLogResponse -> Either QErr EncJSON)
         )
@@ -202,7 +203,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
     buildAction ::
       (SourceName, AB.AnyBackend (IR.SourceConfigWith b)) ->
       RootFieldMap
-        (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue))) ->
+        (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void UnpreparedValue))) ->
       RootFieldAlias ->
       ExceptT QErr IO (SourceName, LiveQueryPlan)
     buildAction (sourceName, exists) allFields rootFieldName = do
@@ -220,8 +221,8 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
       forall b m1.
       (Backend b, MonadError QErr m1) =>
       SourceName ->
-      (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot (Const Void) UnpreparedValue))) ->
-      m1 (IR.QueryDB b (Const Void) (UnpreparedValue b))
+      (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void UnpreparedValue))) ->
+      m1 (IR.QueryDB b Void (UnpreparedValue b))
     checkField sourceName (src, exists)
       | sourceName /= src = throw400 NotSupported "all fields of a subscription must be from the same source"
       | otherwise = case AB.unpackAnyBackend exists of
@@ -229,26 +230,27 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
         Just (IR.SourceConfigWith _ _ (IR.QDBR qdb)) -> pure qdb
 
 checkQueryInAllowlist ::
-  (MonadError QErr m) => Bool -> UserInfo -> GQLReqParsed -> SchemaCache -> m ()
-checkQueryInAllowlist enableAL userInfo req sc =
+  (MonadError QErr m) =>
+  Bool ->
+  AllowlistMode ->
+  UserInfo ->
+  GQLReqParsed ->
+  SchemaCache ->
+  m ()
+checkQueryInAllowlist allowlistEnabled allowlistMode userInfo req schemaCache =
   -- only for non-admin roles
   -- check if query is in allowlist
-  when (enableAL && (_uiRole userInfo /= adminRoleName)) $ do
-    let notInAllowlist =
-          not $ isQueryInAllowlist (_grQuery req) (scAllowlist sc)
-    when notInAllowlist $ modifyQErr modErr $ throw400 ValidationFailed "query is not allowed"
+  when (allowlistEnabled && role /= adminRoleName) do
+    let query = G.ExecutableDocument . unGQLExecDoc $ _grQuery req
+        allowlist = scAllowlist schemaCache
+        allowed = allowlistAllowsQuery allowlist allowlistMode role query
+    unless allowed $
+      modifyQErr modErr $ throw400 ValidationFailed "query is not allowed"
   where
+    role = _uiRole userInfo
     modErr e =
       let msg = "query is not in any of the allowlists"
        in e {qeInternal = Just $ ExtraInternal $ J.object ["message" J..= J.String msg]}
-
-    isQueryInAllowlist q = HS.member gqlQuery
-      where
-        gqlQuery =
-          GQLQuery $
-            G.ExecutableDocument $
-              stripTypenames $
-                unGQLExecDoc q
 
 getResolvedExecPlan ::
   forall m.
@@ -263,6 +265,7 @@ getResolvedExecPlan ::
   L.Logger L.Hasura ->
   UserInfo ->
   SQLGenCtx ->
+  ReadOnlyMode ->
   SchemaCache ->
   SchemaCacheVer ->
   ET.GraphQLQueryType ->
@@ -276,6 +279,7 @@ getResolvedExecPlan
   logger
   userInfo
   sqlGenCtx
+  readOnlyMode
   sc
   _scVer
   queryType
@@ -305,8 +309,10 @@ getResolvedExecPlan
               (scSetGraphqlIntrospectionOptions sc)
               reqId
               maybeOperationName
-          pure $ (parameterizedQueryHash, QueryExecutionPlan executionPlan queryRootFields dirMap)
+          pure (parameterizedQueryHash, QueryExecutionPlan executionPlan queryRootFields dirMap)
         G.TypedOperationDefinition G.OperationTypeMutation _ varDefs directives inlinedSelSet -> do
+          when (readOnlyMode == ReadOnlyModeEnabled) $
+            throw400 NotSupported "Mutations are not allowed when read-only mode is enabled"
           (executionPlan, parameterizedQueryHash) <-
             EM.convertMutationSelectionSet
               env
@@ -323,7 +329,7 @@ getResolvedExecPlan
               (scSetGraphqlIntrospectionOptions sc)
               reqId
               maybeOperationName
-          pure $ (parameterizedQueryHash, MutationExecutionPlan executionPlan)
+          pure (parameterizedQueryHash, MutationExecutionPlan executionPlan)
         G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives inlinedSelSet -> do
           -- Parse as query to check correctness
           (unpreparedAST, normalizedDirectives, normalizedSelectionSet) <-

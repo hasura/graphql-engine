@@ -182,7 +182,7 @@ func SquashCmd(m *migrate.Migrate, from uint64, to int64, version int64, name, d
 
 	err = createOptions.Create()
 	if err != nil {
-		return versions, errors.Wrap(err, "cannot create migration")
+		return versions, fmt.Errorf("cannot create migration: %w", err)
 	}
 
 	return

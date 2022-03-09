@@ -114,6 +114,7 @@ where
 import Control.Arrow.Extended (dup)
 import Control.Concurrent.Extended (Forever (..), sleep)
 import Control.Concurrent.STM
+import Control.Lens (view)
 import Data.Aeson qualified as J
 import Data.Environment qualified as Env
 import Data.Has
@@ -137,6 +138,7 @@ import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.EventTrigger (getHeaderInfosFromConf)
 import Hasura.RQL.DDL.Headers
+import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.Types
 import Hasura.SQL.Types
 import Hasura.Tracing qualified as Tracing
@@ -248,6 +250,8 @@ processCronEvents logger logBehavior httpMgr cronEvents getSC lockedCronEvents =
                 (fromMaybe J.Null ctiPayload)
                 ctiComment
                 Nothing
+                ctiRequestTransform
+                ctiResponseTransform
             retryCtx = RetryContext tries ctiRetryConf
         finally <-
           runMetadataStorageT $
@@ -300,6 +304,8 @@ processOneOffScheduledEvents
                 (fromMaybe J.Null _oosePayload)
                 _ooseComment
                 (Just _ooseCreatedAt)
+                _ooseRequestTransform
+                _ooseResponseTransform
             retryCtx = RetryContext _ooseTries _ooseRetryConf
 
         flip runReaderT (logger, httpMgr) $
@@ -338,17 +344,6 @@ processScheduledTriggers env logger logBehavior httpMgr getSC LockedEventsCtx {.
   where
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
 
-pattern HttpErr :: e -> Either e (Either e' a)
-pattern HttpErr e = Left e
-
-pattern TransErr :: e' -> Either e (Either e' a)
-pattern TransErr e = Right (Left e)
-
-pattern Resp :: a -> Either e (Either e' a)
-pattern Resp a = Right (Right a)
-
-{-# COMPLETE HttpErr, TransErr, Resp #-}
-
 processScheduledEvent ::
   ( MonadReader r m,
     Has HTTP.Manager r,
@@ -383,18 +378,23 @@ processScheduledEvent logBehavior eventId eventHeaders retryCtx payload webhookU
             extraLogCtx = ExtraLogContext eventId (sewpName payload)
             webhookReqBodyJson = J.toJSON payload
             webhookReqBody = J.encode webhookReqBodyJson
-        eitherRes <-
+            requestTransform = sewpRequestTransform payload
+            responseTransform = mkResponseTransform <$> sewpResponseTransform payload
+
+        eitherReqRes <-
           runExceptT $
-            mkRequest headers httpTimeout webhookReqBody Nothing webhookUrl >>= \case
-              Left err -> pure $ Left err
-              Right reqDetails -> do
-                let logger e d = logHTTPForST e extraLogCtx d logBehavior
-                resp <- hoistEither =<< lift (invokeRequest reqDetails logger)
-                pure $ Right resp
-        case eitherRes of
-          Resp r -> processSuccess eventId decodedHeaders type' webhookReqBodyJson r
-          HttpErr e -> processError eventId retryCtx decodedHeaders type' webhookReqBodyJson e
-          TransErr e -> do
+            mkRequest headers httpTimeout webhookReqBody requestTransform webhookUrl >>= \reqDetails -> do
+              let request = extractRequest reqDetails
+                  logger e d = logHTTPForST e extraLogCtx d logBehavior
+                  sessionVars = _rdSessionVars reqDetails
+              resp <- invokeRequest reqDetails responseTransform sessionVars logger
+              pure (request, resp)
+        case eitherReqRes of
+          Right (req, resp) ->
+            let reqBody = fromMaybe J.Null $ view HTTP.body req >>= J.decode @J.Value
+             in processSuccess eventId decodedHeaders type' reqBody resp
+          Left (HTTPError reqBody e) -> processError eventId retryCtx decodedHeaders type' reqBody e
+          Left (TransformationError _ e) -> do
             -- Log The Transformation Error
             logger :: L.Logger L.Hasura <- asks getter
             L.unLogger logger $ L.UnstructuredLog L.LevelError (TBS.fromLBS $ J.encode e)
@@ -463,29 +463,30 @@ retryOrMarkError eventId retryCtx err type' = do
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Scheduled events move between six different states over the course of their
 lifetime, as represented by the following flowchart:
-  ┌───────────┐      ┌────────┐      ┌───────────┐
-  │ scheduled │─(a)─→│ locked │─(b)─→│ delivered │
-  └───────────┘      └────────┘      └───────────┘
-          ↑              │           ┌───────┐
-          └────(c)───────┼─────(d)──→│ error │
-                         │           └───────┘
-                         │           ┌──────┐
-                         └─────(e)──→│ dead │
-                                     └──────┘
+
+    ┌───────────┐      ┌────────┐      ┌───────────┐
+    │ scheduled │─(1)─→│ locked │─(2)─→│ delivered │
+    └───────────┘      └────────┘      └───────────┘
+            ↑              │           ┌───────┐
+            └────(3)───────┼─────(4)──→│ error │
+                           │           └───────┘
+                           │           ┌──────┐
+                           └─────(5)──→│ dead │
+                                       └──────┘
 
 When a scheduled event is first created, it starts in the 'scheduled' state,
 and it can transition to other states in the following ways:
-  a. When graphql-engine fetches a scheduled event from the database to process
+  1. When graphql-engine fetches a scheduled event from the database to process
      it, it sets its state to 'locked'. This prevents multiple graphql-engine
      instances running on the same database from processing the same
      scheduled event concurrently.
-  b. When a scheduled event is processed successfully, it is marked 'delivered'.
-  c. If a scheduled event fails to be processed, but it hasn’t yet reached
+  2. When a scheduled event is processed successfully, it is marked 'delivered'.
+  3. If a scheduled event fails to be processed, but it hasn’t yet reached
      its maximum retry limit, its retry counter is incremented and
      it is returned to the 'scheduled' state.
-  d. If a scheduled event fails to be processed and *has* reached its
+  4. If a scheduled event fails to be processed and *has* reached its
      retry limit, its state is set to 'error'.
-  e. If for whatever reason the difference between the current time and the
+  5. If for whatever reason the difference between the current time and the
      scheduled time is greater than the tolerance of the scheduled event, it
      will not be processed and its state will be set to 'dead'.
 -}

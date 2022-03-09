@@ -34,12 +34,12 @@ The following files will be generated in the ``metadata/`` directory of your pro
 
 .. note::
 
-  The output of the :ref:`export_metadata <export_metadata>` API is a JSON version of the metadata files.
+  The output of the :ref:`metadata_export_metadata` metadata API is a JSON version of the metadata files.
 
 actions.graphql
 ^^^^^^^^^^^^^^^
 
-The ``actions.graphql`` file contains all the :ref:`action<actions>` definitions and :ref:`custom type<custom_types>` definitions.
+The ``actions.graphql`` file contains all the :ref:`action <actions>` definitions and :ref:`custom type<custom_types>` definitions.
 
 **Example**: A query action called ``greet`` and two custom types called ``SampleInput`` and ``SampleOutput``.
 
@@ -60,7 +60,7 @@ The ``actions.graphql`` file contains all the :ref:`action<actions>` definitions
 actions.yaml
 ^^^^^^^^^^^^
 
-The ``actions.yaml`` file contains metadata related to :ref:`actions<actions>`.
+The ``actions.yaml`` file contains metadata related to :ref:`actions <actions>`.
 
 **Example**: An action called ``greet`` with the ``handler`` set to ``<base_url>/greet`` and two custom types called ``SampleInput`` and ``SampleOutput``.
 
@@ -143,7 +143,7 @@ The ``webhook`` can be an HTTP endpoint or an environment variable containing th
 query_collections.yaml
 ^^^^^^^^^^^^^^^^^^^^^^
 
-The ``query_collections.yaml`` file conatins metadata information about :ref:`query collections<api_query_collections>`.
+The ``query_collections.yaml`` file contains metadata information about :ref:`query collections <metadata_api_query_collections>`.
 
 **Example**: A query collection called ``sample-collection`` which contains two queries ``test`` and ``test2``.
 

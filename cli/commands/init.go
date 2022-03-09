@@ -253,15 +253,16 @@ func (o *InitOptions) createFiles() error {
 
 		// create metadata files
 		plugins := make(metadataobject.Objects, 0)
-		plugins = append(plugins, metadataVersion.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, querycollections.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, allowlist.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, remoteschemas.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, actions.New(o.EC, o.EC.MetadataDir))
 		plugins = append(plugins, crontriggers.New(o.EC, o.EC.MetadataDir))
 		if config.Version == cli.V3 {
+			plugins = append(plugins, metadataVersion.New(o.EC, o.EC.MetadataDir))
 			plugins = append(plugins, sources.New(o.EC, o.EC.MetadataDir))
 		} else {
+			plugins = append(plugins, metadataVersion.NewV3MetadataVersion(o.EC, o.EC.MetadataDir))
 			plugins = append(plugins, tables.New(o.EC, o.EC.MetadataDir))
 			plugins = append(plugins, functions.New(o.EC, o.EC.MetadataDir))
 		}
@@ -365,7 +366,11 @@ func (a *validatingEndpointAction) Execute(ctx fsm.EventContext) eventType {
 	context := ctx.(*initCtx)
 	opts := context.initOps
 	context.logger.Debug(validatingEndpoint)
-	if err := util.GetServerStatus(opts.Endpoint); err != nil {
+	if err := opts.EC.Validate(); err != nil {
+		context.err = err
+		return validateEndpointFailed
+	}
+	if err := util.GetServerStatus(opts.EC.Config.GetVersionEndpoint(), opts.EC.Config.HTTPClient); err != nil {
 		context.err = err
 		return validateEndpointFailed
 	}
@@ -378,6 +383,7 @@ func (a *failedValidatingEndpointAction) Execute(ctx fsm.EventContext) eventType
 	context := ctx.(*initCtx)
 	context.logger.Debug(failedValidatingEndpoint)
 	if context.err != nil {
+		context.logger.Debug(context.err)
 		context.logger.Infoln("validating endpoint failed, server not reachable")
 	}
 	return gotoEndstate

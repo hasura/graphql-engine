@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/Pallinder/go-randomdata"
-	"golang.org/x/term"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	. "github.com/onsi/ginkgo"
@@ -218,11 +217,7 @@ var testProgressBar = func(projectDirectory string) {
 			WorkingDirectory: projectDirectory,
 		})
 
-		if !term.IsTerminal(int(os.Stdout.Fd())) {
-			Eventually(session.Err, 60*40).ShouldNot(Say(progressBar))
-		} else {
-			Eventually(session.Err, 60*40).Should(Say(progressBar))
-		}
+		Eventually(session.Err, 60*40).ShouldNot(Say(progressBar))
 		Eventually(session, 60*40).Should(Exit(0))
 	})
 }

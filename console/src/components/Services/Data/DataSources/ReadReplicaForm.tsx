@@ -154,18 +154,15 @@ const ReadReplicaListItem: React.FC<ReadReplicaListItemProps> = ({
       <p>{isFromEnvVar ? currentState.envVarState.envVar : host}</p>
       {/* The connection string is redundant if it's provided via ENV VAR */}
       {!isFromEnvVar && (
-        <span className={`${styles.db_large_string_break_words}`}>
+        <span className="px-sm py-xs max-w-xs align-top break-all">
           {showUrl ? (
             connectionString
           ) : (
             <span
-              className={styles.show_connection_string}
+              className="text-secondary flex items-center cursor-pointer"
               onClick={() => setShowUrl(true)}
             >
-              <i
-                className={`${styles.showAdminSecret} fa fa-eye`}
-                aria-hidden="true"
-              />
+              <i className="fa fa-eye" aria-hidden="true" />
               <p style={{ marginLeft: 6 }}>Show Connection String</p>
             </span>
           )}

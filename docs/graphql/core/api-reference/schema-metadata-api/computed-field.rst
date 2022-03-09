@@ -2,10 +2,17 @@
    :description: Manage computed fields with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, computed field
 
-.. _api_computed_field:
+.. _schema_metadata_api_computed_field:
 
 Schema/Metadata API Reference: Computed Fields (Deprecated)
 ===========================================================
+
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
 .. contents:: Table of contents
   :backlinks: none
@@ -22,14 +29,7 @@ Currenty, the Hasura GraphQL engine supports functions returning
 `table row types <https://www.postgresql.org/docs/current/rowtypes.html#ROWTYPES-DECLARING>`__
 as computed fields.
 
-.. admonition:: Deprecation
-
-  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
-  :ref:`metadata API <metadata_apis>`.
-
-  Though for backwards compatibility, the schema/metadata APIs will continue to function.
-
-.. _add_computed_field:
+.. _schema_metadata_add_computed_field:
 
 add_computed_field
 ------------------
@@ -65,7 +65,7 @@ an SQL function called ``author_full_name``:
        }
    }
 
-.. _add_computed_field_syntax:
+.. _schema_metadata_add_computed_field_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -94,7 +94,7 @@ Args syntax
      - text
      - comment
 
-.. _drop_computed_field:
+.. _schema_metadata_drop_computed_field:
 
 drop_computed_field
 -------------------
@@ -124,7 +124,7 @@ Drop a computed field ``full_name`` from a table ``author``:
        }
    }
 
-.. _drop_computed_field_syntax:
+.. _schema_metadata_drop_computed_field_syntax:
 
 Args syntax
 ^^^^^^^^^^^

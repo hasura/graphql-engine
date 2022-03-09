@@ -41,7 +41,7 @@ func (p *projectMigrationsStatus) Status(opts ...ProjectMigrationStatusOption) (
 					Kind: source.Kind,
 				},
 			}
-			status, err := opts.Run()
+			status, err := opts.RunOnSource()
 			if err != nil {
 				return nil, err
 			}

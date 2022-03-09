@@ -3,6 +3,7 @@ module Hasura.GraphQL.Schema.Table
   ( getTableGQLName,
     tableSelectColumnsEnum,
     tableUpdateColumnsEnum,
+    updateColumnsPlaceholderParser,
     tablePermissions,
     tableSelectPermissions,
     tableSelectFields,
@@ -60,11 +61,10 @@ tableSelectColumnsEnum ::
   (BackendSchema b, MonadSchema n m, MonadRole r m, MonadTableInfo r m, Has P.MkTypename r) =>
   SourceName ->
   TableInfo b ->
-  SelPermInfo b ->
   m (Maybe (Parser 'Both n (Column b)))
-tableSelectColumnsEnum sourceName tableInfo selectPermissions = do
+tableSelectColumnsEnum sourceName tableInfo = do
   tableGQLName <- getTableGQLName @b tableInfo
-  columns <- tableSelectColumns sourceName tableInfo selectPermissions
+  columns <- tableSelectColumns sourceName tableInfo
   enumName <- P.mkTypename $ tableGQLName <> $$(G.litName "_select_column")
   let description =
         Just $
@@ -73,50 +73,62 @@ tableSelectColumnsEnum sourceName tableInfo selectPermissions = do
   pure $
     P.enum enumName description
       <$> nonEmpty
-        [ ( define $ pgiName column,
-            pgiColumn column
+        [ ( define $ ciName column,
+            ciColumn column
           )
           | column <- columns
         ]
   where
     define name =
-      P.mkDefinition name (Just $ G.Description "column name") P.EnumValueInfo
+      P.Definition name (Just $ G.Description "column name") P.EnumValueInfo
 
 -- | Table update columns enum
 --
 -- Parser for an enum type that matches the columns of the given
 -- table. Used for conflict resolution in "insert" mutations, among
 -- others. Maps to the table_update_column object.
---
--- If there's no column for which the current user has "update"
--- permissions, this functions returns an enum that only contains a
--- placeholder, so as to still allow this type to exist in the schema.
 tableUpdateColumnsEnum ::
   forall m n r b.
-  (BackendSchema b, MonadSchema n m, MonadError QErr m, MonadReader r m, Has P.MkTypename r) =>
+  (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has P.MkTypename r) =>
   TableInfo b ->
-  UpdPermInfo b ->
-  m (Parser 'Both n (Maybe (Column b)))
-tableUpdateColumnsEnum tableInfo updatePermissions = do
+  m (Maybe (Parser 'Both n (Column b)))
+tableUpdateColumnsEnum tableInfo = do
   tableGQLName <- getTableGQLName tableInfo
-  columns <- tableUpdateColumns tableInfo updatePermissions
+  columns <- tableUpdateColumns tableInfo
   enumName <- P.mkTypename $ tableGQLName <> $$(G.litName "_update_column")
   let tableName = tableInfoName tableInfo
       enumDesc = Just $ G.Description $ "update columns of table " <>> tableName
-      altDesc = Just $ G.Description $ "placeholder for update columns of table " <> tableName <<> " (current role has no relevant permissions)"
       enumValues = do
         column <- columns
-        pure (define $ pgiName column, Just $ pgiColumn column)
-  pure $ case nonEmpty enumValues of
-    Just values -> P.enum enumName enumDesc values
-    Nothing -> P.enum enumName altDesc $ pure (placeholder, Nothing)
+        pure (define $ ciName column, ciColumn column)
+  pure $ P.enum enumName enumDesc <$> nonEmpty enumValues
   where
-    define name = P.mkDefinition name (Just $ G.Description "column name") P.EnumValueInfo
-    placeholder = P.mkDefinition @P.EnumValueInfo $$(G.litName "_PLACEHOLDER") (Just $ G.Description "placeholder (do not use)") P.EnumValueInfo
+    define name = P.Definition name (Just $ G.Description "column name") P.EnumValueInfo
+
+-- If there's no column for which the current user has "update"
+-- permissions, this functions returns an enum that only contains a
+-- placeholder, so as to still allow this type to exist in the schema.
+updateColumnsPlaceholderParser ::
+  MonadBuildSchema backend r m n =>
+  TableInfo backend ->
+  m (Parser 'Both n (Maybe (Column backend)))
+updateColumnsPlaceholderParser tableInfo = do
+  maybeEnum <- tableUpdateColumnsEnum tableInfo
+  case maybeEnum of
+    Just e -> pure $ Just <$> e
+    Nothing -> do
+      tableGQLName <- getTableGQLName tableInfo
+      enumName <- P.mkTypename $ tableGQLName <> $$(G.litName "_update_column")
+      pure $
+        P.enum enumName (Just $ G.Description $ "placeholder for update columns of table " <> tableInfoName tableInfo <<> " (current role has no relevant permissions)") $
+          pure
+            ( P.Definition @P.EnumValueInfo $$(G.litName "_PLACEHOLDER") (Just $ G.Description "placeholder (do not use)") P.EnumValueInfo,
+              Nothing
+            )
 
 tablePermissions ::
   forall m n r b.
-  (Backend b, MonadSchema n m, MonadRole r m) =>
+  (MonadSchema n m, MonadRole r m) =>
   TableInfo b ->
   m (Maybe (RolePermInfo b))
 tablePermissions tableInfo = do
@@ -125,7 +137,7 @@ tablePermissions tableInfo = do
 
 tableSelectPermissions ::
   forall b r m n.
-  (Backend b, MonadSchema n m, MonadRole r m) =>
+  (MonadSchema n m, MonadRole r m) =>
   TableInfo b ->
   m (Maybe (SelPermInfo b))
 tableSelectPermissions tableInfo = (_permSel =<<) <$> tablePermissions tableInfo
@@ -135,25 +147,26 @@ tableSelectFields ::
   (Backend b, MonadSchema n m, MonadTableInfo r m, MonadRole r m) =>
   SourceName ->
   TableInfo b ->
-  SelPermInfo b ->
   m [FieldInfo b]
-tableSelectFields sourceName tableInfo permissions = do
+tableSelectFields sourceName tableInfo = do
   let tableFields = _tciFieldInfoMap . _tiCoreInfo $ tableInfo
-  filterM canBeSelected $ Map.elems tableFields
+  permissions <- tableSelectPermissions tableInfo
+  filterM (canBeSelected permissions) $ Map.elems tableFields
   where
-    canBeSelected (FIColumn columnInfo) =
-      pure $ Map.member (pgiColumn columnInfo) (spiCols permissions)
-    canBeSelected (FIRelationship relationshipInfo) = do
+    canBeSelected Nothing _ = pure False
+    canBeSelected (Just permissions) (FIColumn columnInfo) =
+      pure $ Map.member (ciColumn columnInfo) (spiCols permissions)
+    canBeSelected _ (FIRelationship relationshipInfo) = do
       tableInfo' <- askTableInfo sourceName $ riRTable relationshipInfo
       isJust <$> tableSelectPermissions @b tableInfo'
-    canBeSelected (FIComputedField computedFieldInfo) =
+    canBeSelected (Just permissions) (FIComputedField computedFieldInfo) =
       case _cfiReturnType computedFieldInfo of
         CFRScalar _ ->
           pure $ Map.member (_cfiName computedFieldInfo) $ spiScalarComputedFields permissions
         CFRSetofTable tableName -> do
           tableInfo' <- askTableInfo sourceName tableName
           isJust <$> tableSelectPermissions @b tableInfo'
-    canBeSelected (FIRemoteRelationship _) = pure True
+    canBeSelected _ (FIRemoteRelationship _) = pure True
 
 tableColumns ::
   forall b. TableInfo b -> [ColumnInfo b]
@@ -170,10 +183,9 @@ tableSelectColumns ::
   (Backend b, MonadSchema n m, MonadTableInfo r m, MonadRole r m) =>
   SourceName ->
   TableInfo b ->
-  SelPermInfo b ->
   m [ColumnInfo b]
-tableSelectColumns sourceName tableInfo permissions =
-  mapMaybe columnInfo <$> tableSelectFields sourceName tableInfo permissions
+tableSelectColumns sourceName tableInfo =
+  mapMaybe columnInfo <$> tableSelectFields sourceName tableInfo
   where
     columnInfo (FIColumn ci) = Just ci
     columnInfo _ = Nothing
@@ -181,18 +193,18 @@ tableSelectColumns sourceName tableInfo permissions =
 -- | Get the columns of a table that my be updated under the given update
 -- permissions.
 tableUpdateColumns ::
-  forall m n b.
-  (Backend b, MonadSchema n m) =>
+  forall m n r b.
+  (Backend b, MonadSchema n m, MonadTableInfo r m, MonadRole r m) =>
   TableInfo b ->
-  UpdPermInfo b ->
   m [ColumnInfo b]
-tableUpdateColumns tableInfo permissions = do
-  let tableFields = _tciFieldInfoMap . _tiCoreInfo $ tableInfo
-  pure $ mapMaybe isUpdatable $ Map.elems tableFields
+tableUpdateColumns tableInfo = do
+  permissions <- (_permUpd =<<) <$> tablePermissions tableInfo
+  pure $ filter (isUpdatable permissions) $ tableColumns tableInfo
   where
-    isUpdatable (FIColumn columnInfo) =
-      if Set.member (pgiColumn columnInfo) (upiCols permissions)
-        && not (Map.member (pgiColumn columnInfo) (upiSet permissions))
-        then Just columnInfo
-        else Nothing
-    isUpdatable _ = Nothing
+    isUpdatable :: Maybe (UpdPermInfo b) -> ColumnInfo b -> Bool
+    isUpdatable (Just permissions) columnInfo = columnIsUpdatable && columnIsPermitted && columnHasNoPreset
+      where
+        columnIsUpdatable = _cmIsUpdatable (ciMutability columnInfo)
+        columnIsPermitted = Set.member (ciColumn columnInfo) (upiCols permissions)
+        columnHasNoPreset = not (Map.member (ciColumn columnInfo) (upiSet permissions))
+    isUpdatable Nothing _ = False

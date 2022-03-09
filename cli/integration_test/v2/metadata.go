@@ -2,15 +2,15 @@ package v2
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/commands"
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/stretchr/testify/assert"
 )
@@ -89,7 +89,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 			&commands.MigrateApplyOptions{
 				EC:            ec,
 				DownMigration: "all",
-				Source:        cli.Source{Name: "", Kind: hasura.SourceKindPG},
+				Source:        cli.Source{Kind: hasura.SourceKindPG},
 			},
 			nil,
 			"",
@@ -124,22 +124,11 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 
 				for _, file := range files {
 					name := file.Name()
-					expectedFileName := filepath.Join(tc.expectedMetadataFolder, name)
-					actualFileName := filepath.Join(ec.MetadataDir, name)
-					fs, err := os.Stat(expectedFileName)
-					if err != nil {
-						t.Fatalf("%s: unable to get info about the expected metadata file %s, got %v", tc.name, name, err)
-					}
-					if fs.IsDir() {
-						// remote_schemas -> remote_schemas/remote_schemas.yaml
-						expectedFileName = filepath.Join(expectedFileName, fmt.Sprintf("%s.yaml", name))
-						actualFileName = filepath.Join(actualFileName, fmt.Sprintf("%s.yaml", name))
-					}
-					expectedByt, err := ioutil.ReadFile(expectedFileName)
+					expectedByt, err := ioutil.ReadFile(filepath.Join(tc.expectedMetadataFolder, name))
 					if err != nil {
 						t.Fatalf("%s: unable to read expected metadata file %s, got %v", tc.name, name, err)
 					}
-					actualByt, err := ioutil.ReadFile(actualFileName)
+					actualByt, err := ioutil.ReadFile(filepath.Join(ec.MetadataDir, name))
 					if err != nil {
 						t.Fatalf("%s: unable to read actual metadata file %s, got %v", tc.name, name, err)
 					}

@@ -141,6 +141,10 @@ export const isArrayString = (str: string) => {
   return false;
 };
 
+export function emptyStringToNull(val?: string): string | null {
+  return val && val !== '' ? val : null;
+}
+
 /* ARRAY utils */
 export const deleteArrayElementAtIndex = (array: unknown[], index: number) => {
   return array.splice(index, 1);
@@ -401,4 +405,8 @@ export const getCurrTimeForFileName = () => {
 
 export const convertDateTimeToLocale = (dateTime: string | Date | number) => {
   return moment(dateTime, moment.ISO_8601).format('ddd, MMM Do HH:mm:ss Z');
+};
+
+export const isConsoleError = (x: any): x is Error => {
+  return typeof x.name === 'string' && typeof x.message === 'string';
 };

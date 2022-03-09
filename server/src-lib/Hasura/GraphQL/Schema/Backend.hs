@@ -44,7 +44,6 @@ import Hasura.RQL.IR
 import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types hiding (EnumValueInfo)
-import Language.GraphQL.Draft.Syntax (Nullability)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- TODO: Might it make sense to add those constraints to MonadSchema directly?
@@ -56,16 +55,8 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- the functions used to implement a class instance are defined in multiple
 -- modules.
 type MonadBuildSchema b r m n =
-  ( Backend b,
-    BackendSchema b,
-    MonadError QErr m,
-    MonadSchema n m,
-    MonadTableInfo r m,
-    MonadRole r m,
-    Has QueryContext r,
-    Has MkTypename r,
-    Has MkRootFieldName r,
-    Has CustomizeRemoteFieldName r
+  ( BackendSchema b,
+    MonadBuildSchemaBase r m n
   )
 
 -- | This type class is responsible for generating the schema of a backend.
@@ -87,7 +78,12 @@ type MonadBuildSchema b r m n =
 -- tandem.
 --
 -- See <#modelling Note BackendSchema modelling principles>.
-class Backend b => BackendSchema (b :: BackendType) where
+class
+  ( Backend b,
+    Eq (BooleanOperators b (UnpreparedValue b))
+  ) =>
+  BackendSchema (b :: BackendType)
+  where
   -- top level parsers
   buildTableQueryFields ::
     MonadBuildSchema b r m n =>
@@ -95,8 +91,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     TableName b ->
     TableInfo b ->
     G.Name ->
-    SelPermInfo b ->
-    m [FieldParser n (QueryDB b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+    m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildTableRelayQueryFields ::
     MonadBuildSchema b r m n =>
@@ -105,19 +100,16 @@ class Backend b => BackendSchema (b :: BackendType) where
     TableInfo b ->
     G.Name ->
     NESeq (ColumnInfo b) ->
-    SelPermInfo b ->
-    m [FieldParser n (QueryDB b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+    m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildTableInsertMutationFields ::
     MonadBuildSchema b r m n =>
+    Scenario ->
     SourceName ->
     TableName b ->
     TableInfo b ->
     G.Name ->
-    InsPermInfo b ->
-    Maybe (SelPermInfo b) ->
-    Maybe (UpdPermInfo b) ->
-    m [FieldParser n (AnnInsert b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+    m [FieldParser n (AnnInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   -- | This method is responsible for building the GraphQL Schema for mutations
   -- backed by @UPDATE@ statements on some table, as described in
@@ -135,11 +127,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     TableInfo b ->
     -- | field display name
     G.Name ->
-    -- | update permissions of the table
-    UpdPermInfo b ->
-    -- | select permissions of the table (if any)
-    Maybe (SelPermInfo b) ->
-    m [FieldParser n (AnnotatedUpdateG b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+    m [FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildTableDeleteMutationFields ::
     MonadBuildSchema b r m n =>
@@ -147,9 +135,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     TableName b ->
     TableInfo b ->
     G.Name ->
-    DelPermInfo b ->
-    Maybe (SelPermInfo b) ->
-    m [FieldParser n (AnnDelG b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+    m [FieldParser n (AnnDelG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildFunctionQueryFields ::
     MonadBuildSchema b r m n =>
@@ -157,8 +143,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     FunctionName b ->
     FunctionInfo b ->
     TableName b ->
-    SelPermInfo b ->
-    m [FieldParser n (QueryDB b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+    m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildFunctionRelayQueryFields ::
     MonadBuildSchema b r m n =>
@@ -167,8 +152,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     FunctionInfo b ->
     TableName b ->
     NESeq (ColumnInfo b) ->
-    SelPermInfo b ->
-    m [FieldParser n (QueryDB b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+    m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildFunctionMutationFields ::
     MonadBuildSchema b r m n =>
@@ -176,15 +160,13 @@ class Backend b => BackendSchema (b :: BackendType) where
     FunctionName b ->
     FunctionInfo b ->
     TableName b ->
-    SelPermInfo b ->
-    m [FieldParser n (MutationDB b (RemoteSelect UnpreparedValue) (UnpreparedValue b))]
+    m [FieldParser n (MutationDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   -- table components
   tableArguments ::
     MonadBuildSchema b r m n =>
     SourceName ->
     TableInfo b ->
-    SelPermInfo b ->
     m (InputFieldsParser n (IR.SelectArgsG b (UnpreparedValue b)))
 
   -- | Make a parser for relationships. Default implementaton elides
@@ -204,27 +186,8 @@ class Backend b => BackendSchema (b :: BackendType) where
   columnParser ::
     (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
     ColumnType b ->
-    Nullability ->
+    G.Nullability -> -- TODO maybe use Hasura.GraphQL.Parser.Schema.Nullability instead?
     m (Parser 'Both n (ValueWithOrigin (ColumnValue b)))
-
-  -- | Creates a parser for the "_on_conflict" object of the given table.
-  --
-  -- This object is used to generate the "ON CONFLICT" SQL clause: what should be
-  -- done if an insert raises a conflict? It may not always exist: it can't be
-  -- created if there aren't any unique or primary keys constraints. However, if
-  -- there are no columns for which the current role has update permissions, we
-  -- must still accept an empty list for `update_columns`; we do this by adding a
-  -- placeholder value to the enum (see 'tableUpdateColumnsEnum').
-  --
-  -- The default implementation elides on_conflict support.
-  conflictObject ::
-    MonadBuildSchema b r m n =>
-    SourceName ->
-    TableInfo b ->
-    Maybe (SelPermInfo b) ->
-    UpdPermInfo b ->
-    m (Maybe (Parser 'Input n (XOnConflict b, IR.ConflictClauseP1 b (UnpreparedValue b))))
-  conflictObject _ _ _ _ = pure Nothing
 
   -- | The "path" argument for json column fields
   jsonPathArg ::
@@ -239,7 +202,12 @@ class Backend b => BackendSchema (b :: BackendType) where
     ColumnType b ->
     m (Parser 'Input n [ComparisonExp b])
 
-  mkCountType :: Maybe Bool -> Maybe [Column b] -> CountType b
+  -- | The input fields parser, for "count" aggregate field, yielding a function
+  -- which generates @'CountType b' from optional "distinct" field value
+  countTypeInput ::
+    MonadParse n =>
+    Maybe (Parser 'Both n (Column b)) ->
+    InputFieldsParser n (CountDistinct -> CountType b)
 
   aggregateOrderByCountType :: ScalarType b
 
@@ -249,7 +217,7 @@ class Backend b => BackendSchema (b :: BackendType) where
     SourceName ->
     ComputedFieldInfo b ->
     TableName b ->
-    SelPermInfo b ->
+    TableInfo b ->
     m (Maybe (FieldParser n (AnnotatedField b)))
 
   -- | The 'node' root field of a Relay request.
@@ -259,9 +227,6 @@ class Backend b => BackendSchema (b :: BackendType) where
 
   -- SQL literals
   columnDefaultValue :: Column b -> SQLExpression b
-
-  -- Extra insert data
-  getExtraInsertData :: TableInfo b -> ExtraInsertData b
 
 type ComparisonExp b = OpExpG b (UnpreparedValue b)
 

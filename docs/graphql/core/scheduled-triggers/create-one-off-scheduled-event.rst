@@ -15,7 +15,8 @@ Creating a one-off scheduled event
 Introduction
 ------------
 
-One-off scheduled events are used to reliably trigger an HTTP webhook to run custom business logic at a particular point in time. For example, you can create a scheduled event to send a reminder email two weeks after a user signs up.
+One-off scheduled events are used to reliably trigger an HTTP webhook to run custom business logic at a particular point in time. For example, you can create a
+scheduled event to send a reminder email two weeks after a user signs up.
 
 To add a one-off scheduled event, follow these steps:
 
@@ -50,13 +51,17 @@ Define the following values for a scheduled event:
          :alt: Defining the scheduled event
          :width: 550px
 
+   .. tab:: CLI
+
+      One-off scheduled events cannot be set using the CLI as they are not tracked as a part of Hasura metadata.
+
    .. tab:: API
 
-      You can define a scheduled event via the :ref:`create_scheduled_event metadata API <create_scheduled_event>`:
+      You can define a scheduled event via the :ref:`metadata_create_scheduled_event` metadata API:
 
       .. code-block:: http
 
-         POST /v1/query HTTP/1.1
+         POST /v1/metadata HTTP/1.1
          Content-Type: application/json
          X-Hasura-Role: admin
 
@@ -89,13 +94,17 @@ If you like, you can also define advanced values:
          :alt: Defining advanced options for a scheduled event
          :width: 700px
 
+   .. tab:: CLI
+
+      One-off scheduled events cannot be set using the CLI as they are not tracked as a part of Hasura metadata.
+
    .. tab:: API
 
-      You can define advanced options when defining a scheduled event via the :ref:`create_scheduled_event metadata API <create_scheduled_event>`:
+      You can define advanced options when defining a scheduled event via the :ref:`metadata_create_scheduled_event` metadata API:
 
       .. code-block:: http
 
-         POST /v1/query HTTP/1.1
+         POST /v1/metadata HTTP/1.1
          Content-Type: application/json
          X-Hasura-Role: admin
 

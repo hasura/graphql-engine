@@ -5,3 +5,8 @@ args:
       source: mssql
       sql: |
         DELETE FROM article;
+        DELETE FROM author;
+
+        -- reset identity columns
+        DBCC CHECKIDENT ('article', RESEED, 0);
+        DBCC CHECKIDENT ('author', RESEED, 0);

@@ -67,7 +67,7 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura migrate apply --down all`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return validateConfigV3Flags(cmd, ec)
+			return validateConfigV3FlagsWithAll(cmd, ec)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return opts.Run()
@@ -85,7 +85,7 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.MigrationType, "type", "up", "type of migration (up, down) to be used with version flag")
 
 	f.BoolVar(&opts.DryRun, "dry-run", false, "print the names of migrations which are going to be applied")
-	f.BoolVar(&opts.AllDatabases, "all-databases", false, "set this flag to attempt to apply migrations on all databases present on server")
+	f.BoolVar(&opts.EC.AllDatabases, "all-databases", false, "set this flag to attempt to apply migrations on all databases present on server")
 	f.BoolVar(&opts.ProgressBarLogs, "progressbar-logs", false, "print the logs of progressbar")
 	if err := f.MarkHidden("progressbar-logs"); err != nil {
 		ec.Logger.WithError(err).Errorf("error while using a dependency library")
@@ -105,7 +105,6 @@ type MigrateApplyOptions struct {
 	SkipExecution   bool
 	DryRun          bool
 	Source          cli.Source
-	AllDatabases    bool
 	ProgressBarLogs bool
 }
 
@@ -118,15 +117,15 @@ func (o *MigrateApplyOptions) Validate() error {
 	if o.DryRun && o.SkipExecution {
 		return errors.New("both --skip-execution and --dry-run flags cannot be used together")
 	}
-	if o.DryRun && o.AllDatabases {
+	if o.DryRun && o.EC.AllDatabases {
 		return errors.New("both --all-databases and --dry-run flags cannot be used together")
 	}
 
 	if o.EC.Config.Version >= cli.V3 {
-		if !o.AllDatabases && len(o.Source.Name) == 0 {
+		if !o.EC.AllDatabases && len(o.Source.Name) == 0 {
 			return fmt.Errorf("unable to determine database on which migration should be applied")
 		}
-		if !o.AllDatabases {
+		if !o.EC.AllDatabases {
 			if len(o.Source.Name) == 0 {
 				return fmt.Errorf("empty database name")
 			}
@@ -185,31 +184,36 @@ func (o *MigrateApplyOptions) Apply() (chan MigrateApplyResult, error) {
 	resultChan := make(chan MigrateApplyResult)
 
 	handleError := func(err error) (string, error) {
-		if err == migrate.ErrNoChange {
+		if err == nil {
+			return "", nil
+		}
+		var errPath *os.PathError
+		var errNotFound *errDatabaseMigrationDirectoryNotFound
+
+		switch {
+		case errors.Is(err, migrate.ErrNoChange):
 			return fmt.Sprintf("nothing to apply on database %s", o.Source.Name), nil
-		} else if e, ok := err.(*os.PathError); ok {
+		case errors.As(err, &errPath):
 			// If Op is first, then log No migrations to apply
-			if e.Op == "first" {
+			if errPath.Op == "first" {
 				return fmt.Sprintf("nothing to apply on database %s", o.Source.Name), nil
 			}
-		} else if e, ok := err.(*errDatabaseMigrationDirectoryNotFound); ok {
+		case errors.As(err, &errNotFound):
 			// check if the returned error is a directory not found error
 			// ie might be because  a migrations/<source_name> directory is not found
 			// if so skip this
-			return "", fmt.Errorf("skipping applying migrations on database %s, encountered: \n%s", o.Source.Name, e.Error())
-		} else if err != nil {
-			return "", fmt.Errorf("skipping applying migrations on database %s, encountered: \n%v", o.Source.Name, err)
+			return "", fmt.Errorf("skipping applying migrations on database %s, encountered: \n%s", o.Source.Name, errNotFound.Error())
 		}
-		return "", nil
+		return "", fmt.Errorf("skipping applying migrations on database %s, encountered: \n%w", o.Source.Name, err)
 	}
 
-	if len(o.Source.Name) == 0 {
+	if len(o.Source.Name) == 0 && !o.EC.AllDatabases {
 		o.Source = o.EC.Source
 	}
 	if err := o.Validate(); err != nil {
 		return nil, err
 	}
-	if o.AllDatabases && o.EC.Config.Version >= cli.V3 {
+	if o.EC.AllDatabases && o.EC.Config.Version >= cli.V3 {
 		o.EC.Spin("getting lists of databases from server ")
 		sourcesAndKind, err := metadatautil.GetSourcesAndKind(o.EC.APIClient.V1Metadata.ExportMetadata)
 		o.EC.Spinner.Stop()
@@ -264,7 +268,7 @@ func (o *MigrateApplyOptions) Exec() error {
 			return &errDatabaseMigrationDirectoryNotFound{fmt.Sprintf("expected to find a migrations directory for database %s in %s, but encountered error: %s", o.Source.Name, o.EC.MigrationDir, err.Error())}
 		}
 	}
-	if o.AllDatabases && (len(o.GotoVersion) > 0 || len(o.VersionMigration) > 0) {
+	if o.EC.AllDatabases && (len(o.GotoVersion) > 0 || len(o.VersionMigration) > 0) {
 		return fmt.Errorf("cannot use --goto or --version in conjunction with --all-databases")
 	}
 	migrationType, step, err := getMigrationTypeAndStep(o.UpMigration, o.DownMigration, o.VersionMigration, o.MigrationType, o.GotoVersion, o.SkipExecution)

@@ -1,6 +1,7 @@
 module Hasura.RQL.DDL.Schema.Diff
   ( TableMeta (..),
     FunctionMeta (..),
+    TablesDiff (..),
     FunctionsDiff (..),
     ComputedFieldMeta (..),
     getTablesDiff,
@@ -113,8 +114,8 @@ getTableDiff oldtm newtm =
 
     mNewDesc = _ptmiDescription $ tmInfo newtm
 
-    droppedCols = map prciName $ getDifferenceOn prciPosition oldCols newCols
-    existingCols = getOverlapWith prciPosition oldCols newCols
+    droppedCols = map rciName $ getDifferenceOn rciPosition oldCols newCols
+    existingCols = getOverlapWith rciPosition oldCols newCols
     alteredCols = filter (uncurry (/=)) existingCols
 
     -- foreign keys are considered dropped only if their oid
@@ -375,8 +376,8 @@ alterColumnsInMetadata ::
   m ()
 alterColumnsInMetadata source alteredCols fields sc tn =
   for_ alteredCols $
-    \( RawColumnInfo {prciName = oldName, prciType = oldType},
-       RawColumnInfo {prciName = newName, prciType = newType}
+    \( RawColumnInfo {rciName = oldName, rciType = oldType},
+       RawColumnInfo {rciName = newName, rciType = newType}
        ) -> do
         if
             | oldName /= newName ->
@@ -404,11 +405,11 @@ alterCustomColumnNamesInMetadata ::
   TableCoreInfo b ->
   m ()
 alterCustomColumnNamesInMetadata source droppedCols ti = do
-  let TableConfig customFields customColumnNames customName = _tciCustomConfig ti
-      tn = _tciName ti
-      modifiedCustomColumnNames = foldl' (flip M.delete) customColumnNames droppedCols
-  when (modifiedCustomColumnNames /= customColumnNames) $
+  let tableConfig@TableConfig {..} = _tciCustomConfig ti
+      tableName = _tciName ti
+      modifiedCustomColumnNames = foldl' (flip M.delete) _tcCustomColumnNames droppedCols
+  when (modifiedCustomColumnNames /= _tcCustomColumnNames) $
     tell $
       MetadataModifier $
-        tableMetadataSetter @b source tn . tmConfiguration
-          .~ TableConfig @b customFields modifiedCustomColumnNames customName
+        tableMetadataSetter @b source tableName . tmConfiguration
+          .~ tableConfig {_tcCustomColumnNames = modifiedCustomColumnNames}

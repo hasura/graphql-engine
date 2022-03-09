@@ -2,17 +2,24 @@
    :description: Execute SQL with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, run_sql
 
-.. _api_run_sql:
+.. _schema_metadata_api_run_sql:
 
 Schema/Metadata API Reference: Run SQL (Deprecated)
 ===================================================
+
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
 .. contents:: Table of contents
   :backlinks: none
   :depth: 2
   :local:
 
-.. _run_sql:
+.. _schema_metadata_run_sql:
 
 run_sql
 -------
@@ -32,13 +39,6 @@ returned.
   you find yourself in the need of using ``run_sql`` to run custom DML requests,
   consider creating a view. You can now define permissions on that particular view
   for various roles.
-
-.. admonition:: Deprecation
-
-  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
-  :ref:`metadata API <metadata_apis>`.
-
-  Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
 Use cases
 ^^^^^^^^^
@@ -193,7 +193,7 @@ Overloading tracked SQL functions is not allowed.
 
 Set ``check_metadata_consistency`` field to ``false`` to force the server to not consider metadata dependencies.
 
-.. _run_sql_syntax:
+.. _schema_metadata_run_sql_syntax:
 
 Args syntax
 ^^^^^^^^^^^

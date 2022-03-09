@@ -1,3 +1,6 @@
+-- | MSSQL DDL BoolExp
+--
+-- How to parse the boolean expressions and operations relevant for MSSQL.
 module Hasura.Backends.MSSQL.DDL.BoolExp
   ( parseBoolExpOperations,
   )

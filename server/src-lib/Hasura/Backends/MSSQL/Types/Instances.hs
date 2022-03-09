@@ -1,6 +1,8 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
--- | Instances that're slow to compile.
+-- | MSSQL Types Instances
+--
+-- Instances for types from "Hasura.Backends.MSSQL.Types.Internal" that're slow to compile.
 module Hasura.Backends.MSSQL.Types.Instances () where
 
 import Data.Aeson.Extended
@@ -42,7 +44,8 @@ $( fmap concat $ for
        ''UnifiedUsing,
        ''UnifiedOn,
        ''UnifiedColumn,
-       ''TempTableName
+       ''TempTableName,
+       ''SomeTableName
      ]
      \name ->
        [d|
@@ -78,7 +81,10 @@ $( fmap concat $ for
        ''JoinAlias,
        ''Reselect,
        ''ColumnName,
+       ''DataLength,
        ''Expression,
+       ''FunctionApplicationExpression,
+       ''MethodApplicationExpression,
        ''NullsOrder,
        ''Order,
        ''ScalarType,
@@ -96,7 +102,23 @@ $( fmap concat $ for
        ''JsonFieldSpec,
        ''Join,
        ''JoinSource,
-       ''SelectIntoTempTable
+       ''SelectIntoTempTable,
+       ''SITTConstraints,
+       ''InsertValuesIntoTempTable,
+       ''InsertOutput,
+       ''Inserted,
+       ''OutputColumn,
+       ''TempTable,
+       ''Deleted,
+       ''DeleteOutput,
+       ''Values,
+       ''Delete,
+       ''Insert,
+       ''Merge,
+       ''MergeUsing,
+       ''MergeOn,
+       ''MergeWhenMatched,
+       ''MergeWhenNotMatched
      ]
      \name ->
        [d|
@@ -140,7 +162,7 @@ instance ToTxt ScalarType where
   toTxt = tshow -- TODO: include schema
 
 instance ToTxt TableName where
-  toTxt TableName {tableName, tableSchema} =
+  toTxt (TableName tableName (SchemaName tableSchema)) =
     if tableSchema == "dbo"
       then tableName
       else tableSchema <> "." <> tableName
@@ -178,7 +200,7 @@ instance ToJSON TableName where
   toJSON = genericToJSON hasuraJSON
 
 instance ToJSONKey TableName where
-  toJSONKey = toJSONKeyText $ \(TableName schema name) -> schema <> "." <> name
+  toJSONKey = toJSONKeyText $ \(TableName name (SchemaName schema)) -> schema <> "." <> name
 
 instance ToJSONKey ScalarType
 
@@ -211,11 +233,9 @@ instance FromJSON n => FromJSON (Countable n)
 
 deriving instance Ord ColumnName
 
-instance Monoid Where where
-  mempty = Where mempty
+deriving instance Monoid Where
 
-instance Semigroup Where where
-  (Where x) <> (Where y) = Where (x <> y)
+deriving instance Semigroup Where
 
 instance Monoid Top where
   mempty = NoTop

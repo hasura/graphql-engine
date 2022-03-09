@@ -15,6 +15,7 @@ module Hasura.RQL.Types.Action
     adHandler,
     adTimeout,
     adRequestTransform,
+    adResponseTransform,
     ActionType (..),
     _ActionMutation,
     ActionDefinitionInput,
@@ -25,7 +26,7 @@ module Hasura.RQL.Types.Action
     getActionOutputFields,
     ActionInfo (..),
     aiName,
-    aiOutputObject,
+    aiOutputType,
     aiDefinition,
     aiPermissions,
     aiForwardedClientHeaders,
@@ -76,8 +77,8 @@ import Hasura.Base.Error
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
-import Hasura.RQL.DDL.RequestTransform (MetadataTransform)
-import Hasura.RQL.IR.Select
+import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
+import Hasura.RQL.IR.Action
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
@@ -178,7 +179,8 @@ data ActionDefinition a b = ActionDefinition
     -- the default timeout of 30 seconds will be used
     _adTimeout :: !Timeout,
     _adHandler :: !b,
-    _adRequestTransform :: !(Maybe MetadataTransform)
+    _adRequestTransform :: !(Maybe RequestTransform),
+    _adResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
 
@@ -202,10 +204,11 @@ instance (J.FromJSON a, J.FromJSON b) => J.FromJSON (ActionDefinition a b) where
       "query" -> pure ActionQuery
       t -> fail $ "expected mutation or query, but found " <> t
     _adRequestTransform <- o J..:? "request_transform"
+    _adResponseTransform <- o J..:? "response_transform"
     return ActionDefinition {..}
 
 instance (J.ToJSON a, J.ToJSON b) => J.ToJSON (ActionDefinition a b) where
-  toJSON (ActionDefinition args outputType actionType headers forwardClientHeaders timeout handler requestTransform) =
+  toJSON (ActionDefinition args outputType actionType headers forwardClientHeaders timeout handler requestTransform responseTransform) =
     let typeAndKind = case actionType of
           ActionQuery -> ["type" J..= ("query" :: String)]
           ActionMutation kind ->
@@ -220,7 +223,10 @@ instance (J.ToJSON a, J.ToJSON b) => J.ToJSON (ActionDefinition a b) where
             "handler" J..= handler,
             "timeout" J..= timeout
           ]
-            <> catMaybes [(\trans -> "request_transform" J..= trans) <$> requestTransform]
+            <> catMaybes
+              [ ("request_transform" J..=) <$> requestTransform,
+                ("response_transform" J..=) <$> responseTransform
+              ]
             <> typeAndKind
 
 type ResolvedActionDefinition =
@@ -237,13 +243,14 @@ type ActionPermissionMap = Map.HashMap RoleName ActionPermissionInfo
 
 type ActionOutputFields = Map.HashMap G.Name G.GType
 
-getActionOutputFields :: AnnotatedObjectType -> ActionOutputFields
-getActionOutputFields =
-  Map.fromList . map ((unObjectFieldName . _ofdName) &&& (fst . _ofdType)) . toList . _otdFields . _aotDefinition
+getActionOutputFields :: AnnotatedOutputType -> ActionOutputFields
+getActionOutputFields inp = case inp of
+  AOTObject aot -> Map.fromList . map ((unObjectFieldName . _ofdName) &&& (fst . _ofdType)) . toList . _otdFields . _aotDefinition $ aot
+  AOTScalar _ -> Map.empty
 
 data ActionInfo = ActionInfo
   { _aiName :: !ActionName,
-    _aiOutputObject :: !(G.GType, AnnotatedObjectType),
+    _aiOutputType :: !(G.GType, AnnotatedOutputType),
     _aiDefinition :: !ResolvedActionDefinition,
     _aiPermissions :: !ActionPermissionMap,
     _aiForwardedClientHeaders :: !Bool,
@@ -307,29 +314,28 @@ data ActionSourceInfo b
   | -- | All relationships refer to tables in one source
     ASISource !SourceName !(SourceConfig b)
 
-getActionSourceInfo :: AnnotatedObjectType -> ActionSourceInfo ('Postgres 'Vanilla)
-getActionSourceInfo = maybe ASINoSource (uncurry ASISource) . _aotSource
+getActionSourceInfo :: AnnotatedOutputType -> ActionSourceInfo ('Postgres 'Vanilla)
+getActionSourceInfo (AOTObject aot) = maybe ASINoSource (uncurry ASISource) . _aotSource $ aot
+getActionSourceInfo (AOTScalar _) = ASINoSource
 
-data AnnActionExecution (b :: BackendType) (r :: BackendType -> Type) v = AnnActionExecution
+data AnnActionExecution (r :: Type) = AnnActionExecution
   { _aaeName :: !ActionName,
     -- | output type
     _aaeOutputType :: !GraphQLType,
     -- | output selection
-    _aaeFields :: !(AnnFieldsG b r v),
+    _aaeFields :: !(ActionFieldsG r),
     -- | jsonified input arguments
     _aaePayload :: !J.Value,
     -- | to validate the response fields from webhook
     _aaeOutputFields :: !ActionOutputFields,
-    _aaeDefinitionList :: ![(Column b, ScalarType b)],
     _aaeWebhook :: !ResolvedWebhook,
     _aaeHeaders :: ![HeaderConf],
     _aaeForwardClientHeaders :: !Bool,
-    _aaeStrfyNum :: !Bool,
     _aaeTimeOut :: !Timeout,
-    _aaeSource :: !(ActionSourceInfo b),
-    _aaeRequestTransform :: !(Maybe MetadataTransform)
+    _aaeRequestTransform :: !(Maybe RequestTransform),
+    _aaeResponseTransform :: !(Maybe MetadataResponseTransform)
   }
-  deriving (Functor, Foldable, Traversable)
+  deriving stock (Functor, Foldable, Traversable)
 
 data AnnActionMutationAsync = AnnActionMutationAsync
   { _aamaName :: !ActionName,
@@ -339,27 +345,27 @@ data AnnActionMutationAsync = AnnActionMutationAsync
   }
   deriving (Show, Eq)
 
-data AsyncActionQueryFieldG (b :: BackendType) (r :: BackendType -> Type) v
+data AsyncActionQueryFieldG (r :: Type)
   = AsyncTypename !Text
-  | AsyncOutput !(AnnFieldsG b r v)
+  | AsyncOutput !(ActionFieldsG r)
   | AsyncId
   | AsyncCreatedAt
   | AsyncErrors
-  deriving (Functor, Foldable, Traversable)
+  deriving stock (Functor, Foldable, Traversable)
 
-type AsyncActionQueryFieldsG b r v = Fields (AsyncActionQueryFieldG b r v)
+type AsyncActionQueryFieldsG r = Fields (AsyncActionQueryFieldG r)
 
-data AnnActionAsyncQuery (b :: BackendType) (r :: BackendType -> Type) v = AnnActionAsyncQuery
+data AnnActionAsyncQuery (b :: BackendType) (r :: Type) = AnnActionAsyncQuery
   { _aaaqName :: !ActionName,
     _aaaqActionId :: !ActionId,
     _aaaqOutputType :: !GraphQLType,
-    _aaaqFields :: !(AsyncActionQueryFieldsG b r v),
+    _aaaqFields :: !(AsyncActionQueryFieldsG r),
     _aaaqDefinitionList :: ![(Column b, ScalarType b)],
-    _aaaqStringifyNum :: !Bool,
+    _aaaqStringifyNum :: !StringifyNumbers,
     _aaaqForwardClientHeaders :: !Bool,
     _aaaqSource :: !(ActionSourceInfo b)
   }
-  deriving (Functor, Foldable, Traversable)
+  deriving stock (Functor, Foldable, Traversable)
 
 data ActionExecContext = ActionExecContext
   { _aecManager :: !HTTP.Manager,

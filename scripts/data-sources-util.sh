@@ -74,7 +74,7 @@ function add_bigquery_source() {
     metadata_url=http://127.0.0.1:$hasura_graphql_server_port/v1/metadata
 
     echo ""
-    echo "Adding BigQuery sources"
+    echo "Adding BigQuery sources to project $HASURA_BIGQUERY_PROJECT_ID"
     curl --fail "$metadata_url" \
     --data-raw '
     {
@@ -92,7 +92,7 @@ function add_bigquery_source() {
                   "from_env": "HASURA_BIGQUERY_SERVICE_ACCOUNT"
                 },
                 "project_id": { "from_env": "HASURA_BIGQUERY_PROJECT_ID" },
-                "datasets": ["hasura_test"]
+                "datasets": ["hasura"]
               }
             },
             {
@@ -104,7 +104,7 @@ function add_bigquery_source() {
                   "from_env": "HASURA_BIGQUERY_SERVICE_ACCOUNT"
                 },
                 "project_id": { "from_env": "HASURA_BIGQUERY_PROJECT_ID" },
-                "datasets": ["hasura_test"]
+                "datasets": ["hasura"]
               }
             },
             {
@@ -117,7 +117,7 @@ function add_bigquery_source() {
                   "from_env": "HASURA_BIGQUERY_SERVICE_ACCOUNT"
                 },
                 "project_id": { "from_env": "HASURA_BIGQUERY_PROJECT_ID" },
-                "datasets": ["hasura_test"]
+                "datasets": ["hasura"]
               }
             }
           ]
@@ -125,13 +125,4 @@ function add_bigquery_source() {
       }
     }
     '
-}
-
-function verify_bigquery_pytest_env() {
-    # check that required bigquery environment variables are present
-    if [[ -z "${HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE:-}" || -z "${HASURA_BIGQUERY_PROJECT_ID:-}"  ]]; then
-        echo "HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE and HASURA_BIGQUERY_PROJECT_ID environment variables are needed to run these tests."
-        echo "See https://github.com/hasura/graphql-engine/blob/master/server/CONTRIBUTING.md#running-the-python-test-suite-on-bigquery for more information."
-        exit 1
-    fi
 }

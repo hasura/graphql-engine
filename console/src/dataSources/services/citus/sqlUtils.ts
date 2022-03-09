@@ -186,6 +186,7 @@ ${schemas?.length ? ` AND schema_name IN (${schemas.join(',')})` : ''}
 ORDER BY schema_name ASC;`;
 
 export const schemaListQuery = `
+-- test_id = schema_list
 SELECT
 	schema_name
 FROM

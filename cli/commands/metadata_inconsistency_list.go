@@ -6,7 +6,6 @@ import (
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/hasura/graphql-engine/cli/v2"
@@ -27,7 +26,7 @@ func newMetadataInconsistencyListCmd(ec *cli.ExecutionContext) *cobra.Command {
 			err := opts.run()
 			opts.EC.Spinner.Stop()
 			if err != nil {
-				return errors.Wrap(err, "failed to list inconsistent metadata")
+				return fmt.Errorf("failed to list inconsistent metadata: %w", err)
 			}
 			if opts.isConsistent {
 				opts.EC.Logger.Println("metadata is consistent")

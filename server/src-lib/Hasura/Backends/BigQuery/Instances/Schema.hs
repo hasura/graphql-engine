@@ -20,7 +20,6 @@ import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Select
 import Hasura.Prelude
-import Hasura.RQL.IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -44,23 +43,20 @@ instance BackendSchema 'BigQuery where
   nodesAggExtension = Just ()
 
   -- table arguments
-  tableArguments = bqTableArgs
+  tableArguments = defaultTableArgs
 
   -- indivdual components
   columnParser = bqColumnParser
   jsonPathArg = bqJsonPathArg
   orderByOperators = bqOrderByOperators
   comparisonExps = bqComparisonExps
-  mkCountType = bqMkCountType
+  countTypeInput = bqCountTypeInput
   aggregateOrderByCountType = BigQuery.IntegerScalarType
   computedField = bqComputedField
   node = bqNode
 
   -- SQL literals
   columnDefaultValue = error "TODO: Make impossible by the type system. BigQuery doesn't support insertions."
-
-  -- Extra insert data
-  getExtraInsertData = const ()
 
 ----------------------------------------------------------------
 -- Top level parsers
@@ -72,22 +68,19 @@ bqBuildTableRelayQueryFields ::
   TableInfo 'BigQuery ->
   G.Name ->
   NESeq (ColumnInfo 'BigQuery) ->
-  SelPermInfo 'BigQuery ->
   m [a]
-bqBuildTableRelayQueryFields _sourceName _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
+bqBuildTableRelayQueryFields _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
   pure []
 
 bqBuildTableInsertMutationFields ::
   MonadBuildSchema 'BigQuery r m n =>
+  Scenario ->
   SourceName ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   G.Name ->
-  InsPermInfo 'BigQuery ->
-  Maybe (SelPermInfo 'BigQuery) ->
-  Maybe (UpdPermInfo 'BigQuery) ->
   m [a]
-bqBuildTableInsertMutationFields _sourceName _tableName _tableInfo _gqlName _insPerms _selPerms _updPerms =
+bqBuildTableInsertMutationFields _scenario _sourceName _tableName _tableInfo _gqlName =
   pure []
 
 bqBuildTableUpdateMutationFields ::
@@ -96,10 +89,8 @@ bqBuildTableUpdateMutationFields ::
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   G.Name ->
-  UpdPermInfo 'BigQuery ->
-  Maybe (SelPermInfo 'BigQuery) ->
   m [a]
-bqBuildTableUpdateMutationFields _sourceName _tableName _tableInfo _gqlName _updPerns _selPerms =
+bqBuildTableUpdateMutationFields _sourceName _tableName _tableInfo _gqlName =
   pure []
 
 bqBuildTableDeleteMutationFields ::
@@ -108,10 +99,8 @@ bqBuildTableDeleteMutationFields ::
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   G.Name ->
-  DelPermInfo 'BigQuery ->
-  Maybe (SelPermInfo 'BigQuery) ->
   m [a]
-bqBuildTableDeleteMutationFields _sourceName _tableName _tableInfo _gqlName _delPerns _selPerms =
+bqBuildTableDeleteMutationFields _sourceName _tableName _tableInfo _gqlName =
   pure []
 
 bqBuildFunctionQueryFields ::
@@ -120,9 +109,8 @@ bqBuildFunctionQueryFields ::
   FunctionName 'BigQuery ->
   FunctionInfo 'BigQuery ->
   TableName 'BigQuery ->
-  SelPermInfo 'BigQuery ->
   m [a]
-bqBuildFunctionQueryFields _ _ _ _ _ =
+bqBuildFunctionQueryFields _ _ _ _ =
   pure []
 
 bqBuildFunctionRelayQueryFields ::
@@ -132,9 +120,8 @@ bqBuildFunctionRelayQueryFields ::
   FunctionInfo 'BigQuery ->
   TableName 'BigQuery ->
   NESeq (ColumnInfo 'BigQuery) ->
-  SelPermInfo 'BigQuery ->
   m [a]
-bqBuildFunctionRelayQueryFields _sourceName _functionName _functionInfo _tableName _pkeyColumns _selPerms =
+bqBuildFunctionRelayQueryFields _sourceName _functionName _functionInfo _tableName _pkeyColumns =
   pure []
 
 bqBuildFunctionMutationFields ::
@@ -143,38 +130,9 @@ bqBuildFunctionMutationFields ::
   FunctionName 'BigQuery ->
   FunctionInfo 'BigQuery ->
   TableName 'BigQuery ->
-  SelPermInfo 'BigQuery ->
   m [a]
-bqBuildFunctionMutationFields _ _ _ _ _ =
+bqBuildFunctionMutationFields _ _ _ _ =
   pure []
-
-----------------------------------------------------------------
--- Table arguments
-
-bqTableArgs ::
-  forall r m n.
-  MonadBuildSchema 'BigQuery r m n =>
-  SourceName ->
-  TableInfo 'BigQuery ->
-  SelPermInfo 'BigQuery ->
-  m (InputFieldsParser n (IR.SelectArgsG 'BigQuery (UnpreparedValue 'BigQuery)))
-bqTableArgs sourceName tableInfo selectPermissions = do
-  whereParser <- tableWhereArg sourceName tableInfo selectPermissions
-  orderByParser <- tableOrderByArg sourceName tableInfo selectPermissions
-  pure do
-    whereArg <- whereParser
-    orderByArg <- orderByParser
-    limitArg <- tableLimitArg
-    offsetArg <- tableOffsetArg
-    pure $
-      IR.SelectArgs
-        { IR._saWhere = whereArg,
-          IR._saOrderBy = orderByArg,
-          IR._saLimit = limitArg,
-          IR._saOffset = offsetArg,
-          -- not supported on BigQuery for now
-          IR._saDistinct = Nothing
-        }
 
 ----------------------------------------------------------------
 -- Individual components
@@ -189,7 +147,7 @@ bqColumnParser columnType (G.Nullability isNullable) =
     ColumnScalar scalarType -> case scalarType of
       -- bytestrings
       -- we only accept string literals
-      BigQuery.BytesScalarType -> pure $ possiblyNullable scalarType $ BigQuery.StringValue <$> P.string
+      BigQuery.BytesScalarType -> pure $ possiblyNullable scalarType $ BigQuery.StringValue <$> stringBased $$(G.litName "Bytes")
       -- text
       BigQuery.StringScalarType -> pure $ possiblyNullable scalarType $ BigQuery.StringValue <$> P.string
       -- floating point values
@@ -203,22 +161,13 @@ bqColumnParser columnType (G.Nullability isNullable) =
       BigQuery.BigDecimalScalarType -> pure $ possiblyNullable scalarType $ BigQuery.BigDecimalValue . BigQuery.doubleToBigDecimal <$> P.float
       -- boolean type
       BigQuery.BoolScalarType -> pure $ possiblyNullable scalarType $ BigQuery.BoolValue <$> P.boolean
-      BigQuery.DateScalarType -> pure $ possiblyNullable scalarType $ BigQuery.DateValue . BigQuery.Date <$> P.string
-      BigQuery.TimeScalarType -> pure $ possiblyNullable scalarType $ BigQuery.TimeValue . BigQuery.Time <$> P.string
-      BigQuery.DatetimeScalarType -> pure $ possiblyNullable scalarType $ BigQuery.DatetimeValue . BigQuery.Datetime <$> P.string
-      BigQuery.GeographyScalarType -> pure $ possiblyNullable scalarType $ BigQuery.GeographyValue . BigQuery.Geography <$> P.string
-      BigQuery.TimestampScalarType -> do
-        let schemaType = P.Nullable . P.TNamed $ P.mkDefinition stringScalar Nothing P.TIScalar
-        pure $
-          possiblyNullable scalarType $
-            Parser
-              { pType = schemaType,
-                pParser =
-                  valueToJSON (P.toGraphQLType schemaType)
-                    >=> fmap (BigQuery.StringValue . BigQuery.utctimeToISO8601Text)
-                      . either (parseErrorWith ParseFailed . qeError) pure
-                      . runAesonParser (J.withText "TimestampColumn" BigQuery.textToUTCTime)
-              }
+      BigQuery.DateScalarType -> pure $ possiblyNullable scalarType $ BigQuery.DateValue . BigQuery.Date <$> stringBased $$(G.litName "Date")
+      BigQuery.TimeScalarType -> pure $ possiblyNullable scalarType $ BigQuery.TimeValue . BigQuery.Time <$> stringBased $$(G.litName "Time")
+      BigQuery.DatetimeScalarType -> pure $ possiblyNullable scalarType $ BigQuery.DatetimeValue . BigQuery.Datetime <$> stringBased $$(G.litName "Datetime")
+      BigQuery.GeographyScalarType ->
+        pure $ possiblyNullable scalarType $ BigQuery.GeographyValue . BigQuery.Geography <$> throughJSON $$(G.litName "Geography")
+      BigQuery.TimestampScalarType ->
+        pure $ possiblyNullable scalarType $ BigQuery.TimestampValue . BigQuery.Timestamp <$> stringBased $$(G.litName "Timestamp")
       ty -> throwError $ internalError $ T.pack $ "Type currently unsupported for BigQuery: " ++ show ty
     ColumnEnumReference (EnumReference tableName enumValues) ->
       case nonEmpty (Map.toList enumValues) of
@@ -233,17 +182,20 @@ bqColumnParser columnType (G.Nullability isNullable) =
       | otherwise = id
     mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, ScalarValue 'BigQuery)
     mkEnumValue (EnumValue value, EnumValueInfo description) =
-      ( P.mkDefinition value (G.Description <$> description) P.EnumValueInfo,
+      ( P.Definition value (G.Description <$> description) P.EnumValueInfo,
         BigQuery.StringValue $ G.unName value
       )
     throughJSON scalarName =
-      let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition scalarName Nothing P.TIScalar
+      let schemaType = P.TNamed P.NonNullable $ P.Definition scalarName Nothing P.TIScalar
        in Parser
             { pType = schemaType,
               pParser =
                 valueToJSON (P.toGraphQLType schemaType)
                   >=> either (parseErrorWith ParseFailed . qeError) pure . runAesonParser J.parseJSON
             }
+    stringBased :: MonadParse m => G.Name -> Parser 'Both m Text
+    stringBased scalarName =
+      P.string {pType = P.TNamed P.NonNullable $ P.Definition scalarName Nothing P.TIScalar}
 
 bqJsonPathArg ::
   MonadParse n =>
@@ -278,7 +230,7 @@ bqOrderByOperators =
       )
     ]
   where
-    define name desc = P.mkDefinition name (Just desc) P.EnumValueInfo
+    define name desc = P.Definition name (Just desc) P.EnumValueInfo
 
 bqComparisonExps ::
   forall m n r.
@@ -287,6 +239,7 @@ bqComparisonExps ::
   m (Parser 'Input n [ComparisonExp 'BigQuery])
 bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
   collapseIfNull <- asks $ qcDangerousBooleanCollapse . getter
+  dWithinGeogOpParser <- geographyWithinDistanceInput
   -- see Note [Columns in comparison expression are never nullable]
   typedParser <- columnParser columnType (G.Nullability False)
   nullableTextParser <- columnParser (ColumnScalar @'BigQuery BigQuery.StringScalarType) (G.Nullability True)
@@ -307,25 +260,109 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
       fmap catMaybes $
         sequenceA $
           concat
-            [ equalityOperators
-                collapseIfNull
-                (mkParameter <$> typedParser)
-                (mkListLiteral <$> columnListParser),
-              comparisonOperators
-                collapseIfNull
-                (mkParameter <$> typedParser)
+            [ -- from https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types:
+              -- GEOGRAPHY comparisons are not supported. To compare GEOGRAPHY values, use ST_Equals.
+              guard (isScalarColumnWhere (/= BigQuery.GeographyScalarType) columnType)
+                *> equalityOperators
+                  collapseIfNull
+                  (mkParameter <$> typedParser)
+                  (mkListLiteral <$> columnListParser),
+              guard (isScalarColumnWhere (/= BigQuery.GeographyScalarType) columnType)
+                *> comparisonOperators
+                  collapseIfNull
+                  (mkParameter <$> typedParser),
+              -- Ops for String type
+              guard (isScalarColumnWhere (== BigQuery.StringScalarType) columnType)
+                *> [ mkBoolOperator
+                       collapseIfNull
+                       $$(G.litName "_like")
+                       (Just "does the column match the given pattern")
+                       (ALIKE . mkParameter <$> typedParser),
+                     mkBoolOperator
+                       collapseIfNull
+                       $$(G.litName "_nlike")
+                       (Just "does the column NOT match the given pattern")
+                       (ANLIKE . mkParameter <$> typedParser)
+                   ],
+              -- Ops for Bytes type
+              guard (isScalarColumnWhere (== BigQuery.BytesScalarType) columnType)
+                *> [ mkBoolOperator
+                       collapseIfNull
+                       $$(G.litName "_like")
+                       (Just "does the column match the given pattern")
+                       (ALIKE . mkParameter <$> typedParser),
+                     mkBoolOperator
+                       collapseIfNull
+                       $$(G.litName "_nlike")
+                       (Just "does the column NOT match the given pattern")
+                       (ANLIKE . mkParameter <$> typedParser)
+                   ],
+              -- Ops for Geography type
+              guard (isScalarColumnWhere (== BigQuery.GeographyScalarType) columnType)
+                *> [ mkBoolOperator
+                       collapseIfNull
+                       $$(G.litName "_st_contains")
+                       (Just "does the column contain the given geography value")
+                       (ABackendSpecific . BigQuery.ASTContains . mkParameter <$> typedParser),
+                     mkBoolOperator
+                       collapseIfNull
+                       $$(G.litName "_st_equals")
+                       (Just "is the column equal to given geography value (directionality is ignored)")
+                       (ABackendSpecific . BigQuery.ASTEquals . mkParameter <$> typedParser),
+                     mkBoolOperator
+                       collapseIfNull
+                       $$(G.litName "_st_touches")
+                       (Just "does the column have at least one point in common with the given geography value")
+                       (ABackendSpecific . BigQuery.ASTTouches . mkParameter <$> typedParser),
+                     mkBoolOperator
+                       collapseIfNull
+                       $$(G.litName "_st_within")
+                       (Just "is the column contained in the given geography value")
+                       (ABackendSpecific . BigQuery.ASTWithin . mkParameter <$> typedParser),
+                     mkBoolOperator
+                       collapseIfNull
+                       $$(G.litName "_st_intersects")
+                       (Just "does the column spatially intersect the given geography value")
+                       (ABackendSpecific . BigQuery.ASTIntersects . mkParameter <$> typedParser),
+                     mkBoolOperator
+                       collapseIfNull
+                       $$(G.litName "_st_d_within")
+                       (Just "is the column within a given distance from the given geometry value")
+                       (ABackendSpecific . BigQuery.ASTDWithin <$> dWithinGeogOpParser)
+                   ]
             ]
 
-bqMkCountType ::
-  -- | distinct values
-  Maybe Bool ->
-  Maybe [Column 'BigQuery] ->
-  CountType 'BigQuery
-bqMkCountType _ Nothing = BigQuery.StarCountable
-bqMkCountType (Just True) (Just cols) =
-  maybe BigQuery.StarCountable BigQuery.DistinctCountable $ nonEmpty cols
-bqMkCountType _ (Just cols) =
-  maybe BigQuery.StarCountable BigQuery.NonNullFieldCountable $ nonEmpty cols
+bqCountTypeInput ::
+  MonadParse n =>
+  Maybe (Parser 'Both n (Column 'BigQuery)) ->
+  InputFieldsParser n (IR.CountDistinct -> CountType 'BigQuery)
+bqCountTypeInput = \case
+  Just columnEnum -> do
+    columns <- P.fieldOptional $$(G.litName "columns") Nothing $ P.list columnEnum
+    pure $ flip mkCountType columns
+  Nothing -> pure $ flip mkCountType Nothing
+  where
+    mkCountType :: IR.CountDistinct -> Maybe [Column 'BigQuery] -> CountType 'BigQuery
+    mkCountType _ Nothing = BigQuery.StarCountable
+    mkCountType IR.SelectCountDistinct (Just cols) =
+      maybe BigQuery.StarCountable BigQuery.DistinctCountable $ nonEmpty cols
+    mkCountType IR.SelectCountNonDistinct (Just cols) =
+      maybe BigQuery.StarCountable BigQuery.NonNullFieldCountable $ nonEmpty cols
+
+geographyWithinDistanceInput ::
+  forall m n r.
+  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
+  m (Parser 'Input n (DWithinGeogOp (UnpreparedValue 'BigQuery)))
+geographyWithinDistanceInput = do
+  geographyParser <- columnParser (ColumnScalar BigQuery.GeographyScalarType) (G.Nullability False)
+  -- practically BigQuery (as of 2021-11-19) doesn't support TRUE as use_spheroid parameter for ST_DWITHIN
+  booleanParser <- columnParser (ColumnScalar BigQuery.BoolScalarType) (G.Nullability True)
+  floatParser <- columnParser (ColumnScalar BigQuery.FloatScalarType) (G.Nullability False)
+  pure $
+    P.object $$(G.litName "st_dwithin_input") Nothing $
+      DWithinGeogOp <$> (mkParameter <$> P.field $$(G.litName "distance") Nothing floatParser)
+        <*> (mkParameter <$> P.field $$(G.litName "from") Nothing geographyParser)
+        <*> (mkParameter <$> P.fieldWithDefault $$(G.litName "use_spheroid") Nothing (G.VBoolean False) booleanParser)
 
 -- | Computed field parser.
 -- Currently unsupported: returns Nothing for now.
@@ -334,15 +371,15 @@ bqComputedField ::
   SourceName ->
   ComputedFieldInfo 'BigQuery ->
   TableName 'BigQuery ->
-  SelPermInfo 'BigQuery ->
+  TableInfo 'BigQuery ->
   m (Maybe (FieldParser n (AnnotatedField 'BigQuery)))
-bqComputedField _sourceName _fieldInfo _table _selectPemissions = pure Nothing
+bqComputedField _sourceName _fieldInfo _table _tableInfo = pure Nothing
 
 -- | Remote join field parser.
 -- Currently unsupported: returns Nothing for now.
 bqRemoteRelationshipField ::
   MonadBuildSchema 'BigQuery r m n =>
-  RemoteFieldInfo 'BigQuery ->
+  RemoteFieldInfo (DBJoinField 'BigQuery) ->
   m (Maybe [FieldParser n (AnnotatedField 'BigQuery)])
 bqRemoteRelationshipField _remoteFieldInfo = pure Nothing
 

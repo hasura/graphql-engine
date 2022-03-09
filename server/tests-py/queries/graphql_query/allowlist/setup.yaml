@@ -1,11 +1,10 @@
 type: bulk
 args:
-
-
 - type: run_sql
   args:
     sql: |
-      CREATE TABLE "user"(
+      DROP TABLE IF EXISTS "user";
+      CREATE TABLE "user" (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         account_id INTEGER NOT NULL,
@@ -16,8 +15,7 @@ args:
         (name, account_id, company)
       VALUES
         ('clarke', 23, 'Symons'),
-        ('reckler', 2, NULL)
-      ;
+        ('reckler', 2, NULL);
 
 - type: track_table
   args:

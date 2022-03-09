@@ -13,9 +13,9 @@ export default {
   title: 'Permissions Form/Components/Clone Permissions',
   component: ClonePermissionsSection,
   decorators: [
-    (S: React.FC) => (
+    (StoryComponent: React.FC) => (
       <Form schema={z.any()} onSubmit={() => {}}>
-        {() => <S />}
+        {() => <StoryComponent />}
       </Form>
     ),
   ],
@@ -29,11 +29,15 @@ Default.args = {
   supportedQueryTypes: ['insert', 'select', 'update', 'delete'],
   roles: ['one', 'two'],
 };
+Default.parameters = {
+  // Disable storybook for playground stories
+  chromatic: { disableSnapshot: true },
+};
 
-export const DefaultOpen: Story<ClonePermissionsSectionProps> = args => (
+export const Showcase: Story<ClonePermissionsSectionProps> = args => (
   <ClonePermissionsSection {...args} />
 );
-DefaultOpen.args = {
+Showcase.args = {
   ...Default.args,
   defaultOpen: true,
 };

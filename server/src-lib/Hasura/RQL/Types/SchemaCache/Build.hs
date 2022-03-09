@@ -7,9 +7,12 @@ module Hasura.RQL.Types.SchemaCache.Build
   ( CollectedInfo (..),
     partitionCollectedInfo,
     recordInconsistency,
+    recordInconsistencyM,
     recordInconsistencies,
     recordDependencies,
+    recordDependenciesM,
     withRecordInconsistency,
+    withRecordInconsistencyM,
     CacheRWM (..),
     BuildReason (..),
     CacheInvalidations (..),
@@ -21,6 +24,7 @@ module Hasura.RQL.Types.SchemaCache.Build
     buildSchemaCacheFor,
     buildSchemaCacheStrict,
     withNewInconsistentObjsCheck,
+    getInconsistentQueryCollections,
   )
 where
 
@@ -28,26 +32,34 @@ import Control.Arrow.Extended
 import Control.Lens
 import Control.Monad.Morph
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Control.Monad.Unique
 import Data.Aeson (Value, toJSON)
 import Data.Aeson.TH
-import Data.HashMap.Strict.Extended qualified as M
-import Data.List (nub)
+import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.Multi qualified as MultiMap
+import Data.List qualified as L
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
+import Data.Text.NonEmpty (unNonEmptyText)
+import Data.Trie qualified as Trie
 import Database.MSSQL.Transaction qualified as MSSQL
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
+import Hasura.GraphQL.Analyse
 import Hasura.Prelude
+import Hasura.RQL.Types.Allowlist (NormalizedQuery, unNormalizedQuery)
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
-import Hasura.RQL.Types.RemoteSchema (RemoteSchemaName)
+import Hasura.RQL.Types.QueryCollection
+import Hasura.RQL.Types.RemoteSchema (RemoteSchemaIntrospection, RemoteSchemaName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.Session
 import Hasura.Tracing (TraceT)
 import Hasura.Tracing qualified as Tracing
+import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 
 -- ----------------------------------------------------------------------------
@@ -87,9 +99,18 @@ recordInconsistency ::
   (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => ((Maybe Value, MetadataObject), Text) `arr` ()
 recordInconsistency = first (arr (: [])) >>> recordInconsistencies'
 
+recordInconsistencyM ::
+  (MonadWriter (Seq w) m, AsInconsistentMetadata w) => Maybe Value -> MetadataObject -> Text -> m ()
+recordInconsistencyM val mo reason = recordInconsistenciesM' [(val, mo)] reason
+
 recordInconsistencies ::
   (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => ([MetadataObject], Text) `arr` ()
 recordInconsistencies = first (arr (map (Nothing,))) >>> recordInconsistencies'
+
+recordInconsistenciesM' ::
+  (MonadWriter (Seq w) m, AsInconsistentMetadata w) => [(Maybe Value, MetadataObject)] -> Text -> m ()
+recordInconsistenciesM' metadataObjects reason =
+  tell $ Seq.fromList $ map (review _InconsistentMetadata . uncurry (InconsistentObject reason)) metadataObjects
 
 recordInconsistencies' ::
   (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => ([(Maybe Value, MetadataObject)], Text) `arr` ()
@@ -102,6 +123,40 @@ recordDependencies ::
 recordDependencies = proc (metadataObject, schemaObjectId, dependencies) ->
   tellA -< Seq.fromList $ map (CIDependency metadataObject schemaObjectId) dependencies
 
+recordDependenciesM ::
+  (MonadWriter (Seq CollectedInfo) m) =>
+  MetadataObject ->
+  SchemaObjId ->
+  [SchemaDependency] ->
+  m ()
+recordDependenciesM metadataObject schemaObjectId dependencies = do
+  tell $ Seq.fromList $ map (CIDependency metadataObject schemaObjectId) dependencies
+
+-- | Monadic version of 'withRecordInconsistency'
+withRecordInconsistencyM ::
+  (MonadWriter (Seq w) m, AsInconsistentMetadata w) =>
+  MetadataObject ->
+  ExceptT QErr m a ->
+  m (Maybe a)
+withRecordInconsistencyM metadataObject f = do
+  result <- runExceptT f
+  case result of
+    Left err -> do
+      case qeInternal err of
+        Just (ExtraExtensions exts) ->
+          -- the QErr type contains an optional qeInternal :: Maybe QErrExtra field, which either stores an error coming
+          -- from an action webhook (ExtraExtensions) or an internal error thrown somewhere within graphql-engine.
+          --
+          -- if we do have an error here, it should be an internal error and hence never be of the former case:
+          recordInconsistencyM (Just (toJSON exts)) metadataObject "withRecordInconsistency: unexpected ExtraExtensions"
+        Just (ExtraInternal internal) ->
+          recordInconsistencyM (Just (toJSON internal)) metadataObject (qeError err)
+        Nothing ->
+          recordInconsistencyM Nothing metadataObject (qeError err)
+      return Nothing
+    Right v -> return $ Just v
+
+-- | Record any errors resulting from a computation as inconsistencies
 withRecordInconsistency ::
   (ArrowChoice arr, ArrowWriter (Seq w) arr, AsInconsistentMetadata w) =>
   ErrorA QErr arr (e, s) a ->
@@ -210,7 +265,6 @@ newtype MetadataT m a = MetadataT {unMetadataT :: StateT Metadata m a}
       Monad,
       MonadTrans,
       MonadIO,
-      MonadUnique,
       MonadReader r,
       MonadError e,
       MonadTx,
@@ -241,9 +295,9 @@ runMetadataT metadata (MetadataT m) =
   runStateT m metadata
 
 buildSchemaCacheWithInvalidations :: (MetadataM m, CacheRWM m) => CacheInvalidations -> MetadataModifier -> m ()
-buildSchemaCacheWithInvalidations cacheInvalidations metadataModifier = do
+buildSchemaCacheWithInvalidations cacheInvalidations MetadataModifier {..} = do
   metadata <- getMetadata
-  let modifiedMetadata = unMetadataModifier metadataModifier metadata
+  let modifiedMetadata = runMetadataModifier metadata
   buildSchemaCacheWithOptions (CatalogUpdate mempty) cacheInvalidations modifiedMetadata
   putMetadata modifiedMetadata
 
@@ -262,23 +316,23 @@ buildSchemaCacheFor objectId metadataModifier = do
   buildSchemaCache metadataModifier
   newSchemaCache <- askSchemaCache
 
-  let diffInconsistentObjects = M.difference `on` (groupInconsistentMetadataById . scInconsistentObjs)
+  let diffInconsistentObjects = Map.difference `on` (groupInconsistentMetadataById . scInconsistentObjs)
       newInconsistentObjects = newSchemaCache `diffInconsistentObjects` oldSchemaCache
 
-  for_ (M.lookup objectId newInconsistentObjects) $ \matchingObjects -> do
+  for_ (Map.lookup objectId newInconsistentObjects) $ \matchingObjects -> do
     let reasons = commaSeparated $ imReason <$> matchingObjects
     throwError (err400 InvalidConfiguration reasons) {qeInternal = Just $ ExtraInternal $ toJSON matchingObjects}
 
   unless (null newInconsistentObjects) $
     throwError
       (err400 Unexpected "cannot continue due to new inconsistent metadata")
-        { qeInternal = Just $ ExtraInternal $ toJSON (nub . concatMap toList $ M.elems newInconsistentObjects)
+        { qeInternal = Just $ ExtraInternal $ toJSON (L.nub . concatMap toList $ Map.elems newInconsistentObjects)
         }
 
 -- | Like 'buildSchemaCache', but fails if there is any inconsistent metadata.
 buildSchemaCacheStrict :: (QErrM m, CacheRWM m, MetadataM m) => m ()
 buildSchemaCacheStrict = do
-  buildSchemaCache noMetadataModify
+  buildSchemaCache mempty
   sc <- askSchemaCache
   let inconsObjs = scInconsistentObjs sc
   unless (null inconsObjs) $ do
@@ -293,9 +347,9 @@ withNewInconsistentObjsCheck action = do
   result <- action
   currentObjects <- scInconsistentObjs <$> askSchemaCache
 
-  let diffInconsistentObjects = M.difference `on` groupInconsistentMetadataById
+  let diffInconsistentObjects = Map.difference `on` groupInconsistentMetadataById
       newInconsistentObjects =
-        nub $ concatMap toList $ M.elems (currentObjects `diffInconsistentObjects` originalObjects)
+        hashNub $ concatMap toList $ Map.elems (currentObjects `diffInconsistentObjects` originalObjects)
   unless (null newInconsistentObjects) $
     throwError
       (err500 Unexpected "cannot continue due to newly found inconsistent metadata")
@@ -303,3 +357,62 @@ withNewInconsistentObjsCheck action = do
         }
 
   pure result
+
+-- | getInconsistentQueryCollections is a helper function that runs the
+-- static analysis over the saved queries and reports any inconsistenties
+-- with the current schema.
+getInconsistentQueryCollections ::
+  Maybe RemoteSchemaIntrospection ->
+  QueryCollections ->
+  ((CollectionName, ListedQuery) -> MetadataObject) ->
+  EndpointTrie GQLQueryWithText ->
+  [NormalizedQuery] ->
+  [InconsistentMetadata]
+getInconsistentQueryCollections Nothing _ _ _ _ = []
+getInconsistentQueryCollections (Just rs) qcs lqToMetadataObj restEndpoints allowLst = map (\(o, t) -> InconsistentObject t Nothing o) fE
+  where
+    zipLQwithDef :: (CollectionName, CreateCollection) -> [((CollectionName, ListedQuery), G.ExecutableDefinition G.Name)]
+    zipLQwithDef (cName, cc) =
+      let lqs = _cdQueries . _ccDefinition $ cc
+       in concatMap (\lq -> map ((cName, lq),) (G.getExecutableDefinitions . unGQLQuery . getGQLQuery . _lqQuery $ lq)) lqs
+    inAllowList :: [NormalizedQuery] -> (ListedQuery) -> Bool
+    inAllowList nqList (ListedQuery {..}) = any (\nq -> unNormalizedQuery nq == (unGQLQuery . getGQLQuery) _lqQuery) nqList
+
+    inRESTEndpoints :: EndpointTrie GQLQueryWithText -> (ListedQuery) -> [Text]
+    inRESTEndpoints edTrie lq = map fst $ filter (queryIsFaulty) allQueries
+      where
+        methodMaps = Trie.elems edTrie
+        endpoints = concatMap snd $ concatMap (MultiMap.toList) methodMaps
+        allQueries :: [(Text, GQLQueryWithText)]
+        allQueries = map (\d -> (unNonEmptyText . unEndpointName . _ceName $ d, _edQuery . _ceDefinition $ d)) endpoints
+
+        queryIsFaulty :: (Text, GQLQueryWithText) -> Bool
+        queryIsFaulty (_, gqlQ) = (_lqQuery lq) == gqlQ
+
+    lqLst = concatMap zipLQwithDef (OMap.toList qcs)
+    fE = lefts $ map (validateQuery rs (lqToMetadataObj) formatError) lqLst
+    formatError (cName, lq) allErrs =
+      let msgInit = "In query collection \"" <> toTxt cName <> "\" the query \"" <> (toTxt . _lqName) lq <> "\" is invalid with the following error(s): "
+          lToTxt = dquoteList . reverse
+          faultyEndpoints = case inRESTEndpoints restEndpoints lq of
+            [] -> ""
+            ePoints -> ". This query is being used in the following REST endpoint(s): " <> lToTxt ePoints
+
+          isInAllowList = if inAllowList allowLst lq then ". This query is in allowlist." else ""
+       in msgInit <> lToTxt allErrs <> faultyEndpoints <> isInAllowList
+
+validateQuery ::
+  RemoteSchemaIntrospection ->
+  (a -> MetadataObject) ->
+  (a -> [Text] -> Text) ->
+  (a, G.ExecutableDefinition G.Name) ->
+  Either (MetadataObject, Text) ()
+validateQuery rSchema getMetaObj formatError (eMeta, eDef) = do
+  let analysis = analyzeGraphqlQuery eDef rSchema
+  case analysis of
+    Nothing -> Left (getMetaObj eMeta, formatError eMeta ["Cannot analyse the GraphQL query"])
+    Just a ->
+      let allErrs = getAllAnalysisErrs a
+       in if (null allErrs)
+            then Right ()
+            else Left (getMetaObj eMeta, formatError eMeta allErrs)

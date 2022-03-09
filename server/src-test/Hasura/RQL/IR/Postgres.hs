@@ -1,6 +1,5 @@
 module Hasura.RQL.IR.Postgres
   ( genTableName,
-    genIdentifier,
     genFunctionName,
     genColumn,
     genScalarType,
@@ -28,9 +27,6 @@ import Hedgehog.Gen (choice, element, maybe)
 genTableName :: MonadGen m => Range Int -> m (TableName ('Postgres 'Vanilla))
 genTableName textRange =
   PG.QualifiedObject <$> genSchemaName textRange <*> genPgTableName textRange
-
-genIdentifier :: MonadGen m => Range Int -> m (Identifier ('Postgres 'Vanilla))
-genIdentifier textRange = PG.Identifier <$> genArbitraryUnicodeText textRange
 
 genFunctionName :: MonadGen m => Range Int -> m (FunctionName ('Postgres 'Vanilla))
 genFunctionName textRange =
@@ -127,7 +123,7 @@ genSchemaName textRange =
   choice [pure PG.publicSchema, PG.SchemaName <$> genArbitraryUnicodeText textRange]
 
 genAnnSelectG ::
-  forall m r f a.
+  forall m f a.
   MonadGen m =>
   Range Int ->
   m a ->
@@ -157,11 +153,10 @@ genAnnSelectG ::
   Range Int ->
   Range Int ->
   Range Int ->
-  m (AnnSelectG ('Postgres 'Vanilla) r f a)
+  m (AnnSelectG ('Postgres 'Vanilla) f a)
 genAnnSelectG textRange genA =
   IRGen.genAnnSelectG
     (genTableName textRange)
-    (genIdentifier textRange)
     (genFunctionName textRange)
     (genColumn textRange)
     (genScalarType textRange)

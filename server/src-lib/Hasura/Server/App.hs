@@ -8,26 +8,19 @@ module Hasura.Server.App
     HasuraApp (HasuraApp),
     MonadConfigApiHandler (..),
     MonadMetadataApiAuthorization (..),
-    SchemaCacheRef (..),
     ServerCtx (scManager),
     boolToText,
     configApiGetHandler,
-    getSCFromRef,
-    initialiseCache,
     isAdminSecretSet,
-    logInconsObjs,
     mkGetHandler,
     mkSpockAction,
     mkWaiApp,
     onlyAdmin,
     renderHtmlTemplate,
-    withSCUpdate,
   )
 where
 
 import Control.Concurrent.Async.Lifted.Safe qualified as LA
-import Control.Concurrent.MVar.Lifted
-import Control.Concurrent.STM qualified as STM
 import Control.Exception (IOException, try)
 import Control.Monad.Stateless
 import Control.Monad.Trans.Control (MonadBaseControl)
@@ -40,7 +33,6 @@ import Data.CaseInsensitive qualified as CI
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as S
-import Data.IORef
 import Data.String (fromString)
 import Data.Text qualified as T
 import Data.Text.Conversions (convertText)
@@ -84,6 +76,12 @@ import Hasura.Server.Metrics (ServerMetrics)
 import Hasura.Server.Middleware (corsMiddleware)
 import Hasura.Server.OpenAPI (serveJSON)
 import Hasura.Server.Rest
+import Hasura.Server.SchemaCacheRef
+  ( SchemaCacheRef,
+    getSchemaCache,
+    readSchemaCacheRef,
+    withSchemaCacheUpdate,
+  )
 import Hasura.Server.Types
 import Hasura.Server.Utils
 import Hasura.Server.Version
@@ -103,25 +101,6 @@ import Text.Mustache qualified as M
 import Web.Spock.Core ((<//>))
 import Web.Spock.Core qualified as Spock
 
-data SchemaCacheRef = SchemaCacheRef
-  { -- | The idea behind explicit locking here is to
-    --
-    --   1. Allow maximum throughput for serving requests (/v1/graphql) (as each
-    --      request reads the current schemacache)
-    --   2. We don't want to process more than one request at any point of time
-    --      which would modify the schema cache as such queries are expensive.
-    --
-    -- Another option is to consider removing this lock in place of `_scrCache ::
-    -- MVar ...` if it's okay or in fact correct to block during schema update in
-    -- e.g.  _wseGCtxMap. Vamshi says: It is theoretically possible to have a
-    -- situation (in between building new schemacache and before writing it to
-    -- the IORef) where we serve a request with a stale schemacache but I guess
-    -- it is an okay trade-off to pay for a higher throughput (I remember doing a
-    -- bunch of benchmarks to test this hypothesis).
-    _scrLock :: MVar (),
-    _scrCache :: IORef (RebuildableSchemaCache, SchemaCacheVer)
-  }
-
 data ServerCtx = ServerCtx
   { scLogger :: !(L.Logger L.Hasura),
     scCacheRef :: !SchemaCacheRef,
@@ -140,7 +119,9 @@ data ServerCtx = ServerCtx
     scEnableMaintenanceMode :: !MaintenanceMode,
     scExperimentalFeatures :: !(S.HashSet ExperimentalFeature),
     -- | this is only required for the short-term fix in https://github.com/hasura/graphql-engine-mono/issues/1770
-    scEnabledLogTypes :: !(S.HashSet (L.EngineLogType L.Hasura))
+    scEnabledLogTypes :: !(S.HashSet (L.EngineLogType L.Hasura)),
+    scEventingMode :: !EventingMode,
+    scEnableReadOnlyMode :: !ReadOnlyMode
   }
 
 data HandlerCtx = HandlerCtx
@@ -174,49 +155,6 @@ boolToText = bool "false" "true"
 isAdminSecretSet :: AuthMode -> Text
 isAdminSecretSet AMNoAuth = boolToText False
 isAdminSecretSet _ = boolToText True
-
-getSCFromRef :: (MonadIO m) => SchemaCacheRef -> m SchemaCache
-getSCFromRef scRef = lastBuiltSchemaCache . fst <$> liftIO (readIORef $ _scrCache scRef)
-
-logInconsObjs :: L.Logger L.Hasura -> [InconsistentMetadata] -> IO ()
-logInconsObjs logger objs =
-  unless (null objs) $
-    L.unLogger logger $ mkInconsMetadataLog objs
-
-withSCUpdate ::
-  (MonadIO m, MonadBaseControl IO m) =>
-  SchemaCacheRef ->
-  L.Logger L.Hasura ->
-  Maybe (STM.TVar Bool) ->
-  m (a, RebuildableSchemaCache) ->
-  m a
-withSCUpdate scr logger mLogCheckerTVar action =
-  withMVarMasked lk $ \() -> do
-    (!res, !newSC) <- action
-    liftIO $ do
-      -- update schemacache in IO reference
-      modifyIORef' cacheRef $ \(_, prevVer) ->
-        let !newVer = incSchemaCacheVer prevVer
-         in (newSC, newVer)
-
-      let inconsistentObjectsList = scInconsistentObjs $ lastBuiltSchemaCache newSC
-          logInconsistentMetadata = logInconsObjs logger inconsistentObjectsList
-      -- log any inconsistent objects only once and not everytime this method is called
-      case mLogCheckerTVar of
-        Nothing -> do logInconsistentMetadata
-        Just logCheckerTVar -> do
-          logCheck <- liftIO $ STM.readTVarIO logCheckerTVar
-          if null inconsistentObjectsList && logCheck
-            then do
-              STM.atomically $ STM.writeTVar logCheckerTVar False
-            else do
-              when (not logCheck && not (null inconsistentObjectsList)) $ do
-                STM.atomically $ STM.writeTVar logCheckerTVar True
-                logInconsistentMetadata
-
-    return res
-  where
-    SchemaCacheRef lk cacheRef = scr
 
 mkGetHandler :: Handler m (HttpLogMetadata m, APIResp) -> APIHandler m ()
 mkGetHandler = AHGet
@@ -449,13 +387,13 @@ v1QueryHandler query = do
   (liftEitherM . authorizeV1QueryApi query) =<< ask
   scRef <- asks (scCacheRef . hcServerCtx)
   logger <- asks (scLogger . hcServerCtx)
-  res <- bool (fst <$> (action logger)) (withSCUpdate scRef logger Nothing (action logger)) $ queryModifiesSchemaCache query
+  res <- bool (fst <$> (action logger)) (withSchemaCacheUpdate scRef logger Nothing (action logger)) $ queryModifiesSchemaCache query
   return $ HttpResponse res []
   where
     action logger = do
       userInfo <- asks hcUser
       scRef <- asks (scCacheRef . hcServerCtx)
-      schemaCache <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
+      schemaCache <- liftIO $ fst <$> readSchemaCacheRef scRef
       httpMgr <- asks (scManager . hcServerCtx)
       sqlGenCtx <- asks (scSQLGenCtx . hcServerCtx)
       instanceId <- asks (scInstanceId . hcServerCtx)
@@ -464,7 +402,9 @@ v1QueryHandler query = do
       functionPermsCtx <- asks (scFunctionPermsCtx . hcServerCtx)
       maintenanceMode <- asks (scEnableMaintenanceMode . hcServerCtx)
       experimentalFeatures <- asks (scExperimentalFeatures . hcServerCtx)
-      let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode experimentalFeatures
+      eventingMode <- asks (scEventingMode . hcServerCtx)
+      readOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
+      let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode experimentalFeatures eventingMode readOnlyMode
       runQuery
         env
         logger
@@ -490,19 +430,21 @@ v1MetadataHandler query = do
   (liftEitherM . authorizeV1MetadataApi query) =<< ask
   userInfo <- asks hcUser
   scRef <- asks (scCacheRef . hcServerCtx)
-  schemaCache <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
+  schemaCache <- liftIO $ fst <$> readSchemaCacheRef scRef
   httpMgr <- asks (scManager . hcServerCtx)
-  sqlGenCtx <- asks (scSQLGenCtx . hcServerCtx)
+  _sccSQLGenCtx <- asks (scSQLGenCtx . hcServerCtx)
   env <- asks (scEnvironment . hcServerCtx)
   instanceId <- asks (scInstanceId . hcServerCtx)
   logger <- asks (scLogger . hcServerCtx)
-  remoteSchemaPermsCtx <- asks (scRemoteSchemaPermsCtx . hcServerCtx)
-  functionPermsCtx <- asks (scFunctionPermsCtx . hcServerCtx)
-  experimentalFeatures <- asks (scExperimentalFeatures . hcServerCtx)
-  maintenanceMode <- asks (scEnableMaintenanceMode . hcServerCtx)
-  let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode experimentalFeatures
+  _sccRemoteSchemaPermsCtx <- asks (scRemoteSchemaPermsCtx . hcServerCtx)
+  _sccFunctionPermsCtx <- asks (scFunctionPermsCtx . hcServerCtx)
+  _sccExperimentalFeatures <- asks (scExperimentalFeatures . hcServerCtx)
+  _sccMaintenanceMode <- asks (scEnableMaintenanceMode . hcServerCtx)
+  _sccEventingMode <- asks (scEventingMode . hcServerCtx)
+  _sccReadOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
+  let serverConfigCtx = ServerConfigCtx {..}
   r <-
-    withSCUpdate
+    withSchemaCacheUpdate
       scRef
       logger
       Nothing
@@ -534,7 +476,7 @@ v2QueryHandler query = do
   scRef <- asks (scCacheRef . hcServerCtx)
   logger <- asks (scLogger . hcServerCtx)
   res <-
-    bool (fst <$> dbAction) (withSCUpdate scRef logger Nothing dbAction) $
+    bool (fst <$> dbAction) (withSchemaCacheUpdate scRef logger Nothing dbAction) $
       V2Q.queryModifiesSchema query
   return $ HttpResponse res []
   where
@@ -542,7 +484,7 @@ v2QueryHandler query = do
     dbAction = do
       userInfo <- asks hcUser
       scRef <- asks (scCacheRef . hcServerCtx)
-      schemaCache <- fmap fst $ liftIO $ readIORef $ _scrCache scRef
+      schemaCache <- liftIO $ fst <$> readSchemaCacheRef scRef
       httpMgr <- asks (scManager . hcServerCtx)
       sqlGenCtx <- asks (scSQLGenCtx . hcServerCtx)
       instanceId <- asks (scInstanceId . hcServerCtx)
@@ -551,7 +493,9 @@ v2QueryHandler query = do
       experimentalFeatures <- asks (scExperimentalFeatures . hcServerCtx)
       functionPermsCtx <- asks (scFunctionPermsCtx . hcServerCtx)
       maintenanceMode <- asks (scEnableMaintenanceMode . hcServerCtx)
-      let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode experimentalFeatures
+      eventingMode <- asks (scEventingMode . hcServerCtx)
+      readOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
+      let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode experimentalFeatures eventingMode readOnlyMode
       V2Q.runQuery env instanceId userInfo schemaCache httpMgr serverConfigCtx query
 
 v1Alpha1GQHandler ::
@@ -576,23 +520,11 @@ v1Alpha1GQHandler queryType query = do
   reqHeaders <- asks hcReqHeaders
   ipAddress <- asks hcSourceIpAddress
   requestId <- asks hcRequestId
-  manager <- asks (scManager . hcServerCtx)
-  scRef <- asks (scCacheRef . hcServerCtx)
-  (sc, scVer) <- liftIO $ readIORef $ _scrCache scRef
-  sqlGenCtx <- asks (scSQLGenCtx . hcServerCtx)
-  enableAL <- asks (scEnableAllowlist . hcServerCtx)
   logger <- asks (scLogger . hcServerCtx)
   responseErrorsConfig <- asks (scResponseInternalErrorsConfig . hcServerCtx)
   env <- asks (scEnvironment . hcServerCtx)
 
-  let execCtx =
-        E.ExecutionCtx
-          logger
-          sqlGenCtx
-          (lastBuiltSchemaCache sc)
-          scVer
-          manager
-          enableAL
+  execCtx <- mkExecutionContext
 
   flip runReaderT execCtx $
     GH.runGQBatched env logger requestId responseErrorsConfig userInfo ipAddress reqHeaders queryType query
@@ -605,11 +537,12 @@ mkExecutionContext ::
 mkExecutionContext = do
   manager <- asks (scManager . hcServerCtx)
   scRef <- asks (scCacheRef . hcServerCtx)
-  (sc, scVer) <- liftIO $ readIORef $ _scrCache scRef
+  (sc, scVer) <- liftIO $ readSchemaCacheRef scRef
   sqlGenCtx <- asks (scSQLGenCtx . hcServerCtx)
   enableAL <- asks (scEnableAllowlist . hcServerCtx)
   logger <- asks (scLogger . hcServerCtx)
-  pure $ E.ExecutionCtx logger sqlGenCtx (lastBuiltSchemaCache sc) scVer manager enableAL
+  readOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
+  pure $ E.ExecutionCtx logger sqlGenCtx (lastBuiltSchemaCache sc) scVer manager enableAL readOnlyMode
 
 v1GQHandler ::
   ( MonadIO m,
@@ -661,7 +594,7 @@ gqlExplainHandler ::
 gqlExplainHandler query = do
   onlyAdmin
   scRef <- asks (scCacheRef . hcServerCtx)
-  sc <- getSCFromRef scRef
+  sc <- liftIO $ getSchemaCache scRef
   res <- GE.explainGQLQuery sc query
   return $ HttpResponse res []
 
@@ -669,7 +602,7 @@ v1Alpha1PGDumpHandler :: (MonadIO m, MonadError QErr m, MonadReader HandlerCtx m
 v1Alpha1PGDumpHandler b = do
   onlyAdmin
   scRef <- asks (scCacheRef . hcServerCtx)
-  sc <- getSCFromRef scRef
+  sc <- liftIO $ getSchemaCache scRef
   let sources = scSources sc
       sourceName = PGD.prbSource b
       sourceConfig = unsafeSourceConfiguration @('Postgres 'Vanilla) =<< M.lookup sourceName sources
@@ -812,6 +745,8 @@ mkWaiApp ::
   WS.ConnectionOptions ->
   KeepAliveDelay ->
   MaintenanceMode ->
+  EventingMode ->
+  ReadOnlyMode ->
   -- | Set of the enabled experimental features
   S.HashSet ExperimentalFeature ->
   S.HashSet (L.EngineLogType L.Hasura) ->
@@ -842,10 +777,12 @@ mkWaiApp
   connectionOptions
   keepAliveDelay
   maintenanceMode
+  eventingMode
+  readOnlyMode
   experimentalFeatures
   enabledLogTypes
   wsConnInitTimeout = do
-    let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
+    let getSchemaCache' = first lastBuiltSchemaCache <$> readSchemaCacheRef schemaCacheRef
 
     let corsPolicy = mkDefaultCorsPolicy corsCfg
         postPollHook = fromMaybe (EL.defaultLiveQueryPostPollHook logger) liveQueryHook
@@ -855,10 +792,11 @@ mkWaiApp
       WS.createWSServerEnv
         logger
         lqState
-        getSchemaCache
+        getSchemaCache'
         httpManager
         corsPolicy
         sqlGenCtx
+        readOnlyMode
         enableAL
         keepAliveDelay
         serverMetrics
@@ -881,7 +819,9 @@ mkWaiApp
               scFunctionPermsCtx = functionPermsCtx,
               scEnableMaintenanceMode = maintenanceMode,
               scExperimentalFeatures = experimentalFeatures,
-              scEnabledLogTypes = enabledLogTypes
+              scEnabledLogTypes = enabledLogTypes,
+              scEventingMode = eventingMode,
+              scEnableReadOnlyMode = readOnlyMode
             }
 
     spockApp <- liftWithStateless $ \lowerIO ->
@@ -896,13 +836,6 @@ mkWaiApp
       pure $ WSC.websocketsOr connectionOptions (\ip conn -> lowerIO $ wsServerApp ip conn) spockApp
 
     return $ HasuraApp waiApp schemaCacheRef (EL._lqsAsyncActions lqState) stopWSServer
-
-initialiseCache :: MonadIO m => RebuildableSchemaCache -> m SchemaCacheRef
-initialiseCache schemaCache = do
-  cacheLock <- liftIO $ newMVar ()
-  cacheCell <- liftIO $ newIORef (schemaCache, initSchemaCacheVer)
-  let cacheRef = SchemaCacheRef cacheLock cacheCell
-  pure cacheRef
 
 httpApp ::
   forall m.
@@ -956,7 +889,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
             Spock.setStatus HTTP.status500 >> Spock.text errorMsg
           Right True -> do
             -- healthy
-            sc <- getSCFromRef $ scCacheRef serverCtx
+            sc <- liftIO $ getSchemaCache $ scCacheRef serverCtx
             let responseText =
                   if null (scInconsistentObjs sc)
                     then "OK"
@@ -990,7 +923,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
         Handler (Tracing.TraceT n) (HttpLogMetadata n, APIResp)
       customEndpointHandler restReq = do
         scRef <- asks (scCacheRef . hcServerCtx)
-        endpoints <- scEndpoints <$> getSCFromRef scRef
+        endpoints <- liftIO $ scEndpoints <$> getSchemaCache scRef
         execCtx <- mkExecutionContext
         env <- asks (scEnvironment . hcServerCtx)
         requestId <- asks hcRequestId
@@ -1102,7 +1035,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
     spockAction encodeQErr id $
       mkGetHandler $ do
         onlyAdmin
-        sc <- getSCFromRef $ scCacheRef serverCtx
+        sc <- liftIO $ getSchemaCache $ scCacheRef serverCtx
         let json = serveJSON sc
         return (emptyHttpLogMetadata @m, JSONResp $ HttpResponse (encJFromJValue json) [])
 

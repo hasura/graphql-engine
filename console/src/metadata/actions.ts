@@ -1,3 +1,4 @@
+import { MetadataResponse } from '@/features/MetadataAPI';
 import requestAction from '../utils/requestAction';
 import Endpoints, { globalCookiePolicy } from '../Endpoints';
 import {
@@ -55,17 +56,22 @@ import { Driver, setDriver } from '../dataSources';
 import { addSource, removeSource, reloadSource } from './sourcesUtils';
 import { getDataSources } from './selector';
 import { FixMe, ReduxState, Thunk } from '../types';
-import { getConfirmation } from '../components/Common/utils/jsUtils';
+import {
+  getConfirmation,
+  isConsoleError,
+} from '../components/Common/utils/jsUtils';
 import _push from '../components/Services/Data/push';
 import { dataSourceIsEqual } from '../components/Services/Data/DataSources/utils';
 import { getSourceDriver } from '../components/Services/Data/utils';
 
 export interface ExportMetadataSuccess {
   type: 'Metadata/EXPORT_METADATA_SUCCESS';
-  data: {
-    resource_version: number;
-    metadata: HasuraMetadataV3;
-  };
+  data:
+    | {
+        resource_version: number;
+        metadata: HasuraMetadataV3;
+      }
+    | HasuraMetadataV3;
 }
 export interface ExportMetadataError {
   type: 'Metadata/EXPORT_METADATA_ERROR';
@@ -234,7 +240,7 @@ export type MetadataActions =
   | { type: typeof UPDATE_CURRENT_DATA_SOURCE; source: string };
 
 export const exportMetadata = (
-  successCb?: (data: ExportMetadataSuccess['data']) => void,
+  successCb?: (data: MetadataResponse) => void,
   errorCb?: (err: string) => void
 ): Thunk<Promise<ReduxState | void>, MetadataActions> => (
   dispatch,
@@ -498,7 +504,7 @@ export const removeDataSource = (
 };
 
 export const replaceMetadata = (
-  newMetadata: HasuraMetadataV2 | ExportMetadataSuccess['data'],
+  newMetadata: HasuraMetadataV2 | MetadataResponse,
   successCb: () => void,
   errorCb: () => void
 ): Thunk<void, MetadataActions> => (dispatch, getState) => {
@@ -507,9 +513,7 @@ export const replaceMetadata = (
     metadata: HasuraMetadataV3;
   }) => {
     const metadata =
-      (newMetadata as HasuraMetadataV2).version?.toString() === '2'
-        ? (newMetadata as HasuraMetadataV2)
-        : (newMetadata as ExportMetadataSuccess['data']).metadata;
+      'version' in newMetadata ? newMetadata : newMetadata.metadata;
     const upQuery = generateReplaceMetadataQuery(metadata);
     const downQuery = generateReplaceMetadataQuery(oldMetadata.metadata);
 
@@ -522,9 +526,7 @@ export const replaceMetadata = (
     const customOnSuccess = () => {
       if (successCb) successCb();
 
-      const updateCurrentDataSource = (
-        newState: ExportMetadataSuccess['data']
-      ) => {
+      const updateCurrentDataSource = (newState: MetadataResponse) => {
         const currentSource = newState.metadata.sources.find(
           (x: MetadataDataSource) =>
             x.name === getState().tables.currentDataSource
@@ -629,12 +631,11 @@ export const replaceMetadataFromFile = (
   try {
     parsedFileContent = JSON.parse(fileContent);
   } catch (e) {
-    dispatch(
-      showErrorNotification(
-        'Error parsing metadata file',
-        (e as Error).toString()
-      )
-    );
+    if (isConsoleError(e)) {
+      dispatch(
+        showErrorNotification('Error parsing metadata file', e.toString())
+      );
+    }
 
     if (errorCb) errorCb();
 

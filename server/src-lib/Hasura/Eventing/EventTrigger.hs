@@ -47,6 +47,7 @@ where
 import Control.Concurrent.Async.Lifted.Safe qualified as LA
 import Control.Concurrent.Extended (Forever (..), sleep)
 import Control.Concurrent.STM.TVar
+import Control.Lens
 import Control.Monad.Catch (MonadMask, bracket_, finally, mask_)
 import Control.Monad.STM
 import Control.Monad.Trans.Control (MonadBaseControl)
@@ -70,14 +71,14 @@ import Hasura.HTTP (getHTTPExceptionStatus)
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
-import Hasura.RQL.DDL.RequestTransform
+import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.Types
 import Hasura.RQL.Types.Eventing.Backend
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Types
 import Hasura.Tracing qualified as Tracing
-import Network.HTTP.Client qualified as HTTP
+import Network.HTTP.Client.Transformable qualified as HTTP
 import System.Metrics.Distribution qualified as EKG.Distribution
 import System.Metrics.Gauge qualified as EKG.Gauge
 
@@ -194,17 +195,6 @@ type BackendEventWithSource = AB.AnyBackend EventWithSource
 
 type FetchEventArguments = ([BackendEventWithSource], Int, Bool)
 
-pattern HttpErr :: e -> Either e (Either e' a)
-pattern HttpErr e = Left e
-
-pattern TransErr :: e' -> Either e (Either e' a)
-pattern TransErr e = Right (Left e)
-
-pattern Resp :: a -> Either e (Either e' a)
-pattern Resp a = Right (Right a)
-
-{-# COMPLETE HttpErr, TransErr, Resp #-}
-
 -- | Service events from our in-DB queue.
 --
 -- There are a few competing concerns and constraints here; we want to...
@@ -255,12 +245,14 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx {..} 
         LA.forConcurrently (M.toList allSources) \(sourceName, sourceCache) ->
           AB.dispatchAnyBackend @BackendEventTrigger sourceCache \(SourceInfo _sourceName tableCache _functionCache sourceConfig _queryTagsConfig _sourceCustomization :: SourceInfo b) -> do
             let tables = M.elems tableCache
-            let eventTriggerCount = sum (M.size . _tiEventTriggerInfoMap <$> tables)
+                triggerMap = _tiEventTriggerInfoMap <$> tables
+                eventTriggerCount = sum (M.size <$> triggerMap)
+                triggerNames = concat $ M.keys <$> triggerMap
 
             -- only process events for this source if at least one event trigger exists
             if eventTriggerCount > 0
               then
-                ( runExceptT (fetchUndeliveredEvents @b sourceConfig sourceName maintenanceMode (FetchBatchSize fetchBatchSize)) >>= \case
+                ( runExceptT (fetchUndeliveredEvents @b sourceConfig sourceName triggerNames maintenanceMode (FetchBatchSize fetchBatchSize)) >>= \case
                     Right events -> do
                       _ <- liftIO $ EKG.Distribution.add (smNumEventsFetchedPerBatch serverMetrics) (fromIntegral $ length events)
                       eventsFetchedTime <- liftIO getCurrentTime
@@ -401,31 +393,32 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx {..} 
                   ep = createEventPayload retryConf e
                   payload = J.encode $ J.toJSON ep
                   extraLogCtx = ExtraLogContext (epId ep) (Just $ etiName eti)
-                  dataTransform = mkRequestTransform <$> etiRequestTransform eti
-
-              eitherRes <-
+                  requestTransform = etiRequestTransform eti
+                  responseTransform = mkResponseTransform <$> etiResponseTransform eti
+              eitherReqRes <-
                 runExceptT $
-                  mkRequest headers httpTimeout payload dataTransform webhook >>= \case
-                    Left err -> pure $ Left err
-                    Right reqDetails -> do
-                      let logger' res details = logHTTPForET res extraLogCtx details logBehavior
-                      -- Event Triggers have a configuration parameter called
-                      -- HASURA_GRAPHQL_EVENTS_HTTP_WORKERS, which is used
-                      -- to control the concurrency of http delivery.
-                      -- This bracket is used to increment and decrement an
-                      -- HTTP Worker EKG Gauge for the duration of the
-                      -- request invocation
-                      resp <-
-                        bracket_
-                          (liftIO $ EKG.Gauge.inc $ smNumEventHTTPWorkers serverMetrics)
-                          (liftIO $ EKG.Gauge.dec $ smNumEventHTTPWorkers serverMetrics)
-                          (hoistEither =<< lift (invokeRequest reqDetails logger'))
-                      pure $ Right resp
-              case eitherRes of
-                Resp resp -> processSuccess sourceConfig e logHeaders ep maintenanceModeVersion resp >>= flip onLeft logQErr
-                HttpErr err -> processError @b sourceConfig e retryConf logHeaders ep maintenanceModeVersion err >>= flip onLeft logQErr
-                TransErr err -> do
-                  -- Log The Transformation Error
+                  mkRequest headers httpTimeout payload requestTransform webhook >>= \reqDetails -> do
+                    let request = extractRequest reqDetails
+                        logger' res details = logHTTPForET res extraLogCtx details logBehavior
+                    -- Event Triggers have a configuration parameter called
+                    -- HASURA_GRAPHQL_EVENTS_HTTP_WORKERS, which is used
+                    -- to control the concurrency of http delivery.
+                    -- This bracket is used to increment and decrement an
+                    -- HTTP Worker EKG Gauge for the duration of the
+                    -- request invocation
+                    resp <-
+                      bracket_
+                        (liftIO $ EKG.Gauge.inc $ smNumEventHTTPWorkers serverMetrics)
+                        (liftIO $ EKG.Gauge.dec $ smNumEventHTTPWorkers serverMetrics)
+                        (invokeRequest reqDetails responseTransform (_rdSessionVars reqDetails) logger')
+                    pure (request, resp)
+              case eitherReqRes of
+                Right (req, resp) ->
+                  let reqBody = fromMaybe J.Null $ view HTTP.body req >>= J.decode @J.Value
+                   in processSuccess sourceConfig e logHeaders reqBody maintenanceModeVersion resp >>= flip onLeft logQErr
+                Left (HTTPError reqBody err) ->
+                  processError @b sourceConfig e retryConf logHeaders reqBody maintenanceModeVersion err >>= flip onLeft logQErr
+                Left (TransformationError _ err) -> do
                   L.unLogger logger $ L.UnstructuredLog L.LevelError (TBS.fromLBS $ J.encode err)
 
                   -- Record an Event Error
@@ -454,7 +447,7 @@ processSuccess ::
   SourceConfig b ->
   Event b ->
   [HeaderConf] ->
-  EventPayload b ->
+  J.Value ->
   Maybe MaintenanceModeVersion ->
   HTTPResp a ->
   m (Either QErr ())
@@ -462,7 +455,8 @@ processSuccess sourceConfig e reqHeaders ep maintenanceModeVersion resp = do
   let respBody = hrsBody resp
       respHeaders = hrsHeaders resp
       respStatus = hrsStatus resp
-      invocation = mkInvocation ep (Just respStatus) reqHeaders respBody respHeaders
+      eid = eId e
+      invocation = mkInvocation eid ep (Just respStatus) reqHeaders respBody respHeaders
   recordSuccess @b sourceConfig e invocation maintenanceModeVersion
 
 processError ::
@@ -474,7 +468,7 @@ processError ::
   Event b ->
   RetryConf ->
   [HeaderConf] ->
-  EventPayload b ->
+  J.Value ->
   Maybe MaintenanceModeVersion ->
   HTTPErr a ->
   m (Either QErr ())
@@ -482,15 +476,15 @@ processError sourceConfig e retryConf reqHeaders ep maintenanceModeVersion err =
   let invocation = case err of
         HClient httpException ->
           let statusMaybe = getHTTPExceptionStatus httpException
-           in mkInvocation ep statusMaybe reqHeaders (TBS.fromLBS (J.encode httpException)) []
+           in mkInvocation (eId e) ep statusMaybe reqHeaders (TBS.fromLBS (J.encode httpException)) []
         HStatus errResp -> do
           let respPayload = hrsBody errResp
               respHeaders = hrsHeaders errResp
               respStatus = hrsStatus errResp
-          mkInvocation ep (Just respStatus) reqHeaders respPayload respHeaders
+          mkInvocation (eId e) ep (Just respStatus) reqHeaders respPayload respHeaders
         HOther detail -> do
           let errMsg = TBS.fromLBS $ J.encode detail
-          mkInvocation ep (Just 500) reqHeaders errMsg []
+          mkInvocation (eId e) ep (Just 500) reqHeaders errMsg []
   retryOrError <- retryOrSetError e retryConf err
   recordError @b sourceConfig e invocation retryOrError maintenanceModeVersion
 
@@ -522,14 +516,14 @@ retryOrSetError e retryConf err = do
     parseRetryHeader = mfilter (> 0) . readMaybe . T.unpack
 
 mkInvocation ::
-  Backend b =>
-  EventPayload b ->
+  EventId ->
+  J.Value ->
   Maybe Int ->
   [HeaderConf] ->
   TBS.TByteString ->
   [HeaderConf] ->
   Invocation 'EventType
-mkInvocation eventPayload statusMaybe reqHeaders respBody respHeaders =
+mkInvocation eid ep statusMaybe reqHeaders respBody respHeaders =
   let resp =
         case statusMaybe of
           Nothing -> mkClientErr respBody
@@ -538,9 +532,9 @@ mkInvocation eventPayload statusMaybe reqHeaders respBody respHeaders =
               then mkResp status respBody respHeaders
               else mkClientErr respBody
    in Invocation
-        (epId eventPayload)
+        eid
         statusMaybe
-        (mkWebhookReq (J.toJSON eventPayload) reqHeaders invocationVersionET)
+        (mkWebhookReq ep reqHeaders invocationVersionET)
         resp
 
 logQErr :: (MonadReader r m, Has (L.Logger L.Hasura) r, MonadIO m) => QErr -> m ()

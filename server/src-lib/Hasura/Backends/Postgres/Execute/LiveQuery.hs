@@ -1,3 +1,11 @@
+-- | Postgres Execute LiveQuery
+--
+-- Multiplex is an optimization which allows us to group similar queries into a
+-- single query, and routing the response rows afterwards. See
+-- https://hasura.io/docs/latest/graphql/core/databases/postgres/subscriptions/execution-and-performance.html
+-- for more details
+--
+-- See 'Hasura.Backends.Postgres.Instances.Execute'.
 module Hasura.Backends.Postgres.Execute.LiveQuery
   ( MultiplexedQuery (..),
     QueryParametersInfo (..),
@@ -95,7 +103,7 @@ toSQLFromItem ::
     DS.PostgresAnnotatedFieldJSON pgKind
   ) =>
   S.Alias ->
-  QueryDB ('Postgres pgKind) (Const Void) S.SQLExp ->
+  QueryDB ('Postgres pgKind) Void S.SQLExp ->
   S.FromItem
 toSQLFromItem = flip \case
   QDBSingleRow s -> S.mkSelFromItem $ DS.mkSQLSelect JASSingleObject s
@@ -107,7 +115,7 @@ mkMultiplexedQuery ::
   ( Backend ('Postgres pgKind),
     DS.PostgresAnnotatedFieldJSON pgKind
   ) =>
-  OMap.InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) (Const Void) S.SQLExp) ->
+  OMap.InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) Void S.SQLExp) ->
   MultiplexedQuery
 mkMultiplexedQuery rootFields =
   MultiplexedQuery . Q.fromBuilder . toSQL $

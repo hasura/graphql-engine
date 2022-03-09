@@ -1,3 +1,10 @@
+-- | Postgres Translate Mutation
+--
+-- Provide a combinator for generating a Postgres SQL SELECT statement for the
+-- selected columns in mutation queries.
+--
+-- See 'Hasura.Backends.Postgres.Execute.Mutation' and note
+-- [Prepared statements in Mutations]
 module Hasura.Backends.Postgres.Translate.Mutation
   ( mkSelectExpFromColumnValues,
   )
@@ -42,11 +49,11 @@ mkSelectExpFromColumnValues qt allCols = \case
     mkTupsFromColVal colVal =
       fmap S.TupleExp $
         forM sortedCols $ \ci -> do
-          let pgCol = pgiColumn ci
+          let pgCol = ciColumn ci
           val <-
             onNothing (Map.lookup pgCol colVal) $
               throw500 $ "column " <> pgCol <<> " not found in returning values"
-          pure $ txtEncodedToSQLExp (pgiType ci) val
+          pure $ txtEncodedToSQLExp (ciType ci) val
 
     selNoRows =
       S.mkSelect

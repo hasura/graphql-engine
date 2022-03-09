@@ -1,3 +1,10 @@
+-- | Metadata related types, functions and helpers.
+--
+-- Provides a single function which loads the MSSQL database metadata.
+-- See the file at src-rsr/mssql_table_metadata.sql for the SQL we use to build
+-- this metadata.
+-- See 'Hasura.RQL.Types.Table.DBTableMetadata' for the Haskell type we use forall
+-- storing this metadata.
 module Hasura.Backends.MSSQL.Meta
   ( loadDBMetadata,
   )
@@ -13,8 +20,8 @@ import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
 import Database.MSSQL.Transaction qualified as Tx
 import Database.ODBC.SQLServer qualified as ODBC
-import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Instances.Types ()
+import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Backends.MSSQL.Types.Internal
 import Hasura.Base.Error
 import Hasura.Prelude
@@ -24,19 +31,21 @@ import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 
 --------------------------------------------------------------------------------
--- Loader
+
+-- * Loader
 
 loadDBMetadata :: (MonadIO m) => Tx.TxET QErr m (DBTablesMetadata 'MSSQL)
 loadDBMetadata = do
   let queryBytes = $(makeRelativeToProject "src-rsr/mssql_table_metadata.sql" >>= embedFile)
       odbcQuery :: ODBC.Query = fromString . BSUTF8.toString $ queryBytes
-  sysTablesText <- runIdentity <$> Tx.singleRowQueryE fromMSSQLTxError odbcQuery
+  sysTablesText <- runIdentity <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler odbcQuery
   case Aeson.eitherDecodeStrict (T.encodeUtf8 sysTablesText) of
     Left e -> throw500 $ T.pack $ "error loading sql server database schema: " <> e
     Right sysTables -> pure $ HM.fromList $ map transformTable sysTables
 
 --------------------------------------------------------------------------------
--- Local types
+
+-- * Local types
 
 data SysTable = SysTable
   { staName :: Text,
@@ -82,6 +91,7 @@ data SysColumn = SysColumn
     scUserTypeId :: Int,
     scIsNullable :: Bool,
     scIsIdentity :: Bool,
+    scIsComputed :: Bool,
     scJoinedSysType :: SysType,
     scJoinedForeignKeyColumns :: [SysForeignKeyColumn]
   }
@@ -117,11 +127,12 @@ instance FromJSON SysForeignKeyColumn where
   parseJSON = genericParseJSON hasuraJSON
 
 --------------------------------------------------------------------------------
--- Transform
+
+-- * Transform
 
 transformTable :: SysTable -> (TableName, DBTableMetadata 'MSSQL)
 transformTable tableInfo =
-  let schemaName = ssName $ staJoinedSysSchema tableInfo
+  let schemaName = SchemaName $ ssName $ staJoinedSysSchema tableInfo
       tableName = TableName (staName tableInfo) schemaName
       tableOID = OID $ staObjectId tableInfo
       (columns, foreignKeys) = unzip $ transformColumn <$> staJoinedSysColumn tableInfo
@@ -146,20 +157,23 @@ transformColumn ::
   SysColumn ->
   (RawColumnInfo 'MSSQL, [ForeignKey 'MSSQL])
 transformColumn columnInfo =
-  let prciName = ColumnName $ scName columnInfo
-      prciPosition = scColumnId columnInfo
+  let rciName = ColumnName $ scName columnInfo
+      rciPosition = scColumnId columnInfo
 
-      prciIsNullable = scIsNullable columnInfo
-      prciDescription = Nothing
-      prciType = parseScalarType $ styName $ scJoinedSysType columnInfo
+      rciIsNullable = scIsNullable columnInfo
+      rciDescription = Nothing
+      rciType = parseScalarType $ styName $ scJoinedSysType columnInfo
       foreignKeys =
         scJoinedForeignKeyColumns columnInfo <&> \foreignKeyColumn ->
           let _fkConstraint = Constraint "fk_mssql" $ OID $ sfkcConstraintObjectId foreignKeyColumn
 
-              schemaName = ssName $ sfkcJoinedReferencedSysSchema foreignKeyColumn
+              schemaName = SchemaName $ ssName $ sfkcJoinedReferencedSysSchema foreignKeyColumn
               _fkForeignTable = TableName (sfkcJoinedReferencedTableName foreignKeyColumn) schemaName
-              _fkColumnMapping = HM.singleton prciName $ ColumnName $ sfkcJoinedReferencedColumnName foreignKeyColumn
+              _fkColumnMapping = HM.singleton rciName $ ColumnName $ sfkcJoinedReferencedColumnName foreignKeyColumn
            in ForeignKey {..}
+
+      colIsImmutable = scIsComputed columnInfo || scIsIdentity columnInfo
+      rciMutability = ColumnMutability {_cmIsInsertable = not colIsImmutable, _cmIsUpdatable = not colIsImmutable}
    in (RawColumnInfo {..}, foreignKeys)
 
 transformPrimaryKey :: SysPrimaryKey -> PrimaryKey 'MSSQL (Column 'MSSQL)
@@ -169,7 +183,8 @@ transformPrimaryKey (SysPrimaryKey {..}) =
    in PrimaryKey constraint columns
 
 --------------------------------------------------------------------------------
--- Helpers
+
+-- * Helpers
 
 coalesceKeys :: [ForeignKey 'MSSQL] -> [ForeignKey 'MSSQL]
 coalesceKeys = HM.elems . foldl' coalesce HM.empty

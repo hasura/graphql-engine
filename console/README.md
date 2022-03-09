@@ -11,6 +11,10 @@ Served by:
 2. Hasura CLI:
    Served by the Hasura CLI using `hasura console` command, typically runs with migration mode **enabled**. All the changes to schema/hasura metadata will be tracked and spit out on the filesystem as migration yaml files and a metadata yaml file. This allows for easy version controlling of the schema/hasura metadata.
 
+> To set up Hasura PRO CLI development environment, follow the steps mentioned
+ [here](./docs/setup-hasura-pro-cli.md).
+
+
 ## Contributing to Hasura console
 
 This guide is for setting-up the console for development on your own machine, and how to contribute.
@@ -85,6 +89,8 @@ IS_ADMIN_SECRET_SET=true
 
 > The server also templates `consolePath` in `window.__env` which is the relative path of the current page (something like `/console/data/schema/public`). Using this path, the console determines the DATA_API_URL in production. You do not need to worry about this in development since you are hardcoding the value of DATA_API_URL in `.env`.
 
+*If you're contributing to team-console i.e. console for Hasura Cloud or Hasura EE, refer to [this doc](https://github.com/hasura/lux/blob/main/docs/team-console.md).*
+
 ##### Run console development server:
 
 ```bash
@@ -110,6 +116,7 @@ Environment variables accepted in `cli` mode:
 - `SERVER_VERSION`: Hasura GraphQL Engine server version
 - `CONSOLE_MODE`: In cli mode, it should be `cli`
 - `ADMIN_SECRET`: the admin secret passed via the CLI
+- `HASURA_CLOUD_ROOT_DOMAIN`: cloud root domain, used to simulate and test Hasura Pro CLI with PAT mode  Eg. lux-dev.hasura.me for local lux setup
 
 Here's an example `.env` file for `cli` mode:
 

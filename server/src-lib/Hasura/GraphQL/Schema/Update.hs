@@ -26,58 +26,60 @@ import Hasura.GraphQL.Schema.BoolExp (boolExp)
 import Hasura.GraphQL.Schema.Common (mapField, partialSQLExpToUnpreparedValue)
 import Hasura.GraphQL.Schema.Mutation (mutationSelectionSet, primaryKeysArguments)
 import Hasura.GraphQL.Schema.Select (tableSelectionSet)
-import Hasura.GraphQL.Schema.Table (getTableGQLName, tableColumns, tableUpdateColumns)
+import Hasura.GraphQL.Schema.Table (getTableGQLName, tableColumns, tablePermissions, tableUpdateColumns)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (AnnBoolExp, annBoolExpTrue)
 import Hasura.RQL.IR.Returning (MutationOutputG (..))
-import Hasura.RQL.IR.Select (RemoteSelect)
+import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Update (AnnotatedUpdateG (..))
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..), isNumCol)
 import Hasura.RQL.Types.Common (SourceName)
-import Hasura.RQL.Types.Table (SelPermInfo, TableInfo, UpdPermInfo (..), tableInfoName)
+import Hasura.RQL.Types.Table
 import Language.GraphQL.Draft.Syntax (Description (..), Name (..), Nullability (..), litName)
 
--- | @UpdateOperator b m n t@ represents one single update operator for a
--- backend @b@, parsing a value of type @t@. @UpdateOperator b m n@ is a
--- @Functor@, which (apart from the type variable @b@) is what enables
--- multi-backend support.
+-- | @UpdateOperator b m n op@ represents one single update operator for a
+-- backend @b@.
 --
--- Use the 'Functor (UpdateOperator b m n)' instance to inject the
--- @UpdateOperator b m n (UnpreparedValue b)@ operators into backend-specific
--- IR types that encode update operators.
-data UpdateOperator b m n t = UpdateOperator
+-- The type variable @op@ is the backend-specific data type that represents
+-- update operators, typically in the form of a sum-type with an
+-- @UnpreparedValue b@ in each constructor.
+--
+-- The @UpdateOperator b m n@ is a @Functor@. There exist building blocks of
+-- common update operators (such as 'setOp', etc.) which have @op ~
+-- UnpreparedValue b@. The Functor instance lets you wrap the generic update
+-- operators in backend-specific tags.
+data UpdateOperator b m n op = UpdateOperator
   { updateOperatorApplicableColumn :: ColumnInfo b -> Bool,
     updateOperatorParser ::
       Name ->
       TableName b ->
       NonEmpty (ColumnInfo b) ->
-      m (P.InputFieldsParser n (HashMap (Column b) t))
+      m (P.InputFieldsParser n (HashMap (Column b) op))
   }
   deriving (Functor)
 
 -- | The top-level component for building update operators parsers.
 --
--- * It implements the 'preset' functionality from Update Permissions (see
+-- * It implements the @preset@ functionality from Update Permissions (see
 --   <https://hasura.io/docs/latest/graphql/core/auth/authorization/permission-rules.html#column-presets
---   Permissions user docs>)
+--   Permissions user docs>). Use the 'presetColumns' function to extract those from the update permissions.
 -- * It validates that that the update fields parsed are sound when taken as a
 --   whole, i.e. that some changes are actually specified (either in the
 --   mutation query text or in update preset columns) and that each column is
 --   only used in one operator.
 buildUpdateOperators ::
-  forall b n t m.
-  (BackendSchema b, P.MonadSchema n m, MonadError QErr m) =>
+  forall b n r op m.
+  (BackendSchema b, P.MonadSchema n m, P.MonadRole r m, P.MonadTableInfo r m) =>
   -- | Columns with @preset@ expressions
-  (HashMap (Column b) t) ->
+  (HashMap (Column b) op) ->
   -- | Update operators to include in the Schema
-  [UpdateOperator b m n t] ->
+  [UpdateOperator b m n op] ->
   TableInfo b ->
-  UpdPermInfo b ->
-  m (P.InputFieldsParser n (HashMap (Column b) t))
-buildUpdateOperators presetCols ops tableInfo updatePermissions = do
-  parsers :: P.InputFieldsParser n [HashMap (Column b) t] <-
-    sequenceA . catMaybes <$> traverse (runUpdateOperator tableInfo updatePermissions) ops
+  m (P.InputFieldsParser n (HashMap (Column b) op))
+buildUpdateOperators presetCols ops tableInfo = do
+  parsers :: P.InputFieldsParser n [HashMap (Column b) op] <-
+    sequenceA . catMaybes <$> traverse (runUpdateOperator tableInfo) ops
   pure $
     parsers
       `P.bindFields` ( \opExps -> do
@@ -94,22 +96,21 @@ presetColumns = fmap partialSQLExpToUnpreparedValue . upiSet
 -- | Produce an InputFieldsParser from an UpdateOperator, but only if the operator
 -- applies to the table (i.e., it admits a non-empty column set).
 runUpdateOperator ::
-  forall b m n t.
-  (Backend b, P.MonadSchema n m, MonadError QErr m) =>
+  forall b m n r op.
+  (Backend b, P.MonadSchema n m, P.MonadRole r m, P.MonadTableInfo r m) =>
   TableInfo b ->
-  UpdPermInfo b ->
-  UpdateOperator b m n t ->
+  UpdateOperator b m n op ->
   m
     ( Maybe
         ( P.InputFieldsParser
             n
-            (HashMap (Column b) t)
+            (HashMap (Column b) op)
         )
     )
-runUpdateOperator tableInfo updatePermissions UpdateOperator {..} = do
+runUpdateOperator tableInfo UpdateOperator {..} = do
   let tableName = tableInfoName tableInfo
   tableGQLName <- getTableGQLName tableInfo
-  columns <- tableUpdateColumns tableInfo updatePermissions
+  columns <- tableUpdateColumns tableInfo
 
   let applicableCols :: Maybe (NonEmpty (ColumnInfo b)) =
         nonEmpty . filter updateOperatorApplicableColumn $ columns
@@ -177,12 +178,12 @@ updateOperator ::
 updateOperator tableGQLName opName mkParser columns opDesc objDesc = do
   fieldParsers :: NonEmpty (P.InputFieldsParser n (Maybe (Column b, a))) <-
     for columns \columnInfo -> do
-      let fieldName = pgiName columnInfo
-          fieldDesc = pgiDescription columnInfo
+      let fieldName = ciName columnInfo
+          fieldDesc = ciDescription columnInfo
       fieldParser <- mkParser columnInfo
       pure $
         P.fieldOptional fieldName fieldDesc fieldParser
-          `mapField` \value -> (pgiColumn columnInfo, value)
+          `mapField` \value -> (ciColumn columnInfo, value)
 
   objName <- P.mkTypename $ tableGQLName <> opName <> $$(litName "_input")
 
@@ -210,8 +211,8 @@ setOp = UpdateOperator {..}
       let typedParser columnInfo =
             fmap P.mkParameter
               <$> columnParser
-                (pgiType columnInfo)
-                (Nullability $ pgiIsNullable columnInfo)
+                (ciType columnInfo)
+                (Nullability $ ciIsNullable columnInfo)
 
       updateOperator
         tableGQLName
@@ -239,8 +240,8 @@ incOp = UpdateOperator {..}
       let typedParser columnInfo =
             fmap P.mkParameter
               <$> columnParser
-                (pgiType columnInfo)
-                (Nullability $ pgiIsNullable columnInfo)
+                (ciType columnInfo)
+                (Nullability $ ciIsNullable columnInfo)
 
       updateOperator
         tableGQLName
@@ -266,18 +267,17 @@ updateTable ::
   Name ->
   -- | field description, if any
   Maybe Description ->
-  -- | update permissions of the table
-  UpdPermInfo b ->
-  -- | select permissions of the table (if any)
-  Maybe (SelPermInfo b) ->
-  m (P.FieldParser n (AnnotatedUpdateG b (RemoteSelect P.UnpreparedValue) (P.UnpreparedValue b)))
-updateTable backendUpdate sourceName tableInfo fieldName description updatePerms selectPerms = do
+  m (Maybe (P.FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b))))
+updateTable backendUpdate sourceName tableInfo fieldName description = runMaybeT do
   let tableName = tableInfoName tableInfo
       columns = tableColumns tableInfo
       whereName = $$(litName "where")
       whereDesc = "filter the rows which have to be updated"
-  whereArg <- P.field whereName (Just whereDesc) <$> boolExp sourceName tableInfo selectPerms
-  selection <- mutationSelectionSet sourceName tableInfo selectPerms
+      viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
+  guard $ isMutable viIsUpdatable viewInfo
+  updatePerms <- MaybeT $ (_permUpd =<<) <$> tablePermissions tableInfo
+  whereArg <- lift $ P.field whereName (Just whereDesc) <$> boolExp sourceName tableInfo
+  selection <- lift $ mutationSelectionSet sourceName tableInfo
   let argsParser = liftA2 (,) backendUpdate whereArg
   pure $
     P.subselection fieldName description argsParser selection
@@ -300,18 +300,17 @@ updateTableByPk ::
   Name ->
   -- | field description, if any
   Maybe Description ->
-  -- | update permissions of the table
-  UpdPermInfo b ->
-  -- | select permissions of the table
-  SelPermInfo b ->
-  m (Maybe (P.FieldParser n (AnnotatedUpdateG b (RemoteSelect P.UnpreparedValue) (P.UnpreparedValue b))))
-updateTableByPk backendUpdate sourceName tableInfo fieldName description updatePerms selectPerms = runMaybeT $ do
+  m (Maybe (P.FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b))))
+updateTableByPk backendUpdate sourceName tableInfo fieldName description = runMaybeT $ do
   let columns = tableColumns tableInfo
       tableName = tableInfoName tableInfo
-  tableGQLName <- getTableGQLName tableInfo
-  pkArgs <- MaybeT $ primaryKeysArguments tableInfo selectPerms
+      viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
+  guard $ isMutable viIsUpdatable viewInfo
+  updatePerms <- MaybeT $ (_permUpd =<<) <$> tablePermissions tableInfo
+  pkArgs <- MaybeT $ primaryKeysArguments tableInfo
+  selection <- MaybeT $ tableSelectionSet sourceName tableInfo
   lift $ do
-    selection <- tableSelectionSet sourceName tableInfo selectPerms
+    tableGQLName <- getTableGQLName tableInfo
     pkObjectName <- P.mkTypename $ tableGQLName <> $$(litName "_pk_columns_input")
     let pkFieldName = $$(litName "pk_columns")
         pkObjectDesc = Description $ "primary key columns input for table: " <> unName tableGQLName
@@ -329,9 +328,9 @@ mkUpdateObject ::
   ( ( BackendUpdate b (P.UnpreparedValue b),
       AnnBoolExp b (P.UnpreparedValue b)
     ),
-    MutationOutputG b (RemoteSelect P.UnpreparedValue) (P.UnpreparedValue b)
+    MutationOutputG b (RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
   ) ->
-  AnnotatedUpdateG b (RemoteSelect P.UnpreparedValue) (P.UnpreparedValue b)
+  AnnotatedUpdateG b (RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
 mkUpdateObject _auTable _auAllCols updatePerms ((_auBackend, whereExp), _auOutput) =
   AnnotatedUpdateG {..}
   where

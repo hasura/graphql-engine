@@ -1,3 +1,11 @@
+-- | MSSQL DDL
+--
+-- Implements the DDL related methods of the
+-- 'Hasura.RQL.Types.Metadata.Backend.BackendMetadata' type class
+-- for the MSSQL backend, which provides an interface for fetching information about
+-- the objects in the database, such as tables, relationships, etc.
+--
+-- The actual instance is defined in "Hasura.Backends.MSSQL.Instances.Metadata".
 module Hasura.Backends.MSSQL.DDL
   ( buildComputedFieldInfo,
     fetchAndValidateEnumValues,
@@ -35,7 +43,7 @@ buildComputedFieldInfo ::
   ComputedFieldName ->
   ComputedFieldDefinition 'MSSQL ->
   RawFunctionInfo 'MSSQL ->
-  Maybe Text ->
+  Comment ->
   m (ComputedFieldInfo 'MSSQL)
 buildComputedFieldInfo _ _ _ _ _ _ =
   throw400 NotSupported "Computed fields aren't supported for MSSQL sources"

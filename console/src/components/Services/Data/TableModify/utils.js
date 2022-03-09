@@ -53,8 +53,11 @@ export const sanitiseRootFields = rootFields => {
   const santisedRootFields = {};
   Object.keys(rootFields).forEach(rootFieldType => {
     let rootField = rootFields[rootFieldType];
-    if (rootField !== null) {
+    if (typeof rootField === 'string') {
       rootField = rootField.trim() || null;
+    } else if (rootField) {
+      rootField.name = rootField.name ? rootField.name.trim() : null;
+      rootField.comment = rootField.comment ? rootField.comment.trim() : null;
     }
     santisedRootFields[rootFieldType] = rootField;
   });

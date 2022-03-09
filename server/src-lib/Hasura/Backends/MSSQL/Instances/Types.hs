@@ -1,12 +1,15 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
+-- | MSSQL Instances Types
+--
+-- Defines a 'Hasura.RQL.Types.Backend.Backend' type class instance for MSSQL.
 module Hasura.Backends.MSSQL.Instances.Types () where
 
 import Data.Aeson
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Connection qualified as MSSQL
 import Hasura.Backends.MSSQL.ToQuery ()
-import Hasura.Backends.MSSQL.Types.Insert qualified as MSSQL (MSSQLExtraInsertData)
+import Hasura.Backends.MSSQL.Types.Insert qualified as MSSQL (BackendInsert)
 import Hasura.Backends.MSSQL.Types.Internal qualified as MSSQL
 import Hasura.Backends.MSSQL.Types.Update qualified as MSSQL (BackendUpdate)
 import Hasura.Base.Error
@@ -18,10 +21,12 @@ import Language.GraphQL.Draft.Syntax qualified as G
 instance Backend 'MSSQL where
   type SourceConfig 'MSSQL = MSSQL.MSSQLSourceConfig
   type SourceConnConfiguration 'MSSQL = MSSQL.MSSQLConnConfiguration
-  type Identifier 'MSSQL = Text
   type TableName 'MSSQL = MSSQL.TableName
   type RawFunctionInfo 'MSSQL = Void
-  type FunctionName 'MSSQL = MSSQL.FunctionName
+
+  -- It's something of a wart that we have to
+  -- specify this here, as we don't support functions for MSSQL.
+  type FunctionName 'MSSQL = Text
   type FunctionArgType 'MSSQL = Void
   type ConstraintName 'MSSQL = Text
   type BasicOrderType 'MSSQL = MSSQL.Order
@@ -37,13 +42,12 @@ instance Backend 'MSSQL where
   type BackendUpdate 'MSSQL = MSSQL.BackendUpdate
 
   type ExtraTableMetadata 'MSSQL = [MSSQL.ColumnName] -- List of identity columns
-  type ExtraInsertData 'MSSQL = MSSQL.MSSQLExtraInsertData
+  type BackendInsert 'MSSQL = MSSQL.BackendInsert
 
   type XComputedField 'MSSQL = XDisable
   type XRelay 'MSSQL = XDisable
   type XNodesAgg 'MSSQL = XEnable
   type XNestedInserts 'MSSQL = XDisable
-  type XOnConflict 'MSSQL = XDisable
 
   functionArgScalarType :: FunctionArgType 'MSSQL -> ScalarType 'MSSQL
   functionArgScalarType = absurd

@@ -23,6 +23,29 @@ args:
       ('Baz', 'Qux'),
       ('X%20Y', 'Test');
 
+- type: run_sql
+  args:
+    sql: |
+      create table test_table_recurse(
+          random_data text,
+          id UUID NOT NULL DEFAULT gen_random_uuid()
+      );
+
+- type: track_table
+  args:
+    schema: public
+    name: test_table_recurse
+
+- type: create_object_relationship
+  args:
+    table: test_table_recurse
+    name: recurse_rel
+    using:
+      manual_configuration:
+        remote_table: test_table_recurse
+        column_mapping:
+          id : id
+
 - type: create_query_collection
   args:
     name: test_collection
@@ -30,6 +53,8 @@ args:
       queries:
       - name: simple_query
         query: "query { test_table { first_name last_name } }"
+      - name: simple_query_with_aliases
+        query: "query { test: test_table { firstName: first_name lastName: last_name surname: last_name } }"
       - name: query_with_arg
         query: "query ($first_name:String!) { test_table(where: {first_name: { _eq: $first_name } }) { first_name last_name } }"
       - name: query_with_args
@@ -40,3 +65,11 @@ args:
         query: "query ($first_name:String=\"Foo\") { test_table(where: {first_name: { _eq: $first_name } }) { first_name last_name } }"
       - name: mutation_with_args
         query: "mutation ($first_name: String!, $last_name: String!) { insert_test_table( objects: {first_name: $first_name, last_name: $last_name }) { returning { id } affected_rows } }"
+      - name: mutation_complex_arg
+        query: "mutation ($objects: [test_table_insert_input!]!) { insert_test_table( objects: $objects) { returning { id } } }"
+      - name: mutation_complex_args
+        query: "mutation QQ($new_object: test_table_set_input!, $first_name: String!) { update_test_table(where: {first_name: {_eq: $first_name}}, _set: $new_object) { affected_rows } }"
+      - name: mutation_recursive_arg
+        query: "mutation MyMutation($object: test_table_recurse_insert_input!) { insert_test_table_recurse_one(object: $object) { id } }"
+      - name: query_with_duplicate_field_name
+        query: "query { test_table { first_name } test_table { last_name } }"

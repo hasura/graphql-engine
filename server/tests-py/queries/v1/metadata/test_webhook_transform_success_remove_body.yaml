@@ -1,0 +1,30 @@
+- description: Test Webhook Transform
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: admin
+  status: 200
+  response:
+    headers:
+      - - foo
+        - bar
+    body:
+    method: GET
+    webhook_url: http://www.google.com?foo=bar
+  query:
+    type: test_webhook_transform
+    args:
+      webhook_url: http://localhost:1234
+      body:
+        hello: world
+      request_transform:
+        version: 2
+        url: "http://www.google.com"
+        template_engine: Kriti
+        body:
+          action: remove
+        method: GET
+        query_params:
+          "foo": "bar"
+        request_headers:
+          add_headers:
+            foo: "bar"

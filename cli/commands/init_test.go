@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -38,11 +39,46 @@ var _ = Describe("hasura init --endpoint (config v3)", func() {
 		teardown()
 	})
 
+	It("should create version 3 metadata directory", func() {
+		err := os.RemoveAll(projectDirectory)
+		Expect(err).To(BeNil())
+
+		session := testutil.Hasura(testutil.CmdOpts{
+			Args: []string{"init", projectDirectory},
+		})
+		Eventually(session, timeout).Should(Exit(0))
+
+		wantKeywordList := []string{
+			fmt.Sprintf("cd %s", projectDirectory),
+			"hasura console",
+		}
+		for _, keyword := range wantKeywordList {
+			Expect(session.Err.Contents()).Should(ContainSubstring(keyword))
+		}
+
+		// check that required files are present
+		wantFilesList := []string{
+			filepath.Join(projectDirectory, "metadata", "databases", "databases.yaml"),
+		}
+		for _, file := range wantFilesList {
+			_, err := ioutil.ReadFile(file)
+			Expect(err).To(BeNil())
+		}
+
+		// check contents of metadata/version.yaml
+		gotMetadataVersion, err := ioutil.ReadFile(filepath.Join(projectDirectory, "metadata", "version.yaml"))
+		Expect(err).To(BeNil())
+		goldenMetadataVersion, err := ioutil.ReadFile("testdata/init_test/config-v3/metadata/version.golden.yaml")
+		Expect(err).To(BeNil())
+
+		Expect(gotMetadataVersion).Should(MatchYAML(goldenMetadataVersion))
+	})
+
 	It("should create directory with metadata and migrations from server", func() {
 		Context("create migrations and apply those on server", func() {
 			testMigrateApply(projectDirectory, []string{"--database-name", sourceName})
 		})
-		Context("test init --endpoint for config v2", func() {
+		Context("test init --endpoint for config v3", func() {
 			err := os.RemoveAll(projectDirectory)
 			Expect(err).To(BeNil())
 			session := testutil.Hasura(testutil.CmdOpts{
@@ -87,6 +123,42 @@ var _ = Describe("hasura init --endpoint (config v2)", func() {
 
 	AfterEach(func() {
 		teardown()
+	})
+
+	It("should create version 2 metadata directory", func() {
+		err := os.RemoveAll(projectDirectory)
+		Expect(err).To(BeNil())
+
+		session := testutil.Hasura(testutil.CmdOpts{
+			Args: []string{"init", projectDirectory, "--version", "2"},
+		})
+		Eventually(session, timeout).Should(Exit(0))
+
+		wantKeywordList := []string{
+			fmt.Sprintf("cd %s", projectDirectory),
+			"hasura console",
+		}
+		for _, keyword := range wantKeywordList {
+			Expect(session.Err.Contents()).Should(ContainSubstring(keyword))
+		}
+
+		// check that required files are present
+		wantFilesList := []string{
+			filepath.Join(projectDirectory, "metadata", "functions.yaml"),
+			filepath.Join(projectDirectory, "metadata", "tables.yaml"),
+		}
+		for _, file := range wantFilesList {
+			_, err := ioutil.ReadFile(file)
+			Expect(err).To(BeNil())
+		}
+
+		// check contents of metadata/version.yaml
+		gotMetadataVersion, err := ioutil.ReadFile(filepath.Join(projectDirectory, "metadata", "version.yaml"))
+		Expect(err).To(BeNil())
+		goldenMetadataVersion, err := ioutil.ReadFile("testdata/init_test/config-v2/metadata/version.golden.yaml")
+		Expect(err).To(BeNil())
+
+		Expect(gotMetadataVersion).Should(MatchYAML(goldenMetadataVersion))
 	})
 
 	It("should create directory with metadata and migrations from server", func() {

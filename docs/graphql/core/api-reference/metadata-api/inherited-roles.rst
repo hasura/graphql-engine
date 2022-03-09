@@ -83,7 +83,7 @@ drop_inherited_role
    {
        "type" : "drop_inherited_role",
        "args" : {
-          "role": "sample_inherited_role"
+          "role_name": "sample_inherited_role"
        }
    }
 
@@ -99,7 +99,7 @@ Args syntax
      - Required
      - Schema
      - Description
-   * - role
+   * - role_name
      - true
      - :ref:`RoleName`
      - Name of the inherited role

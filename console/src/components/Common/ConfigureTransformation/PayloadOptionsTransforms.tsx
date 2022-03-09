@@ -13,9 +13,10 @@ type PayloadOptionsTransformsProps = {
   requestSampleInput: string;
   requestTransformedBody: string;
   requestContentType: RequestTransformContentType;
-  webhookUrl: string;
+  enableRequestBody: boolean;
   resetSampleInput: () => void;
   requestBodyOnChange: (requestBody: string) => void;
+  requestBodyEnabledOnChange: (enableRequestBody: boolean) => void;
   requestSampleInputOnChange: (requestSampleInput: string) => void;
   requestContentTypeOnChange: (
     requestContentType: RequestTransformContentType
@@ -28,8 +29,10 @@ const PayloadOptionsTransforms: React.FC<PayloadOptionsTransformsProps> = ({
   requestSampleInput,
   requestTransformedBody,
   requestContentType,
+  enableRequestBody,
   resetSampleInput,
   requestBodyOnChange,
+  requestBodyEnabledOnChange,
   requestSampleInputOnChange,
   requestContentTypeOnChange,
 }) => {
@@ -49,9 +52,9 @@ const PayloadOptionsTransforms: React.FC<PayloadOptionsTransformsProps> = ({
     <div className="m-md pl-lg pr-sm border-l border-l-gray-400">
       <div className="mb-md">
         <NumberedSidebar
-          number="1"
           title="Sample Input"
           description="Sample input defined by your Action Defintion."
+          number="1"
         >
           <button
             type="button"
@@ -72,62 +75,93 @@ const PayloadOptionsTransforms: React.FC<PayloadOptionsTransformsProps> = ({
 
       <div className="mb-md">
         <NumberedSidebar
-          number="2"
           title="Configure Request Body"
-          description="The template which will transform your request body into the
-          required specification."
+          description={
+            <span>
+              The template which will transform your request body into the
+              required specification. You can use{' '}
+              <code className="text-xs">$body</code> to access the original
+              request body
+            </span>
+          }
+          number="2"
           url="https://hasura.io/docs/latest/graphql/core/actions/transforms.html#request-body"
         />
-        <TemplateEditor
-          requestBody={requestBody}
-          requestBodyError={requestBodyError}
-          requestSampleInput={requestSampleInput}
-          requestBodyOnChange={requestBodyOnChange}
-        />
+        <div className="mb-sm">
+          <input
+            checked={enableRequestBody}
+            id="request-enable"
+            name="request-body"
+            type="checkbox"
+            onChange={e => requestBodyEnabledOnChange(e.target.checked)}
+            className="rounded border-gray-400 focus:outline-none focus:ring-2  focus:ring-offset-2  focus:ring-yellow-400"
+            data-test="transform-showRequestBody-checkbox"
+          />
+          <label className="ml-xs" htmlFor="request-enable">
+            Enable Request Body
+          </label>
+        </div>
+        {enableRequestBody ? (
+          <TemplateEditor
+            requestBody={requestBody}
+            requestBodyError={requestBodyError}
+            requestSampleInput={requestSampleInput}
+            requestBodyOnChange={requestBodyOnChange}
+          />
+        ) : (
+          <div className="flex items-center text-gray-600 bg-gray-200 border border-gray-400 text-sm rounded p-sm">
+            <i className="fa fa-exclamation-circle mr-sm" />
+            The request body is disabled. No request body will be sent with this
+            action. Enable the request body to modify your request
+            transformation.
+          </div>
+        )}
       </div>
 
-      <div className="mb-md">
-        <NumberedSidebar
-          number="3"
-          title="Transformed Request Body"
-          description="Sample request body to be delivered based on your input and
+      {enableRequestBody ? (
+        <div className="mb-md">
+          <NumberedSidebar
+            title="Transformed Request Body"
+            description="Sample request body to be delivered based on your input and
           transformation template."
-        >
-          {showRequestContentTypeOptions ? (
-            <select
-              className={`ml-auto ${inputStyles}`}
-              value={requestContentType}
-              onChange={e =>
-                requestContentTypeOnChange(
-                  e.target.value as RequestTransformContentType
-                )
-              }
-            >
-              <option disabled>Data Type</option>
-              {requestContentTypeOptions.map(option => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          ) : null}
-        </NumberedSidebar>
-        <AceEditor
-          mode="json"
-          editorRef={editorRef}
-          value={requestTransformedBody}
-          showPrintMargin={false}
-          highlightActiveLine={false}
-          height="200px"
-          width="100%"
-          fontSize="12px"
-          style={{ background: '#e2e8f0' }}
-          setOptions={{
-            highlightGutterLine: false,
-          }}
-          readOnly
-        />
-      </div>
+            number="3"
+          >
+            {showRequestContentTypeOptions ? (
+              <select
+                className={`ml-auto ${inputStyles}`}
+                value={requestContentType}
+                onChange={e =>
+                  requestContentTypeOnChange(
+                    e.target.value as RequestTransformContentType
+                  )
+                }
+              >
+                <option disabled>Data Type</option>
+                {requestContentTypeOptions.map(option => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            ) : null}
+          </NumberedSidebar>
+          <AceEditor
+            mode="json"
+            editorRef={editorRef}
+            value={requestTransformedBody}
+            showPrintMargin={false}
+            highlightActiveLine={false}
+            height="200px"
+            width="100%"
+            fontSize="12px"
+            style={{ background: '#e2e8f0' }}
+            setOptions={{
+              highlightGutterLine: false,
+            }}
+            readOnly
+          />
+        </div>
+      ) : null}
     </div>
   );
 };

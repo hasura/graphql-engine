@@ -11,6 +11,7 @@ import Control.Monad.Validate
 import Data.Dependent.Map qualified as DMap
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
+import Data.List.Extended
 import Data.List.Extended qualified as L
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
@@ -92,6 +93,9 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
     enumTypes =
       mapFromL (unEnumTypeName . _etdName) enumDefinitions
 
+    objectTypes =
+      mapFromL (unObjectTypeName . _otdName) objectDefinitions
+
     inputObjectTypes =
       mapFromL (unInputObjectTypeName . _iotdName) inputObjectDefinitions
 
@@ -150,77 +154,61 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
 
     validateObject ::
       ObjectType -> m AnnotatedObjectType
-    validateObject objectDefinition = do
-      let objectTypeName = _otdName objectDefinition
-          fieldNames =
+    validateObject ObjectTypeDefinition {..} = do
+      let fieldNames =
             map (unObjectFieldName . _ofdName) $
-              toList (_otdFields objectDefinition)
-          maybeRelationships = _otdRelationships objectDefinition
+              toList _otdFields
           relNames =
             maybe
               []
               (map (unRelationshipName . _trName) . toList)
-              maybeRelationships
+              _otdRelationships
           duplicateFieldNames = L.duplicates $ fieldNames <> relNames
-          fields = _otdFields objectDefinition
 
       -- check for duplicate field names
       unless (null duplicateFieldNames) $
-        dispute $ pure $ ObjectDuplicateFields objectTypeName duplicateFieldNames
+        dispute $ pure $ ObjectDuplicateFields _otdName duplicateFieldNames
 
-      scalarOrEnumFields <- for fields $ \objectField -> do
+      fields <- for _otdFields $ \objectField -> do
         let fieldName = _ofdName objectField
         -- check that arguments are not defined
         when (isJust $ _ofdArguments objectField) $
           dispute $
             pure $
               ObjectFieldArgumentsNotAllowed
-                objectTypeName
+                _otdName
                 fieldName
 
         forM objectField $ \fieldType -> do
           let fieldBaseType = G.getBaseType $ unGraphQLType fieldType
-              objectTypes =
-                Set.fromList $
-                  map
-                    (unObjectTypeName . _otdName)
-                    objectDefinitions
-
-          -- check that the fields only reference scalars and enums
-          -- and not other object types
           annotatedObjectFieldType <-
             if
                 | Just scalarDef <- Map.lookup fieldBaseType scalarTypes ->
                   pure $ AOFTScalar $ ASTCustom scalarDef
                 | Just enumDef <- Map.lookup fieldBaseType enumTypes ->
                   pure $ AOFTEnum enumDef
-                | Set.member fieldBaseType objectTypes ->
-                  refute $
-                    pure $
-                      ObjectFieldObjectBaseType
-                        objectTypeName
-                        fieldName
-                        fieldBaseType
+                | Map.member fieldBaseType objectTypes ->
+                  pure $ AOFTObject fieldBaseType
                 | Just scalarInfo <- lookupPGScalar allScalars fieldBaseType (AOFTScalar . ASTReusedScalar fieldBaseType) ->
                   pure scalarInfo
                 | otherwise ->
                   refute $
                     pure $
                       ObjectFieldTypeDoesNotExist
-                        objectTypeName
+                        _otdName
                         fieldName
                         fieldBaseType
           pure (unGraphQLType fieldType, annotatedObjectFieldType)
 
-      let scalarOrEnumFieldMap =
+      let fieldsMap =
             Map.fromList $
-              map (_ofdName &&& (fst . _ofdType)) $ toList $ scalarOrEnumFields
+              map (_ofdName &&& (fst . _ofdType)) $ toList fields
 
-      annotatedRelationships <- forM maybeRelationships $ \relationships -> do
+      annotatedRelationships <- forM _otdRelationships $ \relationships -> do
         let headSource NE.:| rest = _trSource <$> relationships
         -- this check is needed to ensure that custom type relationships are all defined to a single source
         unless (all (headSource ==) rest) $
-          refute $ pure $ ObjectRelationshipMultiSources objectTypeName
+          refute $ pure $ ObjectRelationshipMultiSources _otdName
         forM relationships $ \TypeRelationship {..} -> do
           --check that the table exists
           remoteTableInfo <-
@@ -228,19 +216,19 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
               refute $
                 pure $
                   ObjectRelationshipTableDoesNotExist
-                    objectTypeName
+                    _otdName
                     _trName
                     _trRemoteTable
 
           -- check that the column mapping is sane
           annotatedFieldMapping <- flip Map.traverseWithKey _trFieldMapping $
             \fieldName columnName -> do
-              case Map.lookup fieldName scalarOrEnumFieldMap of
+              case Map.lookup fieldName fieldsMap of
                 Nothing ->
                   dispute $
                     pure $
                       ObjectRelationshipFieldDoesNotExist
-                        objectTypeName
+                        _otdName
                         _trName
                         fieldName
                 Just fieldType ->
@@ -249,7 +237,7 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
                     dispute $
                       pure $
                         ObjectRelationshipFieldListType
-                          objectTypeName
+                          _otdName
                           _trName
                           fieldName
 
@@ -257,7 +245,7 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
               onNothing (getColumnInfoM remoteTableInfo (fromCol @('Postgres 'Vanilla) columnName)) $
                 refute $
                   pure $
-                    ObjectRelationshipColumnDoesNotExist objectTypeName _trName _trRemoteTable columnName
+                    ObjectRelationshipColumnDoesNotExist _otdName _trName _trRemoteTable columnName
 
           pure $ TypeRelationship _trName _trType _trSource remoteTableInfo annotatedFieldMapping
 
@@ -269,9 +257,9 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
       pure $
         flip AnnotatedObjectType sourceConfig $
           ObjectTypeDefinition
-            objectTypeName
-            (_otdDescription objectDefinition)
-            scalarOrEnumFields
+            _otdName
+            _otdDescription
+            fields
             annotatedRelationships
 
 -- see Note [Postgres scalars in custom types]
@@ -409,8 +397,8 @@ resolveCustomTypes ::
   DMap.DMap BackendTag ScalarSet ->
   m AnnotatedCustomTypes
 resolveCustomTypes sources customTypes allScalars =
-  either (throw400 ConstraintViolation . showErrors) pure
-    =<< runValidateT (validateCustomTypeDefinitions sources customTypes allScalars)
+  runValidate (validateCustomTypeDefinitions sources customTypes allScalars)
+    `onLeft` (throw400 ConstraintViolation . showErrors)
   where
     showErrors :: [CustomTypeValidationError] -> Text
     showErrors allErrors =

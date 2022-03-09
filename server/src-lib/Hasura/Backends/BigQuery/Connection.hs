@@ -5,12 +5,14 @@ module Hasura.Backends.BigQuery.Connection
     resolveConfigurationInput,
     resolveConfigurationInputs,
     resolveConfigurationJson,
+    initConnection,
     runBigQuery,
   )
 where
 
 import Control.Concurrent.MVar
 import Control.Exception
+import Control.Retry qualified as Retry
 import Crypto.Hash.Algorithms (SHA256 (..))
 import Crypto.PubKey.RSA.PKCS15 (signSafer)
 import Crypto.PubKey.RSA.Types as Cry (Error)
@@ -31,6 +33,7 @@ import Hasura.Backends.BigQuery.Source
 import Hasura.Backends.MSSQL.Connection qualified as MSSQLConn (getEnv)
 import Hasura.Base.Error
 import Hasura.Prelude
+import Network.HTTP.Client
 import Network.HTTP.Simple
 import Network.HTTP.Types
 
@@ -93,6 +96,11 @@ resolveConfigurationInputs ::
 resolveConfigurationInputs env = \case
   FromYamls a -> pure a
   FromEnvs v -> filter (not . T.null) . T.splitOn "," <$> MSSQLConn.getEnv env v
+
+initConnection :: MonadIO m => ServiceAccount -> Text -> Maybe RetryOptions -> m BigQueryConnection
+initConnection _bqServiceAccount _bqProjectId _bqRetryOptions = do
+  _bqAccessTokenMVar <- liftIO $ newMVar Nothing -- `runBigQuery` initializes the token
+  pure BigQueryConnection {..}
 
 getAccessToken :: MonadIO m => ServiceAccount -> m (Either TokenProblem TokenResp)
 getAccessToken sa = do
@@ -163,13 +171,13 @@ getAccessToken sa = do
                   ]
 
 -- | Get a usable token. If the token has expired refresh it.
-getUsableToken :: MonadIO m => BigQuerySourceConfig -> m (Either TokenProblem TokenResp)
-getUsableToken BigQuerySourceConfig {_scServiceAccount, _scAccessTokenMVar} =
+getUsableToken :: MonadIO m => BigQueryConnection -> m (Either TokenProblem TokenResp)
+getUsableToken BigQueryConnection {_bqServiceAccount, _bqAccessTokenMVar} =
   liftIO $
-    modifyMVar _scAccessTokenMVar $ \mTokenResp -> do
+    modifyMVar _bqAccessTokenMVar $ \mTokenResp -> do
       case mTokenResp of
         Nothing -> do
-          refreshedToken <- getAccessToken _scServiceAccount
+          refreshedToken <- getAccessToken _bqServiceAccount
           case refreshedToken of
             Left e -> pure (Nothing, Left e)
             Right t -> pure (Just t, Right t)
@@ -177,7 +185,7 @@ getUsableToken BigQuerySourceConfig {_scServiceAccount, _scAccessTokenMVar} =
           pt <- liftIO $ getPOSIXTime
           if (pt >= fromIntegral _trExpiresAt - (10 :: NominalDiffTime)) -- when posix-time is greater than expires-at-minus-threshold
             then do
-              refreshedToken' <- getAccessToken _scServiceAccount
+              refreshedToken' <- getAccessToken _bqServiceAccount
               case refreshedToken' of
                 Left e -> pure (Just t, Left e)
                 Right t' -> pure (Just t', Right t')
@@ -189,14 +197,29 @@ data BigQueryProblem
 
 runBigQuery ::
   (MonadIO m) =>
-  BigQuerySourceConfig ->
+  BigQueryConnection ->
   Request ->
   m (Either BigQueryProblem (Response BL.ByteString))
-runBigQuery sc req = do
-  eToken <- getUsableToken sc
+runBigQuery conn req = do
+  eToken <- getUsableToken conn
   case eToken of
     Left e -> pure . Left . TokenProblem $ e
     Right TokenResp {_trAccessToken, _trExpiresAt} -> do
       let req' = setRequestHeader "Authorization" ["Bearer " <> (TE.encodeUtf8 . coerce) _trAccessToken] req
       -- TODO: Make this catch the HTTP exceptions
-      Right <$> httpLBS req'
+      Right <$> case _bqRetryOptions conn of
+        Just opts -> withGoogleApiRetries opts (httpLBS req')
+        Nothing -> httpLBS req'
+
+-- | Uses up to specified number retries for Google API requests with the specified base delay, uses full jitter backoff,
+-- see https://aws.amazon.com/ru/blogs/architecture/exponential-backoff-and-jitter/
+-- HTTP statuses for transient errors were taken from
+-- https://github.com/googleapis/python-api-core/blob/34ebdcc251d4f3d7d496e8e0b78847645a06650b/google/api_core/retry.py#L112-L115
+withGoogleApiRetries :: (MonadIO m) => RetryOptions -> m (Response body) -> m (Response body)
+withGoogleApiRetries RetryOptions {..} action =
+  Retry.retrying retryPolicy checkStatus (const action)
+  where
+    baseDelay = fromInteger . diffTimeToMicroSeconds $ microseconds _retryBaseDelay
+    retryPolicy = Retry.fullJitterBackoff baseDelay <> Retry.limitRetries _retryNumRetries
+    checkStatus _ resp =
+      pure $ responseStatus resp `elem` [tooManyRequests429, internalServerError500, serviceUnavailable503]

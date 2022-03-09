@@ -5,6 +5,13 @@
 Schema/Metadata API Reference: Remote Relationships (Deprecated)
 ================================================================
 
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
+
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
@@ -15,14 +22,7 @@ Introduction
 
 Remote Relationships allow you to join tables with remote schemas.
 
-.. admonition:: Deprecation
-
-  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
-  :ref:`metadata API <metadata_apis>`.
-
-  Though for backwards compatibility, the schema/metadata APIs will continue to function.
-
-.. _create_remote_relationship:
+.. _schema_metadata_create_remote_relationship:
 
 create_remote_relationship
 --------------------------
@@ -52,7 +52,7 @@ create_remote_relationship
       }
    }
 
-.. _create_remote_relationship_syntax:
+.. _schema_metadata_create_remote_relationship_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -85,7 +85,7 @@ Args syntax
      - :ref:`RemoteField`
      - The schema tree ending at the field in remote schema which needs to be joined with.
 
-.. _update_remote_relationship:
+.. _schema_metadata_update_remote_relationship:
 
 update_remote_relationship
 --------------------------
@@ -118,7 +118,7 @@ update_remote_relationship
      }
    }
 
-.. _update_remote_relationship_syntax:
+.. _schema_metadata_update_remote_relationship_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -151,7 +151,7 @@ Args syntax
      - :ref:`RemoteField`
      - The schema tree ending at the field in remote schema which needs to be joined with.
 
-.. _delete_remote_relationship:
+.. _schema_metadata_delete_remote_relationship:
 
 delete_remote_relationship
 --------------------------
@@ -175,7 +175,7 @@ delete_remote_relationship
        }
    }
 
-.. _delete_remote_relationship_syntax:
+.. _schema_metadata_delete_remote_relationship_syntax:
 
 Args syntax
 ^^^^^^^^^^^

@@ -15,7 +15,7 @@ Metadata API Reference: Manage metadata
 Introduction
 ------------
 
-APIs to manage Hasura metadata which is stored in ``hdb_catalog`` schema.
+APIs for managing Hasura metadata which is stored in the ``hdb catalog`` schema.
 
 .. admonition:: Supported from
 
@@ -153,9 +153,9 @@ Request
 Responses
 ^^^^^^^^^
 
-Version 2 with inconsistencies and allow_inconsistent_metadata=false, or omitted corresponds with the response document in :ref:`replace_metadata`.
+Version 2 with inconsistencies and allow_inconsistent_metadata=false, or omitted corresponds with the response document in :ref:`metadata_replace_metadata`.
 
-Version 2 example with inconsistencies and allow_inconsistent_metadata=true includes an ``is_consistent`` and ``inconsistent_objects`` corresponding to :ref:`get_inconsistent_metadata`.
+Version 2 example with inconsistencies and allow_inconsistent_metadata=true includes an ``is_consistent`` and ``inconsistent_objects`` corresponding to :ref:`metadata_get_inconsistent_metadata`.
 
 .. code-block:: none
 
@@ -238,6 +238,37 @@ table using ``psql`` and this column should now be added to the GraphQL schema.
        }
    }
 
+Response:
+
+If the metadata is consistent:
+
+.. code-block:: json
+
+  {
+      "is_consistent": true,
+      "message": "success"
+  }
+
+If the metadata is not consistent:
+
+.. code-block:: json
+
+  {
+      "is_consistent": false,
+      "message": "success",
+      "inconsistent_objects": [
+          {
+              "definition": {
+                  "schema": "public",
+                  "name": "article"
+              },
+              "name": "table article in source default",
+              "reason": "Inconsistent object: no such table/view exists in source: \"article\"",
+              "type": "table"
+          }
+      ]
+  }
+
 .. _metadata_reload_metadata_syntax:
 
 Args syntax
@@ -306,40 +337,43 @@ Response:
 
 .. code-block:: json
 
-   [
+   {
+     "is_consistent": false,
+     "inconsistent_objects": [
        {
-           "definition": {
-               "using": {
-                   "foreign_key_constraint_on": {
-                       "column": "author_id",
-                       "table": "article"
-                   }
-               },
-               "name": "articles",
-               "comment": null,
-               "table": "author"
-           },
-           "reason": "table \"article\" does not exist",
-           "type": "array_relation"
+         "type": "table",
+         "name": "table public.article in source default",
+         "definition": {
+           "schema": "public",
+           "name": "article"
+         },
+         "reason": "Inconsistent object: no such table/view exists in source: \"public.article\""
        },
        {
-           "definition": {
-               "using": {
-                   "foreign_key_constraint_on": "author_id"
-               },
-               "name": "author",
-               "comment": null,
-               "table": "article"
+         "type": "array_relation",
+         "name": "array_relation articles in table public.author in source default",
+         "definition": {
+           "name": "articles",
+           "source": "default",
+           "comment": null,
+           "table": {
+             "schema": "public",
+             "name": "author"
            },
-           "reason": "table \"article\" does not exist",
-           "type": "object_relation"
-       },
-       {
-           "definition": "article",
-           "reason": "no such table/view exists in source : \"article\"",
-           "type": "table"
+           "using": {
+             "foreign_key_constraint_on": {
+               "column": "author_id",
+               "table": {
+                 "schema": "public",
+                 "name": "article"
+               }
+             }
+           }
+         },
+         "reason": "Inconsistent object: in table \"public.author\": in relationship \"articles\": table \"public.article\" does not exist"
        }
-   ]
+     ]
+   }
 
 .. _metadata_drop_inconsistent_metadata:
 
@@ -362,7 +396,7 @@ drop_inconsistent_metadata
 .. _test_webhook_transform:
 
 test_webhook_transform
---------------------------
+----------------------
 
 ``test_webhook_transform`` can be used to test out request transformations using mock data.
 
@@ -376,6 +410,28 @@ test_webhook_transform
        "type" : "test_webhook_transform",
        "args" : {
          "webhook_url": "http://localhost:1234",
+         "request_headers": [["myKey", "myValue"]],
+         "body": { "hello": "world" },
+         "request_transform": {
+           "body": "{{ $body.world }}",
+           "template_engine": "Kriti"
+         }
+       }
+   }
+
+The `webhook_url` can be provided in an Environment Variable supplied in an object with the `from_env` key:
+
+.. code-block:: http
+
+   POST /v1/metadata HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "test_webhook_transform",
+       "args" : {
+         "webhook_url": {"from_env": "url_env_var" },
+         "request_headers": [["myKey", "myValue"]],
          "body": { "hello": "world" },
          "request_transform": {
            "body": "{{ $body.world }}",

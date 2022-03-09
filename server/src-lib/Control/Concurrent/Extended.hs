@@ -8,6 +8,9 @@ module Control.Concurrent.Extended
     forkManagedT,
     forkManagedTWithGracefulShutdown,
 
+    -- * Concurrency in MonadError
+    forConcurrentlyEIO,
+
     -- * Deprecated
     threadDelay,
     forkIO,
@@ -20,17 +23,19 @@ where
 
 import Control.Concurrent hiding (forkIO, threadDelay)
 import Control.Concurrent qualified as Base
+import Control.Concurrent.Async as A
 import Control.Concurrent.Async.Lifted.Safe qualified as LA
 import Control.Concurrent.STM qualified as STM
 import Control.Exception
 import Control.Immortal qualified as Immortal
-import Control.Monad
-import Control.Monad.IO.Class
+import Control.Monad.Except
 import Control.Monad.Loops (iterateM_)
 import Control.Monad.Trans.Control qualified as MC
 import Control.Monad.Trans.Managed (ManagedT (..), allocate)
 import Data.Aeson
+import Data.List.Split
 import Data.Time.Clock.Units (DiffTime, Microseconds (..), seconds)
+import Data.Traversable
 import Data.Void
 -- For forkImmortal. We could also have it take a cumbersome continuation if we
 -- want to break this dependency. Probably best to move Hasura.Logging into a
@@ -259,3 +264,15 @@ type ForkableMonadIO m = (MonadIO m, MC.MonadBaseControl IO m, LA.Forall (LA.Pur
 --        this could automatically link in one variant
 --        another variant might return ThreadId that self destructs w/ finalizer (mkWeakThreadId)
 --          and note: "Holding a normal ThreadId reference will prevent the delivery of BlockedIndefinitely exceptions because the reference could be used as the target of throwTo at any time,  "
+
+-- | A somewhat wonky function for parallelizing @for xs f@ where @f@ is
+-- @(MonadIO m, MonadError e m)@. This is equivalent to @for xs f@ modulo the
+-- IO effects (i.e. when the IO has no real side effects we care about).
+--
+-- This also takes a @chunkSize@ argument so you can manipulate the amount of
+-- work given to each thread.
+forConcurrentlyEIO :: (MonadIO m, MonadError e m) => Int -> [a] -> (a -> ExceptT e IO b) -> m [b]
+forConcurrentlyEIO chunkSize xs f = do
+  let fIO a = runExceptT (f a) >>= evaluate
+  xs' <- liftIO $ fmap concat $ A.forConcurrently (chunksOf chunkSize xs) $ traverse fIO
+  for xs' (either throwError pure)

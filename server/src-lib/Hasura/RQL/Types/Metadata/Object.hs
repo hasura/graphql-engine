@@ -49,17 +49,18 @@ import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Permission
-import Hasura.RQL.Types.RemoteRelationship
+import Hasura.RQL.Types.QueryCollection (CollectionName, ListedQuery (_lqName))
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session
+import Language.GraphQL.Draft.Syntax qualified as G
 
 data TableMetadataObjId
   = MTORel !RelName !RelType
   | MTOComputedField !ComputedFieldName
   | MTOPerm !RoleName !PermType
   | MTOTrigger !TriggerName
-  | MTORemoteRelationship !RemoteRelationshipName
+  | MTORemoteRelationship !RelName
   deriving (Show, Eq, Generic)
 
 instance Hashable TableMetadataObjId
@@ -83,6 +84,11 @@ data MetadataObjId
   | -- | Originates from user-defined '_arsqName'
     MORemoteSchema !RemoteSchemaName
   | MORemoteSchemaPermissions !RemoteSchemaName !RoleName
+  | -- | A remote relationship on a remote schema type, identified by
+    -- 1. remote schema name
+    -- 2. remote schema type on which the relationship is defined
+    -- 3. name of the relationship
+    MORemoteSchemaRemoteRelationship !RemoteSchemaName !G.Name !RelName
   | MOCustomTypes
   | MOAction !ActionName
   | MOActionPermission !ActionName !RoleName
@@ -90,11 +96,10 @@ data MetadataObjId
   | MOInheritedRole !RoleName
   | MOEndpoint !EndpointName
   | MOHostTlsAllowlist !String
-  deriving (Generic)
+  | MOQueryCollectionsQuery !CollectionName !ListedQuery
+  deriving (Show, Eq, Generic)
 
 $(makePrisms ''MetadataObjId)
-
-deriving instance Eq MetadataObjId
 
 instance Hashable MetadataObjId
 
@@ -104,13 +109,15 @@ moiTypeName = \case
   MOSourceObjId _ exists -> AB.dispatchAnyBackend @Backend exists handleSourceObj
   MORemoteSchema _ -> "remote_schema"
   MORemoteSchemaPermissions _ _ -> "remote_schema_permission"
+  MORemoteSchemaRemoteRelationship {} -> "remote_schema_remote_relationship"
   MOCronTrigger _ -> "cron_trigger"
   MOCustomTypes -> "custom_types"
   MOAction _ -> "action"
   MOActionPermission _ _ -> "action_permission"
   MOInheritedRole _ -> "inherited_role"
-  MOEndpoint _ -> "endpoint"
+  MOEndpoint _ -> "rest_endpoint"
   MOHostTlsAllowlist _ -> "host_network_tls_allowlist"
+  MOQueryCollectionsQuery _ _ -> "query_collections"
   where
     handleSourceObj :: forall b. SourceMetadataObjId b -> Text
     handleSourceObj = \case
@@ -132,6 +139,10 @@ moiName objectId =
     MORemoteSchema name -> toTxt name
     MORemoteSchemaPermissions name roleName ->
       toTxt roleName <> " permission in remote schema " <> toTxt name
+    MORemoteSchemaRemoteRelationship remoteSchemaName typeName relationshipName ->
+      "remote_relationship " <> toTxt relationshipName <> " on type " <> G.unName typeName
+        <> " in remote schema "
+        <> toTxt remoteSchemaName
     MOCronTrigger name -> toTxt name
     MOCustomTypes -> "custom_types"
     MOAction name -> toTxt name
@@ -139,6 +150,7 @@ moiName objectId =
     MOInheritedRole inheritedRoleName -> "inherited role " <> toTxt inheritedRoleName
     MOEndpoint name -> toTxt name
     MOHostTlsAllowlist hostTlsAllowlist -> T.pack hostTlsAllowlist
+    MOQueryCollectionsQuery cName lq -> (toTxt . _lqName) lq <> " in " <> toTxt cName
   where
     handleSourceObj ::
       forall b.
@@ -173,7 +185,9 @@ data MetadataObject = MetadataObject
   { _moId :: !MetadataObjId,
     _moDefinition :: !Value
   }
-  deriving (Eq)
+  deriving (Show, Eq, Generic)
+
+instance Hashable MetadataObject
 
 $(makeLenses ''MetadataObject)
 
@@ -186,7 +200,9 @@ data InconsistentRoleEntity
       -- use it with `AB.AnyBackend`
       !PermType
   | InconsistentRemoteSchemaPermission !RemoteSchemaName
-  deriving (Eq)
+  deriving stock (Show, Eq, Generic)
+
+instance Hashable InconsistentRoleEntity
 
 instance ToTxt InconsistentRoleEntity where
   toTxt (InconsistentTablePermission source table permType) =
@@ -218,7 +234,9 @@ data InconsistentMetadata
   | InvalidRestSegments !Text !MetadataObject
   | AmbiguousRestEndpoints !Text ![MetadataObject]
   | ConflictingInheritedPermission !RoleName !InconsistentRoleEntity
-  deriving (Eq)
+  deriving stock (Show, Eq, Generic)
+
+instance Hashable InconsistentMetadata
 
 $(makePrisms ''InconsistentMetadata)
 

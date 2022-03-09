@@ -91,6 +91,28 @@ func (re *RestEndpointsConfig) Key() string {
 func (re *RestEndpointsConfig) Filename() string {
 	return "rest_endpoints.yaml"
 }
+
+func (re *RestEndpointsConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+	rootFile := filepath.Join(re.BaseDirectory(), re.Filename())
+	files, err := metadataobject.DefaultGetFiles(rootFile)
+	if err != nil {
+		return nil, re.error(err)
+	}
+	return files, nil
+}
+
+func (re *RestEndpointsConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: re, WriteDiffOpts: opts})
+	if err != nil {
+		return re.error(err)
+	}
+	return nil
+}
+
+func (re *RestEndpointsConfig) BaseDirectory() string {
+	return re.MetadataDir
+}
+
 func (re *RestEndpointsConfig) error(err error, additionalContext ...string) metadataobject.ErrParsingMetadataObject {
 	return metadataobject.NewErrParsingMetadataObject(re, err, additionalContext...)
 }

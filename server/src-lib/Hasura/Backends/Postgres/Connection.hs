@@ -1,8 +1,17 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
--- A module for postgres execution related types and operations
-
+-- | Postgres Connetion
+--
+-- This module handles the connection against a Postgres server. It provides
+-- an assortment of features, such as:
+--
+-- * 'MonadTx', a class which abstracts the 'QErr' in 'Q.TxE' via 'MonadError'
+-- * various run combinators for executing 'Q.TxE' into 'ExceptT' or 'MonadIO'
+-- * dealing with trace contexts ('withTraceContext' and an orphan 'MonadTrace' instance for 'Q.TxET')
+-- * connection pool settings ('PostgresPoolSettings', 'setPostgresPoolSettings', etc)
+-- * other settings, including source connection info and read replicas, etc. ('PostgresConnConfiguration')
+-- * setting or getting miscellaneous properties ('setHeadersTx', 'sessionInfoExp', 'doesTableExist')
 module Hasura.Backends.Postgres.Connection
   ( MonadTx (..),
     runTx,
@@ -43,7 +52,6 @@ where
 import Control.Lens (makeLenses)
 import Control.Monad.Morph (hoist)
 import Control.Monad.Trans.Control (MonadBaseControl (..))
-import Control.Monad.Unique
 import Control.Monad.Validate
 import Data.Aeson
 import Data.Aeson.Casing (aesonDrop)
@@ -175,9 +183,6 @@ withTraceContext ::
 withTraceContext ctx tx = setTraceContextInTx ctx >> tx
 
 deriving instance Tracing.MonadTrace m => Tracing.MonadTrace (Q.TxET e m)
-
-instance (MonadIO m) => MonadUnique (Q.TxET e m) where
-  newUnique = liftIO newUnique
 
 checkDbConnection :: MonadIO m => Q.PGPool -> m Bool
 checkDbConnection pool = do

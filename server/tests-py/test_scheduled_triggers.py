@@ -294,6 +294,61 @@ class TestCronTrigger(object):
         assert event['body']['payload'] == {"foo":"baz"}
         assert event['body']['name'] == 'test_cron_trigger'
 
+    def test_get_cron_triggers(self, hge_ctx):
+        q = {
+            "type": "get_cron_triggers",
+            "args": {}
+        }
+        st, resp = hge_ctx.v1metadataq(q)
+        assert st == 200, resp
+        respDict = json.loads(json.dumps(resp))
+        assert respDict['cron_triggers'] == [
+            {
+                "headers": [
+                    {
+                        "name": "header-name",
+                        "value": "header-value"
+                    }
+                ],
+                "include_in_metadata": True,
+                "name": self.cron_trigger_name,
+                "payload": {
+                    "foo": "baz"
+                },
+                "retry_conf": {
+                    "num_retries": 0,
+                    "retry_interval_seconds": 10,
+                    "timeout_seconds": 60,
+                    "tolerance_seconds": 21600
+                },
+                "schedule": self.cron_schedule,
+                "webhook": "{{SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN}}/foo"
+            },
+            {
+                "headers": [
+                    {
+                        "name": "header-key",
+                        "value": "header-value"
+                    }
+                ],
+                "include_in_metadata": False,
+                "name": "test_cron_trigger",
+                "payload": {
+                    "foo": "baz"
+                },
+                "retry_conf": {
+                    "num_retries": 0,
+                    "retry_interval_seconds": 10,
+                    "timeout_seconds": 60,
+                    "tolerance_seconds": 21600
+                },
+                "schedule": "* * * * *",
+                "webhook": "{{SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN}}/test"
+            },
+
+        ]
+
+
     def test_export_and_import_cron_triggers(self, hge_ctx):
         q = {
             "type": "export_metadata",

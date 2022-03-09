@@ -44,11 +44,10 @@ module Hasura.RQL.Types.SchemaCache
     ViewInfo (..),
     isMutable,
     IntrospectionResult (..),
-    ParsedIntrospectionG (..),
-    ParsedIntrospection,
     RemoteSchemaCustomizer (..),
     remoteSchemaCustomizeTypeName,
     remoteSchemaCustomizeFieldName,
+    RemoteSchemaRelationships,
     RemoteSchemaCtx (..),
     rscName,
     rscInfo,
@@ -56,6 +55,7 @@ module Hasura.RQL.Types.SchemaCache
     rscParsed,
     rscRawIntrospectionResult,
     rscPermissions,
+    rscRemoteRelationships,
     RemoteSchemaMap,
     DepMap,
     WithDeps,
@@ -76,7 +76,6 @@ module Hasura.RQL.Types.SchemaCache
     getCols,
     getRels,
     getComputedFieldInfos,
-    isPGColInfo,
     RelInfo (..),
     PermAccessor (..),
     permAccToLens,
@@ -110,6 +109,9 @@ module Hasura.RQL.Types.SchemaCache
     MetadataResourceVersion (..),
     initialResourceVersion,
     getBoolExpDeps,
+    InlinedAllowlist,
+    ParsedIntrospectionG (..),
+    ParsedIntrospection,
   )
 where
 
@@ -127,6 +129,7 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Context (GQLContext, RoleContext)
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Parser qualified as P
+import Hasura.GraphQL.Parser.Column (UnpreparedValue)
 import Hasura.Incremental
   ( Cacheable,
     Dependency,
@@ -134,8 +137,12 @@ import Hasura.Incremental
     selectKeyD,
   )
 import Hasura.Prelude
+import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.IR.RemoteSchema
+import Hasura.RQL.IR.Root
 import Hasura.RQL.Types.Action
+import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
@@ -149,7 +156,8 @@ import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Network (TlsAllow)
 import Hasura.RQL.Types.QueryCollection
-import Hasura.RQL.Types.Relationship
+import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCacheTypes
@@ -221,12 +229,15 @@ data IntrospectionResult = IntrospectionResult
 instance Cacheable IntrospectionResult
 
 data ParsedIntrospectionG m = ParsedIntrospection
-  { piQuery :: [P.FieldParser m (NamespacedField RemoteField)],
-    piMutation :: Maybe [P.FieldParser m (NamespacedField RemoteField)],
-    piSubscription :: Maybe [P.FieldParser m (NamespacedField RemoteField)]
+  { piQuery :: [P.FieldParser m (NamespacedField (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))],
+    piMutation :: Maybe [P.FieldParser m (NamespacedField (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))],
+    piSubscription :: Maybe [P.FieldParser m (NamespacedField (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))]
   }
 
 type ParsedIntrospection = ParsedIntrospectionG (P.ParseT Identity)
+
+type RemoteSchemaRelationships =
+  InsOrdHashMap G.Name (InsOrdHashMap RelName (RemoteFieldInfo G.Name))
 
 -- | See 'fetchRemoteSchema'.
 data RemoteSchemaCtx = RemoteSchemaCtx
@@ -239,7 +250,8 @@ data RemoteSchemaCtx = RemoteSchemaCtx
     _rscRawIntrospectionResult :: !BL.ByteString,
     -- | FieldParsers with schema customizations applied
     _rscParsed :: ParsedIntrospection,
-    _rscPermissions :: !(M.HashMap RoleName IntrospectionResult)
+    _rscPermissions :: !(M.HashMap RoleName IntrospectionResult),
+    _rscRemoteRelationships :: RemoteSchemaRelationships
   }
 
 $(makeLenses ''RemoteSchemaCtx)
@@ -262,7 +274,9 @@ data CronTriggerInfo = CronTriggerInfo
     ctiRetryConf :: !STRetryConf,
     ctiWebhookInfo :: !ResolvedWebhook,
     ctiHeaders :: ![EventHeaderInfo],
-    ctiComment :: !(Maybe Text)
+    ctiComment :: !(Maybe Text),
+    ctiRequestTransform :: !(Maybe RequestTransform),
+    ctiResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Show, Eq)
 
@@ -306,7 +320,7 @@ data SchemaCache = SchemaCache
   { scSources :: !SourceCache,
     scActions :: !ActionCache,
     scRemoteSchemas :: !RemoteSchemaMap,
-    scAllowlist :: !(HS.HashSet GQLQuery),
+    scAllowlist :: !InlinedAllowlist,
     scGQLContext :: !(HashMap RoleName (RoleContext GQLContext)),
     scUnauthenticatedGQLContext :: !GQLContext,
     scRelayContext :: !(HashMap RoleName (RoleContext GQLContext)),
@@ -319,7 +333,8 @@ data SchemaCache = SchemaCache
     scMetricsConfig :: !MetricsConfig,
     scMetadataResourceVersion :: !(Maybe MetadataResourceVersion),
     scSetGraphqlIntrospectionOptions :: !SetGraphqlIntrospectionOptions,
-    scTlsAllowlist :: ![TlsAllow]
+    scTlsAllowlist :: ![TlsAllow],
+    scQueryCollections :: !QueryCollections
   }
 
 -- WARNING: this can only be used for debug purposes, as it loses all
@@ -343,7 +358,8 @@ instance ToJSON SchemaCache where
         "metrics_config" .= toJSON scMetricsConfig,
         "metadata_resource_version" .= toJSON scMetadataResourceVersion,
         "set_graphql_introspection_options" .= toJSON scSetGraphqlIntrospectionOptions,
-        "tls_allowlist" .= toJSON scTlsAllowlist
+        "tls_allowlist" .= toJSON scTlsAllowlist,
+        "query_collection" .= toJSON scQueryCollections
       ]
 
 getAllRemoteSchemas :: SchemaCache -> [RemoteSchemaName]
@@ -556,7 +572,7 @@ getColExpDeps bexp = do
   BoolExpCtx {source, currTable} <- ask
   case bexp of
     AVColumn colInfo opExps ->
-      let columnName = pgiColumn colInfo
+      let columnName = ciColumn colInfo
           colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
           colDep = mkColDep @b colDepReason source currTable columnName
        in (colDep :) <$> mkOpExpDeps opExps

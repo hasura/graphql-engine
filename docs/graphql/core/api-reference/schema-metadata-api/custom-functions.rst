@@ -2,10 +2,17 @@
    :description: Manage custom functions with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, custom function
 
-.. _api_custom_functions:
+.. _schema_metadata_api_custom_functions:
 
 Schema/Metadata API Reference: Custom Functions (Deprecated)
 ============================================================
+
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
 .. contents:: Table of contents
   :backlinks: none
@@ -19,14 +26,7 @@ Track/untrack a custom SQL function in the Hasura GraphQL engine.
 
 Only tracked custom functions are available for querying/mutating/subscribing data over the GraphQL API.
 
-.. admonition:: Deprecation
-
-  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
-  :ref:`metadata API <metadata_apis>`.
-
-  Though for backwards compatibility, the schema/metadata APIs will continue to function.
-
-.. _track_function:
+.. _schema_metadata_track_function:
 
 track_function
 --------------
@@ -50,7 +50,7 @@ Add an SQL function ``search_articles``:
        }
    }
 
-.. _track_function_v2:
+.. _schema_metadata_track_function_v2:
 
 track_function v2
 -----------------
@@ -124,7 +124,7 @@ some logging visible only to administrators.
    It's easy to accidentally give an SQL function the wrong volatility (or for a
    function to end up with ``VOLATILE`` mistakenly, since it's the default).
 
-.. _track_function_args_syntax_v2:
+.. _schema_metadata_track_function_syntax_v2:
 
 Args syntax
 ^^^^^^^^^^^
@@ -145,7 +145,7 @@ Args syntax
      - :ref:`Function Configuration <function_configuration>`
      - Configuration for the SQL function
 
-.. _untrack_function:
+.. _schema_metadata_untrack_function:
 
 untrack_function
 ----------------
@@ -168,7 +168,7 @@ Remove an SQL function ``search_articles``:
        }
    }
 
-.. _args_syntax:
+.. _schema_metadata_untrack_function_syntax:
 
 Args syntax
 ^^^^^^^^^^^

@@ -8,7 +8,6 @@ module Hasura.Server.API.Query
 where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Control.Monad.Unique
 import Data.Aeson
 import Data.Aeson.Casing
 import Data.Aeson.TH
@@ -66,9 +65,9 @@ data RQLQueryV1
   | -- computed fields related
     RQAddComputedField !(AddComputedField ('Postgres 'Vanilla))
   | RQDropComputedField !(DropComputedField ('Postgres 'Vanilla))
-  | RQCreateRemoteRelationship !(RemoteRelationship ('Postgres 'Vanilla))
-  | RQUpdateRemoteRelationship !(RemoteRelationship ('Postgres 'Vanilla))
-  | RQDeleteRemoteRelationship !(DeleteRemoteRelationship ('Postgres 'Vanilla))
+  | RQCreateRemoteRelationship !(CreateFromSourceRelationship ('Postgres 'Vanilla))
+  | RQUpdateRemoteRelationship !(CreateFromSourceRelationship ('Postgres 'Vanilla))
+  | RQDeleteRemoteRelationship !(DeleteFromSourceRelationship ('Postgres 'Vanilla))
   | RQCreateInsertPermission !(CreatePerm InsPerm ('Postgres 'Vanilla))
   | RQCreateSelectPermission !(CreatePerm SelPerm ('Postgres 'Vanilla))
   | RQCreateUpdatePermission !(CreatePerm UpdPerm ('Postgres 'Vanilla))
@@ -105,8 +104,8 @@ data RQLQueryV1
   | RQDropQueryCollection !DropCollection
   | RQAddQueryToCollection !AddQueryToCollection
   | RQDropQueryFromCollection !DropQueryFromCollection
-  | RQAddCollectionToAllowlist !CollectionReq
-  | RQDropCollectionFromAllowlist !CollectionReq
+  | RQAddCollectionToAllowlist !AllowlistEntry
+  | RQDropCollectionFromAllowlist !DropCollectionFromAllowlist
   | RQRunSql !RunSQL
   | RQReplaceMetadata !ReplaceMetadata
   | RQExportMetadata !ExportMetadata
@@ -176,6 +175,9 @@ runQuery ::
   RQLQuery ->
   m (EncJSON, RebuildableSchemaCache)
 runQuery env logger instanceId userInfo sc hMgr serverConfigCtx query = do
+  when ((_sccReadOnlyMode serverConfigCtx == ReadOnlyModeEnabled) && queryModifiesUserDB query) $
+    throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
+
   (metadata, currentResourceVersion) <- fetchMetadata
   result <-
     runReaderT (runQueryM env query) logger & \x -> do
@@ -283,12 +285,87 @@ queryModifiesSchemaCache (RQV2 qi) = case qi of
   RQV2TrackFunction _ -> True
   RQV2ReplaceMetadata _ -> True
 
+-- | A predicate that determines whether the given query might modify user's Database. If
+-- so, when the server is run in safe mode, we should not proceed with those operations.
+queryModifiesUserDB :: RQLQuery -> Bool
+queryModifiesUserDB (RQV1 qi) = case qi of
+  RQAddExistingTableOrView _ -> False
+  RQTrackTable _ -> False
+  RQUntrackTable _ -> False
+  RQTrackFunction _ -> False
+  RQUntrackFunction _ -> False
+  RQSetTableIsEnum _ -> False
+  RQCreateObjectRelationship _ -> False
+  RQCreateArrayRelationship _ -> False
+  RQDropRelationship _ -> False
+  RQSetRelationshipComment _ -> False
+  RQRenameRelationship _ -> False
+  RQAddComputedField _ -> False
+  RQDropComputedField _ -> False
+  RQCreateRemoteRelationship _ -> False
+  RQUpdateRemoteRelationship _ -> False
+  RQDeleteRemoteRelationship _ -> False
+  RQCreateInsertPermission _ -> False
+  RQCreateSelectPermission _ -> False
+  RQCreateUpdatePermission _ -> False
+  RQCreateDeletePermission _ -> False
+  RQDropInsertPermission _ -> False
+  RQDropSelectPermission _ -> False
+  RQDropUpdatePermission _ -> False
+  RQDropDeletePermission _ -> False
+  RQSetPermissionComment _ -> False
+  RQGetInconsistentMetadata _ -> False
+  RQDropInconsistentMetadata _ -> False
+  RQInsert _ -> True
+  RQSelect _ -> False
+  RQUpdate _ -> True
+  RQDelete _ -> True
+  RQCount _ -> False
+  RQAddRemoteSchema _ -> False
+  RQUpdateRemoteSchema _ -> False
+  RQRemoveRemoteSchema _ -> False
+  RQReloadRemoteSchema _ -> False
+  RQIntrospectRemoteSchema _ -> False
+  RQCreateEventTrigger _ -> True
+  RQDeleteEventTrigger _ -> True
+  RQRedeliverEvent _ -> False
+  RQInvokeEventTrigger _ -> False
+  RQCreateCronTrigger _ -> False
+  RQDeleteCronTrigger _ -> False
+  RQCreateScheduledEvent _ -> False
+  RQCreateQueryCollection _ -> False
+  RQDropQueryCollection _ -> False
+  RQAddQueryToCollection _ -> False
+  RQDropQueryFromCollection _ -> False
+  RQAddCollectionToAllowlist _ -> False
+  RQDropCollectionFromAllowlist _ -> False
+  RQRunSql _ -> True
+  RQReplaceMetadata _ -> True
+  RQExportMetadata _ -> False
+  RQClearMetadata _ -> False
+  RQReloadMetadata _ -> False
+  RQCreateRestEndpoint _ -> False
+  RQDropRestEndpoint _ -> False
+  RQCreateAction _ -> False
+  RQDropAction _ -> False
+  RQUpdateAction _ -> False
+  RQCreateActionPermission _ -> False
+  RQDropActionPermission _ -> False
+  RQDumpInternalState _ -> False
+  RQSetCustomTypes _ -> False
+  RQSetTableCustomization _ -> False
+  RQBulk qs -> any queryModifiesUserDB qs
+queryModifiesUserDB (RQV2 qi) = case qi of
+  RQV2TrackTable _ -> False
+  RQV2SetTableCustomFields _ -> False
+  RQV2TrackFunction _ -> False
+  RQV2ReplaceMetadata _ -> True
+
 runQueryM ::
   ( CacheRWM m,
     UserInfoM m,
     MonadBaseControl IO m,
     MonadIO m,
-    MonadUnique m,
     HasHttpManagerM m,
     HasServerConfigCtx m,
     Tracing.MonadTrace m,

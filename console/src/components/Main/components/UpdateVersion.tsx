@@ -1,5 +1,6 @@
 import React from 'react';
 
+import globals from '../../../Globals';
 import { checkStableVersion } from '../../../helpers/versionUtils';
 import { setPreReleaseNotificationOptOutInDB } from '../../../telemetry/Actions';
 import { Dispatch } from '../../../types';
@@ -40,6 +41,10 @@ export const UpdateVersion: React.FC<UpdateVersionProps> = ({
   dispatch,
   closeUpdateBanner,
 }) => {
+  if (!updateNotificationVersion || globals.consoleType !== 'oss') {
+    return null;
+  }
+
   const isStableRelease = checkStableVersion(updateNotificationVersion);
 
   const handlePreRelNotifOptOut = (e: React.MouseEvent) => {
@@ -50,10 +55,6 @@ export const UpdateVersion: React.FC<UpdateVersionProps> = ({
 
     dispatch(setPreReleaseNotificationOptOutInDB());
   };
-
-  if (!updateNotificationVersion) {
-    return null;
-  }
 
   return (
     <div>

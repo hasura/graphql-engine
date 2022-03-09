@@ -36,6 +36,7 @@ import {
   checkFeatureSupport,
   INSECURE_TLS_ALLOW_LIST,
 } from './helpers/versionUtils';
+import AuthContainer from './components/Services/Auth/AuthContainer';
 
 const routes = store => {
   // load hasuractl migration status
@@ -97,67 +98,70 @@ const routes = store => {
       component={App}
       onEnter={composeOnEnterHooks([validateLogin(store)])}
     >
-      <Route path="login" component={generatedLoginConnector(connect)} />
       {/*Temp route, it'll be in dashboard*/}
+      <Route path="login" component={generatedLoginConnector(connect)} />
       <Route path="heroku-callback" component={TempHerokuCallback} />
-      <Route
-        path=""
-        component={Main}
-        onEnter={composeOnEnterHooks([
-          requireSource,
-          requireMigrationStatus,
-          requireAsyncGlobals(store),
-        ])}
-      >
-        <IndexRoute component={ApiContainer} />
-        <Route path="api" component={ApiContainer}>
-          <IndexRedirect to="api-explorer" />
+      <Route path="" component={AuthContainer}>
+        <Route
+          path=""
+          component={Main}
+          onEnter={composeOnEnterHooks([
+            requireSource,
+            requireMigrationStatus,
+            requireAsyncGlobals(store),
+          ])}
+        >
+          <IndexRoute component={ApiContainer} />
+          <Route path="api" component={ApiContainer}>
+            <IndexRedirect to="api-explorer" />
+            <Route
+              path="api-explorer"
+              component={generatedApiExplorer(connect)}
+            />
+            <Route path="rest">
+              <IndexRedirect to="list" />
+              <Route path="create" component={CreateRestView} />
+              <Route path="list" component={RestListView} />
+              <Route path="details/:name" component={DetailsView} />
+              <Route path="edit/:name" component={CreateRestView} />
+            </Route>
+          </Route>
+
           <Route
-            path="api-explorer"
-            component={generatedApiExplorer(connect)}
+            path="voyager-view"
+            component={generatedVoyagerConnector(connect)}
           />
-          <Route path="rest">
-            <IndexRedirect to="list" />
-            <Route path="create" component={CreateRestView} />
-            <Route path="list" component={RestListView} />
-            <Route path="details/:name" component={DetailsView} />
-            <Route path="edit/:name" component={CreateRestView} />
+          <Route path="settings" component={settingsContainer(connect)}>
+            <IndexRedirect to="metadata-actions" />
+            <Route
+              path="metadata-actions"
+              component={metadataOptionsConnector(connect)}
+            />
+            <Route
+              path="metadata-status"
+              component={metadataStatusConnector(connect)}
+            />
+            <Route
+              path="allow-list"
+              component={allowedQueriesConnector(connect)}
+            />
+            <Route path="logout" component={logoutConnector(connect)} />
+            <Route path="about" component={aboutConnector(connect)} />
+            <Route path="inherited-roles" component={inheritedRolesConnector} />
+            {checkFeatureSupport(INSECURE_TLS_ALLOW_LIST) && (
+              <Route path="insecure-domain" component={InsecureDomains} />
+            )}
+          </Route>
+          {dataRouter}
+          {remoteSchemaRouter}
+          {actionsRouter}
+          {eventsRoutes}
+          <Route path="support" component={SupportContainer}>
+            <Route path="forums" component={HelpPage} />
           </Route>
         </Route>
-
-        <Route
-          path="voyager-view"
-          component={generatedVoyagerConnector(connect)}
-        />
-        <Route path="settings" component={settingsContainer(connect)}>
-          <IndexRedirect to="metadata-actions" />
-          <Route
-            path="metadata-actions"
-            component={metadataOptionsConnector(connect)}
-          />
-          <Route
-            path="metadata-status"
-            component={metadataStatusConnector(connect)}
-          />
-          <Route
-            path="allow-list"
-            component={allowedQueriesConnector(connect)}
-          />
-          <Route path="logout" component={logoutConnector(connect)} />
-          <Route path="about" component={aboutConnector(connect)} />
-          <Route path="inherited-roles" component={inheritedRolesConnector} />
-          {checkFeatureSupport(INSECURE_TLS_ALLOW_LIST) && (
-            <Route path="insecure-domain" component={InsecureDomains} />
-          )}
-        </Route>
-        {dataRouter}
-        {remoteSchemaRouter}
-        {actionsRouter}
-        {eventsRoutes}
-        <Route path="support" component={SupportContainer}>
-          <Route path="forums" component={HelpPage} />
-        </Route>
       </Route>
+
       <Route path="404" component={PageNotFound} status="404" />
       <Route path="*" component={PageNotFound} status="404" />
     </Route>

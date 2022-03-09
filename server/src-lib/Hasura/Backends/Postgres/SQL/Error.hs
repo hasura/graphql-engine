@@ -1,4 +1,6 @@
--- | Functions and datatypes for interpreting Postgres errors.
+-- | Postgres SQL Error
+--
+-- Functions and datatypes for interpreting Postgres errors.
 module Hasura.Backends.Postgres.SQL.Error
   ( PGErrorType (..),
     _PGDataException,

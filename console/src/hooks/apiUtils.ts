@@ -2,6 +2,7 @@
 /* eslint-disable no-inner-declarations */
 import globals from '@/Globals';
 import { browserHistory } from 'react-router';
+import { APIError } from './error';
 
 interface IApiArgs {
   headers: Record<string, string>;
@@ -10,50 +11,12 @@ interface IApiArgs {
   body?: Record<any, any>;
 }
 
-// Adapted from https://github.com/hasura/graphql-engine-mono/blob/88257687a2c989369b62115c238aa318ea9780ca/console/src/components/Services/Common/Notification.tsx#L80-L129
-function processError(error: Record<string, any>): string {
-  if (typeof error === 'string') {
-    return error;
-  } else if (
-    error.message?.error === 'postgres query error' ||
-    error.message?.error === 'query execution failed'
-  ) {
-    if (error.message.internal) {
-      return `${error.message.code}: ${error.message.internal.error?.message}`;
-    }
-    return `${error.code}: ${error.message.error}`;
-  } else if ('info' in error) {
-    return error.info;
-  } else if ('message' in error) {
-    if (error.code) {
-      if (error.message.error) {
-        return error.message.error.message;
-      }
-      return error.message;
-    } else if (typeof error?.message === 'string') {
-      return error.message;
-    } else if ('code' in error?.message) {
-      return error.message.code;
-    }
-    return error.code;
-  } else if (error.internal?.error) {
-    return `${error.internal.error.message}.
-      ${error.internal.error.description}`;
-  } else if ('custom' in error) {
-    return error.custom;
-  } else if ('code' in error && 'error' in error && 'path' in error) {
-    return error.error;
-  }
-  return JSON.stringify(error ?? 'request failed');
-}
-
 async function fetchApi<T = unknown, V = T>(
   args: IApiArgs,
   dataTransform?: (data: T) => V
 ): Promise<V> {
-  const { headers, url, method, body } = args;
-
   try {
+    const { headers, url, method, body } = args;
     const response = await fetch(url, {
       headers,
       method,
@@ -66,12 +29,13 @@ async function fetchApi<T = unknown, V = T>(
         return ((await response.text()) as unknown) as V;
       }
       const data = await response.json();
-      return dataTransform?.(data) || data;
+      if (dataTransform) return dataTransform(data);
+      return data;
     }
     if (response.status >= 400) {
       if (!isResponseJson) {
         const errorMessage = await response.text();
-        throw new Error(errorMessage);
+        throw errorMessage;
       }
       const errorMessage = await response.json();
       if (errorMessage?.code === 'access-denied') {
@@ -79,12 +43,12 @@ async function fetchApi<T = unknown, V = T>(
           browserHistory.push(`${globals.urlPrefix}/login`);
         }
       }
-      throw new Error(processError(errorMessage));
+      throw errorMessage;
     }
     const unknownError = await response.text();
-    throw new Error(unknownError);
+    throw unknownError;
   } catch (error) {
-    throw new Error(processError(error as any));
+    throw APIError.fromUnknown(error);
   }
 }
 
@@ -107,7 +71,6 @@ export namespace Api {
   ) {
     return fetchApi<T, V>({ ...args, method: 'PUT' }, dataTransform);
   }
-  // Http request with method set to DELETE
   export function del<T = unknown, V = T>(
     args: Omit<IApiArgs, 'method'>,
     dataTransform?: (data: T) => V

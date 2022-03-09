@@ -1,0 +1,32 @@
+description: Update mutation on article where updating a column has been restricted.
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '1'
+query:
+  query: |
+    mutation {
+      update_article(
+        where: {id: {_eq: 1}}
+        _set: {id: 2}
+      ){
+        affected_rows
+        returning{
+          id
+          title
+          content
+          is_published
+          author{
+            id
+            name
+          }
+        }
+      }
+    }
+response:
+  errors:
+  - extensions:
+      path: "$.selectionSet.update_article.args._set.id"
+      code: validation-failed
+    message: 'field "id" not found in type: ''article_set_input'''

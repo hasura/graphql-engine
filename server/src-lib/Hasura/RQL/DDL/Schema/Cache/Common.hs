@@ -25,6 +25,7 @@ module Hasura.RQL.DDL.Schema.Cache.Common
     boCronTriggers,
     boCustomTypes,
     boEndpoints,
+    boQueryCollections,
     boRemoteSchemas,
     boRoles,
     boSources,
@@ -40,12 +41,12 @@ module Hasura.RQL.DDL.Schema.Cache.Common
 where
 
 import Control.Arrow.Extended
+import Control.Arrow.Interpret
 import Control.Lens
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.Unique
 import Data.HashMap.Strict.Extended qualified as M
 import Data.HashMap.Strict.InsOrd qualified as OMap
-import Data.HashSet qualified as HS
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
@@ -104,12 +105,9 @@ data NonColumnTableInputs b = NonColumnTableInputs
     _nctiObjectRelationships :: ![ObjRelDef b],
     _nctiArrayRelationships :: ![ArrRelDef b],
     _nctiComputedFields :: ![ComputedFieldMetadata b],
-    _nctiRemoteRelationships :: ![RemoteRelationshipMetadata]
+    _nctiRemoteRelationships :: ![RemoteRelationship]
   }
   deriving (Show, Eq, Generic)
-
--- instance NFData NonColumnTableInputs
--- instance Inc.Cacheable NonColumnTableInputs
 
 data TablePermissionInputs b = TablePermissionInputs
   { _tpiTable :: !(TableName b),
@@ -153,14 +151,15 @@ data BuildOutputs = BuildOutputs
     -- reuse it later if we need to mark the remote schema inconsistent during GraphQL schema
     -- generation (because of field conflicts).
     _boRemoteSchemas :: !(HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)),
-    _boAllowlist :: !(HS.HashSet GQLQuery),
+    _boAllowlist :: !InlinedAllowlist,
     _boCustomTypes :: !AnnotatedCustomTypes,
     _boCronTriggers :: !(M.HashMap TriggerName CronTriggerInfo),
     _boEndpoints :: !(M.HashMap EndpointName (EndpointMetadata GQLQueryWithText)),
     _boApiLimits :: !ApiLimit,
     _boMetricsConfig :: !MetricsConfig,
     _boRoles :: !(HashMap RoleName Role),
-    _boTlsAllowlist :: ![TlsAllow]
+    _boTlsAllowlist :: ![TlsAllow],
+    _boQueryCollections :: !QueryCollections
   }
 
 $(makeLenses ''BuildOutputs)
@@ -168,7 +167,8 @@ $(makeLenses ''BuildOutputs)
 -- | Parameters required for schema cache build
 data CacheBuildParams = CacheBuildParams
   { _cbpManager :: !HTTP.Manager,
-    _cbpSourceResolver :: !SourceResolver,
+    _cbpPGSourceResolver :: !(SourceResolver ('Postgres 'Vanilla)),
+    _cbpMSSQLSourceResolver :: !(SourceResolver 'MSSQL),
     _cbpServerConfigCtx :: !ServerConfigCtx
   }
 
@@ -193,7 +193,8 @@ instance HasServerConfigCtx CacheBuild where
   askServerConfigCtx = asks _cbpServerConfigCtx
 
 instance MonadResolveSource CacheBuild where
-  getSourceResolver = asks _cbpSourceResolver
+  getPGSourceResolver = asks _cbpPGSourceResolver
+  getMSSQLSourceResolver = asks _cbpMSSQLSourceResolver
 
 runCacheBuild ::
   ( MonadIO m,
@@ -218,7 +219,8 @@ runCacheBuildM m = do
   params <-
     CacheBuildParams
       <$> askHttpManager
-      <*> getSourceResolver
+      <*> getPGSourceResolver
+      <*> getMSSQLSourceResolver
       <*> askServerConfigCtx
   runCacheBuild params m
 
@@ -245,18 +247,18 @@ withRecordDependencies f = proc (e, (metadataObject, (schemaObjectId, s))) -> do
 {-# INLINEABLE withRecordDependencies #-}
 
 noDuplicates ::
-  (ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr) =>
+  (MonadWriter (Seq CollectedInfo) m) =>
   (a -> MetadataObject) ->
-  [a] `arr` Maybe a
-noDuplicates mkMetadataObject = proc values -> case values of
-  [] -> returnA -< Nothing
-  [value] -> returnA -< Just value
-  value : _ -> do
+  [a] ->
+  m (Maybe a)
+noDuplicates mkMetadataObject = \case
+  [] -> pure Nothing
+  [value] -> pure $ Just value
+  values@(value : _) -> do
     let objectId = _moId $ mkMetadataObject value
         definitions = map (_moDefinition . mkMetadataObject) values
-    tellA -< Seq.singleton $ CIInconsistency (DuplicateObjects objectId definitions)
-    returnA -< Nothing
-{-# INLINEABLE noDuplicates #-}
+    tell $ Seq.singleton $ CIInconsistency (DuplicateObjects objectId definitions)
+    return Nothing
 
 -- | Processes a list of catalog metadata into a map of processed information, marking any duplicate
 -- entries inconsistent.
@@ -276,7 +278,7 @@ buildInfoMap extractKey mkMetadataObject buildInfo = proc (e, infos) ->
     >-> (|
           Inc.keyed
             ( \_ duplicateInfos ->
-                (duplicateInfos >- noDuplicates mkMetadataObject)
+                (noDuplicates mkMetadataObject duplicateInfos >- interpA @(WriterT _ Identity))
                   >-> (| traverseA (\info -> (e, info) >- buildInfo) |)
                   >-> (\info -> join info >- returnA)
             )

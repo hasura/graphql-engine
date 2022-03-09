@@ -61,6 +61,12 @@ data
       "event_queue_time"
       'DistributionType
       ()
+  -- | The current schema cache metadata resource version
+  SchemaCacheMetadataResourceVersion ::
+    ServerMetricsSpec
+      "schema_cache_metadata_resource_version"
+      'GaugeType
+      ()
 
 -- | Mutable references for the server metrics. See `ServerMetricsSpec` for a
 -- description of each metric.
@@ -70,7 +76,8 @@ data ServerMetrics = ServerMetrics
     smActiveSubscriptions :: !Gauge,
     smNumEventsFetchedPerBatch :: !Distribution,
     smNumEventHTTPWorkers :: !Gauge,
-    smEventQueueTime :: !Distribution
+    smEventQueueTime :: !Distribution,
+    smSchemaCacheMetadataResourceVersion :: !Gauge
   }
 
 createServerMetrics :: Store ServerMetricsSpec -> IO ServerMetrics
@@ -81,4 +88,5 @@ createServerMetrics store = do
   smNumEventsFetchedPerBatch <- createDistribution NumEventsFetchedPerBatch () store
   smNumEventHTTPWorkers <- createGauge NumEventHTTPWorkers () store
   smEventQueueTime <- createDistribution EventQueueTime () store
+  smSchemaCacheMetadataResourceVersion <- createGauge SchemaCacheMetadataResourceVersion () store
   pure ServerMetrics {..}

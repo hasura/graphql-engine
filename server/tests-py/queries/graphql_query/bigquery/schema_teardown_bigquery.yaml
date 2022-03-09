@@ -1,2 +1,17 @@
 type: bulk
-args: []
+args:
+- type: bigquery_run_sql
+  args:
+    source: bigquery
+    cascade: true
+    sql: |
+      DROP TABLE IF EXISTS `hasura.all_types`;
+      DROP TABLE IF EXISTS `hasura.author`;
+      DROP TABLE IF EXISTS `hasura.article`;
+      DROP TABLE IF EXISTS `hasura.article2`;
+      DROP TABLE IF EXISTS `hasura.Artist`;
+      DROP TABLE IF EXISTS `hasura.Album`;
+      DROP TABLE IF EXISTS `hasura.LimitedArtist`;
+      DROP TABLE IF EXISTS `hasura.LimitedAlbum`;
+      DROP TABLE IF EXISTS `hasura.article_citation`;
+      DROP TABLE IF EXISTS `hasura.article_citation2`;

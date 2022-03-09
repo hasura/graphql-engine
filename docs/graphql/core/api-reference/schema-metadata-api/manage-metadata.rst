@@ -2,10 +2,17 @@
    :description: Manage metadata with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, metadata
 
-.. _api_manage_metadata:
+.. _schema_metadata_api_manage_metadata:
 
 Schema/Metadata API Reference: Manage metadata (Deprecated)
 ===========================================================
+
+.. admonition:: Deprecation
+
+  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
+  :ref:`metadata API <metadata_apis>`.
+
+  Though for backwards compatibility, the schema/metadata APIs will continue to function.
 
 .. contents:: Table of contents
   :backlinks: none
@@ -17,14 +24,7 @@ Introduction
 
 APIs to manage Hasura metadata which is stored in ``hdb_catalog`` schema.
 
-.. admonition:: Deprecation
-
-  In versions ``v2.0.0`` and above, the schema/metadata API is deprecated in favour of the :ref:`schema API <schema_apis>` and the
-  :ref:`metadata API <metadata_apis>`.
-
-  Though for backwards compatibility, the schema/metadata APIs will continue to function.
-
-.. _export_metadata:
+.. _schema_metadata_export_metadata:
 
 export_metadata
 ---------------
@@ -49,7 +49,7 @@ is just a JSON version of the :ref:`metadata files <metadata_format_v2>` generat
 the CLI.
 
 
-.. _replace_metadata:
+.. _schema_metadata_replace_metadata:
 
 replace_metadata
 ----------------
@@ -69,13 +69,13 @@ metadata will be replaced with the new one.
         "args": <replace-metadata-args>
     }
 
-.. _replace_metadata_syntax:
+.. _schema_metadata_replace_metadata_syntax:
 
 Args syntax
 ^^^^^^^^^^^
 
 If version is set to 1, then args should be the JSON object which is same as
-the output of :ref:`export_metadata`.
+the output of :ref:`schema_metadata_export_metadata`.
 
 For version 2, the following structure is used:
 
@@ -99,7 +99,7 @@ For version 2, the following structure is used:
      - If set to ``true``, metadata will be replaced with a warning in the response indicating which items are inconsistent (default: ``false``)
    * - metadata
      - true
-     - :ref:`export_metadata`
+     - :ref:`schema_metadata_export_metadata`
      - The metadata that will replace the current metadata.
 
 If the version is not specified, then it is inferred from the format of ``args``.
@@ -131,7 +131,7 @@ Example with inconsistencies:
     ]
   }
 
-.. _reload_metadata:
+.. _schema_metadata_reload_metadata:
 
 reload_metadata
 ---------------
@@ -153,7 +153,38 @@ table using ``psql`` and this column should now be added to the GraphQL schema.
        }
    }
 
-.. _reload_metadata_args_syntax:
+Response:
+
+If the metadata is consistent:
+
+.. code-block:: json
+
+  {
+      "is_consistent": true,
+      "message": "success"
+  }
+
+If the metadata is not consistent:
+
+.. code-block:: json
+
+  {
+      "is_consistent": false,
+      "message": "success",
+      "inconsistent_objects": [
+          {
+              "definition": {
+                  "schema": "public",
+                  "name": "article"
+              },
+              "name": "table article in source default",
+              "reason": "Inconsistent object: no such table/view exists in source: \"article\"",
+              "type": "table"
+          }
+      ]
+  }
+
+.. _schema_metadata_reload_metadata_syntax:
 
 Args syntax
 ^^^^^^^^^^^
@@ -170,7 +201,7 @@ Args syntax
      - ``Boolean`` | [:ref:`RemoteSchemaName`]
      - If set to ``true``, all remote schemas' (including inconsistent ones) cached GraphQL schemas are refreshed (default: ``true``)
 
-.. _clear_metadata:
+.. _schema_metadata_clear_metadata:
 
 clear_metadata
 --------------
@@ -190,7 +221,7 @@ triggers etc.
        "args": {}
    }
 
-.. _get_inconsistent_metadata:
+.. _schema_metadata_get_inconsistent_metadata:
 
 get_inconsistent_metadata
 -------------------------
@@ -247,7 +278,7 @@ Response:
        }
    ]
 
-.. _drop_inconsistent_metadata:
+.. _schema_metadata_drop_inconsistent_metadata:
 
 drop_inconsistent_metadata
 --------------------------

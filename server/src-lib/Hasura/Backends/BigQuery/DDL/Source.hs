@@ -7,11 +7,11 @@ module Hasura.Backends.BigQuery.DDL.Source
   )
 where
 
-import Control.Concurrent.MVar (newMVar)
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as L
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HM
+import Data.Int qualified as Int
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
 import Data.Time.Clock.System
@@ -28,8 +28,14 @@ import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 
-defaultGlobalSelectLimit :: Int
+defaultGlobalSelectLimit :: Int.Int64
 defaultGlobalSelectLimit = 1000
+
+defaultRetryLimit :: Int
+defaultRetryLimit = 5
+
+defaultRetryBaseDelay :: Microseconds
+defaultRetryBaseDelay = 500000
 
 resolveSourceConfig ::
   MonadIO m =>
@@ -41,27 +47,40 @@ resolveSourceConfig _name BigQueryConnSourceConfig {..} env = runExceptT $ do
   eSA <- resolveConfigurationJson env _cscServiceAccount
   case eSA of
     Left e -> throw400 Unexpected $ T.pack e
-    Right _scServiceAccount -> do
+    Right serviceAccount -> do
+      projectId <- resolveConfigurationInput env _cscProjectId
+      retryOptions <- do
+        numRetries <-
+          resolveConfigurationInput env `mapM` _cscRetryLimit >>= \case
+            Nothing -> pure defaultRetryLimit
+            Just v -> readNonNegative v "retry limit"
+        if numRetries == 0
+          then pure Nothing
+          else do
+            let _retryNumRetries = numRetries
+            _retryBaseDelay <-
+              resolveConfigurationInput env `mapM` _cscRetryBaseDelay >>= \case
+                Nothing -> pure defaultRetryBaseDelay
+                Just v -> fromInteger <$> readNonNegative v "retry base delay"
+            pure $ Just RetryOptions {..}
+      _scConnection <- initConnection serviceAccount projectId retryOptions
       _scDatasets <- resolveConfigurationInputs env _cscDatasets
-      _scProjectId <- resolveConfigurationInput env _cscProjectId
       _scGlobalSelectLimit <-
         resolveConfigurationInput env `mapM` _cscGlobalSelectLimit >>= \case
           Nothing -> pure defaultGlobalSelectLimit
-          Just i ->
-            -- This works around the inconsistency between JSON and
-            -- environment variables. The config handling module should be
-            -- reworked to handle non-text values better.
-            case readMaybe (T.unpack i) <|> J.decode (L.fromStrict (T.encodeUtf8 i)) of
-              Nothing -> throw400 Unexpected $ "Need a non-negative integer for global select limit"
-              Just i' -> do
-                when (i' < 0) $ throw400 Unexpected "Need the integer for the global select limit to be non-negative"
-                pure i'
-      trMVar <- liftIO $ newMVar Nothing -- `runBigQuery` initializes the token
-      pure
-        BigQuerySourceConfig
-          { _scAccessTokenMVar = trMVar,
-            ..
-          }
+          Just v -> readNonNegative v "global select limit"
+      pure BigQuerySourceConfig {..}
+
+readNonNegative :: (MonadError QErr m, Num a, Ord a, J.FromJSON a, Read a) => Text -> Text -> m a
+readNonNegative i paramName =
+  -- This works around the inconsistency between JSON and
+  -- environment variables. The config handling module should be
+  -- reworked to handle non-text values better.
+  case readMaybe (T.unpack i) <|> J.decode (L.fromStrict (T.encodeUtf8 i)) of
+    Nothing -> throw400 Unexpected $ "Need a non-negative integer for " <> paramName
+    Just i' -> do
+      when (i' < 0) $ throw400 Unexpected $ "Need the integer for the " <> paramName <> " to be non-negative"
+      pure i'
 
 resolveSource ::
   (MonadIO m) =>
@@ -88,14 +107,15 @@ resolveSource sourceConfig customization =
                           { _ptmiOid = OID (fromIntegral seconds + index :: Int), -- TODO: The seconds are used for uniqueness. BigQuery doesn't support a "stable" ID for a table.
                             _ptmiColumns =
                               [ RawColumnInfo
-                                  { prciName = ColumnName name,
-                                    prciPosition = position,
-                                    prciType = restTypeToScalarType type',
-                                    prciIsNullable =
+                                  { rciName = ColumnName name,
+                                    rciPosition = position,
+                                    rciType = restTypeToScalarType type',
+                                    rciIsNullable =
                                       case mode of
                                         Nullable -> True
                                         _ -> False,
-                                    prciDescription = Nothing
+                                    rciDescription = Nothing,
+                                    rciMutability = ColumnMutability {_cmIsInsertable = True, _cmIsUpdatable = True}
                                   }
                                 | (position, RestFieldSchema {name, type', mode}) <-
                                     zip [1 ..] fields -- TODO: Same trouble as Oid above.

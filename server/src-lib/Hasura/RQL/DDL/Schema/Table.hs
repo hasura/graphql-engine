@@ -31,7 +31,7 @@ import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as S
 import Data.Text.Extended
 import Data.These (These (..))
-import Hasura.Backends.Postgres.SQL.Types (QualifiedTable)
+import Hasura.Backends.Postgres.SQL.Types (PGDescription (..), QualifiedTable)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Context
@@ -294,7 +294,7 @@ runSetTableCustomFieldsQV2 ::
   (QErrM m, CacheRWM m, MetadataM m) => SetTableCustomFields -> m EncJSON
 runSetTableCustomFieldsQV2 (SetTableCustomFields source tableName rootFields columnNames) = do
   void $ askTabInfo @('Postgres 'Vanilla) source tableName -- assert that table is tracked
-  let tableConfig = TableConfig @('Postgres 'Vanilla) rootFields columnNames Nothing
+  let tableConfig = TableConfig @('Postgres 'Vanilla) rootFields columnNames Nothing Automatic
   buildSchemaCacheFor
     (MOSourceObjId source $ AB.mkAnyBackend $ SMOTable @('Postgres 'Vanilla) tableName)
     $ MetadataModifier $
@@ -349,7 +349,7 @@ unTrackExistingTableOrViewP2 (UntrackTable source qtn cascade) = withNewInconsis
     mapM_ (purgeDependentObject source >=> tell) indirectDeps
     tell $ dropTableInMetadata @b source qtn
   -- delete the table and its direct dependencies
-  buildSchemaCache metadataModifier
+  withNewInconsistentObjsCheck $ buildSchemaCache metadataModifier
   pure successMsg
   where
     getIndirectDep :: SchemaObjId -> Maybe (SourceObjId b)
@@ -462,8 +462,9 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
           |) maybeInfo
 
       let columns :: [RawColumnInfo b] = _ptmiColumns metadataTable
-          columnMap = mapFromL (FieldName . toTxt . prciName) columns
+          columnMap = mapFromL (FieldName . toTxt . rciName) columns
           primaryKey = _ptmiPrimaryKey metadataTable
+          description = buildDescription name config metadataTable
       rawPrimaryKey <- liftEitherA -< traverse (resolvePrimaryKeyColumns columnMap) primaryKey
       enumValues <-
         if isEnum
@@ -487,7 +488,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
               _tciViewInfo = _ptmiViewInfo metadataTable,
               _tciEnumValues = enumValues,
               _tciCustomConfig = config,
-              _tciDescription = _ptmiDescription metadataTable,
+              _tciDescription = description,
               _tciExtraTableMetadata = _ptmiExtraTableMetadata metadataTable
             }
 
@@ -550,35 +551,45 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
       resolvedType <- resolveColumnType
       pure
         ColumnInfo
-          { pgiColumn = pgCol,
-            pgiName = name,
-            pgiPosition = prciPosition rawInfo,
-            pgiType = resolvedType,
-            pgiIsNullable = prciIsNullable rawInfo,
-            pgiDescription = prciDescription rawInfo
+          { ciColumn = pgCol,
+            ciName = name,
+            ciPosition = rciPosition rawInfo,
+            ciType = resolvedType,
+            ciIsNullable = rciIsNullable rawInfo,
+            ciDescription = rciDescription rawInfo,
+            ciMutability = rciMutability rawInfo
           }
       where
-        pgCol = prciName rawInfo
+        pgCol = rciName rawInfo
         resolveColumnType =
           case Map.lookup pgCol tableEnumReferences of
             -- no references? not an enum
-            Nothing -> pure $ ColumnScalar (prciType rawInfo)
+            Nothing -> pure $ ColumnScalar (rciType rawInfo)
             -- one reference? is an enum
             Just (enumReference :| []) -> pure $ ColumnEnumReference enumReference
             -- multiple referenced enums? the schema is strange, so let’s reject it
             Just enumReferences ->
               throw400 ConstraintViolation $
-                "column " <> prciName rawInfo <<> " in table " <> tableName
+                "column " <> rciName rawInfo <<> " in table " <> tableName
                   <<> " references multiple enum tables ("
                   <> commaSeparated (map (dquote . erTable) $ toList enumReferences)
                   <> ")"
 
     assertNoDuplicateFieldNames columns =
-      void $ flip Map.traverseWithKey (Map.groupOn pgiName columns) \name columnsWithName ->
+      void $ flip Map.traverseWithKey (Map.groupOn ciName columns) \name columnsWithName ->
         case columnsWithName of
           one : two : more ->
             throw400 AlreadyExists $
               "the definitions of columns "
-                <> englishList "and" (dquote . pgiColumn <$> (one :| two : more))
+                <> englishList "and" (dquote . ciColumn <$> (one :| two : more))
                 <> " are in conflict: they are mapped to the same field name, " <>> name
           _ -> pure ()
+
+    buildDescription :: TableName b -> TableConfig b -> DBTableMetadata b -> Maybe PGDescription
+    buildDescription tableName tableConfig tableMetadata =
+      case _tcComment tableConfig of
+        Automatic -> _ptmiDescription tableMetadata <|> Just autogeneratedDescription
+        Explicit description -> PGDescription . toTxt <$> description
+      where
+        autogeneratedDescription =
+          PGDescription $ "columns and relationships of " <>> tableName

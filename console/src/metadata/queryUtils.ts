@@ -545,6 +545,9 @@ export const getRedeliverDataEventQuery = (
     event_id: eventId,
   });
 
+// this function returns the payload in old format,
+// please note that there is also a new format for local table to remote schema relationship
+// https://gist.github.com/0x777/e9c21e846507c6123cfb7a40c64d5772
 export const getSaveRemoteRelQuery = (
   args: RemoteRelationshipPayload,
   isNew: boolean,
@@ -663,6 +666,60 @@ export const getCreateArrayRelationshipQuery = (
     name,
     table,
     using: {},
+  });
+
+export const getSaveRemoteDbRelationshipQuery = (
+  isObjRel: boolean,
+  tableName: string,
+  name: string,
+  remoteTable: Record<string, string>,
+  columnMapping: Record<string, string>,
+  source: string,
+  rSource: string,
+  isNew: boolean,
+  driver: string,
+  schema: string
+) => {
+  const args = {
+    source,
+    name,
+    table:
+      currentDriver !== 'bigquery'
+        ? { name: tableName, schema }
+        : { name: tableName, dataset: schema },
+    definition: {
+      to_source: {
+        source: rSource,
+        table:
+          driver !== 'bigquery'
+            ? remoteTable
+            : { name: remoteTable.name, dataset: remoteTable.schema },
+        relationship_type: isObjRel ? 'object' : 'array',
+        field_mapping: columnMapping,
+      },
+    },
+  };
+
+  return getMetadataQuery(
+    isNew ? 'create_remote_relationship' : 'update_remote_relationship',
+    source,
+    args
+  );
+};
+
+export const getDropRemoteDbRelationshipQuery = (
+  name: string,
+  tableName: string,
+  source: string,
+  schema: string
+) =>
+  getMetadataQuery('delete_remote_relationship', source, {
+    name,
+    table:
+      currentDriver !== 'bigquery'
+        ? { name: tableName, schema }
+        : { name: tableName, dataset: schema },
+    source,
   });
 
 export const getAddRelationshipQuery = (

@@ -1,43 +1,28 @@
 import React from 'react';
-import { QueryClient, QueryClientProvider } from 'react-query';
 import { Story, Meta } from '@storybook/react';
+import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 
-import {
-  TableForm,
-  PermissionsTable,
-  PermissionsTableProps,
-} from './PermissionsTable';
-import { handlers } from './mocks/handlers.mock';
-
-const queryClient = new QueryClient();
+import { PermissionsTable, PermissionsTableProps } from './PermissionsTable';
+import { handlers } from '../PermissionsForm/mocks/handlers.mock';
+import { useTableMachine } from './hooks';
 
 export default {
-  title: 'Permissions Table',
+  title: 'Permissions Table/Table',
   component: PermissionsTable,
-  decorators: [
-    (StoryComponent: React.FC) => (
-      <QueryClientProvider client={queryClient}>
-        <TableForm>
-          <StoryComponent />
-        </TableForm>
-      </QueryClientProvider>
-    ),
-  ],
+  decorators: [ReactQueryDecorator()],
 } as Meta;
 
-export const Default: Story<PermissionsTableProps> = args => (
-  <PermissionsTable {...args} />
-);
+export const Default: Story<PermissionsTableProps> = args => {
+  const machine = useTableMachine();
+
+  return <PermissionsTable {...args} machine={machine} />;
+};
+
 Default.args = {
   schemaName: 'public',
   tableName: 'users',
-  selected: {
-    queryType: 'insert',
-    roleName: 'user',
-    accessType: 'fullAccess',
-  },
-  onChange: () => {},
 };
+
 Default.parameters = {
-  msw: handlers,
+  msw: handlers(),
 };

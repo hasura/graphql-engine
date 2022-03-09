@@ -5,7 +5,6 @@ module Hasura.Server.MigrateSpec (CacheRefT (..), spec) where
 import Control.Concurrent.MVar.Lifted
 import Control.Monad.Morph
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Control.Monad.Unique
 import Control.Natural ((:~>) (..))
 import Data.Aeson (encode)
 import Data.ByteString.Lazy.UTF8 qualified as LBS
@@ -20,7 +19,7 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Metadata (ClearMetadata (..), runClearMetadata)
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Cache.Common
-import Hasura.RQL.DDL.Schema.LegacyCatalog
+import Hasura.RQL.DDL.Schema.LegacyCatalog (recreateSystemMetadata)
 import Hasura.RQL.Types
 import Hasura.Server.API.PGDump
 import Hasura.Server.Init (DowngradeOptions (..))
@@ -43,7 +42,6 @@ newtype CacheRefT m a = CacheRefT {runCacheRefT :: MVar RebuildableSchemaCache -
       MonadBase b,
       MonadBaseControl b,
       MonadTx,
-      MonadUnique,
       UserInfoM,
       HTTP.HasHttpManagerM,
       HasServerConfigCtx,

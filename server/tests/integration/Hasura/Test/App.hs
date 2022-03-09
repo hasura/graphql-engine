@@ -22,6 +22,7 @@ import Hasura.App
     initGlobalCtx,
     initialiseServeCtx,
     mkHGEServer,
+    mkMSSQLSourceResolver,
     mkPgSourceResolver,
     notifySchemaCacheSyncTx,
     setCatalogStateTx,
@@ -53,6 +54,7 @@ import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.QueryTags (emptyQueryTagsComment)
 import Hasura.RQL.DDL.Schema.Catalog
+import Hasura.RQL.Types.Allowlist (AllowlistMode (AllowlistModeGlobalOnly))
 import Hasura.RQL.Types.Source (MonadResolveSource (..))
 import Hasura.Server.API.Query (requiresAdmin)
 import Hasura.Server.App
@@ -136,7 +138,7 @@ instance MonadMetadataStorage (MetadataStorageT TestM) where
   fetchMetadataResourceVersion = runInSeparateTx fetchMetadataResourceVersionFromCatalog
   fetchMetadata = runInSeparateTx fetchMetadataAndResourceVersionFromCatalog
   fetchMetadataNotifications a b = runInSeparateTx $ fetchMetadataNotificationsFromCatalog a b
-  setMetadata r = runInSeparateTx . setMetadataInCatalog (Just r)
+  setMetadata r = runInSeparateTx . setMetadataInCatalog r
   notifySchemaCacheSync a b c = runInSeparateTx $ notifySchemaCacheSyncTx a b c
   getCatalogState = runInSeparateTx getCatalogStateTx
   setCatalogState a b = runInSeparateTx $ setCatalogStateTx a b
@@ -171,7 +173,8 @@ runInSeparateTx tx = do
   liftEitherM $ liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Nothing) tx
 
 instance MonadResolveSource TestM where
-  getSourceResolver = mkPgSourceResolver <$> asks tcPostgresLogger
+  getPGSourceResolver = mkPgSourceResolver <$> asks tcPostgresLogger
+  getMSSQLSourceResolver = return mkMSSQLSourceResolver
 
 instance UserAuthentication (TraceT TestM) where
   resolveUserInfo logger manager headers authMode reqs =
@@ -196,7 +199,7 @@ instance MonadMetadataApiAuthorization TestM where
 instance MonadGQLExecutionCheck TestM where
   checkGQLExecution userInfo _ enableAL sc query = runExceptT $ do
     req <- toParsed query
-    checkQueryInAllowlist enableAL userInfo req sc
+    checkQueryInAllowlist enableAL AllowlistModeGlobalOnly userInfo req sc
     return req
   executeIntrospection _ introspectionQuery _ =
     pure $ Right $ ExecStepRaw introspectionQuery
@@ -261,7 +264,7 @@ withHasuraTestApp metadataDbUrl action = do
 
   flip runTestM testConfig $
     lowerManagedT $ do
-      serveCtx <- initialiseServeCtx env globalCtx serveOptions
+      serveCtx <- initialiseServeCtx env globalCtx serveOptions serverMetrics
       waiApp <-
         mkHGEServer
           setupHook

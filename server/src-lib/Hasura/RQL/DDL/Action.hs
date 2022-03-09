@@ -22,6 +22,7 @@ import Data.Dependent.Map qualified as DMap
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.List.NonEmpty qualified as NEList
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -75,22 +76,24 @@ runCreateAction createAction = do
   where
     actionName = _caName createAction
 
--- | Note [Postgres scalars in action input arguments]
--- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
--- It's very comfortable to be able to reference Postgres scalars in actions
--- input arguments. For example, see the following action mutation:
---
---    extend type mutation_root {
---      create_user (
---        name: String!
---        created_at: timestamptz
---      ): User
---    }
---
--- The timestamptz is a Postgres scalar. We need to validate the presence of
--- timestamptz type in the Postgres database. So, the 'resolveAction' function
--- takes all Postgres scalar types as one of the inputs and returns the set of
--- referred scalars.
+{- Note [Postgres scalars in action input arguments]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+It's very comfortable to be able to reference Postgres scalars in actions
+input arguments. For example, see the following action mutation:
+
+    extend type mutation_root {
+      create_user (
+        name: String!
+        created_at: timestamptz
+      ): User
+    }
+
+The timestamptz is a Postgres scalar. We need to validate the presence of
+timestamptz type in the Postgres database. So, the 'resolveAction' function
+takes all Postgres scalar types as one of the inputs and returns the set of
+referred scalars.
+-}
+
 resolveAction ::
   QErrM m =>
   Env.Environment ->
@@ -99,7 +102,7 @@ resolveAction ::
   DMap.DMap BackendTag ScalarSet -> -- See Note [Postgres scalars in custom types]
   m
     ( ResolvedActionDefinition,
-      AnnotatedObjectType
+      AnnotatedOutputType
     )
 resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = do
   resolvedArguments <- forM _adArguments $ \argumentDefinition -> do
@@ -120,11 +123,59 @@ resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = d
   -- Check if the response type is an object
   let outputType = unGraphQLType _adOutputType
       outputBaseType = G.getBaseType outputType
-  outputObject <-
-    onNothing (Map.lookup outputBaseType _actObjects) $
-      throw400 NotExists $
-        "the type: " <> dquote outputBaseType
-          <> " is not an object type defined in custom types"
+  outputObject <- do
+    aot <-
+      if
+          | Just aoTScalar <- lookupPGScalar allScalars outputBaseType (AOTScalar . ASTReusedScalar outputBaseType) -> do
+            pure aoTScalar
+          | Just objectType <- Map.lookup outputBaseType _actObjects ->
+            pure $ AOTObject objectType
+          | otherwise ->
+            throw400 NotExists ("the type: " <> dquote outputBaseType <> " is not an object type defined in custom types")
+    -- If the Action is sync:
+    --      1. Check if the output type has only top level relations (if any)
+    --   If the Action is async:
+    --      1. Check that the output type has no relations if the output type contains nested objects
+    -- These checks ensure that the SQL we generate for the join does not have to extract nested fields
+    -- from the action webhook response.
+    let (nestedObjects, scalarOrEnumFields) = case aot of
+          AOTObject aot' ->
+            NEList.partition
+              ( \ObjectFieldDefinition {..} ->
+                  case snd _ofdType of
+                    AOFTScalar _ -> False
+                    AOFTEnum _ -> False
+                    AOFTObject _ -> True
+              )
+              (_otdFields $ _aotDefinition aot')
+          AOTScalar _ -> ([], [])
+        scalarOrEnumFieldNames = fmap (\ObjectFieldDefinition {..} -> unObjectFieldName _ofdName) scalarOrEnumFields
+        validateSyncAction = case aot of
+          AOTObject aot' ->
+            onJust (_otdRelationships $ _aotDefinition aot') $ \relLst -> do
+              let relationshipsWithNonTopLevelFields =
+                    NEList.filter
+                      ( \TypeRelationship {..} ->
+                          let objsInRel = unObjectFieldName <$> Map.keys _trFieldMapping
+                           in not $ all (`elem` scalarOrEnumFieldNames) objsInRel
+                      )
+                      relLst
+              unless (null relationshipsWithNonTopLevelFields) $
+                throw400 ConstraintError $
+                  "Relationships cannot be defined with nested object fields : "
+                    <> commaSeparated (dquote . _trName <$> relationshipsWithNonTopLevelFields)
+          AOTScalar _ -> pure ()
+    case _adType of
+      ActionQuery -> validateSyncAction
+      ActionMutation ActionSynchronous -> validateSyncAction
+      ActionMutation ActionAsynchronous ->
+        let maybeRel = case aot of
+              AOTObject aot' -> isJust (_otdRelationships $ _aotDefinition aot')
+              AOTScalar _ -> False
+         in when (maybeRel && not (null nestedObjects)) $
+              throw400 ConstraintError $
+                "Async action relations cannot be used with object fields : " <> commaSeparated (dquote . _ofdName <$> nestedObjects)
+    pure aot
   resolvedWebhook <- resolveWebhook env _adHandler
   pure
     ( ActionDefinition
@@ -135,7 +186,8 @@ resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = d
         _adForwardClientHeaders
         _adTimeout
         resolvedWebhook
-        _adRequestTransform,
+        _adRequestTransform
+        _adResponseTransform,
       outputObject
     )
 

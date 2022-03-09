@@ -51,14 +51,14 @@ Exporting Hasura metadata
 
   .. tab:: API
 
-     The export can be done via the :ref:`export_metadata metadata API <export_metadata>`.
+     The export can be done via the :ref:`metadata_export_metadata` metadata API.
      Response will be a JSON object with the Hasura metadata.
 
      Here is an example using ``curl`` to save this as a file:
 
      .. code-block:: bash
 
-        curl -d'{"type": "export_metadata", "args": {}}' http://localhost:8080/v1/query -o hasura_metadata.json
+        curl -d'{"type": "export_metadata", "args": {}}' http://localhost:8080/v1/metadata -o hasura_metadata.json
 
      This command will create a ``hasura_metadata.json`` file.
      If an admin secret is set, add ``-H 'X-Hasura-Admin-Secret: <your-admin-secret>'`` as the API is an
@@ -104,13 +104,13 @@ before.
 
   .. tab:: API
 
-     The exported JSON can be imported via the :ref:`replace_metadata metadata API <replace_metadata>`.
+     The exported JSON can be imported via the :ref:`metadata_replace_metadata` metadata API.
 
      Here is an example using ``curl``:
 
      .. code-block:: bash
 
-        curl -d'{"type":"replace_metadata", "args":'$(cat hasura_metadata.json)'}' http://localhost:8080/v1/query
+        curl -d'{"type":"replace_metadata", "args":'$(cat hasura_metadata.json)'}' http://localhost:8080/v1/metadata
 
      This command reads the ``hasura_metadata.json`` file and makes a POST request to
      replace the metadata.
@@ -153,13 +153,13 @@ when a new column has been added to a table via an external tool such as ``psql`
 
   .. tab:: API
 
-     The reload of metadata can be done via the :ref:`reload_metadata metadata API <reload_metadata>`.
+     The reload of metadata can be done via the :ref:`metadata_reload_metadata` metadata API.
 
      Here is an example using ``curl``:
 
      .. code-block:: bash
 
-        curl -d'{"type": "reload_metadata", "args": {}}' http://localhost:8080/v1/query
+        curl -d'{"type": "reload_metadata", "args": {}}' http://localhost:8080/v1/metadata
 
      If an admin secret is set, add ``-H 'X-Hasura-Admin-Secret: <your-admin-secret>'`` as the API is an
      admin-only API.
@@ -201,13 +201,13 @@ again from scratch (e.g. tracking tables, relationships, creating triggers, acti
 
   .. tab:: API
 
-   The reset of metadata can be done via the :ref:`clear_metadata metadata API <clear_metadata>`.
+   The reset of metadata can be done via the :ref:`metadata_clear_metadata` metadata API.
 
    Here is an example using ``curl``:
 
    .. code-block:: bash
 
-      curl -d'{"type": "clear_metadata", "args": {}}' http://localhost:8080/v1/query
+      curl -d'{"type": "clear_metadata", "args": {}}' http://localhost:8080/v1/metadata
 
    If an admin secret is set, add ``-H 'X-Hasura-Admin-Secret: <your-admin-secret>'`` as the API is an
    admin-only API.

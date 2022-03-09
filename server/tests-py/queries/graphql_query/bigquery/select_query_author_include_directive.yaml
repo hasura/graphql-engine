@@ -3,7 +3,7 @@
   query:
     query: |
       query author_with_include($includeId: Boolean!, $includeName: Boolean!) {
-        hasura_test_author (order_by: {id: asc}) {
+        hasura_author (order_by: {id: asc}) {
           id @include(if: $includeId)
           name @include(if: $includeName)
         }
@@ -13,7 +13,7 @@
       includeName: false
   response:
     data:
-      hasura_test_author:
+      hasura_author:
       - id: '1'
       - id: '2'
 - url: /v1/graphql
@@ -21,7 +21,7 @@
   query:
     query: |
       query author_with_include($includeId: Boolean!, $includeName: Boolean!) {
-        hasura_test_author (order_by: {id: asc}) {
+        hasura_author (order_by: {id: asc}) {
           id @include(if: $includeId)
           name @include(if: $includeName)
         }
@@ -31,6 +31,6 @@
       includeName: true
   response:
     data:
-      hasura_test_author:
+      hasura_author:
       - name: Author 1
       - name: Author 2

@@ -1,12 +1,14 @@
 import pytest
 import jwt
 import math
-import ruamel.yaml as yaml
 import json
 
 from validate import check_query
 from datetime import datetime, timedelta
 from context import PytestConf
+from ruamel.yaml import YAML
+
+yaml=YAML(typ='safe', pure=True)
 
 if not PytestConf.config.getoption('--hge-jwt-key-file'):
     pytest.skip('--hge-jwt-key-file is missing, skipping JWT tests', allow_module_level=True)
@@ -185,7 +187,7 @@ class TestJWTClaimsMapBasic():
     def transact(self, setup):
         self.dir = 'queries/graphql_query/permissions'
         with open(self.dir + '/user_select_query_unpublished_articles.yaml') as c:
-            self.conf = yaml.safe_load(c)
+            self.conf = yaml.load(c)
         curr_time = datetime.now()
         exp_time = curr_time + timedelta(hours=1)
         self.claims = {
@@ -269,7 +271,7 @@ class TestJWTClaimsMapWithStaticHasuraClaimsMapValues():
     def transact(self, setup):
         self.dir = 'queries/graphql_query/permissions'
         with open(self.dir + '/user_select_query_unpublished_articles.yaml') as c:
-            self.conf = yaml.safe_load(c)
+            self.conf = yaml.load(c)
         curr_time = datetime.now()
         exp_time = curr_time + timedelta(hours=1)
         self.claims = {

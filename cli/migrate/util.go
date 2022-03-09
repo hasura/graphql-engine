@@ -17,7 +17,6 @@ import (
 	migratedb "github.com/hasura/graphql-engine/cli/v2/migrate/database"
 
 	"github.com/hasura/graphql-engine/cli/v2"
-	"github.com/pkg/errors"
 )
 
 // MultiError holds multiple errors.
@@ -134,7 +133,6 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, sourceName string, sourceK
 		fileURL.String(),
 		dbURL.String(),
 		isCmd, int(ec.Config.Version),
-		ec.Config.ServerConfig.TLSConfig,
 		ec.Logger,
 		ec.Stdout,
 		ec.Stderr,
@@ -154,6 +152,7 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, sourceName string, sourceK
 			SettingsStateStore:   cli.GetSettingsStateStore(ec, sourceName),
 		},
 	}
+	opts.hasuraOpts.PGDumpClient = ec.APIClient.PGDump
 	if ec.HasMetadataV3 {
 		opts.hasuraOpts.PGSourceOps = ec.APIClient.V2Query
 		opts.hasuraOpts.MSSQLSourceOps = ec.APIClient.V2Query
@@ -166,7 +165,7 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, sourceName string, sourceK
 
 	t, err := New(opts)
 	if err != nil {
-		return nil, errors.Wrap(err, "cannot create migrate instance")
+		return nil, fmt.Errorf("cannot create migrate instance: %w", err)
 	}
 	if ec.Config.Version >= cli.V2 {
 		t.databaseDrv.EnableCheckMetadataConsistency(true)

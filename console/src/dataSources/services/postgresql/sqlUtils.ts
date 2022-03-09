@@ -1,3 +1,4 @@
+import { DataSourcesAPI } from '@/dataSources';
 import { FrequentlyUsedColumn, IndexType } from '../../types';
 import { isColTypeString } from '.';
 import { FunctionState } from './types';
@@ -662,32 +663,36 @@ export const getSetColumnDefaultSql = (
   return sql;
 };
 
-export const getSetCommentSql = (
-  on: string,
-  tableName: string,
-  schemaName: string,
-  comment: string | null,
-  columnName?: string,
-  functionName?: string
-) => {
-  if (functionName) {
-    return `
-comment on ${on} "${schemaName}"."${functionName}" is ${
-      comment ? sqlEscapeText(comment) : 'NULL'
-    }
-`;
-  }
+export const getAlterTableCommentSql: DataSourcesAPI['getAlterTableCommentSql'] = ({
+  tableName,
+  schemaName,
+  comment,
+}) => {
+  return `comment on table "${schemaName}"."${tableName}" is ${
+    comment ? sqlEscapeText(comment) : 'NULL'
+  }`;
+};
 
-  if (columnName) {
-    return `
-  comment on ${on} "${schemaName}"."${tableName}"."${columnName}" is ${
-      comment ? sqlEscapeText(comment) : 'NULL'
-    }
-`;
-  }
-
+export const getAlterColumnCommentSql: DataSourcesAPI['getAlterColumnCommentSql'] = ({
+  tableName,
+  schemaName,
+  columnName,
+  comment,
+}) => {
   return `
-comment on ${on} "${schemaName}"."${tableName}" is ${
+  comment on column "${schemaName}"."${tableName}"."${columnName}" is ${
+    comment ? sqlEscapeText(comment) : 'NULL'
+  }
+`;
+};
+
+export const getAlterFunctionCommentSql: DataSourcesAPI['getAlterFunctionCommentSql'] = ({
+  functionName,
+  schemaName,
+  comment,
+}) => {
+  return `
+comment on function "${schemaName}"."${functionName}" is ${
     comment ? sqlEscapeText(comment) : 'NULL'
   }
 `;
@@ -841,6 +846,7 @@ export const getFunctionDefinitionSql = (
   functionName?: string | null,
   type?: keyof typeof functionWhereStatement
 ) => `
+-- test_id = ${Array.isArray(schemaName) ? type ?? 'all' : 'single'}_functions
 SELECT
 COALESCE(
   json_agg(
@@ -1323,6 +1329,7 @@ FROM (
 export const getDatabaseVersionSql = 'SELECT version();';
 
 export const schemaListQuery = `
+-- test_id = schema_list
 SELECT schema_name FROM information_schema.schemata
 WHERE
 	schema_name NOT in('information_schema', 'pg_catalog', 'hdb_catalog')

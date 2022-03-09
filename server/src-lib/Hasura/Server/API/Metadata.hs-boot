@@ -8,7 +8,6 @@ import Hasura.RQL.DDL.ComputedField
 import Hasura.RQL.DDL.EventTrigger
 import Hasura.RQL.DDL.Metadata
 import Hasura.RQL.DDL.Permission
-import Hasura.RQL.DDL.QueryCollection
 import Hasura.RQL.DDL.QueryTags
 import Hasura.RQL.DDL.Relationship
 import Hasura.RQL.DDL.Relationship.Rename
@@ -46,9 +45,9 @@ data RQLMetadataV1
   | RMSetRelationshipComment !(AnyBackend SetRelComment)
   | RMRenameRelationship !(AnyBackend RenameRel)
   | -- Tables remote relationships
-    RMCreateRemoteRelationship !(AnyBackend RemoteRelationship)
-  | RMUpdateRemoteRelationship !(AnyBackend RemoteRelationship)
-  | RMDeleteRemoteRelationship !(DeleteRemoteRelationship ('Postgres 'Vanilla))
+    RMCreateRemoteRelationship !(AnyBackend CreateFromSourceRelationship)
+  | RMUpdateRemoteRelationship !(AnyBackend CreateFromSourceRelationship)
+  | RMDeleteRemoteRelationship !(AnyBackend DeleteFromSourceRelationship)
   | -- Functions
     RMTrackFunction !(AnyBackend TrackFunctionV2)
   | RMUntrackFunction !(AnyBackend UnTrackFunction)
@@ -80,6 +79,7 @@ data RQLMetadataV1
   | RMDeleteScheduledEvent !DeleteScheduledEvent
   | RMGetScheduledEvents !GetScheduledEvents
   | RMGetEventInvocations !GetEventInvocations
+  | RMGetCronTriggers
   | -- Actions
     RMCreateAction !CreateAction
   | RMDropAction !DropAction
@@ -91,8 +91,9 @@ data RQLMetadataV1
   | RMDropQueryCollection !DropCollection
   | RMAddQueryToCollection !AddQueryToCollection
   | RMDropQueryFromCollection !DropQueryFromCollection
-  | RMAddCollectionToAllowlist !CollectionReq
-  | RMDropCollectionFromAllowlist !CollectionReq
+  | RMAddCollectionToAllowlist !AllowlistEntry
+  | RMDropCollectionFromAllowlist !DropCollectionFromAllowlist
+  | RMUpdateScopeOfCollectionInAllowlist !UpdateScopeOfCollectionInAllowlist
   | -- Rest endpoints
     RMCreateRestEndpoint !CreateEndpoint
   | RMDropRestEndpoint !DropEndpoint

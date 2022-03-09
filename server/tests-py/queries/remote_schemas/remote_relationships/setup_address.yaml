@@ -5,7 +5,7 @@ args:
       sql: |
         create table address (
           address_id serial primary key,
-          user_id integer references profiles(id),
+          user_id integer references custom.profiles(id),
           address_line text
         )
   - type: run_sql
@@ -28,7 +28,7 @@ args:
   - type: create_array_relationship
     args:
       name: myAddresses
-      table: profiles
+      table: {schema: custom, name: profiles}
       using:
         foreign_key_constraint_on:
           table: address
@@ -36,7 +36,7 @@ args:
   - type: create_object_relationship
     args:
       name: mySpecialAddress
-      table: profiles
+      table: {schema: custom, name: profiles}
       using:
         manual_configuration:
           remote_table: address

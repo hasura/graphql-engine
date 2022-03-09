@@ -29,6 +29,7 @@ import { findAllFromRel, isFeatureSupported } from '../../../../dataSources';
 import { getRemoteSchemasSelector } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import FeatureDisabled from '../FeatureDisabled';
+import { RemoteDbRelationships } from './RemoteDbRelationships/RemoteDbRelationships';
 
 const addRelationshipCellView = (
   dispatch,
@@ -461,7 +462,12 @@ const Relationships = ({
     return addRelSection;
   };
 
-  const existingRemoteRelationships = tableSchema.remote_relationships;
+  const existingRemoteRelationships =
+    tableSchema?.remote_relationships?.filter(
+      field =>
+        'remote_schema' in field.definition ||
+        'to_remote_schema' in field.definition
+    ) ?? [];
 
   return (
     <RightContainer>
@@ -487,6 +493,19 @@ const Relationships = ({
             {addedRelationshipsView}
             {getAddRelSection()}
           </div>
+          {isFeatureSupported(
+            'tables.relationships.remoteDbRelationships.hostSource'
+          ) ? (
+            <div
+              className={`${styles.padd_left_remove} col-xs-10 col-md-10 ${styles.add_mar_bottom}`}
+            >
+              <RemoteDbRelationships
+                tableSchema={tableSchema}
+                reduxDispatch={dispatch}
+                currentSource={currentSource}
+              />
+            </div>
+          ) : null}
           {isFeatureSupported('tables.relationships.remoteRelationships') ? (
             <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
               <RemoteRelationships

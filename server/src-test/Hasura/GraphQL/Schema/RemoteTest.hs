@@ -3,7 +3,7 @@ module Hasura.GraphQL.Schema.RemoteTest (spec) where
 import Control.Lens (Prism', prism', to, (^..), _Right)
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as LBS
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict.Extended qualified as M
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.RawString
@@ -12,14 +12,20 @@ import Hasura.GraphQL.Execute.Inline
 import Hasura.GraphQL.Execute.Remote (resolveRemoteVariable, runVariableCache)
 import Hasura.GraphQL.Execute.Resolve
 import Hasura.GraphQL.Namespace
+import Hasura.GraphQL.Parser.Column (UnpreparedValue)
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Parser.Schema
 import Hasura.GraphQL.Parser.TestUtils
 import Hasura.GraphQL.RemoteServer (identityCustomizer)
+import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Remote
 import Hasura.Prelude
+import Hasura.RQL.IR.RemoteSchema
+import Hasura.RQL.IR.Root
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.Session
 import Language.GraphQL.Draft.Parser qualified as G
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -33,26 +39,27 @@ runError = runExceptT >=> (`onLeft` (error . T.unpack . qeError))
 
 mkTestRemoteSchema :: Text -> RemoteSchemaIntrospection
 mkTestRemoteSchema schema = RemoteSchemaIntrospection $
-  runIdentity $
-    runError $ do
-      G.SchemaDocument types <- G.parseSchemaDocument schema `onLeft` throw500
-      pure $ flip mapMaybe types \case
-        G.TypeSystemDefinitionSchema _ -> Nothing
-        G.TypeSystemDefinitionType td -> Just $ case fmap toRemoteInputValue td of
-          G.TypeDefinitionScalar std -> G.TypeDefinitionScalar std
-          G.TypeDefinitionObject otd -> G.TypeDefinitionObject otd
-          G.TypeDefinitionUnion utd -> G.TypeDefinitionUnion utd
-          G.TypeDefinitionEnum etd -> G.TypeDefinitionEnum etd
-          G.TypeDefinitionInputObject itd -> G.TypeDefinitionInputObject itd
-          G.TypeDefinitionInterface itd ->
-            G.TypeDefinitionInterface $
-              G.InterfaceTypeDefinition
-                { G._itdDescription = G._itdDescription itd,
-                  G._itdName = G._itdName itd,
-                  G._itdDirectives = G._itdDirectives itd,
-                  G._itdFieldsDefinition = G._itdFieldsDefinition itd,
-                  G._itdPossibleTypes = []
-                }
+  M.fromListOn getTypeName $
+    runIdentity $
+      runError $ do
+        G.SchemaDocument types <- G.parseSchemaDocument schema `onLeft` throw500
+        pure $ flip mapMaybe types \case
+          G.TypeSystemDefinitionSchema _ -> Nothing
+          G.TypeSystemDefinitionType td -> Just $ case fmap toRemoteInputValue td of
+            G.TypeDefinitionScalar std -> G.TypeDefinitionScalar std
+            G.TypeDefinitionObject otd -> G.TypeDefinitionObject otd
+            G.TypeDefinitionUnion utd -> G.TypeDefinitionUnion utd
+            G.TypeDefinitionEnum etd -> G.TypeDefinitionEnum etd
+            G.TypeDefinitionInputObject itd -> G.TypeDefinitionInputObject itd
+            G.TypeDefinitionInterface itd ->
+              G.TypeDefinitionInterface $
+                G.InterfaceTypeDefinition
+                  { G._itdDescription = G._itdDescription itd,
+                    G._itdName = G._itdName itd,
+                    G._itdDirectives = G._itdDirectives itd,
+                    G._itdFieldsDefinition = G._itdFieldsDefinition itd,
+                    G._itdPossibleTypes = []
+                  }
   where
     toRemoteInputValue ivd =
       RemoteSchemaInputValueDefinition
@@ -96,13 +103,23 @@ mkTestVariableValues vars = runIdentity $
 
 buildQueryParsers ::
   RemoteSchemaIntrospection ->
-  IO (P.FieldParser TestMonad (G.Field G.NoFragments RemoteSchemaVariable))
+  IO (P.FieldParser TestMonad (GraphQLField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))
 buildQueryParsers introspection = do
   let introResult = IntrospectionResult introspection $$(G.litName "Query") Nothing Nothing
+      remoteSchemaInfo = RemoteSchemaInfo (ValidatedRemoteSchemaDef N.nullURI [] False 60 Nothing) identityCustomizer
+      sourceContext =
+        -- without relationships to sources, this won't be evaluated
+        ( adminRoleName :: RoleName,
+          mempty :: SourceCache,
+          undefined :: QueryContext,
+          mempty :: CustomizeRemoteFieldName,
+          mempty :: RemoteSchemaMap,
+          mempty :: MkTypename,
+          mempty :: MkRootFieldName
+        )
   ParsedIntrospection query _ _ <-
     runError $
-      buildRemoteParser introResult $
-        RemoteSchemaInfo (ValidatedRemoteSchemaDef N.nullURI [] False 60 Nothing) identityCustomizer
+      buildRemoteParser introResult remoteSchemaInfo
   pure $
     head query <&> \case
       NotNamespaced remoteFld -> _rfField remoteFld
@@ -130,7 +147,7 @@ run ::
   Text ->
   -- | variables
   LBS.ByteString ->
-  IO (G.Field G.NoFragments RemoteSchemaVariable)
+  IO (GraphQLField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable)
 run schema query variables = do
   parser <- buildQueryParsers $ mkTestRemoteSchema schema
   pure $
@@ -190,7 +207,7 @@ query($a: A!) {
   }
 }
 |]
-  let arg = head $ M.toList $ G._fArguments field
+  let arg = head $ M.toList $ _fArguments field
   arg
     `shouldBe` ( $$(G.litName "a"),
                  -- the parser did not create a new JSON variable, and forwarded the query variable unmodified
@@ -244,7 +261,7 @@ query($a: A) {
   }
 }
 |]
-  let arg = head $ M.toList $ G._fArguments field
+  let arg = head $ M.toList $ _fArguments field
   arg
     `shouldBe` ( $$(G.litName "a"),
                  -- fieldOptional has peeled the variable; all we see is a JSON blob, and in doubt
@@ -298,7 +315,7 @@ query($a: A!) {
   }
 }
 |]
-  let arg = head $ M.toList $ G._fArguments field
+  let arg = head $ M.toList $ _fArguments field
   arg
     `shouldBe` ( $$(G.litName "a"),
                  -- the preset has caused partial variable expansion, only up to where it's needed
@@ -331,7 +348,7 @@ testVariableSubstitutionCollision = it "ensures that remote variables are de-dup
       . traverse (resolveRemoteVariable dummyUserInfo)
       $ field
   let variableNames =
-        eField ^.. _Right . to G._fArguments . traverse . _VVariable . to vInfo . to getName . to G.unName
+        eField ^.. _Right . to _fArguments . traverse . _VVariable . to vInfo . to getName . to G.unName
   variableNames `shouldBe` ["hasura_json_var_1", "hasura_json_var_2"]
   where
     -- A schema whose values are representable as collections of JSON values.

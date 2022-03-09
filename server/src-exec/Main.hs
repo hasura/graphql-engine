@@ -62,7 +62,7 @@ runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
       -- It'd be nice if we didn't have to call runManagedT twice here, but
       -- there is a data dependency problem since the call to runPGMetadataStorageApp
       -- below depends on serveCtx.
-      runManagedT (initialiseServeCtx env globalCtx serveOptions) $ \serveCtx -> do
+      runManagedT (initialiseServeCtx env globalCtx serveOptions serverMetrics) $ \serveCtx -> do
         -- Catches the SIGTERM signal and initiates a graceful shutdown.
         -- Graceful shutdown for regular HTTP requests is already implemented in
         -- Warp, and is triggered by invoking the 'closeSocket' callback.

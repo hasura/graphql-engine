@@ -88,6 +88,27 @@ func (t *TableConfig) Key() string {
 	return "tables"
 }
 
+func (t *TableConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+	rootFile := filepath.Join(t.BaseDirectory(), t.Filename())
+	files, err := metadataobject.DefaultGetFiles(rootFile)
+	if err != nil {
+		return nil, t.error(err)
+	}
+	return files, nil
+}
+
+func (t *TableConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: t, WriteDiffOpts: opts})
+	if err != nil {
+		return t.error(err)
+	}
+	return nil
+}
+
+func (t *TableConfig) BaseDirectory() string {
+	return t.MetadataDir
+}
+
 func (t *TableConfig) error(err error, additionalContext ...string) metadataobject.ErrParsingMetadataObject {
 	return metadataobject.NewErrParsingMetadataObject(t, err, additionalContext...)
 }

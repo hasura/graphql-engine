@@ -42,6 +42,7 @@ import Data.Time.Format.ISO8601
 import Database.PG.Query qualified as Q
 import Hasura.Incremental
 import Hasura.Prelude
+import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types.Action (InputWebhook (..))
 import Hasura.RQL.Types.Common (NonNegativeDiffTime, unsafeNonNegativeDiffTime)
 import Hasura.RQL.Types.EventTrigger
@@ -106,7 +107,9 @@ data CronTriggerMetadata = CronTriggerMetadata
     ctRetryConf :: !STRetryConf,
     ctHeaders :: ![HeaderConf],
     ctIncludeInMetadata :: !Bool,
-    ctComment :: !(Maybe Text)
+    ctComment :: !(Maybe Text),
+    ctRequestTransform :: !(Maybe RequestTransform),
+    ctResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Show, Eq, Generic)
 
@@ -125,6 +128,8 @@ instance FromJSON CronTriggerMetadata where
       ctHeaders <- o .:? "headers" .!= []
       ctIncludeInMetadata <- o .: "include_in_metadata"
       ctComment <- o .:? "comment"
+      ctRequestTransform <- o .:? "request_transform"
+      ctResponseTransform <- o .:? "response_transform"
       pure CronTriggerMetadata {..}
 
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''CronTriggerMetadata)
@@ -138,7 +143,9 @@ data CreateCronTrigger = CreateCronTrigger
     cctHeaders :: ![HeaderConf],
     cctIncludeInMetadata :: !Bool,
     cctComment :: !(Maybe Text),
-    cctReplace :: !Bool
+    cctReplace :: !Bool,
+    cctRequestTransform :: !(Maybe RequestTransform),
+    cctResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Show, Eq, Generic)
 
@@ -158,6 +165,8 @@ instance FromJSON CreateCronTrigger where
       cctIncludeInMetadata <- o .: "include_in_metadata"
       cctComment <- o .:? "comment"
       cctReplace <- o .:? "replace" .!= False
+      cctRequestTransform <- o .:? "request_transform"
+      cctResponseTransform <- o .:? "response_transform"
       pure CreateCronTrigger {..}
 
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''CreateCronTrigger)
@@ -179,7 +188,9 @@ data CreateScheduledEvent = CreateScheduledEvent
     csePayload :: !(Maybe J.Value),
     cseHeaders :: ![HeaderConf],
     cseRetryConf :: !STRetryConf,
-    cseComment :: !(Maybe Text)
+    cseComment :: !(Maybe Text),
+    cseRequestTransform :: !(Maybe RequestTransform),
+    cseResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Show, Eq, Generic)
 
@@ -192,6 +203,8 @@ instance FromJSON CreateScheduledEvent where
         <*> o .:? "headers" .!= []
         <*> o .:? "retry_conf" .!= defaultSTRetryConf
         <*> o .:? "comment"
+        <*> o .:? "request_transform"
+        <*> o .:? "response_transform"
 
 $(deriveToJSON hasuraJSON ''CreateScheduledEvent)
 
@@ -301,7 +314,9 @@ data OneOffScheduledEvent = OneOffScheduledEvent
     _ooseTries :: !Int,
     _ooseCreatedAt :: !UTCTime,
     _ooseNextRetryAt :: !(Maybe UTCTime),
-    _ooseComment :: !(Maybe Text)
+    _ooseComment :: !(Maybe Text),
+    _ooseRequestTransform :: !(Maybe RequestTransform),
+    _ooseResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Show, Eq)
 

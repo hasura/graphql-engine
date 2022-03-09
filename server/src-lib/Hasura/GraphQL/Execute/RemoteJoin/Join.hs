@@ -3,14 +3,15 @@ module Hasura.GraphQL.Execute.RemoteJoin.Join
   )
 where
 
+import Control.Lens (view, _3)
 import Data.Aeson qualified as J
 import Data.Aeson.Ordered qualified as JO
 import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.NonEmpty qualified as NEMap
 import Data.HashSet qualified as HS
-import Data.IntMap.Strict qualified as IntMap
+import Data.IntMap.Strict.Extended qualified as IntMap
 import Data.List.NonEmpty qualified as NE
 import Data.Scientific qualified as Scientific
 import Data.Text qualified as T
@@ -24,6 +25,7 @@ import Hasura.GraphQL.Execute.RemoteJoin.RemoteSchema qualified as RS
 import Hasura.GraphQL.Execute.RemoteJoin.Types
 import Hasura.GraphQL.Logging (MonadQueryLog)
 import Hasura.GraphQL.Namespace
+import Hasura.GraphQL.RemoteServer (execRemoteGQ)
 import Hasura.GraphQL.Transport.Backend qualified as TB
 import Hasura.GraphQL.Transport.HTTP.Protocol (GQLReqUnparsed)
 import Hasura.GraphQL.Transport.Instances ()
@@ -36,7 +38,7 @@ import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client qualified as HTTP
-import Network.HTTP.Types qualified as N
+import Network.HTTP.Types qualified as HTTP
 
 forRemoteJoins ::
   (Applicative f) =>
@@ -58,7 +60,7 @@ processRemoteJoins ::
   L.Logger L.Hasura ->
   Env.Environment ->
   HTTP.Manager ->
-  [N.Header] ->
+  [HTTP.Header] ->
   UserInfo ->
   EncJSON ->
   Maybe RemoteJoins ->
@@ -91,27 +93,23 @@ processRemoteJoins_ ::
   L.Logger L.Hasura ->
   Env.Environment ->
   HTTP.Manager ->
-  [N.Header] ->
+  [HTTP.Header] ->
   UserInfo ->
   f JO.Value ->
   RemoteJoins ->
   GQLReqUnparsed ->
   m (f JO.Value)
-processRemoteJoins_ requestId logger env manager reqHdrs userInfo lhs joinTree gqlreq = do
+processRemoteJoins_ requestId logger env manager requestHeaders userInfo lhs joinTree gqlreq = do
   (compositeValue, joins) <- collectJoinArguments (assignJoinIds joinTree) lhs
-  joinIndices <- fmap (IntMap.mapMaybe id) $
+  joinIndices <- fmap IntMap.catMaybes $
     for joins $ \JoinArguments {..} -> do
       let joinArguments = IntMap.fromList $ map swap $ Map.toList _jalArguments
-      case _jalJoin of
-        RemoteJoinRemoteSchema remoteSchemaJoin -> do
-          -- construct a remote call for
-          remoteCall <- RS.buildRemoteSchemaCall userInfo remoteSchemaJoin joinArguments
-          -- A remote call could be Nothing if there are no join arguments
-          for remoteCall $ \rsc@(RS.RemoteSchemaCall _ _ _ responsePaths) -> do
-            remoteResponse <-
-              RS.getRemoteSchemaResponse env manager reqHdrs userInfo rsc
-            -- extract the join values from the remote's response
-            RS.buildJoinIndex remoteResponse responsePaths
+      previousStep <- case _jalJoin of
+        RemoteJoinRemoteSchema remoteSchemaJoin childJoinTree -> do
+          let remoteSchemaInfo = rsDef $ _rsjRemoteSchema remoteSchemaJoin
+              networkCall = fmap (view _3) . execRemoteGQ env manager userInfo requestHeaders remoteSchemaInfo
+          maybeJoinIndex <- RS.makeRemoteSchemaJoinCall networkCall userInfo remoteSchemaJoin joinArguments
+          pure $ fmap (childJoinTree,) maybeJoinIndex
         RemoteJoinSource sourceJoin childJoinTree -> AB.dispatchAnyBackend @TB.BackendTransport sourceJoin \(RemoteSourceJoin {..} :: RemoteSourceJoin b) -> do
           let rows = flip map (IntMap.toList joinArguments) $ \(argumentId, argument) ->
                 Map.insert "__argument_id__" (J.toJSON argumentId) $
@@ -131,6 +129,12 @@ processRemoteJoins_ requestId logger env manager reqHdrs userInfo lhs joinTree g
                 (FieldName "__argument_id__")
                 (FieldName "f", _rsjRelationship)
 
+            let fieldNameText = getFieldNameTxt _jalFieldName
+            -- This should never fail, as field names in remote relationships
+            -- are validated when building the schema cache.
+            fieldName <-
+              G.mkName fieldNameText
+                `onNothing` throw500 ("'" <> fieldNameText <> "' is not a valid GraphQL name")
             (_, sourceResponse) <-
               TB.runDBQuery @b
                 requestId
@@ -138,32 +142,32 @@ processRemoteJoins_ requestId logger env manager reqHdrs userInfo lhs joinTree g
                 -- NOTE: We're making an assumption that the 'FieldName' propagated
                 -- upwards from 'collectJoinArguments' is reasonable to use for
                 -- logging.
-                (mkUnNamespacedRootFieldAlias $ G.unsafeMkName . getFieldNameTxt $ _jalFieldName)
+                (mkUnNamespacedRootFieldAlias fieldName)
                 userInfo
                 logger
                 _rsjSourceConfig
                 (EB.dbsiAction stepInfo)
                 (EB.dbsiPreparedQuery stepInfo)
-
-            preRemoteJoinResults <- buildSourceDataJoinIndex sourceResponse
-            forRemoteJoins childJoinTree preRemoteJoinResults $ \childRemoteJoins -> do
-              results <-
-                processRemoteJoins_
-                  requestId
-                  logger
-                  env
-                  manager
-                  reqHdrs
-                  userInfo
-                  (IntMap.elems preRemoteJoinResults)
-                  childRemoteJoins
-                  gqlreq
-              pure $ IntMap.fromAscList $ zip (IntMap.keys preRemoteJoinResults) results
+            (childJoinTree,) <$> buildSourceDataJoinIndex sourceResponse
+      for previousStep $ \(childJoinTree, joinIndex) -> do
+        forRemoteJoins childJoinTree joinIndex $ \childRemoteJoins -> do
+          results <-
+            processRemoteJoins_
+              requestId
+              logger
+              env
+              manager
+              requestHeaders
+              userInfo
+              (IntMap.elems joinIndex)
+              childRemoteJoins
+              gqlreq
+          pure $ IntMap.fromAscList $ zip (IntMap.keys joinIndex) results
 
   joinResults joinIndices compositeValue
 
 -- | Attempt to construct a 'JoinIndex' from some 'EncJSON' source response.
-buildSourceDataJoinIndex :: (MonadError QErr m) => EncJSON -> m JoinIndex
+buildSourceDataJoinIndex :: (MonadError QErr m) => EncJSON -> m (IntMap.IntMap JO.Value)
 buildSourceDataJoinIndex response = do
   json <-
     JO.eitherDecode (encJToLBS response) `onLeft` \err ->
@@ -373,22 +377,36 @@ collectJoinArguments joinTree lhs = do
         m
         (InsOrdHashMap Text (CompositeValue ReplacementToken))
     traverseObject joinTree_ object = do
-      let phantomFields =
+      let joinTreeNodes = unJoinTree joinTree_
+          phantomFields =
             HS.fromList $
               map getFieldNameTxt $
                 concatMap (getPhantomFields . snd) $ toList joinTree_
 
-          joinTreeNodes =
-            Map.mapKeys getFieldNameTxt $
-              Map.fromList $
-                NE.toList $ unJoinTree joinTree_
+      -- If we need the typename to disambiguate branches in the join tree, it
+      -- will be present in the answer as a placeholder internal field.
+      --
+      -- We currently have no way of checking whether we explicitly requested
+      -- that field, and it would be possible for a malicious user to attempt to
+      -- spoof that value by explicitly requesting a value they control.
+      -- However, there's no actual risk: we only use that value for lookups
+      -- inside the join tree, and if we didn't request this field, the keys in
+      -- the join tree map will explicitly require a typename NOT to be
+      -- provided. Meaning that any spoofing attempt will just, at worst, result
+      -- in remote joins not being performed.
+      --
+      -- We always remove that key from the resulting object.
+      joinTypeName <- case JO.lookup "__hasura_internal_typename" object of
+        Nothing -> pure Nothing
+        Just (JO.String typename) -> pure $ Just typename
+        Just value -> throw500 $ "The reserved __hasura_internal_typename field contains an unexpected value: " <> tshow value
 
       -- during this traversal we assume that the remote join column has some
       -- placeholder value in the response. If this weren't present it would
       -- involve a lot more book-keeping to preserve the order of the original
       -- selection set in the response
       compositeObject <- for (JO.toList object) $ \(fieldName, value_) ->
-        (fieldName,) <$> case Map.lookup fieldName joinTreeNodes of
+        (fieldName,) <$> case NEMap.lookup (QualifiedFieldName joinTypeName fieldName) joinTreeNodes of
           Just (Leaf (joinId, remoteJoin)) -> do
             joinArgument <- forM (getJoinColumnMapping remoteJoin) $ \alias -> do
               let aliasTxt = getFieldNameTxt $ getAliasFieldName alias
@@ -404,7 +422,7 @@ collectJoinArguments joinTree lhs = do
           Just (Tree joinSubTree) ->
             Just <$> traverseValue joinSubTree value_
           Nothing ->
-            if HS.member fieldName phantomFields
+            if HS.member fieldName phantomFields || fieldName == "__hasura_internal_typename"
               then pure Nothing
               else pure $ Just $ CVOrdValue value_
 

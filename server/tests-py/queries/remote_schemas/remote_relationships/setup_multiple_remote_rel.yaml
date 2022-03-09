@@ -4,7 +4,7 @@ args:
 - type: create_remote_relationship
   args:
     name: remoteUser
-    table: profiles
+    table: {schema: custom, name: profiles}
     hasura_fields:
       - id
     remote_schema: my-remote-schema
@@ -17,7 +17,7 @@ args:
 - type: create_remote_relationship
   args:
     name: messagesNestedArr
-    table: profiles
+    table: {schema: custom, name: profiles}
     hasura_fields:
       - name
     remote_schema: my-remote-schema
@@ -30,7 +30,7 @@ args:
 - type: create_remote_relationship
   args:
     name: some_constant_text
-    table: profiles
+    table: {schema: custom, name: profiles}
     hasura_fields:
       # TODO we should probably raise an error for these unused fields:
       - id
@@ -50,7 +50,7 @@ args:
 - type: create_remote_relationship
   args:
     name: some_more_constant_text
-    table: profiles
+    table: {schema: custom, name: profiles}
     hasura_fields: []
     # hasura_fields:
     # - id

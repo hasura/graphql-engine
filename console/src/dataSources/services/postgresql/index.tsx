@@ -9,6 +9,7 @@ import {
   BaseTableColumn,
   ViolationActions,
   IndexType,
+  NormalizedTable,
 } from '../../types';
 import { QUERY_TYPES, Operations } from '../../common';
 import { PGFunction } from './types';
@@ -45,7 +46,6 @@ import {
   getAddColumnSql,
   getAddUniqueConstraintSql,
   getDropNotNullSql,
-  getSetCommentSql,
   getSetColumnDefaultSql,
   getSetNotNullSql,
   getAlterColumnTypeSql,
@@ -71,10 +71,13 @@ import {
   getTableInfo,
   getDatabaseVersionSql,
   schemaListQuery,
+  getAlterTableCommentSql,
+  getAlterColumnCommentSql,
+  getAlterFunctionCommentSql,
 } from './sqlUtils';
 import globals from '../../../Globals';
 
-export const isTable = (table: Table) => {
+export const isTable = (table: Table | NormalizedTable) => {
   return (
     table.table_type === 'TABLE' ||
     table.table_type === 'PARTITIONED TABLE' ||
@@ -88,7 +91,7 @@ export const displayTableName = (table: Table) => {
   return isTable(table) ? <span>{tableName}</span> : <i>{tableName}</i>;
 };
 
-export const getTableSupportedQueries = (table: Table) => {
+export const getTableSupportedQueries = (table: NormalizedTable) => {
   let supportedQueryTypes: Operations[];
 
   if (isTable(table)) {
@@ -216,7 +219,7 @@ export const findFunction = (
 };
 
 export const getGroupedTableComputedFields = (
-  table: Table,
+  computed_fields: ComputedField[],
   allFunctions: PGFunction[]
 ) => {
   const groupedComputedFields: {
@@ -224,7 +227,7 @@ export const getGroupedTableComputedFields = (
     table: ComputedField[];
   } = { scalar: [], table: [] };
 
-  table.computed_fields.forEach(computedField => {
+  computed_fields?.forEach(computedField => {
     const computedFieldFnDef = computedField.definition.function;
     const computedFieldFn = findFunction(
       allFunctions,
@@ -628,6 +631,10 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     },
     relationships: {
       enabled: true,
+      remoteDbRelationships: {
+        hostSource: true,
+        referenceSource: true,
+      },
       remoteRelationships: true,
       track: true,
     },
@@ -668,14 +675,17 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
   rawSQL: {
     enabled: true,
     tracking: true,
-    statementTimeout: true,
+    statementTimeout: false,
   },
   connectDbForm: {
     enabled: true,
     connectionParameters: true,
     databaseURL: true,
     environmentVariable: true,
-    read_replicas: true,
+    read_replicas: {
+      create: true,
+      edit: true,
+    },
     prepared_statements: true,
     isolation_level: true,
     connectionSettings: true,
@@ -759,7 +769,6 @@ export const postgres: DataSourcesAPI = {
   getAddColumnSql,
   getAddUniqueConstraintSql,
   getDropNotNullSql,
-  getSetCommentSql,
   getSetColumnDefaultSql,
   getSetNotNullSql,
   getAlterColumnTypeSql,
@@ -803,4 +812,7 @@ export const postgres: DataSourcesAPI = {
   generateDeleteRowRequest,
   generateBulkDeleteRowRequest,
   schemaListQuery,
+  getAlterTableCommentSql,
+  getAlterColumnCommentSql,
+  getAlterFunctionCommentSql,
 };

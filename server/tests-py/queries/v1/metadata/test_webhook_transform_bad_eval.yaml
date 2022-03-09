@@ -5,13 +5,13 @@
   status: 200
   response:
     body:
-      - error_code: InvalidPathCode
+      - error_code: Invalid Path
         source_position:
-          end_column: 14
-          start_line: 1
-          end_line: 1
-          start_column: 9
-        message: 'Path Lookup Error: "$body.world"'
+          end_column: 15
+          start_line: 0
+          end_line: 0
+          start_column: 4
+        message: '"$body.world"'
     headers: []
     method: GET
     webhook_url: http://localhost:1234/
@@ -22,5 +22,8 @@
       body:
         hello: world
       request_transform:
-        body: "{{ $body.world }}"
+        version: 2
+        body:
+          action: transform
+          template: "{{ $body.world }}"
         template_engine: Kriti

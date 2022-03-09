@@ -2,7 +2,6 @@
 
 module Hasura.RQL.Types.Metadata
   ( Actions,
-    Allowlist,
     BackendSourceMetadata,
     CatalogState (..),
     CatalogStateType (..),
@@ -22,8 +21,10 @@ module Hasura.RQL.Types.Metadata
     Permissions,
     QueryCollections,
     Relationships,
-    RemoteRelationshipMetadata (..),
-    RemoteRelationships,
+    SchemaRemoteRelationships,
+    RemoteSchemaTypeRelationships (..),
+    rstrsName,
+    rstrsRelationships,
     RemoteSchemaMetadata (..),
     RemoteSchemaPermissionMetadata (..),
     RemoteSchemas,
@@ -63,11 +64,7 @@ module Hasura.RQL.Types.Metadata
     metadataToOrdJSON,
     mkSourceMetadata,
     mkTableMeta,
-    noMetadataModify,
-    parseListAsMap,
     parseNonSourcesMetadata,
-    rrmDefinition,
-    rrmName,
     rsmComment,
     rsmDefinition,
     rsmName,
@@ -95,6 +92,7 @@ module Hasura.RQL.Types.Metadata
     tmTable,
     tmUpdatePermissions,
     toSourceMetadata,
+    rsmRemoteRelationships,
   )
 where
 
@@ -107,13 +105,14 @@ import Data.Aeson.Types
 import Data.HashMap.Strict.Extended qualified as M
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.HashSet qualified as HS
-import Data.HashSet.InsOrd qualified as HSIns
 import Data.List.Extended qualified as L
+import Data.Monoid (Dual (..), Endo (..))
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
+import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
@@ -128,8 +127,8 @@ import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.QueryTags
-import Hasura.RQL.Types.Relationship
-import Hasura.RQL.Types.RemoteRelationship
+import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.ScheduledTrigger
@@ -141,21 +140,22 @@ import Hasura.SQL.Tag
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
--- | Raise exception if parsed list has multiple declarations
+-- | Parse a list of objects into a map from a derived key,
+-- failing if the list has duplicates.
 parseListAsMap ::
-  (Hashable k, Eq k, Show k) =>
+  (Hashable k, Eq k, T.ToTxt k) =>
   Text ->
   (a -> k) ->
   Parser [a] ->
   Parser (InsOrdHashMap k a)
-parseListAsMap t mapFn listP = do
+parseListAsMap things mapFn listP = do
   list <- listP
   let duplicates = toList $ L.duplicates $ map mapFn list
   unless (null duplicates) $
     fail $
       T.unpack $
-        "multiple declarations exist for the following " <> t <> " : "
-          <> tshow duplicates
+        "multiple declarations exist for the following " <> things <> ": "
+          <> T.commaSeparated duplicates
   pure $ oMapFromL mapFn list
 
 -- | Versioning the @'Metadata' JSON structure to track backwards incompatible changes.
@@ -197,28 +197,26 @@ currentMetadataVersion = MVVersion3
 data ComputedFieldMetadata b = ComputedFieldMetadata
   { _cfmName :: !ComputedFieldName,
     _cfmDefinition :: !(ComputedFieldDefinition b),
-    _cfmComment :: !(Maybe Text)
+    _cfmComment :: !Comment
   }
   deriving (Show, Eq, Generic)
 
 instance (Backend b) => Cacheable (ComputedFieldMetadata b)
 
 instance (Backend b) => ToJSON (ComputedFieldMetadata b) where
-  toJSON = genericToJSON hasuraJSON
+  toJSON ComputedFieldMetadata {..} =
+    object
+      [ "name" .= _cfmName,
+        "definition" .= _cfmDefinition,
+        "comment" .= _cfmComment
+      ]
 
 instance (Backend b) => FromJSON (ComputedFieldMetadata b) where
-  parseJSON = genericParseJSON hasuraJSON
-
-data RemoteRelationshipMetadata = RemoteRelationshipMetadata
-  { _rrmName :: !RemoteRelationshipName,
-    _rrmDefinition :: !RemoteRelationshipDef
-  }
-  deriving (Show, Eq, Generic)
-
-instance Cacheable RemoteRelationshipMetadata
-
-$(deriveJSON hasuraJSON ''RemoteRelationshipMetadata)
-$(makeLenses ''RemoteRelationshipMetadata)
+  parseJSON = withObject "ComputedFieldMetadata" $ \obj ->
+    ComputedFieldMetadata
+      <$> obj .: "name"
+      <*> obj .: "definition"
+      <*> obj .:? "comment" .!= Automatic
 
 data RemoteSchemaPermissionMetadata = RemoteSchemaPermissionMetadata
   { _rspmRole :: !RoleName,
@@ -232,36 +230,71 @@ instance Cacheable RemoteSchemaPermissionMetadata
 $(deriveJSON hasuraJSON {omitNothingFields = True} ''RemoteSchemaPermissionMetadata)
 $(makeLenses ''RemoteSchemaPermissionMetadata)
 
+type Relationships a = InsOrdHashMap RelName a
+
+type ComputedFields b = InsOrdHashMap ComputedFieldName (ComputedFieldMetadata b)
+
+type RemoteRelationships = InsOrdHashMap RelName RemoteRelationship
+
+type SchemaRemoteRelationships = InsOrdHashMap G.Name RemoteSchemaTypeRelationships
+
+type Permissions a = InsOrdHashMap RoleName a
+
+type EventTriggers b = InsOrdHashMap TriggerName (EventTriggerConf b)
+
+data RemoteSchemaTypeRelationships = RemoteSchemaTypeRelationships
+  { _rstrsName :: G.Name,
+    _rstrsRelationships :: RemoteRelationships
+  }
+  deriving (Show, Eq, Generic)
+
+instance FromJSON RemoteSchemaTypeRelationships where
+  parseJSON = withObject "RemoteSchemaMetadata" \obj ->
+    RemoteSchemaTypeRelationships
+      <$> obj .: "type_name"
+      <*> (oMapFromL _rrName <$> obj .:? "relationships" .!= [])
+
+instance ToJSON RemoteSchemaTypeRelationships where
+  toJSON RemoteSchemaTypeRelationships {..} =
+    object
+      [ "type_name" .= _rstrsName,
+        "relationships" .= OM.elems _rstrsRelationships
+      ]
+
+instance Cacheable RemoteSchemaTypeRelationships
+
 data RemoteSchemaMetadata = RemoteSchemaMetadata
-  { _rsmName :: !RemoteSchemaName,
-    _rsmDefinition :: !RemoteSchemaDef,
-    _rsmComment :: !(Maybe Text),
-    _rsmPermissions :: ![RemoteSchemaPermissionMetadata]
+  { _rsmName :: RemoteSchemaName,
+    _rsmDefinition :: RemoteSchemaDef,
+    _rsmComment :: Maybe Text,
+    _rsmPermissions :: [RemoteSchemaPermissionMetadata],
+    _rsmRemoteRelationships :: SchemaRemoteRelationships
   }
   deriving (Show, Eq, Generic)
 
 instance Cacheable RemoteSchemaMetadata
 
 instance FromJSON RemoteSchemaMetadata where
-  parseJSON = withObject "RemoteSchemaMetadata" $ \obj ->
+  parseJSON = withObject "RemoteSchemaMetadata" \obj ->
     RemoteSchemaMetadata
       <$> obj .: "name"
       <*> obj .: "definition"
       <*> obj .:? "comment"
       <*> obj .:? "permissions" .!= mempty
+      <*> (oMapFromL _rstrsName <$> obj .:? "remote_relationships" .!= [])
 
-$(deriveToJSON hasuraJSON ''RemoteSchemaMetadata)
+instance ToJSON RemoteSchemaMetadata where
+  toJSON RemoteSchemaMetadata {..} =
+    object
+      [ "name" .= _rsmName,
+        "definition" .= _rsmDefinition,
+        "comment" .= _rsmComment,
+        "permissions" .= _rsmPermissions,
+        "remote_relationships" .= OM.elems _rsmRemoteRelationships
+      ]
+
+$(makeLenses ''RemoteSchemaTypeRelationships)
 $(makeLenses ''RemoteSchemaMetadata)
-
-type Relationships a = InsOrdHashMap RelName a
-
-type ComputedFields b = InsOrdHashMap ComputedFieldName (ComputedFieldMetadata b)
-
-type RemoteRelationships = InsOrdHashMap RemoteRelationshipName RemoteRelationshipMetadata
-
-type Permissions a = InsOrdHashMap RoleName a
-
-type EventTriggers b = InsOrdHashMap TriggerName (EventTriggerConf b)
 
 data TableMetadata b = TableMetadata
   { _tmTable :: !(TableName b),
@@ -321,7 +354,7 @@ instance (Backend b) => FromJSON (TableMetadata b) where
       <*> parseListAsMap "object relationships" _rdName (o .:? orKey .!= [])
       <*> parseListAsMap "array relationships" _rdName (o .:? arKey .!= [])
       <*> parseListAsMap "computed fields" _cfmName (o .:? cfKey .!= [])
-      <*> parseListAsMap "remote relationships" _rrmName (o .:? rrKey .!= [])
+      <*> parseListAsMap "remote relationships" _rrName (o .:? rrKey .!= [])
       <*> parseListAsMap "insert permissions" _pdRole (o .:? ipKey .!= [])
       <*> parseListAsMap "select permissions" _pdRole (o .:? spKey .!= [])
       <*> parseListAsMap "update permissions" _pdRole (o .:? upKey .!= [])
@@ -393,10 +426,6 @@ type Functions b = InsOrdHashMap (FunctionName b) (FunctionMetadata b)
 
 type RemoteSchemas = InsOrdHashMap RemoteSchemaName RemoteSchemaMetadata
 
-type QueryCollections = InsOrdHashMap CollectionName CreateCollection
-
-type Allowlist = HSIns.InsOrdHashSet CollectionReq
-
 type Endpoints = InsOrdHashMap EndpointName CreateEndpoint
 
 type Actions = InsOrdHashMap ActionName ActionMetadata
@@ -458,7 +487,7 @@ parseNonSourcesMetadata ::
   Parser
     ( RemoteSchemas,
       QueryCollections,
-      Allowlist,
+      MetadataAllowlist,
       CustomTypes,
       Actions,
       CronTriggers,
@@ -474,7 +503,7 @@ parseNonSourcesMetadata o = do
   queryCollections <-
     parseListAsMap "query collections" _ccName $
       o .:? "query_collections" .!= []
-  allowlist <- o .:? "allowlist" .!= HSIns.empty
+  allowlist <- parseListAsMap "allowlist entries" aeCollection $ o .:? "allowlist" .!= []
   customTypes <- o .:? "custom_types" .!= emptyCustomTypes
   actions <- parseListAsMap "actions" _amName $ o .:? "actions" .!= []
   cronTriggers <-
@@ -506,7 +535,7 @@ data Metadata = Metadata
   { _metaSources :: !Sources,
     _metaRemoteSchemas :: !RemoteSchemas,
     _metaQueryCollections :: !QueryCollections,
-    _metaAllowlist :: !Allowlist,
+    _metaAllowlist :: !MetadataAllowlist,
     _metaCustomTypes :: !CustomTypes,
     _metaActions :: !Actions,
     _metaCronTriggers :: !CronTriggers,
@@ -604,7 +633,7 @@ data MetadataNoSources = MetadataNoSources
     _mnsFunctions :: !(Functions ('Postgres 'Vanilla)),
     _mnsRemoteSchemas :: !RemoteSchemas,
     _mnsQueryCollections :: !QueryCollections,
-    _mnsAllowlist :: !Allowlist,
+    _mnsAllowlist :: !MetadataAllowlist,
     _mnsCustomTypes :: !CustomTypes,
     _mnsActions :: !Actions,
     _mnsCronTriggers :: !CronTriggers
@@ -653,16 +682,8 @@ instance FromJSON MetadataNoSources where
         actions
         cronTriggers
 
-newtype MetadataModifier = MetadataModifier {unMetadataModifier :: Metadata -> Metadata}
-
-instance Semigroup MetadataModifier where
-  (MetadataModifier u1) <> (MetadataModifier u2) = MetadataModifier $ u2 . u1
-
-instance Monoid MetadataModifier where
-  mempty = MetadataModifier id
-
-noMetadataModify :: MetadataModifier
-noMetadataModify = mempty
+newtype MetadataModifier = MetadataModifier {runMetadataModifier :: Metadata -> Metadata}
+  deriving (Semigroup, Monoid) via (Dual (Endo Metadata))
 
 dropTableInMetadata ::
   forall b. (Backend b) => SourceName -> TableName b -> MetadataModifier
@@ -696,7 +717,7 @@ dropEventTriggerInMetadata name =
   tmEventTriggers %~ OM.delete name
 
 dropRemoteRelationshipInMetadata ::
-  RemoteRelationshipName -> TableMetadata b -> TableMetadata b
+  RelName -> TableMetadata b -> TableMetadata b
 dropRemoteRelationshipInMetadata name =
   tmRemoteRelationships %~ OM.delete name
 
@@ -758,7 +779,7 @@ metadataToOrdJSON
         ("sources", AO.array $ map sourceMetaToOrdJSON $ sortOn getSourceName $ OM.elems sources)
       remoteSchemasPair = listToMaybeOrdPairSort "remote_schemas" remoteSchemaQToOrdJSON _rsmName remoteSchemas
       queryCollectionsPair = listToMaybeOrdPairSort "query_collections" createCollectionToOrdJSON _ccName queryCollections
-      allowlistPair = listToMaybeOrdPairSort "allowlist" AO.toOrdered _crCollection allowlist
+      allowlistPair = listToMaybeOrdPairSort "allowlist" (AO.toOrdered . toJSON @AllowlistEntry) aeCollection allowlist
       customTypesPair =
         if customTypes == emptyCustomTypes
           then Nothing
@@ -797,9 +818,7 @@ metadataToOrdJSON
               sourceKindPair = ("kind", AO.String sourceKind)
               tablesPair = ("tables", AO.array $ map tableMetaToOrdJSON $ sortOn _tmTable $ OM.elems _smTables)
               functionsPair = listToMaybeOrdPairSort "functions" functionMetadataToOrdJSON _fmFunction _smFunctions
-
               configurationPair = [("configuration", AO.toOrdered _smConfiguration)]
-
               queryTagsConfigPair = maybe [] (\queryTagsConfig -> [("query_tags", AO.toOrdered queryTagsConfig)]) _smQueryTags
 
               customizationPair =
@@ -866,7 +885,7 @@ metadataToOrdJSON
               listToMaybeOrdPairSort
                 "remote_relationships"
                 AO.toOrdered
-                _rrmName
+                _rrName
                 remoteRelationships
             insertPermissionsPair =
               listToMaybeOrdPairSort
@@ -913,7 +932,7 @@ metadataToOrdJSON
                 [ ("name", AO.toOrdered name),
                   ("definition", AO.toOrdered definition)
                 ]
-                  <> catMaybes [maybeCommentToMaybeOrdPair comment]
+                  <> catMaybes [commentToMaybeOrdPair comment]
 
             insPermDefToOrdJSON :: forall b. (Backend b) => InsPermDef b -> AO.Value
             insPermDefToOrdJSON = permDefToOrdJSON insPermToOrdJSON
@@ -970,7 +989,7 @@ metadataToOrdJSON
                   <> catMaybes [maybeCommentToMaybeOrdPair comment]
 
             eventTriggerConfToOrdJSON :: Backend b => EventTriggerConf b -> AO.Value
-            eventTriggerConfToOrdJSON (EventTriggerConf name definition webhook webhookFromEnv retryConf headers metadataTransform) =
+            eventTriggerConfToOrdJSON (EventTriggerConf name definition webhook webhookFromEnv retryConf headers reqTransform respTransform) =
               AO.object $
                 [ ("name", AO.toOrdered name),
                   ("definition", AO.toOrdered definition),
@@ -980,7 +999,8 @@ metadataToOrdJSON
                     [ maybeAnyToMaybeOrdPair "webhook" AO.toOrdered webhook,
                       maybeAnyToMaybeOrdPair "webhook_from_env" AO.toOrdered webhookFromEnv,
                       headers >>= listToMaybeOrdPair "headers" AO.toOrdered,
-                      fmap (("request_transform",) . AO.toOrdered) metadataTransform
+                      fmap (("request_transform",) . AO.toOrdered) reqTransform,
+                      fmap (("response_transform",) . AO.toOrdered) respTransform
                     ]
 
       functionMetadataToOrdJSON :: Backend b => FunctionMetadata b -> AO.Value
@@ -1007,7 +1027,7 @@ metadataToOrdJSON
           ]
 
       remoteSchemaQToOrdJSON :: RemoteSchemaMetadata -> AO.Value
-      remoteSchemaQToOrdJSON (RemoteSchemaMetadata name definition comment permissions) =
+      remoteSchemaQToOrdJSON (RemoteSchemaMetadata name definition comment permissions relationships) =
         AO.object $
           [ ("name", AO.toOrdered name),
             ("definition", remoteSchemaDefToOrdJSON definition)
@@ -1017,7 +1037,11 @@ metadataToOrdJSON
                 listToMaybeOrdPair
                   "permissions"
                   permsToMaybeOrdJSON
-                  permissions
+                  permissions,
+                listToMaybeOrdPair
+                  "remote_relationships"
+                  AO.toOrdered
+                  relationships
               ]
         where
           permsToMaybeOrdJSON :: RemoteSchemaPermissionMetadata -> AO.Value
@@ -1052,7 +1076,7 @@ metadataToOrdJSON
 
       crontriggerQToOrdJSON :: CronTriggerMetadata -> AO.Value
       crontriggerQToOrdJSON
-        (CronTriggerMetadata name webhook schedule payload retryConf headers includeInMetadata comment) =
+        (CronTriggerMetadata name webhook schedule payload retryConf headers includeInMetadata comment reqTransform respTransform) =
           AO.object $
             [ ("name", AO.toOrdered name),
               ("webhook", AO.toOrdered webhook),
@@ -1063,7 +1087,9 @@ metadataToOrdJSON
                 [ maybeAnyToMaybeOrdPair "payload" AO.toOrdered payload,
                   maybeAnyToMaybeOrdPair "retry_conf" AO.toOrdered (maybeRetryConfiguration retryConf),
                   maybeAnyToMaybeOrdPair "headers" AO.toOrdered (maybeHeader headers),
-                  maybeAnyToMaybeOrdPair "comment" AO.toOrdered comment
+                  maybeAnyToMaybeOrdPair "comment" AO.toOrdered comment,
+                  fmap (("request_transform",) . AO.toOrdered) reqTransform,
+                  fmap (("response_transform",) . AO.toOrdered) respTransform
                 ]
           where
             maybeRetryConfiguration retryConfig
@@ -1165,6 +1191,7 @@ metadataToOrdJSON
                 timeout
                 handler
                 requestTransform
+                responseTransform
               ) =
               let typeAndKind = case actionType of
                     ActionQuery -> [("type", AO.toOrdered ("query" :: String))]
@@ -1180,7 +1207,8 @@ metadataToOrdJSON
                       <> catMaybes
                         [ listToMaybeOrdPair "headers" AO.toOrdered headers,
                           listToMaybeOrdPair "arguments" argDefinitionToOrdJSON args,
-                          fmap (("request_transform",) . AO.toOrdered) requestTransform
+                          fmap (("request_transform",) . AO.toOrdered) requestTransform,
+                          fmap (("response_transform",) . AO.toOrdered) responseTransform
                         ]
                       <> typeAndKind
                       <> bool [("timeout", AO.toOrdered timeout)] mempty (timeout == defaultActionTimeoutSecs)
@@ -1228,6 +1256,9 @@ metadataToOrdJSON
 
       maybeAnyToMaybeOrdPair :: Text -> (a -> AO.Value) -> Maybe a -> Maybe (Text, AO.Value)
       maybeAnyToMaybeOrdPair name f = fmap ((name,) . f)
+
+      commentToMaybeOrdPair :: Comment -> Maybe (Text, AO.Value)
+      commentToMaybeOrdPair comment = (\val -> ("comment", AO.toOrdered val)) <$> commentToMaybeText comment
 
 instance ToJSON Metadata where
   toJSON = AO.fromOrdered . metadataToOrdJSON

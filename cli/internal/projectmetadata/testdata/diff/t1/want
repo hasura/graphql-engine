@@ -1,0 +1,215 @@
+databases/default/tables/public_albums.yaml
+
+(root level)
++ one map entry added:
+  array_relationships:
+  - name: tracks
+    using:
+      foreign_key_constraint_on:
+        column: album_id
+        table:
+          name: tracks
+          schema: public
+
+databases/default/tables/public_foo.yaml
+
+(root level)
+- two map entries removed:
+  table:
+    name: foo
+    schema: public
+  insert_permissions:
+  - permission:
+      backend_only: false
+      check: {}
+      columns:
+      - created_at
+      - id
+    role: foo
+
+databases/default/tables/public_genres.yaml
+
+(root level)
++ one map entry added:
+  array_relationships:
+  - name: tracks
+    using:
+      foreign_key_constraint_on:
+        column: genre_id
+        table:
+          name: tracks
+          schema: public
+
+databases/default/tables/public_media_types.yaml
+
+(root level)
++ one map entry added:
+  array_relationships:
+  - name: tracks
+    using:
+      foreign_key_constraint_on:
+        column: media_type_id
+        table:
+          name: tracks
+          schema: public
+
+databases/default/tables/public_playlist_track.yaml
+
+object_relationships
+  + one list entry added:
+    - name: track
+      using:
+        foreign_key_constraint_on: track_id
+
+databases/default/tables/public_tracks.yaml
+
+(root level)
++ three map entries added:
+  table:
+    name: tracks
+    schema: public
+  object_relationships:
+  - name: album
+    using:
+      foreign_key_constraint_on: album_id
+  - name: genre
+    using:
+      foreign_key_constraint_on: genre_id
+  - name: media_type
+    using:
+      foreign_key_constraint_on: media_type_id
+  array_relationships:
+  - name: playlist_tracks
+    using:
+      foreign_key_constraint_on:
+        column: track_id
+        table:
+          name: playlist_track
+          schema: public
+
+remote_schemas.yaml
+
+countries.permissions.0.definition.schema
+  ± value change
+    - schema  { query: Query }
+
+      type Continent { code: ID!
+        countries: [Country!]!
+        name: String!
+      }
+
+      type Country { capital: String
+        code: ID!
+        continent: Continent!
+        currency: String
+        emoji: String!
+        emojiU: String!
+        languages: [Language!]!
+        name: String!
+        native: String!
+        phone: String!
+        states: [State!]!
+      }
+
+      type Language { code: ID!
+        name: String
+        native: String
+        rtl: Boolean!
+      }
+
+      type Query { continent(code: ID!): Continent
+        country(code: ID!): Country
+        languages(filter: LanguageFilterInput): [Language!]!
+      }
+
+      type State { code: String
+        country: Country!
+        name: String!
+      }
+
+      input LanguageFilterInput {code: StringQueryOperatorInput
+      }
+
+      input StringQueryOperatorInput {eq: String
+        glob: String
+        in: [String]
+        ne: String
+        nin: [String]
+        regex: String
+      }
+
+    + schema  { query: Query }
+
+      type Continent { code: ID!
+        countries: [Country!]!
+        name: String!
+      }
+
+      type Country { capital: String
+        code: ID!
+        continent: Continent!
+        currency: String
+        emoji: String!
+        emojiU: String!
+        languages: [Language!]!
+        name: String!
+        native: String!
+        phone: String!
+        states: [State!]!
+      }
+
+      type Language { code: ID!
+        name: String
+        native: String
+        rtl: Boolean!
+      }
+
+      type Query { country(code: ID!): Country
+        languages(filter: LanguageFilterInput): [Language!]!
+      }
+
+      type State { code: String
+        country: Country!
+        name: String!
+      }
+
+      input LanguageFilterInput {code: StringQueryOperatorInput
+      }
+
+      input StringQueryOperatorInput {eq: String
+        glob: String
+        in: [String]
+        ne: String
+        nin: [String]
+        regex: String
+      }
+
+
+actions.yaml
+
+actions
+  - one list entry removed:
+    - name: bar
+      definition:
+        kind: synchronous
+        handler: "http://localhost:3000"
+        request_transform:
+          body: |
+            {
+              "users": {
+                "bar": {{$body.input.arg1.username}},
+                "password": {{$body.input.arg1.password}}
+              }
+            }
+          content_type: application/json
+          template_engine: Kriti
+
+actions.graphql
+[36m@@ -1,10 +1,4 @@[0m
+[31m-  bar([0m
+[31m-    arg1: SampleInput![0m
+[31m-  ): SampleOutput[0m
+[31m-}[0m
+[31m-[0m
+[31m-type Mutation {[0m
+

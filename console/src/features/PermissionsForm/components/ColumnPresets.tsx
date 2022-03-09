@@ -10,7 +10,7 @@ import { QueryType } from '../types';
 
 interface PresetsRowProps {
   id: number;
-  columns: string[];
+  columns?: string[];
   allDisabled: boolean;
   remove: () => void;
 }
@@ -83,7 +83,7 @@ const PresetsRow: React.FC<PresetsRowProps> = ({
           className={className}
           placeholder="Column value"
           disabled={disabled}
-          {...register(`presets.${id}.columnValue`)}
+          {...register(`presets.${id}.value`)}
         />
       </div>
 
@@ -108,8 +108,7 @@ const PresetsRow: React.FC<PresetsRowProps> = ({
 
 export interface ColumnPresetsSectionProps {
   queryType: QueryType;
-  columns: string[];
-  defaultOpen?: boolean;
+  columns?: string[];
 }
 
 export interface Preset {
@@ -131,7 +130,7 @@ const useStatus = (disabled: boolean) => {
     .map(({ columnName }) => columnName)
     .filter(columnName => columnName !== 'default');
 
-  if (!columnNames.length) {
+  if (!columnNames?.length) {
     return 'No Presets';
   }
 
@@ -141,7 +140,6 @@ const useStatus = (disabled: boolean) => {
 export const ColumnPresetsSection: React.FC<ColumnPresetsSectionProps> = ({
   queryType,
   columns,
-  defaultOpen,
 }) => {
   const { control, watch } = useFormContext();
 
@@ -164,8 +162,8 @@ export const ColumnPresetsSection: React.FC<ColumnPresetsSectionProps> = ({
 
   React.useEffect(() => {
     const finalRowIsNotDefault =
-      controlledFields[controlledFields.length - 1]?.columnName !== 'default';
-    const allColumnsSet = controlledFields.length === columns.length;
+      controlledFields[controlledFields?.length - 1]?.columnName !== 'default';
+    const allColumnsSet = controlledFields?.length === columns?.length;
 
     if (finalRowIsNotDefault && !allColumnsSet) {
       append({
@@ -174,10 +172,10 @@ export const ColumnPresetsSection: React.FC<ColumnPresetsSectionProps> = ({
         columnValue: '',
       });
     }
-  }, [controlledFields, columns.length, append]);
+  }, [controlledFields, columns?.length, append]);
 
   return (
-    <Collapse defaultOpen={defaultOpen}>
+    <Collapse defaultOpen={presets?.length > 0 && !disabled}>
       <Collapse.Header
         title="Column presets"
         tooltip={`Set static values or session variables as pre-determined values
@@ -195,7 +193,7 @@ export const ColumnPresetsSection: React.FC<ColumnPresetsSectionProps> = ({
               .filter(preset => preset !== presets[index]?.columnName);
 
             // remove other presets from selectable columns
-            const selectableColumns = columns.filter(
+            const selectableColumns = columns?.filter(
               column => !columnsToRemove.includes(column)
             );
 

@@ -4,8 +4,9 @@
 
 .. _clean_up_event_data:
 
-Clean up event data
-===================
+Cleaning up event data
+======================
+
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
@@ -14,7 +15,7 @@ Clean up event data
 Introduction
 ------------
 
-Hasura stores event data associated with Event Triggers in **the `hdb_catalog` schema of the database containing the source table**.
+Hasura stores event data associated with Event Triggers in **the "hdb_catalog" schema of the database containing the source table**.
 
 If there are lots of events, the metadata tables can get huge and you may want to prune them. You can use any of the following options to prune your event data depending on your need.
 
@@ -72,6 +73,7 @@ Option 4: Clear all event data for a particular event trigger only
 
 Option 5: Clear everything
 --------------------------
+
 .. admonition:: Warning
  
    This will clear all events including yet to be delivered events.

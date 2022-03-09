@@ -139,3 +139,22 @@ func DatabaseChooserUI(exportMetadata func() (io.Reader, error)) (string, error)
 
 	return databaseName, nil
 }
+
+const ChooseAllDatabases = "All (all available databases)"
+
+func DatabaseChooserUIWithAll(exportMetadata func() (io.Reader, error)) (string, error) {
+	sources, err := GetSources(exportMetadata)
+	if err != nil {
+		return "", fmt.Errorf("unable to get available databases: %w", err)
+	}
+	if len(sources) == 0 {
+		return "", errors.New("no connected databases found in the server")
+	}
+	sources = append([]string{ChooseAllDatabases}, sources...)
+	databaseName, err := util.GetSelectPrompt("Select a database to use", sources)
+	if err != nil {
+		return "", fmt.Errorf("error in selecting a database to use: %w", err)
+	}
+
+	return databaseName, nil
+}

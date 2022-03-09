@@ -1,9 +1,10 @@
-test-server-flags
 haskell-tests
 no-auth
 admin-secret
 admin-secret-unauthorized-role
-jwt
+read-only-db
+jwt-rs512
+jwt-ed25519
 jwt-stringified
 jwt-audience-check-single-string
 jwt-audience-check-list-string
@@ -13,6 +14,7 @@ jwt-claims-map-with-json-path-values
 jwt-claims-map-with-literal-values
 jwt-with-expiry-time-leeway
 jwt-cookie
+jwt-cookie-unauthorized-role
 cors-domains
 auth-webhook-cookie
 ws-init-cookie-read-cors-enabled
@@ -26,6 +28,7 @@ roles-inheritance
 remote-schema-https
 query-caching
 query-logs
+startup-db-calls
 webhook-request-context
 post-webhook
 get-webhook

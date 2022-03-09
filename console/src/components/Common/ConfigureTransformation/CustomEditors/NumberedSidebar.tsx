@@ -3,22 +3,22 @@ import KnowMore from '../../KnowMoreLink/KnowMore';
 import { sidebarNumberStyles } from '../utils';
 
 interface NumberedSidebarProps {
-  number: string;
   title: string;
+  description?: string | JSX.Element;
+  number?: string;
   url?: string;
-  description?: string;
 }
 
 const NumberedSidebar: React.FC<NumberedSidebarProps> = ({
-  number,
   title,
-  url,
   description,
+  number,
+  url,
   children,
 }) => {
   return (
     <>
-      <div className={sidebarNumberStyles}>{number}</div>
+      {number ? <div className={sidebarNumberStyles}>{number}</div> : null}
       <div className="flex items-center mb-sm">
         <div>
           <label className="flex items-center block text-gray-600 font-medium">

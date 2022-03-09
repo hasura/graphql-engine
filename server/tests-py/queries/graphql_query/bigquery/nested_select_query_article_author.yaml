@@ -3,7 +3,7 @@ url: /v1/graphql
 status: 200
 response:
   data:
-    hasura_test_article:
+    hasura_article:
     - id: '1'
       title: Title 1
       content: Content 1
@@ -22,10 +22,16 @@ response:
       author:
         id: '2'
         name: Author 2
+    - id: '4'
+      title: Title 4
+      content: Content 4
+      author:
+        id: '2'
+        name: Author 2
 query:
   query: |
     query {
-      hasura_test_article (order_by: {id: asc}) {
+      hasura_article (order_by: {id: asc}) {
         id
         title
         content

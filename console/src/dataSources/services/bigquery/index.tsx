@@ -152,6 +152,10 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     relationships: {
       enabled: true,
       track: false,
+      remoteDbRelationships: {
+        hostSource: true,
+        referenceSource: true,
+      },
       remoteRelationships: false,
     },
     permissions: {
@@ -198,7 +202,10 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     connectionParameters: true,
     databaseURL: false,
     environmentVariable: true,
-    read_replicas: false,
+    read_replicas: {
+      create: true,
+      edit: true,
+    },
     prepared_statements: false,
     isolation_level: false,
     connectionSettings: false,
@@ -359,9 +366,9 @@ export const bigquery: DataSourcesAPI = {
   getDropNotNullSql: () => {
     return '';
   },
-  getSetCommentSql: () => {
-    return '';
-  },
+  getAlterTableCommentSql: () => '',
+  getAlterColumnCommentSql: () => '',
+  getAlterFunctionCommentSql: () => '',
   getSetColumnDefaultSql: () => {
     return '';
   },

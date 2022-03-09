@@ -50,4 +50,24 @@ services:
       POSTGRES_PASSWORD: "hasura"
       POSTGRES_DB: "hasura"
     volumes:
-        - ./docker-compose/postgres:/docker-entrypoint-initdb.d
+        - ${PWD}/docker-compose/postgres:/docker-entrypoint-initdb.d
+
+  sqlserver:
+    build: ./docker-compose/sqlserver/
+    ports:
+      - "65003:1433"
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "DockerComposePassword!"
+      MSSQL_SA_PASSWORD: "DockerComposePassword!"
+
+  citus:
+    image: citusdata/citus:10.1@sha256:7e497e5ca18d7f2ae2a66c1d5d676b548e9221b7e6294adfb03006adad85502c
+    ports:
+      - "65004:5432"
+    environment:
+      POSTGRES_USER: "hasura"
+      POSTGRES_PASSWORD: "hasura"
+      POSTGRES_DB: "hasura"
+    volumes:
+        - ${PWD}/docker-compose/postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh

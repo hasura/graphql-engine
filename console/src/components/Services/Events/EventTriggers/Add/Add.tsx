@@ -4,6 +4,8 @@ import Helmet from 'react-helmet';
 import {
   getEventRequestTransformDefaultState,
   requestTransformReducer,
+  setEnvVars,
+  setSessionVars,
   setRequestMethod,
   setRequestUrl,
   setRequestUrlError,
@@ -14,6 +16,7 @@ import {
   setRequestBodyError,
   setRequestSampleInput,
   setRequestTransformedBody,
+  setEnableRequestBody,
   setRequestContentType,
   setRequestUrlTransform,
   setRequestPayloadTransform,
@@ -77,6 +80,7 @@ const Add: React.FC<Props> = props => {
     source,
     operationColumns,
     operations,
+    isAllColumnChecked,
   } = state;
   const {
     dispatch,
@@ -142,9 +146,18 @@ const Add: React.FC<Props> = props => {
       table.schema,
       retryConf.num_retries,
       operationColumns,
-      operations
+      operations,
+      isAllColumnChecked
     );
     transformDispatch(setRequestSampleInput(value));
+  };
+
+  const envVarsOnChange = (envVars: KeyValuePair[]) => {
+    transformDispatch(setEnvVars(envVars));
+  };
+
+  const sessionVarsOnChange = (sessionVars: KeyValuePair[]) => {
+    transformDispatch(setSessionVars(sessionVars));
   };
 
   const requestMethodOnChange = (requestMethod: RequestTransformMethod) => {
@@ -173,6 +186,10 @@ const Add: React.FC<Props> = props => {
 
   const requestBodyOnChange = (requestBody: string) => {
     transformDispatch(setRequestBody(requestBody));
+  };
+
+  const requestBodyEnabledOnChange = (enableRequestBody: boolean) => {
+    transformDispatch(setEnableRequestBody(enableRequestBody));
   };
 
   const requestBodyErrorOnChange = (requestBodyError: string) => {
@@ -211,13 +228,16 @@ const Add: React.FC<Props> = props => {
         requestUrlPreviewOnChange
       );
     };
-    const options = getValidateTransformOptions(
-      transformState.requestSampleInput,
-      webhook.value,
-      undefined,
-      transformState.requestUrl,
-      transformState.requestQueryParams
-    );
+    const options = getValidateTransformOptions({
+      version: transformState.version,
+      inputPayloadString: transformState.requestSampleInput,
+      webhookUrl: webhook.value,
+      envVarsFromContext: transformState.envVars,
+      sessionVarsFromContext: transformState.sessionVars,
+      requestUrl: transformState.requestUrl,
+      queryParams: transformState.requestQueryParams,
+      isEnvVar: webhook.type === 'env',
+    });
     if (!webhook.value) {
       requestUrlErrorOnChange(
         'Please configure your webhook handler to generate request url transform'
@@ -239,6 +259,8 @@ const Add: React.FC<Props> = props => {
     webhook,
     transformState.requestUrl,
     transformState.requestQueryParams,
+    transformState.envVars,
+    transformState.sessionVars,
   ]);
 
   useEffect(() => {
@@ -252,11 +274,15 @@ const Add: React.FC<Props> = props => {
         requestTransformedBodyOnChange
       );
     };
-    const options = getValidateTransformOptions(
-      transformState.requestSampleInput,
-      webhook.value,
-      transformState.requestBody
-    );
+    const options = getValidateTransformOptions({
+      version: transformState.version,
+      inputPayloadString: transformState.requestSampleInput,
+      webhookUrl: webhook.value,
+      envVarsFromContext: transformState.envVars,
+      sessionVarsFromContext: transformState.sessionVars,
+      transformerBody: transformState.requestBody,
+      isEnvVar: webhook.type === 'env',
+    });
     if (!webhook.value) {
       requestBodyErrorOnChange(
         'Please configure your webhook handler to generate request body transform'
@@ -273,7 +299,13 @@ const Add: React.FC<Props> = props => {
         )
       ).then(onResponse, onResponse); // parseValidateApiData will parse both success and error
     }
-  }, [transformState.requestSampleInput, transformState.requestBody, webhook]);
+  }, [
+    transformState.requestSampleInput,
+    transformState.requestBody,
+    webhook,
+    transformState.envVars,
+    transformState.sessionVars,
+  ]);
 
   const createBtnText = 'Create Event Trigger';
 
@@ -375,14 +407,16 @@ const Add: React.FC<Props> = props => {
                   handleToggleAllColumn={setState.toggleAllColumnChecked}
                 />
                 <ConfigureTransformation
-                  webhookUrl={webhook?.value}
                   state={transformState}
                   resetSampleInput={resetSampleInput}
+                  envVarsOnChange={envVarsOnChange}
+                  sessionVarsOnChange={sessionVarsOnChange}
                   requestMethodOnChange={requestMethodOnChange}
                   requestUrlOnChange={requestUrlOnChange}
                   requestQueryParamsOnChange={requestQueryParamsOnChange}
                   requestAddHeadersOnChange={requestAddHeadersOnChange}
                   requestBodyOnChange={requestBodyOnChange}
+                  requestBodyEnabledOnChange={requestBodyEnabledOnChange}
                   requestSampleInputOnChange={requestSampleInputOnChange}
                   requestContentTypeOnChange={requestContentTypeOnChange}
                   requestUrlTransformOnChange={requestUrlTransformOnChange}

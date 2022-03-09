@@ -2,6 +2,8 @@ module Hasura.Server.Types
   ( ExperimentalFeature (..),
     InstanceId (..),
     MaintenanceMode (..),
+    EventingMode (..),
+    ReadOnlyMode (..),
     PGVersion (PGVersion),
     RequestId (..),
     ServerConfigCtx (..),
@@ -44,22 +46,21 @@ newtype InstanceId = InstanceId {getInstanceId :: Text}
 
 data ExperimentalFeature
   = EFInheritedRoles
+  | EFOptimizePermissionFilters
   deriving (Show, Eq, Generic)
 
 instance Hashable ExperimentalFeature
 
--- TODO: when there are more than one constuctors in `ExperimentalFeature`, we should
--- auto derive the JSON instances. Doing it with a single data constructor messes
--- up the JSON instances which is why it's manually implemented here
-
 instance FromJSON ExperimentalFeature where
   parseJSON = withText "ExperimentalFeature" $ \case
     "inherited_roles" -> pure EFInheritedRoles
-    _ -> fail "ExperimentalFeature can only be one of these value: inherited_roles "
+    "optimize_permission_filters" -> pure EFOptimizePermissionFilters
+    _ -> fail "ExperimentalFeature can only be one of these value: inherited_roles, optimize_permission_filters"
 
 instance ToJSON ExperimentalFeature where
   toJSON = \case
     EFInheritedRoles -> "inherited_roles"
+    EFOptimizePermissionFilters -> "optimize_permission_filters"
 
 data MaintenanceMode = MaintenanceModeEnabled | MaintenanceModeDisabled
   deriving (Show, Eq)
@@ -72,11 +73,23 @@ instance FromJSON MaintenanceMode where
 instance ToJSON MaintenanceMode where
   toJSON = Bool . (== MaintenanceModeEnabled)
 
+-- | See Note [ReadOnly Mode]
+data ReadOnlyMode = ReadOnlyModeEnabled | ReadOnlyModeDisabled
+  deriving (Show, Eq)
+
+-- | EventingMode decides whether the eventing subsystem should be enabled or disabled.
+-- `EventDisabled` mode disables Event Triggers, Async Actions, Scheduled Events and source catalaog migrations.
+-- This is an internal feature and will not be exposed to users.
+data EventingMode = EventingEnabled | EventingDisabled
+  deriving (Show, Eq)
+
 data ServerConfigCtx = ServerConfigCtx
-  { _sccFunctionPermsCtx :: !FunctionPermissionsCtx,
-    _sccRemoteSchemaPermsCtx :: !RemoteSchemaPermsCtx,
-    _sccSQLGenCtx :: !SQLGenCtx,
-    _sccMaintenanceMode :: !MaintenanceMode,
-    _sccExperimentalFeatures :: !(Set.HashSet ExperimentalFeature)
+  { _sccFunctionPermsCtx :: FunctionPermissionsCtx,
+    _sccRemoteSchemaPermsCtx :: RemoteSchemaPermsCtx,
+    _sccSQLGenCtx :: SQLGenCtx,
+    _sccMaintenanceMode :: MaintenanceMode,
+    _sccExperimentalFeatures :: Set.HashSet ExperimentalFeature,
+    _sccEventingMode :: EventingMode,
+    _sccReadOnlyMode :: ReadOnlyMode
   }
   deriving (Show, Eq)

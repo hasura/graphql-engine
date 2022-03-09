@@ -4,6 +4,7 @@ from context import PytestConf
 
 import json
 import textwrap
+import ruamel.yaml as yaml
 
 # Mark that all tests in this module can be run as server upgrade tests
 pytestmark = pytest.mark.allow_server_upgrade_test
@@ -99,6 +100,8 @@ class TestGraphQLQueryBasicMySQL:
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphQLEmpty:
+    def test_select_placeholder(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_placeholder.yaml', transport)
 
     def test_no_empty_roots(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/check_no_empty_roots.yaml', transport)
@@ -210,10 +213,37 @@ class TestGraphQLQueryBasicBigquery:
     def test_basic_remote_join(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/basic_remote_joins.yaml", transport)
 
+    def test_nested_array_relationships(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/nested_array_relationships.yaml", transport)
+
+    def test_agg_nodes(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/agg_nodes.yaml", transport)
+
+    def test_distinct_on(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/distinct_on.yaml", transport)
+
+    # Timestamp value parsing, https://github.com/hasura/graphql-engine/issues/8076
+    def test_timestamp_filter(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/timestamp_filter.yaml", transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/bigquery'
 
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['bigquery'])
+@usefixtures('per_class_tests_db_state')
+class TestGraphQLQueryBoolExpSearchBigquery:
+
+    def test_city_where_like(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_like_bigquery.yaml', transport)
+
+    def test_city_where_not_like(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_city_where_nlike_bigquery.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/boolexp/search'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.parametrize("backend", ['citus', 'mssql', 'postgres'])
@@ -273,6 +303,9 @@ class TestGraphQLQueryBasicCommon:
 
     def test_select_query_author_pk_null(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_by_pkey_null.yaml', transport)
+
+    def test_select_placeholder_err(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_placeholder_err.yaml', transport)
 
     @classmethod
     def dir(cls):
@@ -449,8 +482,9 @@ class TestGraphQLQueryAgg:
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['mssql', 'postgres'])
 @usefixtures('per_class_tests_db_state')
-class TestGraphQLQueryAggPerm:
+class TestGraphQLQueryAggPermCommon:
 
     def test_author_agg_articles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/author_agg_articles.yaml', transport)
@@ -467,13 +501,28 @@ class TestGraphQLQueryAggPerm:
     def test_article_agg_without_select_access_to_any_col(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/article_agg_with_role_without_select_access.yaml', transport)
 
+    def test_article_agg_with_filter(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/article_agg_with_filter.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/agg_perm'
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['postgres'])
+@usefixtures('per_class_tests_db_state')
+class TestGraphQLQueryAggPermPostgres:
+    # This test should be part of TestGraphQLQueryAggPermCommon and it is not because of
+    # known issue with sql server aggregate count query on multiple columns.
+    # Refer https://github.com/hasura/graphql-engine/issues/7873
+    # Move the test to above said class when the issue is fixed.
+
     def test_article_agg_with_select_access(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/article_agg_with_role_with_select_access.yaml', transport)
 
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/agg_perm'
-
 
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryLimits:
@@ -1198,8 +1247,36 @@ class TestUnauthorizedRolePermission:
     def test_unauth_role(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/unauthorized_role.yaml', transport, False)
 
+@pytest.mark.skipif(
+    not PytestConf.config.getoption("--test-unauthorized-role"),
+    reason="--test-unauthorized-role missing"
+)
+@pytest.mark.parametrize('transport', ['http'])
 @usefixtures('per_class_tests_db_state')
-class TestGraphQLExplain:
+class TestFallbackUnauthorizedRoleCookie:
+    @classmethod
+    def dir(cls):
+        return 'queries/unauthorized_role'
+
+    def test_fallback_unauth_role_jwt_cookie_not_set(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/cookie_header_absent_unauth_role_set.yaml', transport, add_auth=False)
+
+@pytest.mark.skipif(
+    not PytestConf.config.getoption("--test-no-cookie-and-unauth-role"),
+    reason="--test-no-cookie-and-unauth-role missing"
+)
+@pytest.mark.parametrize('transport', ['http'])
+@usefixtures('per_class_tests_db_state')
+class TestMissingUnauthorizedRoleAndCookie:
+    @classmethod
+    def dir(cls):
+        return 'queries/unauthorized_role'
+
+    def test_error_unauth_role_not_set_jwt_cookie_not_set(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/cookie_header_absent_unauth_role_not_set.yaml', transport, add_auth=False)
+
+@usefixtures('per_class_tests_db_state')
+class TestGraphQLExplainCommon:
     @classmethod
     def dir(cls):
         return 'queries/explain'
@@ -1228,9 +1305,13 @@ class TestGraphQLExplain:
     def test_limit_orderby_column_query(self, hge_ctx):
         self.with_admin_secret("query", hge_ctx, self.dir() + '/limit_orderby_column_query.yaml')
 
+    @pytest.mark.skip_server_upgrade_test
+    # skipping due to https://github.com/hasura/graphql-engine/issues/7936
     def test_limit_orderby_relationship_query(self, hge_ctx):
         self.with_admin_secret("query", hge_ctx, self.dir() + '/limit_orderby_relationship_query.yaml')
 
+    @pytest.mark.skip_server_upgrade_test
+    # skipping due to https://github.com/hasura/graphql-engine/issues/7936
     def test_limit_offset_orderby_relationship_query(self, hge_ctx):
         self.with_admin_secret("query", hge_ctx, self.dir() + '/limit_offset_orderby_relationship_query.yaml')
 
@@ -1245,7 +1326,11 @@ class TestGraphQLExplain:
     def test_documented_subscription(self, hge_ctx, backend):
         self.with_admin_secret("subscription", hge_ctx, self.dir() + hge_ctx.backend_suffix('/docs_subscription') + ".yaml")
 
-    def with_admin_secret(self, explain_query_type, hge_ctx, f, hdrs=None, req_st=200):
+    @pytest.mark.parametrize("backend", ['bigquery'])
+    def test_array_relationship_orderby(self, hge_ctx, backend):
+        self.with_admin_secret("query", hge_ctx, self.dir() + hge_ctx.backend_suffix('/author_articles_orderby') + ".yaml")
+
+    def with_admin_secret(self, explain_query_type, hge_ctx, f, hdrs=None, req_st=200, overwrite_expectations=False):
         conf = get_conf_f(f)
         admin_secret = hge_ctx.hge_key
         headers = {}
@@ -1260,21 +1345,37 @@ class TestGraphQLExplain:
             # return early in case we're testing for failures
             return
 
+
         if explain_query_type == "query":
             # This test is specific to queries with a single field.
             # Comparing only with generated 'sql' since the 'plan' may differ.
             resp_sql = resp_json[0]['sql']
             exp_sql = conf['response'][0]['sql']
+
+            p = (resp_sql == exp_sql)
+            if (not p) and overwrite_expectations:
+                with open(f, 'w') as outfile:
+                    conf['response'][0]['sql'] = resp_json[0]['sql']
+                    yaml.YAML(typ='rt').dump(conf, outfile) # , default_flow_style=False)
+
             # Outputing response for embedding in test
-            assert resp_sql == exp_sql, \
+            assert p, \
                 f"Unexpected explain SQL in response:\n{textwrap.indent(json.dumps(resp_json, indent=2), '  ')}"
+
         elif explain_query_type == "subscription":
             # Comparing only with generated 'sql' since the 'plan' may differ.
             # In particular, we ignore the subscription's cohort variables.
             resp_sql = resp_json['sql']
             exp_sql = conf['response']['sql']
+
+            p = (resp_sql == exp_sql)
+            if (not p) and overwrite_expectations:
+                with open(f, 'w') as outfile:
+                    conf['response']['sql'] = resp_json['sql']
+                    yaml.YAML().dump(conf, outfile)
+
             # Outputing response for embedding in test
-            assert resp_sql == exp_sql, \
+            assert p, \
                 f"Unexpected explain SQL in response:\n{textwrap.indent(json.dumps(resp_json, indent=2), '  ')}"
         else:
             assert False, "Test programmer error"
@@ -1483,6 +1584,35 @@ class TestGraphQLQueryBoolExpSpatialMSSQL:
 
     def test_select_spatial_mssql_types_where_st_within_geojson(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_within_geojson_mssql.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/boolexp/spatial'
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['bigquery'])
+@usefixtures('per_class_tests_db_state')
+class TestGraphQLQueryBoolExpSpatialBigquery:
+    def test_select_spatial_bigquery_types(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_bigquery.yaml', transport)
+
+    def test_select_spatial_bigquery_types_where_st_equals(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_equals_bigquery.yaml', transport)
+
+    def test_select_spatial_bigquery_types_where_st_contains(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_contains_bigquery.yaml', transport)
+
+    def test_select_spatial_bigquery_types_where_st_intersects(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_intersects_bigquery.yaml', transport)
+
+    def test_select_spatial_bigquery_types_where_st_within(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_within_bigquery.yaml', transport)
+
+    def test_select_spatial_bigquery_types_where_st_d_within(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_d_within_bigquery.yaml', transport)
+
+    def test_select_spatial_bigquery_types_where_st_touches(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_where_st_touches_bigquery.yaml', transport)
 
     @classmethod
     def dir(cls):

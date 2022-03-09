@@ -1,0 +1,123 @@
+- description: Run get_user_by_email_nested query action with valid email, the response should be an object
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query ($email: String!){
+        get_user_by_email_nested_join(email: $email){
+            address {
+              country
+            }
+            user_id {
+              id
+              user {
+                id
+                name
+                email
+              }
+              articles {
+                id
+                name
+                user_id
+              }
+              articles_aggregate {
+                aggregate {
+                  count
+                }
+              }
+            }
+        }
+      }
+    variables:
+      email: clarke@gmail.com
+  response:
+    data:
+      get_user_by_email_nested_join:
+        address:
+          country: USA
+        user_id:
+          id: 1
+          user:
+            id: 1
+            name: Clarke
+            email: clarke@gmail.com
+          articles:
+          - id: 1
+            name: foo
+            user_id: 1
+          - id: 2
+            name: bar
+            user_id: 1
+          - id: 3
+            name: bar
+            user_id: 1
+          articles_aggregate:
+            aggregate:
+              count: 3
+
+- description: Run get_user_by_email_nested_join query action with valid email, the response should be an object
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query ($email: String!){
+        get_user_by_email_nested_join(email: $email){
+            id
+            address {
+              city
+              country
+            }
+        }
+      }
+    variables:
+      email: clarke@gmail.com
+  response:
+    data:
+      get_user_by_email_nested_join:
+        id: 1
+        address:
+          city: New York
+          country: USA
+
+- description: Run get_user_by_email_nested_join query action with valid email, the response should be an object
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query ($email: String!){
+        get_user_by_email_nested_join(email: $email){
+            id
+            user_id {
+              id
+              user {
+                name
+              }
+            }
+            address {
+              city
+              country
+            }
+            addresses {
+              city
+              country
+            }
+        }
+      }
+    variables:
+      email: clarke@gmail.com
+  response:
+    data:
+      get_user_by_email_nested_join:
+        id: 1
+        user_id:
+          id: 1
+          user:
+            name: Clarke
+        address:
+          city: New York
+          country: USA
+        addresses:
+          - city: Bangalore
+            country: India
+          - city: Melbourne
+            country: Australia

@@ -63,6 +63,9 @@ Available COMMANDs:
     passed to the pytest invocation. Run the hlint code linter individually
     using '--hlint'.
 
+    For unit tests, you can limit the number of tests by using
+    'test --unit --match "runTx" mssql'
+
 EOL
 exit 1
 }
@@ -78,7 +81,7 @@ try_jq() {
 
 # Bump this to:
 #  - force a reinstall of python dependencies, etc.
-DEVSH_VERSION=1.5
+DEVSH_VERSION=1.7
 
 case "${1-}" in
   graphql-engine)
@@ -105,6 +108,7 @@ case "${1-}" in
   test)
     case "${2-}" in
       --unit)
+      UNIT_TEST_ARGS=( "${@:3}" )
       RUN_INTEGRATION_TESTS=false
       RUN_UNIT_TESTS=true
       RUN_HLINT=false
@@ -194,39 +198,46 @@ function cleanup {
 trap cleanup EXIT
 
 function pg_start() {
-  pg_launch_container
-  PG_RUNNING=1
-  pg_wait
+  if [ $PG_RUNNING -eq 0 ]; then
+    pg_launch_container
+    PG_RUNNING=1
+    pg_wait
+  fi
 }
 
 function mssql_start() {
-  mssql_launch_container
-  MSSQL_RUNNING=1
-  if [[ `uname -m` == 'arm64' ]]; then
-    # mssql_wait uses the tool sqlcmd to wait for a database connection which unfortunately
-    # is not available for the azure-sql-edge docker image - which is the only image from microsoft
-    # that runs on M1 computers. So we sleep for 20 seconds, cross fingers and hope for the best
-    # see https://github.com/microsoft/mssql-docker/issues/668
+  if [ $MSSQL_RUNNING -eq 0 ]; then
+    mssql_launch_container
+    MSSQL_RUNNING=1
+    if [[ `uname -m` == 'arm64' ]]; then
+      # mssql_wait uses the tool sqlcmd to wait for a database connection which unfortunately
+      # is not available for the azure-sql-edge docker image - which is the only image from microsoft
+      # that runs on M1 computers. So we sleep for 20 seconds, cross fingers and hope for the best
+      # see https://github.com/microsoft/mssql-docker/issues/668
 
-    echo "Sleeping for 20 sec while mssql comes up..."
-    sleep 20
-  else
-    mssql_wait
+      echo "Sleeping for 20 sec while mssql comes up..."
+      sleep 20
+    else
+      mssql_wait
+    fi
   fi
 }
 
 function citus_start() {
-  citus_launch_container
-  CITUS_RUNNING=1
-  citus_wait
+  if [ $CITUS_RUNNING -eq 0 ]; then
+    citus_launch_container
+    CITUS_RUNNING=1
+    citus_wait
+  fi
 }
 
 function mysql_start() {
-  mysql_launch_container
-  MYSQL_RUNNING=1
-  mysql_wait
+  if [ $MYSQL_RUNNING -eq 0 ]; then
+    mysql_launch_container
+    MYSQL_RUNNING=1
+    mysql_wait
+  fi
 }
-
 
 function start_dbs() {
   # always launch the postgres container
@@ -243,7 +254,7 @@ function start_dbs() {
       mysql_start
     ;;
     # bigquery deliberately omitted as its test setup is atypical. See:
-    # https://github.com/hasura/graphql-engine/blob/master/server/CONTRIBUTING.md#running-the-python-test-suite-on-bigquery
+    # https://github.com/hasura/graphql-engine/blob/master/server/py-tests/README.md#running-bigquery-tests
   esac
 }
 
@@ -472,14 +483,15 @@ elif [ "$MODE" = "test" ]; then
     mssql_start
     pg_start
 
+    echo "${UNIT_TEST_ARGS[@]}"
     HASURA_GRAPHQL_DATABASE_URL="$PG_DB_URL" \
       HASURA_MSSQL_CONN_STR="$MSSQL_CONN_STR" \
-      cabal new-run --project-file=cabal.project.dev-sh -- test:graphql-engine-tests
+      cabal new-run --project-file=cabal.project.dev-sh test:graphql-engine-tests -- "${UNIT_TEST_ARGS[@]}"
   fi
 
   if [ "$RUN_HLINT" = true ]; then
     if command -v hlint >/dev/null; then
-      (cd "$PROJECT_ROOT/server" && hlint src-*)
+      hlint "${PROJECT_ROOT}/server/src-"*
     else
       echo_warn "hlint is not installed: skipping"
     fi
@@ -495,6 +507,7 @@ elif [ "$MODE" = "test" ]; then
     export HASURA_GRAPHQL_PG_SOURCE_URL_1=${HASURA_GRAPHQL_PG_SOURCE_URL_1-$PG_DB_URL}
     export HASURA_GRAPHQL_PG_SOURCE_URL_2=${HASURA_GRAPHQL_PG_SOURCE_URL_2-$PG_DB_URL}
     export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES="inherited_roles"
+    export HASURA_GRAPHQL_MSSQL_SOURCE_URL=$MSSQL_CONN_STR
 
     # Using --metadata-database-url flag to test multiple backends
     #       HASURA_GRAPHQL_PG_SOURCE_URL_* For a couple multi-source pytests:
@@ -518,7 +531,6 @@ elif [ "$MODE" = "test" ]; then
     echo ""
     echo " Ok"
 
-    export HASURA_BIGQUERY_SERVICE_ACCOUNT=$(cat "$HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE")
     add_sources $HASURA_GRAPHQL_SERVER_PORT
 
     cd "$PROJECT_ROOT/server/tests-py"

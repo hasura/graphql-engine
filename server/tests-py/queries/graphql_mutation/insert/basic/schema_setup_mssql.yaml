@@ -40,3 +40,18 @@ args:
           id int identity not null,
           name text not null
         );
+
+        CREATE TABLE author
+        (
+          id int identity not null primary key,
+          name text not null
+        );
+
+        CREATE TABLE article
+        (
+          id int identity not null,
+          title text not null,
+          content text,
+          author_id int
+        );
+        ALTER TABLE article ADD CONSTRAINT article_author_fk FOREIGN KEY (author_id) REFERENCES author (id);

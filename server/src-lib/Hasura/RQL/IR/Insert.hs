@@ -15,7 +15,8 @@ module Hasura.RQL.IR.Insert
     AnnotatedInsert (..),
     AnnotatedInsertRow,
     ArrRelIns,
-    ConflictClauseP1 (..),
+    OnConflictClause (..),
+    OnConflictClauseData (..),
     ConflictTarget (..),
     InsertQueryP1 (..),
     MultiObjIns,
@@ -37,10 +38,11 @@ import Control.Lens.TH (makePrisms)
 import Data.Kind (Type)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.IR.Conflict
 import Hasura.RQL.IR.Returning
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
-import Hasura.RQL.Types.Relationship
+import Hasura.RQL.Types.Relationships.Local
 import Hasura.SQL.Backend
 
 -- | Overall representation of an insert mutation, corresponding to one root
@@ -48,11 +50,11 @@ import Hasura.SQL.Backend
 -- output. For historical reasons, it will always contain a `MultiObjIns`,
 -- whether the root mutation is a single row or not, and will distinguish
 -- between them using a boolean field.
-data AnnInsert (b :: BackendType) (r :: BackendType -> Type) v = AnnInsert
-  { _aiFieldName :: !Text,
-    _aiIsSingle :: !Bool,
-    _aiData :: !(MultiObjIns b v),
-    _aiOutput :: !(MutationOutputG b r v)
+data AnnInsert (b :: BackendType) (r :: Type) v = AnnInsert
+  { _aiFieldName :: Text,
+    _aiIsSingle :: Bool,
+    _aiData :: MultiObjIns b v,
+    _aiOutput :: MutationOutputG b r v
   }
   deriving (Functor, Foldable, Traversable)
 
@@ -60,13 +62,12 @@ data AnnInsert (b :: BackendType) (r :: BackendType -> Type) v = AnnInsert
 -- The @f@ parameter is used to construct the container for the values to be
 -- inserted: 'Single' for a single-row insert, '[]' for a multi-row insert.
 data AnnIns (b :: BackendType) (f :: Type -> Type) (v :: Type) = AnnIns
-  { _aiInsObj :: !(f (AnnotatedInsertRow b v)),
-    _aiTableName :: !(TableName b),
-    _aiConflictClause :: !(Maybe (XOnConflict b, ConflictClauseP1 b v)),
-    _aiCheckCond :: !(AnnBoolExp b v, Maybe (AnnBoolExp b v)),
-    _aiTableCols :: ![ColumnInfo b],
-    _aiDefVals :: !(PreSetColsG b v),
-    _aiExtraInsertData :: !(ExtraInsertData b)
+  { _aiInsObj :: f (AnnotatedInsertRow b v),
+    _aiTableName :: TableName b,
+    _aiCheckCond :: (AnnBoolExp b v, Maybe (AnnBoolExp b v)),
+    _aiTableCols :: [ColumnInfo b],
+    _aiDefVals :: PreSetColsG b v,
+    _aiBackendInsert :: BackendInsert b v
   }
   deriving (Functor, Foldable, Traversable)
 
@@ -85,9 +86,9 @@ type MultiObjIns b v = AnnIns b [] v
 -- | An insert item.
 -- The object and array relationships are not unavailable when 'XNestedInserts b = XDisable'
 data AnnotatedInsert (b :: BackendType) v
-  = AIColumn !(Column b, v)
-  | AIObjectRelationship !(XNestedInserts b) !(ObjRelIns b v)
-  | AIArrayRelationship !(XNestedInserts b) !(ArrRelIns b v)
+  = AIColumn (Column b, v)
+  | AIObjectRelationship (XNestedInserts b) (ObjRelIns b v)
+  | AIArrayRelationship (XNestedInserts b) (ArrRelIns b v)
   deriving (Functor, Foldable, Traversable)
 
 -- | One individual row to be inserted.
@@ -99,8 +100,8 @@ type AnnotatedInsertRow b v = [AnnotatedInsert b v]
 -- @v@, but by the kind of insert has to be performed: multi-row or single row.
 -- See 'ObjRelIns' and 'ArrRelIns'.
 data RelIns (b :: BackendType) a = RelIns
-  { _riAnnIns :: !a,
-    _riRelInfo :: !(RelInfo b)
+  { _riAnnIns :: a,
+    _riRelInfo :: RelInfo b
   }
   deriving (Show, Eq, Functor, Foldable, Traversable)
 
@@ -116,34 +117,19 @@ type ObjRelIns b v = RelIns b (SingleObjIns b v)
 -- therefore parameterized by a 'MultiObjIns'.
 type ArrRelIns b v = RelIns b (MultiObjIns b v)
 
--- Conflict resolution options
-
-data ConflictTarget (b :: BackendType)
-  = CTColumn ![Column b]
-  | CTConstraint !(ConstraintName b)
-
-deriving instance Backend b => Show (ConflictTarget b)
-
-deriving instance Backend b => Eq (ConflictTarget b)
-
-data ConflictClauseP1 (b :: BackendType) v
-  = CP1DoNothing !(Maybe (ConflictTarget b))
-  | CP1Update !(ConflictTarget b) ![Column b] !(PreSetColsG b v) (AnnBoolExp b v)
-  deriving (Functor, Foldable, Traversable)
-
 -- | Old-style representation used for non-recursive insertions.
 -- This is the representation used by RQL.DML, instead of the new fancy
 -- recursive one present in this file. Postgres supports both representations,
 -- and actually translates recursive queries that do not have any relationships
 -- into this representation first.
 data InsertQueryP1 (b :: BackendType) = InsertQueryP1
-  { iqp1Table :: !(TableName b),
-    iqp1Cols :: ![Column b],
-    iqp1Tuples :: ![[SQLExpression b]],
-    iqp1Conflict :: !(Maybe (ConflictClauseP1 b (SQLExpression b))),
-    iqp1CheckCond :: !(AnnBoolExpSQL b, Maybe (AnnBoolExpSQL b)),
-    iqp1Output :: !(MutationOutput b),
-    iqp1AllCols :: ![ColumnInfo b]
+  { iqp1Table :: TableName b,
+    iqp1Cols :: [Column b],
+    iqp1Tuples :: [[SQLExpression b]],
+    iqp1Conflict :: Maybe (OnConflictClause b (SQLExpression b)),
+    iqp1CheckCond :: (AnnBoolExpSQL b, Maybe (AnnBoolExpSQL b)),
+    iqp1Output :: MutationOutput b,
+    iqp1AllCols :: [ColumnInfo b]
   }
 
 -- Template Haskell related

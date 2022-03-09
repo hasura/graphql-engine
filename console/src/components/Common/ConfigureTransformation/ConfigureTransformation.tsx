@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   RequestTransformContentType,
   RequestTransformMethod,
@@ -6,18 +6,21 @@ import {
 import { KeyValuePair, RequestTransformState } from './stateDefaults';
 import RequestOptionsTransforms from './RequestOptionsTransforms';
 import PayloadOptionsTransforms from './PayloadOptionsTransforms';
+import SampleContextTransforms from './SampleContextTransforms';
 import Button from '../Button';
 import AddIcon from '../Icons/Add';
 
 type ConfigureTransformationProps = {
-  webhookUrl: string;
   state: RequestTransformState;
   resetSampleInput: () => void;
+  envVarsOnChange: (envVars: KeyValuePair[]) => void;
+  sessionVarsOnChange: (sessionVars: KeyValuePair[]) => void;
   requestMethodOnChange: (requestMethod: RequestTransformMethod) => void;
   requestUrlOnChange: (requestUrl: string) => void;
   requestQueryParamsOnChange: (requestQueryParams: KeyValuePair[]) => void;
   requestAddHeadersOnChange: (requestAddHeaders: KeyValuePair[]) => void;
   requestBodyOnChange: (requestBody: string) => void;
+  requestBodyEnabledOnChange: (enableRequestBody: boolean) => void;
   requestSampleInputOnChange: (requestSampleInput: string) => void;
   requestContentTypeOnChange: (
     requestContentType: RequestTransformContentType
@@ -27,20 +30,24 @@ type ConfigureTransformationProps = {
 };
 
 const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
-  webhookUrl,
   state,
   resetSampleInput,
+  envVarsOnChange,
+  sessionVarsOnChange,
   requestMethodOnChange,
   requestUrlOnChange,
   requestQueryParamsOnChange,
   requestAddHeadersOnChange,
   requestBodyOnChange,
+  requestBodyEnabledOnChange,
   requestSampleInputOnChange,
   requestContentTypeOnChange,
   requestUrlTransformOnChange,
   requestPayloadTransformOnChange,
 }) => {
   const {
+    envVars,
+    sessionVars,
     requestMethod,
     requestUrl,
     requestUrlError,
@@ -51,31 +58,67 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
     requestBodyError,
     requestSampleInput,
     requestTransformedBody,
+    enableRequestBody,
     requestContentType,
     isRequestUrlTransform,
     isRequestPayloadTransform,
   } = state;
 
+  const [isContextAreaActive, toggleContextArea] = useState<boolean>(false);
+
+  const contextAreaText = isContextAreaActive
+    ? `Hide Sample Context`
+    : `Show Sample Context`;
+
   const requestUrlTransformText = isRequestUrlTransform
-    ? `Remove Request Options Transformation`
-    : `Add Request Options Transformation`;
+    ? `Remove Request Options Transform`
+    : `Add Request Options Transform`;
 
   const requestPayloadTransformText = isRequestPayloadTransform
-    ? `Remove Payload Transformation`
-    : `Add Payload Transformation`;
+    ? `Remove Payload Transform`
+    : `Add Payload Transform`;
 
   return (
     <>
       <h2 className="text-lg font-semibold mb-sm flex items-center">
-        Configure Transformations
+        Configure REST Connectors
       </h2>
+
       <div className="mb-lg">
         <label className="block text-gray-600 font-medium mb-xs">
-          Request Options Transformation
+          Sample Context
         </label>
         <p className="text-sm text-gray-600 mb-sm">
-          Transform your method and URL to adapt to your webhook&apos;s expected
-          format.
+          Add sample env vars and session vars for testing the connector
+        </p>
+        <Button
+          color="white"
+          size="sm"
+          data-test="toggle-context-area"
+          onClick={() => {
+            toggleContextArea(!isContextAreaActive);
+          }}
+        >
+          {!isContextAreaActive ? <AddIcon /> : null}
+          {contextAreaText}
+        </Button>
+
+        {isContextAreaActive ? (
+          <SampleContextTransforms
+            envVars={envVars}
+            sessionVars={sessionVars}
+            envVarsOnChange={envVarsOnChange}
+            sessionVarsOnChange={sessionVarsOnChange}
+          />
+        ) : null}
+      </div>
+
+      <div className="mb-lg">
+        <label className="block text-gray-600 font-medium mb-xs">
+          Change Request Options
+        </label>
+        <p className="text-sm text-gray-600 mb-sm">
+          Change the method and URL to adapt to your API&apos;s expected format.
         </p>
         <Button
           color="white"
@@ -108,11 +151,10 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
 
       <div className="mb-lg">
         <label className="block text-gray-600 font-medium mb-xs">
-          Payload Transformation
+          Change Payload
         </label>
         <p className="text-sm text-gray-600 mb-sm">
-          Transform your payload to adapt to your webhook&apos;s expected
-          format.
+          Change the payload to adapt to your API&apos;s expected format.
         </p>
         <Button
           color="white"
@@ -132,10 +174,11 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
             requestBodyError={requestBodyError}
             requestSampleInput={requestSampleInput}
             requestTransformedBody={requestTransformedBody}
+            enableRequestBody={enableRequestBody}
             requestContentType={requestContentType}
-            webhookUrl={webhookUrl}
             resetSampleInput={resetSampleInput}
             requestBodyOnChange={requestBodyOnChange}
+            requestBodyEnabledOnChange={requestBodyEnabledOnChange}
             requestSampleInputOnChange={requestSampleInputOnChange}
             requestContentTypeOnChange={requestContentTypeOnChange}
           />

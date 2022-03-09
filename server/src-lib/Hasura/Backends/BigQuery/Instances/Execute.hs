@@ -61,7 +61,7 @@ bqDBQueryPlan ::
   UserInfo ->
   SourceName ->
   SourceConfig 'BigQuery ->
-  QueryDB 'BigQuery (Const Void) (UnpreparedValue 'BigQuery) ->
+  QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery) ->
   m (DBStepInfo 'BigQuery)
 bqDBQueryPlan userInfo sourceName sourceConfig qrf = do
   -- TODO (naveen): Append query tags to the query
@@ -116,10 +116,10 @@ bqDBMutationPlan ::
   ( MonadError E.QErr m
   ) =>
   UserInfo ->
-  Bool ->
+  StringifyNumbers ->
   SourceName ->
   SourceConfig 'BigQuery ->
-  MutationDB 'BigQuery (Const Void) (UnpreparedValue 'BigQuery) ->
+  MutationDB 'BigQuery Void (UnpreparedValue 'BigQuery) ->
   m (DBStepInfo 'BigQuery)
 bqDBMutationPlan _userInfo _stringifyNum _sourceName _sourceConfig _mrf =
   throw500 "mutations are not supported in BigQuery; this should be unreachable"
@@ -132,7 +132,7 @@ bqDBQueryExplain ::
   UserInfo ->
   SourceName ->
   SourceConfig 'BigQuery ->
-  QueryDB 'BigQuery (Const Void) (UnpreparedValue 'BigQuery) ->
+  QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery) ->
   m (AB.AnyBackend DBStepInfo)
 bqDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
   select <- planNoPlan (BigQuery.bigQuerySourceConfigToFromIrConfig sourceConfig) userInfo qrf
@@ -190,7 +190,7 @@ bqDBRemoteRelationshipPlan ::
   -- | This is a field name from the lhs that *has* to be selected in the
   -- response along with the relationship.
   FieldName ->
-  (FieldName, SourceRelationshipSelection 'BigQuery (Const Void) UnpreparedValue) ->
+  (FieldName, SourceRelationshipSelection 'BigQuery Void UnpreparedValue) ->
   m (DBStepInfo 'BigQuery)
 bqDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship = do
   flip runReaderT emptyQueryTagsComment $ bqDBQueryPlan userInfo sourceName sourceConfig rootSelection

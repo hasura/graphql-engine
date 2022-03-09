@@ -1,7 +1,6 @@
 package database
 
 import (
-	"crypto/tls"
 	"fmt"
 	"io"
 	"sync"
@@ -44,7 +43,7 @@ type Driver interface {
 	// Open returns a new driver instance configured with parameters
 	// coming from the URL string. Migrate will call this function
 	// only once per instance.
-	Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger, hasuraOpts *HasuraOpts) (Driver, error)
+	Open(url string, isCMD bool, logger *log.Logger, hasuraOpts *HasuraOpts) (Driver, error)
 
 	// Close closes the underlying database instance managed by the driver.
 	// Migrate will call this function only once per instance.
@@ -78,9 +77,6 @@ type Driver interface {
 	// version must be >= -1. -1 means NilVersion.
 	SetVersion(version int64, dirty bool) error
 
-	// SetVersion saves version and dirty state.
-	// Migrate will call this function before and after each call to Run.
-	// version must be >= -1. -1 means NilVersion.
 	RemoveVersion(version int64) error
 
 	// Version returns the currently active version and if the database is dirty.
@@ -121,7 +117,7 @@ type Driver interface {
 }
 
 // Open returns a new driver instance.
-func Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger, hasuraOpts *HasuraOpts) (Driver, error) {
+func Open(url string, isCMD bool, logger *log.Logger, hasuraOpts *HasuraOpts) (Driver, error) {
 	u, err := nurl.Parse(url)
 	if err != nil {
 		log.Debug(err)
@@ -143,7 +139,7 @@ func Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger, has
 		logger = log.New()
 	}
 
-	return d.Open(url, isCMD, tlsConfig, logger, hasuraOpts)
+	return d.Open(url, isCMD, logger, hasuraOpts)
 }
 
 func Register(name string, driver Driver) {

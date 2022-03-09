@@ -99,7 +99,8 @@ Read more about all the API types at the :ref:`API reference <api_reference>`.
 Disable console
 ---------------
 
-It is recommended that you disable the console on production deployments. Also,
+It is recommended that you disable the console on production deployments to
+prevent accidental changes to your production environment. Also,
 when you disable the metadata API, console will stop working.
 
 The console is disabled by default.

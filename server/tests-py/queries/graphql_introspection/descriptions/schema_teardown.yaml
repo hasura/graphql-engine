@@ -1,0 +1,11 @@
+type: run_sql
+args:
+  sql: |
+    DROP FUNCTION "automatic_comment_in_db_upper_name"("automatic_comment_in_db");
+    DROP TABLE "automatic_comment_in_db" cascade;
+    DROP FUNCTION "automatic_no_comment_in_db_upper_name"("automatic_no_comment_in_db");
+    DROP TABLE "automatic_no_comment_in_db" cascade;
+    DROP FUNCTION "explicit_comment_in_metadata_upper_name"("explicit_comment_in_metadata");
+    DROP TABLE "explicit_comment_in_metadata" cascade;
+    DROP FUNCTION "explicit_no_comment_in_metadata_upper_name"("explicit_no_comment_in_metadata");
+    DROP TABLE "explicit_no_comment_in_metadata" cascade;

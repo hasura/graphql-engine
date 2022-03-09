@@ -13,12 +13,14 @@ set -euo pipefail
 # the comment starts with "## Benchmark Results".
 
 
-# Get all issue comments.
-# https://docs.github.com/en/rest/reference/issues#list-issue-comments-for-a-repository
+# Get issue comments.
+# Note: We currently only fetch the first 100 comments. This may not be
+# sufficient in the future.
+# https://docs.github.com/en/rest/reference/issues#list-issue-comments
 curl \
   -s \
   -H "Authorization: token ${GITHUB_TOKEN}" \
-  -X GET "https://api.github.com/repos/hasura/graphql-engine-mono/issues/${PR_NUMBER}/comments" | \
+  -X GET "https://api.github.com/repos/hasura/graphql-engine-mono/issues/${PR_NUMBER}/comments?per_page=100" | \
 # Keep only the benchmark reports.
 jq -r -c '.[] | {id: .id, body: .body} | select(.body | startswith("## Benchmark Results"))' | \
 # Update the benchmark reports to hide them.

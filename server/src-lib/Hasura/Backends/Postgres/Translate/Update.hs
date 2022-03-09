@@ -1,3 +1,6 @@
+-- | Postgres Translate Update
+--
+-- Translates IR update to Postgres-specific SQL UPDATE statements.
 module Hasura.Backends.Postgres.Translate.Update
   ( mkUpdateCTE,
   )
@@ -51,6 +54,6 @@ expandOperator infos (column, op) = S.SetExpItem $
     asJSON e = S.SETyAnn e S.jsonbTypeAnn
     asArray a = S.SETyAnn (S.SEArray a) S.textArrTypeAnn
     asNum e = S.SETyAnn e $
-      case find (\info -> pgiColumn info == column) infos <&> pgiType of
+      case find (\info -> ciColumn info == column) infos <&> ciType of
         Just (ColumnScalar s) -> S.mkTypeAnn $ CollectableTypeScalar s
         _ -> S.numericTypeAnn

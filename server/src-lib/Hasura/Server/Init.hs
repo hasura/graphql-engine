@@ -1,5 +1,4 @@
 {-# LANGUAGE ApplicativeDo #-}
-{-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -O0 #-}
 
 -- | Types and functions related to the server initialisation
@@ -47,6 +46,25 @@ import Network.Wai.Handler.Warp (HostPreference)
 import Network.WebSockets qualified as WS
 import Options.Applicative
 import Text.PrettyPrint.ANSI.Leijen qualified as PP
+
+{- Note [ReadOnly Mode]
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This mode starts the server in a (database) read-only mode. That is, only
+read-only queries are allowed on users' database sources, and write
+queries throw a runtime error. The use-case is for failsafe operations.
+Metadata APIs are also disabled.
+
+Following is the precise behaviour -
+  1. For any GraphQL API (relay/hasura; http/websocket) - disable execution of
+  mutations
+  2. Metadata API is disabled
+  3. /v2/query API - insert, delete, update, run_sql are disabled
+  4. /v1/query API - insert, delete, update, run_sql are disabled
+  5. No source catalog migrations are run
+  6. During build schema cache phase, building event triggers are disabled (as
+  they create corresponding database triggers)
+-}
 
 getDbId :: Q.TxE QErr Text
 getDbId =
@@ -168,7 +186,8 @@ mkServeOptions rso = do
   txIso <- fromMaybe Q.ReadCommitted <$> withEnv (rsoTxIso rso) (fst txIsoEnv)
   adminScrt <- fmap (maybe mempty Set.singleton) $ withEnvs (rsoAdminSecret rso) $ map fst [adminSecretEnv, accessKeyEnv]
   authHook <- mkAuthHook $ rsoAuthHook rso
-  jwtSecret <- withEnvJwtConf (rsoJwtSecret rso) $ fst jwtSecretEnv
+  jwtSecret <- (`onNothing` mempty) <$> withEnvJwtConf (rsoJwtSecret rso) (fst jwtSecretEnv)
+
   unAuthRole <- withEnv (rsoUnAuthRole rso) $ fst unAuthRoleEnv
   corsCfg <- mkCorsConfig $ rsoCorsConfig rso
   enableConsole <-
@@ -178,7 +197,7 @@ mkServeOptions rso = do
   enableTelemetry <-
     fromMaybe True
       <$> withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
-  strfyNum <- withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv
+  strfyNum <- bool LeaveNumbersAlone StringifyNumbers <$> (withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv)
   dangerousBooleanCollapse <-
     fromMaybe False <$> withEnv (rsoDangerousBooleanCollapse rso) (fst dangerousBooleanCollapseEnv)
   enabledAPIs <-
@@ -284,6 +303,8 @@ mkServeOptions rso = do
       devMode
       gracefulShutdownTime
       webSocketConnectionInitTimeout
+      EventingEnabled
+      ReadOnlyModeDisabled
   where
     defaultAsyncActionsFetchInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
     defaultSchemaPollInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
@@ -481,6 +502,7 @@ eventsFetchBatchSizeEnv :: (String, String)
 eventsFetchBatchSizeEnv =
   ( "HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE",
     "The maximum number of events to be fetched from the events table in a single batch. Default 100"
+      ++ "Value \"0\" implies completely disable fetching events from events table. "
   )
 
 asyncActionsFetchIntervalEnv :: (String, String)
@@ -631,7 +653,7 @@ wsReadCookieEnv =
     "Read cookie on WebSocket initial handshake, even when CORS is disabled."
       ++ " This can be a potential security flaw! Please make sure you know "
       ++ "what you're doing."
-      ++ "This configuration is only applicable when CORS is disabled."
+      ++ " This configuration is only applicable when CORS is disabled."
   )
 
 stringifyNumEnv :: (String, String)
@@ -649,11 +671,7 @@ dangerousBooleanCollapseEnv =
   )
 
 defaultEnabledAPIs :: [API]
-#ifdef DeveloperAPIs
-defaultEnabledAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
-#else
-defaultEnabledAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG]
-#endif
+defaultEnabledAPIs = [METADATA, GRAPHQL, PGDUMP, CONFIG]
 
 enabledAPIsEnv :: (String, String)
 enabledAPIsEnv =
@@ -664,7 +682,10 @@ enabledAPIsEnv =
 experimentalFeaturesEnv :: (String, String)
 experimentalFeaturesEnv =
   ( "HASURA_GRAPHQL_EXPERIMENTAL_FEATURES",
-    "Comma separated list of experimental features. (all: inherited_roles)"
+    "Comma separated list of experimental features. (all: inherited_roles,optimize_permission_filters). "
+      <> "optimize_permission_filters: Use experimental SQL optimization"
+      <> "transformations for permission filters. "
+      <> "inherited_roles: ignored; inherited roles cannot be switched off"
   )
 
 gracefulShutdownEnv :: (String, String)
@@ -1321,7 +1342,7 @@ serveOptsToLog so =
         [ "port" J..= soPort so,
           "server_host" J..= show (soHost so),
           "transaction_isolation" J..= show (soTxIso so),
-          "admin_secret_set" J..= (not $ Set.null (soAdminSecret so)),
+          "admin_secret_set" J..= not (Set.null (soAdminSecret so)),
           "auth_hook" J..= (ahUrl <$> soAuthHook so),
           "auth_hook_mode" J..= (show . ahType <$> soAuthHook so),
           "jwt_secret" J..= (J.toJSON <$> soJwtSecret so),
@@ -1331,7 +1352,9 @@ serveOptsToLog so =
           "console_assets_dir" J..= soConsoleAssetsDir so,
           "enable_telemetry" J..= soEnableTelemetry so,
           "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so,
-          "stringify_numeric_types" J..= soStringifyNum so,
+          "stringify_numeric_types" J..= case soStringifyNum so of
+            StringifyNumbers -> True
+            LeaveNumbersAlone -> False,
           "v1-boolean-null-collapse" J..= soDangerousBooleanCollapse so,
           "enabled_apis" J..= soEnabledAPIs so,
           "live_query_options" J..= soLiveQueryOpts so,

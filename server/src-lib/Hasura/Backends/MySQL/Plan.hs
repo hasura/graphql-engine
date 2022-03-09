@@ -25,7 +25,7 @@ import Hasura.Session
 queryToActionForest ::
   MonadError QErr m =>
   UserInfo ->
-  QueryDB 'MySQL (Const Void) (GraphQL.UnpreparedValue 'MySQL) ->
+  QueryDB 'MySQL Void (GraphQL.UnpreparedValue 'MySQL) ->
   m (DataLoader.HeadAndTail, Forest DataLoader.PlannedAction)
 queryToActionForest userInfo qrf = do
   select <- planQuery (_uiSession userInfo) qrf
@@ -38,7 +38,7 @@ queryToActionForest userInfo qrf = do
 planQuery ::
   MonadError QErr m =>
   SessionVariables ->
-  QueryDB 'MySQL (Const Void) (GraphQL.UnpreparedValue 'MySQL) ->
+  QueryDB 'MySQL Void (GraphQL.UnpreparedValue 'MySQL) ->
   m Select
 planQuery sessionVariables queryDB = do
   rootField <- traverse (prepareValueQuery sessionVariables) queryDB

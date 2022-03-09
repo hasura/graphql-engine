@@ -73,6 +73,9 @@ runQuery ::
   RQLQuery ->
   m (EncJSON, RebuildableSchemaCache)
 runQuery env instanceId userInfo schemaCache httpManager serverConfigCtx rqlQuery = do
+  when ((_sccReadOnlyMode serverConfigCtx == ReadOnlyModeEnabled) && queryModifiesUserDB rqlQuery) $
+    throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
+
   (metadata, currentResourceVersion) <- fetchMetadata
   result <-
     runQueryM env rqlQuery & \x -> do
@@ -141,3 +144,18 @@ runQueryM env = \case
   RQBigqueryRunSql q -> BigQuery.runSQL q
   RQBigqueryDatabaseInspection q -> BigQuery.runDatabaseInspection q
   RQBulk l -> encJFromList <$> indexedMapM (runQueryM env) l
+
+queryModifiesUserDB :: RQLQuery -> Bool
+queryModifiesUserDB = \case
+  RQInsert _ -> True
+  RQSelect _ -> False
+  RQUpdate _ -> True
+  RQDelete _ -> True
+  RQCount _ -> False
+  RQRunSql _ -> True
+  RQCitusRunSql _ -> True
+  RQMssqlRunSql _ -> True
+  RQMysqlRunSql _ -> True
+  RQBigqueryRunSql _ -> True
+  RQBigqueryDatabaseInspection _ -> False
+  RQBulk q -> any queryModifiesUserDB q

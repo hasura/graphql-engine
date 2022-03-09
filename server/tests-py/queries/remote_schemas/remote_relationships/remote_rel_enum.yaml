@@ -3,7 +3,7 @@ url: /v1/graphql
 status: 200
 response:
   data:
-    profiles:
+    custom_profiles:
       - id: 1
         getOccupationEnum: "SINGER"
       - id: 2
@@ -13,7 +13,7 @@ response:
 query:
   query: |
     query {
-      profiles {
+      custom_profiles {
         id
         getOccupationEnum
       }

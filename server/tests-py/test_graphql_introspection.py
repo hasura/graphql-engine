@@ -1,13 +1,23 @@
 import pytest
-import ruamel.yaml as yaml
+from ruamel.yaml import YAML
 from validate import check_query_f, check_query
+from remote_server import NodeGraphQL
+
+yaml=YAML(typ='safe', pure=True)
+
+@pytest.fixture(scope="module")
+def graphql_service():
+    svc = NodeGraphQL(["node", "remote_schemas/nodejs/index.js"])
+    svc.start()
+    yield svc
+    svc.stop()
 
 @pytest.mark.usefixtures('per_class_tests_db_state')
 class TestGraphqlIntrospection:
 
     def test_introspection(self, hge_ctx):
         with open(self.dir() + "/introspection.yaml") as c:
-            conf = yaml.safe_load(c)
+            conf = yaml.load(c)
         resp, _ = check_query(hge_ctx, conf)
         hasArticle = False
         hasArticleAuthorFKRel = False
@@ -51,6 +61,15 @@ def getTypeNameFromType(typeObject):
     else:
         raise Exception("typeObject doesn't have name and ofType is not an object")
 
+@pytest.mark.usefixtures('per_class_tests_db_state', 'graphql_service')
+class TestRemoteRelationshipsGraphQLNames:
+    @classmethod
+    def dir(cls):
+        return "queries/graphql_introspection/remote_relationships"
+
+    def test_relation_from_custom_schema_has_correct_name(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/relation_custom_schema_has_correct_name.yaml")
+
 @pytest.mark.usefixtures('per_class_tests_db_state')
 class TestGraphqlIntrospectionWithCustomTableName:
 
@@ -58,7 +77,7 @@ class TestGraphqlIntrospectionWithCustomTableName:
     # while tracking a table with a custom name
     def test_introspection(self, hge_ctx):
         with open(self.dir() + "/introspection.yaml") as c:
-            conf = yaml.safe_load(c)
+            conf = yaml.load(c)
         resp, _ = check_query(hge_ctx, conf)
         hasMultiSelect = False
         hasAggregate = False
@@ -120,3 +139,27 @@ class TestDisableGraphQLIntrospection:
 
     def test_disable_introspection(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/disable_introspection.yaml")
+
+@pytest.mark.usefixtures('per_class_tests_db_state')
+class TestGraphQlIntrospectionDescriptions:
+
+    setup_metadata_api_version = "v2"
+
+    @classmethod
+    def dir(cls):
+        return "queries/graphql_introspection/descriptions"
+
+    def test_automatic_comment_in_db(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/automatic_comment_in_db.yaml")
+
+    def test_automatic_no_comment_in_db(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/automatic_no_comment_in_db.yaml")
+
+    def test_explicit_comment_in_metadata(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/explicit_comment_in_metadata.yaml")
+
+    def test_explicit_no_comment_in_metadata(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/explicit_no_comment_in_metadata.yaml")
+
+    def test_root_fields(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/root_fields.yaml")

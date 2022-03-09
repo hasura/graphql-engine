@@ -21,7 +21,7 @@
                   "name": "ContinentFilterInput",
                   "ofType": null
                 },
-                "defaultValue": null
+                "defaultValue": "{code: {eq: \"AF\"}}"
               }
             ],
             "type": {

@@ -126,7 +126,7 @@ class PermissionBuilder extends React.Component<PermissionBuilderProps> {
 
           const allSchemaNames = allTableSchemas.map(t => t.table_schema);
 
-          if (!allSchemaNames.includes(existTableSchema)) {
+          if (!allSchemaNames?.includes(existTableSchema)) {
             missingSchemas.push(existTableSchema);
           }
         }
@@ -148,7 +148,7 @@ class PermissionBuilder extends React.Component<PermissionBuilderProps> {
           tableRelationshipNames = getTableRelationshipNames(tableSchema);
         }
 
-        if (tableRelationshipNames.includes(operator)) {
+        if (tableRelationshipNames?.includes(operator)) {
           const relationship = getTableRelationship(tableSchema!, operator);
           const refTable = getRelationshipRefTable(tableSchema!, relationship!);
 
@@ -868,7 +868,7 @@ class PermissionBuilder extends React.Component<PermissionBuilderProps> {
           tableRelationshipNames = getTableRelationshipNames(tableSchema);
           const { allFunctions } = this.props;
           const computedFields = getGroupedTableComputedFields(
-            tableSchema,
+            tableSchema.computed_fields,
             allFunctions
           );
           const computedField = computedFields.scalar.find(
@@ -884,7 +884,7 @@ class PermissionBuilder extends React.Component<PermissionBuilderProps> {
       }
 
       let columnExp = null;
-      if (tableRelationshipNames.includes(columnName)) {
+      if (tableRelationshipNames?.includes(columnName)) {
         const relationship = getTableRelationship(tableSchema!, columnName);
         const refTable = getRelationshipRefTable(tableSchema!, relationship!);
 
@@ -1086,7 +1086,7 @@ class PermissionBuilder extends React.Component<PermissionBuilderProps> {
           tableRelationshipNames = getTableRelationshipNames(tableSchema);
           const { allFunctions } = this.props;
           const computedFields = getGroupedTableComputedFields(
-            tableSchema,
+            tableSchema.computed_fields,
             allFunctions
           );
           scalarComputedFields = computedFields.scalar.filter(sc => {

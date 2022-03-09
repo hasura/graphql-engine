@@ -1,0 +1,31 @@
+type: bulk
+args:
+
+- type: bigquery_track_table
+  args:
+    source: bigquery
+    table:
+      dataset: hasura
+      name: author
+
+- type: bigquery_track_table
+  args:
+    source: bigquery
+    table:
+      dataset: hasura
+      name: article
+
+- type: bigquery_create_array_relationship
+  args:
+    source: bigquery
+    table:
+      dataset: hasura
+      name: author
+    name: articles
+    using:
+      manual_configuration:
+        remote_table:
+          dataset: hasura
+          name: article
+        column_mapping:
+          id: author_id

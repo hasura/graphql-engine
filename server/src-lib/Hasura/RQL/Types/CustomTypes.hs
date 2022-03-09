@@ -37,6 +37,7 @@ module Hasura.RQL.Types.CustomTypes
     AnnotatedObjectFieldType (..),
     fieldTypeToScalarType,
     AnnotatedObjectType (..),
+    AnnotatedOutputType (..),
     AnnotatedObjects,
     AnnotatedCustomTypes (..),
     emptyAnnotatedCustomTypes,
@@ -329,6 +330,7 @@ type NonObjectTypeMap = Map.HashMap G.Name NonObjectCustomType
 data AnnotatedObjectFieldType
   = AOFTScalar !AnnotatedScalarType
   | AOFTEnum !EnumTypeDefinition
+  | AOFTObject !G.Name
   deriving (Generic)
 
 instance J.ToJSON AnnotatedObjectFieldType where
@@ -338,6 +340,7 @@ fieldTypeToScalarType :: AnnotatedObjectFieldType -> PGScalarType
 fieldTypeToScalarType = \case
   AOFTEnum _ -> PGText
   AOFTScalar annotatedScalar -> annotatedScalarToPgScalar annotatedScalar
+  AOFTObject _ -> PGJSON
   where
     annotatedScalarToPgScalar = \case
       ASTReusedScalar _ scalarType -> scalarType
@@ -349,6 +352,14 @@ fieldTypeToScalarType = \case
             | _stdName == stringScalar -> PGText
             | _stdName == boolScalar -> PGBoolean
             | otherwise -> PGJSON
+
+data AnnotatedOutputType
+  = AOTObject AnnotatedObjectType
+  | AOTScalar AnnotatedScalarType
+  deriving (Generic)
+
+instance J.ToJSON AnnotatedOutputType where
+  toJSON = J.genericToJSON $ J.defaultOptions
 
 data AnnotatedObjectType = AnnotatedObjectType
   { _aotDefinition :: !(ObjectTypeDefinition (G.GType, AnnotatedObjectFieldType) (TableInfo ('Postgres 'Vanilla)) (ColumnInfo ('Postgres 'Vanilla))),

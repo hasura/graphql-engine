@@ -3,9 +3,7 @@ module Hasura.RQL.Types.RemoteSchema
     AddRemoteSchemaQuery (..),
     AliasMapping,
     DropRemoteSchemaPermissions (..),
-    RemoteField,
     RemoteFieldCustomization (..),
-    RemoteFieldG (..),
     RemoteSchemaCustomization (..),
     RemoteSchemaCustomizer (..),
     RemoteSchemaDef (..),
@@ -34,17 +32,14 @@ module Hasura.RQL.Types.RemoteSchema
     lookupUnion,
     modifyFieldByName,
     remoteSchemaCustomizeFieldName,
+    getTypeName,
     remoteSchemaCustomizeTypeName,
-    rfField,
-    rfRemoteSchemaInfo,
-    rfResultCustomizer,
     singletonAliasMapping,
     validateRemoteSchemaCustomization,
     validateRemoteSchemaDef,
   )
 where
 
-import Control.Lens.TH (makeLenses)
 import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
 import Data.Environment qualified as Env
@@ -408,19 +403,8 @@ instance Hashable RemoteSchemaInputValueDefinition
 instance Cacheable RemoteSchemaInputValueDefinition
 
 newtype RemoteSchemaIntrospection
-  = RemoteSchemaIntrospection [(G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition)]
+  = RemoteSchemaIntrospection (HashMap G.Name (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition))
   deriving (Show, Eq, Generic, Hashable, Cacheable, Ord)
-
-data RemoteFieldG var = RemoteFieldG
-  { _rfRemoteSchemaInfo :: !RemoteSchemaInfo,
-    _rfResultCustomizer :: !ResultCustomizer,
-    _rfField :: !(G.Field G.NoFragments var)
-  }
-  deriving (Functor, Foldable, Traversable)
-
-$(makeLenses ''RemoteFieldG)
-
-type RemoteField = RemoteFieldG RemoteSchemaVariable
 
 data RemoteSchemaPermsCtx
   = RemoteSchemaPermsEnabled
@@ -437,77 +421,79 @@ instance J.ToJSON RemoteSchemaPermsCtx where
     RemoteSchemaPermsEnabled -> J.Bool True
     RemoteSchemaPermsDisabled -> J.Bool False
 
+-- | Extracts the name of a given type from its definition.
+-- TODO: move this to Language.GraphQL.Draft.Syntax.
+getTypeName :: G.TypeDefinition possibleTypes inputType -> G.Name
+getTypeName = \case
+  G.TypeDefinitionScalar t -> G._stdName t
+  G.TypeDefinitionObject t -> G._otdName t
+  G.TypeDefinitionInterface t -> G._itdName t
+  G.TypeDefinitionUnion t -> G._utdName t
+  G.TypeDefinitionEnum t -> G._etdName t
+  G.TypeDefinitionInputObject t -> G._iotdName t
+
 lookupType ::
   RemoteSchemaIntrospection ->
   G.Name ->
   Maybe (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition)
-lookupType (RemoteSchemaIntrospection types) name = find (\tp -> getNamedTyp tp == name) types
-  where
-    getNamedTyp :: G.TypeDefinition possibleTypes RemoteSchemaInputValueDefinition -> G.Name
-    getNamedTyp ty = case ty of
-      G.TypeDefinitionScalar t -> G._stdName t
-      G.TypeDefinitionObject t -> G._otdName t
-      G.TypeDefinitionInterface t -> G._itdName t
-      G.TypeDefinitionUnion t -> G._utdName t
-      G.TypeDefinitionEnum t -> G._etdName t
-      G.TypeDefinitionInputObject t -> G._iotdName t
+lookupType (RemoteSchemaIntrospection types) name = Map.lookup name types
 
 lookupObject ::
   RemoteSchemaIntrospection ->
   G.Name ->
   Maybe (G.ObjectTypeDefinition RemoteSchemaInputValueDefinition)
-lookupObject (RemoteSchemaIntrospection types) name =
-  choice $
-    types <&> \case
-      G.TypeDefinitionObject t | G._otdName t == name -> Just t
-      _ -> Nothing
+lookupObject introspection name =
+  lookupType introspection name >>= \case
+    G.TypeDefinitionObject t | G._otdName t == name -> Just t
+    -- if this happens, it means the schema is inconsistent: we expected to
+    -- find an object with that name, but instead found something that wasn't
+    -- an object; we might want to indicate this with a proper failure, so we
+    -- can show better diagnostics to the user?
+    -- This also applies to all following functions.
+    -- See: https://github.com/hasura/graphql-engine-mono/issues/2991
+    _ -> Nothing
 
 lookupInterface ::
   RemoteSchemaIntrospection ->
   G.Name ->
   Maybe (G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition)
-lookupInterface (RemoteSchemaIntrospection types) name =
-  choice $
-    types <&> \case
-      G.TypeDefinitionInterface t | G._itdName t == name -> Just t
-      _ -> Nothing
+lookupInterface introspection name =
+  lookupType introspection name >>= \case
+    G.TypeDefinitionInterface t | G._itdName t == name -> Just t
+    _ -> Nothing
 
 lookupScalar ::
   RemoteSchemaIntrospection ->
   G.Name ->
   Maybe G.ScalarTypeDefinition
-lookupScalar (RemoteSchemaIntrospection types) name =
-  choice $
-    types <&> \case
-      G.TypeDefinitionScalar t | G._stdName t == name -> Just t
-      _ -> Nothing
+lookupScalar introspection name =
+  lookupType introspection name >>= \case
+    G.TypeDefinitionScalar t | G._stdName t == name -> Just t
+    _ -> Nothing
 
 lookupUnion ::
   RemoteSchemaIntrospection ->
   G.Name ->
   Maybe G.UnionTypeDefinition
-lookupUnion (RemoteSchemaIntrospection types) name =
-  choice $
-    types <&> \case
-      G.TypeDefinitionUnion t | G._utdName t == name -> Just t
-      _ -> Nothing
+lookupUnion introspection name =
+  lookupType introspection name >>= \case
+    G.TypeDefinitionUnion t | G._utdName t == name -> Just t
+    _ -> Nothing
 
 lookupEnum ::
   RemoteSchemaIntrospection ->
   G.Name ->
   Maybe G.EnumTypeDefinition
-lookupEnum (RemoteSchemaIntrospection types) name =
-  choice $
-    types <&> \case
-      G.TypeDefinitionEnum t | G._etdName t == name -> Just t
-      _ -> Nothing
+lookupEnum introspection name =
+  lookupType introspection name >>= \case
+    G.TypeDefinitionEnum t | G._etdName t == name -> Just t
+    _ -> Nothing
 
 lookupInputObject ::
   RemoteSchemaIntrospection ->
   G.Name ->
   Maybe (G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition)
-lookupInputObject (RemoteSchemaIntrospection types) name =
-  choice $
-    types <&> \case
-      G.TypeDefinitionInputObject t | G._iotdName t == name -> Just t
-      _ -> Nothing
+lookupInputObject introspection name =
+  lookupType introspection name >>= \case
+    G.TypeDefinitionInputObject t | G._iotdName t == name -> Just t
+    _ -> Nothing

@@ -1,6 +1,9 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
+-- | Postgres Instances Metadata
+--
+-- Defines a 'Hasura.RQL.Types.Metadata.Backend.BackendMetadata' type class instance for Postgres.
 module Hasura.Backends.Postgres.Instances.Metadata () where
 
 import Data.HashMap.Strict qualified as Map
@@ -12,7 +15,7 @@ import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend)
 import Hasura.RQL.Types.Metadata.Backend
-import Hasura.RQL.Types.Relationship
+import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 

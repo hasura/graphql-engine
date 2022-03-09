@@ -9,11 +9,13 @@ import {
   SupportedFeaturesType,
   FrequentlyUsedColumn,
   ViolationActions,
+  NormalizedTable,
 } from '../../types';
 import {
   generateTableRowRequest,
   operators,
   generateRowsCountRequest,
+  sqlHandleApostrophe,
 } from './utils';
 
 const permissionColumnDataTypes = {
@@ -61,8 +63,7 @@ const supportedColumnOperators = [
   '_lte',
 ];
 
-const isTable = (table: Table) => {
-  if (!table.table_type) return true; // todo
+const isTable = (table: NormalizedTable) => {
   return table.table_type === 'TABLE' || table.table_type === 'BASE TABLE';
 };
 
@@ -170,6 +171,10 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     relationships: {
       enabled: true,
       track: true,
+      remoteDbRelationships: {
+        hostSource: false,
+        referenceSource: false,
+      },
       remoteRelationships: false,
     },
     permissions: {
@@ -216,7 +221,10 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     connectionParameters: false,
     databaseURL: true,
     environmentVariable: true,
-    read_replicas: false,
+    read_replicas: {
+      create: true,
+      edit: true,
+    },
     prepared_statements: false,
     isolation_level: false,
     connectionSettings: true,
@@ -257,8 +265,13 @@ export const mssql: DataSourcesAPI = {
   isColumnAutoIncrement: () => {
     return false;
   },
-  getTableSupportedQueries: () => {
-    // since only subscriptions and queries are supported on MSSQL atm.
+  getTableSupportedQueries: (table: NormalizedTable) => {
+    // all query types are supported for tables
+    if (isTable(table)) {
+      return ['select', 'insert', 'update', 'delete'];
+    }
+
+    // only select permissions for views, until server can verify the other ones
     return ['select'];
   },
   getColumnType: (col: TableColumn) => col.data_type_name ?? col.data_type,
@@ -504,9 +517,10 @@ FROM sys.objects as obj
 
     // add comment to the table using MS_Description property
     if (tableComment && tableComment !== '') {
+      const commentStr = sqlHandleApostrophe(tableComment);
       const commentSQL = `EXEC sys.sp_addextendedproperty   
       @name = N'MS_Description',   
-      @value = N'${tableComment}',   
+      @value = N'${commentStr}',   
       @level0type = N'SCHEMA', @level0name = '${currentSchema}',  
       @level1type = N'TABLE',  @level1name = '${tableName}';`;
       sqlCreateTable += `${commentSQL}`;
@@ -654,31 +668,6 @@ FROM sys.objects as obj
     columnType?: string
   ) => {
     return `ALTER TABLE "${schemaName}"."${tableName}" ALTER COLUMN "${columnName}"  ${columnType} NULL`;
-  },
-  getSetCommentSql: (
-    on: 'column' | 'table' | string,
-    tableName: string,
-    schemaName: string,
-    comment: string | null,
-    columnName?: string
-  ) => {
-    const dropCommonCommentStatement = `IF EXISTS (SELECT NULL FROM SYS.EXTENDED_PROPERTIES WHERE [major_id] = OBJECT_ID('${tableName}') AND [name] = N'${on}_comment_${schemaName}_${tableName}_${columnName}' AND [minor_id] = (SELECT [column_id] FROM SYS.COLUMNS WHERE [name] = '${columnName}' AND [object_id] = OBJECT_ID('${tableName}')))    
-        EXECUTE sp_dropextendedproperty   
-        @name = N'${on}_comment_${schemaName}_${tableName}_${columnName}',   
-        @level0type = N'SCHEMA', @level0name = '${schemaName}'
-    `;
-    const commonCommentStatement = `
-        exec sys.sp_addextendedproperty   
-        @name = N'${on}_comment_${schemaName}_${tableName}_${columnName}',   
-        @value = N'${comment}',   
-        @level0type = N'SCHEMA', @level0name = '${schemaName}'
-    `;
-    if (on === 'column') {
-      return `${dropCommonCommentStatement},@level1type = N'TABLE',  @level1name = '${tableName}',@level2type = N'COLUMN', @level2name = '${columnName}';
-      ${commonCommentStatement},@level1type = N'TABLE',  @level1name = '${tableName}',@level2type = N'COLUMN', @level2name = '${columnName}'`;
-    }
-    // FIXME: Comment on mssql table and function is not implemented yet.
-    return '';
   },
   getSetColumnDefaultSql: (
     tableName: string,
@@ -940,6 +929,7 @@ WHERE
   generateRowsCountRequest,
   // TODO(iyekings): this is a duplicate of schemaList
   schemaListQuery: `
+  -- test_id = schema_list
   SELECT
     s.name AS schema_name
   FROM
@@ -954,4 +944,31 @@ WHERE
   ORDER BY
     s.name
 `,
+  getAlterTableCommentSql: () => {
+    return '';
+  },
+  getAlterColumnCommentSql: ({
+    tableName,
+    schemaName,
+    columnName,
+    comment,
+  }) => {
+    const commentStr = sqlHandleApostrophe(comment);
+    const dropCommonCommentStatement = `IF EXISTS (SELECT NULL FROM SYS.EXTENDED_PROPERTIES WHERE [major_id] = OBJECT_ID('${tableName}') AND [name] = N'column_comment_${schemaName}_${tableName}_${columnName}' AND [minor_id] = (SELECT [column_id] FROM SYS.COLUMNS WHERE [name] = '${columnName}' AND [object_id] = OBJECT_ID('${tableName}')))    
+        EXECUTE sp_dropextendedproperty   
+        @name = N'column_comment_${schemaName}_${tableName}_${columnName}',   
+        @level0type = N'SCHEMA', @level0name = '${schemaName}'
+    `;
+    const commonCommentStatement = `
+        exec sys.sp_addextendedproperty   
+        @name = N'column_comment_${schemaName}_${tableName}_${columnName}',   
+        @value = N'${commentStr}',   
+        @level0type = N'SCHEMA', @level0name = '${schemaName}'
+    `;
+    return `${dropCommonCommentStatement},@level1type = N'TABLE',  @level1name = '${tableName}',@level2type = N'COLUMN', @level2name = '${columnName}';
+    ${commonCommentStatement},@level1type = N'TABLE',  @level1name = '${tableName}',@level2type = N'COLUMN', @level2name = '${columnName}'`;
+  },
+  getAlterFunctionCommentSql: () => {
+    return '';
+  },
 };

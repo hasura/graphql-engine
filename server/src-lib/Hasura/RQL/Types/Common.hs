@@ -1,10 +1,12 @@
 module Hasura.RQL.Types.Common
   ( RelName (..),
     relNameToTxt,
+    fromRemoteRelationship,
     RelType (..),
     relTypeToTxt,
     OID (..),
     FieldName (..),
+    Fields,
     InsertOrder (..),
     ToAesonPairs (..),
     InpValInfo (..),
@@ -42,6 +44,10 @@ module Hasura.RQL.Types.Common
     PGConnectionParams (..),
     getPGConnectionStringFromParams,
     getConnOptionsFromConnParams,
+    Comment (..),
+    commentToMaybeText,
+    commentFromMaybeText,
+    StringifyNumbers (..),
   )
 where
 
@@ -49,6 +55,7 @@ import Control.Lens (makeLenses)
 import Data.Aeson
 import Data.Aeson.Casing
 import Data.Aeson.TH
+import Data.Aeson.Types (prependFailure, typeMismatch)
 import Data.Bifunctor (bimap)
 import Data.Environment qualified as Env
 import Data.Scientific (toBoundedInteger)
@@ -74,6 +81,7 @@ newtype RelName = RelName {getRelTxt :: NonEmptyText}
       Ord,
       Hashable,
       FromJSON,
+      FromJSONKey,
       ToJSON,
       ToJSONKey,
       Q.ToPrepArg,
@@ -89,21 +97,8 @@ instance ToTxt RelName where
 relNameToTxt :: RelName -> Text
 relNameToTxt = unNonEmptyText . getRelTxt
 
-relTypeToTxt :: RelType -> Text
-relTypeToTxt ObjRel = "object"
-relTypeToTxt ArrRel = "array"
-
-data JsonAggSelect
-  = JASMultipleRows
-  | JASSingleObject
-  deriving (Show, Eq, Generic)
-
-instance Hashable JsonAggSelect
-
-instance ToJSON JsonAggSelect where
-  toJSON = \case
-    JASMultipleRows -> "multiple_rows"
-    JASSingleObject -> "single_row"
+fromRemoteRelationship :: RelName -> FieldName
+fromRemoteRelationship = FieldName . relNameToTxt
 
 data RelType
   = ObjRel
@@ -130,6 +125,22 @@ instance Q.FromCol RelType where
       "object" -> Just ObjRel
       "array" -> Just ArrRel
       _ -> Nothing
+
+relTypeToTxt :: RelType -> Text
+relTypeToTxt ObjRel = "object"
+relTypeToTxt ArrRel = "array"
+
+data JsonAggSelect
+  = JASMultipleRows
+  | JASSingleObject
+  deriving (Show, Eq, Generic)
+
+instance Hashable JsonAggSelect
+
+instance ToJSON JsonAggSelect where
+  toJSON = \case
+    JASMultipleRows -> "multiple_rows"
+    JASSingleObject -> "single_row"
 
 data InsertOrder = BeforeParent | AfterParent
   deriving (Show, Eq, Generic)
@@ -176,6 +187,10 @@ newtype FieldName = FieldName {getFieldNameTxt :: Text}
 
 instance ToTxt FieldName where
   toTxt (FieldName c) = c
+
+-- The field name here is the GraphQL alias, i.e, the name with which the field
+-- should appear in the response
+type Fields a = [(FieldName, a)]
 
 class ToAesonPairs a where
   toAesonPairs :: (KeyValue v) => a -> [v]
@@ -229,10 +244,16 @@ isSystemDefined :: SystemDefined -> Bool
 isSystemDefined = unSystemDefined
 
 data SQLGenCtx = SQLGenCtx
-  { stringifyNum :: Bool,
-    dangerousBooleanCollapse :: Bool
+  { stringifyNum :: StringifyNumbers,
+    dangerousBooleanCollapse :: Bool,
+    optimizePermissionFilters :: Bool
   }
   deriving (Show, Eq)
+
+data StringifyNumbers
+  = StringifyNumbers
+  | LeaveNumbersAlone
+  deriving (Eq, Show)
 
 successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"
@@ -481,3 +502,36 @@ $(deriveJSON (aesonPrefix snakeCase) ''MetricsConfig)
 
 emptyMetricsConfig :: MetricsConfig
 emptyMetricsConfig = MetricsConfig False False
+
+data Comment
+  = -- | Automatically generate a comment (derive it from DB comments, or a sensible default describing the source of the data)
+    Automatic
+  | -- | The user's explicitly provided comment, or explicitly no comment (ie. leave it blank, do not autogenerate one)
+    Explicit (Maybe NonEmptyText)
+  deriving (Eq, Show, Generic)
+
+instance NFData Comment
+
+instance Cacheable Comment
+
+instance Hashable Comment
+
+instance FromJSON Comment where
+  parseJSON = \case
+    Null -> pure Automatic
+    String text -> pure . Explicit $ mkNonEmptyText text
+    val -> prependFailure "parsing Comment failed, " (typeMismatch "String or Null" val)
+
+instance ToJSON Comment where
+  toJSON Automatic = Null
+  toJSON (Explicit (Just value)) = String (toTxt value)
+  toJSON (Explicit Nothing) = String ""
+
+commentToMaybeText :: Comment -> Maybe Text
+commentToMaybeText Automatic = Nothing
+commentToMaybeText (Explicit Nothing) = Just ""
+commentToMaybeText (Explicit (Just val)) = Just (toTxt val)
+
+commentFromMaybeText :: Maybe Text -> Comment
+commentFromMaybeText Nothing = Automatic
+commentFromMaybeText (Just val) = Explicit $ mkNonEmptyText val

@@ -104,47 +104,27 @@ insertMetadataInCatalog metadata =
     (Identity $ Q.AltJ metadata)
     True
 
-setMetadataInCatalog :: Maybe MetadataResourceVersion -> Metadata -> Q.TxE QErr MetadataResourceVersion
-setMetadataInCatalog mResourceVersion metadata = case mResourceVersion of
-  -- If a resource version isn't specified update the metadata and bump the version
-  Nothing -> do
-    rows <-
-      Q.withQE
-        defaultTxErrorHandler
-        [Q.sql|
-      INSERT INTO hdb_catalog.hdb_metadata(id, metadata)
-      VALUES (1, $1::json)
-      ON CONFLICT (id) DO UPDATE SET
-        metadata = $1::json,
-        resource_version = hdb_catalog.hdb_metadata.resource_version + 1
-      RETURNING resource_version
-      |]
-        (Identity $ Q.AltJ metadata)
-        True
-
-    case rows of
-      [Identity newResourceVersion] -> pure $ MetadataResourceVersion newResourceVersion
-      _ -> throw500 "error writing to hdb_metadata table"
-
-  -- If a resource version is specified, check that it matches and...
-  --   If so: Update the metadata and bump the version
-  --   If not: Throw a 409 error
-  Just resourceVersion -> do
-    rows <-
-      Q.withQE
-        defaultTxErrorHandler
-        [Q.sql|
-      INSERT INTO hdb_catalog.hdb_metadata(id, metadata)
-      VALUES (1, $1::json)
-      ON CONFLICT (id) DO UPDATE SET
-        metadata = $1::json,
-        resource_version = hdb_catalog.hdb_metadata.resource_version + 1
-        WHERE hdb_catalog.hdb_metadata.resource_version = $2
-      RETURNING resource_version
-      |]
-        (Q.AltJ metadata, getMetadataResourceVersion resourceVersion)
-        True
-    case rows of
-      [] -> throw409 $ "metadata resource version referenced (" <> tshow (getMetadataResourceVersion resourceVersion) <> ") did not match current version"
-      [Identity newResourceVersion] -> pure $ MetadataResourceVersion newResourceVersion
-      _ -> throw500 "multiple rows in hdb_metadata table"
+-- | Check that the specified resource version matches the currently stored one, and...
+--
+-- - If so: Update the metadata and bump the version
+-- - If not: Throw a 409 error
+setMetadataInCatalog :: MetadataResourceVersion -> Metadata -> Q.TxE QErr MetadataResourceVersion
+setMetadataInCatalog resourceVersion metadata = do
+  rows <-
+    Q.withQE
+      defaultTxErrorHandler
+      [Q.sql|
+    INSERT INTO hdb_catalog.hdb_metadata(id, metadata)
+    VALUES (1, $1::json)
+    ON CONFLICT (id) DO UPDATE SET
+      metadata = $1::json,
+      resource_version = hdb_catalog.hdb_metadata.resource_version + 1
+      WHERE hdb_catalog.hdb_metadata.resource_version = $2
+    RETURNING resource_version
+    |]
+      (Q.AltJ metadata, getMetadataResourceVersion resourceVersion)
+      True
+  case rows of
+    [] -> throw409 $ "metadata resource version referenced (" <> tshow (getMetadataResourceVersion resourceVersion) <> ") did not match current version"
+    [Identity newResourceVersion] -> pure $ MetadataResourceVersion newResourceVersion
+    _ -> throw500 "multiple rows in hdb_metadata table"

@@ -95,6 +95,27 @@ func (a *VersionConfig) Filename() string {
 	return "version.yaml"
 }
 
+func (a *VersionConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+	rootFile := filepath.Join(a.BaseDirectory(), a.Filename())
+	files, err := metadataobject.DefaultGetFiles(rootFile)
+	if err != nil {
+		return nil, a.error(err)
+	}
+	return files, nil
+}
+
+func (a *VersionConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: a, WriteDiffOpts: opts})
+	if err != nil {
+		return a.error(err)
+	}
+	return nil
+}
+
+func (a *VersionConfig) BaseDirectory() string {
+	return a.MetadataDir
+}
+
 func (a *VersionConfig) error(err error, additionalContext ...string) metadataobject.ErrParsingMetadataObject {
 	return metadataobject.NewErrParsingMetadataObject(a, err, additionalContext...)
 }

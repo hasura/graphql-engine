@@ -20,19 +20,26 @@ where
 import Control.Lens ((.~), (^.), (^?))
 import Data.Aeson qualified as J
 import Data.Aeson.Ordered qualified as AO
+import Data.Attoparsec.Text qualified as AT
+import Data.Bifunctor (bimap, first)
+import Data.Bitraversable
+import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
+import Data.Environment qualified as Env
 import Data.Has (Has, getter)
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Data.HashSet qualified as HS
 import Data.List qualified as L
 import Data.TByteString qualified as TBS
+import Data.Text qualified as T
+import Data.Text.Encoding qualified as TE
 import Data.Text.Extended ((<<>))
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Logging qualified as HL
 import Hasura.Metadata.Class
-import Hasura.Prelude
+import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ComputedField
 import Hasura.RQL.DDL.CustomTypes
@@ -45,12 +52,15 @@ import Hasura.RQL.DDL.Permission
 import Hasura.RQL.DDL.Relationship
 import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.DDL.RemoteSchema
-import Hasura.RQL.DDL.RequestTransform
 import Hasura.RQL.DDL.ScheduledTrigger
 import Hasura.RQL.DDL.Schema
+import Hasura.RQL.DDL.Webhook.Transform
+import Hasura.RQL.DDL.Webhook.Transform.Class (mkReqTransformCtx)
 import Hasura.RQL.Types
 import Hasura.RQL.Types.Eventing.Backend (BackendEventTrigger (..))
 import Hasura.SQL.AnyBackend qualified as AB
+import Kriti qualified as K
+import Kriti.Error qualified as K
 import Network.HTTP.Client.Transformable qualified as HTTP
 
 runClearMetadata ::
@@ -180,7 +190,7 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
 
   case _rmv2AllowInconsistentMetadata of
     AllowInconsistentMetadata ->
-      buildSchemaCache noMetadataModify
+      buildSchemaCache mempty
     NoAllowInconsistentMetadata ->
       buildSchemaCacheStrict
 
@@ -358,7 +368,12 @@ runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources reloadRecrea
           }
 
   buildSchemaCacheWithOptions (CatalogUpdate $ Just recreateEventTriggersSources) cacheInvalidations metadata
-  pure successMsg
+  inconsObjs <- scInconsistentObjs <$> askSchemaCache
+  pure . encJFromJValue . J.object $
+    [ ("message" :: Text) J..= ("success" :: Text),
+      "is_consistent" J..= null inconsObjs
+    ]
+      <> ["inconsistent_objects" J..= inconsObjs | not (null inconsObjs)]
 
 runDumpInternalState ::
   (QErrM m, CacheRM m) =>
@@ -393,10 +408,10 @@ runDropInconsistentMetadata _ = do
   -- list of inconsistent objects, so reverse the list to start with dependents first. This is not
   -- perfect — a completely accurate solution would require performing a topological sort — but it
   -- seems to work well enough for now.
-  metadataModifier <- execWriterT $ mapM_ (tell . purgeMetadataObj) (reverse inconsSchObjs)
+  MetadataModifier {..} <- execWriterT $ mapM_ (tell . purgeMetadataObj) (reverse inconsSchObjs)
   metadata <- getMetadata
-  putMetadata $ unMetadataModifier metadataModifier metadata
-  buildSchemaCache noMetadataModify
+  putMetadata $ runMetadataModifier metadata
+  buildSchemaCache mempty
   -- after building the schema cache, we need to check the inconsistent metadata, if any
   -- are only those which are not droppable
   newInconsistentObjects <- scInconsistentObjs <$> askSchemaCache
@@ -414,6 +429,8 @@ purgeMetadataObj = \case
   MOSourceObjId source exists -> AB.dispatchAnyBackend @BackendMetadata exists $ handleSourceObj source
   MORemoteSchema rsn -> dropRemoteSchemaInMetadata rsn
   MORemoteSchemaPermissions rsName role -> dropRemoteSchemaPermissionInMetadata rsName role
+  MORemoteSchemaRemoteRelationship rsName typeName relName ->
+    dropRemoteSchemaRemoteRelationshipInMetadata rsName typeName relName
   MOCustomTypes -> clearCustomTypesInMetadata
   MOAction action -> dropActionInMetadata action -- Nothing
   MOActionPermission action role -> dropActionPermissionInMetadata action role
@@ -421,6 +438,7 @@ purgeMetadataObj = \case
   MOEndpoint epName -> dropEndpointInMetadata epName
   MOInheritedRole role -> dropInheritedRoleInMetadata role
   MOHostTlsAllowlist host -> dropHostFromAllowList host
+  MOQueryCollectionsQuery cName lq -> dropListedQueryFromQueryCollections cName lq
   where
     handleSourceObj :: forall b. BackendMetadata b => SourceName -> SourceMetadataObjId b -> MetadataModifier
     handleSourceObj source = \case
@@ -435,6 +453,42 @@ purgeMetadataObj = \case
             MTOTrigger trn -> dropEventTriggerInMetadata trn
             MTOComputedField ccn -> dropComputedFieldInMetadata ccn
             MTORemoteRelationship rn -> dropRemoteRelationshipInMetadata rn
+
+    dropListedQueryFromQueryCollections :: CollectionName -> ListedQuery -> MetadataModifier
+    dropListedQueryFromQueryCollections cName lq = MetadataModifier $ removeAndCleanupMetadata
+      where
+        removeAndCleanupMetadata m =
+          let newQueryCollection = filteredCollection (_metaQueryCollections m)
+              -- QueryCollections = InsOrdHashMap CollectionName CreateCollection
+              filteredCollection :: QueryCollections -> QueryCollections
+              filteredCollection qc = OMap.filter (isNonEmptyCC) $ OMap.adjust (collectionModifier) (cName) qc
+
+              collectionModifier :: CreateCollection -> CreateCollection
+              collectionModifier cc@CreateCollection {..} =
+                cc
+                  { _ccDefinition =
+                      let oldQueries = _cdQueries _ccDefinition
+                       in _ccDefinition
+                            { _cdQueries = filter (/= lq) oldQueries
+                            }
+                  }
+
+              isNonEmptyCC :: CreateCollection -> Bool
+              isNonEmptyCC = not . null . _cdQueries . _ccDefinition
+
+              cleanupAllowList :: MetadataAllowlist -> MetadataAllowlist
+              cleanupAllowList = OMap.filterWithKey (\_ _ -> OMap.member cName newQueryCollection)
+
+              cleanupRESTEndpoints :: Endpoints -> Endpoints
+              cleanupRESTEndpoints endpoints = OMap.filter (not . isFaultyQuery . _edQuery . _ceDefinition) endpoints
+
+              isFaultyQuery :: QueryReference -> Bool
+              isFaultyQuery QueryReference {..} = _qrCollectionName == cName && _qrQueryName == (_lqName lq)
+           in m
+                { _metaQueryCollections = newQueryCollection,
+                  _metaAllowlist = cleanupAllowList (_metaAllowlist m),
+                  _metaRestEndpoints = cleanupRESTEndpoints (_metaRestEndpoints m)
+                }
 
 runGetCatalogState ::
   (MonadMetadataStorageQueryAPI m) => GetCatalogState -> m EncJSON
@@ -468,35 +522,88 @@ runRemoveMetricsConfig = do
         metaMetricsConfig .~ emptyMetricsConfig
   pure successMsg
 
+data TestTransformError
+  = UrlInterpError K.SerializedError
+  | RequestInitializationError HTTP.HttpException
+  | RequestTransformationError HTTP.Request TransformErrorBundle
+
 runTestWebhookTransform ::
-  forall m.
-  ( QErrM m,
-    MonadIO m
-  ) =>
+  (QErrM m) =>
   TestWebhookTransform ->
   m EncJSON
-runTestWebhookTransform (TestWebhookTransform url payload mt sv) = do
-  initReq <- liftIO $ HTTP.mkRequestThrow url
-  let req = initReq & HTTP.body .~ pure (J.encode payload)
-      dataTransform = mkRequestTransform mt
-      transformedE = applyRequestTransform url dataTransform req sv
+runTestWebhookTransform (TestWebhookTransform env headers urlE payload rt _ sv) = do
+  url <- case urlE of
+    URL url' -> interpolateFromEnv env url'
+    EnvVar var ->
+      let err = throwError $ err400 NotFound "Missing Env Var"
+       in maybe err (pure . T.pack) $ Env.lookupEnv env var
 
-  case transformedE of
+  headers' <- traverse (traverse (fmap TE.encodeUtf8 . interpolateFromEnv env . TE.decodeUtf8)) headers
+
+  result <- runExceptT $ do
+    let env' = bimap T.pack (J.String . T.pack) <$> Env.toList env
+        decodeKritiResult = TE.decodeUtf8 . BL.toStrict . J.encode
+
+    kritiUrlResult <- hoistEither $ first (UrlInterpError . K.serialize) $ decodeKritiResult <$> K.runKriti ("\"" <> url <> "\"") env'
+
+    let unwrappedUrl = T.drop 1 $ T.dropEnd 1 kritiUrlResult
+    initReq <- hoistEither $ first RequestInitializationError $ HTTP.mkRequestEither unwrappedUrl
+
+    let req = initReq & HTTP.body .~ pure (J.encode payload) & HTTP.headers .~ headers'
+        reqTransform = requestFields rt
+        engine = templateEngine rt
+        reqTransformCtx = mkReqTransformCtx unwrappedUrl sv engine
+    hoistEither $ first (RequestTransformationError req) $ applyRequestTransform reqTransformCtx reqTransform req
+
+  case result of
     Right transformed ->
-      pure $
-        encJFromJValue $
-          J.object
-            [ "webhook_url" J..= (transformed ^. HTTP.url),
-              "method" J..= (transformed ^. HTTP.method),
-              "headers" J..= (first CI.foldedCase <$> (transformed ^. HTTP.headers)),
-              "body" J..= (J.decode @J.Value =<< (transformed ^. HTTP.body))
-            ]
-    Left err ->
-      pure $
-        encJFromJValue $
-          J.object
-            [ "webhook_url" J..= (req ^. HTTP.url),
-              "method" J..= (req ^. HTTP.method),
-              "headers" J..= (first CI.foldedCase <$> (req ^. HTTP.headers)),
-              "body" J..= J.toJSON err
-            ]
+      let body = decodeBody (transformed ^. HTTP.body)
+       in pure $ packTransformResult transformed body
+    Left (RequestTransformationError req err) -> pure $ packTransformResult req (J.toJSON err)
+    -- NOTE: In the following two cases we have failed before producing a valid request.
+    Left (UrlInterpError err) -> pure $ encJFromJValue $ J.toJSON err
+    Left (RequestInitializationError err) -> pure $ encJFromJValue $ J.String $ "Error: " <> tshow err
+
+interpolateFromEnv :: MonadError QErr m => Env.Environment -> Text -> m Text
+interpolateFromEnv env url =
+  case AT.parseOnly parseEnvTemplate url of
+    Left _ -> throwError $ err400 ParseFailed "Invalid Url Template"
+    Right xs ->
+      let lookup' var = maybe (Left var) (Right . T.pack) $ Env.lookupEnv env (T.unpack var)
+          result = traverse (fmap indistinct . bitraverse lookup' pure) xs
+          err e = throwError $ err400 NotFound $ "Missing Env Var: " <> e
+       in either err (pure . fold) result
+
+decodeBody :: Maybe BL.ByteString -> J.Value
+decodeBody Nothing = J.Null
+decodeBody (Just bs) = fromMaybe J.Null $ jsonToValue bs <|> formUrlEncodedToValue bs
+
+-- | Attempt to encode a 'ByteString' as an Aeson 'Value'
+jsonToValue :: BL.ByteString -> Maybe J.Value
+jsonToValue bs = J.decode bs
+
+-- | Quote a 'ByteString' then attempt to encode it as a JSON
+-- String. This is necessary for 'x-www-url-formencoded' bodies. They
+-- are a list of key/value pairs encoded as a raw 'ByteString' with no
+-- quoting whereas JSON Strings must be quoted.
+formUrlEncodedToValue :: BL.ByteString -> Maybe J.Value
+formUrlEncodedToValue bs = J.decode ("\"" <> bs <> "\"")
+
+parseEnvTemplate :: AT.Parser [Either T.Text T.Text]
+parseEnvTemplate = AT.many1 $ pEnv <|> pLit <|> fmap Right "{"
+  where
+    pEnv = fmap (Left) $ "{{" *> AT.takeWhile1 (/= '}') <* "}}"
+    pLit = fmap Right $ AT.takeWhile1 (/= '{')
+
+indistinct :: Either a a -> a
+indistinct = either id id
+
+packTransformResult :: HTTP.Request -> J.Value -> EncJSON
+packTransformResult req body =
+  encJFromJValue $
+    J.object
+      [ "webhook_url" J..= (req ^. HTTP.url),
+        "method" J..= (req ^. HTTP.method),
+        "headers" J..= (first CI.foldedCase <$> (req ^. HTTP.headers)),
+        "body" J..= body
+      ]

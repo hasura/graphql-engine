@@ -8,6 +8,9 @@ args:
   args:
     name: create_user_transformed
     clear_data: true
+- type: drop_action
+  args:
+    name: create_user_nested
 # clear custom types
 - type: set_custom_types
   args: {}

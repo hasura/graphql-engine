@@ -1,5 +1,5 @@
 import { RequestTransform, RequestTransformMethod } from '@/metadata/types';
-import { getLSItem, LS_KEYS } from '@/utils/localStorage';
+import { getLSItem, setLSItem, LS_KEYS } from '@/utils/localStorage';
 import {
   defaultRequestContentType,
   GraphiQlHeader,
@@ -34,6 +34,52 @@ export const addPlaceholderValue = (pairs: KeyValuePair[]) => {
   return pairs;
 };
 
+const getSessionVarsArrayFromGraphiQL = () => {
+  const lsHeadersString =
+    getLSItem(LS_KEYS.apiExplorerConsoleGraphQLHeaders) ?? '';
+  const headers: GraphiQlHeader[] = isJsonString(lsHeadersString)
+    ? JSON.parse(lsHeadersString)
+    : [];
+  let sessionVars: KeyValuePair[] = [];
+  if (Array.isArray(headers)) {
+    sessionVars = headers
+      .filter(
+        (header: GraphiQlHeader) =>
+          header.isActive && header.key?.toLowerCase().startsWith('x-hasura')
+      )
+      .map((header: GraphiQlHeader) => ({
+        name: header.key?.toLowerCase(),
+        value: header.value,
+      }));
+  }
+  return sessionVars;
+};
+
+const getEnvVarsArrayFromLS = () => {
+  const lsEnvString = getLSItem(LS_KEYS.webhookTransformEnvVars) ?? '';
+  const envVars: KeyValuePair[] = isJsonString(lsEnvString)
+    ? JSON.parse(lsEnvString)
+    : [];
+  return envVars;
+};
+
+export const getSessionVarsFromLS = () =>
+  isEmpty(getSessionVarsArrayFromGraphiQL())
+    ? [{ name: '', value: '' }]
+    : [...getSessionVarsArrayFromGraphiQL(), { name: '', value: '' }];
+
+export const getEnvVarsFromLS = () =>
+  isEmpty(getEnvVarsArrayFromLS())
+    ? [{ name: '', value: '' }]
+    : [...getEnvVarsArrayFromLS(), { name: '', value: '' }];
+
+export const setEnvVarsToLS = (envVars: KeyValuePair[]) => {
+  const validEnvVars = envVars.filter(
+    e => !isEmpty(e.name) && !isEmpty(e.value)
+  );
+  setLSItem(`${LS_KEYS.webhookTransformEnvVars}`, JSON.stringify(validEnvVars));
+};
+
 export const getArrayFromServerPairObject = (
   pairs: Nullable<Record<string, string>>
 ): KeyValuePair[] => {
@@ -60,10 +106,12 @@ export const getRequestTransformObject = (
 ) => {
   const isRequestUrlTransform = transformState.isRequestUrlTransform;
   const isRequestPayloadTransform = transformState.isRequestPayloadTransform;
+  const enableRequestBody = transformState.enableRequestBody;
 
   if (!isRequestUrlTransform && !isRequestPayloadTransform) return null;
 
   let obj: RequestTransform = {
+    version: 2,
     template_engine: transformState.templatingEngine,
   };
 
@@ -74,12 +122,27 @@ export const getRequestTransformObject = (
       url: getUrlWithBasePrefix(transformState.requestUrl),
       query_params: getPairsObjFromArray(transformState.requestQueryParams),
     };
+    if (transformState.requestMethod === 'GET') {
+      obj = {
+        ...obj,
+        request_headers: {
+          remove_headers: ['content-type'],
+        },
+      };
+    }
   }
 
   if (isRequestPayloadTransform) {
     obj = {
       ...obj,
-      body: checkEmptyString(transformState.requestBody),
+      body: enableRequestBody
+        ? {
+            action: 'transform',
+            template: checkEmptyString(transformState.requestBody),
+          }
+        : {
+            action: 'remove',
+          },
       content_type: transformState.requestContentType,
     };
   }
@@ -132,40 +195,73 @@ export const parseValidateApiData = (
   }
 };
 
-type RequestTransformer = {
-  body?: string;
+// fields for `request_transform` key in `test_webhook_transform` api
+type RequestTransformerFields = {
   url?: string;
   method?: Nullable<RequestTransformMethod>;
   query_params?: Record<string, string>;
   template_engine?: string;
 };
 
+type RequestTransformerV1 = RequestTransformerFields & {
+  version: 1;
+  body?: string;
+};
+
+type RequestTransformerV2 = RequestTransformerFields & {
+  version: 2;
+  body?: Record<string, string>;
+};
+
+type RequestTransformer = RequestTransformerV1 | RequestTransformerV2;
+
 const getTransformer = (
+  version: 1 | 2,
   transformerBody?: string,
   transformerUrl?: string,
   requestMethod?: Nullable<RequestTransformMethod>,
   queryParams?: KeyValuePair[]
 ): RequestTransformer => {
-  return {
-    body: checkEmptyString(transformerBody),
-    url: checkEmptyString(transformerUrl),
-    method: requestMethod,
-    query_params: queryParams ? getPairsObjFromArray(queryParams) : undefined,
-    template_engine: 'Kriti',
-  };
+  return version === 1
+    ? {
+        version,
+        body: checkEmptyString(transformerBody),
+        url: checkEmptyString(transformerUrl),
+        method: requestMethod,
+        query_params: queryParams
+          ? getPairsObjFromArray(queryParams)
+          : undefined,
+        template_engine: 'Kriti',
+      }
+    : {
+        version,
+        body: {
+          action: 'transform',
+          template: checkEmptyString(transformerBody) ?? '{}',
+        },
+        url: checkEmptyString(transformerUrl),
+        method: requestMethod,
+        query_params: queryParams
+          ? getPairsObjFromArray(queryParams)
+          : undefined,
+        template_engine: 'Kriti',
+      };
 };
 
 const generateValidateTransformQuery = (
   transformer: RequestTransformer,
   requestPayload: Nullable<Record<string, any>> = null,
   webhookUrl: string,
-  sessionVars?: KeyValuePair[]
+  sessionVars?: KeyValuePair[],
+  isEnvVar?: boolean,
+  envVars?: KeyValuePair[]
 ) => {
   return {
     type: 'test_webhook_transform',
     args: {
-      webhook_url: webhookUrl,
+      webhook_url: isEnvVar ? { from_env: webhookUrl } : webhookUrl,
       body: requestPayload,
+      env: envVars ? getPairsObjFromArray(envVars) : undefined,
       session_variables: sessionVars
         ? getPairsObjFromArray(sessionVars)
         : undefined,
@@ -174,36 +270,31 @@ const generateValidateTransformQuery = (
   };
 };
 
-const getSessionVarsArray = () => {
-  const lsHeadersString =
-    getLSItem(LS_KEYS.apiExplorerConsoleGraphQLHeaders) ?? '';
-  const headers: GraphiQlHeader[] = isJsonString(lsHeadersString)
-    ? JSON.parse(lsHeadersString)
-    : [];
-  let sessionVars: KeyValuePair[] = [];
-  if (Array.isArray(headers)) {
-    sessionVars = headers
-      .filter(
-        (header: GraphiQlHeader) =>
-          header.isActive && header.key.toLowerCase().startsWith('x-hasura')
-      )
-      .map((header: GraphiQlHeader) => ({
-        name: header.key,
-        value: header.value,
-      }));
-  }
-  return sessionVars;
+type ValidateTransformOptionsArgsType = {
+  version: 1 | 2;
+  inputPayloadString: string;
+  webhookUrl: string;
+  envVarsFromContext?: KeyValuePair[];
+  sessionVarsFromContext?: KeyValuePair[];
+  transformerBody?: string;
+  requestUrl?: string;
+  queryParams?: KeyValuePair[];
+  isEnvVar?: boolean;
+  requestMethod?: Nullable<RequestTransformMethod>;
 };
 
-export const getValidateTransformOptions = (
-  inputPayloadString: string,
-  webhookUrl: string,
-  transformerBody?: string,
-  requestUrl?: string,
-  queryParams?: KeyValuePair[],
-  requestMethod?: Nullable<RequestTransformMethod>
-) => {
-  const sessionVars = getSessionVarsArray();
+export const getValidateTransformOptions = ({
+  version,
+  inputPayloadString,
+  webhookUrl,
+  envVarsFromContext,
+  sessionVarsFromContext,
+  transformerBody,
+  requestUrl,
+  queryParams,
+  isEnvVar,
+  requestMethod,
+}: ValidateTransformOptionsArgsType) => {
   const requestPayload = isJsonString(inputPayloadString)
     ? JSON.parse(inputPayloadString)
     : null;
@@ -212,10 +303,18 @@ export const getValidateTransformOptions = (
     : `{{$base_url}}`;
 
   const finalReqBody = generateValidateTransformQuery(
-    getTransformer(transformerBody, transformerUrl, requestMethod, queryParams),
+    getTransformer(
+      version,
+      transformerBody,
+      transformerUrl,
+      requestMethod,
+      queryParams
+    ),
     requestPayload,
     webhookUrl,
-    sessionVars
+    sessionVarsFromContext,
+    isEnvVar,
+    envVarsFromContext
   );
 
   const options: RequestInit = {
@@ -289,7 +388,10 @@ const getTrimmedRequestUrl = (val: string) => {
 export const getTransformState = (
   transform: RequestTransform,
   sampleInput: string
-) => ({
+): RequestTransformState => ({
+  version: transform?.version,
+  envVars: getEnvVarsFromLS(),
+  sessionVars: getSessionVarsFromLS(),
   requestMethod: transform?.method ?? null,
   requestUrl: transform?.url ? getTrimmedRequestUrl(transform?.url) : '',
   requestUrlError: '',
@@ -298,12 +400,17 @@ export const getTransformState = (
     { name: '', value: '' },
   ],
   requestAddHeaders: getArrayFromServerPairObject(
-    transform?.request_headers?.addHeaders
+    transform?.request_headers?.add_headers
   ) ?? [{ name: '', value: '' }],
-  requestBody: transform?.body ?? '',
+  requestBody:
+    transform?.version === 1
+      ? transform?.body ?? ''
+      : transform?.body?.template ?? '',
   requestBodyError: '',
   requestSampleInput: sampleInput,
   requestTransformedBody: '',
+  enableRequestBody:
+    transform?.version === 2 ? transform?.body?.action === 'transform' : true,
   requestContentType: transform?.content_type ?? defaultRequestContentType,
   isRequestUrlTransform:
     !!transform?.method ||

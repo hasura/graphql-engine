@@ -1,4 +1,7 @@
--- | Planning T-SQL queries and subscriptions.
+-- | MSSQL Plan
+--
+-- Planning T-SQL queries and subscription by translating IR to MSSQL-specific
+-- SQL query types.
 module Hasura.Backends.MSSQL.Plan
   ( PrepareState (..),
     planQuery,
@@ -43,7 +46,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 planQuery ::
   MonadError QErr m =>
   SessionVariables ->
-  QueryDB 'MSSQL (Const Void) (GraphQL.UnpreparedValue 'MSSQL) ->
+  QueryDB 'MSSQL Void (GraphQL.UnpreparedValue 'MSSQL) ->
   m Select
 planQuery sessionVariables queryDB = do
   rootField <- traverse (prepareValueQuery sessionVariables) queryDB
@@ -73,16 +76,17 @@ prepareValueQuery sessionVariables =
           `onNothing` throw400 NotFound ("missing session variable: " <>> sessionVariable)
       -- See https://github.com/fpco/odbc/pull/34#issuecomment-812223147
       -- We first cast to nvarchar(max) because casting from ntext is not supported
-      CastExpression (CastExpression (ValueExpression $ ODBC.TextValue value) "nvarchar(max)")
+      CastExpression (CastExpression (ValueExpression $ ODBC.TextValue value) WvarcharType DataLengthMax)
         <$> case typ of
           CollectableTypeScalar baseTy ->
-            pure (scalarTypeDBName baseTy)
+            pure baseTy
           CollectableTypeArray {} ->
             throw400 NotSupported "Array types are currently not supported in MS SQL Server"
+        <*> pure DataLengthMax
 
 planSubscription ::
   MonadError QErr m =>
-  OMap.InsOrdHashMap G.Name (QueryDB 'MSSQL (Const Void) (GraphQL.UnpreparedValue 'MSSQL)) ->
+  OMap.InsOrdHashMap G.Name (QueryDB 'MSSQL Void (GraphQL.UnpreparedValue 'MSSQL)) ->
   SessionVariables ->
   m (Reselect, PrepareState)
 planSubscription unpreparedMap sessionVariables = do

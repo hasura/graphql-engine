@@ -3,6 +3,7 @@ module Data.TByteString
     fromText,
     fromBS,
     fromLBS,
+    toLBS,
   )
 where
 
@@ -42,3 +43,16 @@ fromBS bs =
 fromLBS :: BL.ByteString -> TByteString
 fromLBS =
   fromBS . BL.toStrict
+
+toBS :: TByteString -> Maybe B.ByteString
+toBS (TByteString (p, txt)) =
+  case p of
+    -- Text is encoded in Base64
+    True -> case B64.decode $ TE.encodeUtf8 txt of
+      Left _ -> Nothing
+      Right bs -> Just bs
+    -- Text is not encoded in Base64
+    False -> Just $ TE.encodeUtf8 txt
+
+toLBS :: TByteString -> Maybe BL.ByteString
+toLBS = fmap BL.fromStrict . toBS

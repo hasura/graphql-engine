@@ -7,6 +7,7 @@ module Hasura.Backends.BigQuery.Execute
   ( executeSelect,
     runExecute,
     streamBigQuery,
+    executeBigQuery,
     BigQuery (..),
     OutputValue (..),
     RecordSet (..),
@@ -31,6 +32,9 @@ import Data.Maybe
 import Data.Text qualified as T
 import Data.Text.Lazy qualified as LT
 import Data.Text.Lazy.Builder qualified as LT
+import Data.Text.Read qualified as TR
+import Data.Time
+import Data.Time.Format.ISO8601 (iso8601Show)
 import Data.Vector (Vector)
 import Data.Vector qualified as V
 import GHC.Generics
@@ -101,7 +105,7 @@ instance Aeson.ToJSON OutputValue where
     RecordOutputValue !record -> Aeson.toJSON record
 
 data ExecuteReader = ExecuteReader
-  { credentials :: !BigQuerySourceConfig
+  { sourceConfig :: !BigQuerySourceConfig
   }
 
 data ExecuteProblem
@@ -148,8 +152,7 @@ data BigQueryType
 
 data BigQuery = BigQuery
   { query :: !LT.Text,
-    parameters :: !(InsOrdHashMap ParameterName Parameter),
-    cardinality :: BigQuery.Cardinality
+    parameters :: !(InsOrdHashMap ParameterName Parameter)
   }
   deriving (Show)
 
@@ -211,20 +214,20 @@ runExecute ::
   BigQuerySourceConfig ->
   Execute RecordSet ->
   m (Either ExecuteProblem RecordSet)
-runExecute credentials m =
+runExecute sourceConfig m =
   liftIO
     ( runExceptT
         ( runReaderT
             (unExecute (m >>= getFinalRecordSet))
-            (ExecuteReader {credentials})
+            (ExecuteReader {sourceConfig})
         )
     )
 
 executeSelect :: Select -> Execute RecordSet
 executeSelect select = do
-  credentials <- asks credentials
+  conn <- asks (_scConnection . sourceConfig)
   recordSet <-
-    streamBigQuery credentials (selectToBigQuery select) >>= liftEither
+    streamBigQuery conn (selectToBigQuery select) >>= liftEither
   pure recordSet {wantedFields = selectFinalWantedFields select}
 
 -- | This is needed to strip out unneeded fields (join keys) in the
@@ -263,8 +266,7 @@ selectToBigQuery select =
                   )
               )
               (OMap.toList params)
-          ),
-      cardinality = selectCardinality select
+          )
     }
   where
     (query, params) =
@@ -348,14 +350,14 @@ valueToBigQueryJson = go
 -- response. Until that test has been done, we should consider this a
 -- preliminary implementation.
 streamBigQuery ::
-  MonadIO m => BigQuerySourceConfig -> BigQuery -> m (Either ExecuteProblem RecordSet)
-streamBigQuery credentials bigquery = do
-  jobResult <- createQueryJob credentials bigquery
+  MonadIO m => BigQueryConnection -> BigQuery -> m (Either ExecuteProblem RecordSet)
+streamBigQuery conn bigquery = do
+  jobResult <- createQueryJob conn bigquery
   case jobResult of
     Right job -> loop Nothing Nothing
       where
         loop pageToken mrecordSet = do
-          results <- getJobResults credentials job Fetch {pageToken}
+          results <- getJobResults conn job Fetch {pageToken}
           case results of
             Left problem -> pure (Left problem)
             Right
@@ -377,6 +379,23 @@ streamBigQuery credentials bigquery = do
             Right JobIncomplete {} -> do
               liftIO (threadDelay (1000 * 1000 * streamDelaySeconds))
               loop pageToken mrecordSet
+    Left e -> pure (Left e)
+
+-- | Execute a query without expecting any output (e.g. CREATE TABLE or INSERT)
+executeBigQuery :: MonadIO m => BigQueryConnection -> BigQuery -> m (Either ExecuteProblem ())
+executeBigQuery conn bigquery = do
+  jobResult <- createQueryJob conn bigquery
+  case jobResult of
+    Right job -> loop Nothing
+      where
+        loop mrecordSet = do
+          results <- getJobResults conn job Fetch {pageToken = Nothing}
+          case results of
+            Left problem -> pure (Left problem)
+            Right (JobComplete _) -> pure (Right ())
+            Right JobIncomplete {} -> do
+              liftIO (threadDelay (1000 * 1000 * streamDelaySeconds))
+              loop mrecordSet
     Left e -> pure (Left e)
 
 --------------------------------------------------------------------------------
@@ -434,20 +453,20 @@ data Fetch = Fetch
 -- | Get results of a job.
 getJobResults ::
   MonadIO m =>
-  BigQuerySourceConfig ->
+  BigQueryConnection ->
   Job ->
   Fetch ->
   m (Either ExecuteProblem JobResultsResponse)
-getJobResults sc@BigQuerySourceConfig {..} Job {jobId, location} Fetch {pageToken} =
+getJobResults conn Job {jobId, location} Fetch {pageToken} =
   liftIO (catchAny run (pure . Left . GetJobResultsProblem))
   where
     -- https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/get#query-parameters
     url =
       "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
-        <> T.unpack _scProjectId
+        <> T.unpack (_bqProjectId conn)
         <> "/queries/"
         <> T.unpack jobId
-        <> "?alt=json"
+        <> "?alt=json&prettyPrint=false"
         <> "&location="
         <> T.unpack location
         <> "&"
@@ -456,7 +475,7 @@ getJobResults sc@BigQuerySourceConfig {..} Job {jobId, location} Fetch {pageToke
       let req =
             setRequestHeader "Content-Type" ["application/json"] $
               parseRequest_ url
-      eResp <- runBigQuery sc req
+      eResp <- runBigQuery conn req
       case eResp of
         Left e -> pure (Left (ExecuteRunBigQueryProblem e))
         Right resp ->
@@ -505,8 +524,8 @@ instance Aeson.FromJSON Job where
       )
 
 -- | Create a job asynchronously.
-createQueryJob :: MonadIO m => BigQuerySourceConfig -> BigQuery -> m (Either ExecuteProblem Job)
-createQueryJob sc@BigQuerySourceConfig {..} BigQuery {..} =
+createQueryJob :: MonadIO m => BigQueryConnection -> BigQuery -> m (Either ExecuteProblem Job)
+createQueryJob conn BigQuery {..} =
   liftIO
     ( do
         -- putStrLn (LT.unpack query)
@@ -516,13 +535,13 @@ createQueryJob sc@BigQuerySourceConfig {..} BigQuery {..} =
     run = do
       let url =
             "POST https://content-bigquery.googleapis.com/bigquery/v2/projects/"
-              <> T.unpack _scProjectId
-              <> "/jobs?alt=json"
+              <> T.unpack (_bqProjectId conn)
+              <> "/jobs?alt=json&prettyPrint=false"
       let req =
             setRequestHeader "Content-Type" ["application/json"] $
               setRequestBodyLBS body $
                 parseRequest_ url
-      eResp <- runBigQuery sc req
+      eResp <- runBigQuery conn req
       case eResp of
         Left e -> pure (Left (ExecuteRunBigQueryProblem e))
         Right resp ->
@@ -630,7 +649,7 @@ parseBigQueryValue isNullable fieldType object =
       has_v isNullable (fmap DatetimeOutputValue . Aeson.parseJSON) object
         Aeson.<?> Aeson.Key "DATETIME"
     FieldTIMESTAMP ->
-      has_v isNullable (fmap (TimestampOutputValue . Timestamp . utctimeToISO8601Text) . Aeson.withText "FieldTIMESTAMP" textToUTCTime) object
+      has_v isNullable (fmap TimestampOutputValue . parseTimestamp) object
         Aeson.<?> Aeson.Key "TIMESTAMP"
     FieldGEOGRAPHY ->
       has_v isNullable (fmap GeographyOutputValue . Aeson.parseJSON) object
@@ -647,6 +666,20 @@ parseBigQueryValue isNullable fieldType object =
     FieldBYTES ->
       has_v isNullable (fmap BytesOutputValue . Aeson.parseJSON) object
         Aeson.<?> Aeson.Key "BYTES"
+
+-- | Parse upstream timestamp value in epoch milliseconds and convert it to calendar date time format
+-- https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#timestamp_type
+parseTimestamp :: Aeson.Value -> Aeson.Parser Timestamp
+parseTimestamp =
+  fmap (Timestamp . utctimeToISO8601Text) . Aeson.withText "FieldTIMESTAMP" textToUTCTime
+  where
+    textToUTCTime :: Text -> Aeson.Parser UTCTime
+    textToUTCTime =
+      either fail (pure . flip addUTCTime (UTCTime (fromGregorian 1970 0 0) 0) . fst)
+        . (TR.rational :: TR.Reader NominalDiffTime)
+
+    utctimeToISO8601Text :: UTCTime -> Text
+    utctimeToISO8601Text = T.pack . iso8601Show
 
 parseBigQueryField :: BigQueryField -> Aeson.Value -> Aeson.Parser (FieldNameText, OutputValue)
 parseBigQueryField BigQueryField {name, typ, mode} value1 =

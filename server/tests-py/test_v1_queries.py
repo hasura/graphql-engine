@@ -552,31 +552,6 @@ class TestRunSQL:
     def dir(cls):
         return "queries/v1/run_sql"
 
-@pytest.mark.parametrize("backend", ['mssql'])
-@usefixtures('per_class_tests_db_state')
-class TestRunSQLMssql:
-    @classmethod
-    def dir(cls):
-        return "queries/v1/run_sql"
-
-    def test_select_query(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/sql_select_query_mssql.yaml')
-
-    def test_drop_table(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/sql_drop_table_mssql.yaml')
-
-    def test_rename_table(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/sql_rename_table_mssql.yaml')
-
-    def test_drop_column(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/sql_drop_column_mssql.yaml')
-
-    def test_add_column(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/sql_add_column_mssql.yaml')
-
-    def test_rename_column(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/sql_rename_column_mssql.yaml')
-
 @usefixtures('per_method_tests_db_state')
 class TestRelationships:
 

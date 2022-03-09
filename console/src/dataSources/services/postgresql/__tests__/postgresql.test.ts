@@ -31,6 +31,52 @@ describe('postgresql datasource tests', () => {
     });
   });
 
+  describe('getAlterTableCommentSql', () => {
+    const { getAlterTableCommentSql } = postgres;
+    it('should generate SQL for modifying table comment', () => {
+      const query = getAlterTableCommentSql({
+        tableName: 'users',
+        schemaName: 'public',
+        comment: "user's comment",
+      });
+      expect(query).toContain('comment on table');
+      expect(query).toContain('"public"."users"');
+      expect(query).toContain("E'user\\'s comment'");
+      expect(query).toMatchSnapshot();
+    });
+  });
+
+  describe('getAlterColumnCommentSql', () => {
+    const { getAlterColumnCommentSql } = postgres;
+    it('should generate SQL for modifying column comment', () => {
+      const query = getAlterColumnCommentSql({
+        tableName: 'users',
+        schemaName: 'public',
+        columnName: 'id',
+        comment: "user's comment",
+      });
+      expect(query).toContain('comment on column');
+      expect(query).toContain('"public"."users"."id"');
+      expect(query).toContain("E'user\\'s comment'");
+      expect(query).toMatchSnapshot();
+    });
+  });
+
+  describe('getAlterFunctionCommentSql', () => {
+    const { getAlterFunctionCommentSql } = postgres;
+    it('should generate SQL for modifying function comment', () => {
+      const query = getAlterFunctionCommentSql({
+        functionName: 'users',
+        schemaName: 'public',
+        comment: "user's comment",
+      });
+      expect(query).toContain('comment on function');
+      expect(query).toContain('"public"."users"');
+      expect(query).toContain("E'user\\'s comment'");
+      expect(query).toMatchSnapshot();
+    });
+  });
+
   describe('getCreateIndexSQL', () => {
     const { createIndexSql } = postgres;
     it('generates proper SQL for column names containing no spaces', () => {

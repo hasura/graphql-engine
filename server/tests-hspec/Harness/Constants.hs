@@ -20,26 +20,56 @@ module Harness.Constants
     mysqlHost,
     mysqlPort,
     mysqlConnectInfo,
+    sqlserverLivenessCheckAttempts,
+    sqlserverLivenessCheckIntervalSeconds,
+    sqlserverLivenessCheckIntervalMicroseconds,
+    sqlserverConnectInfo,
+    sqlserverDb,
+    bigqueryServiceAccountFileVar,
+    bigqueryServiceAccountVar,
+    bigqueryProjectIdVar,
+    bigqueryDataset,
     httpHealthCheckAttempts,
     httpHealthCheckIntervalSeconds,
     httpHealthCheckIntervalMicroseconds,
+    citusConnectionString,
+    citusDb,
     serveOptions,
-    debugMessagesEnabled,
   )
 where
 
+-------------------------------------------------------------------------------
+
 import Data.HashSet qualified as Set
-import Data.Word
+import Data.Word (Word16)
 import Database.MySQL.Simple qualified as Mysql
 import Database.PG.Query qualified as Q
 import Hasura.GraphQL.Execute.LiveQuery.Options qualified as LQ
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types
-import Hasura.Server.Cors
+  ( FunctionPermissionsCtx (FunctionPermissionsInferred),
+    RemoteSchemaPermsCtx (RemoteSchemaPermsDisabled),
+  )
+import Hasura.RQL.Types.Common (StringifyNumbers (..))
+import Hasura.Server.Cors (CorsConfig (CCAllowAll))
 import Hasura.Server.Init
+  ( API (CONFIG, DEVELOPER, GRAPHQL, METADATA),
+    OptionalInterval (..),
+    ResponseInternalErrorsConfig (..),
+    ServeOptions (..),
+  )
+import Hasura.Server.Init qualified as Init
 import Hasura.Server.Types
+  ( EventingMode (EventingEnabled),
+    MaintenanceMode (MaintenanceModeDisabled),
+    ReadOnlyMode (ReadOnlyModeDisabled),
+  )
 import Network.WebSockets qualified as WS
+
+-------------------------------------------------------------------------------
+
+-- * Postgres
 
 postgresPassword :: String
 postgresPassword = "hasura"
@@ -69,11 +99,60 @@ postgresqlConnectionString =
     ++ "/"
     ++ postgresDb
 
+-- * Citus
+
+citusPassword :: String
+citusPassword = "hasura"
+
+citusUser :: String
+citusUser = "hasura"
+
+citusDb :: String
+citusDb = "hasura"
+
+citusHost :: String
+citusHost = "127.0.0.1"
+
+citusPort :: Word16
+citusPort = 65004
+
+citusConnectionString :: String
+citusConnectionString =
+  "postgres://"
+    ++ citusUser
+    ++ ":"
+    ++ citusPassword
+    ++ "@"
+    ++ citusHost
+    ++ ":"
+    ++ show citusPort
+    ++ "/"
+    ++ citusDb
+
+-- * Liveness
+
 postgresLivenessCheckAttempts :: Int
 postgresLivenessCheckAttempts = 5
 
 postgresLivenessCheckIntervalSeconds :: Int
 postgresLivenessCheckIntervalSeconds = 1
+
+sqlserverLivenessCheckAttempts :: Int
+sqlserverLivenessCheckAttempts = 5
+
+sqlserverLivenessCheckIntervalSeconds :: Int
+sqlserverLivenessCheckIntervalSeconds = 1
+
+-- | SQL Server has strict password requirements, that's why it's not
+-- simply @hasura@ like the others.
+sqlserverConnectInfo :: Text
+sqlserverConnectInfo = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=127.0.0.1,65003;Uid=hasura;Pwd=Hasura1!;Encrypt=no"
+
+sqlserverDb :: String
+sqlserverDb = "hasura"
+
+sqlserverLivenessCheckIntervalMicroseconds :: Int
+sqlserverLivenessCheckIntervalMicroseconds = 1000 * 1000 * sqlserverLivenessCheckIntervalSeconds
 
 postgresLivenessCheckIntervalMicroseconds :: Int
 postgresLivenessCheckIntervalMicroseconds = 1000 * 1000 * postgresLivenessCheckIntervalSeconds
@@ -86,6 +165,8 @@ mysqlLivenessCheckIntervalSeconds = 1
 
 mysqlLivenessCheckIntervalMicroseconds :: Int
 mysqlLivenessCheckIntervalMicroseconds = 1000 * 1000 * mysqlLivenessCheckIntervalSeconds
+
+-- * MySQL
 
 mysqlPassword :: String
 mysqlPassword = "hasura"
@@ -112,6 +193,20 @@ mysqlConnectInfo =
       Mysql.connectPort = mysqlPort
     }
 
+bigqueryServiceAccountFileVar :: String
+bigqueryServiceAccountFileVar = "HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE"
+
+bigqueryServiceAccountVar :: String
+bigqueryServiceAccountVar = "HASURA_BIGQUERY_SERVICE_ACCOUNT"
+
+bigqueryProjectIdVar :: String
+bigqueryProjectIdVar = "HASURA_BIGQUERY_PROJECT_ID"
+
+bigqueryDataset :: String
+bigqueryDataset = "hasura"
+
+-- * HTTP health checks
+
 httpHealthCheckAttempts :: Int
 httpHealthCheckAttempts = 5
 
@@ -121,7 +216,9 @@ httpHealthCheckIntervalSeconds = 1
 httpHealthCheckIntervalMicroseconds :: Int
 httpHealthCheckIntervalMicroseconds = 1000 * 1000 * httpHealthCheckIntervalSeconds
 
-serveOptions :: ServeOptions impl
+-- * Server configuration
+
+serveOptions :: ServeOptions L.Hasura
 serveOptions =
   ServeOptions
     { soPort = 12345, -- The server runner will typically be generating
@@ -132,22 +229,19 @@ serveOptions =
       soTxIso = Q.Serializable,
       soAdminSecret = mempty,
       soAuthHook = Nothing,
-      soJwtSecret = Nothing,
+      soJwtSecret = mempty,
       soUnAuthRole = Nothing,
       soCorsConfig = CCAllowAll,
       soEnableConsole = True,
       soConsoleAssetsDir = Nothing,
       soEnableTelemetry = False,
-      soStringifyNum = True,
+      soStringifyNum = StringifyNumbers,
       soDangerousBooleanCollapse = False,
       soEnabledAPIs = testSuiteEnabledApis,
       soLiveQueryOpts = LQ.mkLiveQueriesOptions Nothing Nothing,
       soEnableAllowlist = False,
-      soEnabledLogTypes = Set.empty,
-      soLogLevel =
-        if debugMessagesEnabled
-          then L.LevelDebug
-          else L.LevelOther "test-suite",
+      soEnabledLogTypes = Set.fromList L.userAllowedLogTypes,
+      soLogLevel = fromMaybe (L.LevelOther "test-suite") engineLogLevel,
       soResponseInternalErrorsConfig = InternalErrorsAllRequests,
       soEventsHttpPoolSize = Nothing,
       soEventsFetchInterval = Nothing,
@@ -155,7 +249,7 @@ serveOptions =
       soLogHeadersFromEnv = False,
       soEnableRemoteSchemaPermissions = RemoteSchemaPermsDisabled,
       soConnectionOptions = WS.defaultConnectionOptions,
-      soWebsocketKeepAlive = defaultKeepAliveDelay,
+      soWebsocketKeepAlive = Init.defaultKeepAliveDelay,
       soInferFunctionPermissions = FunctionPermissionsInferred,
       soEnableMaintenanceMode = MaintenanceModeDisabled,
       -- MUST be disabled to be able to modify schema.
@@ -164,12 +258,20 @@ serveOptions =
       soEventsFetchBatchSize = 1,
       soDevMode = True,
       soGracefulShutdownTimeout = 0, -- Don't wait to shutdown.
-      soWebsocketConnectionInitTimeout = defaultWSConnectionInitTimeout
+      soWebsocketConnectionInitTimeout = Init.defaultWSConnectionInitTimeout,
+      soEventingMode = EventingEnabled,
+      soReadOnlyMode = ReadOnlyModeDisabled
     }
 
--- | Use the below to show messages.
-debugMessagesEnabled :: Bool
-debugMessagesEnabled = False
+-- | What log level should be used by the engine; this is not exported, and
+-- only used in 'serveOptions'.
+--
+-- This should be adjusted locally for debugging purposes; e.g. change it to
+-- @Just L.Debug@ to enable all logs.
+--
+-- See 'L.LogLevel' for an enumeration of available log levels.
+engineLogLevel :: Maybe L.LogLevel
+engineLogLevel = Nothing
 
 -- These are important for the test suite.
 testSuiteEnabledApis :: HashSet API

@@ -29,8 +29,6 @@ import Data.CaseInsensitive qualified as CI
 import Data.Environment qualified as Env
 import Data.Has
 import Data.HashMap.Strict qualified as Map
-import Data.IORef
-import Data.IntMap qualified as IntMap
 import Data.Set (Set)
 import Data.TByteString qualified as TBS
 import Data.Text.Extended
@@ -40,7 +38,6 @@ import Hasura.Backends.Postgres.Execute.Prepare
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.SQL.Value (PGScalarValue (..))
-import Hasura.Backends.Postgres.Translate.Column (toTxtValue)
 import Hasura.Backends.Postgres.Translate.Select (asSingleRowJsonResp)
 import Hasura.Backends.Postgres.Translate.Select qualified as RS
 import Hasura.Base.Error
@@ -54,8 +51,9 @@ import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
-import Hasura.RQL.DDL.RequestTransform
-import Hasura.RQL.DDL.Schema.Cache
+import Hasura.RQL.DDL.Webhook.Transform
+import Hasura.RQL.DDL.Webhook.Transform.Class (mkReqTransformCtx)
+import Hasura.RQL.IR.Action qualified as RA
 import Hasura.RQL.IR.Select qualified as RS
 import Hasura.RQL.Types
 import Hasura.SQL.Types
@@ -112,61 +110,14 @@ resolveActionExecution ::
   Env.Environment ->
   L.Logger L.Hasura ->
   UserInfo ->
-  AnnActionExecution ('Postgres 'Vanilla) (Const Void) (UnpreparedValue ('Postgres 'Vanilla)) ->
+  AnnActionExecution Void ->
   ActionExecContext ->
   Maybe GQLQueryText ->
   ActionExecution
-resolveActionExecution env logger userInfo annAction execContext gqlQueryText =
-  case actionSource of
-    -- Build client response
-    ASINoSource -> ActionExecution $ first (encJFromOrderedValue . makeActionResponseNoRelations annFields) <$> runWebhook
-    ASISource _ sourceConfig -> ActionExecution do
-      (webhookRes, respHeaders) <- runWebhook
-      let webhookResponseExpression =
-            RS.AEInput $
-              UVLiteral $
-                toTxtValue $ ColumnValue (ColumnScalar PGJSONB) $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
-          selectAstUnresolved =
-            processOutputSelectionSet
-              webhookResponseExpression
-              outputType
-              definitionList
-              annFields
-              stringifyNum
-      (astResolved, finalPlanningSt) <- flip runStateT initPlanningSt $ traverse (prepareWithPlan userInfo) selectAstUnresolved
-      let prepArgs = fmap fst $ IntMap.elems $ withUserVars (_uiSession userInfo) $ _psPrepped finalPlanningSt
-      (,respHeaders) <$> executeActionInDb sourceConfig astResolved prepArgs
+resolveActionExecution env logger _userInfo AnnActionExecution {..} ActionExecContext {..} gqlQueryText =
+  ActionExecution $ first (encJFromOrderedValue . makeActionResponseNoRelations _aaeFields) <$> runWebhook
   where
-    AnnActionExecution
-      actionName
-      outputType
-      annFields
-      inputPayload
-      outputFields
-      definitionList
-      resolvedWebhook
-      confHeaders
-      forwardClientHeaders
-      stringifyNum
-      timeout
-      actionSource
-      metadataTransform = annAction
-    ActionExecContext manager reqHeaders sessionVariables = execContext
-    actionContext = ActionContext actionName
-    handlerPayload = ActionWebhookPayload actionContext sessionVariables inputPayload gqlQueryText
-
-    executeActionInDb ::
-      (MonadError QErr m, MonadIO m, MonadBaseControl IO m) =>
-      SourceConfig ('Postgres 'Vanilla) ->
-      RS.AnnSimpleSelect ('Postgres 'Vanilla) ->
-      [Q.PrepArg] ->
-      m EncJSON
-    executeActionInDb sourceConfig astResolved prepArgs = do
-      let jsonAggType = mkJsonAggSelect outputType
-      liftEitherM $
-        runExceptT $
-          runTx (_pscExecCtx sourceConfig) Q.ReadOnly $
-            liftTx $ asSingleRowJsonResp (Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggType astResolved) prepArgs
+    handlerPayload = ActionWebhookPayload (ActionContext _aaeName) _aecSessionVariables _aaePayload gqlQueryText
 
     runWebhook ::
       (MonadIO m, MonadError QErr m, Tracing.MonadTrace m) =>
@@ -175,40 +126,45 @@ resolveActionExecution env logger userInfo annAction execContext gqlQueryText =
       flip runReaderT logger $
         callWebhook
           env
-          manager
-          outputType
-          outputFields
-          reqHeaders
-          confHeaders
-          forwardClientHeaders
-          resolvedWebhook
+          _aecManager
+          _aaeOutputType
+          _aaeOutputFields
+          _aecHeaders
+          _aaeHeaders
+          _aaeForwardClientHeaders
+          _aaeWebhook
           handlerPayload
-          timeout
-          metadataTransform
+          _aaeTimeOut
+          _aaeRequestTransform
+          _aaeResponseTransform
 
 -- | Build action response from the Webhook JSON response when there are no relationships defined
-makeActionResponseNoRelations :: RS.AnnFieldsG ('Postgres 'Vanilla) r v -> ActionWebhookResponse -> AO.Value
+makeActionResponseNoRelations :: RA.ActionFieldsG Void -> ActionWebhookResponse -> AO.Value
 makeActionResponseNoRelations annFields webhookResponse =
-  let mkResponseObject obj =
+  let mkResponseObject :: RA.ActionFieldsG Void -> HashMap Text J.Value -> AO.Value
+      mkResponseObject fields obj =
         AO.object $
-          flip mapMaybe annFields $ \(fieldName, annField) ->
+          flip mapMaybe fields $ \(fieldName, annField) ->
             let fieldText = getFieldNameTxt fieldName
              in (fieldText,) <$> case annField of
-                  RS.AFExpression t -> Just $ AO.String t
-                  RS.AFColumn c -> AO.toOrdered <$> Map.lookup (G.unsafeMkName . getPGColTxt $ RS._acfColumn c) obj
-                  -- NOTE (Phil): Coercing the name like this using unsafeMkName (instead
-                  -- of using something like pgiName is safe (here) because of how we
-                  -- construct ColumnInfo objects in mkPGColumnInfo. Really, we should get
-                  -- rid of ColumnInfo altogether, but right now action responses are
-                  -- represented as if they were rows in some temp PG table, which is why
-                  -- they appear here.
-                  _ -> AO.toOrdered <$> Map.lookup fieldText (mapKeys G.unName obj)
+                  RA.ACFExpression t -> Just $ AO.String t
+                  RA.ACFScalar fname -> AO.toOrdered <$> Map.lookup (G.unName fname) obj
+                  RA.ACFNestedObject _ nestedFields -> do
+                    let mkValue :: J.Value -> Maybe AO.Value
+                        mkValue = \case
+                          J.Object o -> Just $ mkResponseObject nestedFields o
+                          J.Array a -> Just $ AO.array $ mapMaybe mkValue $ toList a
+                          _ -> Nothing
+                    Map.lookup fieldText obj >>= mkValue
    in -- NOTE (Sam): This case would still not allow for aliased fields to be
       -- a part of the response. Also, seeing that none of the other `annField`
       -- types would be caught in the example, I've chosen to leave it as it is.
       case webhookResponse of
-        AWRArray objs -> AO.array $ map mkResponseObject objs
-        AWRObject obj -> mkResponseObject obj
+        AWRArray objs -> AO.array $ map (mkResponseObject annFields) (mapKeys G.unName <$> objs)
+        AWRObject obj -> mkResponseObject annFields (mapKeys G.unName obj)
+        AWRNum n -> AO.toOrdered n
+        AWRBool b -> AO.toOrdered b
+        AWRString s -> AO.toOrdered s
         AWRNull -> AO.Null
 
 {- Note: [Async action architecture]
@@ -265,7 +221,7 @@ Resolving async action query happens in two steps;
 -- | See Note: [Resolving async action query]
 resolveAsyncActionQuery ::
   UserInfo ->
-  AnnActionAsyncQuery ('Postgres 'Vanilla) (Const Void) (UnpreparedValue ('Postgres 'Vanilla)) ->
+  AnnActionAsyncQuery ('Postgres 'Vanilla) Void ->
   AsyncActionQueryExecution (UnpreparedValue ('Postgres 'Vanilla))
 resolveAsyncActionQuery userInfo annAction =
   case actionSource of
@@ -291,10 +247,9 @@ resolveAsyncActionQuery userInfo annAction =
                     asyncFields <&> second \case
                       AsyncTypename t -> RS.AFExpression t
                       AsyncOutput annFields ->
-                        let inputTableArgument = RS.AETableRow $ Just $ Identifier "response_payload"
-                         in RS.AFComputedField () (ComputedFieldName $$(nonEmptyText "__action_computed_field")) $
-                              RS.CFSTable jsonAggSelect $
-                                processOutputSelectionSet inputTableArgument outputType definitionList annFields stringifyNumerics
+                        RS.AFComputedField () (ComputedFieldName $$(nonEmptyText "__action_computed_field")) $
+                          RS.CFSTable jsonAggSelect $
+                            processOutputSelectionSet RS.AEActionResponsePayload outputType definitionList annFields stringifyNumerics
                       AsyncId -> mkAnnFldFromPGCol idColumn
                       AsyncCreatedAt -> mkAnnFldFromPGCol createdAtColumn
                       AsyncErrors -> mkAnnFldFromPGCol errorsColumn
@@ -316,7 +271,7 @@ resolveAsyncActionQuery userInfo annAction =
     AnnActionAsyncQuery _ actionId outputType asyncFields definitionList stringifyNumerics _ actionSource = annAction
 
     idColumn = (unsafePGCol "id", PGUUID)
-    responsePayloadColumn = (unsafePGCol "response_payload", PGJSONB)
+    responsePayloadColumn = (unsafePGCol RS.actionResponsePayloadColumn, PGJSONB)
     createdAtColumn = (unsafePGCol "created_at", PGTimeStampTZ)
     errorsColumn = (unsafePGCol "errors", PGJSONB)
     sessionVarsColumn = (unsafePGCol "session_variables", PGJSONB)
@@ -324,19 +279,30 @@ resolveAsyncActionQuery userInfo annAction =
     mkAnnFldFromPGCol (column', columnType) =
       RS.mkAnnColumnField column' (ColumnScalar columnType) Nothing Nothing
 
-    -- TODO (from master):- Avoid using ColumnInfo
+    -- TODO: avoid using ColumnInfo
+    -- TODO(#3478): avoid using `unsafeMkName`
     mkPGColumnInfo (column', columnType) =
-      ColumnInfo column' (G.unsafeMkName $ getPGColTxt column') 0 (ColumnScalar columnType) True Nothing
+      ColumnInfo
+        { ciColumn = column',
+          ciName = G.unsafeMkName $ getPGColTxt column',
+          ciPosition = 0,
+          ciType = ColumnScalar columnType,
+          ciIsNullable = True,
+          ciDescription = Nothing,
+          ciMutability = ColumnMutability False False
+        }
 
     tableBoolExpression =
       let actionIdColumnInfo =
             ColumnInfo
-              (unsafePGCol "id")
-              $$(G.litName "id")
-              0
-              (ColumnScalar PGUUID)
-              False
-              Nothing
+              { ciColumn = unsafePGCol "id",
+                ciName = $$(G.litName "id"),
+                ciPosition = 0,
+                ciType = ColumnScalar PGUUID,
+                ciIsNullable = False,
+                ciDescription = Nothing,
+                ciMutability = ColumnMutability False False
+              }
           actionIdColumnEq = BoolFld $ AVColumn actionIdColumnInfo [AEQ True $ UVLiteral $ S.SELit $ actionIdToText actionId]
           sessionVarsColumnInfo = mkPGColumnInfo sessionVarsColumn
           sessionVarValue =
@@ -363,17 +329,17 @@ asyncActionsProcessor ::
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
-  IORef (RebuildableSchemaCache, SchemaCacheVer) ->
+  IO SchemaCache ->
   STM.TVar (Set LockedActionEventId) ->
   HTTP.Manager ->
   Milliseconds ->
   Maybe GH.GQLQueryText ->
   m (Forever m)
-asyncActionsProcessor env logger cacheRef lockedActionEvents httpManager sleepTime gqlQueryText =
+asyncActionsProcessor env logger getSCFromRef' lockedActionEvents httpManager sleepTime gqlQueryText =
   return $
     Forever () $
       const $ do
-        actionCache <- scActions . lastBuiltSchemaCache . fst <$> liftIO (readIORef cacheRef)
+        actionCache <- scActions <$> liftIO getSCFromRef'
         let asyncActions =
               Map.filter ((== ActionMutation ActionAsynchronous) . (^. aiDefinition . adType)) actionCache
         unless (Map.null asyncActions) $ do
@@ -405,14 +371,15 @@ asyncActionsProcessor env logger cacheRef lockedActionEvents httpManager sleepTi
         Nothing -> return ()
         Just actionInfo -> do
           let definition = _aiDefinition actionInfo
-              outputFields = getActionOutputFields $ snd $ _aiOutputObject actionInfo
+              outputFields = getActionOutputFields $ snd $ _aiOutputType actionInfo
               webhookUrl = _adHandler definition
               forwardClientHeaders = _adForwardClientHeaders definition
               confHeaders = _adHeaders definition
               timeout = _adTimeout definition
               outputType = _adOutputType definition
               actionContext = ActionContext actionName
-              metadataTransform = _adRequestTransform definition
+              metadataRequestTransform = _adRequestTransform definition
+              metadataResponseTransform = _adResponseTransform definition
           eitherRes <-
             runExceptT $
               flip runReaderT logger $
@@ -427,7 +394,8 @@ asyncActionsProcessor env logger cacheRef lockedActionEvents httpManager sleepTi
                   webhookUrl
                   (ActionWebhookPayload actionContext sessionVariables inputPayload gqlQueryText)
                   timeout
-                  metadataTransform
+                  metadataRequestTransform
+                  metadataResponseTransform
           resE <- runMetadataStorageT $
             setActionStatus actionId $ case eitherRes of
               Left e -> AASError e
@@ -453,7 +421,8 @@ callWebhook ::
   ResolvedWebhook ->
   ActionWebhookPayload ->
   Timeout ->
-  Maybe MetadataTransform ->
+  Maybe RequestTransform ->
+  Maybe MetadataResponseTransform ->
   m (ActionWebhookResponse, HTTP.ResponseHeaders)
 callWebhook
   env
@@ -466,19 +435,19 @@ callWebhook
   resolvedWebhook
   actionWebhookPayload
   timeoutSeconds
-  metadataTransform = do
+  metadataRequestTransform
+  metadataResponseTransform = do
     resolvedConfHeaders <- makeHeadersFromConf env confHeaders
     let clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else mempty
         -- Using HashMap to avoid duplicate headers between configuration headers
         -- and client headers where configuration headers are preferred
-        hdrs = ("Content-Type", "application/json") : (Map.toList . Map.fromList) (resolvedConfHeaders <> clientHeaders)
+        hdrs = (Map.toList . Map.fromList) (resolvedConfHeaders <> defaultHeaders <> clientHeaders)
         postPayload = J.toJSON actionWebhookPayload
         requestBody = J.encode postPayload
         requestBodySize = BL.length requestBody
         responseTimeout = HTTP.responseTimeoutMicro $ (unTimeout timeoutSeconds) * 1000000
         url = unResolvedWebhook resolvedWebhook
         sessionVars = Just $ _awpSessionVariables actionWebhookPayload
-
     initReq <- liftIO $ HTTP.mkRequestThrow url
 
     let req =
@@ -488,20 +457,21 @@ callWebhook
             & set HTTP.body (Just requestBody)
             & set HTTP.timeout responseTimeout
 
-    (transformedReq, transformedReqSize) <- case metadataTransform of
-      Nothing -> pure (Nothing, Nothing)
-      Just transform' ->
-        case applyRequestTransform url (mkRequestTransform transform') req sessionVars of
-          Left err -> do
-            -- Log The Transformation Error
-            logger :: L.Logger L.Hasura <- asks getter
-            L.unLogger logger $ L.UnstructuredLog L.LevelError (TBS.fromLBS $ J.encode err)
+    (transformedReq, transformedReqSize, reqTransformCtx) <- case metadataRequestTransform of
+      Nothing -> pure (Nothing, Nothing, Nothing)
+      Just RequestTransform {..} ->
+        let reqTransformCtx = mkReqTransformCtx url sessionVars templateEngine
+         in case applyRequestTransform reqTransformCtx requestFields req of
+              Left err -> do
+                -- Log The Transformation Error
+                logger :: L.Logger L.Hasura <- asks getter
+                L.unLogger logger $ L.UnstructuredLog L.LevelError (TBS.fromLBS $ J.encode err)
 
-            -- Throw an exception with the Transformation Error
-            throw500WithDetail "Request Transformation Failed" $ J.toJSON err
-          Right transformedReq ->
-            let transformedPayloadSize = HTTP.getReqSize transformedReq
-             in pure (Just transformedReq, Just transformedPayloadSize)
+                -- Throw an exception with the Transformation Error
+                throw500WithDetail "Request Transformation Failed" $ J.toJSON err
+              Right transformedReq ->
+                let transformedPayloadSize = HTTP.getReqSize transformedReq
+                 in pure (Just transformedReq, Just transformedPayloadSize, Just reqTransformCtx)
 
     let actualReq = fromMaybe req transformedReq
 
@@ -516,6 +486,7 @@ callWebhook
         throw500WithDetail "http exception when calling webhook" $
           J.toJSON $ ActionInternalError (J.toJSON $ HttpException e) requestInfo Nothing
       Right responseWreq -> do
+        -- TODO(SOLOMON): Remove 'wreq'
         let responseBody = responseWreq ^. Wreq.responseBody
             responseBodySize = BL.length responseBody
             actionName = _acName $ _awpAction actionWebhookPayload
@@ -524,11 +495,25 @@ callWebhook
               ActionResponseInfo (HTTP.statusCode responseStatus) respBody $
                 toHeadersConf $ responseWreq ^. Wreq.responseHeaders
 
+        transformedResponseBody <- case metadataResponseTransform of
+          Nothing -> pure responseBody
+          Just metadataResponseTransform' ->
+            let responseTransform = mkResponseTransform metadataResponseTransform'
+                engine = respTransformTemplateEngine responseTransform
+                responseTransformCtx = buildRespTransformCtx (reqTransformCtx <*> Just actualReq) sessionVars engine (HTTP.responseBody responseWreq)
+             in applyResponseTransform responseTransform responseTransformCtx `onLeft` \err -> do
+                  -- Log The Response Transformation Error
+                  logger :: L.Logger L.Hasura <- asks getter
+                  L.unLogger logger $ L.UnstructuredLog L.LevelError (TBS.fromLBS $ J.encode err)
+
+                  -- Throw an exception with the Transformation Error
+                  throw500WithDetail "Response Transformation Failed" $ J.toJSON err
+
         -- log the request and response to/from the action handler
         logger :: (L.Logger L.Hasura) <- asks getter
         L.unLogger logger $ ActionHandlerLog req transformedReq requestBodySize transformedReqSize responseBodySize actionName
 
-        case J.eitherDecode responseBody of
+        case J.eitherDecode transformedResponseBody of
           Left e -> do
             let responseInfo = mkResponseInfo $ J.String $ bsToTxt $ BL.toStrict responseBody
             throw500WithDetail "not a valid json response from webhook" $
@@ -544,24 +529,29 @@ callWebhook
 
             if
                 | HTTP.statusIsSuccessful responseStatus -> do
-                  let expectingArray = isListType outputType
+                  let expectedResponse = showGT' $ unGraphQLType outputType
+                      expectingArray = isListType outputType
                       expectingNull = isNullableType outputType
                   modifyQErr addInternalToErr $ do
                     webhookResponse <- decodeValue responseValue
                     case webhookResponse of
-                      AWRNull -> do
-                        unless expectingNull $
-                          if expectingArray
-                            then throwUnexpected "expecting array for action webhook response but got null"
-                            else throwUnexpected "expecting object for action webhook response but got null"
-                        validateResponseObject Map.empty
+                      AWRNull -> unless expectingNull $ throwUnexpected "got null for the action webhook response"
+                      AWRNum _ -> do
+                        unless (expectedResponse == "Int" || expectedResponse == "Float") $
+                          throwUnexpected $ "got scalar Number for the action webhook response, expecting " <> expectedResponse
+                      AWRBool _ ->
+                        unless (expectedResponse == "Boolean") $
+                          throwUnexpected $ "got scalar Boolean for the action webhook response, expecting " <> expectedResponse
+                      AWRString _ ->
+                        unless (expectedResponse == "String") $
+                          throwUnexpected $ "got scalar String for the action webhook response, expecting " <> expectedResponse
                       AWRArray objs -> do
                         unless expectingArray $
-                          throwUnexpected "expecting object for action webhook response but got array"
+                          throwUnexpected "got array for the action webhook response, might want to check the action return type defined!"
                         mapM_ validateResponseObject objs
                       AWRObject obj -> do
-                        when expectingArray $
-                          throwUnexpected "expecting array for action webhook response but got object"
+                        when (isScalar expectedResponse || expectingArray) $
+                          throwUnexpected "got object for the action webhook response, might want to check the action return type defined!"
                         validateResponseObject obj
                     pure (webhookResponse, mkSetCookieHeaders responseWreq)
                 | HTTP.statusIsClientError responseStatus -> do
@@ -584,7 +574,6 @@ callWebhook
       -- Webhook response object should conform to action output fields
       validateResponseObject obj = do
         -- Note: Fields not specified in the output are ignored
-
         void $
           flip Map.traverseWithKey outputFields $ \fieldName fieldTy ->
             -- When field is non-nullable, it has to present in the response with no null value
@@ -597,16 +586,30 @@ callWebhook
                   throwUnexpected $
                     "expecting not null value for field " <>> fieldName
 
+      showGT' :: G.GType -> Text
+      showGT' = \case
+        G.TypeNamed _ nt -> G.unName nt
+        G.TypeList _ lt -> G.showLT lt
+
+      isScalar :: Text -> Bool
+      isScalar s
+        | s == "Int" = True
+        | s == "Float" = True
+        | s == "String" = True
+        | s == "Boolean" = True
+        | otherwise = False
+
 processOutputSelectionSet ::
-  RS.ArgumentExp ('Postgres 'Vanilla) v ->
+  RS.ArgumentExp v ->
   GraphQLType ->
   [(PGCol, PGScalarType)] ->
-  RS.AnnFieldsG ('Postgres 'Vanilla) r v ->
-  Bool ->
-  RS.AnnSimpleSelectG ('Postgres 'Vanilla) r v
-processOutputSelectionSet tableRowInput actionOutputType definitionList annotatedFields =
+  RA.ActionFieldsG Void ->
+  StringifyNumbers ->
+  RS.AnnSimpleSelectG ('Postgres 'Vanilla) Void v
+processOutputSelectionSet tableRowInput actionOutputType definitionList actionFields =
   RS.AnnSelectG annotatedFields selectFrom RS.noTablePermissions RS.noSelectArgs
   where
+    annotatedFields = fmap actionFieldToAnnField <$> actionFields
     jsonbToPostgresRecordFunction =
       QualifiedObject "pg_catalog" $
         FunctionName $
@@ -615,6 +618,12 @@ processOutputSelectionSet tableRowInput actionOutputType definitionList annotate
             else "jsonb_to_record" -- Single object response
     functionArgs = RS.FunctionArgsExp [tableRowInput] mempty
     selectFrom = RS.FromFunction jsonbToPostgresRecordFunction functionArgs $ Just definitionList
+
+actionFieldToAnnField :: RA.ActionFieldG Void -> RS.AnnFieldG ('Postgres 'Vanilla) Void v
+actionFieldToAnnField = \case
+  RA.ACFScalar asf -> RS.mkAnnColumnField (unsafePGCol $ toTxt asf) (ColumnScalar PGJSON) Nothing Nothing
+  RA.ACFExpression txt -> RS.AFExpression txt
+  RA.ACFNestedObject fieldName _ -> RS.mkAnnColumnField (unsafePGCol $ toTxt fieldName) (ColumnScalar PGJSON) Nothing Nothing
 
 mkJsonAggSelect :: GraphQLType -> JsonAggSelect
 mkJsonAggSelect =

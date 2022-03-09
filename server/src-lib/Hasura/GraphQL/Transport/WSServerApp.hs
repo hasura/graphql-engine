@@ -35,8 +35,9 @@ import Hasura.Server.Init.Config
   )
 import Hasura.Server.Limits
 import Hasura.Server.Metrics (ServerMetrics (..))
+import Hasura.Server.Types (ReadOnlyMode)
 import Hasura.Tracing qualified as Tracing
-import Network.HTTP.Client qualified as H
+import Network.HTTP.Client qualified as HTTP
 import Network.WebSockets qualified as WS
 import System.Metrics.Gauge qualified as EKG.Gauge
 
@@ -97,9 +98,10 @@ createWSServerEnv ::
   L.Logger L.Hasura ->
   LQ.LiveQueriesState ->
   IO (SchemaCache, SchemaCacheVer) ->
-  H.Manager ->
+  HTTP.Manager ->
   CorsPolicy ->
   SQLGenCtx ->
+  ReadOnlyMode ->
   Bool ->
   KeepAliveDelay ->
   ServerMetrics ->
@@ -111,6 +113,7 @@ createWSServerEnv
   httpManager
   corsPolicy
   sqlGenCtx
+  readOnlyMode
   enableAL
   keepAliveDelay
   serverMetrics = do
@@ -123,6 +126,7 @@ createWSServerEnv
         httpManager
         corsPolicy
         sqlGenCtx
+        readOnlyMode
         wsServer
         enableAL
         keepAliveDelay

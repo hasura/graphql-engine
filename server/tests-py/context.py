@@ -334,19 +334,32 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             resp, status = self.create_users()
             self._send_response(status, resp)
 
-        elif req_path == "/invalid-response":
-            self._send_response(HTTPStatus.OK, "some-string")
+        elif req_path == "/create-user-nested":
+            resp, status = self.create_user_nested()
+            self._send_response(status, resp)
 
         elif req_path == "/mirror-action":
             resp, status = self.mirror_action()
+            self._send_response(status, resp)
+
+        elif req_path == "/mirror-headers":
+            resp, status = self.mirror_headers()
             self._send_response(status, resp)
 
         elif req_path == "/get-user-by-email":
             resp, status = self.get_users_by_email(True)
             self._send_response(status, resp)
 
+        elif req_path == "/get-user-by-email-nested":
+            resp, status = self.get_users_by_email_nested(True)
+            self._send_response(status, resp)
+
         elif req_path == "/get-users-by-email":
             resp, status = self.get_users_by_email(False)
+            self._send_response(status, resp)
+
+        elif req_path == "/get-users-by-email-nested":
+            resp, status = self.get_users_by_email_nested(False)
             self._send_response(status, resp)
 
         elif req_path == "/intentional-error":
@@ -355,6 +368,17 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
 
         elif req_path == "/null-response":
             resp, status = self.null_response()
+            self._send_response(status, resp)
+        
+        elif req_path == "/scalar-response":
+            self._send_response(HTTPStatus.OK, "some-string")
+
+        elif req_path == "/recursive-output":
+            resp, status = self.recursive_output()
+            self._send_response(status, resp)
+
+        elif req_path == "/get-results":
+            resp, status = self.get_results()
             self._send_response(status, resp)
 
         else:
@@ -439,8 +463,52 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
         response = resp['data']['insert_user']['returning']
         return response, HTTPStatus.OK
 
+    def create_user_nested(self):
+        email_address = self.req_json['input']['email']
+        name = self.req_json['input']['name']
+
+        if not self.check_email(email_address):
+            response = {
+                'message': 'Given email address is not valid',
+                'code': 'invalid-email'
+            }
+            return response, HTTPStatus.BAD_REQUEST
+
+        gql_query = '''
+        mutation ($email: String! $name: String!) {
+          insert_user_one(object: {email: $email, name: $name}){
+            id
+          }
+        }
+        '''
+        query = {
+            'query': gql_query,
+            'variables': {
+                'email': email_address,
+                'name': name
+            }
+        }
+        code, resp = self.execute_query(query)
+        if code != 200 or 'data' not in resp:
+            response = {
+                'message': 'GraphQL query execution failed',
+                'code': 'unexpected'
+            }
+            return response, HTTPStatus.BAD_REQUEST
+
+        response = {
+            'userObj': resp['data']['insert_user_one']
+        }
+        return response, HTTPStatus.OK
+
     def mirror_action(self):
         response = self.req_json['input']['arg']
+        return response, HTTPStatus.OK
+
+    def mirror_headers(self):
+        response = {
+            'headers': list(map(lambda header: { 'name': header[0], 'value': header[1] }, self.headers.items()))
+        }
         return response, HTTPStatus.OK
 
     def get_users_by_email(self, singleUser = False):
@@ -475,12 +543,39 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             return resp['data']['user'][0], HTTPStatus.OK
         else:
             return resp['data']['user'], HTTPStatus.OK
-    
+
+    def get_users_by_email_nested(self, singleUser = False):
+        resp, status = self.get_users_by_email(singleUser)
+        def make_nested_out_object(outObj):
+            address = { 'city': 'New York', 'country': 'USA'}
+            outObj['address'] = address
+            addresses = [{'city': 'Bangalore', 'country': 'India'}, {'city': 'Melbourne', 'country': 'Australia'}]
+            outObj['addresses'] = addresses
+            outObj['user_id'] = { 'id': outObj['id']}
+            return outObj
+
+        if status != HTTPStatus.OK:
+            return resp, status
+        if singleUser:
+            return make_nested_out_object(resp), status
+        else:
+            return map(make_nested_out_object, resp), status
+
     def null_response(self):
         response = None
         return response, HTTPStatus.OK
 
+    def recursive_output(self):
+        return {
+            'direct': {'id': 1, 'this': {'id': 2, 'this': {'id': 3 }}},
+            'list': {'id': 1, 'these': [{'id': 2, 'these': [{'id': 3}]}, {'id': 4}]},
+            'mutual': {'id': 1, 'that': {'id': 2, 'other': {'id': 3, 'that': {'id': 4}}}}
+        }, HTTPStatus.OK
 
+    def get_results(self):
+        return {
+            'result_ids': [1,2,3,4]
+        }, HTTPStatus.OK
 
     def check_email(self, email):
         regex = '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$'
@@ -690,10 +785,17 @@ class HGECtx:
         self.meta.reflect(bind=self.engine)
 
     def anyq(self, u, q, h, b = None, v = None):
+
         resp = None
         if v == 'GET':
           resp = self.http.get(
               self.hge_url + u,
+              headers=h
+          )
+        elif v == 'POSTJSON' and b:
+          resp = self.http.post(
+              self.hge_url + u,
+              json=b,
               headers=h
           )
         elif v == 'POST' and b:
@@ -702,7 +804,7 @@ class HGECtx:
               self.hge_url + u,
               data=b,
               headers=h
-           )
+          )
         elif v == 'PATCH' and b:
           resp = self.http.patch(
               self.hge_url + u,
