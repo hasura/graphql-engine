@@ -1,4 +1,4 @@
-This note is in [Hasura.GraphQL.Execute.RemoteJoin.Collect](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Execute/RemoteJoin/Collect.hs#L24).
+This note is in [Hasura.GraphQL.Execute.RemoteJoin.Collect](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Execute/RemoteJoin/Collect.hs#L26).
 
 # Remote Joins Architecture
 

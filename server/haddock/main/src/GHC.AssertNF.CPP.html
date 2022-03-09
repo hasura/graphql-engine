@@ -44,9 +44,9 @@
 </span><span id="line-44"></span><span class="hs-comment">-- Instead, we rewrite it to use the re-exported 'assertNFNamed'.</span><span>
 </span><span id="line-45"></span><span id="assertNFHere"><span class="annot"><span class="annottext">assertNFHere :: Q Exp
 </span><a href="GHC.AssertNF.CPP.html#assertNFHere"><span class="hs-identifier hs-var hs-var">assertNFHere</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-46"></span><span>    </span><span id="local-6989586621688117229"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688117229"><span class="hs-identifier hs-var">locStr</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Loc -&gt; String
-</span><a href="#local-6989586621688117228"><span class="hs-identifier hs-var">formatLoc</span></a></span><span> </span><span class="annot"><span class="annottext">(Loc -&gt; String) -&gt; Q Loc -&gt; Q String
+</span><span id="line-46"></span><span>    </span><span id="local-6989586621688126361"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688126361"><span class="hs-identifier hs-var">locStr</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Loc -&gt; String
+</span><a href="#local-6989586621688126360"><span class="hs-identifier hs-var">formatLoc</span></a></span><span> </span><span class="annot"><span class="annottext">(Loc -&gt; String) -&gt; Q Loc -&gt; Q String
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Q Loc
 </span><span class="hs-identifier hs-var">location</span></span><span>
@@ -62,26 +62,26 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-48"></span><span>                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Lit -&gt; Exp
 </span><span class="hs-identifier hs-var">LitE</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Lit
 </span><span class="hs-identifier hs-var">StringL</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688117229"><span class="hs-identifier hs-var">locStr</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-49"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span class="annot"><a href="#local-6989586621688117228"><span class="hs-identifier hs-type">formatLoc</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Loc</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
-</span><span id="line-50"></span><span>        </span><span id="local-6989586621688117228"><span class="annot"><span class="annottext">formatLoc :: Loc -&gt; String
-</span><a href="#local-6989586621688117228"><span class="hs-identifier hs-var hs-var">formatLoc</span></a></span></span><span> </span><span id="local-6989586621688117221"><span class="annot"><span class="annottext">Loc
-</span><a href="#local-6989586621688117221"><span class="hs-identifier hs-var">loc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688117220"><span class="annot"><span class="annottext">file :: String
-</span><a href="#local-6989586621688117220"><span class="hs-identifier hs-var hs-var">file</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Loc -&gt; String
+</span><a href="#local-6989586621688126361"><span class="hs-identifier hs-var">locStr</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span class="annot"><a href="#local-6989586621688126360"><span class="hs-identifier hs-type">formatLoc</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Loc</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-50"></span><span>        </span><span id="local-6989586621688126360"><span class="annot"><span class="annottext">formatLoc :: Loc -&gt; String
+</span><a href="#local-6989586621688126360"><span class="hs-identifier hs-var hs-var">formatLoc</span></a></span></span><span> </span><span id="local-6989586621688126353"><span class="annot"><span class="annottext">Loc
+</span><a href="#local-6989586621688126353"><span class="hs-identifier hs-var">loc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688126352"><span class="annot"><span class="annottext">file :: String
+</span><a href="#local-6989586621688126352"><span class="hs-identifier hs-var hs-var">file</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Loc -&gt; String
 </span><span class="hs-identifier hs-var hs-var">loc_filename</span></span><span> </span><span class="annot"><span class="annottext">Loc
-</span><a href="#local-6989586621688117221"><span class="hs-identifier hs-var">loc</span></a></span><span>
-</span><span id="line-51"></span><span>                            </span><span class="hs-special">(</span><span id="local-6989586621688117218"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621688117218"><span class="hs-identifier hs-var">line</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688117217"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621688117217"><span class="hs-identifier hs-var">col</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Loc -&gt; (Int, Int)
+</span><a href="#local-6989586621688126353"><span class="hs-identifier hs-var">loc</span></a></span><span>
+</span><span id="line-51"></span><span>                            </span><span class="hs-special">(</span><span id="local-6989586621688126350"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621688126350"><span class="hs-identifier hs-var">line</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688126349"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621688126349"><span class="hs-identifier hs-var">col</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Loc -&gt; (Int, Int)
 </span><span class="hs-identifier hs-var hs-var">loc_start</span></span><span> </span><span class="annot"><span class="annottext">Loc
-</span><a href="#local-6989586621688117221"><span class="hs-identifier hs-var">loc</span></a></span><span>
+</span><a href="#local-6989586621688126353"><span class="hs-identifier hs-var">loc</span></a></span><span>
 </span><span id="line-52"></span><span>                        </span><span class="hs-keyword">in</span><span>  </span><span class="annot"><span class="annottext">String -&gt; String -&gt; Int -&gt; Int -&gt; String
 forall r. PrintfType r =&gt; String -&gt; r
 </span><span class="hs-identifier hs-var">printf</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;parameter at %s:%d:%d&quot;</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688117220"><span class="hs-identifier hs-var">file</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621688117218"><span class="hs-identifier hs-var">line</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621688117217"><span class="hs-identifier hs-var">col</span></a></span><span>
+</span><a href="#local-6989586621688126352"><span class="hs-identifier hs-var">file</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621688126350"><span class="hs-identifier hs-var">line</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621688126349"><span class="hs-identifier hs-var">col</span></a></span><span>
 </span><span id="line-53"></span><span>
 </span><span id="line-54"></span><span class="annot"><a href="GHC.AssertNF.CPP.html#disableAssertNF"><span class="hs-identifier hs-type">disableAssertNF</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-55"></span><span id="disableAssertNF"><span class="annot"><span class="annottext">disableAssertNF :: IO ()

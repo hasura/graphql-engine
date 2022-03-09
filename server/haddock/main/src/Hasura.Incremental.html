@@ -42,7 +42,7 @@
 </span><span id="line-42"></span><span class="hs-comment">-- count, so depending on an 'InvalidationKey' provides a mechanism to force portions of the build</span><span>
 </span><span id="line-43"></span><span class="hs-comment">-- process to be reexecuted by calling 'invalidate' before running the build.</span><span>
 </span><span id="line-44"></span><span class="hs-keyword">newtype</span><span> </span><span id="InvalidationKey"><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-var">InvalidationKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="InvalidationKey"><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-var">InvalidationKey</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
-</span><span id="line-45"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688128703"><span id="local-6989586621688128705"><span id="local-6989586621688128707"><span class="annot"><span class="annottext">Int -&gt; InvalidationKey -&gt; ShowS
+</span><span id="line-45"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688137835"><span id="local-6989586621688137837"><span id="local-6989586621688137839"><span class="annot"><span class="annottext">Int -&gt; InvalidationKey -&gt; ShowS
 [InvalidationKey] -&gt; ShowS
 InvalidationKey -&gt; String
 (Int -&gt; InvalidationKey -&gt; ShowS)
@@ -57,7 +57,7 @@ show :: InvalidationKey -&gt; String
 $cshow :: InvalidationKey -&gt; String
 showsPrec :: Int -&gt; InvalidationKey -&gt; ShowS
 $cshowsPrec :: Int -&gt; InvalidationKey -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688128698"><span id="local-6989586621688128700"><span class="annot"><span class="annottext">InvalidationKey -&gt; InvalidationKey -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688137830"><span id="local-6989586621688137832"><span class="annot"><span class="annottext">InvalidationKey -&gt; InvalidationKey -&gt; Bool
 (InvalidationKey -&gt; InvalidationKey -&gt; Bool)
 -&gt; (InvalidationKey -&gt; InvalidationKey -&gt; Bool)
 -&gt; Eq InvalidationKey
@@ -66,7 +66,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: InvalidationKey -&gt; InvalidationKey -&gt; Bool
 == :: InvalidationKey -&gt; InvalidationKey -&gt; Bool
 $c== :: InvalidationKey -&gt; InvalidationKey -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688128694"><span class="annot"><span class="annottext">Eq InvalidationKey
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688137826"><span class="annot"><span class="annottext">Eq InvalidationKey
 Eq InvalidationKey
 -&gt; (Accesses -&gt; InvalidationKey -&gt; InvalidationKey -&gt; Bool)
 -&gt; Cacheable InvalidationKey
@@ -85,10 +85,10 @@ $cp1Cacheable :: Eq InvalidationKey
 </span><span id="line-49"></span><span>
 </span><span id="line-50"></span><span class="annot"><a href="Hasura.Incremental.html#invalidate"><span class="hs-identifier hs-type">invalidate</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-type">InvalidationKey</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-type">InvalidationKey</span></a></span><span>
 </span><span id="line-51"></span><span id="invalidate"><span class="annot"><span class="annottext">invalidate :: InvalidationKey -&gt; InvalidationKey
-</span><a href="Hasura.Incremental.html#invalidate"><span class="hs-identifier hs-var hs-var">invalidate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-type">InvalidationKey</span></a></span><span> </span><span id="local-6989586621688128692"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621688128692"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; InvalidationKey
+</span><a href="Hasura.Incremental.html#invalidate"><span class="hs-identifier hs-var hs-var">invalidate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-type">InvalidationKey</span></a></span><span> </span><span id="local-6989586621688137824"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621688137824"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; InvalidationKey
 </span><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-var">InvalidationKey</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621688128692"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><a href="#local-6989586621688137824"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1</span></span><span class="hs-special">)</span><span>
