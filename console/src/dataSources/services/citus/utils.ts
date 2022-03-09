@@ -193,7 +193,7 @@ export const getTableRowRequestBody = ({
             view.curFilter.limit,
             relationshipInfo,
             tableConfiguration
-          ).join('\n')} 
+          ).join('\n')}
     }
     ${aggregateName} {
       aggregate {
@@ -231,9 +231,9 @@ export const processTableRowData = (
     const { originalTable, currentSchema, tableConfiguration } = config!;
 
     const reversedCustomColumns = Object.entries(
-      tableConfiguration?.custom_column_names ?? {}
-    ).reduce((acc: Record<string, string>, [col, customCol]) => {
-      acc[customCol] = col;
+      tableConfiguration?.column_config ?? {}
+    ).reduce((acc: Record<string, string>, [col, colConfig]) => {
+      if (colConfig.custom_name) acc[colConfig.custom_name] = col;
       return acc;
     }, {});
 
@@ -283,11 +283,11 @@ const getInsertRequestBody = (
 ): ReturnType<generateInsertRequestType['getInsertRequestBody']> => {
   const { name: tableName, schema } = data.tableDef;
   const { tableConfiguration } = data;
-  const customColumnNames = tableConfiguration?.custom_column_names ?? {};
+  const columnConfig = tableConfiguration?.column_config ?? {};
 
   const processedData: Record<string, any> = {};
   Object.entries(data.insertObject).forEach(([key, value]) => {
-    processedData[customColumnNames[key] || key] = value;
+    processedData[columnConfig[key]?.custom_name || key] = value;
   });
   const values = Object.entries(processedData).map(([key, value]) => {
     return `${key}: ${typeof value === 'string' ? `"${value}"` : value}`;
@@ -304,7 +304,7 @@ const getInsertRequestBody = (
   const query = `
   mutation InsertRow {
      ${queryName}(objects: { ${values} }){
-         returning { 
+         returning {
            ${returning}
          }
      }
@@ -394,11 +394,11 @@ const getEditRowRequestBody = (data: {
   where: Record<string, any>;
 }) => {
   const { tableConfiguration } = data;
-  const customColumnNames = tableConfiguration?.custom_column_names || {};
+  const columnConfig = tableConfiguration?.column_config || {};
   const whereClause = Object.entries(data.where)
     .map(
       ([key, value]) =>
-        `${customColumnNames[key] || key}: {_eq: ${
+        `${columnConfig[key]?.custom_name || key}: {_eq: ${
           typeof value === 'string' ? `"${value}"` : value
         }}`
     )
@@ -407,7 +407,7 @@ const getEditRowRequestBody = (data: {
   const setClause = Object.entries(data.set)
     .map(
       ([key, value]) =>
-        `${customColumnNames[key] || key}: ${
+        `${columnConfig[key]?.custom_name || key}: ${
           typeof value === 'string' ? `"${value}"` : value
         }`
     )
@@ -469,14 +469,13 @@ const getDeleteRowRequestBody = ({
   columnInfo: BaseTableColumn[];
   tableConfiguration: TableConfig;
 }) => {
-  const customColumns = tableConfiguration?.custom_column_names;
+  const columnConfig = tableConfiguration?.column_config || {};
 
   const args = Object.keys(pkClause)
     .map(key => {
       let value = (pkClause as Record<string, any>)[key];
       const column = columnInfo.find(c => c.column_name === key);
-      const columnName =
-        customColumns && customColumns[key] ? customColumns[key] : key;
+      const columnName = columnConfig[key]?.custom_name || key;
       value = getFormattedValue(column?.data_type_name || 'varchar', value);
       return `${columnName}: {_eq: ${value}}`;
     })
@@ -530,7 +529,7 @@ const getBulkDeleteRowRequestBody = ({
   columnInfo: BaseTableColumn[];
   tableConfiguration: TableConfig;
 }) => {
-  const customColumns = tableConfiguration?.custom_column_names;
+  const columnConfig = tableConfiguration?.column_config || {};
   const identifier = getFullQueryName({
     tableName,
     schema: schemaName,
@@ -542,8 +541,7 @@ const getBulkDeleteRowRequestBody = ({
       .map(key => {
         let value = (pkClause as Record<string, any>)[key];
         const column = columnInfo.find(c => c.column_name === key);
-        const columnName =
-          customColumns && customColumns[key] ? customColumns[key] : key;
+        const columnName = columnConfig[key]?.custom_name || key;
         value = getFormattedValue(column?.data_type_name || 'varchar', value);
         return `${columnName}: {_eq: ${value}}`;
       })

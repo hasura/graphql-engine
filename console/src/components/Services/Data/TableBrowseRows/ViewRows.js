@@ -45,6 +45,7 @@ import {
   findTable,
   getRelationshipRefTable,
   dataSource,
+  getTableCustomColumnName,
 } from '../../../../dataSources';
 import { updateSchemaInfo } from '../DataActions';
 import {
@@ -250,6 +251,10 @@ const ViewRows = props => {
 
     return pkClause;
   };
+
+  const tableSchema = schemas.find(
+    x => x.table_name === curTableName && x.table_schema === currentSchema
+  );
 
   const getGridRows = (
     _tableSchema,
@@ -505,15 +510,14 @@ const ViewRows = props => {
       // Insert column cells
       _tableSchema.columns
         .map(col => {
-          if (
-            _tableSchema.configuration?.custom_column_names?.[col.column_name]
-          ) {
+          const customColumnName = getTableCustomColumnName(
+            tableSchema,
+            col.column_name
+          );
+          if (customColumnName) {
             return {
               ...col,
-              column_name:
-                _tableSchema.configuration?.custom_column_names[
-                  col?.column_name
-                ],
+              column_name: customColumnName,
               id: col?.column_name,
             };
           }
@@ -647,16 +651,16 @@ const ViewRows = props => {
   };
 
   const curRelName = curPath.length > 0 ? curPath.slice(-1)[0] : null;
-  const tableSchema = schemas.find(
-    x => x.table_name === curTableName && x.table_schema === currentSchema
-  );
   const tableColumnsSorted = tableSchema.columns
     .map(col => {
-      if (tableSchema.configuration?.custom_column_names?.[col.column_name]) {
+      const customColumnName = getTableCustomColumnName(
+        tableSchema,
+        col.column_name
+      );
+      if (customColumnName) {
         return {
           ...col,
-          column_name:
-            tableSchema.configuration.custom_column_names[col.column_name],
+          column_name: customColumnName,
           id: col.column_name,
         };
       }

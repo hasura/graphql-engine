@@ -16,9 +16,11 @@
           select_by_pk: sileckte_by_pk
           select_aggregate: sileckte_aggrigeyte
         custom_name: articilis
-        custom_column_names:
-          id: di
-          title: tittelle
+        column_config:
+          id:
+            custom_name: di
+          title:
+            custom_name: tittelle
 
 
 - description: Select query on article with customization

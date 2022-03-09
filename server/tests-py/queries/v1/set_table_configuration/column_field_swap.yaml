@@ -9,9 +9,11 @@
       table: article
       configuration:
         custom_root_fields: {}
-        custom_column_names:
-          title: content
-          content: title
+        column_config:
+          title:
+            custom_name: content
+          content:
+            custom_name: title
 
 - description: Perform graphql query
   url: /v1/graphql
@@ -46,7 +48,7 @@
       table: article
       configuration:
         custom_root_fields: {}
-        custom_column_names: {}
+        column_config: {}
 
 - description: Peform graphql query
   url: /v1/graphql

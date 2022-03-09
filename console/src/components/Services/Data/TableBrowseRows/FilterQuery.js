@@ -33,7 +33,7 @@ import styles from '../../../Common/FilterQuery/FilterQuery.scss';
 import { getPersistedPageSize } from './tableUtils';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import ExportData from './ExportData';
-import { dataSource } from '../../../../dataSources';
+import { dataSource, getTableCustomColumnName } from '../../../../dataSources';
 
 const history = createHistory();
 
@@ -65,8 +65,7 @@ const renderCols = (
         </option>
       ) : null}
       {columns.map((c, i) => {
-        const col_name =
-          tableSchema.configuration?.custom_column_names?.[c] ?? c;
+        const col_name = getTableCustomColumnName(tableSchema, c) ?? c;
         return (
           <option key={i} value={c}>
             {col_name}

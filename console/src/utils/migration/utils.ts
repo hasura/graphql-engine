@@ -8,9 +8,9 @@ import {
   dataSource,
   findTable,
   generateTableDef,
-  getTableCustomColumnNames,
   getTableCustomRootFields,
   getTableCustomName,
+  getTableColumnConfig,
 } from '../../dataSources';
 import { getRunSqlQuery } from '../../components/Common/utils/v1QueryUtils';
 import { getSetCustomRootFieldsQuery } from '../../metadata/queryUtils';
@@ -304,32 +304,33 @@ export const getColumnUpdateMigration = (
   const metadataMigration = new Migration();
   /* column custom field up/down migration */
   const existingCustomTableName = getTableCustomName(table);
-  const existingCustomColumnNames = getTableCustomColumnNames(table);
+  const existingColumnConfig = getTableColumnConfig(table);
   const existingRootFields = getTableCustomRootFields(table);
-  const newCustomColumnNames = { ...existingCustomColumnNames };
-  let isCustomFieldNameChanged = false;
-  if (customFieldName) {
-    if (customFieldName !== existingCustomColumnNames[colName]) {
-      isCustomFieldNameChanged = true;
-      newCustomColumnNames[newName || colName] = customFieldName.trim();
-    }
-  } else if (existingCustomColumnNames[colName]) {
-    isCustomFieldNameChanged = true;
-    delete newCustomColumnNames[colName];
-  }
+  const newColumnConfig = { ...existingColumnConfig };
+
+  const isCustomFieldNameChanged =
+    (customFieldName || null) !==
+    (existingColumnConfig[colName]?.custom_name || null);
   if (isCustomFieldNameChanged) {
+    const columnConfigValue = existingColumnConfig[colName]
+      ? { ...existingColumnConfig[colName] }
+      : {};
+    columnConfigValue.custom_name = customFieldName || null;
+    delete newColumnConfig[colName];
+    newColumnConfig[newName || colName] = columnConfigValue;
+
     metadataMigration.add(
       getSetCustomRootFieldsQuery(
         tableDef,
         existingRootFields,
-        newCustomColumnNames,
+        newColumnConfig,
         existingCustomTableName,
         source
       ),
       getSetCustomRootFieldsQuery(
         tableDef,
         existingRootFields,
-        existingCustomColumnNames,
+        existingColumnConfig,
         existingCustomTableName,
         source
       )

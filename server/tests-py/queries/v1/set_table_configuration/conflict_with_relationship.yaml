@@ -30,6 +30,8 @@ query:
     table: author
     configuration:
       custom_root_fields: {}
-      custom_column_names:
-        name: articles
-        age: articles_aggregate
+      column_config:
+        name:
+          custom_name: articles
+        age:
+          custom_name: articles_aggregate

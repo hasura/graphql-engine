@@ -75,6 +75,11 @@ export interface NormalizedTable {
   is_table_tracked: boolean;
   triggers?: PostgresTrigger[];
   citus_table_type?: string;
+  configuration?: {
+    column_config: ColumnConfig;
+    custom_root_fields: CustomRootFields;
+    custom_name: string;
+  };
 }
 
 export interface TableColumn extends BaseTableColumn {
@@ -190,6 +195,15 @@ export type CustomRootField = {
   comment?: Nullable<string>;
 };
 
+export type ColumnConfig = {
+  [column: string]: ColumnConfigValue;
+};
+
+export type ColumnConfigValue = {
+  custom_name?: Nullable<string>;
+  comment?: Nullable<string>;
+};
+
 /**
  * @deprecated use {@link NormalizedTable} instead
  * which will be later renamed to Table when it
@@ -209,9 +223,7 @@ export interface Table extends BaseTable {
   opp_foreign_key_constraints: ForeignKeyConstraint[];
   check_constraints: CheckConstraint[];
   configuration?: {
-    custom_column_names: {
-      [column: string]: string;
-    };
+    column_config: ColumnConfig;
     custom_root_fields: CustomRootFields;
     custom_name: string;
   };

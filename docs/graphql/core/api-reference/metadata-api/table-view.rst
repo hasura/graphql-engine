@@ -46,21 +46,24 @@ Add a table/view ``author``:
         "source": "default",
         "table": "author",
         "configuration": {
-           "custom_root_fields": {
-              "select": "Authors",
-              "select_by_pk": "Author",
-              "select_aggregate": "AuthorAggregate",
-              "insert": "AddAuthors",
-              "insert_one":"AddAuthor",
-              "update": "UpdateAuthors",
-              "update_by_pk": "UpdateAuthor",
-              "delete": "DeleteAuthors",
-              "delete_by_pk": "DeleteAuthor"
-           },
-           "custom_column_names": {
-              "id": "authorId"
-           },
-           "comment": "Authors of books"
+          "custom_root_fields": {
+            "select": "Authors",
+            "select_by_pk": "Author",
+            "select_aggregate": "AuthorAggregate",
+            "insert": "AddAuthors",
+            "insert_one":"AddAuthor",
+            "update": "UpdateAuthors",
+            "update_by_pk": "UpdateAuthor",
+            "delete": "DeleteAuthors",
+            "delete_by_pk": "DeleteAuthor"
+          },
+          "column_config": {
+            "id": {
+              "custom_name": "authorId",
+              "comment": "The ID of the Author"
+            }
+          },
+          "comment": "Authors of books"
         }
       }
    }
@@ -260,18 +263,21 @@ Set the configuration for a table/view called ``author``:
         "configuration": {
           "identifier": "author",
           "custom_root_fields": {
-             "select": "Authors",
-             "select_by_pk": "Author",
-             "select_aggregate": "AuthorAggregate",
-             "insert": "AddAuthors",
-             "insert_one":"AddAuthor",
-             "update": "UpdateAuthors",
-             "update_by_pk": "UpdateAuthor",
-             "delete": "DeleteAuthors",
-             "delete_by_pk": "DeleteAuthor"
+            "select": "Authors",
+            "select_by_pk": "Author",
+            "select_aggregate": "AuthorAggregate",
+            "insert": "AddAuthors",
+            "insert_one":"AddAuthor",
+            "update": "UpdateAuthors",
+            "update_by_pk": "UpdateAuthor",
+            "delete": "DeleteAuthors",
+            "delete_by_pk": "DeleteAuthor"
           },
-          "custom_column_names": {
-             "id": "authorId"
+          "column_config": {
+            "id": {
+              "custom_name": "authorId",
+              "comment": "The ID of the Author"
+            }
           }
         }
       }
@@ -469,11 +475,14 @@ Set the configuration for a table/view called ``author``:
         "configuration": {
           "identifier": "author",
           "custom_root_fields": {
-              "select": "Authors",
-              "select_aggregate": "AuthorAggregate",
+            "select": "Authors",
+            "select_aggregate": "AuthorAggregate",
           },
-          "custom_column_names": {
-              "id": "authorId"
+          "column_config": {
+            "id": {
+              "custom_name": "authorId",
+              "comment": "The ID of the Author"
+            }
           }
         }
       }
@@ -714,11 +723,14 @@ Set the configuration for a table/view called ``hasura_author_details`` to ``aut
         "configuration": {
           "custom_name": "author",
           "custom_root_fields": {
-              "select": "Authors",
-              "select_aggregate": "AuthorAggregate",
+            "select": "Authors",
+            "select_aggregate": "AuthorAggregate",
           },
-          "custom_column_names": {
-              "id": "authorId"
+          "column_config": {
+            "id": {
+              "custom_name": "authorId",
+              "comment": "The ID of the Author"
+            }
           }
         }
       }

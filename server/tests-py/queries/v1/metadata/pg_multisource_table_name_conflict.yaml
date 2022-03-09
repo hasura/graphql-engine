@@ -57,7 +57,7 @@
       table: my_author_table
       configuration:
         custom_name: pg1_my_author_table
-        custom_column_names: {}
+        column_config: {}
         custom_root_fields: {}
 
 - description: PG add source 2
@@ -95,7 +95,7 @@
         );
         INSERT INTO my_author_table (name)
           VALUES ('Author 3'), ('Author 4');
-    
+
 - description: track table 2
   url: /v1/metadata
   status: 200

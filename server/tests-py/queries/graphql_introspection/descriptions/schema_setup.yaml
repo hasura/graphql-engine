@@ -9,6 +9,7 @@ args:
         name text not null
       );
       COMMENT ON TABLE "automatic_comment_in_db" IS 'What a great comment in the DB';
+      COMMENT ON COLUMN "automatic_comment_in_db"."name" IS 'The name column comment in the DB';
       CREATE FUNCTION automatic_comment_in_db_upper_name(r "automatic_comment_in_db")
         RETURNS text
         LANGUAGE 'sql'
@@ -41,6 +42,7 @@ args:
         name text not null
       );
       COMMENT ON TABLE "explicit_comment_in_metadata" IS 'Fantastic comment, so good, so hidden';
+      COMMENT ON COLUMN "explicit_comment_in_metadata"."name" IS 'The name column comment in the DB, but hidden!';
       CREATE FUNCTION explicit_comment_in_metadata_upper_name(r "explicit_comment_in_metadata")
         RETURNS text
         LANGUAGE 'sql'
@@ -58,6 +60,7 @@ args:
         name text not null
       );
       COMMENT ON TABLE "explicit_no_comment_in_metadata" IS 'This would be a great comment, but you can''t see it';
+      COMMENT ON COLUMN "explicit_no_comment_in_metadata"."name" IS 'The name column comment in the DB, but you can''t see it';
       CREATE FUNCTION explicit_no_comment_in_metadata_upper_name(r "explicit_no_comment_in_metadata")
         RETURNS text
         LANGUAGE 'sql'

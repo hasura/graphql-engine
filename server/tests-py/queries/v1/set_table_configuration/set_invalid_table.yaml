@@ -13,6 +13,8 @@ query:
       custom_root_fields:
         select: Authors
         select_by_pk: Author
-      custom_column_names:
-        id: AuthorId
-        name: AuthorName
+      column_config:
+        id:
+          custom_name: AuthorId
+        name:
+          custom_name: AuthorName

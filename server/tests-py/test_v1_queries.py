@@ -757,6 +757,9 @@ class TestSetTableCustomization:
     def test_conflicting_custom_table_name(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/fail_conflicting_custom_table_name.yaml")
 
+    def test_use_deprecated_custom_column_names(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/use_deprecated_custom_column_names.yaml")
+
 @usefixtures('per_method_tests_db_state')
 class TestComputedFields:
     @classmethod

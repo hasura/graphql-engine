@@ -2,6 +2,9 @@
 
 ## Next release
 
+### Deprecations
+* The `custom_column_names` property of TableConfig used on `<db>_track_table` and `set_table_customization` metadata APIs has been deprecated in favour of the new `column_config` property. `custom_column_names` will still work for now, however, values used in `column_config` will take precedence over values from `custom_column_names` and any overlapped values in `custom_column_names` will be discarded.
+
 ### Bug fixes and improvements
 
 - server: improve performance of fetching postgres catalog metadata for tables and functions
@@ -9,6 +12,8 @@
 - server: Redesigns internal implementation of webhook transforms.
 - server: improve SQL generation for BigQuery backend queries involving `Orderby`.
 - server: fix regression where remote relationships would get exposed over Relay, which is unsupported
+- server: add support for customising the GraphQL schema descriptions of table columns in metadata
+- console: fixed an issue where editing both a column's name and its GraphQL field name at the same time caused an error
 
 ## v2.2.2
 
