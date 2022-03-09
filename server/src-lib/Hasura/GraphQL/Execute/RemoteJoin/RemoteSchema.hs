@@ -25,13 +25,12 @@ import Control.Lens (view, _2, _3)
 import Data.Aeson qualified as A
 import Data.Aeson.Ordered qualified as AO
 import Data.ByteString.Lazy qualified as BL
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.Extended qualified as Map
 import Data.IntMap.Strict qualified as IntMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated, toTxt, (<<>))
 import Data.Validation (Validation (..), toEither)
-import GHC.Stack (HasCallStack)
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Remote
   ( getVariableDefinitionAndValue,
@@ -159,15 +158,15 @@ fieldCallsToField rrArguments variables finalSelSet topAlias =
         Just f -> do
           s <- nest f
           pure (templatedArguments, [G.SelectionField s])
-        Nothing ->
-          let arguments =
-                Map.unionWith
-                  combineValues
-                  graphQLarguments
-                  -- converting (G.Value Void) -> (G.Value Variable) to merge the
-                  -- 'rrArguments' with the 'variables'
-                  templatedArguments
-           in pure (arguments, finalSelSet)
+        Nothing -> do
+          arguments <-
+            Map.unionWithM
+              combineValues
+              graphQLarguments
+              -- converting (G.Value Void) -> (G.Value Variable) to merge the
+              -- 'rrArguments' with the 'variables'
+              templatedArguments
+          pure (arguments, finalSelSet)
       pure $ G.Field Nothing name args [] selSet
 
     convert :: Map.HashMap G.Name (G.Value Void) -> Map.HashMap G.Name (G.Value RemoteSchemaVariable)
@@ -216,15 +215,13 @@ createArguments variables (RemoteArguments arguments) =
 --
 -- >>> combineValues (Object (fromList [("id", Number 1)]) (Object (fromList [("name", String "foo")])
 -- Object (fromList [("id", Number 1), ("name", String "foo")])
---
--- NOTE: this function *panics* if it fails.
 combineValues ::
-  HasCallStack => G.Value RemoteSchemaVariable -> G.Value RemoteSchemaVariable -> G.Value RemoteSchemaVariable
-combineValues (G.VList l) (G.VList r) = G.VList $ l <> r
-combineValues (G.VObject l) (G.VObject r) = G.VObject $ Map.unionWith combineValues l r
+  MonadError QErr m => G.Value RemoteSchemaVariable -> G.Value RemoteSchemaVariable -> m (G.Value RemoteSchemaVariable)
+combineValues (G.VObject l) (G.VObject r) = G.VObject <$> Map.unionWithM combineValues l r
+combineValues (G.VList l) (G.VList r) = pure $ G.VList $ l <> r
 combineValues l r =
-  error $
-    "combineValues: cannot combine values (" <> show l <> ") and (" <> show r
+  throw500 $
+    "combineValues: cannot combine values (" <> tshow l <> ") and (" <> tshow r
       <> "); \
          \lists can only be merged with lists, objects can only be merged with objects"
 
