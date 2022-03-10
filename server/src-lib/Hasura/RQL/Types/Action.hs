@@ -43,10 +43,34 @@ module Hasura.RQL.Types.Action
     ActionSourceInfo (..),
     getActionSourceInfo,
     AnnActionExecution (..),
+    aaeName,
+    aaeOutputType,
+    aaeFields,
+    aaePayload,
+    aaeOutputFields,
+    aaeWebhook,
+    aaeHeaders,
+    aaeForwardClientHeaders,
+    aaeTimeOut,
+    aaeRequestTransform,
+    aaeResponseTransform,
     AnnActionMutationAsync (..),
     ActionExecContext (..),
     AsyncActionQueryFieldG (..),
+    _AsyncTypename,
+    _AsyncOutput,
+    _AsyncId,
+    _AsyncCreatedAt,
+    _AsyncErrors,
     AnnActionAsyncQuery (..),
+    aaaqName,
+    aaaqActionId,
+    aaaqOutputType,
+    aaaqFields,
+    aaaqDefinitionList,
+    aaaqStringifyNum,
+    aaaqForwardClientHeaders,
+    aaaqSource,
     ActionId (..),
     LockedActionEventId,
     LockedActionIdArray (..),
@@ -411,8 +435,6 @@ data ActionsInfo = ActionsInfo
   }
   deriving (Show, Eq, Generic)
 
-$(makeLenses ''ActionsInfo)
-
 type LockedActionEventId = EventId
 
 -- This type exists only to use the Postgres array encoding.
@@ -424,3 +446,11 @@ instance Q.ToPrepArg LockedActionIdArray where
     Q.toPrepValHelper PTI.unknown encoder $ mapMaybe (UUID.fromText . unEventId) l
     where
       encoder = PE.array 2950 . PE.dimensionArray foldl' (PE.encodingArray . PE.uuid)
+
+$(makeLenses ''AnnActionAsyncQuery)
+
+$(makeLenses ''AnnActionExecution)
+
+$(makeLenses ''ActionsInfo)
+
+$(makePrisms ''AsyncActionQueryFieldG)

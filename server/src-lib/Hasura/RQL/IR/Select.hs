@@ -91,12 +91,23 @@ module Hasura.RQL.IR.Select
     TablePermG (..),
     CountDistinct (..),
     actionResponsePayloadColumn,
+    aarRelationshipName,
+    aarColumnMapping,
+    aarAnnSelect,
+    aosFields,
+    aosTableFrom,
+    aosTableFilter,
     asnArgs,
     asnFields,
     asnFrom,
     asnPerm,
     asnStrfyNum,
     bifoldMapAnnSelectG,
+    csXRelay,
+    csPrimaryKeyColumns,
+    csSplit,
+    csSlice,
+    csSelect,
     emptyFunctionArgsExp,
     functionArgsWithTableRowAndSession,
     insertFunctionArg,
@@ -121,6 +132,15 @@ module Hasura.RQL.IR.Select
     _AOCColumn,
     _AOCComputedField,
     _AOCObjectRelation,
+    _TAFAgg,
+    _TAFNodes,
+    _TAFExp,
+    _ConnectionTypename,
+    _ConnectionPageInfo,
+    _ConnectionEdges,
+    _EdgeTypename,
+    _EdgeCursor,
+    _EdgeNode,
   )
 where
 
@@ -715,9 +735,9 @@ instance Backend b => Bifoldable (ComputedFieldSelect b) where
 -- Local relationship
 
 data AnnRelationSelectG (b :: BackendType) a = AnnRelationSelectG
-  { aarRelationshipName :: RelName, -- Relationship name
-    aarColumnMapping :: HashMap (Column b) (Column b), -- Column of left table to join with
-    aarAnnSelect :: a -- Current table. Almost ~ to SQL Select
+  { _aarRelationshipName :: RelName, -- Relationship name
+    _aarColumnMapping :: HashMap (Column b) (Column b), -- Column of left table to join with
+    _aarAnnSelect :: a -- Current table. Almost ~ to SQL Select
   }
   deriving stock (Functor, Foldable, Traversable)
 
@@ -969,6 +989,12 @@ data CountDistinct
 -- Lenses
 
 $(makeLenses ''AnnSelectG)
+$(makeLenses ''AnnObjectSelectG)
+$(makeLenses ''AnnRelationSelectG)
+$(makeLenses ''ConnectionSelect)
 $(makeLenses ''SelectArgsG)
 $(makePrisms ''AnnFieldG)
 $(makePrisms ''AnnotatedOrderByElement)
+$(makePrisms ''TableAggregateFieldG)
+$(makePrisms ''ConnectionField)
+$(makePrisms ''EdgeField)

@@ -65,8 +65,8 @@ makeResultCustomizer remoteSchemaCustomizer IR.GraphQLField {..} =
       IR.SelectionSet (IR.RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable -> ResultCustomizer
     resultCustomizerFromSelection = \case
       IR.SelectionSetObject s -> foldMap customizeField s
-      IR.SelectionSetUnion s -> foldMap (foldMap customizeField) $ IR._atssMemberSelectionSets s
-      IR.SelectionSetInterface s -> foldMap (foldMap customizeField) $ IR._atssMemberSelectionSets s
+      IR.SelectionSetUnion s -> foldMap (foldMap customizeField) $ IR._dssMemberSelectionSets s
+      IR.SelectionSetInterface s -> foldMap (foldMap customizeField) $ IR._dssMemberSelectionSets s
       IR.SelectionSetNone -> mempty
 
     customizeField :: IR.Field (IR.RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable -> ResultCustomizer

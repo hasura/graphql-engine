@@ -63,14 +63,14 @@ buildDeleteTx deleteOperation stringifyNum = do
       createInsertedTempTableQuery =
         toQueryFlat $
           TQ.fromSelectIntoTempTable $
-            TSQL.toSelectIntoTempTable tempTableNameDeleted (dqp1Table deleteOperation) (dqp1AllCols deleteOperation) RemoveConstraints
+            TSQL.toSelectIntoTempTable tempTableNameDeleted (_adTable deleteOperation) (_adAllCols deleteOperation) RemoveConstraints
   -- Create a temp table
   Tx.unitQueryE defaultMSSQLTxErrorHandler createInsertedTempTableQuery
   let deleteQuery = TQ.fromDelete <$> TSQL.fromDelete deleteOperation
   deleteQueryValidated <- toQueryFlat <$> V.runValidate (runFromIr deleteQuery) `onLeft` (throw500 . tshow)
   -- Execute DELETE statement
   Tx.unitQueryE mutationMSSQLTxErrorHandler deleteQueryValidated
-  mutationOutputSelect <- mkMutationOutputSelect stringifyNum withAlias $ dqp1Output deleteOperation
+  mutationOutputSelect <- mkMutationOutputSelect stringifyNum withAlias $ _adOutput deleteOperation
   let withSelect =
         emptySelect
           { selectProjections = [StarProjection],

@@ -62,7 +62,7 @@ explainQueryField userInfo fieldName rootField = do
       step <- AB.dispatchAnyBackend @BackendExecute
         exists
         \(SourceConfigWith sourceConfig _ (QDBR db)) -> do
-          let (newDB, remoteJoins) = RJ.getRemoteJoins db
+          let (newDB, remoteJoins) = RJ.getRemoteJoinsQueryDB db
           unless (isNothing remoteJoins) $
             throw400 InvalidParams "queries with remote relationships cannot be explained"
           mkDBQueryExplain fieldName userInfo sourceName sourceConfig newDB

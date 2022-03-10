@@ -1106,7 +1106,7 @@ fromObjectRelationSelectG _existingJoins annRelationSelectG = do
   selectProjections <-
     NE.nonEmpty (concatMap (toList . fieldSourceProjections True) fieldSources)
       `onNothing` refute (pure NoProjectionFields)
-  joinFieldName <- lift (fromRelName aarRelationshipName)
+  joinFieldName <- lift (fromRelName _aarRelationshipName)
   joinAlias <-
     lift (generateEntityAlias (ObjectRelationTemplate joinFieldName))
   filterExpression <- local (const entityAlias) (fromAnnBoolExp tableFilter)
@@ -1159,9 +1159,9 @@ fromObjectRelationSelectG _existingJoins annRelationSelectG = do
         _aosTableFilter = tableFilter :: Ir.AnnBoolExp 'BigQuery Expression
       } = annObjectSelectG
     Ir.AnnRelationSelectG
-      { aarRelationshipName,
-        aarColumnMapping = mapping :: HashMap ColumnName ColumnName,
-        aarAnnSelect = annObjectSelectG :: Ir.AnnObjectSelectG 'BigQuery Void Expression
+      { _aarRelationshipName,
+        _aarColumnMapping = mapping :: HashMap ColumnName ColumnName,
+        _aarAnnSelect = annObjectSelectG :: Ir.AnnObjectSelectG 'BigQuery Void Expression
       } = annRelationSelectG
 
 -- We're not using existingJoins at the moment, which was used to
@@ -1193,7 +1193,7 @@ fromArrayAggregateSelectG ::
   Ir.AnnRelationSelectG 'BigQuery (Ir.AnnAggregateSelectG 'BigQuery Void Expression) ->
   ReaderT EntityAlias FromIr Join
 fromArrayAggregateSelectG annRelationSelectG = do
-  joinFieldName <- lift (fromRelName aarRelationshipName)
+  joinFieldName <- lift (fromRelName _aarRelationshipName)
   select <- do
     lhsEntityAlias <- ask
     lift (fromSelectAggregate (pure (lhsEntityAlias, mapping)) annSelectG)
@@ -1235,9 +1235,9 @@ fromArrayAggregateSelectG annRelationSelectG = do
       }
   where
     Ir.AnnRelationSelectG
-      { aarRelationshipName,
-        aarColumnMapping = mapping :: HashMap ColumnName ColumnName,
-        aarAnnSelect = annSelectG
+      { _aarRelationshipName,
+        _aarColumnMapping = mapping :: HashMap ColumnName ColumnName,
+        _aarAnnSelect = annSelectG
       } = annRelationSelectG
 
 -- | Produce a join for an array relation.
@@ -1306,7 +1306,7 @@ fromArrayRelationSelectG ::
   ReaderT EntityAlias FromIr Join
 fromArrayRelationSelectG annRelationSelectG = do
   pselect <- lift (fromSelectRows annSelectG) -- Take the original select.
-  joinFieldName <- lift (fromRelName aarRelationshipName)
+  joinFieldName <- lift (fromRelName _aarRelationshipName)
   alias <- lift (generateEntityAlias (ArrayRelationTemplate joinFieldName))
   indexAlias <- lift (generateEntityAlias IndexTemplate)
   joinOn <- fromMappingFieldNames alias mapping
@@ -1445,9 +1445,9 @@ fromArrayRelationSelectG annRelationSelectG = do
       }
   where
     Ir.AnnRelationSelectG
-      { aarRelationshipName,
-        aarColumnMapping = mapping :: HashMap ColumnName ColumnName,
-        aarAnnSelect = annSelectG
+      { _aarRelationshipName,
+        _aarColumnMapping = mapping :: HashMap ColumnName ColumnName,
+        _aarAnnSelect = annSelectG
       } = annRelationSelectG
 
 -- | For entity projections, convert any entity aliases to their field
