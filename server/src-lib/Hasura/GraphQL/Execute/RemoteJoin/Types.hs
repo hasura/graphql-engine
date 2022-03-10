@@ -30,7 +30,6 @@ module Hasura.GraphQL.Execute.RemoteJoin.Types
   )
 where
 
-import Control.Lens (view, _1)
 import Data.Aeson.Ordered qualified as AO
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.NonEmpty qualified as NEMap
@@ -190,7 +189,7 @@ getJoinColumnMapping = \case
   RemoteJoinSource sourceJoin _ -> AB.runBackend
     sourceJoin
     \RemoteSourceJoin {_rsjJoinColumns} ->
-      fmap (view _1) _rsjJoinColumns
+      fmap fst _rsjJoinColumns
   RemoteJoinRemoteSchema RemoteSchemaJoin {_rsjJoinColumnAliases} _ ->
     _rsjJoinColumnAliases
 
@@ -204,7 +203,7 @@ data RemoteSourceJoin b = RemoteSourceJoin
   { _rsjSource :: !SourceName,
     _rsjSourceConfig :: !(SourceConfig b),
     _rsjRelationship :: !(IR.SourceRelationshipSelection b Void P.UnpreparedValue),
-    _rsjJoinColumns :: !(Map.HashMap FieldName (JoinColumnAlias, ScalarType b, Column b))
+    _rsjJoinColumns :: !(Map.HashMap FieldName (JoinColumnAlias, (Column b, ScalarType b)))
   }
   deriving (Generic)
 
