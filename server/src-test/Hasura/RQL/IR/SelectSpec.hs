@@ -23,7 +23,7 @@ genMyPair genR genV = do
   pure $ MyPair (r, v)
 
 smallRange :: Integral a => Range a
-smallRange = linear 0 10
+smallRange = linear 0 8
 
 spec :: Spec
 spec = do
