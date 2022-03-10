@@ -22,19 +22,19 @@
 </span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Session.html"><span class="hs-identifier">Hasura.Session</span></a></span><span>
 </span><span id="line-23"></span><span>
 </span><span id="line-24"></span><span class="hs-comment">-- | Plan the query and then produce a forest of actions for the executor.</span><span>
-</span><span id="line-25"></span><span id="local-6989586621688224871"><span class="annot"><a href="Hasura.Backends.MySQL.Plan.html#queryToActionForest"><span class="hs-identifier hs-type">queryToActionForest</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-26"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688224871"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-25"></span><span id="local-6989586621688227513"><span class="annot"><a href="Hasura.Backends.MySQL.Plan.html#queryToActionForest"><span class="hs-identifier hs-type">queryToActionForest</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-26"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688227513"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-27"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-28"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#QueryDB"><span class="hs-identifier hs-type">QueryDB</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">GraphQL.UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-29"></span><span>  </span><span class="annot"><a href="#local-6989586621688224871"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#HeadAndTail"><span class="hs-identifier hs-type">DataLoader.HeadAndTail</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Forest</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#PlannedAction"><span class="hs-identifier hs-type">DataLoader.PlannedAction</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-29"></span><span>  </span><span class="annot"><a href="#local-6989586621688227513"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#HeadAndTail"><span class="hs-identifier hs-type">DataLoader.HeadAndTail</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Forest</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#PlannedAction"><span class="hs-identifier hs-type">DataLoader.PlannedAction</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-30"></span><span id="queryToActionForest"><span class="annot"><span class="annottext">queryToActionForest :: UserInfo
 -&gt; QueryDB 'MySQL Void (UnpreparedValue 'MySQL)
 -&gt; m (HeadAndTail, Forest PlannedAction)
-</span><a href="Hasura.Backends.MySQL.Plan.html#queryToActionForest"><span class="hs-identifier hs-var hs-var">queryToActionForest</span></a></span></span><span> </span><span id="local-6989586621688224870"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621688224870"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621688224869"><span class="annot"><span class="annottext">QueryDB 'MySQL Void (UnpreparedValue 'MySQL)
-</span><a href="#local-6989586621688224869"><span class="hs-identifier hs-var">qrf</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-31"></span><span>  </span><span id="local-6989586621688224868"><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621688224868"><span class="hs-identifier hs-var">select</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SessionVariables
+</span><a href="Hasura.Backends.MySQL.Plan.html#queryToActionForest"><span class="hs-identifier hs-var hs-var">queryToActionForest</span></a></span></span><span> </span><span id="local-6989586621688227512"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621688227512"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621688227511"><span class="annot"><span class="annottext">QueryDB 'MySQL Void (UnpreparedValue 'MySQL)
+</span><a href="#local-6989586621688227511"><span class="hs-identifier hs-var">qrf</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-31"></span><span>  </span><span id="local-6989586621688227510"><span class="annot"><span class="annottext">Select
+</span><a href="#local-6989586621688227510"><span class="hs-identifier hs-var">select</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SessionVariables
 -&gt; QueryDB 'MySQL Void (UnpreparedValue 'MySQL) -&gt; m Select
 forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
@@ -42,11 +42,11 @@ SessionVariables
 -&gt; QueryDB 'MySQL Void (UnpreparedValue 'MySQL) -&gt; m Select
 </span><a href="Hasura.Backends.MySQL.Plan.html#planQuery"><span class="hs-identifier hs-var">planQuery</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UserInfo -&gt; SessionVariables
 </span><a href="Hasura.Session.html#_uiSession"><span class="hs-identifier hs-var hs-var">_uiSession</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621688224870"><span class="hs-identifier hs-var">userInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">QueryDB 'MySQL Void (UnpreparedValue 'MySQL)
-</span><a href="#local-6989586621688224869"><span class="hs-identifier hs-var">qrf</span></a></span><span>
-</span><span id="line-32"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">!</span><span id="local-6989586621688224866"><span class="annot"><span class="annottext">HeadAndTail
-</span><a href="#local-6989586621688224866"><span class="hs-identifier hs-var">headAndTail</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621688224865"><span class="annot"><span class="annottext">[PlannedAction]
-</span><a href="#local-6989586621688224865"><span class="hs-identifier hs-var">plannedActionsList</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621688227512"><span class="hs-identifier hs-var">userInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">QueryDB 'MySQL Void (UnpreparedValue 'MySQL)
+</span><a href="#local-6989586621688227511"><span class="hs-identifier hs-var">qrf</span></a></span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">!</span><span id="local-6989586621688227508"><span class="annot"><span class="annottext">HeadAndTail
+</span><a href="#local-6989586621688227508"><span class="hs-identifier hs-var">headAndTail</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621688227507"><span class="annot"><span class="annottext">[PlannedAction]
+</span><a href="#local-6989586621688227507"><span class="hs-identifier hs-var">plannedActionsList</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-33"></span><span>        </span><span class="annot"><span class="annottext">Plan HeadAndTail -&gt; (HeadAndTail, [PlannedAction])
 forall r. Plan r -&gt; (r, [PlannedAction])
 </span><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#runPlan"><span class="hs-identifier hs-var">DataLoader.runPlan</span></a></span><span>
@@ -56,32 +56,32 @@ forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621688224868"><span class="hs-identifier hs-var">select</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-35"></span><span>      </span><span class="hs-glyph">!</span><span id="local-6989586621688224862"><span class="annot"><span class="annottext">actionsForest :: Forest PlannedAction
-</span><a href="#local-6989586621688224862"><span class="hs-identifier hs-var hs-var">actionsForest</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Graph -&gt; Graph) -&gt; [PlannedAction] -&gt; Forest PlannedAction
+</span><a href="#local-6989586621688227510"><span class="hs-identifier hs-var">select</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>      </span><span class="hs-glyph">!</span><span id="local-6989586621688227504"><span class="annot"><span class="annottext">actionsForest :: Forest PlannedAction
+</span><a href="#local-6989586621688227504"><span class="hs-identifier hs-var hs-var">actionsForest</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Graph -&gt; Graph) -&gt; [PlannedAction] -&gt; Forest PlannedAction
 </span><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#actionsForest"><span class="hs-identifier hs-var">DataLoader.actionsForest</span></a></span><span> </span><span class="annot"><span class="annottext">Graph -&gt; Graph
 forall a. a -&gt; a
 </span><span class="hs-identifier hs-var">id</span></span><span> </span><span class="annot"><span class="annottext">[PlannedAction]
-</span><a href="#local-6989586621688224865"><span class="hs-identifier hs-var">plannedActionsList</span></a></span><span>
+</span><a href="#local-6989586621688227507"><span class="hs-identifier hs-var">plannedActionsList</span></a></span><span>
 </span><span id="line-36"></span><span>  </span><span class="annot"><span class="annottext">(HeadAndTail, Forest PlannedAction)
 -&gt; m (HeadAndTail, Forest PlannedAction)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeadAndTail
-</span><a href="#local-6989586621688224866"><span class="hs-identifier hs-var">headAndTail</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Forest PlannedAction
-</span><a href="#local-6989586621688224862"><span class="hs-identifier hs-var">actionsForest</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688227508"><span class="hs-identifier hs-var">headAndTail</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Forest PlannedAction
+</span><a href="#local-6989586621688227504"><span class="hs-identifier hs-var">actionsForest</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-37"></span><span>
-</span><span id="line-38"></span><span id="local-6989586621688224932"><span class="annot"><a href="Hasura.Backends.MySQL.Plan.html#planQuery"><span class="hs-identifier hs-type">planQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-39"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688224932"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-38"></span><span id="local-6989586621688227574"><span class="annot"><a href="Hasura.Backends.MySQL.Plan.html#planQuery"><span class="hs-identifier hs-type">planQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-39"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688227574"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-40"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-41"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#QueryDB"><span class="hs-identifier hs-type">QueryDB</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">GraphQL.UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-42"></span><span>  </span><span class="annot"><a href="#local-6989586621688224932"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#Select"><span class="hs-identifier hs-type">Select</span></a></span></span><span>
+</span><span id="line-42"></span><span>  </span><span class="annot"><a href="#local-6989586621688227574"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#Select"><span class="hs-identifier hs-type">Select</span></a></span></span><span>
 </span><span id="line-43"></span><span id="planQuery"><span class="annot"><span class="annottext">planQuery :: SessionVariables
 -&gt; QueryDB 'MySQL Void (UnpreparedValue 'MySQL) -&gt; m Select
-</span><a href="Hasura.Backends.MySQL.Plan.html#planQuery"><span class="hs-identifier hs-var hs-var">planQuery</span></a></span></span><span> </span><span id="local-6989586621688224859"><span class="annot"><span class="annottext">SessionVariables
-</span><a href="#local-6989586621688224859"><span class="hs-identifier hs-var">sessionVariables</span></a></span></span><span> </span><span id="local-6989586621688224858"><span class="annot"><span class="annottext">QueryDB 'MySQL Void (UnpreparedValue 'MySQL)
-</span><a href="#local-6989586621688224858"><span class="hs-identifier hs-var">queryDB</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-44"></span><span>  </span><span id="local-6989586621688224857"><span class="annot"><span class="annottext">QueryDB 'MySQL Void Expression
-</span><a href="#local-6989586621688224857"><span class="hs-identifier hs-var">rootField</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(UnpreparedValue 'MySQL -&gt; m Expression)
+</span><a href="Hasura.Backends.MySQL.Plan.html#planQuery"><span class="hs-identifier hs-var hs-var">planQuery</span></a></span></span><span> </span><span id="local-6989586621688227501"><span class="annot"><span class="annottext">SessionVariables
+</span><a href="#local-6989586621688227501"><span class="hs-identifier hs-var">sessionVariables</span></a></span></span><span> </span><span id="local-6989586621688227500"><span class="annot"><span class="annottext">QueryDB 'MySQL Void (UnpreparedValue 'MySQL)
+</span><a href="#local-6989586621688227500"><span class="hs-identifier hs-var">queryDB</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621688227499"><span class="annot"><span class="annottext">QueryDB 'MySQL Void Expression
+</span><a href="#local-6989586621688227499"><span class="hs-identifier hs-var">rootField</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(UnpreparedValue 'MySQL -&gt; m Expression)
 -&gt; QueryDB 'MySQL Void (UnpreparedValue 'MySQL)
 -&gt; m (QueryDB 'MySQL Void Expression)
 forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
@@ -92,17 +92,17 @@ forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 SessionVariables -&gt; UnpreparedValue 'MySQL -&gt; m Expression
 </span><a href="Hasura.Backends.MySQL.Plan.html#prepareValueQuery"><span class="hs-identifier hs-var">prepareValueQuery</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables
-</span><a href="#local-6989586621688224859"><span class="hs-identifier hs-var">sessionVariables</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">QueryDB 'MySQL Void (UnpreparedValue 'MySQL)
-</span><a href="#local-6989586621688224858"><span class="hs-identifier hs-var">queryDB</span></a></span><span>
-</span><span id="line-45"></span><span>  </span><span id="local-6989586621688224854"><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621688224854"><span class="hs-identifier hs-var">sel</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621688227501"><span class="hs-identifier hs-var">sessionVariables</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">QueryDB 'MySQL Void (UnpreparedValue 'MySQL)
+</span><a href="#local-6989586621688227500"><span class="hs-identifier hs-var">queryDB</span></a></span><span>
+</span><span id="line-45"></span><span>  </span><span id="local-6989586621688227496"><span class="annot"><span class="annottext">Select
+</span><a href="#local-6989586621688227496"><span class="hs-identifier hs-var">sel</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-46"></span><span>    </span><span class="annot"><span class="annottext">Validate (NonEmpty Error) Select -&gt; Either (NonEmpty Error) Select
 forall e a. Validate e a -&gt; Either e a
 </span><span class="hs-identifier hs-var">runValidate</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FromIr Select -&gt; Validate (NonEmpty Error) Select
 forall a. FromIr a -&gt; Validate (NonEmpty Error) a
 </span><a href="Hasura.Backends.MySQL.FromIr.html#runFromIr"><span class="hs-identifier hs-var">runFromIr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">QueryDB 'MySQL Void Expression -&gt; FromIr Select
 </span><a href="Hasura.Backends.MySQL.FromIr.html#fromRootField"><span class="hs-identifier hs-var">fromRootField</span></a></span><span> </span><span class="annot"><span class="annottext">QueryDB 'MySQL Void Expression
-</span><a href="#local-6989586621688224857"><span class="hs-identifier hs-var">rootField</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688227499"><span class="hs-identifier hs-var">rootField</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-47"></span><span>      </span><span class="annot"><span class="annottext">Either (NonEmpty Error) Select
 -&gt; (NonEmpty Error -&gt; m Select) -&gt; m Select
 forall (m :: * -&gt; *) e a.
@@ -123,25 +123,25 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-49"></span><span>    </span><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621688224854"><span class="hs-identifier hs-var">sel</span></a></span><span>
+</span><a href="#local-6989586621688227496"><span class="hs-identifier hs-var">sel</span></a></span><span>
 </span><span id="line-50"></span><span>
 </span><span id="line-51"></span><span class="hs-comment">-- | Prepare a value without any query planning; we just execute the</span><span>
 </span><span id="line-52"></span><span class="hs-comment">-- query with the values embedded.</span><span>
-</span><span id="line-53"></span><span id="local-6989586621688224915"><span class="annot"><a href="Hasura.Backends.MySQL.Plan.html#prepareValueQuery"><span class="hs-identifier hs-type">prepareValueQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-54"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688224915"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-53"></span><span id="local-6989586621688227557"><span class="annot"><a href="Hasura.Backends.MySQL.Plan.html#prepareValueQuery"><span class="hs-identifier hs-type">prepareValueQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-54"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688227557"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-55"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-56"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">GraphQL.UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-57"></span><span>  </span><span class="annot"><a href="#local-6989586621688224915"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span></span><span>
+</span><span id="line-57"></span><span>  </span><span class="annot"><a href="#local-6989586621688227557"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span></span><span>
 </span><span id="line-58"></span><span id="prepareValueQuery"><span class="annot"><span class="annottext">prepareValueQuery :: SessionVariables -&gt; UnpreparedValue 'MySQL -&gt; m Expression
-</span><a href="Hasura.Backends.MySQL.Plan.html#prepareValueQuery"><span class="hs-identifier hs-var hs-var">prepareValueQuery</span></a></span></span><span> </span><span id="local-6989586621688224845"><span class="annot"><span class="annottext">SessionVariables
-</span><a href="#local-6989586621688224845"><span class="hs-identifier hs-var">sessionVariables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.MySQL.Plan.html#prepareValueQuery"><span class="hs-identifier hs-var hs-var">prepareValueQuery</span></a></span></span><span> </span><span id="local-6989586621688227487"><span class="annot"><span class="annottext">SessionVariables
+</span><a href="#local-6989586621688227487"><span class="hs-identifier hs-var">sessionVariables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-59"></span><span>  </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-60"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UVLiteral"><span class="hs-identifier hs-type">GraphQL.UVLiteral</span></a></span><span> </span><span id="local-6989586621688224843"><span class="annot"><span class="annottext">SQLExpression 'MySQL
-</span><a href="#local-6989586621688224843"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Expression -&gt; m Expression
+</span><span id="line-60"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UVLiteral"><span class="hs-identifier hs-type">GraphQL.UVLiteral</span></a></span><span> </span><span id="local-6989586621688227485"><span class="annot"><span class="annottext">SQLExpression 'MySQL
+</span><a href="#local-6989586621688227485"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Expression -&gt; m Expression
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">SQLExpression 'MySQL
 Expression
-</span><a href="#local-6989586621688224843"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><a href="#local-6989586621688227485"><span class="hs-identifier hs-var">x</span></a></span><span>
 </span><span id="line-61"></span><span>    </span><span class="annot"><span class="annottext">UnpreparedValue 'MySQL
 </span><a href="Hasura.GraphQL.Parser.Column.html#UVSession"><span class="hs-identifier hs-var">GraphQL.UVSession</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Expression -&gt; m Expression
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -159,9 +159,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SessionVariables -&gt; ByteString
 forall a. ToJSON a =&gt; a -&gt; ByteString
 </span><span class="hs-identifier hs-var">J.encode</span></span><span> </span><span class="annot"><span class="annottext">SessionVariables
-</span><a href="#local-6989586621688224845"><span class="hs-identifier hs-var">sessionVariables</span></a></span><span>
+</span><a href="#local-6989586621688227487"><span class="hs-identifier hs-var">sessionVariables</span></a></span><span>
 </span><span id="line-62"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UVParameter"><span class="hs-identifier hs-type">GraphQL.UVParameter</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe VariableInfo
-</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">RQL.ColumnValue</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688224835"><span id="local-6989586621688224836"><span class="annot"><span class="annottext">ScalarValue 'MySQL
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">RQL.ColumnValue</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688227477"><span id="local-6989586621688227478"><span class="annot"><span class="annottext">ScalarValue 'MySQL
 ColumnType 'MySQL
 cvValue :: forall (b :: BackendType). ColumnValue b -&gt; ScalarValue b
 cvType :: forall (b :: BackendType). ColumnValue b -&gt; ColumnType b
@@ -174,16 +174,16 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ScalarValue -&gt; Expression
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#ValueExpression"><span class="hs-identifier hs-var">ValueExpression</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarValue 'MySQL
 ScalarValue
-</span><a href="#local-6989586621688224835"><span class="hs-identifier hs-var">cvValue</span></a></span><span>
-</span><span id="line-63"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UVSessionVar"><span class="hs-identifier hs-type">GraphQL.UVSessionVar</span></a></span><span> </span><span id="local-6989586621688224831"><span class="annot"><span class="annottext">SessionVarType 'MySQL
-</span><a href="#local-6989586621688224831"><span class="hs-identifier hs-var">_typ</span></a></span></span><span> </span><span id="local-6989586621688224830"><span class="annot"><span class="annottext">SessionVariable
-</span><a href="#local-6989586621688224830"><span class="hs-identifier hs-var">sessionVariable</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-64"></span><span>      </span><span id="local-6989586621688224829"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688224829"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621688227477"><span class="hs-identifier hs-var">cvValue</span></a></span><span>
+</span><span id="line-63"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UVSessionVar"><span class="hs-identifier hs-type">GraphQL.UVSessionVar</span></a></span><span> </span><span id="local-6989586621688227473"><span class="annot"><span class="annottext">SessionVarType 'MySQL
+</span><a href="#local-6989586621688227473"><span class="hs-identifier hs-var">_typ</span></a></span></span><span> </span><span id="local-6989586621688227472"><span class="annot"><span class="annottext">SessionVariable
+</span><a href="#local-6989586621688227472"><span class="hs-identifier hs-var">sessionVariable</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-64"></span><span>      </span><span id="local-6989586621688227471"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688227471"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-65"></span><span>        </span><span class="annot"><span class="annottext">SessionVariable -&gt; SessionVariables -&gt; Maybe Text
 </span><a href="Hasura.Session.html#getSessionVariableValue"><span class="hs-identifier hs-var">getSessionVariableValue</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable
-</span><a href="#local-6989586621688224830"><span class="hs-identifier hs-var">sessionVariable</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables
-</span><a href="#local-6989586621688224845"><span class="hs-identifier hs-var">sessionVariables</span></a></span><span>
+</span><a href="#local-6989586621688227472"><span class="hs-identifier hs-var">sessionVariable</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables
+</span><a href="#local-6989586621688227487"><span class="hs-identifier hs-var">sessionVariables</span></a></span><span>
 </span><span id="line-66"></span><span>          </span><span class="annot"><span class="annottext">Maybe Text -&gt; m Text -&gt; m Text
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="Hasura.Prelude.html#onNothing"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m Text
@@ -193,7 +193,7 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><span class="hs-string">&quot;missing session variable: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; SessionVariable -&gt; Text
 forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable
-</span><a href="#local-6989586621688224830"><span class="hs-identifier hs-var">sessionVariable</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688227472"><span class="hs-identifier hs-var">sessionVariable</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-67"></span><span>      </span><span class="annot"><span class="annottext">Expression -&gt; m Expression
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Expression -&gt; m Expression) -&gt; Expression -&gt; m Expression
@@ -203,5 +203,5 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ScalarValue
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#TextValue"><span class="hs-identifier hs-var">TextValue</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688224829"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621688227471"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-68"></span></pre></body></html>

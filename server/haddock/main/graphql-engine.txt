@@ -21224,11 +21224,11 @@ getJoinColumnMapping :: RemoteJoin -> HashMap FieldName JoinColumnAlias
 --   required for the execution of a join against a source, translated from
 --   the IR's representation of a selection (see <tt>AnnFieldG</tt>).
 data RemoteSourceJoin b
-RemoteSourceJoin :: !SourceName -> !SourceConfig b -> !SourceRelationshipSelection b Void UnpreparedValue -> !HashMap FieldName (JoinColumnAlias, ScalarType b, Column b) -> RemoteSourceJoin b
+RemoteSourceJoin :: !SourceName -> !SourceConfig b -> !SourceRelationshipSelection b Void UnpreparedValue -> !HashMap FieldName (JoinColumnAlias, (Column b, ScalarType b)) -> RemoteSourceJoin b
 [_rsjSource] :: RemoteSourceJoin b -> !SourceName
 [_rsjSourceConfig] :: RemoteSourceJoin b -> !SourceConfig b
 [_rsjRelationship] :: RemoteSourceJoin b -> !SourceRelationshipSelection b Void UnpreparedValue
-[_rsjJoinColumns] :: RemoteSourceJoin b -> !HashMap FieldName (JoinColumnAlias, ScalarType b, Column b)
+[_rsjJoinColumns] :: RemoteSourceJoin b -> !HashMap FieldName (JoinColumnAlias, (Column b, ScalarType b))
 
 -- | A <a>RemoteSchemaJoin</a> contains all the contextual information
 --   required for the execution of a join against a remote schema,
@@ -24024,9 +24024,9 @@ QueryParametersInfo :: !HashMap Name (ColumnValue b) -> !Seq (ColumnValue b) -> 
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> !HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_awEB8. Lens' (QueryParametersInfo b_awEB8) (Seq (ColumnValue b_awEB8))
-qpiReusableVariableValues :: forall b_awEB8. Lens' (QueryParametersInfo b_awEB8) (HashMap Name (ColumnValue b_awEB8))
-qpiReferencedSessionVariables :: forall b_awEB8. Lens' (QueryParametersInfo b_awEB8) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_awEAU. Lens' (QueryParametersInfo b_awEAU) (Seq (ColumnValue b_awEAU))
+qpiReusableVariableValues :: forall b_awEAU. Lens' (QueryParametersInfo b_awEAU) (HashMap Name (ColumnValue b_awEAU))
+qpiReferencedSessionVariables :: forall b_awEAU. Lens' (QueryParametersInfo b_awEAU) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
@@ -25329,14 +25329,80 @@ instance Hasura.GraphQL.Transport.Backend.BackendTransport 'Hasura.SQL.Backend.B
 
 module Hasura.GraphQL.Transport.Instances
 
-module Hasura.GraphQL.Execute.RemoteJoin.Join
-forRemoteJoins :: Applicative f => Maybe RemoteJoins -> a -> (RemoteJoins -> f a) -> f a
-processRemoteJoins :: (MonadError QErr m, MonadIO m, MonadQueryTags m, MonadQueryLog m, MonadTrace m) => RequestId -> Logger Hasura -> Environment -> Manager -> [Header] -> UserInfo -> EncJSON -> Maybe RemoteJoins -> GQLReqUnparsed -> m EncJSON
-processRemoteJoins_ :: (MonadError QErr m, MonadIO m, MonadQueryTags m, MonadQueryLog m, MonadTrace m, Traversable f) => RequestId -> Logger Hasura -> Environment -> Manager -> [Header] -> UserInfo -> f Value -> RemoteJoins -> GQLReqUnparsed -> m (f Value)
 
--- | Attempt to construct a <tt>JoinIndex</tt> from some <a>EncJSON</a>
---   source response.
-buildSourceDataJoinIndex :: MonadError QErr m => EncJSON -> m (IntMap Value)
+-- | How to construct and execute a call to a source for a remote join.
+--   
+--   There are three steps required to do this: - construct the execution
+--   step for that source join - execute that GraphQL query over the
+--   network - build a join index of the variables out of the response
+--   
+--   This can be done as one function, but we also export the individual
+--   steps for debugging / test purposes. We congregate all intermediary
+--   state in the opaque <a>SourceJoinCall</a> type.
+module Hasura.GraphQL.Execute.RemoteJoin.Source
+
+-- | Construct and execute a call to a source for a remote join.
+makeSourceJoinCall :: (MonadQueryTags m, MonadError QErr m) => (AnyBackend SourceJoinCall -> m ByteString) -> UserInfo -> AnyBackend RemoteSourceJoin -> FieldName -> IntMap JoinArgument -> m (Maybe (IntMap Value))
+
+-- | Intermediate type that contains all the necessary information to
+--   perform a call to a database to perform a join.
+data SourceJoinCall b
+SourceJoinCall :: RootFieldAlias -> SourceConfig b -> DBStepInfo b -> SourceJoinCall b
+[_sjcRootFieldAlias] :: SourceJoinCall b -> RootFieldAlias
+[_sjcSourceConfig] :: SourceJoinCall b -> SourceConfig b
+[_sjcStepInfo] :: SourceJoinCall b -> DBStepInfo b
+buildSourceJoinCall :: (BackendExecute b, MonadQueryTags m, MonadError QErr m) => UserInfo -> FieldName -> IntMap JoinArgument -> RemoteSourceJoin b -> m (Maybe (AnyBackend SourceJoinCall))
+
+-- | Construct a join index from the <tt>EncJSON</tt> response from the
+--   source.
+--   
+--   Unlike with remote schemas, we can make assumptions about the shape of
+--   the result, instead of having to keep track of the path within the
+--   answer. This function therefore enforces that the answer has the shape
+--   we expect, and throws a <a>QErr</a> if it doesn't.
+buildJoinIndex :: MonadError QErr m => ByteString -> m (IntMap Value)
+
+module Hasura.GraphQL.Execute.RemoteJoin.Join
+
+-- | Process all remote joins, recursively.
+--   
+--   Given the result of the first step of an execution and its associated
+--   remote joins, process all joins recursively to build the resulting
+--   JSON object.
+--   
+--   This function is a thin wrapper around
+--   <tt>processRemoteJoinsWith</tt>, and starts the join tree traversal
+--   process by re-parsing the <a>EncJSON</a> value into an introspectable
+--   JSON <tt>Value</tt>, and "injects" the required functions to process
+--   each join over the network.
+processRemoteJoins :: forall m. (MonadError QErr m, MonadIO m, MonadQueryTags m, MonadQueryLog m, MonadTrace m) => RequestId -> Logger Hasura -> Environment -> Manager -> [Header] -> UserInfo -> EncJSON -> Maybe RemoteJoins -> GQLReqUnparsed -> m EncJSON
+
+-- | Fold the join tree.
+--   
+--   This function takes as an argument the functions that will be used to
+--   do the actual network calls; this allows this function not to require
+--   <a>MonadIO</a>, allowing it to be used in tests.
+foldJoinTreeWith :: (MonadError QErr m, MonadQueryTags m, Traversable f) => (AnyBackend SourceJoinCall -> m ByteString) -> (ValidatedRemoteSchemaDef -> GQLReqOutgoing -> m ByteString) -> UserInfo -> f Value -> RemoteJoins -> m (f Value)
+
+-- | Simple convenient wrapper around <tt>Maybe RemoteJoins</tt>.
+forRemoteJoins :: Applicative f => Maybe RemoteJoins -> a -> (RemoteJoins -> f a) -> f a
+
+-- | When traversing a responses's json, wherever the join columns of a
+--   remote join are expected, we want to collect these arguments.
+--   
+--   However looking up by a remote join's definition to collect these
+--   arguments does not work because we don't have an <a>Ord</a> or a
+--   <a>Hashable</a> instance (it would be a bit of work).
+--   
+--   So this assigned each remote join a unique integer ID by using just
+--   the <a>Eq</a> instance. This ID then can be used for the collection of
+--   arguments (which should also be faster).
+--   
+--   TODO(nicuveo):
+--   <a>https://github.com/hasura/graphql-engine-mono/issues/3891</a>.
+assignJoinIds :: JoinTree RemoteJoin -> JoinTree (JoinCallId, RemoteJoin)
+collectJoinArguments :: forall f m. (MonadError QErr m, Traversable f) => JoinTree (JoinCallId, RemoteJoin) -> f Value -> m (f (CompositeValue ReplacementToken), IntMap JoinArguments)
+joinResults :: forall f m. (MonadError QErr m, Traversable f) => IntMap (IntMap Value) -> f (CompositeValue ReplacementToken) -> m (f Value)
 type CompositeObject a = InsOrdHashMap Text (CompositeValue a)
 
 -- | A hybrid JSON value representation which captures the context of
@@ -25358,20 +25424,6 @@ ReplacementToken :: !JoinCallId -> !JoinArgumentId -> ReplacementToken
 
 -- | Unique identifier for an argument to some remote join.
 [_rtArgumentId] :: ReplacementToken -> !JoinArgumentId
-joinResults :: forall f m. (MonadError QErr m, Traversable f) => IntMap (IntMap Value) -> f (CompositeValue ReplacementToken) -> m (f Value)
-
--- | When traversing a responses's json, wherever the join columns of a
---   remote join are expected, we want to collect these arguments.
---   
---   However looking up by a remote join's definition to collect these
---   arguments does not work because we don't have an <a>Ord</a> or a
---   <a>Hashable</a> instance (it would be a bit of work).
---   
---   So this assigned each remote join a unique integer ID by using just
---   the <a>Eq</a> instance. This ID then can be used for the collection of
---   arguments (which should also be faster).
-assignJoinIds :: JoinTree RemoteJoin -> JoinTree (JoinCallId, RemoteJoin)
-collectJoinArguments :: forall f m. (MonadError QErr m, Traversable f) => JoinTree (JoinCallId, RemoteJoin) -> f Value -> m (f (CompositeValue ReplacementToken), IntMap JoinArguments)
 instance Data.Traversable.Traversable Hasura.GraphQL.Execute.RemoteJoin.Join.CompositeValue
 instance Data.Foldable.Foldable Hasura.GraphQL.Execute.RemoteJoin.Join.CompositeValue
 instance GHC.Base.Functor Hasura.GraphQL.Execute.RemoteJoin.Join.CompositeValue
