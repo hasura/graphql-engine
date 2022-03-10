@@ -121,6 +121,7 @@ function:
 
 - server: add metadata inconsistency information in `reload_metadata` API call
 - server: add custom function for case insensitive lookup in session variable in request transformation
+- server: Improved error messaging for `test_webhook_transform` metadata API endpoint
 - server: Webhook Tranforms can now produce `x-www-url-formencoded` bodies.
 - server: Webhook Transforms can now delete request/response bodies explicitly.
 - server: Fix truncation of session variables with variable length column types in MSSQL (#8158)

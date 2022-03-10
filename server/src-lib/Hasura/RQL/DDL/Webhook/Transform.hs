@@ -272,7 +272,7 @@ infixr 8 .=?
 newtype WithOptional fn result = WithOptional
   { getOptional :: Maybe (fn result)
   }
-  deriving stock (Eq, Functor, Generic, Show)
+  deriving stock (Eq, Functor, Foldable, Generic, Show)
   deriving newtype (FromJSON, ToJSON)
 
 deriving newtype instance
@@ -355,7 +355,7 @@ mkRespTemplateTransform engine (ModifyBody (Template template)) ResponseTransfor
 mkRespTemplateTransform engine (FormUrlEncoded formTemplates) context =
   case engine of
     Kriti -> do
-      result <- liftEither . V.toEither $ traverse (validateUnescapedResponseTemplateTransform context) formTemplates
+      result <- liftEither . V.toEither $ traverse (runUnescapedResponseTemplateTransform' context) formTemplates
       pure $ J.String $ TE.decodeUtf8 $ BL.toStrict $ foldFormEncoded result
 
 mkResponseTransform :: MetadataResponseTransform -> ResponseTransform

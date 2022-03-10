@@ -16,15 +16,18 @@ where
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as J
 import Data.Text qualified as T
+import Data.Validation
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform.Class
   ( RequestTransformCtx (..),
+    TemplatingEngine,
     Transform (..),
     TransformErrorBundle (..),
     UnescapedTemplate (..),
-    mkRequestTemplateTransform,
+    runRequestTemplateTransform,
     throwErrorBundle,
+    validateRequestUnescapedTemplateTransform',
     wrapUnescapedTemplate,
   )
 import Network.URI (parseURI)
@@ -55,7 +58,7 @@ instance Transform Url where
     case transformation of
       ModifyUrl unescapedTemplate -> do
         let template = wrapUnescapedTemplate unescapedTemplate
-        resultJson <- liftEither $ mkRequestTemplateTransform template context
+        resultJson <- liftEither $ runRequestTemplateTransform template context
         templatedUrlTxt <- case resultJson of
           J.String templatedUrlTxt -> pure templatedUrlTxt
           val -> do
@@ -64,6 +67,13 @@ instance Transform Url where
         case parseURI (T.unpack templatedUrlTxt) of
           Nothing -> throwErrorBundle ("Invalid URL: " <> templatedUrlTxt) Nothing
           Just _validatedUrl -> pure $ Url templatedUrlTxt
+
+  validate ::
+    TemplatingEngine ->
+    TransformFn Url ->
+    Validation TransformErrorBundle ()
+  validate engine (UrlTransform (ModifyUrl template)) =
+    validateRequestUnescapedTemplateTransform' engine template
 
 -- | The defunctionalized transformation function on 'Url'
 newtype UrlTransformAction

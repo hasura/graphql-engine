@@ -27,9 +27,21 @@ module Hasura.RQL.Types.ScheduledTrigger
     GetInvocationsBy (..),
     GetEventInvocations (..),
     ClearCronEvents (..),
+    cctName,
+    cctWebhook,
+    cctCronSchedule,
+    cctPayload,
+    cctRetryConf,
+    cctHeaders,
+    cctIncludeInMetadata,
+    cctComment,
+    cctReplace,
+    cctRequestTransform,
+    cctResponseTransform,
   )
 where
 
+import Control.Lens (makeLenses)
 import Data.Aeson
 import Data.Aeson qualified as J
 import Data.Aeson.Casing
@@ -135,19 +147,21 @@ instance FromJSON CronTriggerMetadata where
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''CronTriggerMetadata)
 
 data CreateCronTrigger = CreateCronTrigger
-  { cctName :: !TriggerName,
-    cctWebhook :: !InputWebhook,
-    cctCronSchedule :: !CronSchedule,
-    cctPayload :: !(Maybe J.Value),
-    cctRetryConf :: !STRetryConf,
-    cctHeaders :: ![HeaderConf],
-    cctIncludeInMetadata :: !Bool,
-    cctComment :: !(Maybe Text),
-    cctReplace :: !Bool,
-    cctRequestTransform :: !(Maybe RequestTransform),
-    cctResponseTransform :: !(Maybe MetadataResponseTransform)
+  { _cctName :: !TriggerName,
+    _cctWebhook :: !InputWebhook,
+    _cctCronSchedule :: !CronSchedule,
+    _cctPayload :: !(Maybe J.Value),
+    _cctRetryConf :: !STRetryConf,
+    _cctHeaders :: ![HeaderConf],
+    _cctIncludeInMetadata :: !Bool,
+    _cctComment :: !(Maybe Text),
+    _cctReplace :: !Bool,
+    _cctRequestTransform :: !(Maybe RequestTransform),
+    _cctResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Show, Eq, Generic)
+
+$(makeLenses ''CreateCronTrigger)
 
 instance NFData CreateCronTrigger
 
@@ -156,17 +170,17 @@ instance Cacheable CreateCronTrigger
 instance FromJSON CreateCronTrigger where
   parseJSON =
     withObject "CreateCronTrigger" $ \o -> do
-      cctName <- o .: "name"
-      cctWebhook <- o .: "webhook"
-      cctPayload <- o .:? "payload"
-      cctCronSchedule <- o .: "schedule"
-      cctRetryConf <- o .:? "retry_conf" .!= defaultSTRetryConf
-      cctHeaders <- o .:? "headers" .!= []
-      cctIncludeInMetadata <- o .: "include_in_metadata"
-      cctComment <- o .:? "comment"
-      cctReplace <- o .:? "replace" .!= False
-      cctRequestTransform <- o .:? "request_transform"
-      cctResponseTransform <- o .:? "response_transform"
+      _cctName <- o .: "name"
+      _cctWebhook <- o .: "webhook"
+      _cctPayload <- o .:? "payload"
+      _cctCronSchedule <- o .: "schedule"
+      _cctRetryConf <- o .:? "retry_conf" .!= defaultSTRetryConf
+      _cctHeaders <- o .:? "headers" .!= []
+      _cctIncludeInMetadata <- o .: "include_in_metadata"
+      _cctComment <- o .:? "comment"
+      _cctReplace <- o .:? "replace" .!= False
+      _cctRequestTransform <- o .:? "request_transform"
+      _cctResponseTransform <- o .:? "response_transform"
       pure CreateCronTrigger {..}
 
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''CreateCronTrigger)

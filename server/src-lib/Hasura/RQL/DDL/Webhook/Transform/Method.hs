@@ -16,10 +16,12 @@ import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as J
 import Data.CaseInsensitive qualified as CI
 import Data.Text qualified as T
+import Data.Validation
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform.Class
   ( RequestTransformCtx (..),
+    TemplatingEngine,
     Transform (..),
     TransformErrorBundle (..),
   )
@@ -47,6 +49,13 @@ instance Transform Method where
   -- In the case of 'Method' we simply replace the 'Method' with the one in the request transform.
   transform :: MonadError TransformErrorBundle m => TransformFn Method -> RequestTransformCtx -> Method -> m Method
   transform (MethodTransform (ReplaceMethod method)) _ _ = pure method
+
+  -- NOTE: Do we want to validate the method verb?
+  validate ::
+    TemplatingEngine ->
+    TransformFn Method ->
+    Validation TransformErrorBundle ()
+  validate _ _ = pure ()
 
 -- | The defunctionalized transformation on 'Method'.
 --
