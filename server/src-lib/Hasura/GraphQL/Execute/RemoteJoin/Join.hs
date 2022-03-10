@@ -1,33 +1,31 @@
 module Hasura.GraphQL.Execute.RemoteJoin.Join
   ( processRemoteJoins,
+    foldJoinTreeWith,
   )
 where
 
 import Control.Lens (view, _3)
-import Data.Aeson qualified as J
 import Data.Aeson.Ordered qualified as JO
+import Data.ByteString.Lazy qualified as BL
 import Data.Environment qualified as Env
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashMap.Strict.NonEmpty qualified as NEMap
 import Data.HashSet qualified as HS
 import Data.IntMap.Strict.Extended qualified as IntMap
-import Data.List.NonEmpty qualified as NE
-import Data.Scientific qualified as Scientific
 import Data.Text qualified as T
-import Data.Text.Read qualified as TR
 import Data.Tuple (swap)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend qualified as EB
 import Hasura.GraphQL.Execute.Instances ()
 import Hasura.GraphQL.Execute.RemoteJoin.RemoteSchema qualified as RS
+import Hasura.GraphQL.Execute.RemoteJoin.Source qualified as S
 import Hasura.GraphQL.Execute.RemoteJoin.Types
 import Hasura.GraphQL.Logging (MonadQueryLog)
-import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.RemoteServer (execRemoteGQ)
 import Hasura.GraphQL.Transport.Backend qualified as TB
-import Hasura.GraphQL.Transport.HTTP.Protocol (GQLReqUnparsed)
+import Hasura.GraphQL.Transport.HTTP.Protocol (GQLReqOutgoing, GQLReqUnparsed)
 import Hasura.GraphQL.Transport.Instances ()
 import Hasura.Logging qualified as L
 import Hasura.Prelude
@@ -36,20 +34,22 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
-import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 
-forRemoteJoins ::
-  (Applicative f) =>
-  Maybe RemoteJoins ->
-  a ->
-  (RemoteJoins -> f a) ->
-  f a
-forRemoteJoins remoteJoins onNoJoins f =
-  maybe (pure onNoJoins) f remoteJoins
+-------------------------------------------------------------------------------
 
+-- | Process all remote joins, recursively.
+--
+-- Given the result of the first step of an execution and its associated remote
+-- joins, process all joins recursively to build the resulting JSON object.
+--
+-- This function is a thin wrapper around 'processRemoteJoinsWith', and starts
+-- the join tree traversal process by re-parsing the 'EncJSON' value into an
+-- introspectable JSON 'Value', and "injects" the required functions to process
+-- each join over the network.
 processRemoteJoins ::
+  forall m.
   ( MonadError QErr m,
     MonadIO m,
     EB.MonadQueryTags m,
@@ -66,40 +66,73 @@ processRemoteJoins ::
   Maybe RemoteJoins ->
   GQLReqUnparsed ->
   m EncJSON
-processRemoteJoins requestId logger env manager reqHdrs userInfo lhs joinTree gqlreq = do
-  forRemoteJoins joinTree lhs $ \remoteJoins -> do
-    lhsParsed <- onLeft (JO.eitherDecode $ encJToLBS lhs) (throw500 . T.pack)
-    encJFromOrderedValue . runIdentity
-      <$> processRemoteJoins_
-        requestId
-        logger
-        env
-        manager
-        reqHdrs
+processRemoteJoins requestId logger env manager requestHeaders userInfo lhs maybeJoinTree gqlreq =
+  forRemoteJoins maybeJoinTree lhs \joinTree -> do
+    lhsParsed <-
+      JO.eitherDecode (encJToLBS lhs)
+        `onLeft` (throw500 . T.pack)
+    jsonResult <-
+      foldJoinTreeWith
+        callSource
+        callRemoteServer
         userInfo
         (Identity lhsParsed)
-        remoteJoins
-        gqlreq
+        joinTree
+    pure $ encJFromOrderedValue $ runIdentity jsonResult
+  where
+    -- How to process a source join call over the network.
+    callSource ::
+      -- Generated information about the step
+      AB.AnyBackend S.SourceJoinCall ->
+      -- Resulting JSON object, as a 'ByteString'.
+      m BL.ByteString
+    callSource sourceJoinCall =
+      AB.dispatchAnyBackend @TB.BackendTransport sourceJoinCall \(S.SourceJoinCall {..} :: S.SourceJoinCall b) -> do
+        response <-
+          TB.runDBQuery @b
+            requestId
+            gqlreq
+            _sjcRootFieldAlias
+            userInfo
+            logger
+            _sjcSourceConfig
+            (EB.dbsiAction _sjcStepInfo)
+            (EB.dbsiPreparedQuery _sjcStepInfo)
+        pure $ encJToLBS $ snd response
 
-processRemoteJoins_ ::
+    -- How to process a remote schema join call over the network.
+    callRemoteServer ::
+      -- Information about the remote schema
+      ValidatedRemoteSchemaDef ->
+      -- Generated GraphQL request
+      GQLReqOutgoing ->
+      -- Resulting JSON object, as a 'ByteString'.
+      m BL.ByteString
+    callRemoteServer remoteSchemaInfo request =
+      fmap (view _3) $
+        execRemoteGQ env manager userInfo requestHeaders remoteSchemaInfo request
+
+-- | Fold the join tree.
+--
+-- This function takes as an argument the functions that will be used to do the
+-- actual network calls; this allows this function not to require 'MonadIO',
+-- allowing it to be used in tests.
+foldJoinTreeWith ::
   ( MonadError QErr m,
-    MonadIO m,
     EB.MonadQueryTags m,
-    MonadQueryLog m,
-    Tracing.MonadTrace m,
     Traversable f
   ) =>
-  RequestId ->
-  L.Logger L.Hasura ->
-  Env.Environment ->
-  HTTP.Manager ->
-  [HTTP.Header] ->
+  -- | How to process a call to a source.
+  (AB.AnyBackend S.SourceJoinCall -> m BL.ByteString) ->
+  -- | How to process a call to a remote schema.
+  (ValidatedRemoteSchemaDef -> GQLReqOutgoing -> m BL.ByteString) ->
+  -- | User information.
   UserInfo ->
-  f JO.Value ->
+  -- | Initial accumulator; the LHS of this join tree.
+  (f JO.Value) ->
   RemoteJoins ->
-  GQLReqUnparsed ->
   m (f JO.Value)
-processRemoteJoins_ requestId logger env manager requestHeaders userInfo lhs joinTree gqlreq = do
+foldJoinTreeWith callSource callRemoteSchema userInfo lhs joinTree = do
   (compositeValue, joins) <- collectJoinArguments (assignJoinIds joinTree) lhs
   joinIndices <- fmap IntMap.catMaybes $
     for joins $ \JoinArguments {..} -> do
@@ -107,163 +140,34 @@ processRemoteJoins_ requestId logger env manager requestHeaders userInfo lhs joi
       previousStep <- case _jalJoin of
         RemoteJoinRemoteSchema remoteSchemaJoin childJoinTree -> do
           let remoteSchemaInfo = rsDef $ _rsjRemoteSchema remoteSchemaJoin
-              networkCall = fmap (view _3) . execRemoteGQ env manager userInfo requestHeaders remoteSchemaInfo
-          maybeJoinIndex <- RS.makeRemoteSchemaJoinCall networkCall userInfo remoteSchemaJoin joinArguments
+          maybeJoinIndex <- RS.makeRemoteSchemaJoinCall (callRemoteSchema remoteSchemaInfo) userInfo remoteSchemaJoin joinArguments
           pure $ fmap (childJoinTree,) maybeJoinIndex
-        RemoteJoinSource sourceJoin childJoinTree -> AB.dispatchAnyBackend @TB.BackendTransport sourceJoin \(RemoteSourceJoin {..} :: RemoteSourceJoin b) -> do
-          let rows = flip map (IntMap.toList joinArguments) $ \(argumentId, argument) ->
-                Map.insert "__argument_id__" (J.toJSON argumentId) $
-                  Map.fromList $
-                    map (getFieldNameTxt *** JO.fromOrdered) $
-                      Map.toList $ unJoinArgument argument
-              rowSchema = fmap (\(_, rhsType, rhsColumn) -> (rhsColumn, rhsType)) _rsjJoinColumns
-
-          for (NE.nonEmpty rows) $ \nonEmptyRows -> do
-            stepInfo <-
-              EB.mkDBRemoteRelationshipPlan
-                userInfo
-                _rsjSource
-                _rsjSourceConfig
-                nonEmptyRows
-                rowSchema
-                (FieldName "__argument_id__")
-                (FieldName "f", _rsjRelationship)
-
-            let fieldNameText = getFieldNameTxt _jalFieldName
-            -- This should never fail, as field names in remote relationships
-            -- are validated when building the schema cache.
-            fieldName <-
-              G.mkName fieldNameText
-                `onNothing` throw500 ("'" <> fieldNameText <> "' is not a valid GraphQL name")
-            (_, sourceResponse) <-
-              TB.runDBQuery @b
-                requestId
-                gqlreq
-                -- NOTE: We're making an assumption that the 'FieldName' propagated
-                -- upwards from 'collectJoinArguments' is reasonable to use for
-                -- logging.
-                (mkUnNamespacedRootFieldAlias fieldName)
-                userInfo
-                logger
-                _rsjSourceConfig
-                (EB.dbsiAction stepInfo)
-                (EB.dbsiPreparedQuery stepInfo)
-            (childJoinTree,) <$> buildSourceDataJoinIndex sourceResponse
+        RemoteJoinSource sourceJoin childJoinTree -> do
+          maybeJoinIndex <- S.makeSourceJoinCall callSource userInfo sourceJoin _jalFieldName joinArguments
+          pure $ fmap (childJoinTree,) maybeJoinIndex
       for previousStep $ \(childJoinTree, joinIndex) -> do
         forRemoteJoins childJoinTree joinIndex $ \childRemoteJoins -> do
           results <-
-            processRemoteJoins_
-              requestId
-              logger
-              env
-              manager
-              requestHeaders
+            foldJoinTreeWith
+              callSource
+              callRemoteSchema
               userInfo
               (IntMap.elems joinIndex)
               childRemoteJoins
-              gqlreq
           pure $ IntMap.fromAscList $ zip (IntMap.keys joinIndex) results
-
   joinResults joinIndices compositeValue
 
--- | Attempt to construct a 'JoinIndex' from some 'EncJSON' source response.
-buildSourceDataJoinIndex :: (MonadError QErr m) => EncJSON -> m (IntMap.IntMap JO.Value)
-buildSourceDataJoinIndex response = do
-  json <-
-    JO.eitherDecode (encJToLBS response) `onLeft` \err ->
-      throwInvalidJsonErr $ T.pack err
-  case json of
-    JO.Array arr -> fmap IntMap.fromList $ for (toList arr) \case
-      JO.Object obj -> do
-        argumentResult <-
-          JO.lookup "f" obj
-            `onNothing` throwMissingRelationshipDataErr
-        argumentIdValue <-
-          JO.lookup "__argument_id__" obj
-            `onNothing` throwMissingArgumentIdErr
-        (argumentId :: Int) <-
-          case argumentIdValue of
-            JO.Number n ->
-              Scientific.toBoundedInteger n
-                `onNothing` throwInvalidArgumentIdValueErr
-            JO.String s ->
-              intFromText s
-                `onNothing` throwInvalidArgumentIdValueErr
-            _ -> throwInvalidArgumentIdValueErr
-        pure (argumentId, argumentResult)
-      _ -> throwNoNestedObjectErr
-    _ -> throwNoListOfObjectsErr
-  where
-    intFromText txt = case TR.decimal txt of
-      Right (i, "") -> pure i
-      _ -> Nothing
-    throwInvalidJsonErr errMsg =
-      throw500 $
-        "failed to decode JSON response from the source: " <> errMsg
-    throwMissingRelationshipDataErr =
-      throw500 $
-        "cannot find relationship data (aliased as 'f') within the source \
-        \response"
-    throwMissingArgumentIdErr =
-      throw500 $
-        "cannot find '__argument_id__' within the source response"
-    throwInvalidArgumentIdValueErr =
-      throw500 $ "expected 'argument_id' to get parsed as backend integer type"
-    throwNoNestedObjectErr =
-      throw500 $
-        "expected an object one level deep in the remote schema's response, \
-        \but found an array/scalar value instead"
-    throwNoListOfObjectsErr =
-      throw500 $
-        "expected a list of objects in the remote schema's response, but found \
-        \an object/scalar value instead"
+-------------------------------------------------------------------------------
 
-type CompositeObject a = OMap.InsOrdHashMap Text (CompositeValue a)
-
--- | A hybrid JSON value representation which captures the context of remote join field in type parameter.
-data CompositeValue a
-  = CVOrdValue !JO.Value
-  | CVObject !(CompositeObject a)
-  | CVObjectArray ![CompositeValue a]
-  | CVFromRemote !a
-  deriving (Show, Eq, Functor, Foldable, Traversable)
-
-compositeValueToJSON :: CompositeValue JO.Value -> JO.Value
-compositeValueToJSON = \case
-  CVOrdValue v -> v
-  CVObject obj -> JO.object $ OMap.toList $ OMap.map compositeValueToJSON obj
-  CVObjectArray vals -> JO.array $ map compositeValueToJSON vals
-  CVFromRemote v -> v
-
--- | A token used to uniquely identify the results within a join call that are
--- associated with a particular argument.
-data ReplacementToken = ReplacementToken
-  { -- | Unique identifier for a remote join call.
-    _rtCallId :: !JoinCallId,
-    -- | Unique identifier for an argument to some remote join.
-    _rtArgumentId :: !JoinArgumentId
-  }
-
-joinResults ::
-  forall f m.
-  (MonadError QErr m, Traversable f) =>
-  IntMap.IntMap (IntMap.IntMap JO.Value) ->
-  f (CompositeValue ReplacementToken) ->
-  m (f JO.Value)
-joinResults remoteResults compositeValues = do
-  traverse (fmap compositeValueToJSON . traverse replaceToken) compositeValues
-  where
-    replaceToken :: ReplacementToken -> m JO.Value
-    replaceToken (ReplacementToken joinCallId argumentId) = do
-      joinCallResults <-
-        onNothing (IntMap.lookup joinCallId remoteResults) $
-          throw500 $
-            "couldn't find results for the join with id: "
-              <> tshow joinCallId
-      onNothing (IntMap.lookup argumentId joinCallResults) $
-        throw500 $
-          "couldn't find a value for argument id in the join results: "
-            <> tshow (argumentId, joinCallId)
+-- | Simple convenient wrapper around @Maybe RemoteJoins@.
+forRemoteJoins ::
+  (Applicative f) =>
+  Maybe RemoteJoins ->
+  a ->
+  (RemoteJoins -> f a) ->
+  f a
+forRemoteJoins remoteJoins onNoJoins f =
+  maybe (pure onNoJoins) f remoteJoins
 
 -- | When traversing a responses's json, wherever the join columns of a remote
 -- join are expected, we want to collect these arguments.
@@ -275,6 +179,8 @@ joinResults remoteResults compositeValues = do
 -- So this assigned each remote join a unique integer ID by using just the 'Eq'
 -- instance. This ID then can be used for the collection of arguments (which
 -- should also be faster).
+--
+-- TODO(nicuveo): https://github.com/hasura/graphql-engine-mono/issues/3891.
 assignJoinIds :: JoinTree RemoteJoin -> JoinTree (JoinCallId, RemoteJoin)
 assignJoinIds joinTree =
   evalState (traverse assignId joinTree) (0, [])
@@ -429,3 +335,52 @@ collectJoinArguments joinTree lhs = do
       pure . OMap.fromList $
         -- filter out the Nothings
         mapMaybe sequenceA compositeObject
+
+joinResults ::
+  forall f m.
+  (MonadError QErr m, Traversable f) =>
+  IntMap.IntMap (IntMap.IntMap JO.Value) ->
+  f (CompositeValue ReplacementToken) ->
+  m (f JO.Value)
+joinResults remoteResults compositeValues = do
+  traverse (fmap compositeValueToJSON . traverse replaceToken) compositeValues
+  where
+    replaceToken :: ReplacementToken -> m JO.Value
+    replaceToken (ReplacementToken joinCallId argumentId) = do
+      joinCallResults <-
+        onNothing (IntMap.lookup joinCallId remoteResults) $
+          throw500 $
+            "couldn't find results for the join with id: "
+              <> tshow joinCallId
+      onNothing (IntMap.lookup argumentId joinCallResults) $
+        throw500 $
+          "couldn't find a value for argument id in the join results: "
+            <> tshow (argumentId, joinCallId)
+
+-------------------------------------------------------------------------------
+
+type CompositeObject a = OMap.InsOrdHashMap Text (CompositeValue a)
+
+-- | A hybrid JSON value representation which captures the context of remote join field in type parameter.
+data CompositeValue a
+  = CVOrdValue !JO.Value
+  | CVObject !(CompositeObject a)
+  | CVObjectArray ![CompositeValue a]
+  | CVFromRemote !a
+  deriving (Show, Eq, Functor, Foldable, Traversable)
+
+compositeValueToJSON :: CompositeValue JO.Value -> JO.Value
+compositeValueToJSON = \case
+  CVOrdValue v -> v
+  CVObject obj -> JO.object $ OMap.toList $ OMap.map compositeValueToJSON obj
+  CVObjectArray vals -> JO.array $ map compositeValueToJSON vals
+  CVFromRemote v -> v
+
+-- | A token used to uniquely identify the results within a join call that are
+-- associated with a particular argument.
+data ReplacementToken = ReplacementToken
+  { -- | Unique identifier for a remote join call.
+    _rtCallId :: !JoinCallId,
+    -- | Unique identifier for an argument to some remote join.
+    _rtArgumentId :: !JoinArgumentId
+  }

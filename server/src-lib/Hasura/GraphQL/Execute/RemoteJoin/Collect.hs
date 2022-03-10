@@ -613,8 +613,8 @@ createRemoteJoin joinColumnAliases = \case
           -- unweildy
           joinColumns =
             _rssJoinMapping & Map.mapMaybeWithKey
-              \joinFieldName (rhsColumn, rhsColumnType) ->
-                (,rhsColumn,rhsColumnType)
+              \joinFieldName (rhsColumnType, rhsColumn) ->
+                (,(rhsColumn, rhsColumnType))
                   <$> Map.lookup joinFieldName joinColumnAliases
           anySourceJoin =
             AB.mkAnyBackend $

@@ -675,6 +675,7 @@ library
                      , Hasura.GraphQL.Execute.RemoteJoin.Collect
                      , Hasura.GraphQL.Execute.RemoteJoin.Join
                      , Hasura.GraphQL.Execute.RemoteJoin.RemoteSchema
+                     , Hasura.GraphQL.Execute.RemoteJoin.Source
                      , Hasura.GraphQL.Execute.Resolve
                      , Hasura.GraphQL.Execute.Types
                      , Hasura.GraphQL.Explain
