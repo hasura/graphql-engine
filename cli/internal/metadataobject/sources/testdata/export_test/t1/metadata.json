@@ -98,6 +98,14 @@
       "query_tags": {
         "disabled": false,
         "format": "standard"
+      },
+      "customization": {
+        "type_names": null,
+        "root_fields": {
+          "suffix": null,
+          "prefix": null,
+          "namespace": "mynamespace"
+        }
       }
     },
     {
