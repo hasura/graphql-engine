@@ -17,15 +17,12 @@ import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Parser.Schema
 import Hasura.GraphQL.Parser.TestUtils
 import Hasura.GraphQL.RemoteServer (identityCustomizer)
-import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Remote
 import Hasura.Prelude
 import Hasura.RQL.IR.RemoteSchema
 import Hasura.RQL.IR.Root
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache
-import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization
 import Hasura.Session
 import Language.GraphQL.Draft.Parser qualified as G
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -107,16 +104,6 @@ buildQueryParsers ::
 buildQueryParsers introspection = do
   let introResult = IntrospectionResult introspection $$(G.litName "Query") Nothing Nothing
       remoteSchemaInfo = RemoteSchemaInfo (ValidatedRemoteSchemaDef N.nullURI [] False 60 Nothing) identityCustomizer
-      sourceContext =
-        -- without relationships to sources, this won't be evaluated
-        ( adminRoleName :: RoleName,
-          mempty :: SourceCache,
-          undefined :: QueryContext,
-          mempty :: CustomizeRemoteFieldName,
-          mempty :: RemoteSchemaMap,
-          mempty :: MkTypename,
-          mempty :: MkRootFieldName
-        )
   ParsedIntrospection query _ _ <-
     runError $
       buildRemoteParser introResult remoteSchemaInfo

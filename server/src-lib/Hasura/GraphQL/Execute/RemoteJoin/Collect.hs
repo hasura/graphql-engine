@@ -8,7 +8,7 @@ module Hasura.GraphQL.Execute.RemoteJoin.Collect
   )
 where
 
-import Control.Lens (Traversal', preview, (^?), _2)
+import Control.Lens (Traversal', preview, _2)
 import Control.Monad.Writer
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
@@ -532,6 +532,15 @@ transformActionFields fields = do
                    in Just (a, annotatedColumn)
        in (fmap snd annotatedJoinColumns, phantomFields_)
 
+-- | Constructs a 'JoinColumnAlias' for a given field in a selection set.
+--
+-- If the field was already requested, we leave it unchanged, to avoid
+-- double-fetching the same information. However, if this field is a "phantom"
+-- field, that we only add for the purpose of fetching a join key, we rename it
+-- in a way that is guaranteed to avoid conflicts.
+--
+-- NOTE: if the @fieldName@ argument is a valid GraphQL name, then the
+-- constructed alias MUST also be a valid GraphQL name.
 getJoinColumnAlias ::
   (Eq field, Hashable field) =>
   FieldName ->
@@ -549,7 +558,7 @@ getJoinColumnAlias fieldName field selectedFields allAliases =
     --
     -- If we generate a unique name for each field name which is longer than
     -- the longest alias in the selection set, the generated name would be
-    -- unique
+    -- unique.
     uniqueAlias :: FieldName
     uniqueAlias =
       let suffix =
@@ -668,8 +677,12 @@ transformObjectSelectionSet typename selectionSet = do
     annotateLHSJoinField fieldName lhsJoinField =
       let columnAlias =
             getJoinColumnAlias fieldName lhsJoinField noArgsGraphQLFields allAliases
+          -- This alias is generated in 'getJoinColumnAlias', and is guaranteed
+          -- to be a valid GraphQLName.
+          columnGraphQLName =
+            G.unsafeMkName $ getFieldNameTxt $ getAliasFieldName columnAlias
        in ( mkGraphQLField
-              (Just $ G.unsafeMkName $ getFieldNameTxt $ getAliasFieldName columnAlias)
+              (Just columnGraphQLName)
               lhsJoinField
               mempty
               mempty
@@ -679,7 +692,7 @@ transformObjectSelectionSet typename selectionSet = do
 
     (joinColumnAliases, phantomFields) =
       let lhsJoinFields =
-            Map.unions $ map _srrsLHSJoinFields $ mapMaybe (^? _FieldRemote) $ toList selectionSet
+            Map.unions $ map _srrsLHSJoinFields $ mapMaybe (preview _FieldRemote) $ toList selectionSet
           annotatedJoinColumns = Map.mapWithKey annotateLHSJoinField lhsJoinFields
        in (fmap snd annotatedJoinColumns, fmap fst annotatedJoinColumns)
 

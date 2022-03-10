@@ -14,7 +14,7 @@ module Data.HashMap.Strict.NonEmpty
     (!?),
     keys,
 
-    -- * Compose
+    -- * Combine
     unionWith,
 
     -- * Transformations
