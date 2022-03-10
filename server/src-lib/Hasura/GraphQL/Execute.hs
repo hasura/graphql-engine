@@ -181,7 +181,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
       IR.RFRaw _ -> throw400 NotSupported "Introspection not supported over subscriptions"
       IR.RFDB src e -> do
         newQDB <- AB.traverseBackend @EB.BackendExecute e \(IR.SourceConfigWith srcConfig queryTagsConfig (IR.QDBR qdb)) -> do
-          let (newQDB, remoteJoins) = RJ.getRemoteJoins qdb
+          let (newQDB, remoteJoins) = RJ.getRemoteJoinsQueryDB qdb
           unless (isNothing remoteJoins) $
             throw400 NotSupported "Remote relationships are not allowed in subscriptions"
           pure $ IR.SourceConfigWith srcConfig queryTagsConfig (IR.QDBR newQDB)

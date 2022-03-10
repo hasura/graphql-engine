@@ -391,10 +391,10 @@ mkDeleteObject ::
   IR.AnnDelG b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
 mkDeleteObject table columns deletePerms (whereExp, mutationOutput) =
   IR.AnnDel
-    { IR.dqp1Table = table,
-      IR.dqp1Where = (permissionFilter, whereExp),
-      IR.dqp1Output = mutationOutput,
-      IR.dqp1AllCols = columns
+    { IR._adTable = table,
+      IR._adWhere = (permissionFilter, whereExp),
+      IR._adOutput = mutationOutput,
+      IR._adAllCols = columns
     }
   where
     permissionFilter = fmap partialSQLExpToUnpreparedValue <$> dpiFilter deletePerms

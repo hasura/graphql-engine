@@ -3,6 +3,9 @@
 module Hasura.RQL.IR.Returning
   ( MutFld,
     MutFldG (..),
+    _MCount,
+    _MExp,
+    _MRet,
     MutFlds,
     MutFldsG,
     MutationOutput,
@@ -12,6 +15,7 @@ module Hasura.RQL.IR.Returning
   )
 where
 
+import Control.Lens.TH (makePrisms)
 import Data.Aeson qualified as J
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Kind (Type)
@@ -67,3 +71,5 @@ hasNestedFld = \case
       AFObjectRelation _ -> True
       AFArrayRelation _ -> True
       _ -> False
+
+$(makePrisms ''MutFldG)

@@ -458,9 +458,9 @@ getArrayRelNameAndSelectArgs ::
   ArraySelectG ('Postgres pgKind) r v ->
   (RelName, SelectArgsG ('Postgres pgKind) v)
 getArrayRelNameAndSelectArgs = \case
-  ASSimple r -> (aarRelationshipName r, _asnArgs $ aarAnnSelect r)
-  ASAggregate r -> (aarRelationshipName r, _asnArgs $ aarAnnSelect r)
-  ASConnection r -> (aarRelationshipName r, _asnArgs $ _csSelect $ aarAnnSelect r)
+  ASSimple r -> (_aarRelationshipName r, _asnArgs $ _aarAnnSelect r)
+  ASAggregate r -> (_aarRelationshipName r, _asnArgs $ _aarAnnSelect r)
+  ASConnection r -> (_aarRelationshipName r, _asnArgs $ _csSelect $ _aarAnnSelect r)
 
 getAnnArr ::
   (a, AnnFieldG ('Postgres pgKind) r v) ->

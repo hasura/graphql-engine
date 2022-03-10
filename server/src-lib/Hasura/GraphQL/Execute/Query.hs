@@ -109,7 +109,7 @@ convertQuerySelSet
             \(SourceConfigWith (sourceConfig :: (SourceConfig b)) queryTagsConfig (QDBR db)) -> do
               let queryTagsAttributes = encodeQueryTags $ QTQuery $ QueryMetadata reqId maybeOperationName rootFieldName parameterizedQueryHash
                   queryTagsComment = Tagged.untag $ createQueryTags @m queryTagsAttributes queryTagsConfig
-                  (noRelsDBAST, remoteJoins) = RJ.getRemoteJoins db
+                  (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsQueryDB db
               dbStepInfo <- flip runReaderT queryTagsComment $ mkDBQueryPlan @b userInfo sourceName sourceConfig noRelsDBAST
               pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
         RFRemote rf -> do

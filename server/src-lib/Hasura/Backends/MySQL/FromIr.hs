@@ -593,7 +593,7 @@ fromArrayAggregateSelectG ::
   IR.AnnRelationSelectG 'MySQL (IR.AnnAggregateSelectG 'MySQL Void Expression) ->
   ReaderT EntityAlias FromIr Join
 fromArrayAggregateSelectG annRelationSelectG = do
-  fieldName <- lift (fromRelName aarRelationshipName)
+  fieldName <- lift (fromRelName _aarRelationshipName)
   joinSelect' <- do
     lhsEntityAlias <- ask
     -- With this, the foreign key relations are injected automatically
@@ -612,9 +612,9 @@ fromArrayAggregateSelectG annRelationSelectG = do
       }
   where
     IR.AnnRelationSelectG
-      { aarRelationshipName,
-        aarColumnMapping = mapping :: HashMap Column Column,
-        aarAnnSelect = annSelectG
+      { _aarRelationshipName,
+        _aarColumnMapping = mapping :: HashMap Column Column,
+        _aarAnnSelect = annSelectG
       } = annRelationSelectG
 
 fromArraySelectG :: IR.ArraySelectG 'MySQL Void Expression -> ReaderT EntityAlias FromIr Join
@@ -649,7 +649,7 @@ fromObjectRelationSelectG annRelationSelectG = do
                   }
           )
           joinOn
-  joinFieldName <- lift (fromRelName aarRelationshipName)
+  joinFieldName <- lift (fromRelName _aarRelationshipName)
   pure
     Join
       { joinSelect =
@@ -679,9 +679,9 @@ fromObjectRelationSelectG annRelationSelectG = do
         _aosTableFilter = tableFilter :: IR.AnnBoolExp 'MySQL Expression
       } = annObjectSelectG
     IR.AnnRelationSelectG
-      { aarRelationshipName,
-        aarColumnMapping = mapping :: HashMap Column Column,
-        aarAnnSelect = annObjectSelectG :: IR.AnnObjectSelectG 'MySQL Void Expression
+      { _aarRelationshipName,
+        _aarColumnMapping = mapping :: HashMap Column Column,
+        _aarAnnSelect = annObjectSelectG :: IR.AnnObjectSelectG 'MySQL Void Expression
       } = annRelationSelectG
 
 isEmptyExpression :: Expression -> Bool
@@ -739,7 +739,7 @@ fromSelectRows annSelectG = do
 
 fromArrayRelationSelectG :: IR.ArrayRelationSelectG 'MySQL Void Expression -> ReaderT EntityAlias FromIr Join
 fromArrayRelationSelectG annRelationSelectG = do
-  joinFieldName <- lift (fromRelName aarRelationshipName)
+  joinFieldName <- lift (fromRelName _aarRelationshipName)
   sel <- lift (fromSelectRows annSelectG)
   joinOn <- fromMappingFieldNames (fromAlias (selectFrom sel)) mapping
   let joinFieldProjections =
@@ -772,9 +772,9 @@ fromArrayRelationSelectG annRelationSelectG = do
       }
   where
     IR.AnnRelationSelectG
-      { aarRelationshipName,
-        aarColumnMapping = mapping :: HashMap Column Column,
-        aarAnnSelect = annSelectG
+      { _aarRelationshipName,
+        _aarColumnMapping = mapping :: HashMap Column Column,
+        _aarAnnSelect = annSelectG
       } = annRelationSelectG
 
 -- | The main sources of fields, either constants, fields or via joins.

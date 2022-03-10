@@ -12,6 +12,10 @@
 module Hasura.RQL.IR.Insert
   ( AnnIns (..),
     AnnInsert (..),
+    aiFieldName,
+    aiIsSingle,
+    aiData,
+    aiOutput,
     AnnotatedInsert (..),
     AnnotatedInsertRow,
     ArrRelIns,
@@ -34,7 +38,7 @@ module Hasura.RQL.IR.Insert
 where
 
 import Control.Lens ((^?))
-import Control.Lens.TH (makePrisms)
+import Control.Lens.TH (makeLenses, makePrisms)
 import Data.Kind (Type)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -132,7 +136,8 @@ data InsertQueryP1 (b :: BackendType) = InsertQueryP1
     iqp1AllCols :: [ColumnInfo b]
   }
 
--- Template Haskell related
+$(makeLenses ''AnnInsert)
+
 $(makePrisms ''AnnotatedInsert)
 
 getInsertColumns :: AnnotatedInsertRow b v -> [(Column b, v)]

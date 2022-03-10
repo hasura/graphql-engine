@@ -131,7 +131,7 @@ execDeleteQuery ::
   m EncJSON
 execDeleteQuery strfyNum userInfo (u, p) =
   runMutation
-    (mkMutation userInfo (dqp1Table u) (MCDelete delete, p) (dqp1Output u) (dqp1AllCols u) strfyNum)
+    (mkMutation userInfo (_adTable u) (MCDelete delete, p) (_adOutput u) (_adAllCols u) strfyNum)
   where
     delete = mkDelete u
 
