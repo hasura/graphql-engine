@@ -208,6 +208,7 @@ parseBoolExpOperations rhsParser rootTable fim columnRef value = do
         checkValidCast targetType = case (colTy, targetType) of
           (ColumnScalar PGGeometry, PGGeography) -> return ()
           (ColumnScalar PGGeography, PGGeometry) -> return ()
+          (ColumnScalar PGJSONB, PGText) -> return ()
           _ ->
             throw400 UnexpectedPayload $
               "cannot cast column of type " <> colTy <<> " to type " <>> targetType

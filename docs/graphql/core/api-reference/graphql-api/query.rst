@@ -814,7 +814,10 @@ CastExp
 
 .. note::
 
-   Currently, only casting between ``geometry`` and ``geography`` types is allowed.
+   Currently, only the following type casts are supported:
+
+   - between PostGIS ``geometry`` and ``geography`` types
+   - from Postgres ``jsonb`` type to ``string`` type.
 
 .. _OrderByExp:
 

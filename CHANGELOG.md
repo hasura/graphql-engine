@@ -7,6 +7,7 @@
 
 ### Bug fixes and improvements
 
+- server: add jsonb to string cast support - postgres 
 - server: improve performance of fetching postgres catalog metadata for tables and functions
 - server: Queries present in query collections, such as allow-list, and rest-endpoints are now validated (against the schema)
 - server: Redesigns internal implementation of webhook transforms.
