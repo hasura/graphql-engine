@@ -8,6 +8,7 @@
 package cli
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -56,7 +57,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/subosito/gotenv"
 	"golang.org/x/term"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // Other constants used in the package
@@ -775,11 +776,14 @@ func (ec *ExecutionContext) WriteConfig(config *Config) error {
 	} else {
 		cfg = ec.Config
 	}
-	y, err := yaml.Marshal(cfg)
+	buf := new(bytes.Buffer)
+	encoder := yaml.NewEncoder(buf)
+	encoder.SetIndent(2)
+	err := encoder.Encode(cfg)
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(ec.ConfigFile, y, 0644)
+	return ioutil.WriteFile(ec.ConfigFile, buf.Bytes(), 0644)
 }
 
 type DefaultAPIPath string

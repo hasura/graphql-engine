@@ -15,9 +15,25 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/diff"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
-	v3yaml "gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v3"
+)
 
-	"gopkg.in/yaml.v2"
+const (
+	VersionKey                    string = "version"
+	SourcesKey                    string = "sources"
+	TablesKey                     string = "tables"
+	FunctionsKey                  string = "functions"
+	ActionsKey                    string = "actions"
+	CustomTypesKey                string = "custom_types"
+	RemoteSchemasKey              string = "remote_schemas"
+	QueryCollectionsKey           string = "query_collections"
+	AllowListKey                  string = "allowlist"
+	CronTriggersKey               string = "cron_triggers"
+	APILimitsKey                  string = "api_limits"
+	RestEndpointsKey              string = "rest_endpoints"
+	InheritedRolesKey             string = "inherited_roles"
+	GraphQLSchemaIntrospectionKey string = "graphql_schema_introspection"
+	NetworkKey                    string = "network"
 )
 
 type Objects []Object
@@ -27,11 +43,52 @@ type WriteDiffOpts struct {
 	W            io.Writer
 	DisableColor bool
 }
+
+// GetEncoder is the YAML encoder which is expected to be used in all implementations
+// of Object. This helps bring uniformity in the format of generated YAML
+func GetEncoder(destination io.Writer) *yaml.Encoder {
+	encoder := yaml.NewEncoder(destination)
+	encoder.SetIndent(2)
+	return encoder
+}
+
 type Object interface {
-	Build(metadata *yaml.MapSlice) ErrParsingMetadataObject
-	Export(metadata yaml.MapSlice) (map[string][]byte, ErrParsingMetadataObject)
+	// Build will be responsible for reading the metadata object from metadata files in project directory
+	// It should return nil if it was not able to find the matching metadata file
+	// Build returns a map of the objects, and it's corresponding unmarshalled content
+	// For example:
+	// an implementation for handling the "remote_schemas" object might return a map like
+	// "remote_schemas": []yaml.Node
+	// since there is a chance that this function can return a yaml.Node. The return value is not expected to
+	// directly be unmarshalled to JSON using json.Marshal
+	Build() (map[string]interface{}, ErrParsingMetadataObject)
+	// Export is responsible for writing the yaml Node(s) for the metadata object
+	// to project directory
+	// Export expects a map[string]yaml.Node specifically rather than a builtin data structure like
+	// map[string]interface{} because it does not guarantee the order in which contents will be unmarshalled.
+	// eg: say we received the following JSON metadata from the server
+	// {
+	//		"foo": [
+	//			"x": 1,
+	//			"a": 2,
+	//		],
+	// }
+	// we are interested in preserving the order of keys when transforming this to YAML. Something like the following
+	// foo:
+	// 	x: 1
+	// 	a: 2
+	// This ordering is not guaranteed if we are using map[string]interface{} to unmarshal the JSON. This might look
+	// something like the following
+	// foo:
+	// 	a: 2
+	// 	x: 1
+	// This not bug, since JSON spec doesn't guarantee the ordering anyway.
+	// We are interested in writing or transforming the JSON object received from the server in
+	// the same order to YAML files. This coupled with our requirement of NOT strongly typing metadata on CLI requires
+	// using yaml.Node to preserve the ordering.
+	Export(metadata map[string]yaml.Node) (map[string][]byte, ErrParsingMetadataObject)
 	CreateFiles() error
-	// GetFiles will return an array of filepaths which make up the metadata object.
+	// GetFiles will return an array of file paths which make up the metadata object.
 	// For example the "sources" metadata key is made up of files like
 	// databases.yaml. which then will have !include tags which will branch to include
 	// files like databases/<source-name>/tables/tables.yaml
@@ -109,10 +166,10 @@ func DefaultGetFiles(yamlFile string) ([]string, error) {
 		}
 		return nil, err
 	}
-	var rootIsMapArray []map[string]v3yaml.Node
+	var rootIsMapArray []map[string]yaml.Node
 	files := []string{yamlFile}
 	parentDir := filepath.Dir(yamlFile)
-	err = v3yaml.Unmarshal(rootFileContents, &rootIsMapArray)
+	err = yaml.Unmarshal(rootFileContents, &rootIsMapArray)
 	if err == nil {
 		for _, item := range rootIsMapArray {
 			for _, node := range item {
@@ -124,8 +181,8 @@ func DefaultGetFiles(yamlFile string) ([]string, error) {
 			}
 		}
 	} else {
-		var rootIsMap map[string]v3yaml.Node
-		err = v3yaml.Unmarshal(rootFileContents, &rootIsMap)
+		var rootIsMap map[string]yaml.Node
+		err = yaml.Unmarshal(rootFileContents, &rootIsMap)
 		if err == nil {
 			for _, node := range rootIsMap {
 				nodeFiles, err := metadatautil.GetIncludeTagFiles(&node, parentDir)
@@ -260,18 +317,18 @@ func DefaultWriteDiff(opts DefaultWriteDiffOpts) error {
 // file of an empty sequence ([]), otherwise it returns an MappingNode
 func createEmptyYamlFileAccordingToContent(file ytbx.InputFile) ytbx.InputFile {
 	//Empty yaml data
-	var documentNode *v3yaml.Node
+	var documentNode *yaml.Node
 	for _, node := range file.Documents {
 		documentNode = node
 		break
 	}
-	var contentNode *v3yaml.Node
+	var contentNode *yaml.Node
 	for _, n := range documentNode.Content {
 		contentNode = n
 		break
 	}
 	var content interface{}
-	if contentNode != nil && contentNode.Kind == v3yaml.SequenceNode {
+	if contentNode != nil && contentNode.Kind == yaml.SequenceNode {
 		content = []map[string]string{}
 	} else {
 		content = map[string]string{}
@@ -355,4 +412,38 @@ func diffWithEmptyFile(file diffFile, direction diffDirection, w io.Writer, disa
 		}
 	}
 	return nil
+}
+
+type DefaultObjectType int
+
+const (
+	DefaultObjectTypeSequence DefaultObjectType = iota
+	DefaultObjectTypeMapping
+)
+
+// DefaultExport is an implementation for Object.Export
+// metadata objects which doesn't require additional customisations can make use of this implementation
+func DefaultExport(object Object, metadata map[string]yaml.Node, errorFunc func(error, ...string) ErrParsingMetadataObject, objectType DefaultObjectType) (map[string][]byte, ErrParsingMetadataObject) {
+	var value interface{}
+	if v, ok := metadata[object.Key()]; ok {
+		value = v
+	} else {
+		switch objectType {
+		case DefaultObjectTypeSequence:
+			value = yaml.Node{Kind: yaml.SequenceNode}
+		case DefaultObjectTypeMapping:
+			value = yaml.Node{Kind: yaml.MappingNode}
+		default:
+			value = nil
+		}
+	}
+
+	var buf bytes.Buffer
+	err := GetEncoder(&buf).Encode(value)
+	if err != nil {
+		return nil, errorFunc(err)
+	}
+	return map[string][]byte{
+		filepath.ToSlash(filepath.Join(object.BaseDirectory(), object.Filename())): buf.Bytes(),
+	}, nil
 }

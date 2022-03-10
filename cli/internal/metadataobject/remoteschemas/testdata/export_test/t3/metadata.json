@@ -1,0 +1,27 @@
+{
+  "remote_schemas": [
+    {
+      "name": "countries",
+      "definition": {
+        "url_from_env": "RS_ENV",
+        "timeout_seconds": 11,
+        "headers": [
+          {
+            "value": "countries-bar",
+            "name": "countries-foo"
+          }
+        ],
+        "forward_client_headers": true
+      },
+      "comment": "foo countries",
+      "permissions": [
+        {
+          "role": "user",
+          "definition": {
+            "schema": "schema  { query: Query }\n\ntype Continent { code: ID!\n  countries: [Country!]!\n  name: String!\n}\n\ntype Country { capital: String\n  code: ID!\n  continent: Continent!\n  currency: String\n  emoji: String!\n  emojiU: String!\n  languages: [Language!]!\n  name: String!\n  native: String!\n  phone: String!\n  states: [State!]!\n}\n\ntype Language { code: ID!\n  name: String\n  native: String\n  rtl: Boolean!\n}\n\ntype Query { continent(code: ID!): Continent\n  countries(filter: CountryFilterInput): [Country!]!\n  languages(filter: LanguageFilterInput): [Language!]!\n}\n\ntype State { code: String\n  country: Country!\n  name: String!\n}\n\ninput CountryFilterInput {code: StringQueryOperatorInput\n  continent: StringQueryOperatorInput\n  currency: StringQueryOperatorInput\n}\n\ninput LanguageFilterInput {code: StringQueryOperatorInput\n}\n\ninput StringQueryOperatorInput {eq: String\n  glob: String\n  in: [String]\n  ne: String\n  nin: [String]\n  regex: String\n}"
+          }
+        }
+      ]
+    }
+  ]
+}

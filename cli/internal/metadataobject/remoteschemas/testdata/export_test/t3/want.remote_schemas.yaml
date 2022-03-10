@@ -1,0 +1,64 @@
+- name: countries
+  definition:
+    url_from_env: RS_ENV
+    timeout_seconds: 11
+    headers:
+      - value: countries-bar
+        name: countries-foo
+    forward_client_headers: true
+  comment: foo countries
+  permissions:
+    - role: user
+      definition:
+        schema: |-
+          schema  { query: Query }
+
+          type Continent { code: ID!
+            countries: [Country!]!
+            name: String!
+          }
+
+          type Country { capital: String
+            code: ID!
+            continent: Continent!
+            currency: String
+            emoji: String!
+            emojiU: String!
+            languages: [Language!]!
+            name: String!
+            native: String!
+            phone: String!
+            states: [State!]!
+          }
+
+          type Language { code: ID!
+            name: String
+            native: String
+            rtl: Boolean!
+          }
+
+          type Query { continent(code: ID!): Continent
+            countries(filter: CountryFilterInput): [Country!]!
+            languages(filter: LanguageFilterInput): [Language!]!
+          }
+
+          type State { code: String
+            country: Country!
+            name: String!
+          }
+
+          input CountryFilterInput {code: StringQueryOperatorInput
+            continent: StringQueryOperatorInput
+            currency: StringQueryOperatorInput
+          }
+
+          input LanguageFilterInput {code: StringQueryOperatorInput
+          }
+
+          input StringQueryOperatorInput {eq: String
+            glob: String
+            in: [String]
+            ne: String
+            nin: [String]
+            regex: String
+          }

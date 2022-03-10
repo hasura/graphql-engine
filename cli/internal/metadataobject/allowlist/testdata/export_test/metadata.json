@@ -1,0 +1,7 @@
+{
+  "allowlist": [
+    {
+      "collection": "allowed-queries"
+    }
+  ]
+}

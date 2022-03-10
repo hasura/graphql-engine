@@ -1,0 +1,15 @@
+- name: foo
+  webhook: https://httpbin.org/post
+  schedule: '* * * * *'
+  include_in_metadata: true
+  payload:
+    foo: bar
+  retry_conf:
+    num_retries: 1
+    timeout_seconds: 600
+    tolerance_seconds: 21600
+    retry_interval_seconds: 1000
+  headers:
+    - value: bar-h
+      name: foo-h
+  comment: foo trigger

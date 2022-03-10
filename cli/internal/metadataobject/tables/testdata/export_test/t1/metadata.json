@@ -1,0 +1,31 @@
+{
+  "tables": [
+    {
+      "table": {
+        "schema": "public",
+        "name": "articles"
+      },
+      "insert_permissions": [
+        {
+          "role": "user",
+          "permission": {
+            "check": {
+              "_and": [
+                {
+                  "id": {
+                    "_eq": "X-Hasura-User-Id"
+                  }
+                },
+                {
+                  "id": {}
+                }
+              ]
+            },
+            "columns": [],
+            "backend_only": false
+          }
+        }
+      ]
+    }
+  ]
+}

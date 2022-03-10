@@ -1,0 +1,3 @@
+- role_name: user-dupe
+  role_set:
+  - user

@@ -14,13 +14,10 @@ import (
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 
-	"github.com/pkg/errors"
-
 	"github.com/aryann/difflib"
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/mgutz/ansi"
 	"github.com/spf13/cobra"
-	v2yaml "gopkg.in/yaml.v2"
 )
 
 type MetadataDiffOptions struct {
@@ -124,22 +121,14 @@ type printGeneratedMetadataFileDiffOpts struct {
 func printGeneratedMetadataFileDiffBetweenProjectDirectories(opts printGeneratedMetadataFileDiffOpts) error {
 	// build server metadata
 	opts.projectMetadataHandler.SetMetadataObjects(projectmetadata.GetMetadataObjectsWithDir(opts.ec, opts.toProjectDirectory))
-	serverMeta, err := opts.projectMetadataHandler.BuildMetadata()
+	newYaml, err := opts.projectMetadataHandler.BuildYAMLMetadata()
 	if err != nil {
 		return err
-	}
-	newYaml, err := v2yaml.Marshal(serverMeta)
-	if err != nil {
-		return errors.Wrap(err, "cannot unmarshall server metadata")
 	}
 	opts.projectMetadataHandler.SetMetadataObjects(projectmetadata.GetMetadataObjectsWithDir(opts.ec, opts.fromProjectDirectory))
-	localMeta, err := opts.projectMetadataHandler.BuildMetadata()
+	oldYaml, err := opts.projectMetadataHandler.BuildYAMLMetadata()
 	if err != nil {
 		return err
-	}
-	oldYaml, err := v2yaml.Marshal(localMeta)
-	if err != nil {
-		return errors.Wrap(err, "cannot unmarshal local metadata")
 	}
 
 	switch opts.diffType {

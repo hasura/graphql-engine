@@ -4,10 +4,12 @@ import (
 	"io/ioutil"
 	"testing"
 
-	goccyaml "github.com/goccy/go-yaml"
+	goyaml "github.com/goccy/go-yaml"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
+
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 func TestInheritedRolesConfig_Build(t *testing.T) {
@@ -15,37 +17,19 @@ func TestInheritedRolesConfig_Build(t *testing.T) {
 		MetadataDir string
 		logger      *logrus.Logger
 	}
-	type args struct {
-		metadata *yaml.MapSlice
-	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *yaml.MapSlice
-		wantErr bool
+		name       string
+		fields     fields
+		wantGolden string
+		wantErr    bool
 	}{
 		{
 			"can build inherited roles",
 			fields{
-				MetadataDir: "testdata/metadata",
+				MetadataDir: "testdata/build_test/t1/metadata",
 				logger:      logrus.New(),
 			},
-			args{
-				metadata: new(yaml.MapSlice),
-			},
-			func() *yaml.MapSlice {
-				var v = yaml.MapItem{
-					Key:   "inherited_roles",
-					Value: []yaml.MapSlice{},
-				}
-				b, err := ioutil.ReadFile("testdata/metadata/inherited_roles.yaml")
-				assert.NoError(t, err)
-				assert.NoError(t, yaml.Unmarshal(b, &v.Value))
-				m := yaml.MapSlice{}
-				m = append(m, v)
-				return &m
-			}(),
+			"testdata/build_test/t1/want.golden.json",
 			false,
 		},
 	}
@@ -55,12 +39,22 @@ func TestInheritedRolesConfig_Build(t *testing.T) {
 				MetadataDir: tt.fields.MetadataDir,
 				logger:      tt.fields.logger,
 			}
-			err := tc.Build(tt.args.metadata)
+			got, err := tc.Build()
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.want, tt.args.metadata)
+				gotbs, err := yaml.Marshal(got)
+				assert.NoError(t, err)
+				jsonbs, err := goyaml.YAMLToJSON(gotbs)
+				assert.NoError(t, err)
+
+				// uncomment following lines to update golden file
+				//assert.NoError(t, ioutil.WriteFile(tt.wantGolden, jsonbs, os.ModePerm))
+
+				wantbs, err := ioutil.ReadFile(tt.wantGolden)
+				assert.NoError(t, err)
+				assert.Equal(t, string(wantbs), string(jsonbs))
 			}
 		})
 	}
@@ -72,9 +66,10 @@ func TestInheritedRolesConfig_Export(t *testing.T) {
 		logger      *logrus.Logger
 	}
 	type args struct {
-		metadata yaml.MapSlice
+		metadata map[string]yaml.Node
 	}
 	tests := []struct {
+		id      string
 		name    string
 		fields  fields
 		args    args
@@ -82,43 +77,34 @@ func TestInheritedRolesConfig_Export(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "can export inherited roles",
-			fields: fields{
+			"t1",
+			"can export inherited roles",
+			fields{
 				MetadataDir: "testdata/metadata",
 				logger:      logrus.New(),
 			},
-			args: args{
-				metadata: func() yaml.MapSlice {
-					metadata := []byte(`{
-  "version": 3,
-  "inherited_roles": [
-    {
-      "role_name": "combined_user",
-      "role_set": [
-        "user",
-        "user1"
-      ]
-    }
-  ]
-}`)
-					yamlb, err := goccyaml.JSONToYAML(metadata)
+			args{
+				metadata: func() map[string]yaml.Node {
+					bs, err := ioutil.ReadFile("testdata/export_test/t1/metadata.json")
 					assert.NoError(t, err)
-					var v yaml.MapSlice
-					assert.NoError(t, yaml.Unmarshal(yamlb, &v))
+					yamlbs, err := metadatautil.JSONToYAML(bs)
+					assert.NoError(t, err)
+					var v map[string]yaml.Node
+					assert.NoError(t, yaml.Unmarshal(yamlbs, &v))
 					return v
 				}(),
 			},
-			want: func() map[string][]byte {
+			func() map[string][]byte {
 				m := map[string][]byte{
-					"testdata/metadata/inherited_roles.yaml": []byte(`- role_name: combined_user
-  role_set:
-  - user
-  - user1
-`),
+					"testdata/metadata/inherited_roles.yaml": func() []byte {
+						bs, err := ioutil.ReadFile("testdata/export_test/t1/want.inherited_roles.yaml")
+						assert.NoError(t, err)
+						return bs
+					}(),
 				}
 				return m
 			}(),
-			wantErr: false,
+			false,
 		},
 	}
 	for _, tt := range tests {
@@ -131,16 +117,13 @@ func TestInheritedRolesConfig_Export(t *testing.T) {
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
-				assert.NoError(t, err)
-				gotS := map[string]string{}
-				wantS := map[string]string{}
 				for k, v := range got {
-					gotS[k] = string(v)
+					assert.Contains(t, tt.want, k)
+					// uncomment to update golden files
+					//assert.NoError(t, ioutil.WriteFile(fmt.Sprintf("testdata/export_test/%v/want.%v", tt.id, filepath.Base(k)), v, os.ModePerm))
+
+					assert.Equalf(t, string(tt.want[k]), string(v), "%v", k)
 				}
-				for k, v := range tt.want {
-					wantS[k] = string(v)
-				}
-				assert.Equal(t, wantS, gotS)
 			}
 		})
 	}

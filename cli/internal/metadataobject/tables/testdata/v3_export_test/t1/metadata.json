@@ -1,0 +1,19 @@
+{
+  "sources": [
+    {
+      "name": "default",
+      "tables": [
+        {
+          "table": {
+            "name": "test"
+          }
+        },
+        {
+          "table": {
+            "name": "test"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -61,7 +61,7 @@ func (m *metadataModeDirectoryHandler) Apply(p *ProjectMetadata) (io.Reader, err
 
 func (m *metadataModeDirectoryHandler) Parse(p *ProjectMetadata) (io.Reader, error) {
 	metadataHandler := projectmetadata.NewHandlerFromEC(p.ec)
-	jsonMetadata, err := metadataHandler.MakeJSONMetadata()
+	jsonMetadata, err := metadataHandler.BuildJSONMetadata()
 	if err != nil {
 		return nil, fmt.Errorf("parsing project metadata to json failed: %w", err)
 	}

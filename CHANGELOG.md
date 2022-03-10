@@ -1,9 +1,100 @@
 # Hasura GraphQL Engine Changelog
 
 ## Next release
-
 ### Deprecations
 * The `custom_column_names` property of TableConfig used on `<db>_track_table` and `set_table_customization` metadata APIs has been deprecated in favour of the new `column_config` property. `custom_column_names` will still work for now, however, values used in `column_config` will take precedence over values from `custom_column_names` and any overlapped values in `custom_column_names` will be discarded.
+
+### Behaviour Changes
+
+- cli: use indentation of 2 spaces in array elements of metadata YAML files
+
+Example:
+<table>
+<thead>
+  <tr>
+    <th>Old behaviour<pre> metadata/query_collections.yaml</pre> </th>
+    <th>New behaviour<pre> metadata/query_collections.yaml </pre> </th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>
+      <pre>
+- name: allowed-queries
+  definition:
+    queries:
+    - name: getAlbums
+      query: |
+        query getAlbums {
+          albums {
+            id
+            title
+          }
+        }
+       </pre>
+    </td>
+    <td>
+      <pre>
+- name: allowed-queries
+  definition:
+    queries:
+      - name: getAlbums
+        query: |
+          query getAlbums {
+            albums {
+              id
+              title
+            }
+          }
+      </pre>
+    </td>
+  </tr>
+</tbody>
+</table>
+
+This change is a result of fixing some inconsistencies and edge cases in writing array elements.
+`hasura metadata export` will write YAML files in this format going forward. Also, note that this is a backwards compatible change.
+
+- cli: fix ordering of elements in metadata files to match server metadata
+
+Example:
+<table>
+   <thead>
+      <tr>
+         <th>Server Metadata (JSON)</th>
+         <th>Old behaviour (YAML)</th>
+         <th>New Behaviour (YAML)</th>
+      </tr>
+   </thead>
+   <tbody>
+      <tr>
+         <td>
+            <pre>
+{
+  "function": {
+    "schema": "public",
+    "name": "search_albums"
+  }
+}
+       </pre>
+         </td>
+         <td>
+            <pre>
+function:
+  name: search_albums
+  schema: public
+      </pre>
+         </td>
+         <td>
+            <pre>
+function:
+  schema: public
+  name: search_albums
+      </pre>
+         </td>
+      </tr>
+   </tbody>
+</table>
 
 ### Bug fixes and improvements
 
@@ -15,6 +106,7 @@
 - server: fix regression where remote relationships would get exposed over Relay, which is unsupported
 - server: add support for customising the GraphQL schema descriptions of table columns in metadata
 - console: fixed an issue where editing both a column's name and its GraphQL field name at the same time caused an error
+- cli: fix inherited roles metadata not being updated when dropping all roles (#7872)
 
 ## v2.2.2
 

@@ -1,13 +1,14 @@
 package version
 
 import (
+	"bytes"
 	"io/ioutil"
 	"path/filepath"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 
 	"github.com/hasura/graphql-engine/cli/v2"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type Version struct {
@@ -48,47 +49,38 @@ func (a *VersionConfig) CreateFiles() error {
 	return nil
 }
 
-func (a *VersionConfig) Build(metadata *yaml.MapSlice) metadataobject.ErrParsingMetadataObject {
+func (a *VersionConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
 	data, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, a.Filename()))
 	if err != nil {
-		return a.error(err)
+		return nil, a.error(err)
 	}
 	var v Version
 	err = yaml.Unmarshal(data, &v)
 	if err != nil {
-		return a.error(err)
+		return nil, a.error(err)
 	}
-	item := yaml.MapItem{
-		Key:   "version",
-		Value: v.Version,
-	}
-	*metadata = append(*metadata, item)
-	return nil
+	return map[string]interface{}{a.Key(): v.Version}, nil
 }
 
-func (a *VersionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
-	var version int
-	for _, item := range metadata {
-		k, ok := item.Key.(string)
-		if !ok || k != "version" {
-			continue
-		}
-		version = item.Value.(int)
+func (a *VersionConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+	var version map[string]yaml.Node
+	if v, ok := metadata[a.Key()]; ok {
+		version = map[string]yaml.Node{a.Key(): v}
+	} else {
+		return nil, nil
 	}
-	v := Version{
-		Version: version,
-	}
-	data, err := yaml.Marshal(v)
+	var buf bytes.Buffer
+	err := metadataobject.GetEncoder(&buf).Encode(version)
 	if err != nil {
 		return nil, a.error(err)
 	}
 	return map[string][]byte{
-		filepath.ToSlash(filepath.Join(a.MetadataDir, a.Filename())): data,
+		filepath.ToSlash(filepath.Join(a.MetadataDir, a.Filename())): buf.Bytes(),
 	}, nil
 }
 
 func (a *VersionConfig) Key() string {
-	return "version"
+	return metadataobject.VersionKey
 }
 
 func (a *VersionConfig) Filename() string {
