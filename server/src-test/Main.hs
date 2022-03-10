@@ -96,25 +96,25 @@ unitSpecs = do
   describe "Data.Parser.JSONPath" JsonPath.spec
   describe "Data.Time" TimeSpec.spec
   describe "Data.Trie" TrieSpec.spec
-  describe "Hasura.Backends.MySQL.DataLoader.ExecuteTests" MySQLDataLoader.spec
   describe "Hasura.Backends.MSSQL.ErrorSpec" MSSQLErrorSpec.spec
+  describe "Hasura.Backends.MySQL.DataLoader.ExecuteTests" MySQLDataLoader.spec
   describe "Hasura.Eventing" EventingSpec.spec
+  describe "Hasura.GraphQL.Namespace" NamespaceSpec.spec
   describe "Hasura.GraphQL.Parser.Directives" GraphQLDirectivesSpec.spec
   describe "Hasura.GraphQL.Schema.Remote" GraphRemoteSchemaSpec.spec
   describe "Hasura.Incremental" IncrementalSpec.spec
-  describe "Hasura.RQL.Types.Common" CommonTypesSpec.spec
+  describe "Hasura.RQL.IR.SelectSpec" SelectSpec.spec
+  describe "Hasura.RQL.MetadataSpec" MetadataSpec.spec
+  describe "Hasura.RQL.PermissionSpec" PermSpec.spec
   describe "Hasura.RQL.Types.Allowlist" AllowlistSpec.spec
+  describe "Hasura.RQL.Types.Common" CommonTypesSpec.spec
   describe "Hasura.RQL.Types.Endpoint" EndpointSpec.spec
   describe "Hasura.RQL.Types.Table" TableSpec.spec
-  describe "Hasura.GraphQL.Namespace" NamespaceSpec.spec
-  describe "Hasura.SQL.WKT" WKTSpec.spec
-  describe "Hasura.Server.Auth.JWT" JWTSpec.spec
-  describe "Hasura.Server.Auth" AuthSpec.spec
-  describe "Hasura.Server.Telemetry" TelemetrySpec.spec
-  describe "Hasura.RQL.IR.SelectSpec" SelectSpec.spec
-  describe "Hasura.RQL.PermissionSpec" PermSpec.spec
-  describe "Hasura.RQL.MetadataSpec" MetadataSpec.spec
   describe "Hasura.RQL.WebhookTransformsSpec" WebhookTransformsSpec.spec
+  describe "Hasura.SQL.WKT" WKTSpec.spec
+  describe "Hasura.Server.Auth" AuthSpec.spec
+  describe "Hasura.Server.Auth.JWT" JWTSpec.spec
+  describe "Hasura.Server.Telemetry" TelemetrySpec.spec
   describe "Network.HTTP.Client.TransformableSpec" TransformableSpec.spec
 
 buildMSSQLSpecs :: IO Spec
