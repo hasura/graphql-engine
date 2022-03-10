@@ -20,11 +20,12 @@ import Data.Text.Extended
 import Hasura.Base.Error (QErr)
 import Hasura.GraphQL.Parser (Kind (..), Parser)
 import Hasura.GraphQL.Parser qualified as P
-import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
+import Hasura.GraphQL.Schema.Common
 import Hasura.Prelude
 import Hasura.RQL.DML.Internal (getRolePermInfo)
 import Hasura.RQL.Types
+import Hasura.Session (RoleName)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Helper function to get the table GraphQL name. A table may have a
@@ -57,8 +58,8 @@ getTableGQLName tableInfo = do
 -- Return Nothing if there's no column the current user has "select"
 -- permissions for.
 tableSelectColumnsEnum ::
-  forall m n r b.
-  (BackendSchema b, MonadSchema n m, MonadRole r m, MonadTableInfo r m, Has P.MkTypename r) =>
+  forall b r m n.
+  MonadBuildSchema b r m n =>
   SourceName ->
   TableInfo b ->
   m (Maybe (Parser 'Both n (Column b)))
@@ -88,8 +89,8 @@ tableSelectColumnsEnum sourceName tableInfo = do
 -- table. Used for conflict resolution in "insert" mutations, among
 -- others. Maps to the table_update_column object.
 tableUpdateColumnsEnum ::
-  forall m n r b.
-  (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has P.MkTypename r) =>
+  forall b r m n.
+  MonadBuildSchema b r m n =>
   TableInfo b ->
   m (Maybe (Parser 'Both n (Column b)))
 tableUpdateColumnsEnum tableInfo = do
@@ -127,24 +128,29 @@ updateColumnsPlaceholderParser tableInfo = do
             )
 
 tablePermissions ::
-  forall m n r b.
-  (MonadSchema n m, MonadRole r m) =>
+  forall b r m.
+  (MonadReader r m, Has RoleName r) =>
   TableInfo b ->
   m (Maybe (RolePermInfo b))
 tablePermissions tableInfo = do
-  roleName <- askRoleName
+  roleName <- asks getter
   pure $ getRolePermInfo roleName tableInfo
 
 tableSelectPermissions ::
-  forall b r m n.
-  (MonadSchema n m, MonadRole r m) =>
+  forall b r m.
+  (MonadReader r m, Has RoleName r) =>
   TableInfo b ->
   m (Maybe (SelPermInfo b))
 tableSelectPermissions tableInfo = (_permSel =<<) <$> tablePermissions tableInfo
 
 tableSelectFields ::
-  forall m n r b.
-  (Backend b, MonadSchema n m, MonadTableInfo r m, MonadRole r m) =>
+  forall b r m.
+  ( Backend b,
+    MonadError QErr m,
+    MonadReader r m,
+    Has SourceCache r,
+    Has RoleName r
+  ) =>
   SourceName ->
   TableInfo b ->
   m [FieldInfo b]
@@ -179,8 +185,13 @@ tableColumns tableInfo =
 -- | Get the columns of a table that my be selected under the given select
 -- permissions.
 tableSelectColumns ::
-  forall m n r b.
-  (Backend b, MonadSchema n m, MonadTableInfo r m, MonadRole r m) =>
+  forall b r m.
+  ( Backend b,
+    MonadError QErr m,
+    MonadReader r m,
+    Has SourceCache r,
+    Has RoleName r
+  ) =>
   SourceName ->
   TableInfo b ->
   m [ColumnInfo b]
@@ -193,8 +204,12 @@ tableSelectColumns sourceName tableInfo =
 -- | Get the columns of a table that my be updated under the given update
 -- permissions.
 tableUpdateColumns ::
-  forall m n r b.
-  (Backend b, MonadSchema n m, MonadTableInfo r m, MonadRole r m) =>
+  forall b r m.
+  ( Backend b,
+    MonadError QErr m,
+    MonadReader r m,
+    Has RoleName r
+  ) =>
   TableInfo b ->
   m [ColumnInfo b]
 tableUpdateColumns tableInfo = do

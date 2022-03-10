@@ -35,8 +35,8 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- >   obj-rel: <remote-table>_order_by
 -- > }
 orderByExp ::
-  forall m n r b.
-  (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has P.MkTypename r) =>
+  forall b r m n.
+  MonadBuildSchema b r m n =>
   SourceName ->
   TableInfo b ->
   m (Parser 'Input n [IR.AnnotatedOrderByItemG b (UnpreparedValue b)])
@@ -116,8 +116,8 @@ orderByExp sourceName tableInfo = memoizeOn 'orderByExp (sourceName, tableInfoNa
 -- order, rather than using a general intermediary representation
 
 orderByAggregation ::
-  forall m n r b.
-  (BackendSchema b, MonadSchema n m, MonadTableInfo r m, MonadRole r m, Has P.MkTypename r) =>
+  forall b r m n.
+  MonadBuildSchema b r m n =>
   SourceName ->
   TableInfo b ->
   m (Parser 'Input n [IR.OrderByItemG b (IR.AnnotatedAggregateOrderBy b)])

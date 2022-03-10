@@ -18,7 +18,7 @@ import Hasura.GraphQL.Parser
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
-import Hasura.GraphQL.Schema.Common (partialSQLExpToUnpreparedValue)
+import Hasura.GraphQL.Schema.Common (askTableInfo, partialSQLExpToUnpreparedValue)
 import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
 import Hasura.RQL.Types

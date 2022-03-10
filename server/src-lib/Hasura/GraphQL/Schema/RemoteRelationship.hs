@@ -67,11 +67,11 @@ remoteRelationshipToSchemaField lhsFields RemoteSchemaFieldInfo {..} = runMaybeT
     -- The remote relationship field should not be accessible
     -- if the remote schema is not accessible to the said role
     hoistMaybe $ Map.lookup _rrfiRemoteSchemaName remoteRelationshipQueryCtx
-  role <- askRoleName
+  roleName <- asks getter
   let hasuraFieldNames = Map.keysSet lhsFields
       relationshipDef = ToSchemaRelationshipDef _rrfiRemoteSchemaName hasuraFieldNames _rrfiRemoteFields
   (newInpValDefns :: [G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition], remoteFieldParamMap) <-
-    if role == adminRoleName
+    if roleName == adminRoleName
       then do
         -- we don't validate the remote relationship when the role is admin
         -- because it's already been validated, when the remote relationship

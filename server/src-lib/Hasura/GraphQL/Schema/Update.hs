@@ -69,8 +69,8 @@ data UpdateOperator b m n op = UpdateOperator
 --   mutation query text or in update preset columns) and that each column is
 --   only used in one operator.
 buildUpdateOperators ::
-  forall b n r op m.
-  (BackendSchema b, P.MonadSchema n m, P.MonadRole r m, P.MonadTableInfo r m) =>
+  forall b r m n op.
+  MonadBuildSchema b r m n =>
   -- | Columns with @preset@ expressions
   (HashMap (Column b) op) ->
   -- | Update operators to include in the Schema
@@ -96,8 +96,8 @@ presetColumns = fmap partialSQLExpToUnpreparedValue . upiSet
 -- | Produce an InputFieldsParser from an UpdateOperator, but only if the operator
 -- applies to the table (i.e., it admits a non-empty column set).
 runUpdateOperator ::
-  forall b m n r op.
-  (Backend b, P.MonadSchema n m, P.MonadRole r m, P.MonadTableInfo r m) =>
+  forall b r m n op.
+  MonadBuildSchema b r m n =>
   TableInfo b ->
   UpdateOperator b m n op ->
   m

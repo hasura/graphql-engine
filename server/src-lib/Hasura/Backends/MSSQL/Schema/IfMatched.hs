@@ -13,7 +13,6 @@ module Hasura.Backends.MSSQL.Schema.IfMatched
   )
 where
 
-import Data.Has
 import Data.Text.Extended
 import Hasura.Backends.MSSQL.Types.Insert
 import Hasura.Backends.MSSQL.Types.Internal (ScalarType (..))
@@ -59,7 +58,7 @@ ifMatchedFieldParser sourceName tableInfo = do
 -- | Parse a @tablename_if_matched@ object.
 ifMatchedObjectParser ::
   forall r m n.
-  (MonadBuildSchema 'MSSQL r m n) =>
+  MonadBuildSchema 'MSSQL r m n =>
   SourceName ->
   TableInfo 'MSSQL ->
   m (Maybe (Parser 'Input n (IfMatched (UnpreparedValue 'MSSQL))))
@@ -101,8 +100,8 @@ ifMatchedObjectParser sourceName tableInfo = runMaybeT do
 -- Return Nothing if there's no column the current user has "select"
 -- permissions for.
 tableInsertMatchColumnsEnum ::
-  forall m n r.
-  (MonadSchema n m, MonadRole r m, MonadTableInfo r m, Has P.MkTypename r) =>
+  forall r m n.
+  MonadBuildSchemaBase r m n =>
   SourceName ->
   TableInfo 'MSSQL ->
   m (Maybe (Parser 'Both n (Column 'MSSQL)))

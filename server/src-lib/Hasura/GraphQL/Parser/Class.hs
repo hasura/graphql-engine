@@ -1,24 +1,16 @@
 -- | Classes for monads used during schema construction and query parsing.
 module Hasura.GraphQL.Parser.Class
-  ( MonadParse (..),
+  ( MonadSchema (..),
+    memoize,
+    MonadParse (..),
     parseError,
-    module Hasura.GraphQL.Parser.Class,
   )
 where
 
-import Data.Has
-import Data.HashMap.Strict qualified as Map
-import Data.Text.Extended
 import GHC.Stack (HasCallStack)
-import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Class.Parse
 import Hasura.GraphQL.Parser.Internal.Types
 import Hasura.Prelude
-import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table
-import Hasura.Session (RoleName)
 import Language.Haskell.TH qualified as TH
 import Type.Reflection (Typeable)
 
@@ -112,34 +104,6 @@ class (Monad m, MonadParse n) => MonadSchema n m | m -> n where
     a ->
     m (p n b) ->
     m (p n b)
-
-type MonadRole r m = (MonadReader r m, Has RoleName r)
-
--- | Gets the current role the schema is being built for.
-askRoleName ::
-  MonadRole r m =>
-  m RoleName
-askRoleName = asks getter
-
-type MonadTableInfo r m = (MonadReader r m, Has SourceCache r, MonadError QErr m)
-
--- | Looks up table information for the given table name. This function
--- should never fail, since the schema cache construction process is
--- supposed to ensure all dependencies are resolved.
-askTableInfo ::
-  forall b r m.
-  (Backend b, MonadTableInfo r m) =>
-  SourceName ->
-  TableName b ->
-  m (TableInfo b)
-askTableInfo sourceName tableName = do
-  tableInfo <- asks $ getTableInfo . getter
-  -- This should never fail, since the schema cache construction process is
-  -- supposed to ensure that all dependencies are resolved.
-  tableInfo `onNothing` throw500 ("askTableInfo: no info for table " <> dquote tableName <> " in source " <> dquote sourceName)
-  where
-    getTableInfo :: SourceCache -> Maybe (TableInfo b)
-    getTableInfo = Map.lookup tableName <=< unsafeSourceTables <=< Map.lookup sourceName
 
 -- | A wrapper around 'memoizeOn' that memoizes a function by using its argument
 -- as the key.
