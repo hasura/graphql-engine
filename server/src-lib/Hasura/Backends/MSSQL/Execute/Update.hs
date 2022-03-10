@@ -9,11 +9,14 @@ module Hasura.Backends.MSSQL.Execute.Update
   )
 where
 
-import Control.Monad.Validate qualified as V
 import Database.MSSQL.Transaction qualified as Tx
 import Hasura.Backends.MSSQL.Connection
-import Hasura.Backends.MSSQL.Execute.MutationResponse
 import Hasura.Backends.MSSQL.FromIr as TSQL
+import Hasura.Backends.MSSQL.FromIr.Constants (tempTableNameUpdated)
+import Hasura.Backends.MSSQL.FromIr.Expression (fromGBoolExp)
+import Hasura.Backends.MSSQL.FromIr.MutationResponse
+import Hasura.Backends.MSSQL.FromIr.SelectIntoTempTable qualified as TSQL
+import Hasura.Backends.MSSQL.FromIr.Update qualified as TSQL
 import Hasura.Backends.MSSQL.Plan
 import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Backends.MSSQL.ToQuery as TQ
@@ -72,15 +75,13 @@ buildUpdateTx updateOperation stringifyNum = do
   -- Create a temp table
   Tx.unitQueryE defaultMSSQLTxErrorHandler createInsertedTempTableQuery
   let updateQuery = TQ.fromUpdate <$> TSQL.fromUpdate updateOperation
-  updateQueryValidated <- toQueryFlat <$> V.runValidate (runFromIr updateQuery) `onLeft` (throw500 . tshow)
+  updateQueryValidated <- toQueryFlat <$> runFromIr updateQuery
   -- Execute UPDATE statement
   Tx.unitQueryE mutationMSSQLTxErrorHandler updateQueryValidated
-  mutationOutputSelect <- mkMutationOutputSelect stringifyNum withAlias $ _auOutput updateOperation
+  mutationOutputSelect <- runFromIr $ mkMutationOutputSelect stringifyNum withAlias $ _auOutput updateOperation
   let checkCondition = _auCheck updateOperation
   -- The check constraint is translated to boolean expression
-  checkBoolExp <-
-    V.runValidate (runFromIr $ runReaderT (fromGBoolExp checkCondition) (EntityAlias withAlias))
-      `onLeft` (throw500 . tshow)
+  checkBoolExp <- runFromIr $ runReaderT (fromGBoolExp checkCondition) (EntityAlias withAlias)
 
   let withSelect =
         emptySelect

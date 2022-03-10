@@ -28,7 +28,7 @@ import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Execute.Delete
 import Hasura.Backends.MSSQL.Execute.Insert
 import Hasura.Backends.MSSQL.Execute.Update
-import Hasura.Backends.MSSQL.FromIr as TSQL
+import Hasura.Backends.MSSQL.FromIr.Constants (jsonFieldName)
 import Hasura.Backends.MSSQL.Plan
 import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Backends.MSSQL.SQL.Value (txtEncodedColVal)
@@ -184,7 +184,7 @@ multiplexRootReselect variables rootReselect =
                   ColumnExpression
                     ( TSQL.FieldName
                         { fieldNameEntity = resultAlias,
-                          fieldName = TSQL.jsonFieldName
+                          fieldName = jsonFieldName
                         }
                     ),
                 aliasedAlias = resultAlias
@@ -213,7 +213,7 @@ multiplexRootReselect variables rootReselect =
               joinJoinAlias =
                 JoinAlias
                   { joinAliasEntity = resultAlias,
-                    joinAliasField = Just TSQL.jsonFieldName
+                    joinAliasField = Just jsonFieldName
                   }
             }
         ],

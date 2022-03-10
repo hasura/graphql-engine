@@ -386,11 +386,18 @@ library
                      , Hasura.Backends.MSSQL.DDL.RunSQL
                      , Hasura.Backends.MSSQL.DDL.Source
                      , Hasura.Backends.MSSQL.DDL.Source.Version
-                     , Hasura.Backends.MSSQL.Execute.MutationResponse
                      , Hasura.Backends.MSSQL.Execute.Delete
                      , Hasura.Backends.MSSQL.Execute.Insert
                      , Hasura.Backends.MSSQL.Execute.Update
                      , Hasura.Backends.MSSQL.FromIr
+                     , Hasura.Backends.MSSQL.FromIr.Constants
+                     , Hasura.Backends.MSSQL.FromIr.Delete
+                     , Hasura.Backends.MSSQL.FromIr.Expression
+                     , Hasura.Backends.MSSQL.FromIr.Insert
+                     , Hasura.Backends.MSSQL.FromIr.MutationResponse
+                     , Hasura.Backends.MSSQL.FromIr.Query
+                     , Hasura.Backends.MSSQL.FromIr.SelectIntoTempTable
+                     , Hasura.Backends.MSSQL.FromIr.Update
                      , Hasura.Backends.MSSQL.Instances.API
                      , Hasura.Backends.MSSQL.Instances.Execute
                      , Hasura.Backends.MSSQL.Instances.Metadata
