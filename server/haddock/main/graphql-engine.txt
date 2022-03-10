@@ -21198,6 +21198,17 @@ getFields :: Traversal' super sub -> [(any, super)] -> [(any, sub)]
 --   so that a remote join can be constructed.
 transformAnnRelation :: (a -> Collector b) -> AnnRelationSelectG src a -> Collector (AnnRelationSelectG src b)
 transformActionFields :: ActionFieldsG (RemoteRelationshipField UnpreparedValue) -> Collector (ActionFieldsG Void)
+
+-- | Constructs a <a>JoinColumnAlias</a> for a given field in a selection
+--   set.
+--   
+--   If the field was already requested, we leave it unchanged, to avoid
+--   double-fetching the same information. However, if this field is a
+--   "phantom" field, that we only add for the purpose of fetching a join
+--   key, we rename it in a way that is guaranteed to avoid conflicts.
+--   
+--   NOTE: if the <tt>fieldName</tt> argument is a valid GraphQL name, then
+--   the constructed alias MUST also be a valid GraphQL name.
 getJoinColumnAlias :: (Eq field, Hashable field) => FieldName -> field -> HashMap field FieldName -> [FieldName] -> JoinColumnAlias
 getRemoteJoinsSourceRelation :: Backend b => SourceRelationshipSelection b (RemoteRelationshipField UnpreparedValue) UnpreparedValue -> (SourceRelationshipSelection b Void UnpreparedValue, Maybe RemoteJoins)
 transformGraphQLSelectionSet :: SelectionSet (RemoteRelationshipField UnpreparedValue) var -> Collector (SelectionSet Void var)
@@ -23799,9 +23810,9 @@ QueryParametersInfo :: !HashMap Name (ColumnValue b) -> !Seq (ColumnValue b) -> 
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> !HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_awC1e. Lens' (QueryParametersInfo b_awC1e) (Seq (ColumnValue b_awC1e))
-qpiReusableVariableValues :: forall b_awC1e. Lens' (QueryParametersInfo b_awC1e) (HashMap Name (ColumnValue b_awC1e))
-qpiReferencedSessionVariables :: forall b_awC1e. Lens' (QueryParametersInfo b_awC1e) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_awC0Y. Lens' (QueryParametersInfo b_awC0Y) (Seq (ColumnValue b_awC0Y))
+qpiReusableVariableValues :: forall b_awC0Y. Lens' (QueryParametersInfo b_awC0Y) (HashMap Name (ColumnValue b_awC0Y))
+qpiReferencedSessionVariables :: forall b_awC0Y. Lens' (QueryParametersInfo b_awC0Y) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
