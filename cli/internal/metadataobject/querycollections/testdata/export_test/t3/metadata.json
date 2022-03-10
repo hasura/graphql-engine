@@ -1,0 +1,23 @@
+{
+  "query_collections": [
+    {
+      "name": "allowed-queries",
+      "definition": {
+        "queries": [
+          {
+            "name": "getAlbums",
+            "query": "query getAlbums {\n  albums {\n    id\n    title\n  }\n}\n"
+          },
+          {
+            "name": "getArtists",
+            "query": "query getArtists {\n  artists {\n    id\n    name\n  }\n}\n"
+          },
+          {
+            "name": "get-artists",
+            "query": "query getArtists {\n  artists {\n    name\n  }\n}"
+          }
+        ]
+      }
+    }
+  ]
+}

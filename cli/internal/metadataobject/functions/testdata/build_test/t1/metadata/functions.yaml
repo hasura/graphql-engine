@@ -1,0 +1,3 @@
+- function:
+    schema: public
+    name: search_articles

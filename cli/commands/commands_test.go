@@ -17,7 +17,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/util"
 
 	"github.com/hasura/graphql-engine/cli/v2"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

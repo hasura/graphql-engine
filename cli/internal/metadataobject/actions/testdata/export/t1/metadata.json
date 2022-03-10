@@ -1,0 +1,55 @@
+{
+  "actions": [
+    {
+      "name": "foo",
+      "definition": {
+        "handler": "http://localhost:3000",
+        "output_type": "fooOutput",
+        "arguments": [
+          {
+            "name": "arg1",
+            "type": "fooInput!"
+          }
+        ],
+        "type": "mutation",
+        "kind": "synchronous",
+        "request_transform": {
+          "body": "{\n  \"my-baz\": {{$body.input.foo.baz}}\n \"my-bar\": {{$body.input.foo.bar}}\n \n}",
+          "content_type": "application/json",
+          "method": "POST",
+          "query_params": {},
+          "template_engine": "Kriti"
+        },
+        "timeout": 10
+      }
+    }
+  ],
+  "custom_types": {
+    "input_objects": [
+      {
+        "name": "fooInput",
+        "fields": [
+          {
+            "name": "username",
+            "type": "String!"
+          },
+          {
+            "name": "password",
+            "type": "String!"
+          }
+        ]
+      }
+    ],
+    "objects": [
+      {
+        "name": "fooOutput",
+        "fields": [
+          {
+            "name": "accessToken",
+            "type": "String!"
+          }
+        ]
+      }
+    ]
+  }
+}

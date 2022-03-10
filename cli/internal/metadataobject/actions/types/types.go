@@ -2,7 +2,7 @@ package types
 
 import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // CodegenExecutionConfig represents the config required to generate codegen for an action.
@@ -54,10 +54,10 @@ func (c *Common) SetExportDefault() {
 }
 
 type Action struct {
-	Name        string          `json:"name" yaml:"name"`
-	Definition  ActionDef       `json:"definition" yaml:"definition"`
-	Permissions []yaml.MapSlice `json:"-" yaml:"permissions,omitempty"`
-	Comment     interface{}     `json:"comment,omitempty" yaml:"comment,omitempty"`
+	Name        string      `json:"name" yaml:"name"`
+	Definition  ActionDef   `json:"definition" yaml:"definition"`
+	Permissions yaml.Node   `json:"-" yaml:"permissions,omitempty"`
+	Comment     interface{} `json:"comment,omitempty" yaml:"comment,omitempty"`
 }
 
 type ActionType string
@@ -70,15 +70,15 @@ const (
 )
 
 type ActionDef struct {
-	Kind                 string          `json:"kind" yaml:"kind"`
-	Type                 ActionType      `json:"type" yaml:"type,omitempty"`
-	Handler              string          `json:"handler" yaml:"handler"`
-	Arguments            []yaml.MapSlice `json:"arguments" yaml:"arguments,omitempty"`
-	OutputType           string          `json:"output_type" yaml:"output_type,omitempty"`
-	ForwardClientHeaders bool            `json:"-" yaml:"forward_client_headers,omitempty"`
-	Headers              []yaml.MapSlice `json:"-" yaml:"headers,omitempty"`
-	Timeout              int             `json:"-" yaml:"timeout,omitempty"`
-	RequestTransform     interface{}     `json:"request_transform,omitempty" yaml:"request_transform,omitempty"`
+	Kind                 string      `json:"kind" yaml:"kind"`
+	Type                 ActionType  `json:"type" yaml:"type,omitempty"`
+	Handler              string      `json:"handler" yaml:"handler"`
+	Arguments            []yaml.Node `json:"arguments" yaml:"arguments,omitempty"`
+	OutputType           string      `json:"output_type" yaml:"output_type,omitempty"`
+	ForwardClientHeaders bool        `json:"-" yaml:"forward_client_headers,omitempty"`
+	Headers              yaml.Node   `json:"-" yaml:"headers,omitempty"`
+	Timeout              int         `json:"-" yaml:"timeout,omitempty"`
+	RequestTransform     yaml.Node   `json:"request_transform,omitempty" yaml:"request_transform,omitempty"`
 }
 
 type CustomTypes struct {
@@ -89,11 +89,11 @@ type CustomTypes struct {
 }
 
 type CustomTypeDef struct {
-	Name          string          `json:"name" yaml:"name"`
-	Description   *string         `json:"description" yaml:"description,omitempty"`
-	Fields        []yaml.MapSlice `json:"fields,omitempty" yaml:"fields,omitempty"`
-	Values        []interface{}   `json:"values,omitempty" yaml:"values,omitempty"`
-	Relationships []yaml.MapSlice `json:"-" yaml:"relationships,omitempty"`
+	Name          string      `json:"name" yaml:"name"`
+	Description   *string     `json:"description,omitempty" yaml:"description,omitempty"`
+	Fields        []yaml.Node `json:"fields,omitempty" yaml:"fields,omitempty"`
+	Values        []yaml.Node `json:"values,omitempty" yaml:"values,omitempty"`
+	Relationships yaml.Node   `json:"-" yaml:"relationships,omitempty"`
 }
 
 // CLI Extension types

@@ -1,0 +1,7 @@
+- "!include public_albums.yaml"
+- "!include public_artists.yaml"
+- "!include public_genres.yaml"
+- "!include public_media_types.yaml"
+- "!include public_playlist_track.yaml"
+- "!include public_playlists.yaml"
+- "!include public_tracks.yaml"

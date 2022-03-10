@@ -8,6 +8,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 	"github.com/hasura/graphql-engine/cli/v2/internal/scripts"
 	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/spf13/cobra"
@@ -83,7 +84,7 @@ func writeByOutputFormat(w io.Writer, b []byte, format rawOutputFormat) error {
 			return fmt.Errorf("writing output failed: %w", err)
 		}
 	case rawOutputFormatYAML:
-		o, err := yaml.JSONToYAML(b)
+		o, err := metadatautil.JSONToYAML(b)
 		if err != nil {
 			return err
 		}

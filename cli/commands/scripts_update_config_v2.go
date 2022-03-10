@@ -13,7 +13,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 	"github.com/hasura/graphql-engine/cli/v2/migrate"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/types"

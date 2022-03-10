@@ -1,0 +1,13 @@
+actions:
+- name: foo
+  definition:
+    kind: synchronous
+    handler: http://localhost:3000
+    timeout: 10
+custom_types:
+  enums: []
+  input_objects:
+  - name: fooInput
+  objects:
+  - name: fooOutput
+  scalars: []

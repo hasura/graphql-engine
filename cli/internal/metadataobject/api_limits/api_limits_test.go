@@ -4,12 +4,12 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	goyaml "github.com/goccy/go-yaml"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
+	"gopkg.in/yaml.v3"
 
 	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMetadataObject_Build(t *testing.T) {
@@ -17,49 +17,45 @@ func TestMetadataObject_Build(t *testing.T) {
 		MetadataDir string
 		logger      *logrus.Logger
 	}
-	type args struct {
-		metadata *yaml.MapSlice
-	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    string
-		wantErr bool
+		id         string
+		name       string
+		fields     fields
+		wantGolden string
+		wantErr    bool
 	}{
 		{
-			"can build from file",
+			"t1",
+			"can build metadata json",
 			fields{
-				MetadataDir: "testdata/metadata",
+				MetadataDir: "testdata/build_test/t1/metadata",
 				logger:      logrus.New(),
 			},
-			args{
-				metadata: new(yaml.MapSlice),
-			},
-			`api_limits:
-  disabled: false
-  rate_limit:
-    per_role: {}
-    global:
-      unique_params: IP
-      max_reqs_per_min: 1
-`,
+			"testdata/build_test/t1/want.golden.json",
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := &MetadataObject{
+			o := &MetadataObject{
 				MetadataDir: tt.fields.MetadataDir,
 				logger:      tt.fields.logger,
 			}
-			err := m.Build(tt.args.metadata)
+			got, err := o.Build()
 			if tt.wantErr {
-				require.Error(t, err)
+				assert.Error(t, err)
 			} else {
-				b, err := yaml.Marshal(tt.args.metadata)
 				assert.NoError(t, err)
-				assert.Equal(t, tt.want, string(b))
+				gotbs, err := yaml.Marshal(got)
+				assert.NoError(t, err)
+				jsonbs, err := goyaml.YAMLToJSON(gotbs)
+				assert.NoError(t, err)
+
+				// uncomment following lines to update golden file
+				//assert.NoError(t, ioutil.WriteFile(tt.wantGolden, jsonbs, os.ModePerm))
+				wantbs, err := ioutil.ReadFile(tt.wantGolden)
+				assert.NoError(t, err)
+				assert.Equal(t, string(wantbs), string(jsonbs))
 			}
 		})
 	}
@@ -71,9 +67,10 @@ func TestMetadataObject_Export(t *testing.T) {
 		logger      *logrus.Logger
 	}
 	type args struct {
-		metadata yaml.MapSlice
+		metadata map[string]yaml.Node
 	}
 	tests := []struct {
+		id      string
 		name    string
 		fields  fields
 		args    args
@@ -81,54 +78,48 @@ func TestMetadataObject_Export(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			"can export metadata with api_limits",
+			"t1",
+			"can export metadata",
 			fields{
-				MetadataDir: "testdata/metadata",
+				MetadataDir: "testdata/export_test",
 				logger:      logrus.New(),
 			},
 			args{
-				metadata: func() yaml.MapSlice {
-					var metadata yaml.MapSlice
-					jsonb, err := ioutil.ReadFile("testdata/metadata.json")
+				metadata: func() map[string]yaml.Node {
+					bs, err := ioutil.ReadFile("testdata/export_test/metadata.json")
 					assert.NoError(t, err)
-					assert.NoError(t, yaml.Unmarshal(jsonb, &metadata))
-					return metadata
+					yamlbs, err := metadatautil.JSONToYAML(bs)
+					assert.NoError(t, err)
+					var v map[string]yaml.Node
+					assert.NoError(t, yaml.Unmarshal(yamlbs, &v))
+					return v
 				}(),
 			},
 			map[string][]byte{
-				"testdata/metadata/api_limits.yaml": []byte(`disabled: false
+				"testdata/export_test/api_limits.yaml": []byte(`disabled: false
 rate_limit:
   per_role: {}
   global:
     unique_params: IP
     max_reqs_per_min: 1
-`),
-			},
+`)},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			obj := &MetadataObject{
+			o := &MetadataObject{
 				MetadataDir: tt.fields.MetadataDir,
 				logger:      tt.fields.logger,
 			}
-			got, err := obj.Export(tt.args.metadata)
+			got, err := o.Export(tt.args.metadata)
 			if tt.wantErr {
-				require.Error(t, err)
+				assert.Error(t, err)
 			} else {
-				require.NoError(t, err)
-				var wantContent = map[string]string{}
-				var gotContent = map[string]string{}
-				for k, v := range got {
-					gotContent[k] = string(v)
-				}
-				for k, v := range tt.want {
-					wantContent[k] = string(v)
-				}
 				assert.NoError(t, err)
-				if diff := cmp.Diff(wantContent, gotContent); diff != "" {
-					t.Errorf("Export() mismatch (-want +got):\n%s", diff)
+				for k, v := range got {
+					assert.Contains(t, tt.want, k)
+					assert.Equalf(t, string(tt.want[k]), string(v), "%v", k)
 				}
 			}
 		})

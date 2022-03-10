@@ -1,13 +1,14 @@
 package tables
 
 import (
+	"bytes"
 	"path/filepath"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 
 	"github.com/hasura/graphql-engine/cli/v2"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 /*
@@ -26,15 +27,15 @@ func NewV3MetadataTableConfig(ec *cli.ExecutionContext, baseDir string) *V3Metad
 		},
 	}
 }
-func (t *V3MetadataTableConfig) Export(md yaml.MapSlice) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+func (t *V3MetadataTableConfig) Export(md map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
 	metadataBytes, err := yaml.Marshal(md)
 	if err != nil {
 		return nil, t.error(err)
 	}
 	var metadata struct {
 		Sources []struct {
-			Name   string          `yaml:"name"`
-			Tables []yaml.MapSlice `yaml:"tables"`
+			Name   string      `yaml:"name"`
+			Tables []yaml.Node `yaml:"tables"`
 		} `yaml:"sources"`
 	}
 	var tables interface{}
@@ -47,11 +48,12 @@ func (t *V3MetadataTableConfig) Export(md yaml.MapSlice) (map[string][]byte, met
 	if tables == nil {
 		tables = make([]interface{}, 0)
 	}
-	data, err := yaml.Marshal(tables)
+	var buf bytes.Buffer
+	err = metadataobject.GetEncoder(&buf).Encode(tables)
 	if err != nil {
 		return nil, t.error(err)
 	}
 	return map[string][]byte{
-		filepath.ToSlash(filepath.Join(t.MetadataDir, t.Filename())): data,
+		filepath.ToSlash(filepath.Join(t.MetadataDir, t.Filename())): buf.Bytes(),
 	}, nil
 }

@@ -21,7 +21,7 @@ func getMetadataAsYaml(exportMetadata func() (io.Reader, error)) ([]byte, error)
 	if err != nil {
 		return nil, err
 	}
-	yamlb, err := yaml.JSONToYAML(jsonb)
+	yamlb, err := JSONToYAML(jsonb)
 	if err != nil {
 		return nil, err
 	}

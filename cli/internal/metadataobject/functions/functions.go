@@ -8,7 +8,7 @@ import (
 
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type FunctionConfig struct {
@@ -41,49 +41,25 @@ func (f *FunctionConfig) CreateFiles() error {
 	return nil
 }
 
-func (f *FunctionConfig) Build(metadata *yaml.MapSlice) metadataobject.ErrParsingMetadataObject {
+func (f *FunctionConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
 	data, err := ioutil.ReadFile(filepath.Join(f.MetadataDir, f.Filename()))
-	if err != nil {
-		return f.error(err)
-	}
-	item := yaml.MapItem{
-		Key: "functions",
-	}
-	var obj []yaml.MapSlice
-	err = yaml.Unmarshal(data, &obj)
-	if err != nil {
-		return f.error(err)
-	}
-	if len(obj) != 0 {
-		item.Value = obj
-		*metadata = append(*metadata, item)
-	}
-	return nil
-}
-
-func (f *FunctionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
-	var functions interface{}
-	for _, item := range metadata {
-		k, ok := item.Key.(string)
-		if !ok || k != "functions" {
-			continue
-		}
-		functions = item.Value
-	}
-	if functions == nil {
-		functions = make([]interface{}, 0)
-	}
-	data, err := yaml.Marshal(functions)
 	if err != nil {
 		return nil, f.error(err)
 	}
-	return map[string][]byte{
-		filepath.ToSlash(filepath.Join(f.MetadataDir, f.Filename())): data,
-	}, nil
+	var obj []yaml.Node
+	err = yaml.Unmarshal(data, &obj)
+	if err != nil {
+		return nil, f.error(err)
+	}
+	return map[string]interface{}{f.Key(): obj}, nil
+}
+
+func (f *FunctionConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+	return metadataobject.DefaultExport(f, metadata, f.error, metadataobject.DefaultObjectTypeSequence)
 }
 
 func (f *FunctionConfig) Key() string {
-	return "functions"
+	return metadataobject.FunctionsKey
 }
 
 func (f *FunctionConfig) Filename() string {
