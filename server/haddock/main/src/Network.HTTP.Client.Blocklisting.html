@@ -10,13 +10,13 @@
 </span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Network.HTTP.Client.Restricted.html"><span class="hs-identifier">Network.HTTP.Client.Restricted</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Restricted</span></span><span>
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.Socket</span></span><span>
 </span><span id="line-12"></span><span>
-</span><span id="line-13"></span><span id="local-6989586621688140994"><span id="local-6989586621688140995"></span></span><span class="hs-keyword">data</span><span> </span><span id="Blocklist"><span class="annot"><a href="Network.HTTP.Client.Blocklisting.html#Blocklist"><span class="hs-identifier hs-var">Blocklist</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Blocklist"><span class="annot"><a href="Network.HTTP.Client.Blocklisting.html#Blocklist"><span class="hs-identifier hs-var">Blocklist</span></a></span></span><span>
+</span><span id="line-13"></span><span id="local-6989586621688141099"><span id="local-6989586621688141100"></span></span><span class="hs-keyword">data</span><span> </span><span id="Blocklist"><span class="annot"><a href="Network.HTTP.Client.Blocklisting.html#Blocklist"><span class="hs-identifier hs-var">Blocklist</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Blocklist"><span class="annot"><a href="Network.HTTP.Client.Blocklisting.html#Blocklist"><span class="hs-identifier hs-var">Blocklist</span></a></span></span><span>
 </span><span id="line-14"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="ipv4Blocklist"><span class="annot"><span class="annottext">Blocklist -&gt; [IPv4Range]
 </span><a href="Network.HTTP.Client.Blocklisting.html#ipv4Blocklist"><span class="hs-identifier hs-var hs-var">ipv4Blocklist</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">IPv4.IPv4Range</span></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
 </span><span id="line-15"></span><span>    </span><span id="ipv6Blocklist"><span class="annot"><span class="annottext">Blocklist -&gt; [IPv6Range]
 </span><a href="Network.HTTP.Client.Blocklisting.html#ipv6Blocklist"><span class="hs-identifier hs-var hs-var">ipv6Blocklist</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">IPv6.IPv6Range</span></span><span class="hs-special">]</span><span>
 </span><span id="line-16"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-17"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688140985"><span id="local-6989586621688140987"><span id="local-6989586621688140989"><span class="annot"><span class="annottext">Int -&gt; Blocklist -&gt; ShowS
+</span><span id="line-17"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688141090"><span id="local-6989586621688141092"><span id="local-6989586621688141094"><span class="annot"><span class="annottext">Int -&gt; Blocklist -&gt; ShowS
 [Blocklist] -&gt; ShowS
 Blocklist -&gt; String
 (Int -&gt; Blocklist -&gt; ShowS)
@@ -41,25 +41,25 @@ $cto :: forall x. Rep Blocklist x -&gt; Blocklist
 $cfrom :: forall x. Blocklist -&gt; Rep Blocklist x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-18"></span><span>
-</span><span id="line-19"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688140976"><span id="local-6989586621688140978"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Network.HTTP.Client.Blocklisting.html#Blocklist"><span class="hs-identifier hs-type">Blocklist</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-20"></span><span>  </span><span class="annot"><a href="Network.HTTP.Client.Blocklisting.html#Blocklist"><span class="hs-identifier hs-type">Blocklist</span></a></span><span> </span><span id="local-6989586621688140974"><span class="annot"><span class="annottext">[IPv4Range]
-</span><a href="#local-6989586621688140974"><span class="hs-identifier hs-var">ipv4Lst1</span></a></span></span><span> </span><span id="local-6989586621688140973"><span class="annot"><span class="annottext">[IPv6Range]
-</span><a href="#local-6989586621688140973"><span class="hs-identifier hs-var">ipv6Lst1</span></a></span></span><span> </span><span id="local-6989586621688140972"><span class="annot"><span class="annottext">&lt;&gt; :: Blocklist -&gt; Blocklist -&gt; Blocklist
-</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="annot"><a href="Network.HTTP.Client.Blocklisting.html#Blocklist"><span class="hs-identifier hs-type">Blocklist</span></a></span><span> </span><span id="local-6989586621688140971"><span class="annot"><span class="annottext">[IPv4Range]
-</span><a href="#local-6989586621688140971"><span class="hs-identifier hs-var">ipv4Lst2</span></a></span></span><span> </span><span id="local-6989586621688140970"><span class="annot"><span class="annottext">[IPv6Range]
-</span><a href="#local-6989586621688140970"><span class="hs-identifier hs-var">ipv6Lst2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[IPv4Range] -&gt; [IPv6Range] -&gt; Blocklist
+</span><span id="line-19"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688141081"><span id="local-6989586621688141083"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Network.HTTP.Client.Blocklisting.html#Blocklist"><span class="hs-identifier hs-type">Blocklist</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-20"></span><span>  </span><span class="annot"><a href="Network.HTTP.Client.Blocklisting.html#Blocklist"><span class="hs-identifier hs-type">Blocklist</span></a></span><span> </span><span id="local-6989586621688141079"><span class="annot"><span class="annottext">[IPv4Range]
+</span><a href="#local-6989586621688141079"><span class="hs-identifier hs-var">ipv4Lst1</span></a></span></span><span> </span><span id="local-6989586621688141078"><span class="annot"><span class="annottext">[IPv6Range]
+</span><a href="#local-6989586621688141078"><span class="hs-identifier hs-var">ipv6Lst1</span></a></span></span><span> </span><span id="local-6989586621688141077"><span class="annot"><span class="annottext">&lt;&gt; :: Blocklist -&gt; Blocklist -&gt; Blocklist
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="annot"><a href="Network.HTTP.Client.Blocklisting.html#Blocklist"><span class="hs-identifier hs-type">Blocklist</span></a></span><span> </span><span id="local-6989586621688141076"><span class="annot"><span class="annottext">[IPv4Range]
+</span><a href="#local-6989586621688141076"><span class="hs-identifier hs-var">ipv4Lst2</span></a></span></span><span> </span><span id="local-6989586621688141075"><span class="annot"><span class="annottext">[IPv6Range]
+</span><a href="#local-6989586621688141075"><span class="hs-identifier hs-var">ipv6Lst2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[IPv4Range] -&gt; [IPv6Range] -&gt; Blocklist
 </span><a href="Network.HTTP.Client.Blocklisting.html#Blocklist"><span class="hs-identifier hs-var">Blocklist</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[IPv4Range]
-</span><a href="#local-6989586621688140974"><span class="hs-identifier hs-var">ipv4Lst1</span></a></span><span> </span><span class="annot"><span class="annottext">[IPv4Range] -&gt; [IPv4Range] -&gt; [IPv4Range]
+</span><a href="#local-6989586621688141079"><span class="hs-identifier hs-var">ipv4Lst1</span></a></span><span> </span><span class="annot"><span class="annottext">[IPv4Range] -&gt; [IPv4Range] -&gt; [IPv4Range]
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">[IPv4Range]
-</span><a href="#local-6989586621688140971"><span class="hs-identifier hs-var">ipv4Lst2</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[IPv6Range]
-</span><a href="#local-6989586621688140973"><span class="hs-identifier hs-var">ipv6Lst1</span></a></span><span> </span><span class="annot"><span class="annottext">[IPv6Range] -&gt; [IPv6Range] -&gt; [IPv6Range]
+</span><a href="#local-6989586621688141076"><span class="hs-identifier hs-var">ipv4Lst2</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[IPv6Range]
+</span><a href="#local-6989586621688141078"><span class="hs-identifier hs-var">ipv6Lst1</span></a></span><span> </span><span class="annot"><span class="annottext">[IPv6Range] -&gt; [IPv6Range] -&gt; [IPv6Range]
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">[IPv6Range]
-</span><a href="#local-6989586621688140970"><span class="hs-identifier hs-var">ipv6Lst2</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688141075"><span class="hs-identifier hs-var">ipv6Lst2</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-21"></span><span>
-</span><span id="line-22"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688140964"><span id="local-6989586621688140966"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="Network.HTTP.Client.Blocklisting.html#Blocklist"><span class="hs-identifier hs-type">Blocklist</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-23"></span><span>  </span><span id="local-6989586621688140962"><span class="annot"><span class="annottext">mempty :: Blocklist
+</span><span id="line-22"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688141069"><span id="local-6989586621688141071"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="Network.HTTP.Client.Blocklisting.html#Blocklist"><span class="hs-identifier hs-type">Blocklist</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-23"></span><span>  </span><span id="local-6989586621688141067"><span class="annot"><span class="annottext">mempty :: Blocklist
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">mempty</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[IPv4Range] -&gt; [IPv6Range] -&gt; Blocklist
 </span><a href="Network.HTTP.Client.Blocklisting.html#Blocklist"><span class="hs-identifier hs-var">Blocklist</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-24"></span><span>
@@ -68,53 +68,53 @@ forall a. [a] -&gt; [a] -&gt; [a]
 </span><span id="line-27"></span><span class="hs-comment">-- not restricted.</span><span>
 </span><span id="line-28"></span><span class="annot"><a href="Network.HTTP.Client.Blocklisting.html#block"><span class="hs-identifier hs-type">block</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Network.HTTP.Client.Blocklisting.html#Blocklist"><span class="hs-identifier hs-type">Blocklist</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">AddrInfo</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Network.HTTP.Client.Restricted.html#Decision"><span class="hs-identifier hs-type">Restricted.Decision</span></a></span><span>
 </span><span id="line-29"></span><span id="block"><span class="annot"><span class="annottext">block :: Blocklist -&gt; AddrInfo -&gt; Decision
-</span><a href="Network.HTTP.Client.Blocklisting.html#block"><span class="hs-identifier hs-var hs-var">block</span></a></span></span><span> </span><span id="local-6989586621688140961"><span class="annot"><span class="annottext">Blocklist
-</span><a href="#local-6989586621688140961"><span class="hs-identifier hs-var">blocklist</span></a></span></span><span> </span><span id="local-6989586621688140960"><span class="annot"><span class="annottext">AddrInfo
-</span><a href="#local-6989586621688140960"><span class="hs-identifier hs-var">addr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Network.HTTP.Client.Blocklisting.html#block"><span class="hs-identifier hs-var hs-var">block</span></a></span></span><span> </span><span id="local-6989586621688141066"><span class="annot"><span class="annottext">Blocklist
+</span><a href="#local-6989586621688141066"><span class="hs-identifier hs-var">blocklist</span></a></span></span><span> </span><span id="local-6989586621688141065"><span class="annot"><span class="annottext">AddrInfo
+</span><a href="#local-6989586621688141065"><span class="hs-identifier hs-var">addr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">SockAddr -&gt; Bool
-</span><a href="#local-6989586621688140959"><span class="hs-identifier hs-var">sockAddrInBlocklist</span></a></span><span> </span><span class="annot"><span class="annottext">(SockAddr -&gt; Bool) -&gt; SockAddr -&gt; Bool
+</span><a href="#local-6989586621688141064"><span class="hs-identifier hs-var">sockAddrInBlocklist</span></a></span><span> </span><span class="annot"><span class="annottext">(SockAddr -&gt; Bool) -&gt; SockAddr -&gt; Bool
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">AddrInfo -&gt; SockAddr
 </span><span class="hs-identifier hs-var hs-var">addrAddress</span></span><span> </span><span class="annot"><span class="annottext">AddrInfo
-</span><a href="#local-6989586621688140960"><span class="hs-identifier hs-var">addr</span></a></span><span>
+</span><a href="#local-6989586621688141065"><span class="hs-identifier hs-var">addr</span></a></span><span>
 </span><span id="line-31"></span><span>    </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Decision
 </span><a href="Network.HTTP.Client.Restricted.html#Deny"><span class="hs-identifier hs-var">Restricted.Deny</span></a></span><span>
 </span><span id="line-32"></span><span>    </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">Decision
 </span><a href="Network.HTTP.Client.Restricted.html#Allow"><span class="hs-identifier hs-var">Restricted.Allow</span></a></span><span>
 </span><span id="line-33"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-34"></span><span>    </span><span id="local-6989586621688140959"><span class="annot"><span class="annottext">sockAddrInBlocklist :: SockAddr -&gt; Bool
-</span><a href="#local-6989586621688140959"><span class="hs-identifier hs-var hs-var">sockAddrInBlocklist</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-34"></span><span>    </span><span id="local-6989586621688141064"><span class="annot"><span class="annottext">sockAddrInBlocklist :: SockAddr -&gt; Bool
+</span><a href="#local-6989586621688141064"><span class="hs-identifier hs-var hs-var">sockAddrInBlocklist</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-35"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">SockAddrInet</span></span><span> </span><span class="annot"><span class="annottext">PortNumber
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688140954"><span class="annot"><span class="annottext">HostAddress
-</span><a href="#local-6989586621688140954"><span class="hs-identifier hs-var">hostAddr</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(IPv4Range -&gt; Bool) -&gt; [IPv4Range] -&gt; Bool
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688141059"><span class="annot"><span class="annottext">HostAddress
+</span><a href="#local-6989586621688141059"><span class="hs-identifier hs-var">hostAddr</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(IPv4Range -&gt; Bool) -&gt; [IPv4Range] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">any</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IPv4 -&gt; IPv4Range -&gt; Bool
 </span><span class="hs-identifier hs-var">IPv4.member</span></span><span> </span><span class="annot"><span class="annottext">(IPv4 -&gt; IPv4Range -&gt; Bool) -&gt; IPv4 -&gt; IPv4Range -&gt; Bool
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HostAddress -&gt; IPv4
-</span><a href="#local-6989586621688140951"><span class="hs-identifier hs-var">ipv4Addr</span></a></span><span> </span><span class="annot"><span class="annottext">HostAddress
-</span><a href="#local-6989586621688140954"><span class="hs-identifier hs-var">hostAddr</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Blocklist -&gt; [IPv4Range]
+</span><a href="#local-6989586621688141056"><span class="hs-identifier hs-var">ipv4Addr</span></a></span><span> </span><span class="annot"><span class="annottext">HostAddress
+</span><a href="#local-6989586621688141059"><span class="hs-identifier hs-var">hostAddr</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Blocklist -&gt; [IPv4Range]
 </span><a href="Network.HTTP.Client.Blocklisting.html#ipv4Blocklist"><span class="hs-identifier hs-var hs-var">ipv4Blocklist</span></a></span><span> </span><span class="annot"><span class="annottext">Blocklist
-</span><a href="#local-6989586621688140961"><span class="hs-identifier hs-var">blocklist</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688141066"><span class="hs-identifier hs-var">blocklist</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-36"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">SockAddrInet6</span></span><span> </span><span class="annot"><span class="annottext">PortNumber
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">HostAddress
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688140949"><span class="annot"><span class="annottext">HostAddress6
-</span><a href="#local-6989586621688140949"><span class="hs-identifier hs-var">hostAddr6</span></a></span></span><span> </span><span class="annot"><span class="annottext">HostAddress
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688141054"><span class="annot"><span class="annottext">HostAddress6
+</span><a href="#local-6989586621688141054"><span class="hs-identifier hs-var">hostAddr6</span></a></span></span><span> </span><span class="annot"><span class="annottext">HostAddress
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(IPv6Range -&gt; Bool) -&gt; [IPv6Range] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">any</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IPv6 -&gt; IPv6Range -&gt; Bool
 </span><span class="hs-identifier hs-var">IPv6.member</span></span><span> </span><span class="annot"><span class="annottext">(IPv6 -&gt; IPv6Range -&gt; Bool) -&gt; IPv6 -&gt; IPv6Range -&gt; Bool
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HostAddress6 -&gt; IPv6
-</span><a href="#local-6989586621688140947"><span class="hs-identifier hs-var">ipv6Addr</span></a></span><span> </span><span class="annot"><span class="annottext">HostAddress6
-</span><a href="#local-6989586621688140949"><span class="hs-identifier hs-var">hostAddr6</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Blocklist -&gt; [IPv6Range]
+</span><a href="#local-6989586621688141052"><span class="hs-identifier hs-var">ipv6Addr</span></a></span><span> </span><span class="annot"><span class="annottext">HostAddress6
+</span><a href="#local-6989586621688141054"><span class="hs-identifier hs-var">hostAddr6</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Blocklist -&gt; [IPv6Range]
 </span><a href="Network.HTTP.Client.Blocklisting.html#ipv6Blocklist"><span class="hs-identifier hs-var hs-var">ipv6Blocklist</span></a></span><span> </span><span class="annot"><span class="annottext">Blocklist
-</span><a href="#local-6989586621688140961"><span class="hs-identifier hs-var">blocklist</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688141066"><span class="hs-identifier hs-var">blocklist</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-37"></span><span>      </span><span class="annot"><span class="annottext">SockAddr
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
-</span><span id="line-38"></span><span>    </span><span id="local-6989586621688140951"><span class="annot"><span class="annottext">ipv4Addr :: HostAddress -&gt; IPv4
-</span><a href="#local-6989586621688140951"><span class="hs-identifier hs-var hs-var">ipv4Addr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Word8, Word8, Word8, Word8) -&gt; IPv4
+</span><span id="line-38"></span><span>    </span><span id="local-6989586621688141056"><span class="annot"><span class="annottext">ipv4Addr :: HostAddress -&gt; IPv4
+</span><a href="#local-6989586621688141056"><span class="hs-identifier hs-var hs-var">ipv4Addr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Word8, Word8, Word8, Word8) -&gt; IPv4
 </span><span class="hs-identifier hs-var">IPv4.fromTupleOctets</span></span><span> </span><span class="annot"><span class="annottext">((Word8, Word8, Word8, Word8) -&gt; IPv4)
 -&gt; (HostAddress -&gt; (Word8, Word8, Word8, Word8))
 -&gt; HostAddress
@@ -122,7 +122,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">HostAddress -&gt; (Word8, Word8, Word8, Word8)
 </span><span class="hs-identifier hs-var">hostAddressToTuple</span></span><span>
-</span><span id="line-39"></span><span>    </span><span id="local-6989586621688140947"><span class="annot"><span class="annottext">ipv6Addr :: HostAddress6 -&gt; IPv6
-</span><a href="#local-6989586621688140947"><span class="hs-identifier hs-var hs-var">ipv6Addr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HostAddress6 -&gt; IPv6
+</span><span id="line-39"></span><span>    </span><span id="local-6989586621688141052"><span class="annot"><span class="annottext">ipv6Addr :: HostAddress6 -&gt; IPv6
+</span><a href="#local-6989586621688141052"><span class="hs-identifier hs-var hs-var">ipv6Addr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HostAddress6 -&gt; IPv6
 </span><span class="hs-identifier hs-var">IPv6.fromTupleWord32s</span></span><span>
 </span><span id="line-40"></span></pre></body></html>
