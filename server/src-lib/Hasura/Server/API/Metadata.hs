@@ -8,6 +8,7 @@ module Hasura.Server.API.Metadata
   )
 where
 
+import Control.Lens (_Just)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.Aeson.Casing
@@ -20,7 +21,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
-import Hasura.Prelude
+import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ApiLimit
 import Hasura.RQL.DDL.ComputedField
@@ -41,6 +42,7 @@ import Hasura.RQL.DDL.RemoteSchema
 import Hasura.RQL.DDL.ScheduledTrigger
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Source
+import Hasura.RQL.DDL.Webhook.Transform.Validation
 import Hasura.RQL.Types
 import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.Run
@@ -96,7 +98,7 @@ data RQLMetadataV1
     RMAddComputedField !(AddComputedField ('Postgres 'Vanilla))
   | RMDropComputedField !(DropComputedField ('Postgres 'Vanilla))
   | -- Tables event triggers
-    RMCreateEventTrigger !(AnyBackend CreateEventTriggerQuery)
+    RMCreateEventTrigger !(AnyBackend (Unvalidated1 CreateEventTriggerQuery))
   | RMDeleteEventTrigger !(AnyBackend DeleteEventTriggerQuery)
   | RMRedeliverEvent !(AnyBackend RedeliverEventQuery)
   | RMInvokeEventTrigger !(AnyBackend InvokeEventTriggerQuery)
@@ -110,7 +112,7 @@ data RQLMetadataV1
     RMAddRemoteSchemaPermissions !AddRemoteSchemaPermission
   | RMDropRemoteSchemaPermissions !DropRemoteSchemaPermissions
   | -- Scheduled triggers
-    RMCreateCronTrigger !CreateCronTrigger
+    RMCreateCronTrigger !(Unvalidated CreateCronTrigger)
   | RMDeleteCronTrigger !ScheduledTriggerName
   | RMCreateScheduledEvent !CreateScheduledEvent
   | RMDeleteScheduledEvent !DeleteScheduledEvent
@@ -118,9 +120,9 @@ data RQLMetadataV1
   | RMGetEventInvocations !GetEventInvocations
   | RMGetCronTriggers
   | -- Actions
-    RMCreateAction !CreateAction
+    RMCreateAction !(Unvalidated CreateAction)
   | RMDropAction !DropAction
-  | RMUpdateAction !UpdateAction
+  | RMUpdateAction !(Unvalidated UpdateAction)
   | RMCreateActionPermission !CreateActionPermission
   | RMDropActionPermission !DropActionPermission
   | -- Query collections, allow list related
@@ -163,7 +165,7 @@ data RQLMetadataV1
     RMDumpInternalState !DumpInternalState
   | RMGetCatalogState !GetCatalogState
   | RMSetCatalogState !SetCatalogState
-  | RMTestWebhookTransform !TestWebhookTransform
+  | RMTestWebhookTransform !(Unvalidated TestWebhookTransform)
   | -- Bulk metadata queries
     RMBulk [RQLMetadataRequest]
 
@@ -429,7 +431,13 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMDropFunctionPermission q -> dispatchMetadata runDropFunctionPermission q
   RMAddComputedField q -> runAddComputedField q
   RMDropComputedField q -> runDropComputedField q
-  RMCreateEventTrigger q -> dispatchMetadata runCreateEventTriggerQuery q
+  RMCreateEventTrigger q ->
+    dispatchMetadata
+      ( validateTransforms
+          (unUnvalidate1 . cetqRequestTransform . _Just)
+          (runCreateEventTriggerQuery . _unUnvalidate1)
+      )
+      q
   RMDeleteEventTrigger q -> dispatchMetadataAndEventTrigger runDeleteEventTriggerQuery q
   RMRedeliverEvent q -> dispatchEventTrigger runRedeliverEvent q
   RMInvokeEventTrigger q -> dispatchEventTrigger runInvokeEventTrigger q
@@ -440,16 +448,28 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMIntrospectRemoteSchema q -> runIntrospectRemoteSchema q
   RMAddRemoteSchemaPermissions q -> runAddRemoteSchemaPermissions q
   RMDropRemoteSchemaPermissions q -> runDropRemoteSchemaPermissions q
-  RMCreateCronTrigger q -> runCreateCronTrigger q
+  RMCreateCronTrigger q ->
+    validateTransforms
+      (unUnvalidate . cctRequestTransform . _Just)
+      (runCreateCronTrigger . _unUnvalidate)
+      q
   RMDeleteCronTrigger q -> runDeleteCronTrigger q
   RMCreateScheduledEvent q -> runCreateScheduledEvent q
   RMDeleteScheduledEvent q -> runDeleteScheduledEvent q
   RMGetScheduledEvents q -> runGetScheduledEvents q
   RMGetEventInvocations q -> runGetEventInvocations q
   RMGetCronTriggers -> runGetCronTriggers
-  RMCreateAction q -> runCreateAction q
+  RMCreateAction q ->
+    validateTransforms
+      (unUnvalidate . caDefinition . adRequestTransform . _Just)
+      (runCreateAction . _unUnvalidate)
+      q
   RMDropAction q -> runDropAction q
-  RMUpdateAction q -> runUpdateAction q
+  RMUpdateAction q ->
+    validateTransforms
+      (unUnvalidate . uaDefinition . adRequestTransform . _Just)
+      (runUpdateAction . _unUnvalidate)
+      q
   RMCreateActionPermission q -> runCreateActionPermission q
   RMDropActionPermission q -> runDropActionPermission q
   RMCreateQueryCollection q -> runCreateCollection q
@@ -480,7 +500,11 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMDumpInternalState q -> runDumpInternalState q
   RMGetCatalogState q -> runGetCatalogState q
   RMSetCatalogState q -> runSetCatalogState q
-  RMTestWebhookTransform q -> runTestWebhookTransform q
+  RMTestWebhookTransform q ->
+    validateTransforms
+      (unUnvalidate . twtTransformer)
+      (runTestWebhookTransform . _unUnvalidate)
+      q
   RMSetQueryTagsConfig q -> runSetQueryTagsConfig q
   RMBulk q -> encJFromList <$> indexedMapM (runMetadataQueryM env currentResourceVersion) q
   where

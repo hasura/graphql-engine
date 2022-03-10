@@ -12,10 +12,16 @@ module Hasura.RQL.DDL.Action
     DropActionPermission,
     runDropActionPermission,
     dropActionPermissionInMetadata,
+    caName,
+    caDefinition,
+    caComment,
+    uaName,
+    uaDefinition,
+    uaComment,
   )
 where
 
-import Control.Lens ((.~), (^.))
+import Control.Lens (makeLenses, (.~), (^.))
 import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
 import Data.Dependent.Map qualified as DMap
@@ -48,6 +54,8 @@ data CreateAction = CreateAction
     _caDefinition :: !ActionDefinitionInput,
     _caComment :: !(Maybe Text)
   }
+
+$(makeLenses ''CreateAction)
 
 $(J.deriveJSON hasuraJSON ''CreateAction)
 
@@ -197,6 +205,7 @@ data UpdateAction = UpdateAction
     _uaComment :: !(Maybe Text)
   }
 
+$(makeLenses ''UpdateAction)
 $(J.deriveFromJSON hasuraJSON ''UpdateAction)
 
 runUpdateAction ::

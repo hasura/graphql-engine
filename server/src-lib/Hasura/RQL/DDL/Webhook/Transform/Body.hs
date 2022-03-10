@@ -22,17 +22,21 @@ import Data.HashMap.Internal.Strict qualified as M
 import Data.List qualified as L
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
+import Data.Validation (Validation)
 import Data.Validation qualified as V
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform.Class
   ( RequestTransformCtx (..),
     Template (..),
+    TemplatingEngine,
     Transform (..),
     TransformErrorBundle (..),
     UnescapedTemplate,
-    mkRequestTemplateTransform,
-    validateUnescapedRequestTemplateTransform,
+    runRequestTemplateTransform,
+    runUnescapedRequestTemplateTransform',
+    validateRequestTemplateTransform',
+    validateRequestUnescapedTemplateTransform',
   )
 import Network.URI.Extended qualified as URI
 
@@ -60,11 +64,20 @@ instance Transform Body where
     case transformation of
       RemoveBody -> pure $ JSONBody Nothing
       ModifyBody template -> do
-        result <- liftEither $ mkRequestTemplateTransform template context
+        result <- liftEither $ runRequestTemplateTransform template context
         pure . JSONBody . Just $ result
       FormUrlEncoded formTemplates -> do
-        result <- liftEither . V.toEither $ traverse (validateUnescapedRequestTemplateTransform context) formTemplates
+        result <- liftEither . V.toEither $ traverse (runUnescapedRequestTemplateTransform' context) formTemplates
         pure $ RawBody $ foldFormEncoded result
+
+  validate ::
+    TemplatingEngine ->
+    TransformFn Body ->
+    Validation TransformErrorBundle ()
+  validate engine = \case
+    BodyTransform (RemoveBody) -> pure ()
+    BodyTransform (ModifyBody template) -> validateRequestTemplateTransform' engine template
+    BodyTransform (FormUrlEncoded kv) -> traverse_ (validateRequestUnescapedTemplateTransform' engine) kv
 
 -- | Helper function for URI escaping 'T.Text' values.
 escapeURIText :: T.Text -> T.Text

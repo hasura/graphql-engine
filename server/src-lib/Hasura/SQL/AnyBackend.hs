@@ -45,9 +45,12 @@ import Language.Haskell.TH hiding (Type)
 -- backend. This declaration generates the following type:
 --
 --   data AnyBackend (i :: BackendType -> Type)
---     = PostgresValue (i 'Postgres)
---     | MSSQLValue    (i 'MSSQL)
---     | ...
+--     = PostgresVanillaValue (i '(Postgres Vanilla))
+--     | PostgresCitusValue (i '(Postgres Citus))
+--     | BigQueryValue (i 'BigQuery)
+--     | MySQLValue (i 'MySQL)
+--     | MSSQLValue (i 'MSSQL)
+--     | ExperimentalValue (i 'Experimental)
 $( do
      -- the kind of the type variable, expressed with a quote
      varKind <- [t|BackendType -> Type|]

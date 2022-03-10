@@ -53,17 +53,17 @@ runCreateCronTrigger ::
 runCreateCronTrigger CreateCronTrigger {..} = do
   let q =
         CronTriggerMetadata
-          cctName
-          cctWebhook
-          cctCronSchedule
-          cctPayload
-          cctRetryConf
-          cctHeaders
-          cctIncludeInMetadata
-          cctComment
-          cctRequestTransform
-          cctResponseTransform
-  case cctReplace of
+          _cctName
+          _cctWebhook
+          _cctCronSchedule
+          _cctPayload
+          _cctRetryConf
+          _cctHeaders
+          _cctIncludeInMetadata
+          _cctComment
+          _cctRequestTransform
+          _cctResponseTransform
+  case _cctReplace of
     True -> updateCronTrigger q
     False -> do
       cronTriggersMap <- scCronTriggers <$> askSchemaCache
@@ -75,23 +75,23 @@ runCreateCronTrigger CreateCronTrigger {..} = do
               <> triggerNameToTxt (ctName q)
               <> " already exists"
 
-      let metadataObj = MOCronTrigger cctName
+      let metadataObj = MOCronTrigger _cctName
           metadata =
             CronTriggerMetadata
-              cctName
-              cctWebhook
-              cctCronSchedule
-              cctPayload
-              cctRetryConf
-              cctHeaders
-              cctIncludeInMetadata
-              cctComment
-              cctRequestTransform
-              cctResponseTransform
+              _cctName
+              _cctWebhook
+              _cctCronSchedule
+              _cctPayload
+              _cctRetryConf
+              _cctHeaders
+              _cctIncludeInMetadata
+              _cctComment
+              _cctRequestTransform
+              _cctResponseTransform
       buildSchemaCacheFor metadataObj $
         MetadataModifier $
-          metaCronTriggers %~ OMap.insert cctName metadata
-      populateInitialCronTriggerEvents cctCronSchedule cctName
+          metaCronTriggers %~ OMap.insert _cctName metadata
+      populateInitialCronTriggerEvents _cctCronSchedule _cctName
       return successMsg
 
 resolveCronTrigger ::

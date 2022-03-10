@@ -7,7 +7,7 @@
     body: "foo=bar&baz=world"
     headers:
       - - content-type
-        - application/json
+        - application/x-www-form-urlencoded
       - - foo
         - bar
     method: POST
@@ -33,4 +33,4 @@
         request_headers:
           add_headers:
             foo: "bar"
-            content-type: "application/json"
+            content-type: "application/x-www-form-urlencoded"

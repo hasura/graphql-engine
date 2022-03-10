@@ -1,6 +1,7 @@
 {-# LANGUAGE ApplicativeDo #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Hasura.RQL.DDL.Webhook.Transform.Headers
   ( -- * Header Transformations
@@ -20,15 +21,18 @@ import Data.Aeson qualified as J
 import Data.CaseInsensitive qualified as CI
 import Data.HashMap.Strict qualified as M
 import Data.Text.Encoding qualified as TE
+import Data.Validation (Validation)
 import Data.Validation qualified as V
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform.Class
   ( RequestTransformCtx (..),
+    TemplatingEngine,
     Transform (..),
     TransformErrorBundle (..),
     UnescapedTemplate (..),
-    validateUnescapedRequestTemplateTransform,
+    runUnescapedRequestTemplateTransform',
+    validateRequestUnescapedTemplateTransform',
   )
 import Network.HTTP.Types qualified as HTTP.Types
 
@@ -67,10 +71,17 @@ instance Transform Headers where
         -- Validation's applicative sequencing.
         newHeaders <- liftEither . V.toEither $ for rhf_addHeaders \(rawKey, rawValue) -> do
           let key = CI.map TE.encodeUtf8 rawKey
-          value <- validateUnescapedRequestTemplateTransform context rawValue
+          value <- runUnescapedRequestTemplateTransform' context rawValue
           pure (key, value)
 
         pure . Headers $ filteredHeaders <> newHeaders
+
+  validate ::
+    TemplatingEngine ->
+    TransformFn Headers ->
+    Validation TransformErrorBundle ()
+  validate engine (HeadersTransform (ReplaceHeaders (fmap snd . rhf_addHeaders -> templates))) =
+    traverse_ (validateRequestUnescapedTemplateTransform' engine) templates
 
 -- | The defunctionalized transformation on 'Headers'
 newtype HeadersTransformAction

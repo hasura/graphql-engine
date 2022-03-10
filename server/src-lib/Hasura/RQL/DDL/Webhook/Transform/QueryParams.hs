@@ -15,15 +15,18 @@ where
 
 import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as M
+import Data.Validation (Validation)
 import Data.Validation qualified as V
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform.Class
   ( RequestTransformCtx (..),
+    TemplatingEngine,
     Transform (..),
     TransformErrorBundle (..),
     UnescapedTemplate (..),
-    validateUnescapedRequestTemplateTransform,
+    runUnescapedRequestTemplateTransform',
+    validateRequestUnescapedTemplateTransform',
   )
 import Network.HTTP.Client.Transformable qualified as HTTP
 
@@ -47,10 +50,21 @@ instance Transform QueryParams where
         -- NOTE: We use `ApplicativeDo` here to take advantage of
         -- Validation's applicative sequencing.
         queryParams <- liftEither . V.toEither $ for replacements \(rawKey, rawValue) -> do
-          key <- validateUnescapedRequestTemplateTransform context rawKey
-          value <- traverse (validateUnescapedRequestTemplateTransform context) rawValue
+          key <- runUnescapedRequestTemplateTransform' context rawKey
+          value <- traverse (runUnescapedRequestTemplateTransform' context) rawValue
           pure (key, value)
         pure $ QueryParams queryParams
+
+  validate ::
+    TemplatingEngine ->
+    TransformFn QueryParams ->
+    Validation TransformErrorBundle ()
+  validate engine (QueryParamsTransform (QueryParamsTransformAction params)) =
+    for_ params \(key, val) -> do
+      -- Note: We are using ApplicativeDo here:
+      validateRequestUnescapedTemplateTransform' engine key
+      traverse_ (validateRequestUnescapedTemplateTransform' engine) val
+      pure ()
 
 -- | The defunctionalized transformation 'QueryParams'
 newtype QueryParamsTransformAction = QueryParamsTransformAction [(UnescapedTemplate, Maybe UnescapedTemplate)]
