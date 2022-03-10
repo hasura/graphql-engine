@@ -14,6 +14,7 @@ module Hasura.GraphQL.Schema.Common
     SelectArgs,
     SelectExp,
     TablePerms,
+    askTableInfo,
     comparisonAggOperators,
     currentNodeIdVersion,
     mapField,
@@ -46,14 +47,16 @@ import Hasura.RQL.IR.Action qualified as IR
 import Hasura.RQL.IR.Root qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types
+import Hasura.Session (RoleName)
 import Language.GraphQL.Draft.Syntax as G
 
 -- | the set of common constraints required to build the schema
 type MonadBuildSchemaBase r m n =
   ( MonadError QErr m,
+    MonadReader r m,
     P.MonadSchema n m,
-    P.MonadTableInfo r m,
-    P.MonadRole r m,
+    Has RoleName r,
+    Has SourceCache r,
     Has QueryContext r,
     Has MkTypename r,
     Has MkRootFieldName r,
@@ -98,6 +101,24 @@ data QueryContext = QueryContext
     -- | 'True' when we should attempt to use experimental SQL optimization passes
     qcOptimizePermissionFilters :: Bool
   }
+
+-- | Looks up table information for the given table name. This function
+-- should never fail, since the schema cache construction process is
+-- supposed to ensure all dependencies are resolved.
+askTableInfo ::
+  forall b r m.
+  (Backend b, MonadError QErr m, MonadReader r m, Has SourceCache r) =>
+  SourceName ->
+  TableName b ->
+  m (TableInfo b)
+askTableInfo sourceName tableName = do
+  tableInfo <- asks $ getTableInfo . getter
+  -- This should never fail, since the schema cache construction process is
+  -- supposed to ensure that all dependencies are resolved.
+  tableInfo `onNothing` throw500 ("askTableInfo: no info for table " <> dquote tableName <> " in source " <> dquote sourceName)
+  where
+    getTableInfo :: SourceCache -> Maybe (TableInfo b)
+    getTableInfo = Map.lookup tableName <=< unsafeSourceTables <=< Map.lookup sourceName
 
 -- | Whether the request is sent with `x-hasura-use-backend-only-permissions` set to `true`.
 data Scenario = Backend | Frontend deriving (Enum, Show, Eq)

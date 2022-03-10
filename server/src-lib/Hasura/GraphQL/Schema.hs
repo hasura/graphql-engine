@@ -522,7 +522,7 @@ buildQueryFields ::
   Maybe QueryTagsConfig ->
   m [P.FieldParser n (QueryRootField UnpreparedValue)]
 buildQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> functions) queryTagsConfig = do
-  roleName <- askRoleName
+  roleName <- asks getter
   functionPermsCtx <- asks $ qcFunctionPermsContext . getter
   tableSelectExpParsers <- for (Map.toList tables) \(tableName, tableInfo) -> do
     tableGQLName <- getTableGQLName @b tableInfo
@@ -573,7 +573,7 @@ buildMutationFields ::
   Maybe QueryTagsConfig ->
   m [P.FieldParser n (MutationRootField UnpreparedValue)]
 buildMutationFields scenario sourceName sourceConfig tables (takeExposedAs FEAMutation -> functions) queryTagsConfig = do
-  roleName <- askRoleName
+  roleName <- asks getter
   tableMutations <- for (Map.toList tables) \(tableName, tableInfo) -> do
     tableGQLName <- getTableGQLName @b tableInfo
     inserts <-
@@ -603,15 +603,8 @@ buildMutationFields scenario sourceName sourceConfig tables (takeExposedAs FEAMu
 -- | Prepare the parser for query-type GraphQL requests, but with introspection
 --   for queries, mutations and subscriptions built in.
 buildQueryParser ::
-  forall m n r.
-  ( MonadSchema n m,
-    MonadTableInfo r m,
-    MonadRole r m,
-    Has QueryContext r,
-    Has P.MkTypename r,
-    Has MkRootFieldName r,
-    Has CustomizeRemoteFieldName r
-  ) =>
+  forall r m n.
+  MonadBuildSchemaBase r m n =>
   [P.FieldParser n (NamespacedField (QueryRootField UnpreparedValue))] ->
   [P.FieldParser n (NamespacedField (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))] ->
   [ActionInfo] ->
@@ -681,15 +674,8 @@ queryRootFromFields fps =
 -- exposed as a subscription along with fields to get the status of
 -- asynchronous actions.
 buildSubscriptionParser ::
-  forall m n r.
-  ( MonadSchema n m,
-    MonadTableInfo r m,
-    MonadRole r m,
-    Has QueryContext r,
-    Has P.MkTypename r,
-    Has MkRootFieldName r,
-    Has CustomizeRemoteFieldName r
-  ) =>
+  forall r m n.
+  MonadBuildSchemaBase r m n =>
   [P.FieldParser n (NamespacedField (QueryRootField UnpreparedValue))] ->
   [ActionInfo] ->
   AnnotatedCustomTypes ->
@@ -702,15 +688,8 @@ buildSubscriptionParser queryFields allActions customTypes = do
       <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
 
 buildMutationParser ::
-  forall m n r.
-  ( MonadSchema n m,
-    MonadTableInfo r m,
-    MonadRole r m,
-    Has QueryContext r,
-    Has P.MkTypename r,
-    Has MkRootFieldName r,
-    Has CustomizeRemoteFieldName r
-  ) =>
+  forall r m n.
+  MonadBuildSchemaBase r m n =>
   [P.FieldParser n (NamespacedField (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))] ->
   [ActionInfo] ->
   AnnotatedCustomTypes ->
