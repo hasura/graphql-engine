@@ -644,7 +644,7 @@ Fetch all authors living within a particular pincode (present in ``address`` JSO
               "city": "Bengaluru",
               "state": "Karnataka",
               "pincode": 560095,
-              "phone": "9090909090",
+              "phone": "9090909090"
             }
           }
         ]
@@ -2026,13 +2026,55 @@ Cast a field to a different type before filtering (_cast)
 ---------------------------------------------------------
 
 The ``_cast`` operator can be used to cast a field to a different type, which allows type-specific
-operators to be used on fields that otherwise would not support them. Currently, only casting
-between PostGIS ``geometry`` and ``geography`` types is supported.
+operators to be used on fields that otherwise would not support them.
+
+Currently, only the following type casts are supported:
+
+- between PostGIS ``geometry`` and ``geography`` types
+- from Postgres ``jsonb`` type to ``string`` type.
 
 Casting using ``_cast`` corresponds directly to
 `SQL type casts <https://www.postgresql.org/docs/current/sql-expressions.html#SQL-SYNTAX-TYPE-CASTS>`__.
 
-**Example: cast ``geometry`` to ``geography``**
+**Example: cast jsonb to string**
+
+Columns of type ``jsonb`` can be cast to ``String`` to use :ref:`text operators <text_operators>` on a
+``jsonb`` field:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query get_authors_in_bengaluru {
+      authors(
+        where: {
+          address: {_cast: {String: {_ilike: "%bengaluru%"}}}
+        }
+      ) {
+        id
+        name
+        address
+      }
+    }
+  :response:
+    {
+      "data": {
+        "authors": [
+          {
+            "id": 1,
+            "name": "Ash",
+            "address": {
+              "street_address": "161, 19th Main Road, Koramangala 6th Block",
+              "city": "Bengaluru",
+              "state": "Karnataka",
+              "pincode": 560095,
+              "phone": "9090909090"
+            }
+          }
+        ]
+      }
+    }
+
+**Example: cast geometry to geography**
 
 Filtering using ``_st_d_within`` over large distances can be inaccurate for location data stored in
 ``geometry`` columns. For accurate queries, cast the field to ``geography`` before comparing:
@@ -2073,7 +2115,7 @@ Filtering using ``_st_d_within`` over large distances can be inaccurate for loca
       "distance": 1000000
     }
 
-**Example: cast ``geography`` to ``geometry``**
+**Example: cast geography to geometry**
 
 Columns of type ``geography`` are more accurate, but they don’t support as many operations as
 ``geometry``. Cast to ``geometry`` to use those operations in a filter:

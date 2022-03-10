@@ -558,7 +558,7 @@ Fetch a list of articles whose titles contain the word “amet”:
                 "city": "Bengaluru",
                 "state": "Karnataka",
                 "pincode": 560095,
-                "phone": "9090909090",
+                "phone": "9090909090"
               }
             }
           ]

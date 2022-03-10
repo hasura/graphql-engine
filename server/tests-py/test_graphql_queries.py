@@ -934,6 +934,9 @@ class TestGraphQLQueryBoolExpSearchMSSQL:
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpJsonB:
 
+    def test_query_cast_geometry_to_geography(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_cast_jsonb_to_string.yaml', transport)
+
     def test_jsonb_contains_article_latest(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_article_author_jsonb_contains_latest.yaml', transport)
 
