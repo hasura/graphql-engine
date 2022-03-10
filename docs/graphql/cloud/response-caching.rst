@@ -24,13 +24,13 @@ used) cache, and removed from the cache as needed based on usage.
 
 A query's response can be cached only if the following conditions hold:
 
-- The query does **not** make use of ``remote schemas`` or ``remote joins``.
+- The query does **not** make use of ``remote schemas`` that has ``forward_client_headers`` (see :ref:`RemoteSchemaDef`) set to ``true``.
 - The query **isn't** an ``Action`` that has ``forward_client_headers`` (see :ref:`ActionDefinition`) set to ``true``.
 - The response JSON is **under** 100KB in size
 
 .. admonition:: Support
 
-  Query response caching is available for Hasura Cloud projects on the ``Standard`` (pay-as-you-go) tier and above.
+  Query response caching is available for Hasura Cloud projects on the ``Free`` tier and above.
 
 Enable caching
 --------------
@@ -49,8 +49,8 @@ to your query:
    }
 
 If the response was cached successfully, the HTTP response will include a
-``X-Hasura-TTL`` header, whose value indicates the maximum number of seconds
-for the returned response to remain in the cache.
+``Cache-Control`` header, whose value (``max-age={SECONDS}``) indicates the
+maximum number of seconds for the returned response to remain in the cache.
 
 Controlling cache lifetime
 --------------------------
