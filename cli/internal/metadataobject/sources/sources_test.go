@@ -53,7 +53,7 @@ func TestSourceConfig_Build(t *testing.T) {
 				assert.NoError(t, err)
 
 				// uncomment following lines to update golden file
-				//assert.NoError(t, ioutil.WriteFile(tt.wantGolden, jsonbs, os.ModePerm))
+				// assert.NoError(t, ioutil.WriteFile(tt.wantGolden, jsonbs, os.ModePerm))
 
 				wantbs, err := ioutil.ReadFile(tt.wantGolden)
 				assert.NoError(t, err)
