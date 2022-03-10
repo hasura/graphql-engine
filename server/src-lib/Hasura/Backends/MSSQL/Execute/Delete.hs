@@ -9,11 +9,13 @@ module Hasura.Backends.MSSQL.Execute.Delete
   )
 where
 
-import Control.Monad.Validate qualified as V
 import Database.MSSQL.Transaction qualified as Tx
 import Hasura.Backends.MSSQL.Connection
-import Hasura.Backends.MSSQL.Execute.MutationResponse
 import Hasura.Backends.MSSQL.FromIr as TSQL
+import Hasura.Backends.MSSQL.FromIr.Constants (tempTableNameDeleted)
+import Hasura.Backends.MSSQL.FromIr.Delete qualified as TSQL
+import Hasura.Backends.MSSQL.FromIr.MutationResponse
+import Hasura.Backends.MSSQL.FromIr.SelectIntoTempTable qualified as TSQL
 import Hasura.Backends.MSSQL.Plan
 import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Backends.MSSQL.ToQuery as TQ
@@ -67,10 +69,11 @@ buildDeleteTx deleteOperation stringifyNum = do
   -- Create a temp table
   Tx.unitQueryE defaultMSSQLTxErrorHandler createInsertedTempTableQuery
   let deleteQuery = TQ.fromDelete <$> TSQL.fromDelete deleteOperation
-  deleteQueryValidated <- toQueryFlat <$> V.runValidate (runFromIr deleteQuery) `onLeft` (throw500 . tshow)
+  deleteQueryValidated <- toQueryFlat <$> runFromIr deleteQuery
   -- Execute DELETE statement
   Tx.unitQueryE mutationMSSQLTxErrorHandler deleteQueryValidated
-  mutationOutputSelect <- mkMutationOutputSelect stringifyNum withAlias $ _adOutput deleteOperation
+  mutationOutputSelect <- runFromIr $ mkMutationOutputSelect stringifyNum withAlias $ _adOutput deleteOperation
+
   let withSelect =
         emptySelect
           { selectProjections = [StarProjection],

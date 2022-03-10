@@ -19,7 +19,6 @@ where
 -- , planSubscription
 -- ) where
 
-import Control.Monad.Validate
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy (toStrict)
 import Data.HashMap.Strict qualified as HM
@@ -29,6 +28,7 @@ import Data.Text qualified as T
 import Data.Text.Extended
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.FromIr
+import Hasura.Backends.MSSQL.FromIr.Query (fromQueryRootField)
 import Hasura.Backends.MSSQL.Types.Internal
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser qualified as GraphQL
@@ -50,8 +50,7 @@ planQuery ::
   m Select
 planQuery sessionVariables queryDB = do
   rootField <- traverse (prepareValueQuery sessionVariables) queryDB
-  runValidate (runFromIr (fromRootField rootField))
-    `onLeft` (throw400 NotSupported . tshow)
+  runFromIr (fromQueryRootField rootField)
 
 -- | Prepare a value without any query planning; we just execute the
 -- query with the values embedded.
@@ -97,9 +96,7 @@ planSubscription unpreparedMap sessionVariables = do
           unpreparedMap
       )
       emptyPrepareState
-  selectMap <-
-    runValidate (runFromIr (traverse fromRootField rootFieldMap))
-      `onLeft` (throw400 NotSupported . tshow)
+  selectMap <- runFromIr (traverse fromQueryRootField rootFieldMap)
   pure (collapseMap selectMap, prepareState)
 
 -- Plan a query without prepare/exec.
