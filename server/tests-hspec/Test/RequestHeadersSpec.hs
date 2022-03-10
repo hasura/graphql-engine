@@ -4,10 +4,10 @@ module Test.RequestHeadersSpec (spec) where
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Sql (sql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
 import Harness.State (State)
 import Harness.Test.Context qualified as Context
+import Harness.Test.Schema qualified as Schema
 import Test.Hspec (SpecWith, it)
 import Prelude
 
@@ -29,8 +29,66 @@ spec =
     tests
 
 --------------------------------------------------------------------------------
+-- Schema
 
--- * Tests
+schema :: [Schema.Table]
+schema = [author]
+
+author :: Schema.Table
+author =
+  Schema.Table
+    "author"
+    [ Schema.column "uuid" Schema.TVarchar50,
+      Schema.column "name" Schema.TStr
+    ]
+    ["uuid"]
+    []
+    [ [Schema.VStr "36a6257b-08bb-45ef-a5cf-c1b7a7997087", Schema.VStr "Author 1"],
+      [Schema.VStr "36a6257b-08bb-45ef-a5cf-c1b7a7", Schema.VStr "Author 2"]
+    ]
+
+--------------------------------------------------------------------------------
+-- Setup and teardown override
+
+sqlserverSetup :: (State, ()) -> IO ()
+sqlserverSetup (state, _) = do
+  Sqlserver.setup schema (state, ())
+  -- create permissions
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: mssql_create_select_permission
+args:
+  source: mssql
+  table:
+    schema: hasura
+    name: author
+  role: user
+  permission:
+    filter:
+      uuid: X-Hasura-User-Id
+    columns: '*'
+|]
+
+sqlserverTeardown :: (State, ()) -> IO ()
+sqlserverTeardown (state, _) = do
+  -- drop permissions
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: mssql_drop_select_permission
+args:
+  source: mssql
+  table:
+    schema: hasura
+    name: author
+  role: user
+|]
+  -- rest of the teardown
+  Sqlserver.teardown schema (state, ())
+
+--------------------------------------------------------------------------------
+-- Tests
 
 tests :: Context.Options -> SpecWith State
 tests opts = do
@@ -57,89 +115,4 @@ data:
   hasura_author:
   - name: 'Author 1'
     uuid: '36a6257b-08bb-45ef-a5cf-c1b7a7997087'
-|]
-
---------------------------------------------------------------------------------
-
--- * SQL Server backend
-
--- ** Setup
-
-sqlserverSetup :: (State, ()) -> IO ()
-sqlserverSetup (state, _) = do
-  -- Clear and reconfigure the metadata
-  GraphqlEngine.setSource state Sqlserver.defaultSourceMetadata
-  -- Setup
-  sqlserverSetupTables
-  sqlserverInsertValues
-  sqlserverTrackTables state
-  sqlserverCreateRelationships state
-  sqlserverCreatePermissions state
-
-sqlserverSetupTables :: IO ()
-sqlserverSetupTables = do
-  -- Setup tables
-  Sqlserver.run_
-    [sql|
-CREATE TABLE hasura.author
-(
-    uuid VARCHAR(50) NOT NULL PRIMARY KEY,
-    name NVARCHAR(50) NOT NULL
-);
-|]
-
-sqlserverInsertValues :: IO ()
-sqlserverInsertValues = do
-  Sqlserver.run_
-    [sql|
-INSERT INTO hasura.author
-    (uuid, name)
-VALUES
-    ('36a6257b-08bb-45ef-a5cf-c1b7a7997087', 'Author 1'),
-    ('36a6257b-08bb-45ef-a5cf-c1b7a7', 'Author 2');
-|]
-
-sqlserverTrackTables :: State -> IO ()
-sqlserverTrackTables state = do
-  -- Track the tables
-  GraphqlEngine.postMetadata_
-    state
-    [yaml|
-type: mssql_track_table
-args:
-  source: mssql
-  table:
-    schema: hasura
-    name: author
-|]
-
-sqlserverCreateRelationships :: State -> IO ()
-sqlserverCreateRelationships _ = do
-  pure ()
-
-sqlserverCreatePermissions :: State -> IO ()
-sqlserverCreatePermissions state = do
-  GraphqlEngine.postMetadata_
-    state
-    [yaml|
-type: mssql_create_select_permission
-args:
-  source: mssql
-  table:
-    schema: hasura
-    name: author
-  role: user
-  permission:
-    filter:
-      uuid: X-Hasura-User-Id
-    columns: '*'
-|]
-
--- ** Teardown
-
-sqlserverTeardown :: (State, ()) -> IO ()
-sqlserverTeardown _ = do
-  Sqlserver.run_
-    [sql|
-DROP TABLE hasura.author;
 |]

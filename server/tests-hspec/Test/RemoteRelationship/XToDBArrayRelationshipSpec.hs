@@ -15,14 +15,16 @@ import Data.Aeson (Value)
 import Data.Aeson.Lens (key, values, _String)
 import Data.Foldable (for_)
 import Data.Maybe qualified as Unsafe (fromJust)
+import Data.Text qualified as T
 import Harness.Backend.Postgres qualified as Postgres
+import Harness.Constants qualified as Constants
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Sql (sql)
 import Harness.Quoter.Yaml (shouldBeYaml, shouldReturnYaml, yaml)
 import Harness.State (Server, State)
 import Harness.Test.Context (Context (..))
 import Harness.Test.Context qualified as Context
+import Harness.Test.Schema qualified as Schema
 import Test.Hspec (SpecWith, describe, it)
 import Prelude
 
@@ -128,6 +130,41 @@ rhsMSSQL = ([yaml|{"schema":"hasura", "name":"album"}|], Context "MSSQL" rhsMSSQ
 -}
 
 --------------------------------------------------------------------------------
+-- Schema
+
+-- | LHS
+artist :: Schema.Table
+artist =
+  Schema.Table
+    "artist"
+    [ Schema.columnNull "id" Schema.TInt,
+      Schema.column "name" Schema.TStr
+    ]
+    []
+    []
+    [ [Schema.VInt 1, Schema.VStr "artist1"],
+      [Schema.VInt 2, Schema.VStr "artist2"],
+      [Schema.VInt 3, Schema.VStr "artist_no_albums"],
+      [Schema.VNull, Schema.VStr "artist_no_id"]
+    ]
+
+-- | RHS
+album :: Schema.Table
+album =
+  Schema.Table
+    "album"
+    [ Schema.column "id" Schema.TInt,
+      Schema.column "title" Schema.TStr,
+      Schema.columnNull "artist_id" Schema.TInt
+    ]
+    ["id"]
+    []
+    [ [Schema.VInt 1, Schema.VStr "album1_artist1", Schema.VInt 1],
+      [Schema.VInt 2, Schema.VStr "album2_artist1", Schema.VInt 1],
+      [Schema.VInt 3, Schema.VStr "album3_artist2", Schema.VInt 2]
+    ]
+
+--------------------------------------------------------------------------------
 -- LHS Postgres
 
 lhsPostgresMkLocalState :: State -> IO (Maybe Server)
@@ -135,53 +172,54 @@ lhsPostgresMkLocalState _ = pure Nothing
 
 lhsPostgresSetup :: Value -> (State, Maybe Server) -> IO ()
 lhsPostgresSetup rhsTableName (state, _) = do
-  Postgres.run_
-    [sql|
-create table hasura.artist (
-  id int null,
-  name text not null
-);
-insert into hasura.artist (id, name) values
-  (1, 'artist1'),
-  (2, 'artist2'),
-  (3, 'artist_no_albums'),
-  (null, 'artist_no_id');
-  |]
-  let lhsTableName = [yaml|{"schema":"hasura", "name":"artist"}|]
+  let sourceName = "source"
       sourceConfig = Postgres.defaultSourceConfiguration
+      schemaName = T.pack Constants.postgresDb
+  -- Add remote source
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: pg_add_source
+args:
+  name: *sourceName
+  configuration: *sourceConfig
+|]
+  -- setup tables only
+  Postgres.createTable artist
+  Postgres.insertTable artist
+  Schema.trackTable "postgres" sourceName schemaName artist state
+
   GraphqlEngine.postMetadata_
     state
     [yaml|
 type: bulk
 args:
-- type: pg_add_source
-  args:
-    name: source
-    configuration: *sourceConfig
-- type: pg_track_table
-  args:
-    source: source
-    table: *lhsTableName
 - type: pg_create_select_permission
   args:
-    source: source
+    source: *sourceName
     role: role1
-    table: *lhsTableName
+    table:
+      schema: *schemaName
+      name: artist
     permission:
       columns: '*'
       filter: {}
 - type: pg_create_select_permission
   args:
-    source: source
+    source: *sourceName
     role: role2
-    table: *lhsTableName
+    table:
+      schema: *schemaName
+      name: artist
     permission:
       columns: '*'
       filter: {}
 - type: pg_create_remote_relationship
   args:
-    source: source
-    table: *lhsTableName
+    source: *sourceName
+    table:
+      schema: *schemaName
+      name: artist
     name: albums
     definition:
       to_source:
@@ -193,50 +231,46 @@ args:
   |]
 
 lhsPostgresTeardown :: (State, Maybe Server) -> IO ()
-lhsPostgresTeardown _ =
-  Postgres.run_
-    [sql|
-DROP TABLE hasura.artist;
-|]
+lhsPostgresTeardown (state, _) = do
+  let sourceName = "source"
+      schemaName = T.pack Constants.postgresDb
+  Schema.untrackTable "postgres" sourceName schemaName artist state
+  Postgres.dropTable artist
 
 --------------------------------------------------------------------------------
 -- RHS Postgres
 
 rhsPostgresSetup :: (State, ()) -> IO ()
 rhsPostgresSetup (state, _) = do
-  Postgres.run_
-    [sql|
-create table hasura.album (
-  id serial primary key,
-  title text not null,
-  artist_id int null
-);
-insert into hasura.album (title, artist_id) values
-  ('album1_artist1', 1),
-  ('album2_artist1', 1),
-  ('album3_artist2', 2);
-  |]
-
-  let rhsTableName = [yaml|{"schema":"hasura", "name":"album"}|]
+  let sourceName = "target"
       sourceConfig = Postgres.defaultSourceConfiguration
+      schemaName = T.pack Constants.postgresDb
+  -- Add remote source
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: pg_add_source
+args:
+  name: *sourceName
+  configuration: *sourceConfig
+|]
+  -- setup tables only
+  Postgres.createTable album
+  Postgres.insertTable album
+  Schema.trackTable "postgres" sourceName schemaName album state
+
   GraphqlEngine.postMetadata_
     state
     [yaml|
 type: bulk
 args:
-- type: pg_add_source
-  args:
-    name: target
-    configuration: *sourceConfig
-- type: pg_track_table
-  args:
-    source: target
-    table: *rhsTableName
 - type: pg_create_select_permission
   args:
-    source: target
+    source: *sourceName
     role: role1
-    table: *rhsTableName
+    table:
+      schema: *schemaName
+      name: album
     permission:
       columns:
         - title
@@ -246,9 +280,11 @@ args:
           _eq: x-hasura-artist-id
 - type: pg_create_select_permission
   args:
-    source: target
+    source: *sourceName
     role: role2
-    table: *rhsTableName
+    table:
+      schema: *schemaName
+      name: album
     permission:
       columns: [id, title, artist_id]
       filter:
@@ -259,11 +295,11 @@ args:
   |]
 
 rhsPostgresTeardown :: (State, ()) -> IO ()
-rhsPostgresTeardown _ =
-  Postgres.run_
-    [sql|
-DROP TABLE hasura.album;
-|]
+rhsPostgresTeardown (state, _) = do
+  let sourceName = "target"
+      schemaName = T.pack Constants.postgresDb
+  Schema.untrackTable "postgres" sourceName schemaName album state
+  Postgres.dropTable album
 
 --------------------------------------------------------------------------------
 -- Tests
@@ -376,8 +412,7 @@ schemaTests _opts =
       [ albumsField ^?! key "args",
         albumsAggregateField ^?! key "args"
       ]
-      \schema ->
-        schema `shouldBeYaml` relationshipFieldArgsSchema
+      (`shouldBeYaml` relationshipFieldArgsSchema)
 
     -- check the return type of albums field
     shouldBeYaml

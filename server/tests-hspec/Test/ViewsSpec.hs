@@ -8,6 +8,7 @@ import Harness.Quoter.Sql
 import Harness.Quoter.Yaml
 import Harness.State (State)
 import Harness.Test.Context qualified as Context
+import Harness.Test.Schema qualified as Schema
 import Test.Hspec
 import Prelude
 
@@ -28,52 +29,38 @@ spec =
     tests
 
 --------------------------------------------------------------------------------
--- MySQL backend
+-- Schema
+
+schema :: [Schema.Table]
+schema = [author]
+
+author :: Schema.Table
+author =
+  Schema.Table
+    "author"
+    [ Schema.column "id" Schema.TInt,
+      Schema.column "name" Schema.TStr,
+      Schema.column "createdAt" Schema.TUTCTime
+    ]
+    ["id"]
+    []
+    [ [Schema.VInt 1, Schema.VStr "Author 1", Schema.parseUTCTimeOrError "2017-09-21 09:39:44"],
+      [Schema.VInt 2, Schema.VStr "Author 2", Schema.parseUTCTimeOrError "2017-09-21 09:50:44"]
+    ]
+
+--------------------------------------------------------------------------------
+-- Setup and Teardown
 
 mysqlSetup :: (State, ()) -> IO ()
 mysqlSetup (state, _) = do
-  -- Clear and reconfigure the metadata
-  GraphqlEngine.setSource state Mysql.defaultSourceMetadata
-
-  -- Setup tables
-  Mysql.run_
-    [sql|
-CREATE TABLE author
-(
-    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(45) UNIQUE KEY,
-    createdAt DATETIME
-);
-|]
-  Mysql.run_
-    [sql|
-INSERT INTO author
-    (name, createdAt)
-VALUES
-    ( 'Author 1', '2017-09-21 09:39:44' ),
-    ( 'Author 2', '2017-09-21 09:50:44' );
-|]
-
+  Mysql.setup schema (state, ())
   -- Setup views
   Mysql.run_
     [sql|
 CREATE OR REPLACE VIEW search_author_view AS
   SELECT * FROM author;
 |]
-
-  -- Track the tables
-  GraphqlEngine.postMetadata_
-    state
-    [yaml|
-type: mysql_track_table
-args:
-  source: mysql
-  table:
-    schema: hasura
-    name: author
-|]
   -- Track the views
-
   GraphqlEngine.postMetadata_
     state
     [yaml|
@@ -86,14 +73,22 @@ args:
 |]
 
 mysqlTeardown :: (State, ()) -> IO ()
-mysqlTeardown _ = do
-  Mysql.run_
-    [sql|
-DROP VIEW IF EXISTS search_author_view;
+mysqlTeardown (state, _) = do
+  Mysql.teardown schema (state, ())
+  -- unrack the views
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: mysql_untrack_table
+args:
+  source: mysql
+  table:
+    name: search_author_view
+    schema: hasura
 |]
   Mysql.run_
     [sql|
-DROP TABLE author;
+DROP VIEW IF EXISTS search_author_view;
 |]
 
 --------------------------------------------------------------------------------

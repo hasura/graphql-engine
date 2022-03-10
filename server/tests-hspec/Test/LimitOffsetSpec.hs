@@ -4,10 +4,10 @@ module Test.LimitOffsetSpec (spec) where
 import Harness.Backend.Mysql as Mysql
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql
-import Harness.Quoter.Sql
 import Harness.Quoter.Yaml
 import Harness.State (State)
 import Harness.Test.Context qualified as Context
+import Harness.Test.Schema qualified as Schema
 import Test.Hspec
 import Prelude
 
@@ -20,59 +20,33 @@ spec =
     [ Context.Context
         { name = Context.MySQL,
           mkLocalState = Context.noLocalState,
-          setup = mysqlSetup,
-          teardown = mysqlTeardown,
+          setup = Mysql.setup schema,
+          teardown = Mysql.teardown schema,
           customOptions = Nothing
         }
     ]
     tests
 
 --------------------------------------------------------------------------------
--- MySQL backend
+-- Schema
 
-mysqlSetup :: (State, ()) -> IO ()
-mysqlSetup (state, _) = do
-  -- Clear and reconfigure the metadata
-  GraphqlEngine.setSource state Mysql.defaultSourceMetadata
+schema :: [Schema.Table]
+schema = [author]
 
-  -- Setup tables
-  Mysql.run_
-    [sql|
-CREATE TABLE author
-(
-    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(45) UNIQUE KEY
-);
-|]
-  Mysql.run_
-    [sql|
-INSERT INTO author
-    (name)
-VALUES
-    ( 'Author 1'),
-    ( 'Author 2'),
-    ( 'Author 3'),
-    ( 'Author 4');
-|]
-
-  -- Track the tables
-  GraphqlEngine.postMetadata_
-    state
-    [yaml|
-type: mysql_track_table
-args:
-  source: mysql
-  table:
-    schema: hasura
-    name: author
-|]
-
-mysqlTeardown :: (State, ()) -> IO ()
-mysqlTeardown _ = do
-  Mysql.run_
-    [sql|
-DROP TABLE author;
-|]
+author :: Schema.Table
+author =
+  Schema.Table
+    "author"
+    [ Schema.column "id" Schema.TInt,
+      Schema.column "name" Schema.TStr
+    ]
+    ["id"]
+    []
+    [ [Schema.VInt 1, Schema.VStr "Author 1"],
+      [Schema.VInt 2, Schema.VStr "Author 2"],
+      [Schema.VInt 3, Schema.VStr "Author 3"],
+      [Schema.VInt 4, Schema.VStr "Author 4"]
+    ]
 
 --------------------------------------------------------------------------------
 -- Tests

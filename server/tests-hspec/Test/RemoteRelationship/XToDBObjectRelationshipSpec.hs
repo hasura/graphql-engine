@@ -9,14 +9,16 @@
 module Test.RemoteRelationship.XToDBObjectRelationshipSpec (spec) where
 
 import Data.Aeson (Value)
+import Data.Text qualified as T
 import Harness.Backend.Postgres qualified as Postgres
+import Harness.Constants qualified as Constants
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Sql (sql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
 import Harness.State (Server, State)
 import Harness.Test.Context (Context (..))
 import Harness.Test.Context qualified as Context
+import Harness.Test.Schema qualified as Schema
 import Test.Hspec (SpecWith, describe, it)
 import Prelude
 
@@ -122,6 +124,46 @@ rhsMSSQL = ([yaml|{"schema":"hasura", "name":"album"}|], Context "MSSQL" rhsMSSQ
 -}
 
 --------------------------------------------------------------------------------
+-- Schema
+
+-- | LHS
+track :: Schema.Table
+track =
+  Schema.Table
+    "track"
+    [ Schema.column "id" Schema.TInt,
+      Schema.column "title" Schema.TStr,
+      Schema.columnNull "album_id" Schema.TInt
+    ]
+    ["id"]
+    []
+    [ [Schema.VInt 1, Schema.VStr "track1_album1", Schema.VInt 1],
+      [Schema.VInt 2, Schema.VStr "track2_album1", Schema.VInt 1],
+      [Schema.VInt 3, Schema.VStr "track3_album1", Schema.VInt 1],
+      [Schema.VInt 4, Schema.VStr "track1_album2", Schema.VInt 2],
+      [Schema.VInt 5, Schema.VStr "track2_album2", Schema.VInt 2],
+      [Schema.VInt 6, Schema.VStr "track1_album3", Schema.VInt 3],
+      [Schema.VInt 7, Schema.VStr "track2_album3", Schema.VInt 3],
+      [Schema.VInt 8, Schema.VStr "track_no_album", Schema.VNull]
+    ]
+
+-- | RHS
+album :: Schema.Table
+album =
+  Schema.Table
+    "album"
+    [ Schema.column "id" Schema.TInt,
+      Schema.column "title" Schema.TStr,
+      Schema.columnNull "artist_id" Schema.TInt
+    ]
+    ["id"]
+    []
+    [ [Schema.VInt 1, Schema.VStr "album1_artist1", Schema.VInt 1],
+      [Schema.VInt 2, Schema.VStr "album2_artist1", Schema.VInt 1],
+      [Schema.VInt 3, Schema.VStr "album3_artist2", Schema.VInt 2]
+    ]
+
+--------------------------------------------------------------------------------
 -- LHS Postgres
 
 lhsPostgresMkLocalState :: State -> IO (Maybe Server)
@@ -129,58 +171,53 @@ lhsPostgresMkLocalState _ = pure Nothing
 
 lhsPostgresSetup :: Value -> (State, Maybe Server) -> IO ()
 lhsPostgresSetup rhsTableName (state, _) = do
-  Postgres.run_
-    [sql|
-create table hasura.track (
-  id serial primary key,
-  title text not null,
-  album_id int null
-);
-insert into hasura.track (title, album_id) values
-  ('track1_album1', 1),
-  ('track2_album1', 1),
-  ('track3_album1', 1),
-  ('track1_album2', 2),
-  ('track2_album2', 2),
-  ('track1_album3', 3),
-  ('track2_album3', 3),
-  ('track_no_album', null);
-  |]
-  let lhsTableName = [yaml|{"schema":"hasura", "name":"track"}|]
+  let sourceName = "source"
       sourceConfig = Postgres.defaultSourceConfiguration
+      schemaName = T.pack Constants.postgresDb
+  -- Add remote source
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: pg_add_source
+args:
+  name: *sourceName
+  configuration: *sourceConfig
+|]
+  -- setup tables only
+  Postgres.createTable track
+  Postgres.insertTable track
+  Schema.trackTable "postgres" sourceName schemaName track state
   GraphqlEngine.postMetadata_
     state
     [yaml|
 type: bulk
 args:
-- type: pg_add_source
-  args:
-    name: source
-    configuration: *sourceConfig
-- type: pg_track_table
-  args:
-    source: source
-    table: *lhsTableName
 - type: pg_create_select_permission
   args:
-    source: source
+    source: *sourceName
     role: role1
-    table: *lhsTableName
+    table:
+      schema: *schemaName
+      name: track
     permission:
       columns: '*'
       filter: {}
 - type: pg_create_select_permission
   args:
-    source: source
+    source: *sourceName
     role: role2
-    table: *lhsTableName
+    table:
+      schema: *schemaName
+      name: track
     permission:
       columns: '*'
       filter: {}
 - type: pg_create_remote_relationship
   args:
-    source: source
-    table: *lhsTableName
+    source: *sourceName
+    table:
+      schema: *schemaName
+      name: track
     name: album
     definition:
       to_source:
@@ -192,46 +229,46 @@ args:
   |]
 
 lhsPostgresTeardown :: (State, Maybe Server) -> IO ()
-lhsPostgresTeardown _ = Postgres.run_ [sql|drop table hasura.track;|]
+lhsPostgresTeardown (state, _) = do
+  let sourceName = "source"
+      schemaName = T.pack Constants.postgresDb
+  Schema.untrackTable "postgres" sourceName schemaName track state
+  Postgres.dropTable track
 
 --------------------------------------------------------------------------------
 -- RHS Postgres
 
 rhsPostgresSetup :: (State, ()) -> IO ()
 rhsPostgresSetup (state, _) = do
-  Postgres.run_
-    [sql|
-create table hasura.album (
-  id serial primary key,
-  title text not null,
-  artist_id int null
-);
-insert into hasura.album (title, artist_id) values
-  ('album1_artist1', 1),
-  ('album2_artist1', 1),
-  ('album3_artist2', 2);
-  |]
-
-  let rhsTableName = [yaml|{"schema":"hasura", "name":"album"}|]
+  let sourceName = "target"
       sourceConfig = Postgres.defaultSourceConfiguration
+      schemaName = T.pack Constants.postgresDb
+  -- Add remote source
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: pg_add_source
+args:
+  name: *sourceName
+  configuration: *sourceConfig
+|]
+  -- setup tables only
+  Postgres.createTable album
+  Postgres.insertTable album
+  Schema.trackTable "postgres" sourceName schemaName album state
+
   GraphqlEngine.postMetadata_
     state
     [yaml|
 type: bulk
 args:
-- type: pg_add_source
-  args:
-    name: target
-    configuration: *sourceConfig
-- type: pg_track_table
-  args:
-    source: target
-    table: *rhsTableName
 - type: pg_create_select_permission
   args:
-    source: target
+    source: *sourceName
     role: role1
-    table: *rhsTableName
+    table:
+      schema: *schemaName
+      name: album
     permission:
       columns:
         - title
@@ -241,9 +278,11 @@ args:
           _eq: x-hasura-artist-id
 - type: pg_create_select_permission
   args:
-    source: target
+    source: *sourceName
     role: role2
-    table: *rhsTableName
+    table:
+      schema: *schemaName
+      name: album
     permission:
       columns: [id, title, artist_id]
       filter:
@@ -254,17 +293,17 @@ args:
   |]
 
 rhsPostgresTeardown :: (State, ()) -> IO ()
-rhsPostgresTeardown _ =
-  Postgres.run_
-    [sql|
-DROP TABLE hasura.album;
-|]
+rhsPostgresTeardown (state, _) = do
+  let sourceName = "target"
+      schemaName = T.pack Constants.postgresDb
+  Schema.untrackTable "postgres" sourceName schemaName album state
+  Postgres.dropTable album
 
 --------------------------------------------------------------------------------
 -- Tests
 
 tests :: Context.Options -> SpecWith (State, Maybe Server)
-tests opts = do
+tests opts = describe "object-relationship" $ do
   schemaTests opts
   executionTests opts
   permissionTests opts
