@@ -56,8 +56,9 @@ inside the `metadata` directory:
     schema: dbo
     name: author
   configuration:
-    custom_column_names:
-      addr: address
+    column_config:
+      addr:
+        custom_name: address
 ```
 
 Apply the metadata by running:
@@ -71,7 +72,7 @@ hasura metadata apply
 
 A custom field name can be set for a column via the following 2 methods:
 
-1.  Passing a [Table config](/graphql/core/api-reference/syntax-defs.mdx#table-config) with the [CustomColumnNames](/graphql/core/api-reference/syntax-defs.mdx#customcolumnnames) to the
+1.  Passing a [Table config](/graphql/core/api-reference/syntax-defs.mdx#table-config) with the [ColumnConfig](/graphql/core/api-reference/syntax-defs.mdx#columnconfig) to the
     [mssql_set_table_customization](/graphql/core/api-reference/metadata-api/table-view.mdx#mssql-set-table-customization) API while tracking a table:
 
     ```http
@@ -85,8 +86,10 @@ A custom field name can be set for a column via the following 2 methods:
         "source": "<db_name>",
         "table": "authors",
         "configuration": {
-          "custom_column_names": {
-            "id": "AuthorId"
+          "column_config": {
+            "id": {
+              "custom_name": "AuthorId"
+            }
           }
         }
       }
@@ -156,8 +159,10 @@ A custom field name can be set for a table root field via the following
         "source": "<db_name>",
         "table": "authors",
         "configuration": {
-          "custom_column_names": {
-            "id": "AuthorId"
+          "column_config": {
+            "id": {
+              "custom_name": "AuthorId"
+            }
           },
           "custom_root_fields": {
             "select": "authors",

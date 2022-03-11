@@ -40,29 +40,31 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-   "type": "pg_track_table",
-   "args": {
-     "source": "default",
-     "table": "author",
-     "configuration": {
-        "custom_root_fields": {
-           "select": "Authors",
-           "select_by_pk": "Author",
-           "select_aggregate": "AuthorAggregate",
-           "insert": "AddAuthors",
-           "insert_one":"AddAuthor",
-           "update": "UpdateAuthors",
-           "update_by_pk": "UpdateAuthor",
-           "delete": "DeleteAuthors",
-           "delete_by_pk": "DeleteAuthor"
-        },
-        "custom_column_names": {
-           "id": "authorId"
-          },
-          "comment": "Authors of books"
+  "type": "pg_track_table",
+  "args": {
+    "source": "default",
+    "table": "author",
+    "configuration": {
+      "custom_root_fields": {
+        "select": "Authors",
+        "select_by_pk": "Author",
+        "select_aggregate": "AuthorAggregate",
+        "insert": "AddAuthors",
+        "insert_one":"AddAuthor",
+        "update": "UpdateAuthors",
+        "update_by_pk": "UpdateAuthor",
+        "delete": "DeleteAuthors",
+        "delete_by_pk": "DeleteAuthor"
+      },
+      "column_config": {
+        "id": {
+          "custom_name": "authorId",
+          "comment": "The ID of the Author"
         }
-     }
-   }
+      },
+      "comment": "Authors of books"
+    }
+  }
 }
 ```
 
@@ -198,28 +200,31 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-   "type": "pg_set_table_customization",
-   "args": {
-     "table": "author_details",
-     "source": "default",
-     "configuration": {
-       "identifier": "author",
-       "custom_root_fields": {
-          "select": "Authors",
-          "select_by_pk": "Author",
-          "select_aggregate": "AuthorAggregate",
-          "insert": "AddAuthors",
-          "insert_one":"AddAuthor",
-          "update": "UpdateAuthors",
-          "update_by_pk": "UpdateAuthor",
-          "delete": "DeleteAuthors",
-          "delete_by_pk": "DeleteAuthor"
-       },
-       "custom_column_names": {
-          "id": "authorId"
-       }
-     }
-   }
+  "type": "pg_set_table_customization",
+  "args": {
+    "table": "author_details",
+    "source": "default",
+    "configuration": {
+      "identifier": "author",
+      "custom_root_fields": {
+        "select": "Authors",
+        "select_by_pk": "Author",
+        "select_aggregate": "AuthorAggregate",
+        "insert": "AddAuthors",
+        "insert_one":"AddAuthor",
+        "update": "UpdateAuthors",
+        "update_by_pk": "UpdateAuthor",
+        "delete": "DeleteAuthors",
+        "delete_by_pk": "DeleteAuthor"
+      },
+      "column_config": {
+        "id": {
+          "custom_name": "authorId",
+          "comment": "The ID of the Author"
+        }
+      }
+    }
+  }
 }
 ```
 
@@ -361,11 +366,14 @@ X-Hasura-Role: admin
     "configuration": {
       "identifier": "author",
       "custom_root_fields": {
-          "select": "Authors",
-          "select_aggregate": "AuthorAggregate",
+        "select": "Authors",
+        "select_aggregate": "AuthorAggregate",
       },
-      "custom_column_names": {
-          "id": "authorId"
+      "column_config": {
+        "id": {
+          "custom_name": "authorId",
+          "comment": "The ID of the Author"
+        }
       }
     }
   }
@@ -552,11 +560,14 @@ X-Hasura-Role: admin
     "configuration": {
       "custom_name": "author",
       "custom_root_fields": {
-          "select": "Authors",
-          "select_aggregate": "AuthorAggregate",
+        "select": "Authors",
+        "select_aggregate": "AuthorAggregate",
       },
-      "custom_column_names": {
-          "id": "authorId"
+      "column_config": {
+        "id": {
+          "custom_name": "authorId",
+          "comment": "The ID of the Author"
+        }
       }
     }
   }
