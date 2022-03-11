@@ -54,6 +54,14 @@ X-Hasura-Role: admin
 }
 ```
 
+:::info Note
+
+The queries in query collections are validated against the schema. So, adding an invalid query would result in inconsistent metadata error.
+As the query collection is used in allowlists and REST endpoints, they are validated as well.
+
+:::
+
+
 ### Args Syntax {#schema-metadata-create-query-collection-syntax}
 
 | Key        | Required | Schema                                                                                | Description                  |

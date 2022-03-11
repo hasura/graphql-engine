@@ -1206,7 +1206,7 @@ Enum](https://spec.graphql.org/June2018/#sec-Enums)
 | body            | false    | [BodyTransform](#bodytransform) \| String    | A template script for transforming the request body.                                                                                               |
 | content_type    | false    | String                                       | Replace the Content-Type with this value. Only "application/json" and "application/x-www-form-urlencoded" are allowed. Default: "application/json" |
 | query_params    | false    | Object (String : String)                     | Replace the query params on the URL with this value.                                                                                               |
-| request_headers | false    | [TransformHeaders](#transformheaders)        | Transform headers as described here.                                                                                                               |
+| request_headers | false    | [TransformHeaders](#transformheaders)        | Request Header Transformation.                                                                                                                     |
 | template_engine | false    | [TemplateEngine](#templateengine)            | Template language to be used for this transformation. Default: "Kriti"                                                                             |
 
 
