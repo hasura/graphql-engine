@@ -13,7 +13,7 @@ sidebar_position: 3
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
-import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
+import Thumbnail from "@site/src/components/Thumbnail";
 
 # MS SQL Server: Setting values for fields using role-based column presets
 
@@ -147,7 +147,7 @@ Now, if we run the following insert mutation, we'll see that the
 
 Not passing the configured header will result in a run-time error:
 
-```JSON
+```json
 {
     "errors": [
       {

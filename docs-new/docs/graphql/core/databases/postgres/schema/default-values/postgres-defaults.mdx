@@ -13,8 +13,8 @@ keywords:
 
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
-import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
-import GraphiQLIDE from "@site/src/components/GraphiQLIDE/GraphiQLIDE";
+import Thumbnail from "@site/src/components/Thumbnail";
+import GraphiQLIDE from "@site/src/components/GraphiQLIDE";
 
 # Postgres: Setting default values for fields using Postgres defaults
 
@@ -61,7 +61,7 @@ as a default value.
 [Create a migration manually](/graphql/core/migrations/advanced/writing-migrations-manually.mdx) and add the following
 SQL statement to the `up.sql` file:
 
-```SQL
+```sql
 ALTER TABLE ONLY "public"."article" ALTER COLUMN "created_at" SET DEFAULT now();
 ```
 
@@ -110,7 +110,7 @@ set by default as an auto-incremented integer.
 
 Run the following SQL command to create a new sequence.
 
-```SQL
+```sql
 CREATE SEQUENCE roll_number_seq;
 ```
 

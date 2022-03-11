@@ -9,9 +9,7 @@ import Link from '@docusaurus/Link';
 
 # List Tables
 
-Listing tables might be a bit of a complex part in the migration.
-
-This section probably needs a direct migration from RST to MDX rather than from `pandoc` migrated files as the auto migration messes up the code block syntax with lots of `span`'s. Apologies for the inconvenience.
+Tables are the only complex stuff in markdown.
 
 ## Sphinx - RST
 
@@ -90,7 +88,7 @@ Unfortunately, `markdown` doesn't have straightforward syntax to control the wid
 
 :::tip Few things to note:
 
-If a table cell is mixed with text and markdown stuff (`code highlighters`, [links](/migration-guide/links) etc., Please prefer `html` syntax over markdown as markdown won't be parsed correctly.
+If a table cell is mixed with text and markdown stuff (`code highlighters`, [links](/rst-vs-mdx-guide/links.mdx) etc., Please prefer `html` syntax over markdown as markdown won't be parsed correctly.
 
 ```html
 <!-- Usage of <Link> for `[link](https://...)` -->

@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from './CustomTOCList.module.scss';
+import styles from './styles.module.scss';
 
 const CustomTOCList = ({children}) => (
   <div className={styles["toc-list"]}>

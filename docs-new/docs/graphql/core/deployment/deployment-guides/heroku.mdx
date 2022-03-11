@@ -9,7 +9,7 @@ sidebar_position: 5
 sidebar_label: Using Heroku (one-click)
 ---
 
-import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
+import Thumbnail from "@site/src/components/Thumbnail";
 import TOCInline from '@theme/TOCInline';
 import LatestRelease from "@site/src/components/LatestRelease";
 
@@ -278,7 +278,7 @@ Head to the `Dockerfile` in the git repo you cloned in step 1. Change
 the `FROM` line to the specific version you want. A list of all releases
 can be found at [https://github.com/hasura/graphql-engine/releases](https://github.com/hasura/graphql-engine/releases).
 
-```Dockerfile {1}
+```docker {1}
 FROM hasura/graphql-engine:v1.0.0
 
 ...

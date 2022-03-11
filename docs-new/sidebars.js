@@ -37,7 +37,7 @@ const sidebars = {
     {
       type: 'link',
       href: '/latest/graphql/core/index',
-      label: 'Hasura Core',
+      label: 'Hasura GraphQL Engine',
     },
     {
       type: 'category',

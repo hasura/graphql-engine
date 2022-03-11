@@ -13,8 +13,8 @@ sidebar_position: 2
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
-import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
-import GraphiQLIDE from '@site/src/components/GraphiQLIDE/GraphiQLIDE';
+import Thumbnail from "@site/src/components/Thumbnail";
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
 # MS SQL Server: Setting default values for fields using MS SQL Server defaults
 
@@ -87,7 +87,7 @@ set by default as an auto-incremented integer.
 
 Run the following SQL command to create a new sequence.
 
-```SQL
+```sql
 CREATE SEQUENCE roll_number_seq AS INT START WITH 0 INCREMENT BY 1;
 ```
 

@@ -11,7 +11,7 @@ keywords:
   - rename
 ---
 
-import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
+import Thumbnail from "@site/src/components/Thumbnail";
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -54,8 +54,9 @@ inside the `metadata` directory:
     schema: public
     name: author
   configuration:
-    custom_column_names:
-      addr: address
+    column_config:
+      addr:
+        custom_name: address
 ```
 
 Apply the metadata by running:
@@ -69,7 +70,7 @@ hasura metadata apply
 
 A custom field name can be set for a column via the following 2 methods:
 
-1.  passing a [Table Config](/graphql/core/api-reference/syntax-defs.mdx#table-config) with the [CustomColumnNames](/graphql/core/api-reference/syntax-defs.mdx#customcolumnnames) to the
+1.  passing a [Table Config](/graphql/core/api-reference/syntax-defs.mdx#table-config) with the [ColumnConfig](/graphql/core/api-reference/syntax-defs.mdx#columnconfig) to the
     [pg_track_table](/graphql/core/api-reference/metadata-api/table-view.mdx#metadata-pg-track-table) API while tracking a table:
 
     ```http
@@ -83,8 +84,10 @@ A custom field name can be set for a column via the following 2 methods:
         "source": "<db_name>",
         "table": "author",
         "configuration": {
-          "custom_column_names": {
-            "addr": "address"
+          "column_config": {
+            "addr": {
+              "custom_name": "address"
+            }
           }
         }
       }
@@ -92,7 +95,7 @@ A custom field name can be set for a column via the following 2 methods:
     ```
 
 2.  using the [pg_set_table_customization](/graphql/core/api-reference/metadata-api/table-view.mdx#metadata-pg-set-table-customization) API to set the
-    [CustomColumnNames](/graphql/core/api-reference/syntax-defs.mdx#customcolumnnames):
+    [ColumnConfig](/graphql/core/api-reference/syntax-defs.mdx#columnconfig):
 
     ```http
     POST /v1/metadata HTTP/1.1
@@ -104,8 +107,10 @@ A custom field name can be set for a column via the following 2 methods:
       "args": {
         "source": "<db_name>",
         "table": "author",
-        "custom_column_names": {
-          "addr": "address"
+        "column_config": {
+          "addr": {
+            "custom_name": "address"
+          }
         }
       }
     }

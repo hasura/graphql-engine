@@ -11,8 +11,8 @@ keywords:
   - stored procedures
 ---
 
-import GraphiQLIDE from '@site/src/components/GraphiQLIDE/GraphiQLIDE';
-import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+import Thumbnail from "@site/src/components/Thumbnail";
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -185,14 +185,14 @@ Let's see a few example use cases for custom functions:
 Let's take a look at an example where the `SETOF` table is already part
 of the existing schema:
 
-```plpgsql
+```plsql
 articles(id integer, title text, content text)
 ```
 
 Let's say we've created and tracked a custom function,
 `search_articles`, with the following definition:
 
-```plpgsql
+```plsql
 CREATE FUNCTION search_articles(search text)
 RETURNS SETOF articles AS $$
     SELECT *
@@ -258,7 +258,7 @@ USING GIN ((unit || ' ' || num || ' ' || street || ' ' || city || ' ' || region 
 
 And finally create the custom SQL function in the Hasura console:
 
-```plpgsql
+```plsql
 CREATE FUNCTION search_properties(search text)
 RETURNS SETOF properties AS $$
     SELECT *
@@ -360,7 +360,7 @@ create this table and then create our location search function.
 
 -   create and track the following function:
 
-    ```plpgsql
+    ```plsql
     -- function returns a list of landmarks near a user based on the
     -- input arguments distance_kms and userid
     CREATE FUNCTION search_landmarks_near_user(userid integer, distance_kms integer)
@@ -484,7 +484,7 @@ definition.
 [PostGIS functions example](#pg-custom-functions-postgis), the function
 definition can be updated as follows:
 
-```plpgsql
+```plsql
 -- input arguments distance_kms (default: 2) and userid
 CREATE FUNCTION search_landmarks_near_user(userid integer, distance_kms integer default 2)
 ```
@@ -542,7 +542,7 @@ object where keys are session variable names (in lower case) and values
 are strings. Use the `->>` JSON operator to fetch the value of a session
 variable as shown in the following example.
 
-```plpgsql
+```plsql
 -- single text column table
 CREATE TABLE text_result(
   result text

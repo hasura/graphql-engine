@@ -26,9 +26,9 @@ const config = {
         docs: {
           routeBasePath: "/",
           sidebarPath: require.resolve('./sidebars.js'),
-          editUrl: 'https://github.com/hasura/graphql-engine/edit/main/docs-new/',
-          docItemComponent: require.resolve('./src/components/CustomDocItem/CustomDocItem.tsx'),
-          exclude: ['**/*.wip', 'migration-guide'],
+          editUrl: ({ docPath }) => `https://github.com/hasura/graphql-engine/edit/master/docs-new/docs/${docPath}`,
+          docItemComponent: require.resolve('./src/components/CustomDocItem/index.tsx'),
+          exclude: ['**/*.wip'],
           breadcrumbs: true,
           // showLastUpdateAuthor: true,
           // showLastUpdateTime: true,
@@ -49,6 +49,22 @@ const config = {
   ],
   plugins: [
     'docusaurus-plugin-sass',
+    [
+      'content-docs',
+      /** @type {import('@docusaurus/plugin-content-docs').Options} */
+      ({
+        id: 'wiki',
+        path: 'wiki',
+        routeBasePath: "wiki",
+        editUrl: ({ docPath }) => `https://github.com/hasura/graphql-engine/edit/master/docs-new/docs/${docPath}`,
+        editCurrentVersion: true,
+        // disableVersioning: true,
+        breadcrumbs: false,
+        sidebarPath: require.resolve('./sidebarsWiki.js'),
+        showLastUpdateAuthor: true,
+        showLastUpdateTime: true,
+      }),
+    ],
     [
       path.resolve(__dirname, './src/plugins/docusaurus-plugin-segment-analytics'),
       {
@@ -85,6 +101,24 @@ const config = {
         disableSwitch: false,
         respectPrefersColorScheme: true,
       },
+      prism: {
+        theme: lightCodeTheme,
+        darkTheme: darkCodeTheme,
+        additionalLanguages: ['rest', 'http', 'haskell', 'plsql', 'docker', 'nginx', 'markdown'],
+      },
+      algolia: {
+        // If Algolia did not provide you any appId, use 'BH4D9OD16A'
+        appId: 'NS6GBGYACO',
+        // Public API key: it is safe to commit it
+        apiKey: '8f0f11e3241b59574c5dd32af09acdc8',
+        indexName: 'hasura-graphql',
+        // Optional: see doc section below
+        // contextualSearch: true,
+        // Optional: Specify domains where the navigation should occur through window.location instead on history.push. Useful when our Algolia config crawls multiple documentation sites and we want to navigate with window.location.href to them.
+        // externalUrlRegex: 'external\\.com|domain\\.com',
+        // Optional: Algolia search parameters
+        // searchParameters: {},
+      },
       // announcementBar: {
       //   id: 'announcementBar-2', // Increment on change
       //   content: `⭐️ If you like Docusaurus, give it a star on <a target="_blank" rel="noopener noreferrer" href="https://github.com/facebook/docusaurus">GitHub</a> and follow us on <a target="_blank" rel="noopener noreferrer" href="https://twitter.com/docusaurus" >Twitter</a> ${TwitterSvg}`,
@@ -100,28 +134,22 @@ const config = {
         },
         items: [
           {
-            type: 'docsVersionDropdown',
+            type: 'dropdown',
+            label: 'Docs',
             position: 'left',
-            dropdownActiveClassDisabled: true,
-            dropdownItemsAfter: [
+            items: [
               {
-                href: 'https://hasura.io/docs/1.0/graphql/core/index.html',
-                label: 'v1.x',
+                type: 'doc',
+                docId: 'graphql/core/index',
+                label: 'Hasura GraphQL Engine',
+              },
+              {
+                type: 'docSidebar',
+                sidebarId: 'cloudDocsSidebar',
+                label: 'Hasura Cloud',
               },
             ],
           },
-          // {
-          //   type: 'doc',
-          //   position: 'left',
-          //   docId: 'graphql/core/index',
-          //   label: 'Docs',
-          // },
-          // {
-          //    type: 'docSidebar',
-          //    position: 'left',
-          //    sidebarId: 'cloudDocsSidebar',
-          //    label: 'Cloud Docs',
-          // },
           {
             to: 'https://hasura.io/products/',
             label: 'Product',
@@ -138,6 +166,17 @@ const config = {
             position: 'left',
           },
           {
+            type: 'docsVersionDropdown',
+            position: 'right',
+            dropdownActiveClassDisabled: true,
+            dropdownItemsAfter: [
+              {
+                href: 'https://hasura.io/docs/1.0/graphql/core/index.html',
+                label: 'v1.x',
+              },
+            ],
+          },
+          {
             type: 'search',
             position: 'right',
           },
@@ -149,7 +188,7 @@ const config = {
           },
           {
             to: 'https://hasura.io/pricing/',
-            label: 'Prcing',
+            label: 'Pricing',
             position: 'right',
           },
           {
@@ -342,24 +381,6 @@ const config = {
       //   ],
       //   copyright: `Copyright © ${new Date().getFullYear()} Hasura Inc. All rights reserved`,
       // },
-      prism: {
-        theme: lightCodeTheme,
-        darkTheme: darkCodeTheme,
-        additionalLanguages: ['rest', 'http', 'haskell', 'plsql', 'docker']
-      },
-      algolia: {
-        // If Algolia did not provide you any appId, use 'BH4D9OD16A'
-        appId: 'NS6GBGYACO',
-        // Public API key: it is safe to commit it
-        apiKey: '8f0f11e3241b59574c5dd32af09acdc8',
-        indexName: 'hasura-graphql',
-        // Optional: see doc section below
-        // contextualSearch: true,
-        // Optional: Specify domains where the navigation should occur through window.location instead on history.push. Useful when our Algolia config crawls multiple documentation sites and we want to navigate with window.location.href to them.
-        // externalUrlRegex: 'external\\.com|domain\\.com',
-        // Optional: Algolia search parameters
-        // searchParameters: {},
-      },
     }),
 };
 

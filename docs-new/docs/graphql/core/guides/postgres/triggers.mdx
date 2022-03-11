@@ -32,7 +32,7 @@ Let's say we want to check if an author is active before a corresponding
 article can be inserted or updated. We can do so with the following
 Postgres function:
 
-```plpgsql
+```plsql
 CREATE FUNCTION check_author_active()
     RETURNS trigger AS $BODY$
     DECLARE active_author BOOLEAN;
@@ -50,14 +50,14 @@ Now we want to have this function executed whenever a new article is
 about to be inserted or updated. We can create a Postgres trigger as
 follows:
 
-```plpgsql
+```plsql
 CREATE TRIGGER insert_article BEFORE INSERT OR UPDATE ON "articles" FOR EACH ROW EXECUTE PROCEDURE check_author_active();
 ```
 
 If someone now tries to insert an article for an author that is not
 active, the following error will be thrown:
 
-```plpgsql
+```plsql
 unexpected : Author must be active
 ```
 
@@ -68,7 +68,7 @@ is inserted.
 
 The following Postgres function refreshes a materialized view:
 
-```plpgsql
+```plsql
 CREATE FUNCTION refresh_materialized_view()
   RETURNS trigger AS $BODY$
   BEGIN
@@ -81,7 +81,7 @@ CREATE FUNCTION refresh_materialized_view()
 Now, to make sure this function gets called whenever a new author is
 inserted, we can create the following Postgres trigger:
 
-```plpgsql
+```plsql
 CREATE TRIGGER update_materialized_view AFTER INSERT ON "authors" FOR EACH ROW EXECUTE PROCEDURE refresh_materialized_view();
 ```
 

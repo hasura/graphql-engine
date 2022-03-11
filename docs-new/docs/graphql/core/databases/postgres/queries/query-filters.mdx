@@ -11,7 +11,7 @@ keywords:
   - search
 ---
 
-import GraphiQLIDE from '@site/src/components/GraphiQLIDE/GraphiQLIDE';
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
 # Postgres: Filter query results / search queries
 
@@ -612,8 +612,7 @@ the [API reference](/graphql/core/api-reference/graphql-api/query.mdx#jsonb-oper
 
 **Example: \_contains**
 
-Fetch all authors living within a particular pincode (present in
-`address` JSONB column):
+Fetch all authors living within a particular pincode (present in `address` JSONB column):
 
 <GraphiQLIDE
   query={`query get_authors_in_pincode ($jsonFilter: jsonb){
@@ -638,7 +637,7 @@ response={`{
           "city": "Bengaluru",
           "state": "Karnataka",
           "pincode": 560095,
-          "phone": "9090909090",
+          "phone": "9090909090"
         }
       }
     ]
@@ -1970,14 +1969,54 @@ response={`{
 
 ## Cast a field to a different type before filtering (\_cast)
 
-The `_cast` operator can be used to cast a field to a different type,
-which allows type-specific operators to be used on fields that otherwise
-would not support them. Currently, only casting between PostGIS
-`geometry` and `geography` types is supported.
+The `_cast` operator can be used to cast a field to a different type, which allows type-specific
+operators to be used on fields that otherwise would not support them.
+
+Currently, only the following type casts are supported:
+
+- between PostGIS `geometry` and `geography` types
+- from Postgres `jsonb` type to `string` type.
 
 Casting using `_cast` corresponds directly to [SQL type casts](https://www.postgresql.org/docs/current/sql-expressions.html#SQL-SYNTAX-TYPE-CASTS).
 
-**Example: cast \`\`geometry\`\` to \`\`geography\`\`**
+
+**Example: cast jsonb to string**
+
+Columns of type `jsonb` can be cast to `String` to use [text operators](/graphql/core/api-reference/graphql-api/query.mdx#text-operators) on a
+`jsonb` field:
+
+<GraphiQLIDE
+query={`query get_authors_in_bengaluru {
+  authors(
+    where: {
+      address: {_cast: {String: {_ilike: "%bengaluru%"}}}
+    }
+  ) {
+    id
+    name
+    address
+  }
+}`}
+response={`{
+  "data": {
+    "authors": [
+      {
+        "id": 1,
+        "name": "Ash",
+        "address": {
+          "street_address": "161, 19th Main Road, Koramangala 6th Block",
+          "city": "Bengaluru",
+          "state": "Karnataka",
+          "pincode": 560095,
+          "phone": "9090909090"
+        }
+      }
+    ]
+  }
+}`}
+/>
+
+**Example: cast geometry to geography**
 
 Filtering using `_st_d_within` over large distances can be inaccurate
 for location data stored in `geometry` columns. For accurate queries,
@@ -2016,7 +2055,7 @@ variables={`{
 }`}
 />
 
-**Example: cast \`\`geography\`\` to \`\`geometry\`\`**
+**Example: cast geography to geometry**
 
 Columns of type `geography` are more accurate, but they don’t support as
 many operations as `geometry`. Cast to `geometry` to use those

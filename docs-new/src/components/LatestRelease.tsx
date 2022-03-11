@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 
 const LatestRelease = ({ prerelease }) => {
 	const [releases, setReleases] = useState({
-		latest: "v1.3.3",
-		prerelease: "v2.1.0-beta.3",
+		latest: "v2.3.0",
+		prerelease: "v2.4.0-beta.1",
 	});
 
 	useEffect(() => {

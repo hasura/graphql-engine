@@ -35,13 +35,13 @@ Similarly, scheduled events also have two tables managed by Hasura:
 
 1. Cron event invocation logs
 
-```SQL
+```sql
 DELETE FROM hdb_catalog.hdb_cron_event_invocation_logs;
 ```
 
 2. Scheduled event invocation logs
 
-```SQL
+```sql
 DELETE FROM hdb_catalog.hdb_scheduled_event_invocation_logs;
 ```
 
@@ -49,14 +49,14 @@ DELETE FROM hdb_catalog.hdb_scheduled_event_invocation_logs;
 
 1. Cron events
 
-```SQL
+```sql
 DELETE FROM hdb_catalog.hdb_cron_events
 WHERE status IN ('delivered', 'error', 'dead');
 ```
 
 2. Scheduled events
 
-```SQL
+```sql
 DELETE FROM hdb_catalog.hdb_scheduled_events
 WHERE status IN ('delivered', 'error', 'dead');
 ```
@@ -79,7 +79,7 @@ upto a minute.
 
 ## Option 3: Clear all data for a particular cron trigger only
 
-```SQL
+```sql
 DELETE FROM hdb_catalog.hdb_cron_events
 WHERE trigger_name = '<trigger_name>';
 ```
@@ -88,13 +88,13 @@ WHERE trigger_name = '<trigger_name>';
 
 1. Cron triggers
 
-```SQL
+```sql
 DELETE FROM hdb_catalog.hdb_cron_events;
 ```
 
 2. Scheduled events
 
-```SQL
+```sql
 DELETE FROM hdb_catalog.hdb_scheduled_events;
 ```
 
@@ -102,7 +102,7 @@ DELETE FROM hdb_catalog.hdb_scheduled_events;
 
 If you wish to keep recent data and only clear data before a particular time period you can add the following time clause to your query's where clause:
 
-```SQL
+```sql
 -- units can be 'minutes', 'hours', 'days', 'months', 'years'
 created_at < now() - interval '<x> <units>'
 ```
@@ -111,7 +111,7 @@ For example: to delete all processed events and HTTP logs older than 3 months:
 
 1. Cron triggers
 
-```SQL
+```sql
 DELETE FROM hdb_catalog.hdb_cron_events
 WHERE status IN ('delivered', 'error', 'dead')
   AND created_at < now() - interval '3 months';
@@ -119,7 +119,7 @@ WHERE status IN ('delivered', 'error', 'dead')
 
 2. Scheduled events
 
-```SQL
+```sql
 DELETE FROM hdb_catalog.hdb_scheduled_events
 WHERE status IN ('delivered', 'error', 'dead')
  AND created_at < now() - interval '3 months';

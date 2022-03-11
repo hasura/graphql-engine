@@ -2,8 +2,9 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Admonitions
+
 <Tabs>
-  <TabItem value="sphinx" label="Sphinx - RST" default>
+<TabItem value="sphinx" label="Sphinx - RST" default>
 
 ```rest
   .. note::
@@ -17,8 +18,9 @@ import TabItem from '@theme/TabItem';
     Data Federation with Hasura - `Watch Webinar <https://hasura.io/events/webinar/data-federation-hasura-graphql/>`__.
 ```
 
-  </TabItem>
-  <TabItem value="docusaurus" label="Docusaurus - MDX">
+</TabItem>
+<TabItem value="docusaurus" label="Docusaurus - MDX">
+
 
 ```markdown
 :::note
@@ -34,7 +36,8 @@ built-in remote schemas feature, please get in touch with us on [Discord](https:
 Data Federation with Hasura - [Watch Webinar](https://hasura.io/events/webinar/data-federation-hasura-graphql/).
 
 :::
-  
+
+
 ```
 
 :::caution Please note the empty lines
@@ -45,7 +48,18 @@ Read about it on the [Docusaurus Docs](https://docusaurus.io/docs/markdown-featu
 
 :::
 
-  </TabItem>
+```diff {1,3,5,7}
++
+:::info Note
++
+Make sure to place the note/admonition in a place where the user will see it at the appropriate time.
++
+:::
++
+```
+
+
+</TabItem>
 </Tabs>
 
 which would render as below
@@ -66,7 +80,9 @@ Data Federation with Hasura - [Watch Webinar](https://hasura.io/events/webinar/d
 
 <hr />
 
-:::info
+Please prefer `:::info Note` over `:::note` for a decent blue colored note.
+
+:::info Note
 
 For further syntax and usage reference please check docusaurus [Admonitions docs](https://docusaurus.io/docs/markdown-features/admonitions)
 

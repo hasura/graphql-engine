@@ -5,9 +5,11 @@ html[data-theme='dark'] {
   --ifm-navbar-background-color:var(--color-gray-82);
   --ifm-background-color:var(--color-gray-90);
   --ifm-hero-background-color: var(--ifm-background-color);
-  --ifm-table-stripe-background: var(--color-gray-86);
+  --ifm-table-stripe-background: var(--color-gray-86-alpha-04);
   --ifm-pre-background:var(--color-gray-86);
   --ifm-code-background:var(--color-gray-86);
+  --ifm-dropdown-background-color: var(--color-gray-78);
+  --ifm-card-background-color:var(--color-gray-82);
   --ifm-footer-background-color:var(--color-gray-82);
   --collapse-button-bg-color-dark: var(--color-gray-86);
   --docsearch-searchbox-background: var(--color-gray-90) !important;
@@ -29,6 +31,14 @@ html[data-theme='dark'] {
         --ifm-code-background: var(--color-gray-78);
       }
     }
+  }
+
+  .docusaurus-highlight-code-line {
+    background-color: var(--color-gray-78);
+  }
+
+  .card:hover {
+    --ifm-card-background-color:var(--color-gray-78) !important;
   }
 
   .header-github-link {
@@ -85,10 +95,6 @@ html[data-theme='dark'] {
     .table-of-contents__link--active {
       border-left: 0.125rem solid var(--color-gray-16);
     }
-  }
-
-  .docusaurus-highlight-code-line {
-    background-color: rgba(0, 0, 0, 0.3);
   }
 
   .admonition {

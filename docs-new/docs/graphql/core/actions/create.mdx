@@ -11,8 +11,8 @@ keywords:
 import TOCInline from '@theme/TOCInline';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
-import Thumbnail from "@site/src/components/Thumbnail/Thumbnail";
-import GraphiQLIDE from '@site/src/components/GraphiQLIDE/GraphiQLIDE';
+import Thumbnail from "@site/src/components/Thumbnail";
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
 # Creating Actions
 
@@ -214,7 +214,6 @@ The above definition means:
 - It returns an output type called `LoginResponse`.
 - `LoginResponse` is a simple object type with a field called `accessToken` of type `String!`.
 
-<hr />
 
 ### Step 2: Create the action handler
 
@@ -223,7 +222,7 @@ A handler is an HTTP webhook where you can perform the custom logic for the acti
 In this case, we will just return an access token, but typically you would want to run all the business logic that the action demands.
 NodeJS/Express code for this handler would look something like:
 
-```js
+```javascript
 const handler = (req, resp) => {
   // You can access their arguments input at req.body.input
   const { username, password } = req.body.input;
@@ -288,7 +287,6 @@ If you are running Hasura using Docker, ensure that the Hasura Docker container 
 
 :::
 
-<hr />
 
 ### Step 3: Finish action creation
 
@@ -312,7 +310,6 @@ An action will be created when sending a request to the [create_action metadata 
   </TabItem>
 </Tabs>
 
-<hr />
 
 ### Step 4: Try it out
 
@@ -337,7 +334,6 @@ In the Hasura console, head to the `GraphiQL` tab and try out the new action.
 
 And that's it. You have extended your Hasura schema with a new mutation.
 
-<hr />
 
 ## Query type action
 
@@ -465,7 +461,6 @@ The above definition means:
 - It returns an output type called `AddResult`.
 - `AddResult` is a simple object type with a field called `sum` of type integer.
 
-<hr />
 
 ### Step 2: Create the action handler
 
@@ -473,7 +468,7 @@ A handler is an HTTP webhook where you can perform the custom logic for the acti
 
 In this case, it is the addition of the numbers. NodeJS/Express code for this handler would look something like:
 
-```js
+```javascript
 const handler = (req, resp) => {
   // You can access their arguments input at req.body.input
   const { numbers } = req.body.input;
@@ -530,7 +525,6 @@ e.g. `https://my-handler-endpoint/addNumbers` can be templated to `{{ACTION_BASE
 
 :::
 
-<hr />
 
 ### Step 3: Finish action creation
 
@@ -554,7 +548,6 @@ An action will be created when sending a request to the [create_action metadata 
   </TabItem>
 </Tabs>
 
-<hr />
 
 ### Step 4: Try it out
 

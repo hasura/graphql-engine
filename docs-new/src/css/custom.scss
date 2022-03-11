@@ -83,6 +83,7 @@
   /* Custom Variables */
   --color-gray-0:#FFFFFF;
   --color-gray-4:#F3F5F7;
+  --color-gray-4-alpha-04:rgba(243, 245, 247, 0.4);
   --color-gray-8:#E7EBEF;
   --color-gray-12:#DCE2E8;
   --color-gray-16:#CFD8DF;
@@ -90,6 +91,7 @@
   --color-gray-78:#2C3B4B;
   --color-gray-82:#23303D;
   --color-gray-86:#1C262F;
+  --color-gray-86-alpha-04: rgba(28, 38, 47, 0.4);
   --color-gray-90:#141C22;
 
   /* Docusaurus Specific variables */
@@ -168,7 +170,7 @@
   --ifm-menu-color-active: var(--ifm-color-content);
   --ifm-toc-link-color: var(--ifm-color-content);
 
-  --ifm-table-stripe-background: var(--color-gray-4);
+  --ifm-table-stripe-background: var(--color-gray-4-alpha-04);
   --ifm-pre-background:var(--color-gray-4);
   --ifm-code-background:var(--color-gray-4);
   --ifm-code-font-size:0.875rem; /* 14px */
@@ -395,14 +397,6 @@
   }
 }
 
-.docusaurus-highlight-code-line {
-  background-color: rgba(0, 0, 0, 0.1);
-  display: block;
-  margin: 0 calc(-1 * var(--ifm-pre-padding));
-  padding: 0 var(--ifm-pre-padding);
-}
-
-
 .admonition {
   .admonition-heading h5 {
     text-transform: capitalize;
@@ -427,12 +421,23 @@ pre {
   }
 }
 
+div[class*=codeBlockTitle_] {
+  background-color: var(--ifm-code-background) !important;
+}
+
 .alert {
   pre {
     code {
       --ifm-code-background: var(--color-gray-4);
     }
   }
+}
+
+.docusaurus-highlight-code-line {
+  background-color: var(--color-gray-12);
+  display: block;
+  margin: 0 calc(-1 * var(--ifm-pre-padding));
+  padding: 0 var(--ifm-pre-padding);
 }
 
 .theme-edit-this-page {
