@@ -332,7 +332,7 @@ For the ``serve`` sub-command these are the available flags and environment vari
        (default: ``5``)
 
        *(Available for versions > v2.0.0)*
-    
+   
    * - ``--websocket-connection-init-timeout <SECONDS>``
      - ``HASURA_GRAPHQL_WEBSOCKET_CONNECTION_INIT_TIMEOUT``
      - Used to set the connection initialisation timeout for ``graphql-ws`` clients. This is ignored

@@ -12,10 +12,24 @@ module Hasura.RQL.DDL.EventTrigger
     getHeaderInfosFromConf,
     getWebhookInfoFromConf,
     buildEventTriggerInfo,
+    cetqSource,
+    cetqName,
+    cetqTable,
+    cetqInsert,
+    cetqUpdate,
+    cetqDelete,
+    cetqEnableManual,
+    cetqRetryConf,
+    cetqWebhook,
+    cetqWebhookFromEnv,
+    cetqHeaders,
+    cetqReplace,
+    cetqRequestTransform,
+    cetqResponseTrasnform,
   )
 where
 
-import Control.Lens ((.~))
+import Control.Lens (makeLenses, (.~))
 import Data.Aeson
 import Data.ByteString.Lazy qualified as LBS
 import Data.Environment qualified as Env
@@ -27,7 +41,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
-import Hasura.RQL.DDL.WebhookTransforms (MetadataRequestTransform, MetadataResponseTransform)
+import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types
 import Hasura.RQL.Types.Eventing.Backend
 import Hasura.SQL.AnyBackend qualified as AB
@@ -48,9 +62,11 @@ data CreateEventTriggerQuery (b :: BackendType) = CreateEventTriggerQuery
     _cetqWebhookFromEnv :: !(Maybe Text),
     _cetqHeaders :: !(Maybe [HeaderConf]),
     _cetqReplace :: !Bool,
-    _cetqRequestTransform :: !(Maybe MetadataRequestTransform),
+    _cetqRequestTransform :: !(Maybe RequestTransform),
     _cetqResponseTrasnform :: !(Maybe MetadataResponseTransform)
   }
+
+$(makeLenses ''CreateEventTriggerQuery)
 
 instance Backend b => FromJSON (CreateEventTriggerQuery b) where
   parseJSON = withObject "CreateEventTriggerQuery" \o -> do

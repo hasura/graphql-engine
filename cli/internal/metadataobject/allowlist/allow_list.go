@@ -1,6 +1,7 @@
 package allowlist
 
 import (
+	"bytes"
 	"io/ioutil"
 	"path/filepath"
 
@@ -8,7 +9,7 @@ import (
 
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type AllowListConfig struct {
@@ -41,49 +42,25 @@ func (a *AllowListConfig) CreateFiles() error {
 	return nil
 }
 
-func (a *AllowListConfig) Build(metadata *yaml.MapSlice) metadataobject.ErrParsingMetadataObject {
+func (a *AllowListConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
 	data, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, a.Filename()))
-	if err != nil {
-		return a.error(err)
-	}
-	item := yaml.MapItem{
-		Key: "allowlist",
-	}
-	var obj []yaml.MapSlice
-	err = yaml.Unmarshal(data, &obj)
-	if err != nil {
-		return a.error(err)
-	}
-	if len(obj) != 0 {
-		item.Value = obj
-		*metadata = append(*metadata, item)
-	}
-	return nil
-}
-
-func (a *AllowListConfig) Export(metadata yaml.MapSlice) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
-	var allowList interface{}
-	for _, item := range metadata {
-		k, ok := item.Key.(string)
-		if !ok || k != "allowlist" {
-			continue
-		}
-		allowList = item.Value
-	}
-	if allowList == nil {
-		allowList = make([]interface{}, 0)
-	}
-	data, err := yaml.Marshal(allowList)
 	if err != nil {
 		return nil, a.error(err)
 	}
-	return map[string][]byte{
-		filepath.ToSlash(filepath.Join(a.MetadataDir, a.Filename())): data,
-	}, nil
+	var obj []yaml.Node
+	err = yaml.NewDecoder(bytes.NewReader(data)).Decode(&obj)
+	if err != nil {
+		return nil, a.error(err)
+	}
+	return map[string]interface{}{a.Key(): obj}, nil
+}
+
+func (a *AllowListConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+	return metadataobject.DefaultExport(a, metadata, a.error, metadataobject.DefaultObjectTypeSequence)
 }
 
 func (a *AllowListConfig) Key() string {
-	return "allowlist"
+	return metadataobject.AllowListKey
 }
 
 func (a *AllowListConfig) Filename() string {

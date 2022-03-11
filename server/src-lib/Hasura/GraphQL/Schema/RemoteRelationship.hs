@@ -60,18 +60,18 @@ remoteRelationshipToSchemaField ::
   (MonadBuildSchemaBase r m n) =>
   Map.HashMap FieldName lhsJoinField ->
   RemoteSchemaFieldInfo ->
-  m (Maybe (FieldParser n IR.RemoteSchemaSelect))
+  m (Maybe (FieldParser n (IR.RemoteSchemaSelect (IR.RemoteRelationshipField UnpreparedValue))))
 remoteRelationshipToSchemaField lhsFields RemoteSchemaFieldInfo {..} = runMaybeT do
   remoteRelationshipQueryCtx <- asks $ qcRemoteRelationshipContext . getter
   RemoteRelationshipQueryContext roleIntrospectionResultOriginal _ remoteSchemaCustomizer <-
     -- The remote relationship field should not be accessible
     -- if the remote schema is not accessible to the said role
     hoistMaybe $ Map.lookup _rrfiRemoteSchemaName remoteRelationshipQueryCtx
-  role <- askRoleName
+  roleName <- asks getter
   let hasuraFieldNames = Map.keysSet lhsFields
       relationshipDef = ToSchemaRelationshipDef _rrfiRemoteSchemaName hasuraFieldNames _rrfiRemoteFields
   (newInpValDefns :: [G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition], remoteFieldParamMap) <-
-    if role == adminRoleName
+    if roleName == adminRoleName
       then do
         -- we don't validate the remote relationship when the role is admin
         -- because it's already been validated, when the remote relationship

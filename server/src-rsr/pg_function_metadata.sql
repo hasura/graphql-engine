@@ -26,34 +26,34 @@ FROM (
     FROM (
       -- Necessary metadata from Postgres
       SELECT
-        p.proname::text AS function_name,
-        pn.nspname::text AS function_schema,
+        "function".function_name,
+        "function".function_schema,
         pd.description,
 
         CASE
-          WHEN (p.provariadic = (0) :: oid) THEN false
+          WHEN ("function".provariadic = (0) :: oid) THEN false
           ELSE true
         END AS has_variadic,
 
         CASE
           WHEN (
-            (p.provolatile) :: text = ('i' :: character(1)) :: text
+            ("function".provolatile) :: text = ('i' :: character(1)) :: text
           ) THEN 'IMMUTABLE' :: text
           WHEN (
-            (p.provolatile) :: text = ('s' :: character(1)) :: text
+            ("function".provolatile) :: text = ('s' :: character(1)) :: text
           ) THEN 'STABLE' :: text
           WHEN (
-            (p.provolatile) :: text = ('v' :: character(1)) :: text
+            ("function".provolatile) :: text = ('v' :: character(1)) :: text
           ) THEN 'VOLATILE' :: text
           ELSE NULL :: text
         END AS function_type,
 
-        pg_get_functiondef(p.oid) AS function_definition,
+        pg_get_functiondef("function".function_oid) AS function_definition,
 
         rtn.nspname::text as return_type_schema,
         rt.typname::text as return_type_name,
         rt.typtype::text as return_type_type,
-        p.proretset AS returns_set,
+        "function".proretset AS returns_set,
         ( SELECT
             COALESCE(json_agg(
               json_build_object('schema', q."schema",
@@ -70,16 +70,16 @@ FROM (
                 pat.ordinality
               FROM
                 unnest(
-                  COALESCE(p.proallargtypes, (p.proargtypes) :: oid [])
+                  COALESCE("function".proallargtypes, ("function".proargtypes) :: oid [])
                 ) WITH ORDINALITY pat(oid, ordinality)
                 LEFT JOIN pg_type pt ON ((pt.oid = pat.oid))
                 LEFT JOIN pg_namespace pns ON (pt.typnamespace = pns.oid)
               ORDER BY pat.ordinality ASC
             ) q
          ) AS input_arg_types,
-        to_json(COALESCE(p.proargnames, ARRAY [] :: text [])) AS input_arg_names,
-        p.pronargdefaults AS default_args,
-        p.oid::integer AS function_oid,
+        to_json(COALESCE("function".proargnames, ARRAY [] :: text [])) AS input_arg_names,
+        "function".pronargdefaults AS default_args,
+        "function".function_oid::integer AS function_oid,
         (exists(
           SELECT
             1
@@ -100,15 +100,23 @@ FROM (
           )
         ) AS returns_table
       FROM
-        pg_proc p
-        JOIN pg_namespace pn ON (pn.oid = p.pronamespace)
-        JOIN pg_type rt ON (rt.oid = p.prorettype)
+        jsonb_to_recordset($1::jsonb) AS tracked("schema" text, "name" text)
+        JOIN
+        ( SELECT   p.oid AS function_oid,
+                   p.*,
+                   p.proname::text AS function_name,
+                   pn.nspname::text AS function_schema
+              FROM pg_proc p
+              JOIN pg_namespace pn ON (pn.oid = p.pronamespace)
+        ) "function" ON "function".function_name = tracked.name
+                     AND "function".function_schema = tracked.schema
+        JOIN pg_type rt ON (rt.oid = "function".prorettype)
         JOIN pg_namespace rtn ON (rtn.oid = rt.typnamespace)
-        LEFT JOIN pg_description pd ON p.oid = pd.objoid
+        LEFT JOIN pg_description pd ON "function".function_oid = pd.objoid
       WHERE
         -- Do not fetch some default functions in public schema
-        p.proname :: text NOT LIKE 'pgp_%'
-        AND p.proname :: text NOT IN
+        "function".function_name NOT LIKE 'pgp_%'
+        AND "function".function_name NOT IN
                           ( 'armor'
                           , 'crypt'
                           , 'dearmor'
@@ -122,15 +130,15 @@ FROM (
                           , 'gen_salt'
                           , 'hmac'
                           )
-        AND pn.nspname :: text NOT LIKE 'pg_%'
-        AND pn.nspname :: text NOT IN ('information_schema', 'hdb_catalog')
+        AND "function".function_schema NOT LIKE 'pg_%'
+        AND "function".function_schema NOT IN ('information_schema', 'hdb_catalog')
         AND (NOT EXISTS (
                 SELECT
                   1
                 FROM
                   pg_aggregate
                 WHERE
-                  ((pg_aggregate.aggfnoid) :: oid = p.oid)
+                  ((pg_aggregate.aggfnoid) :: oid = "function".function_oid)
               )
           )
     ) AS "pg_function"

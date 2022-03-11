@@ -1,10 +1,12 @@
-import { useMutation, useQueryClient } from 'react-query';
-
 import { useAppSelector } from '@/store';
-import { useMetadataVersion } from '../../../MetadataAPI';
+import { currentDriver } from '@/dataSources';
+import {
+  useMetadataMigration,
+  useMetadataVersion,
+} from '@/features/MetadataAPI';
 
 import { AccessType, FormOutput, QueryType } from '../../types';
-import { api, cache } from '../../api';
+import { api } from '../../api';
 
 export interface UseSubmitFormArgs {
   tableName: string;
@@ -14,45 +16,74 @@ export interface UseSubmitFormArgs {
   accessType: AccessType;
 }
 
-export const useSubmitForm = (args: UseSubmitFormArgs) => {
-  const client = useQueryClient();
-  const headers = useAppSelector(state => state.tables.dataHeaders);
-  const { data: resourceVersion } = useMetadataVersion();
-  const { handleUpdate } = cache.useUpdateTablePermissionCache();
+const useDataTarget = () => {
+  const dataSource: string = useAppSelector(
+    state => state.tables.currentDataSource || 'default'
+  );
 
-  const { mutateAsync, ...rest } = useMutation(api.createPermissions, {
-    mutationKey: 'permissionsUpdate',
-    // this performs an optimistic cache update
-    // once the mutation has resolved the cache will be updated if it failed
-    onMutate: response => handleUpdate({ args, response }),
-    onError: (_err, _, context: any) => {
-      // if there is an error set the metadata query to the original value
-      client.setQueryData('metadata', context.metadata);
-    },
-    onSettled: () => {
-      // once the mutation is complete invalidate the query
-      // ensure the client state is upto date with the server state
-      client.invalidateQueries('metadata');
-    },
-  });
+  const driver = currentDriver;
+
+  const { data: resourceVersion, isLoading, isError } = useMetadataVersion();
+
+  if (!resourceVersion && !isLoading) {
+    throw new Error('No resource version');
+  }
+
+  return {
+    driver,
+    dataSource,
+    resourceVersion,
+    isLoading,
+    isError,
+  };
+};
+
+export const useSubmitForm = (args: UseSubmitFormArgs) => {
+  const {
+    driver,
+    dataSource,
+    resourceVersion,
+    isLoading: dataTargetLoading,
+    isError: dataTargetError,
+  } = useDataTarget();
+
+  const mutate = useMetadataMigration();
 
   const submit = async (formData: FormOutput) => {
     if (!resourceVersion) {
-      throw new Error('No resource version provided');
+      console.error('No resource version');
+      return;
     }
     const { tableName, schemaName, roleName, queryType, accessType } = args;
 
     const body = api.createInsertBody({
-      dataSource: 'pg',
-      qualifiedTable: { name: tableName, schema: schemaName },
+      driver,
+      dataTarget: {
+        database: dataSource,
+        table: tableName,
+        schema: schemaName,
+      },
       roleName,
       queryType,
       accessType,
       resourceVersion,
       formData,
     });
-    await mutateAsync({ headers, body });
+
+    await mutate.mutateAsync({
+      source: dataSource,
+      query: body,
+      migrationName: 'permissionsUpdate',
+    });
   };
 
-  return { submit, ...rest };
+  const isLoading = mutate.isLoading || dataTargetLoading;
+  const isError = mutate.isError || dataTargetError;
+
+  return {
+    submit,
+    ...mutate,
+    isLoading,
+    isError,
+  };
 };

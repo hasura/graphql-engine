@@ -6,10 +6,10 @@ module Test.ObjectRelationshipsLimitSpec (spec) where
 import Harness.Backend.Postgres as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql
-import Harness.Quoter.Sql
 import Harness.Quoter.Yaml
 import Harness.State (State)
 import Harness.Test.Context qualified as Context
+import Harness.Test.Schema qualified as Schema
 import Test.Hspec
 import Prelude
 
@@ -29,6 +29,83 @@ spec =
         }
     ]
     tests
+
+--------------------------------------------------------------------------------
+
+-- * Schema
+
+schema :: [Schema.Table]
+schema = [author, article]
+
+author :: Schema.Table
+author =
+  Schema.Table
+    "author"
+    [ Schema.column "id" Schema.TInt,
+      Schema.column "name" Schema.TStr,
+      Schema.column "createdAt" Schema.TUTCTime
+    ]
+    ["id"]
+    []
+    [ [Schema.VInt 1, Schema.VStr "Author 1", Schema.parseUTCTimeOrError "2017-09-21 09:39:44"],
+      [Schema.VInt 2, Schema.VStr "Author 2", Schema.parseUTCTimeOrError "2017-09-21 09:50:44"],
+      [Schema.VInt 3, Schema.VStr "Author 1", Schema.parseUTCTimeOrError "2017-09-21 09:55:44"]
+    ]
+
+article :: Schema.Table
+article =
+  Schema.Table
+    "article"
+    [ Schema.column "id" Schema.TInt,
+      Schema.column "author_name" Schema.TStr
+    ]
+    ["id"]
+    [] -- No references; we are using @manual_configuration@ to make the object relationship
+    [ [Schema.VInt 1, Schema.VStr "Author 1"],
+      [Schema.VInt 2, Schema.VStr "Author 2"]
+    ]
+
+--------------------------------------------------------------------------------
+
+-- ** Setup and teardown override
+
+postgresSetup :: (State, ()) -> IO ()
+postgresSetup (state, ()) = do
+  Postgres.setup schema (state, ())
+  -- also setup special relationship
+  GraphqlEngine.postMetadata_ state $
+    [yaml|
+type: pg_create_object_relationship
+args:
+  source: postgres
+  table:
+    schema: hasura
+    name: article
+  name: author
+  using:
+    manual_configuration:
+       remote_table:
+         schema: hasura
+         name: author
+       column_mapping:
+         author_name: name
+|]
+
+postgresTeardown :: (State, ()) -> IO ()
+postgresTeardown (state, ()) = do
+  -- first teardown special relationship
+  GraphqlEngine.postMetadata_ state $
+    [yaml|
+type: pg_drop_relationship
+args:
+  source: postgres
+  table:
+    schema: hasura
+    name: article
+  relationship: author
+|]
+  -- and then rest of the teardown
+  Postgres.teardown schema (state, ())
 
 --------------------------------------------------------------------------------
 
@@ -202,122 +279,4 @@ data:
   hasura_article_aggregate:
     aggregate:
       count: 2
-|]
-
---------------------------------------------------------------------------------
-
--- * Postgres backend
-
-----------------------
-
--- ** Setup
-
-postgresSetup :: (State, ()) -> IO ()
-postgresSetup (state, ()) = do
-  -- Clear and reconfigure the metadata
-  GraphqlEngine.setSource state Postgres.defaultSourceMetadata
-  postgresSetupTables
-  postgresInsertValues
-  postgresTrackTables state
-  postgresCreateRelationships state
-
-postgresSetupTables :: IO ()
-postgresSetupTables = do
-  -- Setup tables
-  Postgres.run_
-    [sql|
-CREATE TABLE hasura.author
-(
-    id SERIAL PRIMARY KEY,
-    name TEXT,
-    created_at TIMESTAMP
-);
-|]
-
-  Postgres.run_
-    [sql|
-CREATE TABLE hasura.article (
-   id SERIAL PRIMARY KEY,
-   author_name TEXT
-);
-|]
-
-postgresInsertValues :: IO ()
-postgresInsertValues = do
-  Postgres.run_
-    [sql|
-INSERT INTO hasura.author
-    (name, created_at)
-VALUES
-    ( 'Author 1', '2017-09-21 09:39:44' ),
-    ( 'Author 2', '2017-09-21 09:50:44' ),
-    ( 'Author 1', '2017-09-21 09:55:44' );
-|]
-
-  Postgres.run_
-    [sql|
-INSERT INTO hasura.article
-    (author_name)
-VALUES
-    ( 'Author 1' ),
-    ( 'Author 2' );
-|]
-
-postgresTrackTables :: State -> IO ()
-postgresTrackTables state = do
-  GraphqlEngine.postMetadata_
-    state
-    [yaml|
-type: pg_track_table
-args:
-  source: postgres
-  table:
-    schema: hasura
-    name: author
-|]
-  GraphqlEngine.postMetadata_
-    state
-    [yaml|
-type: pg_track_table
-args:
-  source: postgres
-  table:
-    schema: hasura
-    name: article
-|]
-
-postgresCreateRelationships :: State -> IO ()
-postgresCreateRelationships state = do
-  GraphqlEngine.postMetadata_
-    state
-    [yaml|
-type: pg_create_object_relationship
-args:
-  source: postgres
-  table:
-    schema: hasura
-    name: article
-  name: author
-  using:
-    manual_configuration:
-       remote_table:
-         schema: hasura
-         name: author
-       column_mapping:
-         author_name: name
-|]
-
-----------------------
-
--- ** Teardown
-
-postgresTeardown :: (State, ()) -> IO ()
-postgresTeardown _ = do
-  Postgres.run_
-    [sql|
-DROP TABLE IF EXISTS hasura.article;
-|]
-  Postgres.run_
-    [sql|
-DROP TABLE IF EXISTS hasura.author;
 |]

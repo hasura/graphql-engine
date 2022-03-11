@@ -1,6 +1,7 @@
 package restendpoints
 
 import (
+	"bytes"
 	"io/ioutil"
 	"path/filepath"
 
@@ -9,7 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/hasura/graphql-engine/cli/v2"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type RestEndpointsConfig struct {
@@ -31,61 +32,40 @@ func (re *RestEndpointsConfig) Validate() error {
 
 func (re *RestEndpointsConfig) CreateFiles() error {
 	v := make([]interface{}, 0)
-	data, err := yaml.Marshal(v)
+	buf := new(bytes.Buffer)
+	err := metadataobject.GetEncoder(buf).Encode(v)
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(re.MetadataDir, re.Filename()), data, 0644)
+	err = ioutil.WriteFile(filepath.Join(re.MetadataDir, re.Filename()), buf.Bytes(), 0644)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (re *RestEndpointsConfig) Build(metadata *yaml.MapSlice) metadataobject.ErrParsingMetadataObject {
+func (re *RestEndpointsConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
 	data, err := ioutil.ReadFile(filepath.Join(re.MetadataDir, re.Filename()))
-	if err != nil {
-		return re.error(err)
-	}
-	var obj []yaml.MapSlice
-	err = yaml.Unmarshal(data, &obj)
-	if err != nil {
-		return re.error(err)
-	}
-	if len(obj) > 0 {
-		item := yaml.MapItem{
-			Key:   "rest_endpoints",
-			Value: []yaml.MapSlice{},
-		}
-		item.Value = obj
-		*metadata = append(*metadata, item)
-	}
-	return nil
-}
-
-func (re *RestEndpointsConfig) Export(metadata yaml.MapSlice) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
-	var restEndpoints interface{}
-	for _, item := range metadata {
-		k, ok := item.Key.(string)
-		if !ok || k != "rest_endpoints" {
-			continue
-		}
-		restEndpoints = item.Value
-	}
-	if restEndpoints == nil {
-		restEndpoints = make([]interface{}, 0)
-	}
-	data, err := yaml.Marshal(restEndpoints)
 	if err != nil {
 		return nil, re.error(err)
 	}
-	return map[string][]byte{
-		filepath.ToSlash(filepath.Join(re.MetadataDir, re.Filename())): data,
-	}, nil
+	var obj []yaml.Node
+	err = yaml.Unmarshal(data, &obj)
+	if err != nil {
+		return nil, re.error(err)
+	}
+	if len(obj) == 0 {
+		return nil, nil
+	}
+	return map[string]interface{}{re.Key(): obj}, nil
+}
+
+func (re *RestEndpointsConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+	return metadataobject.DefaultExport(re, metadata, re.error, metadataobject.DefaultObjectTypeSequence)
 }
 
 func (re *RestEndpointsConfig) Key() string {
-	return "rest_endpoints"
+	return metadataobject.RestEndpointsKey
 }
 
 func (re *RestEndpointsConfig) Filename() string {

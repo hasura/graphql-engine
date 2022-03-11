@@ -52,7 +52,7 @@ actionExecute ::
   ActionInfo ->
   m (Maybe (FieldParser n (AnnActionExecution (RQL.RemoteRelationshipField UnpreparedValue))))
 actionExecute customTypes actionInfo = runMaybeT do
-  roleName <- askRoleName
+  roleName <- asks getter
   guard (roleName == adminRoleName || roleName `Map.member` permissions)
   let fieldName = unActionName actionName
       description = G.Description <$> comment
@@ -90,13 +90,13 @@ actionExecute customTypes actionInfo = runMaybeT do
 --
 -- > action_name(action_input_arguments)
 actionAsyncMutation ::
-  forall m n r.
-  (MonadSchema n m, MonadTableInfo r m, MonadRole r m) =>
+  forall r m n.
+  MonadBuildSchemaBase r m n =>
   NonObjectTypeMap ->
   ActionInfo ->
   m (Maybe (FieldParser n AnnActionMutationAsync))
 actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
-  roleName <- lift askRoleName
+  roleName <- asks getter
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
   inputArguments <- lift $ actionInputArguments nonObjectTypeMap $ _adArguments definition
   let fieldName = unActionName actionName
@@ -127,7 +127,7 @@ actionAsyncQuery ::
   ActionInfo ->
   m (Maybe (FieldParser n (AnnActionAsyncQuery ('Postgres 'Vanilla) (RQL.RemoteRelationshipField UnpreparedValue))))
 actionAsyncQuery objectTypes actionInfo = runMaybeT do
-  roleName <- askRoleName
+  roleName <- asks getter
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
   createdAtFieldParser <-
     lift $ columnParser @('Postgres 'Vanilla) (ColumnScalar PGTimeStampTZ) (G.Nullability False)
@@ -294,8 +294,8 @@ mkDefinitionList (AOTObject AnnotatedObjectType {..}) =
       Map.unions $ map _trFieldMapping $ maybe [] toList _otdRelationships
 
 actionInputArguments ::
-  forall m n r.
-  (MonadSchema n m, MonadTableInfo r m) =>
+  forall r m n.
+  MonadBuildSchemaBase r m n =>
   NonObjectTypeMap ->
   [ArgumentDefinition (G.GType, NonObjectCustomType)] ->
   m (InputFieldsParser n J.Value)

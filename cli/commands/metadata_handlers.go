@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 
 	goyaml "github.com/goccy/go-yaml"
 	"github.com/hasura/graphql-engine/cli/v2"
@@ -75,7 +76,7 @@ func (m *metadataModeDirectoryHandler) Apply(o *MetadataApplyOptions) error {
 	}
 
 	if o.DryRun {
-		projectMetadataJSON, err := metadataHandler.MakeJSONMetadata()
+		projectMetadataJSON, err := metadataHandler.BuildJSONMetadata()
 		if err != nil {
 			return fmt.Errorf("error building project metadata: %w", err)
 		}
@@ -226,7 +227,7 @@ func export(o *MetadataExportOptions, mode cli.MetadataMode) error {
 		return fmt.Errorf("reading metadata from response: %w", err)
 	}
 	if mode == cli.MetadataModeYAML {
-		metadataBytes, err = goyaml.JSONToYAML(metadataBytes)
+		metadataBytes, err = metadatautil.JSONToYAML(metadataBytes)
 		if err != nil {
 			return fmt.Errorf("parsing metadata to yaml: %w", err)
 		}
@@ -304,7 +305,7 @@ func diff(o *MetadataDiffOptions, diffType DiffType) error {
 		return fmt.Errorf("reading server metadata: %w", err)
 	}
 	if diffType == DifftypeYAML {
-		serverMetadataBytes, err = goyaml.JSONToYAML(serverMetadataBytes)
+		serverMetadataBytes, err = metadatautil.JSONToYAML(serverMetadataBytes)
 		if err != nil {
 			return fmt.Errorf("parsing server metadata as yaml: %w", err)
 		}

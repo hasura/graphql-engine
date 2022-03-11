@@ -55,8 +55,8 @@ export interface TableConfig {
   custom_name: string;
   /** Customise the root fields */
   custom_root_fields?: CustomRootFields;
-  /** Customise the column names */
-  custom_column_names?: CustomColumnNames;
+  /** Customise the column configuration */
+  column_config?: ColumnConfig;
 }
 
 /**
@@ -107,11 +107,13 @@ export interface CustomRootField {
   comment?: string | null;
 }
 
-/**
- * A JSON Object of Postgres column name to GraphQL name mapping
- */
-export interface CustomColumnNames {
-  [key: string]: string;
+export interface ColumnConfig {
+  [key: string]: ColumnConfigValue;
+}
+
+export interface ColumnConfigValue {
+  custom_name?: string | null;
+  comment?: string | null;
 }
 
 // ////////////////////////////

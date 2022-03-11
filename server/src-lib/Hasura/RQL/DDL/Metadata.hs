@@ -21,7 +21,7 @@ import Control.Lens ((.~), (^.), (^?))
 import Data.Aeson qualified as J
 import Data.Aeson.Ordered qualified as AO
 import Data.Attoparsec.Text qualified as AT
-import Data.Bifunctor (bimap, first)
+import Data.Bifunctor (first)
 import Data.Bitraversable
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
@@ -54,12 +54,11 @@ import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.DDL.RemoteSchema
 import Hasura.RQL.DDL.ScheduledTrigger
 import Hasura.RQL.DDL.Schema
-import Hasura.RQL.DDL.WebhookTransforms
+import Hasura.RQL.DDL.Webhook.Transform
+import Hasura.RQL.DDL.Webhook.Transform.Class (mkReqTransformCtx)
 import Hasura.RQL.Types
 import Hasura.RQL.Types.Eventing.Backend (BackendEventTrigger (..))
 import Hasura.SQL.AnyBackend qualified as AB
-import Kriti qualified as K
-import Kriti.Error qualified as K
 import Network.HTTP.Client.Transformable qualified as HTTP
 
 runClearMetadata ::
@@ -437,6 +436,7 @@ purgeMetadataObj = \case
   MOEndpoint epName -> dropEndpointInMetadata epName
   MOInheritedRole role -> dropInheritedRoleInMetadata role
   MOHostTlsAllowlist host -> dropHostFromAllowList host
+  MOQueryCollectionsQuery cName lq -> dropListedQueryFromQueryCollections cName lq
   where
     handleSourceObj :: forall b. BackendMetadata b => SourceName -> SourceMetadataObjId b -> MetadataModifier
     handleSourceObj source = \case
@@ -451,6 +451,42 @@ purgeMetadataObj = \case
             MTOTrigger trn -> dropEventTriggerInMetadata trn
             MTOComputedField ccn -> dropComputedFieldInMetadata ccn
             MTORemoteRelationship rn -> dropRemoteRelationshipInMetadata rn
+
+    dropListedQueryFromQueryCollections :: CollectionName -> ListedQuery -> MetadataModifier
+    dropListedQueryFromQueryCollections cName lq = MetadataModifier $ removeAndCleanupMetadata
+      where
+        removeAndCleanupMetadata m =
+          let newQueryCollection = filteredCollection (_metaQueryCollections m)
+              -- QueryCollections = InsOrdHashMap CollectionName CreateCollection
+              filteredCollection :: QueryCollections -> QueryCollections
+              filteredCollection qc = OMap.filter (isNonEmptyCC) $ OMap.adjust (collectionModifier) (cName) qc
+
+              collectionModifier :: CreateCollection -> CreateCollection
+              collectionModifier cc@CreateCollection {..} =
+                cc
+                  { _ccDefinition =
+                      let oldQueries = _cdQueries _ccDefinition
+                       in _ccDefinition
+                            { _cdQueries = filter (/= lq) oldQueries
+                            }
+                  }
+
+              isNonEmptyCC :: CreateCollection -> Bool
+              isNonEmptyCC = not . null . _cdQueries . _ccDefinition
+
+              cleanupAllowList :: MetadataAllowlist -> MetadataAllowlist
+              cleanupAllowList = OMap.filterWithKey (\_ _ -> OMap.member cName newQueryCollection)
+
+              cleanupRESTEndpoints :: Endpoints -> Endpoints
+              cleanupRESTEndpoints endpoints = OMap.filter (not . isFaultyQuery . _edQuery . _ceDefinition) endpoints
+
+              isFaultyQuery :: QueryReference -> Bool
+              isFaultyQuery QueryReference {..} = _qrCollectionName == cName && _qrQueryName == (_lqName lq)
+           in m
+                { _metaQueryCollections = newQueryCollection,
+                  _metaAllowlist = cleanupAllowList (_metaAllowlist m),
+                  _metaRestEndpoints = cleanupRESTEndpoints (_metaRestEndpoints m)
+                }
 
 runGetCatalogState ::
   (MonadMetadataStorageQueryAPI m) => GetCatalogState -> m EncJSON
@@ -485,15 +521,14 @@ runRemoveMetricsConfig = do
   pure successMsg
 
 data TestTransformError
-  = UrlInterpError K.SerializedError
-  | RequestInitializationError HTTP.HttpException
+  = RequestInitializationError HTTP.HttpException
   | RequestTransformationError HTTP.Request TransformErrorBundle
 
 runTestWebhookTransform ::
   (QErrM m) =>
   TestWebhookTransform ->
   m EncJSON
-runTestWebhookTransform (TestWebhookTransform env headers urlE payload mt _ sv) = do
+runTestWebhookTransform (TestWebhookTransform env headers urlE payload rt _ sv) = do
   url <- case urlE of
     URL url' -> interpolateFromEnv env url'
     EnvVar var ->
@@ -503,27 +538,25 @@ runTestWebhookTransform (TestWebhookTransform env headers urlE payload mt _ sv) 
   headers' <- traverse (traverse (fmap TE.encodeUtf8 . interpolateFromEnv env . TE.decodeUtf8)) headers
 
   result <- runExceptT $ do
-    let env' = bimap T.pack (J.String . T.pack) <$> Env.toList env
-        decodeKritiResult = TE.decodeUtf8 . BL.toStrict . J.encode
-
-    kritiUrlResult <- hoistEither $ first (UrlInterpError . K.serialize) $ decodeKritiResult <$> K.runKriti ("\"" <> url <> "\"") env'
-
-    let unwrappedUrl = T.drop 1 $ T.dropEnd 1 kritiUrlResult
-    initReq <- hoistEither $ first RequestInitializationError $ HTTP.mkRequestEither unwrappedUrl
+    initReq <- hoistEither $ first RequestInitializationError $ HTTP.mkRequestEither url
 
     let req = initReq & HTTP.body .~ pure (J.encode payload) & HTTP.headers .~ headers'
-        reqTransform = mkRequestTransform mt
-        reqTransformCtx = buildReqTransformCtx unwrappedUrl sv
+        reqTransform = requestFields rt
+        engine = templateEngine rt
+        reqTransformCtx = mkReqTransformCtx url sv engine
     hoistEither $ first (RequestTransformationError req) $ applyRequestTransform reqTransformCtx reqTransform req
 
   case result of
     Right transformed ->
-      let body = decodeBody (transformed ^. HTTP.body)
-       in pure $ packTransformResult transformed body
-    Left (RequestTransformationError req err) -> pure $ packTransformResult req (J.toJSON err)
-    -- NOTE: In the following two cases we have failed before producing a valid request.
-    Left (UrlInterpError err) -> pure $ encJFromJValue $ J.toJSON err
-    Left (RequestInitializationError err) -> pure $ encJFromJValue $ J.String $ "Error: " <> tshow err
+      pure $ packTransformResult $ Right transformed
+    Left (RequestTransformationError _ err) -> pure $ packTransformResult (Left err)
+    -- NOTE: In the following case we have failed before producing a valid request.
+    Left (RequestInitializationError err) ->
+      let errorBundle =
+            TransformErrorBundle $
+              pure $
+                J.object ["error_code" J..= J.String "Request Initialization Error", "message" J..= J.String (tshow err)]
+       in pure $ encJFromJValue $ J.toJSON errorBundle
 
 interpolateFromEnv :: MonadError QErr m => Env.Environment -> Text -> m Text
 interpolateFromEnv env url =
@@ -535,6 +568,8 @@ interpolateFromEnv env url =
           err e = throwError $ err400 NotFound $ "Missing Env Var: " <> e
        in either err (pure . fold) result
 
+-- | Deserialize a JSON or X-WWW-URL-FORMENCODED body from an
+-- 'HTTP.Request' as 'J.Value'.
 decodeBody :: Maybe BL.ByteString -> J.Value
 decodeBody Nothing = J.Null
 decodeBody (Just bs) = fromMaybe J.Null $ jsonToValue bs <|> formUrlEncodedToValue bs
@@ -559,12 +594,14 @@ parseEnvTemplate = AT.many1 $ pEnv <|> pLit <|> fmap Right "{"
 indistinct :: Either a a -> a
 indistinct = either id id
 
-packTransformResult :: HTTP.Request -> J.Value -> EncJSON
-packTransformResult req body =
-  encJFromJValue $
-    J.object
-      [ "webhook_url" J..= (req ^. HTTP.url),
-        "method" J..= (req ^. HTTP.method),
-        "headers" J..= (first CI.foldedCase <$> (req ^. HTTP.headers)),
-        "body" J..= body
-      ]
+packTransformResult :: Either TransformErrorBundle HTTP.Request -> EncJSON
+packTransformResult = \case
+  Right req ->
+    encJFromJValue $
+      J.object
+        [ "webhook_url" J..= (req ^. HTTP.url),
+          "method" J..= (req ^. HTTP.method),
+          "headers" J..= (first CI.foldedCase <$> (req ^. HTTP.headers)),
+          "body" J..= decodeBody (req ^. HTTP.body)
+        ]
+  Left err -> encJFromJValue $ J.toJSON err

@@ -17,6 +17,7 @@ where
 import Control.Monad.Validate
 import Data.HashMap.Strict qualified as HM
 import Data.Int qualified as Int
+import Data.List.Extended (appendToNonEmpty)
 import Data.List.NonEmpty qualified as NE
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
@@ -130,7 +131,7 @@ bigQuerySourceConfigToFromIrConfig BigQuerySourceConfig {_scGlobalSelectLimit} =
 -- single object or an array.
 mkSQLSelect ::
   Rql.JsonAggSelect ->
-  Ir.AnnSelectG 'BigQuery Void (Ir.AnnFieldG 'BigQuery Void) Expression ->
+  Ir.AnnSelectG 'BigQuery (Ir.AnnFieldG 'BigQuery Void) Expression ->
   FromIr BigQuery.Select
 mkSQLSelect jsonAggSelect annSimpleSel = do
   select <- noExtraPartitionFields <$> fromSelectRows annSimpleSel
@@ -170,7 +171,7 @@ fromUnnestedJSON json columns _fields = do
         )
     )
 
-fromSelectRows :: Ir.AnnSelectG 'BigQuery Void (Ir.AnnFieldG 'BigQuery Void) Expression -> FromIr BigQuery.PartitionableSelect
+fromSelectRows :: Ir.AnnSelectG 'BigQuery (Ir.AnnFieldG 'BigQuery Void) Expression -> FromIr BigQuery.PartitionableSelect
 fromSelectRows annSelectG = do
   let Ir.AnnSelectG
         { _asnFields = fields,
@@ -324,7 +325,7 @@ simulateDistinctOn select distinctOnColumns orderByColumns = do
 
 fromSelectAggregate ::
   Maybe (EntityAlias, HashMap ColumnName ColumnName) ->
-  Ir.AnnSelectG 'BigQuery Void (Ir.TableAggregateFieldG 'BigQuery Void) Expression ->
+  Ir.AnnSelectG 'BigQuery (Ir.TableAggregateFieldG 'BigQuery Void) Expression ->
   FromIr BigQuery.Select
 fromSelectAggregate minnerJoinFields annSelectG = do
   selectFrom <-
@@ -975,9 +976,13 @@ fieldSourceProjections keepJoinField =
         -- Haskell-native joining.  They will be removed by upstream
         -- code if keepJoinField is True
         ( [ FieldNameProjection
-              (Aliased {aliasedThing = right, aliasedAlias = fieldNameText right})
-            | (_left, right) <- joinOn join',
-              keepJoinField
+              ( Aliased
+                  { aliasedThing = right,
+                    aliasedAlias = fieldNameText right
+                  }
+              )
+            | keepJoinField,
+              (_left, right) <- joinOn join'
           ]
             <>
             -- Below:
@@ -1101,7 +1106,7 @@ fromObjectRelationSelectG _existingJoins annRelationSelectG = do
   selectProjections <-
     NE.nonEmpty (concatMap (toList . fieldSourceProjections True) fieldSources)
       `onNothing` refute (pure NoProjectionFields)
-  joinFieldName <- lift (fromRelName aarRelationshipName)
+  joinFieldName <- lift (fromRelName _aarRelationshipName)
   joinAlias <-
     lift (generateEntityAlias (ObjectRelationTemplate joinFieldName))
   filterExpression <- local (const entityAlias) (fromAnnBoolExp tableFilter)
@@ -1154,9 +1159,9 @@ fromObjectRelationSelectG _existingJoins annRelationSelectG = do
         _aosTableFilter = tableFilter :: Ir.AnnBoolExp 'BigQuery Expression
       } = annObjectSelectG
     Ir.AnnRelationSelectG
-      { aarRelationshipName,
-        aarColumnMapping = mapping :: HashMap ColumnName ColumnName,
-        aarAnnSelect = annObjectSelectG :: Ir.AnnObjectSelectG 'BigQuery Void Expression
+      { _aarRelationshipName,
+        _aarColumnMapping = mapping :: HashMap ColumnName ColumnName,
+        _aarAnnSelect = annObjectSelectG :: Ir.AnnObjectSelectG 'BigQuery Void Expression
       } = annRelationSelectG
 
 -- We're not using existingJoins at the moment, which was used to
@@ -1188,7 +1193,7 @@ fromArrayAggregateSelectG ::
   Ir.AnnRelationSelectG 'BigQuery (Ir.AnnAggregateSelectG 'BigQuery Void Expression) ->
   ReaderT EntityAlias FromIr Join
 fromArrayAggregateSelectG annRelationSelectG = do
-  joinFieldName <- lift (fromRelName aarRelationshipName)
+  joinFieldName <- lift (fromRelName _aarRelationshipName)
   select <- do
     lhsEntityAlias <- ask
     lift (fromSelectAggregate (pure (lhsEntityAlias, mapping)) annSelectG)
@@ -1230,9 +1235,9 @@ fromArrayAggregateSelectG annRelationSelectG = do
       }
   where
     Ir.AnnRelationSelectG
-      { aarRelationshipName,
-        aarColumnMapping = mapping :: HashMap ColumnName ColumnName,
-        aarAnnSelect = annSelectG
+      { _aarRelationshipName,
+        _aarColumnMapping = mapping :: HashMap ColumnName ColumnName,
+        _aarAnnSelect = annSelectG
       } = annRelationSelectG
 
 -- | Produce a join for an array relation.
@@ -1301,7 +1306,7 @@ fromArrayRelationSelectG ::
   ReaderT EntityAlias FromIr Join
 fromArrayRelationSelectG annRelationSelectG = do
   pselect <- lift (fromSelectRows annSelectG) -- Take the original select.
-  joinFieldName <- lift (fromRelName aarRelationshipName)
+  joinFieldName <- lift (fromRelName _aarRelationshipName)
   alias <- lift (generateEntityAlias (ArrayRelationTemplate joinFieldName))
   indexAlias <- lift (generateEntityAlias IndexTemplate)
   joinOn <- fromMappingFieldNames alias mapping
@@ -1334,7 +1339,7 @@ fromArrayRelationSelectG annRelationSelectG = do
                                   fmap
                                     (aliasToFieldProjection (fromAlias (selectFrom select)))
                                     (selectProjections select),
-                                arrayAggOrderBy = Nothing,
+                                arrayAggOrderBy = selectOrderBy select,
                                 arrayAggTop = selectTop select
                                 -- The sub-select takes care of caring about global top.
                                 --
@@ -1352,6 +1357,17 @@ fromArrayRelationSelectG annRelationSelectG = do
                           { selectProjections =
                               selectProjections select
                                 <> NE.fromList joinFieldProjections
+                                `appendToNonEmpty` foldMap @Maybe
+                                  ( map \OrderBy {orderByFieldName} ->
+                                      FieldNameProjection
+                                        Aliased
+                                          { aliasedThing = orderByFieldName,
+                                            aliasedAlias = fieldName orderByFieldName
+                                          }
+                                  )
+                                  (toList <$> selectOrderBy select)
+                                -- Above: Select "order by" fields as they're being used
+                                -- inside `ARRAY_AGG` function (as ORDER BY clause)
                                 <> pure
                                   ( WindowProjection
                                       ( Aliased
@@ -1429,9 +1445,9 @@ fromArrayRelationSelectG annRelationSelectG = do
       }
   where
     Ir.AnnRelationSelectG
-      { aarRelationshipName,
-        aarColumnMapping = mapping :: HashMap ColumnName ColumnName,
-        aarAnnSelect = annSelectG
+      { _aarRelationshipName,
+        _aarColumnMapping = mapping :: HashMap ColumnName ColumnName,
+        _aarAnnSelect = annSelectG
       } = annRelationSelectG
 
 -- | For entity projections, convert any entity aliases to their field

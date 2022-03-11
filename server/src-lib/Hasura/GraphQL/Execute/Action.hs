@@ -29,7 +29,6 @@ import Data.CaseInsensitive qualified as CI
 import Data.Environment qualified as Env
 import Data.Has
 import Data.HashMap.Strict qualified as Map
-import Data.IORef
 import Data.Set (Set)
 import Data.TByteString qualified as TBS
 import Data.Text.Extended
@@ -52,8 +51,8 @@ import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
-import Hasura.RQL.DDL.Schema.Cache
-import Hasura.RQL.DDL.WebhookTransforms
+import Hasura.RQL.DDL.Webhook.Transform
+import Hasura.RQL.DDL.Webhook.Transform.Class (mkReqTransformCtx)
 import Hasura.RQL.IR.Action qualified as RA
 import Hasura.RQL.IR.Select qualified as RS
 import Hasura.RQL.Types
@@ -330,17 +329,17 @@ asyncActionsProcessor ::
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
-  IORef (RebuildableSchemaCache, SchemaCacheVer) ->
+  IO SchemaCache ->
   STM.TVar (Set LockedActionEventId) ->
   HTTP.Manager ->
   Milliseconds ->
   Maybe GH.GQLQueryText ->
   m (Forever m)
-asyncActionsProcessor env logger cacheRef lockedActionEvents httpManager sleepTime gqlQueryText =
+asyncActionsProcessor env logger getSCFromRef' lockedActionEvents httpManager sleepTime gqlQueryText =
   return $
     Forever () $
       const $ do
-        actionCache <- scActions . lastBuiltSchemaCache . fst <$> liftIO (readIORef cacheRef)
+        actionCache <- scActions <$> liftIO getSCFromRef'
         let asyncActions =
               Map.filter ((== ActionMutation ActionAsynchronous) . (^. aiDefinition . adType)) actionCache
         unless (Map.null asyncActions) $ do
@@ -422,7 +421,7 @@ callWebhook ::
   ResolvedWebhook ->
   ActionWebhookPayload ->
   Timeout ->
-  Maybe MetadataRequestTransform ->
+  Maybe RequestTransform ->
   Maybe MetadataResponseTransform ->
   m (ActionWebhookResponse, HTTP.ResponseHeaders)
 callWebhook
@@ -449,7 +448,6 @@ callWebhook
         responseTimeout = HTTP.responseTimeoutMicro $ (unTimeout timeoutSeconds) * 1000000
         url = unResolvedWebhook resolvedWebhook
         sessionVars = Just $ _awpSessionVariables actionWebhookPayload
-        reqTransformCtx = buildReqTransformCtx url sessionVars
     initReq <- liftIO $ HTTP.mkRequestThrow url
 
     let req =
@@ -459,11 +457,11 @@ callWebhook
             & set HTTP.body (Just requestBody)
             & set HTTP.timeout responseTimeout
 
-    (transformedReq, transformedReqSize) <- case metadataRequestTransform of
-      Nothing -> pure (Nothing, Nothing)
-      Just transform' ->
-        let reqTransform = mkRequestTransform transform'
-         in case applyRequestTransform reqTransformCtx reqTransform req of
+    (transformedReq, transformedReqSize, reqTransformCtx) <- case metadataRequestTransform of
+      Nothing -> pure (Nothing, Nothing, Nothing)
+      Just RequestTransform {..} ->
+        let reqTransformCtx = mkReqTransformCtx url sessionVars templateEngine
+         in case applyRequestTransform reqTransformCtx requestFields req of
               Left err -> do
                 -- Log The Transformation Error
                 logger :: L.Logger L.Hasura <- asks getter
@@ -473,7 +471,7 @@ callWebhook
                 throw500WithDetail "Request Transformation Failed" $ J.toJSON err
               Right transformedReq ->
                 let transformedPayloadSize = HTTP.getReqSize transformedReq
-                 in pure (Just transformedReq, Just transformedPayloadSize)
+                 in pure (Just transformedReq, Just transformedPayloadSize, Just reqTransformCtx)
 
     let actualReq = fromMaybe req transformedReq
 
@@ -501,7 +499,8 @@ callWebhook
           Nothing -> pure responseBody
           Just metadataResponseTransform' ->
             let responseTransform = mkResponseTransform metadataResponseTransform'
-                responseTransformCtx = buildRespTransformCtx (reqTransformCtx actualReq) (HTTP.responseBody responseWreq)
+                engine = respTransformTemplateEngine responseTransform
+                responseTransformCtx = buildRespTransformCtx (reqTransformCtx <*> Just actualReq) sessionVars engine (HTTP.responseBody responseWreq)
              in applyResponseTransform responseTransform responseTransformCtx `onLeft` \err -> do
                   -- Log The Response Transformation Error
                   logger :: L.Logger L.Hasura <- asks getter

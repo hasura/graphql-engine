@@ -43,7 +43,6 @@ Insert.args = {
   roleName: 'two',
   queryType: 'insert',
   columns,
-  defaultOpen: true,
 };
 
 export const Select: Story<ColumnPermissionsSectionProps> = args => (

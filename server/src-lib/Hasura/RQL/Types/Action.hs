@@ -43,10 +43,34 @@ module Hasura.RQL.Types.Action
     ActionSourceInfo (..),
     getActionSourceInfo,
     AnnActionExecution (..),
+    aaeName,
+    aaeOutputType,
+    aaeFields,
+    aaePayload,
+    aaeOutputFields,
+    aaeWebhook,
+    aaeHeaders,
+    aaeForwardClientHeaders,
+    aaeTimeOut,
+    aaeRequestTransform,
+    aaeResponseTransform,
     AnnActionMutationAsync (..),
     ActionExecContext (..),
     AsyncActionQueryFieldG (..),
+    _AsyncTypename,
+    _AsyncOutput,
+    _AsyncId,
+    _AsyncCreatedAt,
+    _AsyncErrors,
     AnnActionAsyncQuery (..),
+    aaaqName,
+    aaaqActionId,
+    aaaqOutputType,
+    aaaqFields,
+    aaaqDefinitionList,
+    aaaqStringifyNum,
+    aaaqForwardClientHeaders,
+    aaaqSource,
     ActionId (..),
     LockedActionEventId,
     LockedActionIdArray (..),
@@ -77,7 +101,7 @@ import Hasura.Base.Error
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
-import Hasura.RQL.DDL.WebhookTransforms (MetadataRequestTransform, MetadataResponseTransform)
+import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.IR.Action
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
@@ -179,7 +203,7 @@ data ActionDefinition a b = ActionDefinition
     -- the default timeout of 30 seconds will be used
     _adTimeout :: !Timeout,
     _adHandler :: !b,
-    _adRequestTransform :: !(Maybe MetadataRequestTransform),
+    _adRequestTransform :: !(Maybe RequestTransform),
     _adResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
@@ -332,9 +356,10 @@ data AnnActionExecution (r :: Type) = AnnActionExecution
     _aaeHeaders :: ![HeaderConf],
     _aaeForwardClientHeaders :: !Bool,
     _aaeTimeOut :: !Timeout,
-    _aaeRequestTransform :: !(Maybe MetadataRequestTransform),
+    _aaeRequestTransform :: !(Maybe RequestTransform),
     _aaeResponseTransform :: !(Maybe MetadataResponseTransform)
   }
+  deriving stock (Functor, Foldable, Traversable)
 
 data AnnActionMutationAsync = AnnActionMutationAsync
   { _aamaName :: !ActionName,
@@ -350,6 +375,7 @@ data AsyncActionQueryFieldG (r :: Type)
   | AsyncId
   | AsyncCreatedAt
   | AsyncErrors
+  deriving stock (Functor, Foldable, Traversable)
 
 type AsyncActionQueryFieldsG r = Fields (AsyncActionQueryFieldG r)
 
@@ -363,6 +389,7 @@ data AnnActionAsyncQuery (b :: BackendType) (r :: Type) = AnnActionAsyncQuery
     _aaaqForwardClientHeaders :: !Bool,
     _aaaqSource :: !(ActionSourceInfo b)
   }
+  deriving stock (Functor, Foldable, Traversable)
 
 data ActionExecContext = ActionExecContext
   { _aecManager :: !HTTP.Manager,
@@ -408,8 +435,6 @@ data ActionsInfo = ActionsInfo
   }
   deriving (Show, Eq, Generic)
 
-$(makeLenses ''ActionsInfo)
-
 type LockedActionEventId = EventId
 
 -- This type exists only to use the Postgres array encoding.
@@ -421,3 +446,11 @@ instance Q.ToPrepArg LockedActionIdArray where
     Q.toPrepValHelper PTI.unknown encoder $ mapMaybe (UUID.fromText . unEventId) l
     where
       encoder = PE.array 2950 . PE.dimensionArray foldl' (PE.encodingArray . PE.uuid)
+
+$(makeLenses ''AnnActionAsyncQuery)
+
+$(makeLenses ''AnnActionExecution)
+
+$(makeLenses ''ActionsInfo)
+
+$(makePrisms ''AsyncActionQueryFieldG)

@@ -30,13 +30,13 @@ pro:
   oauth_server_endpoint: https://oauth.pro.arusah.com
 ```
 
-7. Execute `hasura pro login` and login to your hasura account with the PAT 
+7. Execute `hasura pro login` and login to your hasura account with the PAT
 8. Execute `hasura pro console --use-server-assets`, this will ask for you to select the projectand it will start hasura console on the port 9695 on successfull authentication.
 
-### Setup Hasura PRO Console on CLI mode 
+### Setup Hasura PRO Console on CLI mode
 
-1. Checkout the PRO console code 
-2. execute `npm install` 
+1. Checkout the PRO console code
+2. execute `npm install`
 3. create a file `.env` as mentioned in the main readme file. an example env file is shown below.
 
 ```
@@ -51,7 +51,7 @@ ADMIN_SECRET=randompassword
 IS_ACCESS_KEY_SET=false
 URL_PREFIX=/console
 ASSETS_PATH=https://graphql-engine-cdn.hasura.io/console/assets
-# to run against staging 
+# to run against staging
 HASURA_OAUTH_URL='https://oauth.pro.arusah.com'
 HASURA_METRICS_URL='https://metrics.pro.arusah.com'
 # to run against local lux
@@ -65,6 +65,7 @@ PROJECT_NAME="test"
 HASURA_CLIENT_ID='d74ee3cf-1785-4aaf-bfc2-7356f661220e_console'
 PROJECT_ID='d74ee3cf-1785-4aaf-bfc2-7356f661220e'
 ```
+
 > Note: HASURA_CLIENT ID and PROJECT_ID needs to be changed from the base64 decoded PRO key generated from the Hasura cloud project dashboard.
 
 4. execute `npm run dev`

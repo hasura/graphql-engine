@@ -14,6 +14,7 @@ import Hasura.RQL.DDL.Relationship.Rename
 import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Source
+import Hasura.RQL.DDL.Webhook.Transform.Validation
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend
 
@@ -59,7 +60,7 @@ data RQLMetadataV1
     RMAddComputedField !(AddComputedField ('Postgres 'Vanilla))
   | RMDropComputedField !(DropComputedField ('Postgres 'Vanilla))
   | -- Tables event triggers
-    RMCreateEventTrigger !(AnyBackend CreateEventTriggerQuery)
+    RMCreateEventTrigger !(AnyBackend (Unvalidated1 CreateEventTriggerQuery))
   | RMDeleteEventTrigger !(AnyBackend DeleteEventTriggerQuery)
   | RMRedeliverEvent !(AnyBackend RedeliverEventQuery)
   | RMInvokeEventTrigger !(AnyBackend InvokeEventTriggerQuery)
@@ -73,7 +74,7 @@ data RQLMetadataV1
     RMAddRemoteSchemaPermissions !AddRemoteSchemaPermission
   | RMDropRemoteSchemaPermissions !DropRemoteSchemaPermissions
   | -- Scheduled triggers
-    RMCreateCronTrigger !CreateCronTrigger
+    RMCreateCronTrigger !(Unvalidated CreateCronTrigger)
   | RMDeleteCronTrigger !ScheduledTriggerName
   | RMCreateScheduledEvent !CreateScheduledEvent
   | RMDeleteScheduledEvent !DeleteScheduledEvent
@@ -81,9 +82,9 @@ data RQLMetadataV1
   | RMGetEventInvocations !GetEventInvocations
   | RMGetCronTriggers
   | -- Actions
-    RMCreateAction !CreateAction
+    RMCreateAction !(Unvalidated CreateAction)
   | RMDropAction !DropAction
-  | RMUpdateAction !UpdateAction
+  | RMUpdateAction !(Unvalidated UpdateAction)
   | RMCreateActionPermission !CreateActionPermission
   | RMDropActionPermission !DropActionPermission
   | -- Query collections, allow list related
@@ -126,7 +127,7 @@ data RQLMetadataV1
     RMDumpInternalState !DumpInternalState
   | RMGetCatalogState !GetCatalogState
   | RMSetCatalogState !SetCatalogState
-  | RMTestWebhookTransform !TestWebhookTransform
+  | RMTestWebhookTransform !(Unvalidated TestWebhookTransform)
   | -- Bulk metadata queries
     RMBulk [RQLMetadataRequest]
 

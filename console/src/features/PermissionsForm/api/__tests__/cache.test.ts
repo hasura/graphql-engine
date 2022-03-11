@@ -1,13 +1,14 @@
+import { allowedMetadataTypes } from '../../../MetadataAPI';
 import { updateTablePermission } from '../cache';
 import { metadata } from '../../mocks/dataStubs';
 
 const data = {
-  type: 'bulk',
+  type: 'bulk' as allowedMetadataTypes,
   source: 'default',
   resource_version: 30,
   args: [
     {
-      type: 'pg_create_insert_permission',
+      type: 'pg_create_insert_permission' as allowedMetadataTypes,
       args: {
         table: {
           name: 'users',

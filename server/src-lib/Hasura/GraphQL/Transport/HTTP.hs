@@ -27,11 +27,12 @@ module Hasura.GraphQL.Transport.HTTP
   )
 where
 
-import Control.Lens (Traversal', toListOf)
+import Control.Lens (Traversal', foldOf, to)
 import Control.Monad.Morph (hoist)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Aeson.Ordered qualified as JO
+import Data.Bifoldable
 import Data.ByteString.Lazy qualified as LBS
 import Data.Dependent.Map qualified as DM
 import Data.Environment qualified as Env
@@ -226,34 +227,34 @@ buildResponse telemType res f = case res of
 
 -- | A predicate on session variables. The 'Monoid' instance makes it simple
 -- to combine several predicates disjunctively.
-newtype SessVarPred = SessVarPred {unSessVarPred :: SessionVariable -> SessionVariableValue -> Bool}
-  deriving (Semigroup, Monoid) via (SessionVariable -> SessionVariableValue -> Any)
+-- | The definition includes `Maybe` which allows us to short-circuit calls like @mempty <> m@ and @m <> mempty@, which
+-- otherwise might build up long repeated chains of calls to @\_ _ -> False@.
+newtype SessVarPred = SessVarPred {unSessVarPred :: Maybe (SessionVariable -> SessionVariableValue -> Bool)}
+  deriving (Semigroup, Monoid) via (Maybe (SessionVariable -> SessionVariableValue -> Any))
 
 keepAllSessionVariables :: SessVarPred
-keepAllSessionVariables = SessVarPred $ \_ _ -> True
+keepAllSessionVariables = SessVarPred $ Just $ \_ _ -> True
 
 runSessVarPred :: SessVarPred -> SessionVariables -> SessionVariables
-runSessVarPred = filterSessionVariables . unSessVarPred
+runSessVarPred = filterSessionVariables . fromMaybe (\_ _ -> False) . unSessVarPred
 
 -- | Filter out only those session variables used by the query AST provided
 filterVariablesFromQuery ::
   [ RootField
       (QueryDBRoot (RemoteRelationshipField UnpreparedValue) UnpreparedValue)
-      (RemoteSchemaRootField Void RemoteSchemaVariable)
+      (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable)
       (ActionQuery (RemoteRelationshipField UnpreparedValue))
       d
   ] ->
   SessVarPred
-filterVariablesFromQuery query = fold $ rootToSessVarPreds =<< query
+filterVariablesFromQuery = foldMap \case
+  RFDB _ exists ->
+    AB.dispatchAnyBackend @Backend exists \case
+      SourceConfigWith _ _ (QDBR db) -> bifoldMap remoteFieldPred toPred db
+  RFRemote remote -> foldOf (traverse . _SessionPresetVariable . to match) remote
+  RFAction actionQ -> foldMap remoteFieldPred actionQ
+  RFRaw {} -> mempty
   where
-    rootToSessVarPreds = \case
-      RFDB _ exists ->
-        AB.dispatchAnyBackend @Backend exists \case
-          SourceConfigWith _ _ (QDBR db) -> toPred <$> toListOf traverse db
-      RFRemote remote -> match <$> toListOf (traverse . _SessionPresetVariable) remote
-      RFAction _ -> [] -- TODO: does this work correctly if there are session variables in a remote join?
-      _ -> []
-
     _SessionPresetVariable :: Traversal' RemoteSchemaVariable SessionVariable
     _SessionPresetVariable f (SessionPresetVariable a b c) =
       (\a' -> SessionPresetVariable a' b c) <$> f a
@@ -268,7 +269,18 @@ filterVariablesFromQuery query = fold $ rootToSessVarPreds =<< query
     toPred _ = mempty
 
     match :: SessionVariable -> SessVarPred
-    match sv = SessVarPred $ \sv' _ -> sv == sv'
+    match sv = SessVarPred $ Just $ \sv' _ -> sv == sv'
+
+    remoteFieldPred :: RemoteRelationshipField UnpreparedValue -> SessVarPred
+    remoteFieldPred = \case
+      RemoteSchemaField RemoteSchemaSelect {..} ->
+        foldOf (traverse . _SessionPresetVariable . to match) _rselSelection
+      RemoteSourceField exists ->
+        AB.dispatchAnyBackend @Backend exists \RemoteSourceSelect {..} ->
+          case _rssSelection of
+            SourceRelationshipObject obj -> foldMap toPred obj
+            SourceRelationshipArray arr -> foldMap toPred arr
+            SourceRelationshipArrayAggregate agg -> foldMap toPred agg
 
 -- | Run (execute) a single GraphQL query
 runGQ ::
@@ -420,9 +432,9 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         finalResponse <-
           RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins reqUnparsed
         pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse []
-      E.ExecStepRemote rsi resultCustomizer gqlReq -> do
+      E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
         logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
-        runRemoteGQ httpManager fieldName rsi resultCustomizer gqlReq
+        runRemoteGQ httpManager fieldName rsi resultCustomizer gqlReq remoteJoins
       E.ExecStepAction aep _ remoteJoins -> do
         logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindAction
         (time, resp) <- doQErr $ do
@@ -450,9 +462,9 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         finalResponse <-
           RJ.processRemoteJoins reqId logger env httpManager reqHeaders userInfo resp remoteJoins reqUnparsed
         pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse responseHeaders
-      E.ExecStepRemote rsi resultCustomizer gqlReq -> do
+      E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
         logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
-        runRemoteGQ httpManager fieldName rsi resultCustomizer gqlReq
+        runRemoteGQ httpManager fieldName rsi resultCustomizer gqlReq remoteJoins
       E.ExecStepAction aep _ remoteJoins -> do
         logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindAction
         (time, (resp, hdrs)) <- doQErr $ do
@@ -465,12 +477,25 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindIntrospection
         buildRaw json
 
-    runRemoteGQ httpManager fieldName rsi resultCustomizer gqlReq = do
+    runRemoteGQ httpManager fieldName rsi resultCustomizer gqlReq remoteJoins = do
       (telemTimeIO_DT, remoteResponseHeaders, resp) <-
         doQErr $ E.execRemoteGQ env httpManager userInfo reqHeaders (rsDef rsi) gqlReq
       value <- extractFieldFromResponse fieldName resultCustomizer resp
+      finalResponse <-
+        doQErr $
+          RJ.processRemoteJoins
+            reqId
+            logger
+            env
+            httpManager
+            reqHeaders
+            userInfo
+            -- TODO: avoid encode and decode here
+            (encJFromOrderedValue value)
+            remoteJoins
+            reqUnparsed
       let filteredHeaders = filter ((== "Set-Cookie") . fst) remoteResponseHeaders
-      pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Remote (encJFromOrderedValue value) filteredHeaders
+      pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Remote finalResponse filteredHeaders
 
     cacheAccess ::
       GQLReqParsed ->

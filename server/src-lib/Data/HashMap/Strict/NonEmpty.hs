@@ -12,6 +12,10 @@ module Data.HashMap.Strict.NonEmpty
     -- * Basic interface
     lookup,
     (!?),
+    keys,
+
+    -- * Combine
+    unionWith,
 
     -- * Transformations
     mapKeys,
@@ -71,6 +75,19 @@ lookup k (NEHashMap m) = M.lookup k m
 -- This is a flipped version of 'lookup'.
 (!?) :: (Eq k, Hashable k) => NEHashMap k v -> k -> Maybe v
 (!?) = flip lookup
+
+-- | Return a list of this map's keys.
+keys :: NEHashMap k v -> [k]
+keys = M.keys . unNEHashMap
+
+-------------------------------------------------------------------------------
+
+-- | The union of two maps.
+--
+-- If a key occurs in both maps, the provided function (first argument) will be
+-- used to compute the result.
+unionWith :: (Eq k, Hashable k) => (v -> v -> v) -> NEHashMap k v -> NEHashMap k v -> NEHashMap k v
+unionWith fun (NEHashMap m1) (NEHashMap m2) = NEHashMap $ M.unionWith fun m1 m2
 
 -------------------------------------------------------------------------------
 

@@ -264,7 +264,7 @@ withHasuraTestApp metadataDbUrl action = do
 
   flip runTestM testConfig $
     lowerManagedT $ do
-      serveCtx <- initialiseServeCtx env globalCtx serveOptions
+      serveCtx <- initialiseServeCtx env globalCtx serveOptions serverMetrics
       waiApp <-
         mkHGEServer
           setupHook

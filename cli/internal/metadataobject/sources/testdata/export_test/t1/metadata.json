@@ -1,0 +1,141 @@
+{
+  "version": 3,
+  "sources": [
+    {
+      "name": "default",
+      "kind": "postgres",
+      "tables": [
+        {
+          "table": {
+            "schema": "public",
+            "name": "t1"
+          },
+          "insert_permissions": [
+            {
+              "role": "user",
+              "permission": {
+                "check": {
+                  "id": {
+                    "_eq": "X-Hasura-User-Id"
+                  }
+                },
+                "columns": [],
+                "backend_only": false
+              }
+            }
+          ],
+          "event_triggers": [
+            {
+              "name": "artists",
+              "definition": {
+                "enable_manual": false,
+                "insert": {
+                  "columns": "*"
+                },
+                "update": {
+                  "columns": "*"
+                }
+              },
+              "retry_conf": {
+                "num_retries": 0,
+                "interval_sec": 10,
+                "timeout_sec": 60
+              },
+              "webhook": "https://httpbin.org/post",
+              "request_transform": {
+                "body": "{\n  \"table\": {\n    \"name\": {{$body.table.name}},\n    \"schema\": {{$body.table.schema}}\n  }\n}",
+                "content_type": "application/json",
+                "method": "PUT",
+                "query_params": {},
+                "template_engine": "Kriti"
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "schema": "public",
+            "name": "t2"
+          }
+        }
+      ],
+      "functions": [
+        {
+          "function": {
+            "schema": "public",
+            "name": "get_t1"
+          },
+          "some_amazing_stuff": {
+            "test1": "test",
+            "test2": "test"
+          },
+          "xyz_test": {
+            "test1": "test",
+            "test2": "test"
+          }
+        },
+        {
+          "function": {
+            "schema": "public",
+            "name": "get_t2"
+          }
+        }
+      ],
+      "configuration": {
+        "connection_info": {
+          "database_url": {
+            "from_env": "HASURA_GRAPHQL_DATABASE_URL"
+          },
+          "isolation_level": "read-committed",
+          "pool_settings": {
+            "retries": 1,
+            "idle_timeout": 180,
+            "max_connections": 50
+          },
+          "use_prepared_statements": true
+        }
+      },
+      "query_tags": {
+        "disabled": false,
+        "format": "standard"
+      },
+      "customization": {
+        "type_names": null,
+        "root_fields": {
+          "suffix": null,
+          "prefix": null,
+          "namespace": "mynamespace"
+        }
+      }
+    },
+    {
+      "name": "bg",
+      "kind": "bigquery",
+      "tables": [
+        {
+          "table": {
+            "dataset": "london_cycles",
+            "name": "cycle_hire"
+          }
+        },
+        {
+          "table": {
+            "dataset": "london_cycles",
+            "name": "cycle_stations"
+          }
+        }
+      ],
+      "configuration": {
+        "service_account": {
+          "project_id": "some_test",
+          "client_email": "some_email",
+          "private_key": "the private key"
+        },
+        "project_id": "test_id",
+        "datasets": [
+          "t1"
+        ]
+      }
+    }
+  ]
+}

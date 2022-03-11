@@ -2,8 +2,7 @@
 
 module Hasura.GraphQL.Execute.Remote
   ( buildExecStepRemote,
-    collectVariablesFromSelectionSet,
-    collectVariables,
+    getVariableDefinitionAndValue,
     resolveRemoteVariable,
     resolveRemoteField,
     runVariableCache,
@@ -17,17 +16,18 @@ import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Backend
+import Hasura.GraphQL.Execute.RemoteJoin.Types (RemoteJoins)
 import Hasura.GraphQL.Parser
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.Prelude
-import Hasura.RQL.IR.RemoteSchema
+import Hasura.RQL.IR.RemoteSchema qualified as IR
 import Hasura.RQL.Types
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
-mkVariableDefinitionAndValue :: Variable -> (G.VariableDefinition, (G.Name, J.Value))
-mkVariableDefinitionAndValue var@(Variable varInfo gType varValue) =
+getVariableDefinitionAndValue :: Variable -> (G.VariableDefinition, (G.Name, J.Value))
+getVariableDefinitionAndValue var@(Variable varInfo gType varValue) =
   (varDefn, (varName, varJSONValue))
   where
     varName = getName var
@@ -60,29 +60,25 @@ collectVariables ::
 collectVariables =
   Set.unions . fmap (foldMap Set.singleton)
 
-collectVariablesFromSelectionSet ::
-  G.SelectionSet G.NoFragments Variable ->
-  [(G.VariableDefinition, (G.Name, J.Value))]
-collectVariablesFromSelectionSet =
-  map mkVariableDefinitionAndValue . Set.toList . collectVariables
-
 buildExecStepRemote ::
   RemoteSchemaInfo ->
   ResultCustomizer ->
   G.OperationType ->
-  G.SelectionSet G.NoFragments Variable ->
+  IR.GraphQLField Void Variable ->
+  Maybe RemoteJoins ->
   Maybe OperationName ->
   ExecutionStep
-buildExecStepRemote remoteSchemaInfo resultCustomizer tp selSet operationName =
-  let unresolvedSelSet = unresolveVariables selSet
-      allVars = map mkVariableDefinitionAndValue $ Set.toList $ collectVariables selSet
+buildExecStepRemote remoteSchemaInfo resultCustomizer tp rootField remoteJoins operationName =
+  let selSet = [G.SelectionField $ IR.convertGraphQLField rootField]
+      unresolvedSelSet = unresolveVariables selSet
+      allVars = map getVariableDefinitionAndValue $ Set.toList $ collectVariables selSet
       varValues = Map.fromList $ map snd allVars
       varValsM = bool (Just varValues) Nothing $ Map.null varValues
       varDefs = map fst allVars
       _grQuery = G.TypedOperationDefinition tp (_unOperationName <$> operationName) varDefs [] unresolvedSelSet
       _grVariables = varValsM
       _grOperationName = operationName
-   in ExecStepRemote remoteSchemaInfo resultCustomizer GH.GQLReq {..}
+   in ExecStepRemote remoteSchemaInfo resultCustomizer GH.GQLReq {..} remoteJoins
 
 -- | Association between keys uniquely identifying some remote JSON variable and
 -- an 'Int' identifier that will be used to construct a valid variable name to
@@ -223,8 +219,8 @@ resolveRemoteVariable userInfo = \case
 resolveRemoteField ::
   (MonadError QErr m) =>
   UserInfo ->
-  RemoteSchemaRootField Void RemoteSchemaVariable ->
-  StateT RemoteJSONVariableMap m (RemoteSchemaRootField Void Variable)
+  IR.RemoteSchemaRootField r RemoteSchemaVariable ->
+  StateT RemoteJSONVariableMap m (IR.RemoteSchemaRootField r Variable)
 resolveRemoteField userInfo = traverse (resolveRemoteVariable userInfo)
 
 -- | TODO: Documentation.

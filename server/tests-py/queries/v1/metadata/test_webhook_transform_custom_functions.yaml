@@ -26,7 +26,6 @@
     X-Hasura-Role: admin
   status: 200
   response:
-    body:
     - error_code: Function Error
       source_position:
         end_column: 51
@@ -34,9 +33,6 @@
         end_line: 0
         start_column: 23
       message: Session variable "this_variable_doesnt_exist" not found
-    headers: []
-    method: GET
-    webhook_url: http://localhost:1234/
   query:
     type: test_webhook_transform
     args:
@@ -55,7 +51,6 @@
     X-Hasura-Role: admin
   status: 200
   response:
-    body:
     - error_code: Function Error
       source_position:
         end_column: 15
@@ -63,9 +58,6 @@
         end_line: 0
         start_column: 4
       message: Function fooFunction is not defined.
-    headers: []
-    method: GET
-    webhook_url: http://localhost:1234/
   query:
     type: test_webhook_transform
     args:

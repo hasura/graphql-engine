@@ -156,8 +156,7 @@ const getErrorFromCode = (data: Record<string, any>) => {
   return `${errorCode}: ${errorMsg}`;
 };
 
-const getErrorFromBody = (data: Record<string, any>) => {
-  const errorObj = data.body[0];
+const getErrorFromBody = (errorObj: Record<string, any>) => {
   const errorCode = errorObj?.error_code;
   const errorMsg = errorObj?.message;
   const stPos = errorObj?.source_position?.start_line
@@ -170,16 +169,16 @@ const getErrorFromBody = (data: Record<string, any>) => {
 };
 
 export const parseValidateApiData = (
-  requestData: Record<string, any>,
+  requestData: Record<string, any> | Record<string, any>[],
   setError: (error: string) => void,
   setUrl?: (data: string) => void,
   setBody?: (data: string) => void
 ) => {
-  if (requestData?.code) {
-    const errorMessage = getErrorFromCode(requestData);
+  if (Array.isArray(requestData)) {
+    const errorMessage = getErrorFromBody(requestData[0]);
     setError(errorMessage);
-  } else if (requestData?.body?.[0]?.error_code) {
-    const errorMessage = getErrorFromBody(requestData);
+  } else if (requestData?.code) {
+    const errorMessage = getErrorFromCode(requestData);
     setError(errorMessage);
   } else if (requestData?.webhook_url || requestData?.body) {
     setError('');

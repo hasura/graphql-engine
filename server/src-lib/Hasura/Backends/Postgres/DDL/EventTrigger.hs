@@ -55,16 +55,17 @@ fetchUndeliveredEvents ::
   (MonadIO m, MonadError QErr m) =>
   SourceConfig ('Postgres pgKind) ->
   SourceName ->
+  [TriggerName] ->
   MaintenanceMode ->
   FetchBatchSize ->
   m [Event ('Postgres pgKind)]
-fetchUndeliveredEvents sourceConfig sourceName maintenanceMode fetchBatchSize = do
+fetchUndeliveredEvents sourceConfig sourceName triggerNames maintenanceMode fetchBatchSize = do
   fetchEventsTxE <-
     case maintenanceMode of
       MaintenanceModeEnabled -> do
         maintenanceModeVersion <- liftIO $ runPgSourceReadTx sourceConfig getMaintenanceModeVersionTx
-        pure $ fmap (fetchEventsMaintenanceMode sourceName fetchBatchSize) maintenanceModeVersion
-      MaintenanceModeDisabled -> pure $ Right $ fetchEvents sourceName fetchBatchSize
+        pure $ fmap (fetchEventsMaintenanceMode sourceName triggerNames fetchBatchSize) maintenanceModeVersion
+      MaintenanceModeDisabled -> pure $ Right $ fetchEvents sourceName triggerNames fetchBatchSize
   case fetchEventsTxE of
     Left err -> throw500 $ "something went wrong while fetching events: " <> tshow err
     Right fetchEventsTx ->
@@ -309,8 +310,8 @@ getMaintenanceModeVersionTx = liftTx $ do
 -- limit. Process events approximately in created_at order, but we make no
 -- ordering guarentees; events can and will race. Nevertheless we want to
 -- ensure newer change events don't starve older ones.
-fetchEvents :: SourceName -> FetchBatchSize -> Q.TxE QErr [Event ('Postgres pgKind)]
-fetchEvents source (FetchBatchSize fetchBatchSize) =
+fetchEvents :: SourceName -> [TriggerName] -> FetchBatchSize -> Q.TxE QErr [Event ('Postgres pgKind)]
+fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) =
   map uncurryEvent
     <$> Q.listQE
       defaultTxErrorHandler
@@ -323,6 +324,7 @@ fetchEvents source (FetchBatchSize fetchBatchSize) =
                           and (l.locked IS NULL or l.locked < (NOW() - interval '30 minute'))
                           and (l.next_retry_at is NULL or l.next_retry_at <= now())
                           and l.archived = 'f'
+                          and l.trigger_name = ANY($2)
                     /* NB: this ordering is important for our index `event_log_fetch_events` */
                     /* (see `init_pg_source.sql`) */
                     ORDER BY locked NULLS FIRST, next_retry_at NULLS FIRST, created_at
@@ -330,23 +332,25 @@ fetchEvents source (FetchBatchSize fetchBatchSize) =
                     FOR UPDATE SKIP LOCKED )
       RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at
       |]
-      (Identity limit)
+      (limit, triggerNamesTxt)
       True
   where
-    uncurryEvent (id', sn, tn, trn, Q.AltJ payload, tries, created) =
+    uncurryEvent (id', sourceName, tableName, triggerName, Q.AltJ payload, tries, created) =
       Event
         { eId = id',
           eSource = source,
-          eTable = QualifiedObject sn tn,
-          eTrigger = TriggerMetadata trn,
+          eTable = QualifiedObject sourceName tableName,
+          eTrigger = TriggerMetadata triggerName,
           eEvent = payload,
           eTries = tries,
           eCreatedAt = created
         }
     limit = fromIntegral fetchBatchSize :: Word64
 
-fetchEventsMaintenanceMode :: SourceName -> FetchBatchSize -> MaintenanceModeVersion -> Q.TxE QErr [Event ('Postgres pgKind)]
-fetchEventsMaintenanceMode sourceName fetchBatchSize = \case
+    triggerNamesTxt = PGTextArray $ triggerNameToTxt <$> triggerNames
+
+fetchEventsMaintenanceMode :: SourceName -> [TriggerName] -> FetchBatchSize -> MaintenanceModeVersion -> Q.TxE QErr [Event ('Postgres pgKind)]
+fetchEventsMaintenanceMode sourceName triggerNames fetchBatchSize = \case
   PreviousMMVersion ->
     map uncurryEvent
       <$> Q.listQE
@@ -378,7 +382,7 @@ fetchEventsMaintenanceMode sourceName fetchBatchSize = \case
             eCreatedAt = created
           }
       limit = fromIntegral (_unFetchBatchSize fetchBatchSize) :: Word64
-  CurrentMMVersion -> fetchEvents sourceName fetchBatchSize
+  CurrentMMVersion -> fetchEvents sourceName triggerNames fetchBatchSize
 
 setSuccessTx :: Event ('Postgres pgKind) -> Maybe MaintenanceModeVersion -> Q.TxE QErr ()
 setSuccessTx e = \case

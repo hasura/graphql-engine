@@ -15,7 +15,7 @@ import Control.Monad.Validate qualified as MV
 import Data.Sequence qualified as Seq
 import Data.Text qualified as T
 import Data.Text.Extended
-import Hasura.Backends.Postgres.SQL.Types
+import Hasura.Backends.Postgres.SQL.Types hiding (FunctionName)
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend

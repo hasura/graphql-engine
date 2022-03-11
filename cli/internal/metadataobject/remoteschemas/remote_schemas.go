@@ -1,6 +1,7 @@
 package remoteschemas
 
 import (
+	"bytes"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -8,7 +9,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type RemoteSchema struct {
@@ -45,7 +46,8 @@ func (r *RemoteSchemaConfig) Validate() error {
 
 func (r *RemoteSchemaConfig) CreateFiles() error {
 	v := make([]interface{}, 0)
-	data, err := yaml.Marshal(v)
+	buf := new(bytes.Buffer)
+	err := metadataobject.GetEncoder(buf).Encode(v)
 	if err != nil {
 		return err
 	}
@@ -54,51 +56,27 @@ func (r *RemoteSchemaConfig) CreateFiles() error {
 	if err := os.MkdirAll(filepath.Dir(path), 0744); err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(path, data, 0644)
+	err = ioutil.WriteFile(path, buf.Bytes(), 0644)
 	if err != nil {
 		return err
 	}
 	return nil
 }
-func (r *RemoteSchemaConfig) Build(metadata *yaml.MapSlice) metadataobject.ErrParsingMetadataObject {
+func (r *RemoteSchemaConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
 	data, err := ioutil.ReadFile(filepath.Join(r.MetadataDir, r.Filename()))
-	if err != nil {
-		return r.error(err)
-	}
-	item := yaml.MapItem{
-		Key: "remote_schemas",
-	}
-	var obj []yaml.MapSlice
-	err = yaml.Unmarshal(data, &obj)
-	if err != nil {
-		return r.error(err)
-	}
-	if len(obj) != 0 {
-		item.Value = obj
-		*metadata = append(*metadata, item)
-	}
-	return nil
-}
-
-func (r *RemoteSchemaConfig) Export(metadata yaml.MapSlice) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
-	var remoteSchemas interface{}
-	for _, item := range metadata {
-		k, ok := item.Key.(string)
-		if !ok || k != "remote_schemas" {
-			continue
-		}
-		remoteSchemas = item.Value
-	}
-	if remoteSchemas == nil {
-		remoteSchemas = make([]interface{}, 0)
-	}
-	data, err := yaml.Marshal(remoteSchemas)
 	if err != nil {
 		return nil, r.error(err)
 	}
-	return map[string][]byte{
-		filepath.ToSlash(filepath.Join(r.MetadataDir, r.Filename())): data,
-	}, nil
+	var obj []yaml.Node
+	err = yaml.Unmarshal(data, &obj)
+	if err != nil {
+		return nil, r.error(err)
+	}
+	return map[string]interface{}{r.Key(): obj}, nil
+}
+
+func (r *RemoteSchemaConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+	return metadataobject.DefaultExport(r, metadata, r.error, metadataobject.DefaultObjectTypeSequence)
 }
 
 func (r *RemoteSchemaConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
@@ -123,7 +101,7 @@ func (r *RemoteSchemaConfig) BaseDirectory() string {
 }
 
 func (r *RemoteSchemaConfig) Key() string {
-	return "remote_schemas"
+	return metadataobject.RemoteSchemasKey
 }
 
 func (r *RemoteSchemaConfig) Filename() string {

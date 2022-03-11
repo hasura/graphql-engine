@@ -1,7 +1,22 @@
+-- | How to construct and execute a call to a remote schema for a remote join.
+--
+-- There are three steps required to do this:
+--   1. construct the call: given the requested fields, the phantom fields, the
+--      values extracted by the LHS, construct a GraphQL query
+--   2. execute that GraphQL query over the network
+--   3. build a index of the variables out of the response
+--
+-- This can be done as one function, but we also export the individual steps for
+-- debugging / test purposes. We congregate all intermediary state in the opaque
+-- 'RemoteSchemaCall' type.
 module Hasura.GraphQL.Execute.RemoteJoin.RemoteSchema
-  ( buildRemoteSchemaCall,
-    RemoteSchemaCall (..),
-    getRemoteSchemaResponse,
+  ( -- * Executing a remote join
+    makeRemoteSchemaJoinCall,
+
+    -- * Individual steps
+    RemoteSchemaCall,
+    buildRemoteSchemaCall,
+    executeRemoteSchemaCall,
     buildJoinIndex,
   )
 where
@@ -9,8 +24,8 @@ where
 import Control.Lens (view, _2, _3)
 import Data.Aeson qualified as A
 import Data.Aeson.Ordered qualified as AO
-import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as Map
+import Data.ByteString.Lazy qualified as BL
+import Data.HashMap.Strict.Extended qualified as Map
 import Data.IntMap.Strict qualified as IntMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
@@ -18,87 +33,93 @@ import Data.Text.Extended (commaSeparated, toTxt, (<<>))
 import Data.Validation (Validation (..), toEither)
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Remote
-  ( collectVariablesFromSelectionSet,
+  ( getVariableDefinitionAndValue,
     resolveRemoteVariable,
     runVariableCache,
   )
 import Hasura.GraphQL.Execute.RemoteJoin.Types
 import Hasura.GraphQL.Parser qualified as P
-import Hasura.GraphQL.RemoteServer (execRemoteGQ)
 import Hasura.GraphQL.Transport.HTTP.Protocol (GQLReq (..), GQLReqOutgoing)
 import Hasura.Prelude
+import Hasura.RQL.IR.RemoteSchema (convertSelectionSet)
 import Hasura.RQL.Types
 import Hasura.Session
-import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
-import Network.HTTP.Client qualified as HTTP
-import Network.HTTP.Types qualified as HTTP
 
--- XXX(jkachmar): Think about reworking 'ResponsePath' to be 'Alias, Maybe [G.Name]'
+-------------------------------------------------------------------------------
+-- Executing a remote join
+
+-- | Construct and execute a call to a remote schema for a remote join.
+makeRemoteSchemaJoinCall ::
+  (MonadError QErr m) =>
+  -- | Function to send a request over the network.
+  (GQLReqOutgoing -> m BL.ByteString) ->
+  -- | User information.
+  UserInfo ->
+  -- | Information about that remote join.
+  RemoteSchemaJoin ->
+  -- | Mapping from 'JoinArgumentId' to its corresponding 'JoinArgument'.
+  IntMap.IntMap JoinArgument ->
+  -- | The resulting join index (see 'buildJoinIndex') if any.
+  m (Maybe (IntMap.IntMap AO.Value))
+makeRemoteSchemaJoinCall networkFunction userInfo remoteSchemaJoin joinArguments = do
+  -- step 1: construct the internal intermediary representation
+  maybeRemoteCall <- buildRemoteSchemaCall remoteSchemaJoin joinArguments userInfo
+  -- if there actually is a remote call:
+  for maybeRemoteCall \remoteCall -> do
+    -- step 2: execute it over the network
+    responseValue <- executeRemoteSchemaCall networkFunction remoteCall
+    -- step 3: build the join index
+    buildJoinIndex remoteCall responseValue
+
+-------------------------------------------------------------------------------
+-- Internal representation
+
+-- | Intermediate type containing all of the information required to perform
+-- a remote schema call, constructed from the static join information.
+data RemoteSchemaCall = RemoteSchemaCall
+  { rscCustomizer :: ResultCustomizer,
+    rscGQLRequest :: GQLReqOutgoing,
+    rscResponsePaths :: IntMap.IntMap ResponsePath
+  }
 
 -- | Used to extract the value from a remote schema response.
 --
 -- For example: if a remote relationship is defined to retrieve data from some
 -- deeply nested field, this is the path towards that deeply nested field.
 newtype ResponsePath = ResponsePath (NE.NonEmpty G.Name)
-  -- (Alias, Maybe [G.Name])
   deriving stock (Eq, Show)
 
--- | The name that we generate when performing a remote join, which shall always
--- be the first field in a 'ResponsePath'.
-type Alias = G.Name
+-------------------------------------------------------------------------------
+-- Step 1: building the remote call
 
--- NOTE: Ideally this should be done at the remote relationship validation
--- layer.
---
--- When validating remote relationships, we should store the validated names so
--- that we don't need to continually re-validate them downstream.
-parseGraphQLName :: (MonadError QErr m) => Text -> m G.Name
-parseGraphQLName txt =
-  G.mkName txt `onNothing` (throw400 RemoteSchemaError $ errMsg)
-  where
-    errMsg = txt <> " is not a valid GraphQL name"
-
--- | Intermediate type containing all of the information required to perform
--- a remote schema call.
---
--- See 'buildRemoteSchemaCall' for details.
-data RemoteSchemaCall = RemoteSchemaCall
-  { _rscInfo :: !RemoteSchemaInfo,
-    _rscCustomizer :: !ResultCustomizer,
-    _rscGQLRequest :: !GQLReqOutgoing,
-    _rscResponsePaths :: !(IntMap.IntMap ResponsePath)
-  }
-
--- | Constructs an outgoing response from the remote relationships definition
--- (i.e. 'RemoteSchemaJoin') and the arguments collected from the database's
--- response.
---
--- NOTE: We need to pass along some additional information with the raw outgoing
--- GraphQL request, hence the 'RemoteSchemaCall' type.
+-- | Constructs a 'RemoteSchemaCall' from some static information, such as the
+-- definition of the join, and dynamic information such as the user's
+-- information and the map of join arguments.
 buildRemoteSchemaCall ::
   (MonadError QErr m) =>
-  UserInfo ->
   RemoteSchemaJoin ->
   IntMap.IntMap JoinArgument ->
+  UserInfo ->
   m (Maybe RemoteSchemaCall)
-buildRemoteSchemaCall userInfo RemoteSchemaJoin {..} arguments = do
+buildRemoteSchemaCall RemoteSchemaJoin {..} arguments userInfo = do
   -- for each join argument, we generate a unique field, with the alias
   -- "f" <> argumentId
   fields <- flip IntMap.traverseWithKey arguments $ \argumentId (JoinArgument argument) -> do
     graphqlArgs <- fmap Map.fromList $
-      for (Map.toList argument) $
-        \(FieldName columnName, value) ->
-          (,) <$> parseGraphQLName columnName <*> ordJSONValueToGValue value
+      for (Map.toList argument) \(FieldName columnName, value) -> do
+        graphQLName <- parseGraphQLName columnName
+        graphQLValue <- ordJSONValueToGValue value
+        pure (graphQLName, graphQLValue)
     -- Creating the alias should never fail.
     let aliasText = T.pack $ "f" <> show argumentId
     alias <-
       G.mkName aliasText
         `onNothing` throw500 ("'" <> aliasText <> "' is not a valid GraphQL name!")
-    let responsePath = alias NE.:| map fcName (toList $ NE.tail _rsjFieldCall)
+    let responsePath = alias NE.:| fmap fcName (NE.tail _rsjFieldCall)
         rootField = fcName $ NE.head _rsjFieldCall
         resultCustomizer = applyAliasMapping (singletonAliasMapping rootField alias) _rsjResultCustomizer
-    gqlField <- fieldCallsToField _rsjArgs graphqlArgs _rsjSelSet alias _rsjFieldCall
+    gqlField <- fieldCallsToField _rsjArgs graphqlArgs (convertSelectionSet _rsjSelSet) alias _rsjFieldCall
     pure (gqlField, responsePath, resultCustomizer)
 
   -- this constructs the actual GraphQL Request that can be sent to the remote
@@ -108,136 +129,7 @@ buildRemoteSchemaCall userInfo RemoteSchemaJoin {..} arguments = do
         \(field, _, _) -> traverse (resolveRemoteVariable userInfo) field
     let customizer = foldMap (view _3) fields
         responsePath = fmap (ResponsePath . view _2) fields
-    pure $ RemoteSchemaCall _rsjRemoteSchema customizer gqlRequest responsePath
-
--- | Construct a 'JoinIndex' from the remote source's 'AO.Value' response.
---
--- If the response does not have value at any of the provided 'ResponsePath's,
--- throw a generic 'QErr'.
---
--- NOTE(jkachmar): If we switch to an 'Applicative' validator, we can collect
--- more than one missing 'ResponsePath's (rather than short-circuiting on the
--- first missing value).
-buildJoinIndex ::
-  (Monad m, MonadError QErr m) =>
-  AO.Object ->
-  IntMap.IntMap ResponsePath ->
-  m JoinIndex
-buildJoinIndex response responsePaths =
-  for responsePaths $ \path -> extractAtPath (AO.Object response) path
-
-getRemoteSchemaResponse ::
-  ( MonadError QErr m,
-    MonadIO m,
-    Tracing.MonadTrace m
-  ) =>
-  Env.Environment ->
-  HTTP.Manager ->
-  [HTTP.Header] ->
-  UserInfo ->
-  RemoteSchemaCall ->
-  m AO.Object
-getRemoteSchemaResponse env manager requestHeaders userInfo (RemoteSchemaCall rsi customizer req _) = do
-  (_, _, respBody) <- execRemoteGQ env manager userInfo requestHeaders (rsDef rsi) req
-  resp <-
-    AO.eitherDecode respBody
-      `onLeft` (\e -> throw500 $ "Remote server response is not valid JSON: " <> T.pack e)
-  respObj <- AO.asObject resp `onLeft` throw500
-  let errors = AO.lookup "errors" respObj
-  if
-      | isNothing errors || errors == Just AO.Null ->
-        case AO.lookup "data" respObj of
-          Nothing -> throw500 "\"data\" field not found in remote response"
-          Just v ->
-            let v' = applyResultCustomizer customizer v
-             in AO.asObject v' `onLeft` throw500
-      | otherwise ->
-        throwError
-          (err400 Unexpected "Errors from remote server")
-            { qeInternal = Just $ ExtraInternal $ A.object ["errors" A..= (AO.fromOrdered <$> errors)]
-            }
-
--- | Attempt to extract a deeply nested value from a remote source's 'AO.Value'
--- response, according to the JSON path provided by 'ResponsePath'.
-extractAtPath ::
-  forall m.
-  MonadError QErr m =>
-  AO.Value ->
-  ResponsePath ->
-  m AO.Value
-extractAtPath initValue (ResponsePath rPath) =
-  go initValue (map G.unName . NE.toList $ rPath)
-  where
-    go :: AO.Value -> [Text] -> m AO.Value
-    go value path = case path of
-      [] -> pure value
-      k : ks -> case value of
-        AO.Object obj -> do
-          objValue <-
-            AO.lookup k obj
-              `onNothing` throw500 ("failed to lookup key '" <> toTxt k <> "' in response")
-          go objValue ks
-        _ ->
-          throw500 $
-            "unexpected non-object json value found while path not empty: "
-              <> commaSeparated path
-
-ordJSONValueToGValue :: (MonadError QErr n) => AO.Value -> n (G.Value Void)
-ordJSONValueToGValue =
-  either (throw400 ValidationFailed) pure . P.jsonToGraphQL . AO.fromOrdered
-
-convertFieldWithVariablesToName :: G.Field G.NoFragments P.Variable -> G.Field G.NoFragments G.Name
-convertFieldWithVariablesToName = fmap P.getName
-
-inputValueToJSON :: P.InputValue Void -> A.Value
-inputValueToJSON = \case
-  P.JSONValue j -> j
-  P.GraphQLValue g -> graphQLValueToJSON g
-
--- | TODO: Documentation.
-collectVariablesFromValue ::
-  G.Value P.Variable -> HashMap G.VariableDefinition A.Value
-collectVariablesFromValue = foldMap' \var@(P.Variable _ gType val) ->
-  let name = P.getName var
-      jsonVal = inputValueToJSON val
-      defaultVal = getDefaultValue val
-   in Map.singleton (G.VariableDefinition name gType defaultVal) jsonVal
-  where
-    getDefaultValue :: P.InputValue Void -> Maybe (G.Value Void)
-    getDefaultValue = \case
-      P.JSONValue _ -> Nothing
-      P.GraphQLValue g -> Just g
-
--- | TODO: Documentation.
-collectVariablesFromField ::
-  G.Field G.NoFragments P.Variable -> HashMap G.VariableDefinition A.Value
-collectVariablesFromField (G.Field _ _ arguments _ selSet) =
-  let argumentVariables = fmap collectVariablesFromValue arguments
-      selSetVariables =
-        (fmap . fmap) snd $ collectVariablesFromSelectionSet selSet
-   in fold' (Map.elems argumentVariables) <> Map.fromList selSetVariables
-
--- | TODO: Documentation.
---
--- Extension of the documentation required for 'collectVariablesFromField' and
--- 'collectVariablesFromValue'.
-fieldsToRequest :: NonEmpty (G.Field G.NoFragments P.Variable) -> GQLReqOutgoing
-fieldsToRequest gFields =
-  let variableInfos = foldMap collectVariablesFromField gFields
-   in GQLReq
-        { _grOperationName = Nothing,
-          _grVariables =
-            mapKeys G._vdName variableInfos <$ guard (not $ Map.null variableInfos),
-          _grQuery =
-            G.TypedOperationDefinition
-              { G._todSelectionSet =
-                  NE.toList $ G.SelectionField . convertFieldWithVariablesToName <$> gFields,
-                G._todVariableDefinitions = Map.keys variableInfos,
-                G._todType = G.OperationTypeQuery,
-                G._todName = Nothing,
-                G._todDirectives = []
-              }
-        }
+    pure $ RemoteSchemaCall customizer gqlRequest responsePath
 
 -- | Fold nested 'FieldCall's into a bare 'Field', inserting the passed
 -- selection set at the leaf of the tree we construct.
@@ -251,7 +143,7 @@ fieldCallsToField ::
   -- | Inserted at leaf of nested FieldCalls
   G.SelectionSet G.NoFragments RemoteSchemaVariable ->
   -- | Top-level name to set for this Field
-  Alias ->
+  G.Name ->
   NonEmpty FieldCall ->
   m (G.Field G.NoFragments RemoteSchemaVariable)
 fieldCallsToField rrArguments variables finalSelSet topAlias =
@@ -266,15 +158,15 @@ fieldCallsToField rrArguments variables finalSelSet topAlias =
         Just f -> do
           s <- nest f
           pure (templatedArguments, [G.SelectionField s])
-        Nothing ->
-          let arguments =
-                Map.unionWith
-                  mergeValue
-                  graphQLarguments
-                  -- converting (G.Value Void) -> (G.Value Variable) to merge the
-                  -- 'rrArguments' with the 'variables'
-                  templatedArguments
-           in pure (arguments, finalSelSet)
+        Nothing -> do
+          arguments <-
+            Map.unionWithM
+              combineValues
+              graphQLarguments
+              -- converting (G.Value Void) -> (G.Value Variable) to merge the
+              -- 'rrArguments' with the 'variables'
+              templatedArguments
+          pure (arguments, finalSelSet)
       pure $ G.Field Nothing name args [] selSet
 
     convert :: Map.HashMap G.Name (G.Value Void) -> Map.HashMap G.Name (G.Value RemoteSchemaVariable)
@@ -290,54 +182,163 @@ fieldCallsToField rrArguments variables finalSelSet topAlias =
         -- FIXME: check that this is correct!
         throw500 "internal error: encountered an already expanded variable when folding remote field arguments"
 
--- FIXME: better error message
-
--- This is a kind of "deep merge".
--- For e.g. suppose the input argument of the remote field is something like:
--- `where: { id : 1}`
--- And during execution, client also gives the input arg: `where: {name: "tiru"}`
--- We need to merge the input argument to where: {id : 1, name: "tiru"}
-mergeValue :: G.Value RemoteSchemaVariable -> G.Value RemoteSchemaVariable -> G.Value RemoteSchemaVariable
-mergeValue lVal rVal = case (lVal, rVal) of
-  (G.VList l, G.VList r) ->
-    G.VList $ l <> r
-  (G.VObject l, G.VObject r) ->
-    G.VObject $ Map.unionWith mergeValue l r
-  (_, _) ->
-    error $
-      "can only merge a list with another list or an "
-        <> "object with another object"
-
--- | Create an argument map using the inputs taken from the hasura database.
+-- | Create an argument map using the inputs taken from the left hand side.
 createArguments ::
   (MonadError QErr m) =>
   Map.HashMap G.Name (G.Value Void) ->
   RemoteArguments ->
   m (HashMap G.Name (G.Value Void))
 createArguments variables (RemoteArguments arguments) =
-  toEither (substituteVariables variables arguments)
+  toEither (traverse substituteVariables arguments)
     `onLeft` (\errors -> throw400 Unexpected $ "Found errors: " <> commaSeparated errors)
-
--- | Substitute values in the argument list.
-substituteVariables ::
-  -- | Values of the variables to substitute.
-  HashMap G.Name (G.Value Void) ->
-  -- | Template which contains the variables.
-  HashMap G.Name (G.Value G.Name) ->
-  Validation [Text] (HashMap G.Name (G.Value Void))
-substituteVariables values = traverse go
   where
-    go = \case
+    substituteVariables = \case
       G.VVariable variableName ->
-        Map.lookup variableName values
+        Map.lookup variableName variables
           `onNothing` Failure ["Value for variable " <> variableName <<> " not provided"]
       G.VList listValue ->
-        fmap G.VList (traverse go listValue)
+        fmap G.VList (traverse substituteVariables listValue)
       G.VObject objectValue ->
-        fmap G.VObject (traverse go objectValue)
+        fmap G.VObject (traverse substituteVariables objectValue)
       G.VInt i -> pure $ G.VInt i
       G.VFloat d -> pure $ G.VFloat d
       G.VString txt -> pure $ G.VString txt
       G.VEnum e -> pure $ G.VEnum e
       G.VBoolean b -> pure $ G.VBoolean b
       G.VNull -> pure $ G.VNull
+
+-- | Combine two GraphQL values together.
+--
+-- This is used to combine different input arguments into one. This function can
+-- only combine objects or lists pairwise, and fails if it has to combine any
+-- other combination of values.
+--
+-- >>> combineValues (Object (fromList [("id", Number 1)]) (Object (fromList [("name", String "foo")])
+-- Object (fromList [("id", Number 1), ("name", String "foo")])
+combineValues ::
+  MonadError QErr m => G.Value RemoteSchemaVariable -> G.Value RemoteSchemaVariable -> m (G.Value RemoteSchemaVariable)
+combineValues (G.VObject l) (G.VObject r) = G.VObject <$> Map.unionWithM combineValues l r
+combineValues (G.VList l) (G.VList r) = pure $ G.VList $ l <> r
+combineValues l r =
+  throw500 $
+    "combineValues: cannot combine values (" <> tshow l <> ") and (" <> tshow r
+      <> "); \
+         \lists can only be merged with lists, objects can only be merged with objects"
+
+-- | Craft a GraphQL query document from the list of fields.
+fieldsToRequest :: NonEmpty (G.Field G.NoFragments P.Variable) -> GQLReqOutgoing
+fieldsToRequest gFields =
+  GQLReq
+    { _grOperationName = Nothing,
+      _grVariables =
+        if Map.null variableInfos
+          then Nothing
+          else Just $ mapKeys G._vdName variableInfos,
+      _grQuery =
+        G.TypedOperationDefinition
+          { G._todSelectionSet =
+              -- convert from Field Variable to Field Name
+              NE.toList $ G.SelectionField . fmap P.getName <$> gFields,
+            G._todVariableDefinitions = Map.keys variableInfos,
+            G._todType = G.OperationTypeQuery,
+            G._todName = Nothing,
+            G._todDirectives = []
+          }
+    }
+  where
+    variableInfos :: HashMap G.VariableDefinition A.Value
+    variableInfos = Map.fromList $ concatMap (foldMap getVariableInfo) gFields
+    getVariableInfo :: P.Variable -> [(G.VariableDefinition, A.Value)]
+    getVariableInfo = pure . fmap snd . getVariableDefinitionAndValue
+
+------------------------------------------------------------------------------
+-- Step 2: sending the call over the network
+
+-- | Sends the call over the network, and parse the resulting ByteString.
+executeRemoteSchemaCall ::
+  (MonadError QErr m) =>
+  -- | Function to send a request over the network.
+  (GQLReqOutgoing -> m BL.ByteString) ->
+  -- | Information about that call.
+  RemoteSchemaCall ->
+  -- | Resulting JSON object
+  m AO.Object
+executeRemoteSchemaCall networkFunction (RemoteSchemaCall customizer request _) = do
+  responseBody <- networkFunction request
+  responseJSON <-
+    AO.eitherDecode responseBody
+      `onLeft` (\e -> throw500 $ "Remote server response is not valid JSON: " <> T.pack e)
+  responseObject <- AO.asObject responseJSON `onLeft` throw500
+  let errors = AO.lookup "errors" responseObject
+  if
+      | isNothing errors || errors == Just AO.Null ->
+        case AO.lookup "data" responseObject of
+          Nothing -> throw500 "\"data\" field not found in remote response"
+          Just v ->
+            let v' = applyResultCustomizer customizer v
+             in AO.asObject v' `onLeft` throw500
+      | otherwise ->
+        throwError
+          (err400 Unexpected "Errors from remote server")
+            { qeInternal = Just $ ExtraInternal $ A.object ["errors" A..= (AO.fromOrdered <$> errors)]
+            }
+
+-------------------------------------------------------------------------------
+-- Step 3: extracting the join index
+
+-- | Construct a join index from the remote source's 'AO.Value' response.
+--
+-- This function extracts from the 'RemoteJoinCall' a mapping from
+-- 'JoinArgumentId' to 'ResponsePath': from an integer that uniquely identifies
+-- a join argument to the "path" at which we expect that value in the
+-- response. With it, and with the actual reponse JSON value obtained from the
+-- remote server, it constructs a corresponding mapping of, for each argument,
+-- its extracted value.
+--
+-- If the response does not have value at any of the provided 'ResponsePath's,
+-- throw a generic 'QErr'.
+--
+-- NOTE(jkachmar): If we switch to an 'Applicative' validator, we can collect
+-- more than one missing 'ResponsePath's (rather than short-circuiting on the
+-- first missing value).
+buildJoinIndex ::
+  forall m.
+  (MonadError QErr m) =>
+  RemoteSchemaCall ->
+  AO.Object ->
+  m (IntMap.IntMap AO.Value)
+buildJoinIndex RemoteSchemaCall {..} response =
+  for rscResponsePaths $ \(ResponsePath path) ->
+    go (AO.Object response) (map G.unName . NE.toList $ path)
+  where
+    go :: AO.Value -> [Text] -> m AO.Value
+    go value path = case path of
+      [] -> pure value
+      k : ks -> case value of
+        AO.Object obj -> do
+          objValue <-
+            AO.lookup k obj
+              `onNothing` throw500 ("failed to lookup key '" <> toTxt k <> "' in response")
+          go objValue ks
+        _ ->
+          throw500 $
+            "unexpected non-object json value found while path not empty: "
+              <> commaSeparated path
+
+-------------------------------------------------------------------------------
+-- Local helpers
+
+-- NOTE: Ideally this should be done at the remote relationship validation
+-- layer.
+--
+-- When validating remote relationships, we should store the validated names so
+-- that we don't need to continually re-validate them downstream.
+parseGraphQLName :: (MonadError QErr m) => Text -> m G.Name
+parseGraphQLName txt =
+  G.mkName txt `onNothing` (throw400 RemoteSchemaError $ errMsg)
+  where
+    errMsg = txt <> " is not a valid GraphQL name"
+
+ordJSONValueToGValue :: (MonadError QErr n) => AO.Value -> n (G.Value Void)
+ordJSONValueToGValue =
+  either (throw400 ValidationFailed) pure . P.jsonToGraphQL . AO.fromOrdered

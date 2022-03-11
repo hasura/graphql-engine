@@ -23,6 +23,7 @@ module Hasura.Prelude
     hoistEither,
     readJson,
     tshow,
+    hashNub,
 
     -- * Trace debugging
     ltrace,
@@ -92,6 +93,7 @@ import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd as M (InsOrdHashMap)
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet as M (HashSet)
+import Data.HashSet qualified as HSet
 import Data.Hashable (hashWithSalt)
 import Data.Hashable as M (Hashable)
 import Data.List as M
@@ -293,3 +295,12 @@ ltrace lbl x = Debug.trace (lbl <> ": " <> TL.unpack (PS.pShow x)) x
 ltraceM :: Applicative m => Show a => String -> a -> m ()
 ltraceM lbl x = Debug.traceM (lbl <> ": " <> TL.unpack (PS.pShow x))
 {-# WARNING ltraceM "ltraceM left in code" #-}
+
+-- | Remove duplicates from a list. Like 'nub' but runs in @O(n * log_16(n))@
+--   time and requires 'Hashable' and `Eq` instances. hashNub is faster than
+--   ordNub when there're not so many different values in the list.
+--
+-- >>> hashNub [1,3,2,9,4,1,5,7,3,3,1,2,5,4,3,2,1,0]
+-- [0,1,2,3,4,5,7,9]
+hashNub :: (Hashable a, Eq a) => [a] -> [a]
+hashNub = HSet.toList . HSet.fromList

@@ -1,0 +1,25 @@
+actions:
+- name: foo
+  definition:
+    kind: synchronous
+    handler: http://localhost:3000
+    request_transform:
+      body: |-
+        {
+          "users": {
+            "name-foo": {{$body.input.arg1.username}},
+            "password-bar": {{$body.input.arg1.password}}
+          }
+        }
+      content_type: application/json
+      method: POST
+      query_params:
+        baz: "1"
+      template_engine: Kriti
+custom_types:
+  enums: []
+  input_objects:
+  - name: FooInput
+  objects:
+  - name: FooOutput
+  scalars: []

@@ -36,6 +36,31 @@ export namespace MetadataSelector {
     return m.metadata?.sources.find(source => source.name === dataSource);
   };
 
+  export const getAllRemoteSchemaRelationships = () => (
+    m: MetadataResponse
+  ) => {
+    let allRemoteSchemaRelationships: Array<
+      { table_name: string } & RemoteRelationship
+    > = [];
+    m.metadata?.sources?.forEach(source => {
+      source?.tables.forEach(tableDefinition => {
+        if (tableDefinition?.remote_relationships) {
+          const table_name = tableDefinition?.table?.name;
+          // Remote relations can be 3 types, legacy remote schema, new RS, and remote source relationships
+          // filtering out remote source relationships => allowing only remote schema relationships
+          const remoteSchemaTableRels = tableDefinition?.remote_relationships
+            .filter(relationship => !relationship?.definition?.to_source)
+            .map(i => ({ ...i, table_name }));
+          allRemoteSchemaRelationships = [
+            ...allRemoteSchemaRelationships,
+            ...remoteSchemaTableRels,
+          ];
+        }
+      });
+    });
+    return allRemoteSchemaRelationships;
+  };
+
   export const getTables = (dataSource: string) => (m: MetadataResponse) => {
     const sources = getDataSourceMetadata(dataSource)(m);
     return sources?.tables ?? [];

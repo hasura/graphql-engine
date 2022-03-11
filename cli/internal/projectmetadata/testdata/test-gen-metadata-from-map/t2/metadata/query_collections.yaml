@@ -1,0 +1,19 @@
+- name: allowed-queries
+  definition:
+    queries:
+    - name: getAlbums
+      query: |
+        query getAlbums {
+          albums {
+            id
+            title
+          }
+        }
+    - name: getArtists
+      query: |
+        query getArtists {
+          artists {
+            id
+            name
+          }
+        }

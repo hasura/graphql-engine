@@ -1,0 +1,34 @@
+- name: default
+  kind: postgres
+  configuration:
+    connection_info:
+      database_url:
+        from_env: HASURA_GRAPHQL_DATABASE_URL
+      isolation_level: read-committed
+      pool_settings:
+        retries: 1
+        idle_timeout: 180
+        max_connections: 50
+      use_prepared_statements: true
+  query_tags:
+    disabled: false
+    format: standard
+  customization:
+    type_names: null
+    root_fields:
+      suffix: null
+      prefix: null
+      namespace: mynamespace
+  tables: "!include default/tables/tables.yaml"
+  functions: "!include default/functions/functions.yaml"
+- name: bg
+  kind: bigquery
+  configuration:
+    service_account:
+      project_id: some_test
+      client_email: some_email
+      private_key: the private key
+    project_id: test_id
+    datasets:
+      - t1
+  tables: "!include bg/tables/tables.yaml"

@@ -58,12 +58,6 @@ import Hasura.GraphQL.Parser
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
-  ( MonadParse (parseErrorWith, withPath),
-    MonadSchema (..),
-    MonadTableInfo,
-    askTableInfo,
-    parseError,
-  )
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
@@ -1394,7 +1388,7 @@ computedFieldPG sourceName ComputedFieldInfo {..} parentTable tableInfo = runMay
 -- | The custom SQL functions' input "args" field parser
 -- > function_name(args: function_args)
 customSQLFunctionArgs ::
-  (BackendSchema b, MonadSchema n m, MonadTableInfo r m, Has P.MkTypename r) =>
+  MonadBuildSchema b r m n =>
   FunctionInfo b ->
   G.Name ->
   G.Name ->
@@ -1421,12 +1415,8 @@ customSQLFunctionArgs FunctionInfo {..} functionName functionArgsName =
 --   table row argument in the case of computed fields), the args object will
 --   be omitted.
 functionArgs ::
-  forall b m n r.
-  ( BackendSchema b,
-    MonadSchema n m,
-    MonadTableInfo r m,
-    Has P.MkTypename r
-  ) =>
+  forall b r m n.
+  MonadBuildSchema b r m n =>
   FunctionTrackedAs b ->
   Seq.Seq (FunctionInputArgument b) ->
   m (InputFieldsParser n (IR.FunctionArgsExpTableRow (UnpreparedValue b)))
@@ -1647,7 +1637,7 @@ nodePG = memoizeOn 'nodePG () do
         sourceConfig <- maybeToList $ unsafeSourceConfiguration @('Postgres 'Vanilla) sourceInfo
         pure (tableName, (source, sourceConfig, AB.runBackend sourceInfo _siCustomization))
   tables <-
-    Map.mapMaybe id <$> flip Map.traverseWithKey allTables \table (source, sourceConfig, sourceCustomization) -> runMaybeT do
+    Map.catMaybes <$> flip Map.traverseWithKey allTables \table (source, sourceConfig, sourceCustomization) -> runMaybeT do
       tableInfo <- lift $ askTableInfo source table
       tablePkeyColumns <- hoistMaybe $ tableInfo ^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns
       selectPermissions <- MaybeT $ tableSelectPermissions tableInfo

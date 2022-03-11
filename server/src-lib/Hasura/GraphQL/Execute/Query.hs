@@ -109,12 +109,13 @@ convertQuerySelSet
             \(SourceConfigWith (sourceConfig :: (SourceConfig b)) queryTagsConfig (QDBR db)) -> do
               let queryTagsAttributes = encodeQueryTags $ QTQuery $ QueryMetadata reqId maybeOperationName rootFieldName parameterizedQueryHash
                   queryTagsComment = Tagged.untag $ createQueryTags @m queryTagsAttributes queryTagsConfig
-                  (noRelsDBAST, remoteJoins) = RJ.getRemoteJoins db
+                  (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsQueryDB db
               dbStepInfo <- flip runReaderT queryTagsComment $ mkDBQueryPlan @b userInfo sourceName sourceConfig noRelsDBAST
               pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
         RFRemote rf -> do
           RemoteSchemaRootField remoteSchemaInfo resultCustomizer remoteField <- runVariableCache $ for rf $ resolveRemoteVariable userInfo
-          pure $ buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeQuery [G.SelectionField $ convertGraphQLField remoteField] (GH._grOperationName gqlUnparsed)
+          let (noRelsRemoteField, remoteJoins) = RJ.getRemoteJoinsGraphQLField remoteField
+          pure $ buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeQuery noRelsRemoteField remoteJoins (GH._grOperationName gqlUnparsed)
         RFAction action -> do
           let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionQuery action
           (actionExecution, actionName, fch) <- pure $ case noRelsDBAST of

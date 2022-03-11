@@ -18,8 +18,7 @@ import Hasura.Base.Error (QErr (..), QErrExtra (..))
 import Hasura.Base.Error qualified as Error
 import Hasura.GraphQL.Namespace (NamespacedField (..), namespacedField)
 import Hasura.Prelude
-import Hasura.RQL.Types (CustomRootField (..), TableCustomRootFields (..), getAllCustomRootFields)
-import Hasura.RQL.Types.Common (Comment (..), SourceName (..))
+import Hasura.RQL.Types (ColumnConfig (..), Comment (..), CustomRootField (..), SourceName (..), TableCustomRootFields (..), getAllCustomRootFields)
 import Hasura.RQL.Types.Endpoint.Trie
 import Hasura.RQL.Types.Metadata.Object
   ( MetadataObjId (..),
@@ -381,6 +380,12 @@ instance Arbitrary TableCustomRootFields where
         let allNames = mapMaybe _crfName $ getAllCustomRootFields tcrf
             uniqueNames = HashSet.fromList allNames
          in length allNames == length uniqueNames
+
+instance Arbitrary ColumnConfig where
+  arbitrary =
+    ColumnConfig
+      <$> arbitrary
+      <*> arbitrary
 
 -- Generators for GraphQL Engine types
 

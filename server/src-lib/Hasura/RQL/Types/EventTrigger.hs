@@ -36,7 +36,7 @@ import Database.PG.Query qualified as Q
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
-import Hasura.RQL.DDL.WebhookTransforms (MetadataRequestTransform, MetadataResponseTransform)
+import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common (InputWebhook, ResolvedWebhook, SourceName)
 import Hasura.RQL.Types.Eventing
@@ -198,7 +198,7 @@ data EventTriggerConf (b :: BackendType) = EventTriggerConf
     etcWebhookFromEnv :: !(Maybe Text),
     etcRetryConf :: !RetryConf,
     etcHeaders :: !(Maybe [HeaderConf]),
-    etcRequestTransform :: !(Maybe MetadataRequestTransform),
+    etcRequestTransform :: !(Maybe RequestTransform),
     etcResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Show, Eq, Generic)
@@ -277,7 +277,7 @@ data EventTriggerInfo (b :: BackendType) = EventTriggerInfo
     -- | Custom headers can be added to an event trigger. Each webhook request will have these
     -- headers added.
     etiHeaders :: ![EventHeaderInfo],
-    etiRequestTransform :: !(Maybe MetadataRequestTransform),
+    etiRequestTransform :: !(Maybe RequestTransform),
     etiResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Generic, Eq)

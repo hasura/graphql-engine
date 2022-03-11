@@ -1,12 +1,23 @@
-import { Api } from '@/hooks/apiUtils';
-import Endpoints from '@/Endpoints';
-
-import { QualifiedTable } from '@/metadata/types';
+import {
+  DataTarget,
+  isPostgresDataTarget,
+  isMSSQLDataTarget,
+} from '@/features/Datasources';
+import { allowedMetadataTypes } from '@/features/MetadataAPI';
+import { MetadataDataSource, QualifiedTable } from '@/metadata/types';
 import { AccessType, FormOutput, QueryType } from '../types';
 
+const driverPrefixes = {
+  postgres: 'pg',
+  mysql: 'mysql',
+  mssql: 'mssql',
+  bigquery: 'bigquery',
+  citus: 'citus',
+};
+
 interface CreateBodyArgs {
-  dataSource: string;
-  qualifiedTable: QualifiedTable;
+  driver: MetadataDataSource['kind'];
+  dataTarget: DataTarget;
   roleName: string;
   resourceVersion: number;
 }
@@ -16,26 +27,89 @@ interface CreateDeleteBodyArgs extends CreateBodyArgs {
 }
 
 const createDeleteBody = ({
-  dataSource,
-  qualifiedTable,
+  driver,
+  dataTarget,
   roleName,
   resourceVersion,
   queries,
-}: CreateDeleteBodyArgs) => {
+}: CreateDeleteBodyArgs): {
+  type: allowedMetadataTypes;
+  source: string;
+  resource_version: number;
+  args: BulkArgs[];
+} => {
+  const driverPrefix = driverPrefixes[driver];
+
+  if (!isPostgresDataTarget(dataTarget) || !isMSSQLDataTarget(dataTarget)) {
+    throw new Error(`${driver} not supported`);
+  }
+
   const args = queries.map(queryType => ({
-    type: `${dataSource}_drop_${queryType}_permission`,
+    type: `${driverPrefix}_drop_${queryType}_permission` as allowedMetadataTypes,
     args: {
-      table: qualifiedTable,
+      table: { schema: dataTarget.schema, name: dataTarget.table },
       role: roleName,
-      source: 'default',
+      source: dataTarget.database,
     },
   }));
 
   const body = {
-    type: 'bulk',
+    type: 'bulk' as allowedMetadataTypes,
     source: 'default',
     resource_version: resourceVersion,
     args,
+  };
+
+  return body;
+};
+
+interface CreateBulkDeleteBodyArgs extends CreateBodyArgs {
+  roleList?: Array<{ roleName: string; queries: QueryType[] }>;
+}
+
+interface BulkArgs {
+  type: allowedMetadataTypes;
+  args: Record<string, string | allowedMetadataTypes | QualifiedTable>;
+}
+
+const createBulkDeleteBody = ({
+  driver,
+  dataTarget,
+  resourceVersion,
+  roleList,
+}: CreateBulkDeleteBodyArgs): {
+  type: allowedMetadataTypes;
+  source: string;
+  resource_version: number;
+  args: BulkArgs[];
+} => {
+  const driverPrefix = driverPrefixes[driver];
+
+  if (!isPostgresDataTarget(dataTarget) || !isMSSQLDataTarget(dataTarget)) {
+    throw new Error('Only Postgres, Citus and MsSql is supported');
+  }
+
+  const args =
+    roleList?.reduce<BulkArgs[]>((acc, role) => {
+      role.queries.forEach(queryType => {
+        acc.push({
+          type: `${driverPrefix}_drop_${queryType}_permission` as allowedMetadataTypes,
+          args: {
+            table: { schema: dataTarget.schema, name: dataTarget.table },
+            role: role.roleName,
+            source: dataTarget.database,
+          },
+        });
+      });
+
+      return acc;
+    }, []) || [];
+
+  const body = {
+    type: 'bulk' as allowedMetadataTypes,
+    source: dataTarget.database,
+    resource_version: resourceVersion,
+    args: args ?? [],
   };
 
   return body;
@@ -48,14 +122,24 @@ interface CreateInsertBodyArgs extends CreateBodyArgs {
 }
 
 const createInsertBody = ({
-  dataSource,
-  qualifiedTable,
+  driver,
+  dataTarget,
   queryType,
   roleName,
   formData,
   accessType,
   resourceVersion,
-}: CreateInsertBodyArgs) => {
+}: CreateInsertBodyArgs): {
+  type: allowedMetadataTypes;
+  resource_version: number;
+  args: Record<string, any>[];
+} => {
+  const driverPrefix = driverPrefixes[driver];
+
+  if (!isPostgresDataTarget(dataTarget) || !isMSSQLDataTarget(dataTarget)) {
+    throw new Error(`${driver} not supported`);
+  }
+
   const presets = formData.presets?.reduce((acc, preset) => {
     if (preset.columnValue) {
       acc[preset.columnName] = preset.columnValue;
@@ -79,64 +163,40 @@ const createInsertBody = ({
     filter: JSON.parse(formData.filter || '{}'),
   };
 
-  const args = [
+  const args: Record<string, any>[] = [
     {
-      type: `${dataSource}_create_${queryType}_permission`,
+      type: `${driverPrefix}_create_${queryType}_permission` as allowedMetadataTypes,
       args: {
-        table: qualifiedTable,
+        table: { schema: dataTarget.schema, name: dataTarget.table },
         role: roleName,
         permission,
-        source: 'default',
+        source: dataTarget.database,
       },
     },
   ];
 
   if (accessType !== 'noAccess') {
     args.unshift({
-      type: `${dataSource}_drop_${queryType}_permission`,
+      type: `${driverPrefix}_drop_${queryType}_permission` as allowedMetadataTypes,
       args: {
-        table: qualifiedTable,
+        table: { schema: dataTarget.schema, name: dataTarget.table },
         role: roleName,
-        source: 'default',
+        source: dataTarget.database,
       },
     } as typeof args[0]);
   }
 
   const formBody = {
-    type: 'bulk',
-    source: 'default',
+    type: 'bulk' as allowedMetadataTypes,
     resource_version: resourceVersion,
-    args,
+    args: args ?? [],
   };
 
   return formBody;
 };
 
-interface CreatePermissionsArgs {
-  headers: any;
-  body: ReturnType<typeof createInsertBody>;
-}
-
-const createPermissions = ({ headers, body }: CreatePermissionsArgs) =>
-  Api.post<string[]>(
-    { headers, body, url: Endpoints.metadata },
-    result => result
-  );
-
-interface DeletePermissionsArgs {
-  headers: any;
-  body: ReturnType<typeof createDeleteBody>;
-}
-
-const deletePermissions = ({ headers, body }: DeletePermissionsArgs) =>
-  Api.post<string[]>(
-    { headers, body, url: Endpoints.metadata },
-    result => result
-  );
-
 export const api = {
-  createPermissions,
-  deletePermissions,
   createInsertBody,
   createDeleteBody,
+  createBulkDeleteBody,
 };

@@ -1,6 +1,6 @@
 SELECT
-  schema.nspname AS table_schema,
-  "table".relname AS table_name,
+  "table".table_schema,
+  "table".table_name,
 
   -- This field corresponds to the `DBTableMetadata` Haskell type
   jsonb_build_object(
@@ -29,10 +29,26 @@ SELECT
       END
   )::json AS info
 
+-- tracked tables
+-- $1 parameter provides JSON array of tracked tables
+FROM
+  ( SELECT "tracked"."name" AS "table_name",
+           "tracked"."schema" AS "table_schema"
+      FROM jsonb_to_recordset($1::jsonb) AS "tracked"("schema" text, "name" text)
+  ) "tracked_table"
+
 -- table & schema
-FROM pg_catalog.pg_class "table"
-JOIN pg_catalog.pg_namespace schema
-  ON schema.oid = "table".relnamespace
+LEFT JOIN
+  ( SELECT "table".oid,
+           "table".relkind,
+           "table".relname AS "table_name",
+           "schema".nspname AS "table_schema"
+      FROM pg_catalog.pg_class "table"
+           JOIN pg_catalog.pg_namespace "schema"
+               ON schema.oid = "table".relnamespace
+  ) "table"
+      ON  "table"."table_name" = "tracked_table"."table_name"
+      AND "table"."table_schema" = "tracked_table"."table_schema"
 
 -- description
 LEFT JOIN pg_catalog.pg_description description
@@ -184,18 +200,18 @@ LEFT JOIN LATERAL
                   AND q.ref_table_id = afc.attrelid
          GROUP BY q.table_schema, q.table_name, q.constraint_name
     ) foreign_key
-    WHERE foreign_key.table_schema = schema.nspname
-      AND foreign_key.table_name = "table".relname
+    WHERE foreign_key.table_schema = "table".table_schema
+      AND foreign_key.table_name = "table".table_name
   ) foreign_key_constraints ON true
 
 LEFT JOIN LATERAL
   ( SELECT citus_table_type, distribution_column, table_name
     FROM citus_tables extraMetadata
     -- DO NOT SUBMIT: Should we compare columns of type 'name' by casting to 'text'?
-    WHERE extraMetadata.table_name::text = "table".relname::text ) extraMetadata ON true
+    WHERE extraMetadata.table_name::text = "table".table_name::text ) extraMetadata ON true
 
 -- all these identify table-like things
 WHERE "table".relkind IN ('r', 't', 'v', 'm', 'f', 'p')
   -- and tables not from any system schemas
-  AND schema.nspname NOT LIKE 'pg_%'
-  AND schema.nspname NOT IN ('information_schema', 'hdb_catalog');
+  AND "table".table_schema NOT LIKE 'pg_%'
+  AND "table".table_schema NOT IN ('information_schema', 'hdb_catalog');

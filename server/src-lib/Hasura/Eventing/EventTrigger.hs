@@ -71,7 +71,7 @@ import Hasura.HTTP (getHTTPExceptionStatus)
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
-import Hasura.RQL.DDL.WebhookTransforms
+import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.Types
 import Hasura.RQL.Types.Eventing.Backend
 import Hasura.SQL.AnyBackend qualified as AB
@@ -245,12 +245,14 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx {..} 
         LA.forConcurrently (M.toList allSources) \(sourceName, sourceCache) ->
           AB.dispatchAnyBackend @BackendEventTrigger sourceCache \(SourceInfo _sourceName tableCache _functionCache sourceConfig _queryTagsConfig _sourceCustomization :: SourceInfo b) -> do
             let tables = M.elems tableCache
-            let eventTriggerCount = sum (M.size . _tiEventTriggerInfoMap <$> tables)
+                triggerMap = _tiEventTriggerInfoMap <$> tables
+                eventTriggerCount = sum (M.size <$> triggerMap)
+                triggerNames = concat $ M.keys <$> triggerMap
 
             -- only process events for this source if at least one event trigger exists
             if eventTriggerCount > 0
               then
-                ( runExceptT (fetchUndeliveredEvents @b sourceConfig sourceName maintenanceMode (FetchBatchSize fetchBatchSize)) >>= \case
+                ( runExceptT (fetchUndeliveredEvents @b sourceConfig sourceName triggerNames maintenanceMode (FetchBatchSize fetchBatchSize)) >>= \case
                     Right events -> do
                       _ <- liftIO $ EKG.Distribution.add (smNumEventsFetchedPerBatch serverMetrics) (fromIntegral $ length events)
                       eventsFetchedTime <- liftIO getCurrentTime
@@ -391,9 +393,8 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx {..} 
                   ep = createEventPayload retryConf e
                   payload = J.encode $ J.toJSON ep
                   extraLogCtx = ExtraLogContext (epId ep) (Just $ etiName eti)
-                  requestTransform = mkRequestTransform <$> etiRequestTransform eti
+                  requestTransform = etiRequestTransform eti
                   responseTransform = mkResponseTransform <$> etiResponseTransform eti
-
               eitherReqRes <-
                 runExceptT $
                   mkRequest headers httpTimeout payload requestTransform webhook >>= \reqDetails -> do
@@ -409,7 +410,7 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx {..} 
                       bracket_
                         (liftIO $ EKG.Gauge.inc $ smNumEventHTTPWorkers serverMetrics)
                         (liftIO $ EKG.Gauge.dec $ smNumEventHTTPWorkers serverMetrics)
-                        (invokeRequest reqDetails responseTransform logger')
+                        (invokeRequest reqDetails responseTransform (_rdSessionVars reqDetails) logger')
                     pure (request, resp)
               case eitherReqRes of
                 Right (req, resp) ->

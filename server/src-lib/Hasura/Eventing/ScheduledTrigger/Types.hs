@@ -14,7 +14,7 @@ import Hasura.Base.Error
 import Hasura.Eventing.HTTP
 import Hasura.Logging qualified as L
 import Hasura.Prelude
-import Hasura.RQL.DDL.WebhookTransforms (MetadataRequestTransform, MetadataResponseTransform)
+import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types
 
 newtype ScheduledTriggerInternalErr
@@ -51,7 +51,7 @@ data ScheduledEventWebhookPayload = ScheduledEventWebhookPayload
     -- `created_at` is just an implementation detail, so we
     -- don't send it
     sewpCreatedAt :: !(Maybe UTCTime),
-    sewpRequestTransform :: !(Maybe MetadataRequestTransform),
+    sewpRequestTransform :: !(Maybe RequestTransform),
     sewpResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Show, Eq)

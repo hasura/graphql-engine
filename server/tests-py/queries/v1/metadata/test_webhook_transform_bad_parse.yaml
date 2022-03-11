@@ -2,11 +2,15 @@
   url: /v1/metadata
   headers:
     X-Hasura-Role: admin
-  status: 400
+  status: 200
   response:
-    path: "$.args.request_transform.body.template"
-    error: "Unexpected token '$body'."
-    code: "parse-failed"
+    - error_code: Parse Error
+      source_position:
+        end_column: 15
+        start_line: 0
+        end_line: 0
+        start_column: 14
+      message: Unexpected token '$body'.
   query:
     type: test_webhook_transform
     args:

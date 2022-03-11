@@ -27,9 +27,21 @@ module Hasura.RQL.Types.ScheduledTrigger
     GetInvocationsBy (..),
     GetEventInvocations (..),
     ClearCronEvents (..),
+    cctName,
+    cctWebhook,
+    cctCronSchedule,
+    cctPayload,
+    cctRetryConf,
+    cctHeaders,
+    cctIncludeInMetadata,
+    cctComment,
+    cctReplace,
+    cctRequestTransform,
+    cctResponseTransform,
   )
 where
 
+import Control.Lens (makeLenses)
 import Data.Aeson
 import Data.Aeson qualified as J
 import Data.Aeson.Casing
@@ -42,7 +54,7 @@ import Data.Time.Format.ISO8601
 import Database.PG.Query qualified as Q
 import Hasura.Incremental
 import Hasura.Prelude
-import Hasura.RQL.DDL.WebhookTransforms (MetadataRequestTransform, MetadataResponseTransform)
+import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types.Action (InputWebhook (..))
 import Hasura.RQL.Types.Common (NonNegativeDiffTime, unsafeNonNegativeDiffTime)
 import Hasura.RQL.Types.EventTrigger
@@ -108,7 +120,7 @@ data CronTriggerMetadata = CronTriggerMetadata
     ctHeaders :: ![HeaderConf],
     ctIncludeInMetadata :: !Bool,
     ctComment :: !(Maybe Text),
-    ctRequestTransform :: !(Maybe MetadataRequestTransform),
+    ctRequestTransform :: !(Maybe RequestTransform),
     ctResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Show, Eq, Generic)
@@ -135,19 +147,21 @@ instance FromJSON CronTriggerMetadata where
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''CronTriggerMetadata)
 
 data CreateCronTrigger = CreateCronTrigger
-  { cctName :: !TriggerName,
-    cctWebhook :: !InputWebhook,
-    cctCronSchedule :: !CronSchedule,
-    cctPayload :: !(Maybe J.Value),
-    cctRetryConf :: !STRetryConf,
-    cctHeaders :: ![HeaderConf],
-    cctIncludeInMetadata :: !Bool,
-    cctComment :: !(Maybe Text),
-    cctReplace :: !Bool,
-    cctRequestTransform :: !(Maybe MetadataRequestTransform),
-    cctResponseTransform :: !(Maybe MetadataResponseTransform)
+  { _cctName :: !TriggerName,
+    _cctWebhook :: !InputWebhook,
+    _cctCronSchedule :: !CronSchedule,
+    _cctPayload :: !(Maybe J.Value),
+    _cctRetryConf :: !STRetryConf,
+    _cctHeaders :: ![HeaderConf],
+    _cctIncludeInMetadata :: !Bool,
+    _cctComment :: !(Maybe Text),
+    _cctReplace :: !Bool,
+    _cctRequestTransform :: !(Maybe RequestTransform),
+    _cctResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Show, Eq, Generic)
+
+$(makeLenses ''CreateCronTrigger)
 
 instance NFData CreateCronTrigger
 
@@ -156,17 +170,17 @@ instance Cacheable CreateCronTrigger
 instance FromJSON CreateCronTrigger where
   parseJSON =
     withObject "CreateCronTrigger" $ \o -> do
-      cctName <- o .: "name"
-      cctWebhook <- o .: "webhook"
-      cctPayload <- o .:? "payload"
-      cctCronSchedule <- o .: "schedule"
-      cctRetryConf <- o .:? "retry_conf" .!= defaultSTRetryConf
-      cctHeaders <- o .:? "headers" .!= []
-      cctIncludeInMetadata <- o .: "include_in_metadata"
-      cctComment <- o .:? "comment"
-      cctReplace <- o .:? "replace" .!= False
-      cctRequestTransform <- o .:? "request_transform"
-      cctResponseTransform <- o .:? "response_transform"
+      _cctName <- o .: "name"
+      _cctWebhook <- o .: "webhook"
+      _cctPayload <- o .:? "payload"
+      _cctCronSchedule <- o .: "schedule"
+      _cctRetryConf <- o .:? "retry_conf" .!= defaultSTRetryConf
+      _cctHeaders <- o .:? "headers" .!= []
+      _cctIncludeInMetadata <- o .: "include_in_metadata"
+      _cctComment <- o .:? "comment"
+      _cctReplace <- o .:? "replace" .!= False
+      _cctRequestTransform <- o .:? "request_transform"
+      _cctResponseTransform <- o .:? "response_transform"
       pure CreateCronTrigger {..}
 
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''CreateCronTrigger)
@@ -189,7 +203,7 @@ data CreateScheduledEvent = CreateScheduledEvent
     cseHeaders :: ![HeaderConf],
     cseRetryConf :: !STRetryConf,
     cseComment :: !(Maybe Text),
-    cseRequestTransform :: !(Maybe MetadataRequestTransform),
+    cseRequestTransform :: !(Maybe RequestTransform),
     cseResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Show, Eq, Generic)
@@ -315,7 +329,7 @@ data OneOffScheduledEvent = OneOffScheduledEvent
     _ooseCreatedAt :: !UTCTime,
     _ooseNextRetryAt :: !(Maybe UTCTime),
     _ooseComment :: !(Maybe Text),
-    _ooseRequestTransform :: !(Maybe MetadataRequestTransform),
+    _ooseRequestTransform :: !(Maybe RequestTransform),
     _ooseResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Show, Eq)

@@ -7,10 +7,23 @@ module Harness.Test.Schema
     ScalarValue (..),
     serialize,
     column,
+    columnNull,
+    parseUTCTimeOrError,
+    trackTable,
+    untrackTable,
+    trackObjectRelationships,
+    trackArrayRelationships,
+    untrackRelationships,
   )
 where
 
-import Data.Text (Text, replace)
+import Data.Foldable (for_)
+import Data.Text (Text, pack, replace)
+import Data.Time (UTCTime, defaultTimeLocale, formatTime)
+import Data.Time.Format (parseTimeOrError)
+import Harness.GraphqlEngine qualified as GraphqlEngine
+import Harness.Quoter.Yaml (yaml)
+import Harness.State (State)
 import Hasura.Prelude (tshow)
 import Prelude
 
@@ -25,11 +38,13 @@ import Prelude
 -- need to be just a bit careful while constructing Tables.
 data Table = Table
   { tableName :: Text,
+    -- | Columns that are references (foreign keys) should be null-able
     tableColumns :: [Column],
     tablePrimaryKey :: [Text],
     tableReferences :: [Reference],
     tableData :: [[ScalarValue]]
   }
+  deriving (Show, Eq)
 
 -- | Foreign keys for backends that support it.
 data Reference = Reference
@@ -37,6 +52,7 @@ data Reference = Reference
     referenceTargetTable :: Text,
     referenceTargetColumn :: Text
   }
+  deriving (Show, Eq)
 
 -- | Generic type to construct columns for all backends
 data Column = Column
@@ -45,6 +61,7 @@ data Column = Column
     columnNullable :: Bool,
     columnDefault :: Maybe Text
   }
+  deriving (Show, Eq)
 
 -- | Generic scalar type for all backends, for simplicity.
 -- Ideally, we would be wiring in @'Backend@ specific scalar types here to make
@@ -53,12 +70,23 @@ data Column = Column
 data ScalarType
   = TInt
   | TStr
+  | TUTCTime
+  | TBool
+  | -- | Specialized. See: https://github.com/hasura/graphql-engine/issues/8158
+    -- session variable string values are not truncated to default (30) length in Test.RequestHeadersSpec
+    -- works with VStr
+    TVarchar50
+  deriving (Show, Eq)
 
 -- | Generic scalar value type for all backends, that should directly correspond
 -- to 'ScalarType'
 data ScalarValue
   = VInt Int
   | VStr Text
+  | VUTCTime UTCTime
+  | VBool Bool
+  | VNull
+  deriving (Show, Eq)
 
 -- | Generic 'ScalarValue' serializer.
 --
@@ -68,7 +96,132 @@ serialize :: ScalarValue -> Text
 serialize = \case
   VInt i -> tshow i
   VStr s -> "'" <> replace "'" "\'" s <> "'"
+  VUTCTime t -> pack $ formatTime defaultTimeLocale "'%F %T'" t
+  VBool b -> tshow @Int $ if b then 1 else 0
+  VNull -> "NULL"
 
 -- | Helper function to construct 'Column's with common defaults
 column :: Text -> ScalarType -> Column
 column name typ = Column name typ False Nothing
+
+-- | Helper function to construct 'Column's that are null-able
+columnNull :: Text -> ScalarType -> Column
+columnNull name typ = Column name typ True Nothing
+
+-- | Helper to construct UTCTime using @%F %T@ format. For e.g. @YYYY-MM-DD HH:MM:SS@
+parseUTCTimeOrError :: String -> ScalarValue
+parseUTCTimeOrError = VUTCTime . parseTimeOrError True defaultTimeLocale "%F %T"
+
+-- | Unified track table
+trackTable :: Text -> Text -> Text -> Table -> State -> IO ()
+trackTable backendType sourceName schema Table {tableName} state = do
+  let requestType = backendType <> "_track_table"
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: *requestType
+args:
+  source: *sourceName
+  table:
+    schema: *schema
+    name: *tableName
+|]
+
+-- | Unified untrack table
+untrackTable :: Text -> Text -> Text -> Table -> State -> IO ()
+untrackTable backendType sourceName schema Table {tableName} state = do
+  let requestType = backendType <> "_untrack_table"
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: *requestType
+args:
+  source: *sourceName
+  table:
+    schema: *schema
+    name: *tableName
+|]
+
+-- | Helper to create the object relationship name
+mkObjectRelationshipName :: Reference -> Text
+mkObjectRelationshipName Reference {referenceLocalColumn, referenceTargetTable} = referenceTargetTable <> "_by_" <> referenceLocalColumn
+
+-- | Unified track object relationships
+trackObjectRelationships :: Text -> Text -> Table -> State -> IO ()
+trackObjectRelationships source schema Table {tableName, tableReferences} state = do
+  let requestType = source <> "_create_object_relationship"
+  for_ tableReferences $ \ref@Reference {referenceLocalColumn} -> do
+    let relationshipName = mkObjectRelationshipName ref
+    GraphqlEngine.postMetadata_
+      state
+      [yaml|
+type: *requestType
+args:
+  source: *source
+  table:
+    name: *tableName
+    schema: *schema
+  name: *relationshipName
+  using:
+    foreign_key_constraint_on: *referenceLocalColumn
+|]
+
+-- | Helper to create the array relationship name
+mkArrayRelationshipName :: Text -> Text -> Text
+mkArrayRelationshipName tableName referenceLocalColumn = tableName <> "s_by_" <> referenceLocalColumn
+
+-- | Unified track array relationships
+trackArrayRelationships :: Text -> Text -> Table -> State -> IO ()
+trackArrayRelationships source schema Table {tableName, tableReferences} state = do
+  let requestType = source <> "_create_array_relationship"
+  for_ tableReferences $ \Reference {referenceLocalColumn, referenceTargetTable} -> do
+    let relationshipName = mkArrayRelationshipName tableName referenceLocalColumn
+    GraphqlEngine.postMetadata_
+      state
+      [yaml|
+type: *requestType
+args:
+  source: *source
+  table:
+    name: *referenceTargetTable
+    schema: *schema
+  name: *relationshipName
+  using:
+    foreign_key_constraint_on:
+      table:
+        name: *tableName
+        schema: *schema
+      column: *referenceLocalColumn
+|]
+
+-- | Unified untrack relationships
+untrackRelationships :: Text -> Text -> Table -> State -> IO ()
+untrackRelationships source schema Table {tableName, tableReferences} state = do
+  let requestType = source <> "_drop_relationship"
+  for_ tableReferences $ \ref@Reference {referenceLocalColumn, referenceTargetTable} -> do
+    let arrayRelationshipName = mkArrayRelationshipName tableName referenceLocalColumn
+        objectRelationshipName = mkObjectRelationshipName ref
+    -- drop array relationships
+    GraphqlEngine.postMetadata_
+      state
+      [yaml|
+type: *requestType
+args:
+  source: *source
+  table:
+    schema: *schema
+    name: *referenceTargetTable
+  relationship: *arrayRelationshipName
+|]
+    -- drop object relationships
+    GraphqlEngine.postMetadata_
+      state
+      [yaml|
+type: *requestType
+args:
+  source: *source
+  table:
+    schema: *schema
+    name: *tableName
+  relationship: *objectRelationshipName
+|]

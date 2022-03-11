@@ -1,17 +1,26 @@
 - server
 + project
-@@ -13,4 +13,16 @@
--  tables: []
-+  tables:
-+  - table:
-+      name: t3
-+      schema: pub
-+  - table:
-+      name: t4
-+      schema: pub
-+  - table:
-+      name: t1
-+      schema: public
-+  - table:
-+      name: t2
-+      schema: public
+@@ -4,22 +4,29 @@
+-        use_prepared_statements: true
+-          retries: 1
+-    tables: []
++          retries: 1
++        use_prepared_statements: true
++    tables:
++      - table:
++          name: t3
++          schema: pub
++      - table:
++          name: t4
++          schema: pub
++      - table:
++          name: t1
++          schema: public
++      - table:
++          name: t2
++          schema: public
+-network: {}
+-api_limits: {}
+-inherited_roles: []
+-graphql_schema_introspection:
+-  disabled_for_roles: []

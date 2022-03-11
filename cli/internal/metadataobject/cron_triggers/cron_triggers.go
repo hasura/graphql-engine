@@ -10,7 +10,7 @@ import (
 
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type CronTriggers struct {
@@ -45,50 +45,25 @@ func (c *CronTriggers) CreateFiles() error {
 	return nil
 }
 
-func (c *CronTriggers) Build(metadata *yaml.MapSlice) metadataobject.ErrParsingMetadataObject {
+func (c *CronTriggers) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
 	data, err := ioutil.ReadFile(filepath.Join(c.MetadataDir, c.Filename()))
-	if err != nil {
-		return c.error(err)
-	}
-
-	var obj []yaml.MapSlice
-	err = yaml.Unmarshal(data, &obj)
-	if err != nil {
-		return c.error(err)
-	}
-	if len(obj) > 0 {
-		item := yaml.MapItem{
-			Key:   c.Key(),
-			Value: obj,
-		}
-		*metadata = append(*metadata, item)
-	}
-	return nil
-}
-
-func (c *CronTriggers) Export(metadata yaml.MapSlice) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
-	var cronTriggers interface{}
-	for _, item := range metadata {
-		k, ok := item.Key.(string)
-		if !ok || k != c.Key() {
-			continue
-		}
-		cronTriggers = item.Value
-	}
-	if cronTriggers == nil {
-		cronTriggers = make([]interface{}, 0)
-	}
-	data, err := yaml.Marshal(cronTriggers)
 	if err != nil {
 		return nil, c.error(err)
 	}
-	return map[string][]byte{
-		filepath.ToSlash(filepath.Join(c.MetadataDir, c.Filename())): data,
-	}, nil
+	var obj []yaml.Node
+	err = yaml.Unmarshal(data, &obj)
+	if err != nil {
+		return nil, c.error(err)
+	}
+	return map[string]interface{}{c.Key(): obj}, nil
+}
+
+func (c *CronTriggers) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+	return metadataobject.DefaultExport(c, metadata, c.error, metadataobject.DefaultObjectTypeSequence)
 }
 
 func (c *CronTriggers) Key() string {
-	return "cron_triggers"
+	return metadataobject.CronTriggersKey
 }
 
 func (c *CronTriggers) Filename() string {

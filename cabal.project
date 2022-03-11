@@ -20,11 +20,6 @@ jobs: $ncpus
 
 packages: server
 
-constraints:
-  -- Ensure we don't end up with a freeze file that forces an incompatible
-  -- version in CI for `Setup.hs` scripts.
-  setup.Cabal <3.4
-
 -- https://github.com/andrewthad/haskell-ip/issues/79
 allow-newer: ip:attoparsec
 

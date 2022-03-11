@@ -129,6 +129,7 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Context (GQLContext, RoleContext)
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Parser qualified as P
+import Hasura.GraphQL.Parser.Column (UnpreparedValue)
 import Hasura.Incremental
   ( Cacheable,
     Dependency,
@@ -136,9 +137,10 @@ import Hasura.Incremental
     selectKeyD,
   )
 import Hasura.Prelude
-import Hasura.RQL.DDL.WebhookTransforms
+import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.RemoteSchema
+import Hasura.RQL.IR.Root
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
@@ -227,9 +229,9 @@ data IntrospectionResult = IntrospectionResult
 instance Cacheable IntrospectionResult
 
 data ParsedIntrospectionG m = ParsedIntrospection
-  { piQuery :: [P.FieldParser m (NamespacedField (RemoteSchemaRootField Void RemoteSchemaVariable))],
-    piMutation :: Maybe [P.FieldParser m (NamespacedField (RemoteSchemaRootField Void RemoteSchemaVariable))],
-    piSubscription :: Maybe [P.FieldParser m (NamespacedField (RemoteSchemaRootField Void RemoteSchemaVariable))]
+  { piQuery :: [P.FieldParser m (NamespacedField (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))],
+    piMutation :: Maybe [P.FieldParser m (NamespacedField (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))],
+    piSubscription :: Maybe [P.FieldParser m (NamespacedField (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))]
   }
 
 type ParsedIntrospection = ParsedIntrospectionG (P.ParseT Identity)
@@ -273,7 +275,7 @@ data CronTriggerInfo = CronTriggerInfo
     ctiWebhookInfo :: !ResolvedWebhook,
     ctiHeaders :: ![EventHeaderInfo],
     ctiComment :: !(Maybe Text),
-    ctiRequestTransform :: !(Maybe MetadataRequestTransform),
+    ctiRequestTransform :: !(Maybe RequestTransform),
     ctiResponseTransform :: !(Maybe MetadataResponseTransform)
   }
   deriving (Show, Eq)
@@ -331,7 +333,8 @@ data SchemaCache = SchemaCache
     scMetricsConfig :: !MetricsConfig,
     scMetadataResourceVersion :: !(Maybe MetadataResourceVersion),
     scSetGraphqlIntrospectionOptions :: !SetGraphqlIntrospectionOptions,
-    scTlsAllowlist :: ![TlsAllow]
+    scTlsAllowlist :: ![TlsAllow],
+    scQueryCollections :: !QueryCollections
   }
 
 -- WARNING: this can only be used for debug purposes, as it loses all
@@ -355,7 +358,8 @@ instance ToJSON SchemaCache where
         "metrics_config" .= toJSON scMetricsConfig,
         "metadata_resource_version" .= toJSON scMetadataResourceVersion,
         "set_graphql_introspection_options" .= toJSON scSetGraphqlIntrospectionOptions,
-        "tls_allowlist" .= toJSON scTlsAllowlist
+        "tls_allowlist" .= toJSON scTlsAllowlist,
+        "query_collection" .= toJSON scQueryCollections
       ]
 
 getAllRemoteSchemas :: SchemaCache -> [RemoteSchemaName]

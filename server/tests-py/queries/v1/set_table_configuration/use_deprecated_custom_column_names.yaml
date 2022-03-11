@@ -1,0 +1,55 @@
+- description: Customise column names using deprecated custom_column_names
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: set_table_customization
+    args:
+      table: author
+      configuration:
+        custom_column_names:
+          id: AuthorId
+          name: AuthorName
+          age: age
+
+- description: Check that above query has changed the schema
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      author_by_pk:
+        AuthorName: Clarke
+  query:
+    query: |
+      query {
+          author_by_pk(AuthorId: 1){
+            AuthorName
+          }
+      }
+
+- description: Remove custom column names
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: set_table_customization
+    args:
+      table: author
+      configuration: {}
+
+- description: Check that above query has changed the schema
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      author_by_pk:
+        name: Clarke
+  query:
+    query: |
+      query {
+          author_by_pk(id: 1){
+            name
+          }
+      }

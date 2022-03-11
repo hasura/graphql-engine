@@ -1,6 +1,7 @@
 module Hasura.RQL.DDL.Schema.Diff
   ( TableMeta (..),
     FunctionMeta (..),
+    TablesDiff (..),
     FunctionsDiff (..),
     ComputedFieldMeta (..),
     getTablesDiff,
@@ -321,8 +322,8 @@ alterTableInMetadata source ti tableDiff = do
 
   -- Process computed field diff
   processComputedFieldDiff tn
-  -- Drop custom column names for dropped columns
-  alterCustomColumnNamesInMetadata source droppedCols ti
+  -- Drop custom column names and comments for dropped columns
+  removeDroppedColumnsFromMetadataField source droppedCols ti
   maybe withOldTabName withNewTabName mNewName
   where
     TableDiff mNewName droppedCols alteredCols _ computedFieldDiff _ _ = tableDiff
@@ -396,19 +397,21 @@ alterColumnsInMetadata source alteredCols fields sc tn =
                     <> reportSchemaObjs typeDepObjs
             | otherwise -> pure ()
 
-alterCustomColumnNamesInMetadata ::
+removeDroppedColumnsFromMetadataField ::
   forall b m.
   (MonadWriter MetadataModifier m, BackendMetadata b) =>
   SourceName ->
   [Column b] ->
   TableCoreInfo b ->
   m ()
-alterCustomColumnNamesInMetadata source droppedCols ti = do
-  let tableConfig@TableConfig {..} = _tciCustomConfig ti
-      tableName = _tciName ti
-      modifiedCustomColumnNames = foldl' (flip M.delete) _tcCustomColumnNames droppedCols
-  when (modifiedCustomColumnNames /= _tcCustomColumnNames) $
+removeDroppedColumnsFromMetadataField source droppedCols tableInfo = do
+  when (newColumnConfig /= originalColumnConfig) $
     tell $
       MetadataModifier $
-        tableMetadataSetter @b source tableName . tmConfiguration
-          .~ tableConfig {_tcCustomColumnNames = modifiedCustomColumnNames}
+        tableMetadataSetter @b source tableName . tmConfiguration .~ newTableConfig
+  where
+    tableName = _tciName tableInfo
+    originalTableConfig = _tciCustomConfig tableInfo
+    originalColumnConfig = _tcColumnConfig originalTableConfig
+    newColumnConfig = foldl' (flip M.delete) originalColumnConfig droppedCols
+    newTableConfig = originalTableConfig & tcColumnConfig .~ newColumnConfig

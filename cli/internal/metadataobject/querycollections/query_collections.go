@@ -1,6 +1,7 @@
 package querycollections
 
 import (
+	"bytes"
 	"io/ioutil"
 	"path/filepath"
 
@@ -9,7 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/hasura/graphql-engine/cli/v2"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type QueryCollectionConfig struct {
@@ -31,60 +32,37 @@ func (q *QueryCollectionConfig) Validate() error {
 
 func (q *QueryCollectionConfig) CreateFiles() error {
 	v := make([]interface{}, 0)
-	data, err := yaml.Marshal(v)
+	buf := new(bytes.Buffer)
+	err := metadataobject.GetEncoder(buf).Encode(v)
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(q.MetadataDir, q.Filename()), data, 0644)
+	err = ioutil.WriteFile(filepath.Join(q.MetadataDir, q.Filename()), buf.Bytes(), 0644)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (q *QueryCollectionConfig) Build(metadata *yaml.MapSlice) metadataobject.ErrParsingMetadataObject {
+func (q *QueryCollectionConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
 	data, err := ioutil.ReadFile(filepath.Join(q.MetadataDir, q.Filename()))
-	if err != nil {
-		return q.error(err)
-	}
-	item := yaml.MapItem{
-		Key: "query_collections",
-	}
-	var obj []yaml.MapSlice
-	err = yaml.Unmarshal(data, &obj)
-	if err != nil {
-		return q.error(err)
-	}
-	if len(obj) != 0 {
-		item.Value = obj
-		*metadata = append(*metadata, item)
-	}
-	return nil
-}
-
-func (q *QueryCollectionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
-	var queryCollections interface{}
-	for _, item := range metadata {
-		k, ok := item.Key.(string)
-		if !ok || k != "query_collections" {
-			continue
-		}
-		queryCollections = item.Value
-	}
-	if queryCollections == nil {
-		queryCollections = make([]interface{}, 0)
-	}
-	data, err := yaml.Marshal(queryCollections)
 	if err != nil {
 		return nil, q.error(err)
 	}
-	return map[string][]byte{
-		filepath.ToSlash(filepath.Join(q.MetadataDir, q.Filename())): data,
-	}, nil
+	var obj []yaml.Node
+	err = yaml.Unmarshal(data, &obj)
+	if err != nil {
+		return nil, q.error(err)
+	}
+	return map[string]interface{}{q.Key(): obj}, nil
+}
+
+func (q *QueryCollectionConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+	return metadataobject.DefaultExport(q, metadata, q.error, metadataobject.DefaultObjectTypeSequence)
 }
 
 func (q *QueryCollectionConfig) Key() string {
-	return "query_collections"
+	return metadataobject.QueryCollectionsKey
 }
 
 func (q *QueryCollectionConfig) Filename() string {

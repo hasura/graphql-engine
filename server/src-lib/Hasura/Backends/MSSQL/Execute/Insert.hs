@@ -9,11 +9,15 @@ module Hasura.Backends.MSSQL.Execute.Insert
   )
 where
 
-import Control.Monad.Validate qualified as V
 import Database.MSSQL.Transaction qualified as Tx
 import Hasura.Backends.MSSQL.Connection
-import Hasura.Backends.MSSQL.Execute.MutationResponse
 import Hasura.Backends.MSSQL.FromIr as TSQL
+import Hasura.Backends.MSSQL.FromIr.Constants (tempTableNameInserted, tempTableNameValues)
+import Hasura.Backends.MSSQL.FromIr.Expression
+import Hasura.Backends.MSSQL.FromIr.Insert (toMerge)
+import Hasura.Backends.MSSQL.FromIr.Insert qualified as TSQL
+import Hasura.Backends.MSSQL.FromIr.MutationResponse
+import Hasura.Backends.MSSQL.FromIr.SelectIntoTempTable qualified as TSQL
 import Hasura.Backends.MSSQL.Plan
 import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Backends.MSSQL.ToQuery as TQ
@@ -196,10 +200,7 @@ buildUpsertTx tableName insert ifMatched = do
   Tx.unitQueryE mutationMSSQLTxErrorHandler insertValuesIntoTempTableQuery
 
   -- Run the MERGE query and store the mutated rows in #inserted temporary table
-  merge <-
-    (V.runValidate . runFromIr)
-      (toMerge tableName (_aiInsObj $ _aiData insert) allTableColumns ifMatched)
-      `onLeft` (throw500 . tshow)
+  merge <- runFromIr (toMerge tableName (_aiInsObj $ _aiData insert) allTableColumns ifMatched)
   let mergeQuery = toQueryFlat $ TQ.fromMerge merge
   Tx.unitQueryE mutationMSSQLTxErrorHandler mergeQuery
 
@@ -210,13 +211,11 @@ buildUpsertTx tableName insert ifMatched = do
 buildInsertResponseTx :: StringifyNumbers -> Text -> AnnInsert 'MSSQL Void Expression -> Tx.TxET QErr IO (Text, Int)
 buildInsertResponseTx stringifyNum withAlias insert = do
   -- Generate a SQL SELECT statement which outputs the mutation response using the #inserted
-  mutationOutputSelect <- mkMutationOutputSelect stringifyNum withAlias $ _aiOutput insert
+  mutationOutputSelect <- runFromIr $ mkMutationOutputSelect stringifyNum withAlias $ _aiOutput insert
 
   -- The check constraint is translated to boolean expression
   let checkCondition = fst $ _aiCheckCond $ _aiData insert
-  checkBoolExp <-
-    V.runValidate (runFromIr $ runReaderT (fromGBoolExp checkCondition) (EntityAlias withAlias))
-      `onLeft` (throw500 . tshow)
+  checkBoolExp <- runFromIr $ runReaderT (fromGBoolExp checkCondition) (EntityAlias withAlias)
 
   let withSelect =
         emptySelect

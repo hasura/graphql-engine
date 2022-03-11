@@ -1,0 +1,18 @@
+description: Test casting from jsonb to string
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    query {
+      article(where: {tags: {_cast: {String: {_like: "%bestseller%"}}}}){
+        id
+        tags
+      }
+    }
+response:
+  data:
+    article:
+    - id: 2
+      tags:
+      - bestseller
+      - latest

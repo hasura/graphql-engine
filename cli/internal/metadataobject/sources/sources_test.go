@@ -4,13 +4,64 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
+	goyaml "github.com/goccy/go-yaml"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 
 	"github.com/sirupsen/logrus"
 )
+
+func TestSourceConfig_Build(t *testing.T) {
+	type fields struct {
+		MetadataDir string
+		logger      *logrus.Logger
+	}
+	tests := []struct {
+		id         string
+		name       string
+		fields     fields
+		wantGolden string
+		wantErr    bool
+	}{
+		{
+			"t1",
+			"can build metadata from file",
+			fields{
+				MetadataDir: "testdata/build_test/t1/metadata",
+				logger:      logrus.New(),
+			},
+			"testdata/build_test/t1/want.golden.json",
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tc := &SourceConfig{
+				MetadataDir: tt.fields.MetadataDir,
+				logger:      tt.fields.logger,
+			}
+			got, err := tc.Build()
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				gotbs, err := yaml.Marshal(got)
+				assert.NoError(t, err)
+				jsonbs, err := goyaml.YAMLToJSON(gotbs)
+				assert.NoError(t, err)
+
+				// uncomment following lines to update golden file
+				// assert.NoError(t, ioutil.WriteFile(tt.wantGolden, jsonbs, os.ModePerm))
+
+				wantbs, err := ioutil.ReadFile(tt.wantGolden)
+				assert.NoError(t, err)
+				assert.Equal(t, string(wantbs), string(jsonbs))
+			}
+		})
+	}
+}
 
 func TestSourceConfig_Export(t *testing.T) {
 	type fields struct {
@@ -18,9 +69,10 @@ func TestSourceConfig_Export(t *testing.T) {
 		logger      *logrus.Logger
 	}
 	type args struct {
-		metadata yaml.MapSlice
+		metadata map[string]yaml.Node
 	}
 	tests := []struct {
+		id      string
 		name    string
 		fields  fields
 		args    args
@@ -28,108 +80,74 @@ func TestSourceConfig_Export(t *testing.T) {
 		wantErr bool
 	}{
 		{
+			"t1",
 			"can create sources metadata representation",
 			fields{
-				MetadataDir: "./metadata",
+				MetadataDir: "testdata/export_test/t1/want",
 				logger:      logrus.New(),
 			},
 			args{
-				metadata: func() yaml.MapSlice {
-					var metadata yaml.MapSlice
-					jsonb, err := ioutil.ReadFile("testdata/metadata.json")
+				metadata: func() map[string]yaml.Node {
+					bs, err := ioutil.ReadFile("testdata/export_test/t1/metadata.json")
 					assert.NoError(t, err)
-					assert.NoError(t, yaml.Unmarshal(jsonb, &metadata))
-					return metadata
+					yamlbs, err := metadatautil.JSONToYAML(bs)
+					assert.NoError(t, err)
+					var v map[string]yaml.Node
+					assert.NoError(t, yaml.Unmarshal(yamlbs, &v))
+					return v
 				}(),
 			},
 			map[string][]byte{
-				"metadata/databases/databases.yaml": []byte(`- name: default
-  kind: postgres
-  configuration:
-    connection_info:
-      database_url:
-        from_env: HASURA_GRAPHQL_DATABASE_URL
-      isolation_level: read-committed
-      pool_settings:
-        idle_timeout: 180
-        max_connections: 50
-        retries: 1
-      use_prepared_statements: true
-  query_tags:
-    disabled: false
-    format: standard
-  tables: "!include default/tables/tables.yaml"
-  functions: "!include default/functions/functions.yaml"
-- name: bg
-  kind: bigquery
-  configuration:
-    datasets:
-    - t1
-    project_id: test_id
-    service_account:
-      client_email: some_email
-      private_key: the private key
-      project_id: some_test
-  tables: "!include bg/tables/tables.yaml"
-`),
-				"metadata/databases/default/tables/public_t1.yaml": []byte(`table:
-  name: t1
-  schema: public
-insert_permissions:
-- permission:
-    backend_only: false
-    check:
-      id:
-        _eq: X-Hasura-User-Id
-    columns: []
-  role: user
-event_triggers:
-- definition:
-    enable_manual: false
-    insert:
-      columns: "*"
-  name: t1
-  retry_conf:
-    interval_sec: 10
-    num_retries: 0
-    timeout_sec: 60
-  webhook: https://httpbin.org/post
-`),
-				"metadata/databases/default/tables/public_t2.yaml": []byte(`table:
-  name: t2
-  schema: public
-`),
-				"metadata/databases/default/tables/tables.yaml": []byte(`- "!include public_t1.yaml"
-- "!include public_t2.yaml"
-`),
-				"metadata/databases/default/functions/functions.yaml": []byte(`- "!include public_get_t1.yaml"
-- "!include public_get_t2.yaml"
-`),
-				"metadata/databases/default/functions/public_get_t1.yaml": []byte(`function:
-  name: get_t1
-  schema: public
-some_amazing_stuff:
-  test1: test
-  test2: test
-xyz_test:
-  test1: test
-  test2: test
-`),
-				"metadata/databases/default/functions/public_get_t2.yaml": []byte(`function:
-  name: get_t2
-  schema: public
-`),
-				"metadata/databases/bg/tables/tables.yaml": []byte(`- "!include london_cycles_cycle_hire.yaml"
-- "!include london_cycles_cycle_stations.yaml"
-`),
-				"metadata/databases/bg/tables/london_cycles_cycle_hire.yaml": []byte(`table:
-  dataset: london_cycles
-  name: cycle_hire
-`),
-				"metadata/databases/bg/tables/london_cycles_cycle_stations.yaml": []byte(`table:
-  dataset: london_cycles
-  name: cycle_stations
-`),
+				"testdata/export_test/t1/want/databases/databases.yaml": func() []byte {
+					bs, err := ioutil.ReadFile("testdata/export_test/t1/want/databases/databases.yaml")
+					assert.NoError(t, err)
+					return bs
+				}(),
+				"testdata/export_test/t1/want/databases/default/tables/public_t1.yaml": func() []byte {
+					bs, err := ioutil.ReadFile("testdata/export_test/t1/want/databases/default/tables/public_t1.yaml")
+					assert.NoError(t, err)
+					return bs
+				}(),
+				"testdata/export_test/t1/want/databases/default/tables/public_t2.yaml": func() []byte {
+					bs, err := ioutil.ReadFile("testdata/export_test/t1/want/databases/default/tables/public_t2.yaml")
+					assert.NoError(t, err)
+					return bs
+				}(),
+				"testdata/export_test/t1/want/databases/default/tables/tables.yaml": func() []byte {
+					bs, err := ioutil.ReadFile("testdata/export_test/t1/want/databases/default/tables/tables.yaml")
+					assert.NoError(t, err)
+					return bs
+				}(),
+				"testdata/export_test/t1/want/databases/default/functions/functions.yaml": func() []byte {
+					bs, err := ioutil.ReadFile("testdata/export_test/t1/want/databases/default/functions/functions.yaml")
+					assert.NoError(t, err)
+					return bs
+				}(),
+				"testdata/export_test/t1/want/databases/default/functions/public_get_t1.yaml": func() []byte {
+					bs, err := ioutil.ReadFile("testdata/export_test/t1/want/databases/default/functions/public_get_t1.yaml")
+					assert.NoError(t, err)
+					return bs
+				}(),
+				"testdata/export_test/t1/want/databases/default/functions/public_get_t2.yaml": func() []byte {
+					bs, err := ioutil.ReadFile("testdata/export_test/t1/want/databases/default/functions/public_get_t2.yaml")
+					assert.NoError(t, err)
+					return bs
+				}(),
+				"testdata/export_test/t1/want/databases/bg/tables/tables.yaml": func() []byte {
+					bs, err := ioutil.ReadFile("testdata/export_test/t1/want/databases/bg/tables/tables.yaml")
+					assert.NoError(t, err)
+					return bs
+				}(),
+				"testdata/export_test/t1/want/databases/bg/tables/london_cycles_cycle_hire.yaml": func() []byte {
+					bs, err := ioutil.ReadFile("testdata/export_test/t1/want/databases/bg/tables/london_cycles_cycle_hire.yaml")
+					assert.NoError(t, err)
+					return bs
+				}(),
+				"testdata/export_test/t1/want/databases/bg/tables/london_cycles_cycle_stations.yaml": func() []byte {
+					bs, err := ioutil.ReadFile("testdata/export_test/t1/want/databases/bg/tables/london_cycles_cycle_stations.yaml")
+					assert.NoError(t, err)
+					return bs
+				}(),
 			},
 			false,
 		},
@@ -141,199 +159,17 @@ xyz_test:
 				logger:      tt.fields.logger,
 			}
 			got, err := tc.Export(tt.args.metadata)
-			if (err != nil) != tt.wantErr {
-				t.Fatalf("Export() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			var wantContent = map[string]string{}
-			var gotContent = map[string]string{}
-			for k, v := range got {
-				gotContent[k] = string(v)
-			}
-			for k, v := range tt.want {
-				wantContent[k] = string(v)
-			}
-			if diff := cmp.Diff(wantContent, gotContent); diff != "" {
-				t.Errorf("Export() mismatch (-want +got):\n%s", diff)
-			}
-		})
-	}
-}
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				for k, v := range got {
+					assert.Contains(t, tt.want, k)
+					// uncomment to update golden files
+					// assert.NoError(t, ioutil.WriteFile(fmt.Sprintf("%s", k), v, os.ModePerm))
 
-func TestSourceConfig_Build(t *testing.T) {
-	type fields struct {
-		MetadataDir string
-		logger      *logrus.Logger
-	}
-	type args struct {
-		metadata *yaml.MapSlice
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    string
-		wantErr bool
-	}{
-		{
-			"can build metadata from file",
-			fields{
-				MetadataDir: "testdata/metadata",
-				logger:      logrus.New(),
-			},
-			args{
-				metadata: new(yaml.MapSlice),
-			},
-			`sources:
-- configuration:
-    connection_info:
-      database_url:
-        from_env: HASURA_GRAPHQL_DATABASE_URL
-      isolation_level: read-committed
-      pool_settings:
-        idle_timeout: 180
-        max_connections: 50
-        retries: 1
-      use_prepared_statements: true
-  functions:
-  - function:
-      name: get_t1
-      schema: public
-  - function:
-      name: get_t2
-      schema: public
-  kind: postgres
-  name: s1
-  query_tags:
-    disabled: false
-    format: standard
-  tables:
-  - table:
-      name: t1
-      schema: public
-  - table:
-      name: t2
-      schema: public
-- configuration:
-    connection_info:
-      database_url:
-        from_env: HASURA_GRAPHQL_DATABASE_URL
-      isolation_level: read-committed
-      pool_settings:
-        idle_timeout: 180
-        max_connections: 50
-        retries: 1
-      use_prepared_statements: true
-  functions:
-  - function:
-      name: get_t1
-      schema: public
-  - function:
-      name: get_t2
-      schema: public
-  kind: postgres
-  name: s2
-  tables:
-  - table:
-      name: t1
-      schema: public
-  - table:
-      name: t2
-      schema: public
-- configuration:
-    connection_info:
-      database_url:
-        from_env: HASURA_GRAPHQL_DATABASE_URL
-      isolation_level: read-committed
-      pool_settings:
-        idle_timeout: 180
-        max_connections: 50
-        retries: 1
-      use_prepared_statements: true
-  functions:
-  - function:
-      name: get_t1
-      schema: public
-  - function:
-      name: get_t2
-      schema: public
-  kind: postgres
-  name: s 3
-  tables:
-  - table:
-      name: t1
-      schema: public
-  - table:
-      name: t2
-      schema: public
-- configuration:
-    connection_info:
-      database_url:
-        from_env: HASURA_GRAPHQL_DATABASE_URL
-      isolation_level: read-committed
-      pool_settings:
-        idle_timeout: 180
-        max_connections: 50
-        retries: 1
-      use_prepared_statements: true
-  functions:
-  - function:
-      name: get_t1
-      schema: public
-  - function:
-      name: get_t2
-      schema: public
-  kind: postgres
-  name: s 4
-  tables:
-  - table:
-      name: t1
-      schema: public
-  - table:
-      name: t2
-      schema: public
-- configuration:
-    connection_info:
-      database_url:
-        from_env: HASURA_GRAPHQL_DATABASE_URL
-      isolation_level: read-committed
-      pool_settings:
-        idle_timeout: 180
-        max_connections: 50
-        retries: 1
-      use_prepared_statements: true
-  functions:
-  - function:
-      name: get_t1
-      schema: public
-  - function:
-      name: get_t2
-      schema: public
-  kind: postgres
-  name: s 5
-  tables:
-  - table:
-      name: t1
-      schema: public
-  - table:
-      name: t2
-      schema: public
-`,
-			false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tc := &SourceConfig{
-				MetadataDir: tt.fields.MetadataDir,
-				logger:      tt.fields.logger,
+					assert.Equal(t, string(tt.want[k]), string(v), "%s", k)
+				}
 			}
-			if err := tc.Build(tt.args.metadata); (err != nil) != tt.wantErr {
-				t.Fatalf("Build() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			b, err := yaml.Marshal(tt.args.metadata)
-			assert.NoError(t, err)
-			assert.Equal(t, tt.want, string(b))
 		})
 	}
 }

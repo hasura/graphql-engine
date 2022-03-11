@@ -126,6 +126,7 @@ library
                      , aeson-casing
                      , attoparsec
                      , attoparsec-iso8601 >= 1.0
+                     , barbies
                      , base
                      , bytestring
                      , containers
@@ -335,6 +336,7 @@ library
                      , Data.HashMap.Strict.Multi
                      , Data.HashMap.Strict.NonEmpty
                      , Data.HashMap.Strict.InsOrd.Extended
+                     , Data.IntMap.Strict.Extended
                      , Data.List.Extended
                      , Data.Parser.CacheControl
                      , Data.Parser.Expires
@@ -384,11 +386,18 @@ library
                      , Hasura.Backends.MSSQL.DDL.RunSQL
                      , Hasura.Backends.MSSQL.DDL.Source
                      , Hasura.Backends.MSSQL.DDL.Source.Version
-                     , Hasura.Backends.MSSQL.Execute.MutationResponse
                      , Hasura.Backends.MSSQL.Execute.Delete
                      , Hasura.Backends.MSSQL.Execute.Insert
                      , Hasura.Backends.MSSQL.Execute.Update
                      , Hasura.Backends.MSSQL.FromIr
+                     , Hasura.Backends.MSSQL.FromIr.Constants
+                     , Hasura.Backends.MSSQL.FromIr.Delete
+                     , Hasura.Backends.MSSQL.FromIr.Expression
+                     , Hasura.Backends.MSSQL.FromIr.Insert
+                     , Hasura.Backends.MSSQL.FromIr.MutationResponse
+                     , Hasura.Backends.MSSQL.FromIr.Query
+                     , Hasura.Backends.MSSQL.FromIr.SelectIntoTempTable
+                     , Hasura.Backends.MSSQL.FromIr.Update
                      , Hasura.Backends.MSSQL.Instances.API
                      , Hasura.Backends.MSSQL.Instances.Execute
                      , Hasura.Backends.MSSQL.Instances.Metadata
@@ -408,6 +417,8 @@ library
                      , Hasura.Backends.MSSQL.Types.Update
 
                      , Hasura.Backends.Postgres.Connection
+                     , Hasura.Backends.Postgres.Connection.MonadTx
+                     , Hasura.Backends.Postgres.Connection.Settings
                      , Hasura.Backends.Postgres.DDL
                      , Hasura.Backends.Postgres.DDL.BoolExp
                      , Hasura.Backends.Postgres.DDL.ComputedField
@@ -534,6 +545,7 @@ library
                      , Hasura.Server.Middleware
                      , Hasura.Server.Cors
                      , Hasura.Server.CheckUpdates
+                     , Hasura.Server.SchemaCacheRef
                      , Hasura.Server.SchemaUpdate
                      , Hasura.Server.Migrate.Version
                      , Hasura.Server.Migrate.Internal
@@ -599,7 +611,14 @@ library
                      , Hasura.RQL.DDL.RemoteRelationship.Validate
                      , Hasura.RQL.DDL.RemoteSchema
                      , Hasura.RQL.DDL.RemoteSchema.Permission
-                     , Hasura.RQL.DDL.WebhookTransforms
+                     , Hasura.RQL.DDL.Webhook.Transform
+                     , Hasura.RQL.DDL.Webhook.Transform.Body
+                     , Hasura.RQL.DDL.Webhook.Transform.Class
+                     , Hasura.RQL.DDL.Webhook.Transform.Headers
+                     , Hasura.RQL.DDL.Webhook.Transform.Method
+                     , Hasura.RQL.DDL.Webhook.Transform.QueryParams
+                     , Hasura.RQL.DDL.Webhook.Transform.Validation
+                     , Hasura.RQL.DDL.Webhook.Transform.Url
                      , Hasura.RQL.DDL.Schema
                      , Hasura.RQL.DDL.Schema.Cache
                      , Hasura.RQL.DDL.Schema.Cache.Common
@@ -657,6 +676,7 @@ library
                      , Hasura.GraphQL.Execute.RemoteJoin.Collect
                      , Hasura.GraphQL.Execute.RemoteJoin.Join
                      , Hasura.GraphQL.Execute.RemoteJoin.RemoteSchema
+                     , Hasura.GraphQL.Execute.RemoteJoin.Source
                      , Hasura.GraphQL.Execute.Resolve
                      , Hasura.GraphQL.Execute.Types
                      , Hasura.GraphQL.Explain
@@ -853,6 +873,7 @@ test-suite graphql-engine-tests
   hs-source-dirs: src-test
   main-is: Main.hs
   other-modules:
+    Control.Concurrent.ExtendedSpec
     Data.HashMap.Strict.ExtendedSpec
     Data.NonNegativeIntSpec
     Data.Parser.CacheControlSpec
@@ -874,6 +895,7 @@ test-suite graphql-engine-tests
     Hasura.QuickCheck.Instances
     Hasura.RQL.IR.Generator
     Hasura.RQL.IR.Postgres
+    Hasura.RQL.IR.SelectSpec
     Hasura.RQL.MetadataSpec
     Hasura.RQL.PermissionSpec
     Hasura.RQL.Types.AllowlistSpec

@@ -1,0 +1,1 @@
+{"remote_schemas": [{"name": "countries", "definition": {"forward_client_headers": true, "headers": [{"name": "foo", "value": "bar"}], "timeout_seconds": 420, "url": "https://countries.trevorblades.com/"}, "comment": "baz", "permissions": []}]}

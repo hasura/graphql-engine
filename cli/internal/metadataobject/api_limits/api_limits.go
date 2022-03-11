@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/hasura/graphql-engine/cli/v2"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type MetadataObject struct {
@@ -42,53 +42,45 @@ func (o *MetadataObject) CreateFiles() error {
 	return nil
 }
 
-func (o *MetadataObject) Build(metadata *yaml.MapSlice) metadataobject.ErrParsingMetadataObject {
-	data, err := ioutil.ReadFile(filepath.Join(o.MetadataDir, o.Filename()))
-	if err != nil {
-		return o.error(err)
-	}
-	item := yaml.MapItem{
-		Key: o.Key(),
-	}
-	var obj yaml.MapSlice
-	err = yaml.Unmarshal(data, &obj)
-	if err != nil {
-		return o.error(err)
-	}
-	if len(obj) > 0 {
-		item.Value = obj
-		*metadata = append(*metadata, item)
-	}
-	return nil
+type apiLimitsObject struct {
+	Disabled   yaml.Node `yaml:"disabled,omitempty"`
+	RateLimit  yaml.Node `yaml:"rate_limit,omitempty"`
+	DepthLimit yaml.Node `yaml:"depth_limit,omitempty"`
+	NodeLimit  yaml.Node `yaml:"node_limit,omitempty"`
+	TimeLimit  yaml.Node `yaml:"time_limit,omitempty"`
 }
 
-func (o *MetadataObject) Export(metadata yaml.MapSlice) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
-	var apiLimits interface{}
-	for _, item := range metadata {
-		k, ok := item.Key.(string)
-		if !ok || k != o.Key() {
-			continue
-		}
-		apiLimits = item.Value
-	}
-	if apiLimits == nil {
-		o.logger.WithFields(logrus.Fields{
-			"object": o.Key(),
-			"reason": "not found in metadata",
-		}).Debugf("skipped building %s", o.Key())
-		return nil, nil
-	}
-	data, err := yaml.Marshal(apiLimits)
+func (o *MetadataObject) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
+	data, err := ioutil.ReadFile(filepath.Join(o.MetadataDir, o.Filename()))
 	if err != nil {
 		return nil, o.error(err)
 	}
-	return map[string][]byte{
-		filepath.ToSlash(filepath.Join(o.MetadataDir, o.Filename())): data,
-	}, nil
+	// The reason for loosely typing this variable to a struct rather than using a catch-all yaml.Node
+	// is because, if we were to do something like
+	// data, _ := ioutil.ReadFile(filepath.Join(o.MetadataDir, o.Filename()))
+	// var obj yaml.Node
+	// err = yaml.Unmarshal(data, &obj)
+	// then the yaml.Node.Kind will be a Document Node and therefore the final return value will be
+	// map[string]interface{}{ o.Key: A Document Node }
+	// if we call a yaml.Marshal on this return value it'll fail with the following error
+	// `yaml: expected SCALAR, SEQUENCE-START, MAPPING-START, or ALIAS, but got document start`
+	// which is fair, because a map will be parsed to a Mapping Node and yaml should not have a "Document Node" as
+	// child of a Mapping Node and hence the error
+	// This pattern is repeated for objects where it's child is a MappingNode
+	var obj apiLimitsObject
+	err = yaml.Unmarshal(data, &obj)
+	if err != nil {
+		return nil, o.error(err)
+	}
+	return map[string]interface{}{o.Key(): obj}, nil
+}
+
+func (o *MetadataObject) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+	return metadataobject.DefaultExport(o, metadata, o.error, metadataobject.DefaultObjectTypeMapping)
 }
 
 func (o *MetadataObject) Key() string {
-	return "api_limits"
+	return metadataobject.APILimitsKey
 }
 
 func (o *MetadataObject) Filename() string {

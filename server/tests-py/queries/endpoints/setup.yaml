@@ -1,25 +1,5 @@
 type: bulk
 args:
-- type: create_query_collection
-  args:
-    name: test_collection
-    definition:
-      queries:
-      - name: simple_query
-        query: "query { test_table { first_name last_name } }"
-      - name: simple_query_cached
-        query: "query @cached(ttl: 5) { test_table { first_name last_name } }"
-      - name: query_with_arg
-        query: "query ($first_name:String!) { test_table(where: {first_name: { _eq: $first_name } }) { first_name last_name } }"
-      - name: query_with_args
-        query: "query ($first_name: String!, $last_name:String!) { test_table(where: {first_name: { _eq: $first_name } last_name: { _eq: $last_name }}) { first_name last_name } }"
-      - name: query_with_uuid_arg
-        query: "query ($id: uuid!) { test_table(where: {id: { _neq: $id }}) { first_name last_name } }"
-      - name: query_with_uuid_args
-        query: "query ($ids: [uuid!]!) { test_table(where: {id: { _in: $ids }}) { first_name last_name } }"
-      - name: simple_subscription
-        query: "subscription { test_table { first_name last_name } }"
-
 - type: run_sql
   args:
     sql: |
@@ -42,6 +22,26 @@ args:
       ('Foo', 'Bar'),
       ('Baz', 'Qux'),
       ('X%20Y', 'Test');
+
+- type: create_query_collection
+  args:
+    name: test_collection
+    definition:
+      queries:
+      - name: simple_query
+        query: "query { test_table { first_name last_name } }"
+      - name: simple_query_cached
+        query: "query @cached(ttl: 5) { test_table { first_name last_name } }"
+      - name: query_with_arg
+        query: "query ($first_name:String!) { test_table(where: {first_name: { _eq: $first_name } }) { first_name last_name } }"
+      - name: query_with_args
+        query: "query ($first_name: String!, $last_name:String!) { test_table(where: {first_name: { _eq: $first_name } last_name: { _eq: $last_name }}) { first_name last_name } }"
+      - name: query_with_uuid_arg
+        query: "query ($id: uuid!) { test_table(where: {id: { _neq: $id }}) { first_name last_name } }"
+      - name: query_with_uuid_args
+        query: "query ($ids: [uuid!]!) { test_table(where: {id: { _in: $ids }}) { first_name last_name } }"
+      - name: simple_subscription
+        query: "subscription { test_table { first_name last_name } }"
 
 - type: create_rest_endpoint
   args:

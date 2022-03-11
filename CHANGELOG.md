@@ -1,10 +1,118 @@
 # Hasura GraphQL Engine Changelog
 
 ## Next release
+### Deprecations
+* The `custom_column_names` property of TableConfig used on `<db>_track_table` and `set_table_customization` metadata APIs has been deprecated in favour of the new `column_config` property. `custom_column_names` will still work for now, however, values used in `column_config` will take precedence over values from `custom_column_names` and any overlapped values in `custom_column_names` will be discarded.
+
+### Behaviour Changes
+
+- cli: use indentation of 2 spaces in array elements of metadata YAML files
+
+Example:
+<table>
+<thead>
+  <tr>
+    <th>Old behaviour<pre> metadata/query_collections.yaml</pre> </th>
+    <th>New behaviour<pre> metadata/query_collections.yaml </pre> </th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>
+      <pre>
+- name: allowed-queries
+  definition:
+    queries:
+    - name: getAlbums
+      query: |
+        query getAlbums {
+          albums {
+            id
+            title
+          }
+        }
+       </pre>
+    </td>
+    <td>
+      <pre>
+- name: allowed-queries
+  definition:
+    queries:
+      - name: getAlbums
+        query: |
+          query getAlbums {
+            albums {
+              id
+              title
+            }
+          }
+      </pre>
+    </td>
+  </tr>
+</tbody>
+</table>
+
+This change is a result of fixing some inconsistencies and edge cases in writing array elements.
+`hasura metadata export` will write YAML files in this format going forward. Also, note that this is a backwards compatible change.
+
+- cli: fix ordering of elements in metadata files to match server metadata
+
+Example:
+<table>
+   <thead>
+      <tr>
+         <th>Server Metadata (JSON)</th>
+         <th>Old behaviour (YAML)</th>
+         <th>New Behaviour (YAML)</th>
+      </tr>
+   </thead>
+   <tbody>
+      <tr>
+         <td>
+            <pre>
+{
+  "function": {
+    "schema": "public",
+    "name": "search_albums"
+  }
+}
+       </pre>
+         </td>
+         <td>
+            <pre>
+function:
+  name: search_albums
+  schema: public
+      </pre>
+         </td>
+         <td>
+            <pre>
+function:
+  schema: public
+  name: search_albums
+      </pre>
+         </td>
+      </tr>
+   </tbody>
+</table>
 
 ### Bug fixes and improvements
 
+- server: add jsonb to string cast support - postgres 
+- server: improve performance of fetching postgres catalog metadata for tables and functions
+- server: Queries present in query collections, such as allow-list, and rest-endpoints are now validated (against the schema)
+- server: Redesigns internal implementation of webhook transforms.
+- server: improve SQL generation for BigQuery backend queries involving `Orderby`.
 - server: fix regression where remote relationships would get exposed over Relay, which is unsupported
+- server: add support for customising the GraphQL schema descriptions of table columns in metadata
+- console: fixed an issue where editing both a column's name and its GraphQL field name at the same time caused an error
+- cli: fix inherited roles metadata not being updated when dropping all roles (#7872)
+- cli: add support for customization field in sources metadata (#8292)
+
+## v2.2.2
+
+- server: fix regression where remote relationships would get exposed over Relay, which is unsupported
+- server: fix caching bug with session variables in remote joins
 
 ## v2.4.0-beta.1
 
@@ -13,6 +121,7 @@
 
 - server: add metadata inconsistency information in `reload_metadata` API call
 - server: add custom function for case insensitive lookup in session variable in request transformation
+- server: Improved error messaging for `test_webhook_transform` metadata API endpoint
 - server: Webhook Tranforms can now produce `x-www-url-formencoded` bodies.
 - server: Webhook Transforms can now delete request/response bodies explicitly.
 - server: Fix truncation of session variables with variable length column types in MSSQL (#8158)

@@ -7,21 +7,15 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 
 	"github.com/hasura/graphql-engine/cli/v2"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type V3MetadataV2ConfigVersion struct {
 	*VersionConfig
 }
 
-func (a *V3MetadataV2ConfigVersion) Build(metadata *yaml.MapSlice) metadataobject.ErrParsingMetadataObject {
-	item := yaml.MapItem{
-		Key: "version",
-		// Force version 2
-		Value: 2,
-	}
-	*metadata = append(*metadata, item)
-	return nil
+func (a *V3MetadataV2ConfigVersion) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
+	return map[string]interface{}{a.Key(): 2}, nil
 }
 
 // TODO: improve naming as the method name is misleading because it gets called when we require
@@ -54,7 +48,7 @@ func (a *V3MetadataV2ConfigVersion) CreateFiles() error {
 	return nil
 }
 
-func (a *V3MetadataV2ConfigVersion) Export(_ yaml.MapSlice) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+func (a *V3MetadataV2ConfigVersion) Export(_ map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
 	v := Version{
 		// during a v3 metadata export forcefully write metadata v2
 		Version: 2,

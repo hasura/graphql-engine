@@ -21,6 +21,7 @@ module Hasura.RQL.DDL.Schema.Cache
 where
 
 import Control.Arrow.Extended
+import Control.Concurrent.Extended (forConcurrentlyEIO)
 import Control.Lens hiding ((.=))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Retry qualified as Retry
@@ -30,7 +31,7 @@ import Data.Dependent.Map qualified as DMap
 import Data.Either (isLeft)
 import Data.Environment qualified as Env
 import Data.HashMap.Strict.Extended qualified as M
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Data.HashSet qualified as HS
 import Data.Proxy
 import Data.Set qualified as S
@@ -250,27 +251,19 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
   (resolvedOutputs, dependencyInconsistentObjects, resolvedDependencies) <-
     resolveDependencies -< (outputs, unresolvedDependencies)
 
-  -- Step 3: Build the GraphQL schema.
-  (gqlContext, gqlContextUnauth, inconsistentRemoteSchemas) <-
+  -- Steps 3 and 4: Build the regular and relay GraphQL schemas in parallel
+  [(gqlContext, gqlContextUnauth, inconsistentRemoteSchemas), (relayContext, relayContextUnauth, _)] <-
     bindA
-      -<
-        buildGQLContext
-          QueryHasura
-          (_boSources resolvedOutputs)
-          (_boRemoteSchemas resolvedOutputs)
-          (_boActions resolvedOutputs)
-          (_boCustomTypes resolvedOutputs)
-
-  -- Step 4: Build the relay GraphQL schema
-  (relayContext, relayContextUnauth, _) <-
-    bindA
-      -<
-        buildGQLContext
-          QueryRelay
-          (_boSources resolvedOutputs)
-          (_boRemoteSchemas resolvedOutputs)
-          (_boActions resolvedOutputs)
-          (_boCustomTypes resolvedOutputs)
+      -< do
+        cxt <- askServerConfigCtx
+        forConcurrentlyEIO 1 [QueryHasura, QueryRelay] $ \queryType -> do
+          buildGQLContext
+            cxt
+            queryType
+            (_boSources resolvedOutputs)
+            (_boRemoteSchemas resolvedOutputs)
+            (_boActions resolvedOutputs)
+            (_boCustomTypes resolvedOutputs)
 
   let duplicateVariables :: EndpointMetadata a -> Bool
       duplicateVariables m = any ((> 1) . length) $ group $ sort $ catMaybes $ splitPath Just (const Nothing) (_ceUrl m)
@@ -280,6 +273,9 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
 
       endpointObject :: EndpointMetadata q -> MetadataObject
       endpointObject md = MetadataObject (endpointObjId md) (toJSON $ OMap.lookup (_ceName md) $ _metaRestEndpoints metadata)
+
+      listedQueryObjects :: (CollectionName, ListedQuery) -> MetadataObject
+      listedQueryObjects (cName, lq) = MetadataObject (MOQueryCollectionsQuery cName lq) (toJSON lq)
 
       --  Cases of urls that generate invalid segments:
 
@@ -299,8 +295,11 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
       ambiguousF' ep = MetadataObject (endpointObjId ep) (toJSON ep)
       ambiguousF mds = AmbiguousRestEndpoints (commaSeparated $ map _ceUrl mds) (map ambiguousF' mds)
       ambiguousRestEndpoints = map (ambiguousF . S.elems . snd) $ ambiguousPathsGrouped endpoints
+
       maybeRS = getSchemaIntrospection gqlContext
-      inconsistentRestQueries = getInconsistentRestQueries maybeRS endpoints endpointObject
+      queryCollections = _boQueryCollections resolvedOutputs
+      allowLists = HS.toList . iaGlobal . _boAllowlist $ resolvedOutputs
+      inconsistentQueryCollections = getInconsistentQueryCollections maybeRS queryCollections listedQueryObjects endpoints allowLists
 
   returnA
     -<
@@ -328,12 +327,13 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
               <> duplicateRestVariables
               <> invalidRestSegments
               <> ambiguousRestEndpoints
-              <> inconsistentRestQueries,
+              <> inconsistentQueryCollections,
           scApiLimits = _boApiLimits resolvedOutputs,
           scMetricsConfig = _boMetricsConfig resolvedOutputs,
           scMetadataResourceVersion = Nothing,
           scSetGraphqlIntrospectionOptions = _metaSetGraphqlIntrospectionOptions metadata,
-          scTlsAllowlist = _boTlsAllowlist resolvedOutputs
+          scTlsAllowlist = _boTlsAllowlist resolvedOutputs,
+          scQueryCollections = _boQueryCollections resolvedOutputs
         }
   where
     getSourceConfigIfNeeded ::
@@ -378,7 +378,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
           metadataObj = MetadataObject (MOSource sourceName) $ toJSON sourceName
           logAndResolveDatabaseMetadata :: SourceConfig b -> SourceTypeCustomization -> m (Either QErr (ResolvedSource b))
           logAndResolveDatabaseMetadata scConfig sType = do
-            resSource <- resolveDatabaseMetadata scConfig sType
+            resSource <- resolveDatabaseMetadata sourceMetadata scConfig sType
             for_ resSource $ liftIO . unLogger logger
             pure resSource
 
@@ -778,8 +778,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                       returnA
                         -<
                           ( remoteSchemaCtx
-                              { _rscPermissions = M.mapMaybe id $ M.fromList resolvedPermissions,
-                                _rscRemoteRelationships = OMap.mapMaybe id <$> OMap.fromList resolvedRelationships
+                              { _rscPermissions = M.catMaybes $ M.fromList resolvedPermissions,
+                                _rscRemoteRelationships = OMap.catMaybes <$> OMap.fromList resolvedRelationships
                               },
                             metadataObj
                           )
@@ -833,7 +833,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
               _boApiLimits = apiLimits,
               _boMetricsConfig = metricsConfig,
               _boRoles = mapFromL _rRoleName $ _unOrderedRoles orderedRoles,
-              _boTlsAllowlist = (networkTlsAllowlist networkConfig)
+              _boTlsAllowlist = (networkTlsAllowlist networkConfig),
+              _boQueryCollections = collections
             }
 
     mkEndpointMetadataObject (name, createEndpoint) =

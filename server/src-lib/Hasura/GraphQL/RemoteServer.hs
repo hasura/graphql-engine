@@ -33,7 +33,7 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Context
 import Hasura.GraphQL.Namespace (mkUnNamespacedRootFieldAlias)
 import Hasura.GraphQL.Parser.Collect ()
-import Hasura.GraphQL.Parser.Schema (Variable)
+import Hasura.GraphQL.Parser.Schema (InputValue (..), Variable (..), VariableInfo (..))
 -- Needed for GHCi and HLS due to TH in cyclically dependent modules (see https://gitlab.haskell.org/ghc/ghc/-/issues/1012)
 import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
 import Hasura.GraphQL.Transport.HTTP.Protocol
@@ -569,9 +569,13 @@ getSchemaIntrospection gqlContext = do
   fieldMap <- either (const Nothing) Just $ gqlQueryParser _rctxDefault $ fmap (fmap nameToVariable) $ G._todSelectionSet $ _grQuery introspectionQuery
   RFRaw v <- OMap.lookup (mkUnNamespacedRootFieldAlias $$(G.litName "__schema")) fieldMap
   fmap irDoc $ parseIntrospectionResult $ J.object [("data", J.object [("__schema", JO.fromOrdered v)])]
+
+nameToVariable :: G.Name -> Variable
+nameToVariable n = Variable vInf vTyp vVal
   where
-    -- TODO: Look for a way to convert Name to Variable (using some default types) or make the
-    --       ParserFn general (i.e. type ParserFn a b =  G.SelectionSet G.NoFragments b -> ...)
-    -- This value isn't used but we give it a type to be more clear about what is being ignored
-    nameToVariable :: G.Name -> Variable
-    nameToVariable n = errorE . T.unpack $ G.unName n <> " cannot be converted to Variable"
+    vInf = VIRequired n
+    vTyp = G.TypeNamed (G.Nullability True) n
+    vVal = dummyValue
+
+    dummyValue :: InputValue Void
+    dummyValue = JSONValue $ J.String $ "nameToVariable is being called"

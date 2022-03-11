@@ -20,6 +20,7 @@ module Hasura.Backends.MSSQL.Types.Internal
     BooleanOperators (..),
     Column,
     ColumnName (..),
+    columnNameToFieldName,
     ColumnType,
     Comment (..),
     Countable (..),
@@ -27,6 +28,7 @@ module Hasura.Backends.MSSQL.Types.Internal
     Delete (..),
     DeleteOutput,
     EntityAlias (..),
+    fromAlias,
     Expression (..),
     FieldName (..),
     For (..),
@@ -93,10 +95,6 @@ module Hasura.Backends.MSSQL.Types.Internal
     scalarTypeDBName,
     snakeCaseTableName,
     stringTypes,
-    tempTableNameInserted,
-    tempTableNameValues,
-    tempTableNameDeleted,
-    tempTableNameUpdated,
   )
 where
 
@@ -297,18 +295,6 @@ data InsertValuesIntoTempTable = InsertValuesIntoTempTable
 -- | A temporary table name is prepended by a hash-sign
 newtype TempTableName = TempTableName Text
 
-tempTableNameInserted :: TempTableName
-tempTableNameInserted = TempTableName "inserted"
-
-tempTableNameValues :: TempTableName
-tempTableNameValues = TempTableName "values"
-
-tempTableNameDeleted :: TempTableName
-tempTableNameDeleted = TempTableName "deleted"
-
-tempTableNameUpdated :: TempTableName
-tempTableNameUpdated = TempTableName "updated"
-
 -- | A name of a regular table or temporary table
 data SomeTableName
   = RegularTableName TableName
@@ -453,6 +439,14 @@ data From
   | FromIdentifier Text
   | FromTempTable (Aliased TempTableName)
 
+-- | Extract the name bound in a 'From' clause as an 'EntityAlias'.
+fromAlias :: From -> EntityAlias
+fromAlias (FromQualifiedTable Aliased {aliasedAlias}) = EntityAlias aliasedAlias
+fromAlias (FromOpenJson Aliased {aliasedAlias}) = EntityAlias aliasedAlias
+fromAlias (FromSelect Aliased {aliasedAlias}) = EntityAlias aliasedAlias
+fromAlias (FromIdentifier identifier) = EntityAlias identifier
+fromAlias (FromTempTable Aliased {aliasedAlias}) = EntityAlias aliasedAlias
+
 data OpenJson = OpenJson
   { openJsonExpression :: Expression,
     openJsonWith :: Maybe (NonEmpty JsonFieldSpec)
@@ -487,6 +481,10 @@ data Comment = DueToPermission | RequestedSingleObject
 newtype EntityAlias = EntityAlias
   { entityAliasText :: Text
   }
+
+columnNameToFieldName :: ColumnName -> EntityAlias -> FieldName
+columnNameToFieldName (ColumnName fieldName) EntityAlias {entityAliasText = fieldNameEntity} =
+  FieldName {fieldName, fieldNameEntity}
 
 data Op
   = LT

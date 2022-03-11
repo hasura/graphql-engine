@@ -240,6 +240,7 @@ data ExecutionStep where
     !RemoteSchemaInfo ->
     !ResultCustomizer ->
     !GH.GQLReqOutgoing ->
+    Maybe RemoteJoins ->
     ExecutionStep
   -- | Output a plain JSON object
   ExecStepRaw ::

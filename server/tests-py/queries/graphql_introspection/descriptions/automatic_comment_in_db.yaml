@@ -24,6 +24,6 @@ response:
       - name: id
         description: null
       - name: name
-        description: null
+        description: The name column comment in the DB
       - name: upper_name
         description: What a great comment on the function in the DB

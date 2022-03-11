@@ -15,9 +15,17 @@ module Hasura.RQL.DDL.Metadata.Types
     AllowInconsistentMetadata (..),
     WebHookUrl (..),
     TestWebhookTransform (..),
+    twtEnv,
+    twtHeaders,
+    twtWebhookUrl,
+    twtPayload,
+    twtTransformer,
+    twtResponseTransformer,
+    twtSessionVariables,
   )
 where
 
+import Control.Lens (makeLenses)
 import Data.Aeson
 import Data.Aeson.TH
 import Data.CaseInsensitive qualified as CI
@@ -25,7 +33,7 @@ import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as H
 import Data.Text qualified as T
 import Hasura.Prelude
-import Hasura.RQL.DDL.WebhookTransforms (MetadataRequestTransform, MetadataResponseTransform)
+import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types
 import Hasura.Session (SessionVariables)
 import Network.HTTP.Client.Transformable qualified as HTTP
@@ -208,11 +216,13 @@ data TestWebhookTransform = TestWebhookTransform
     _twtHeaders :: [HTTP.Header],
     _twtWebhookUrl :: WebHookUrl,
     _twtPayload :: Value,
-    _twtTransformer :: MetadataRequestTransform,
+    _twtTransformer :: RequestTransform,
     _twtResponseTransformer :: !(Maybe MetadataResponseTransform),
     _twtSessionVariables :: Maybe SessionVariables
   }
   deriving (Eq)
+
+$(makeLenses ''TestWebhookTransform)
 
 instance FromJSON TestWebhookTransform where
   parseJSON = withObject "TestWebhookTransform" $ \o -> do

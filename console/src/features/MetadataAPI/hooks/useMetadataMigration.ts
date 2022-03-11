@@ -7,12 +7,11 @@ import { useConsoleConfig } from '@/hooks/useEnvVars';
 import { useAppSelector } from '@/store';
 import { useMutation, UseMutationOptions, useQueryClient } from 'react-query';
 import sanitize from 'sanitize-filename';
+import { allowedMetadataTypes } from '../types';
 
 const maxAllowedLength = 255;
 const unixEpochLength = 14;
 export const maxAllowedMigrationLength = maxAllowedLength - unixEpochLength;
-
-export type allowedMetadataTypes = 'pg_create_remote_relationship';
 
 export type TMigration = {
   source: string;

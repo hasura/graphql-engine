@@ -934,6 +934,9 @@ class TestGraphQLQueryBoolExpSearchMSSQL:
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpJsonB:
 
+    def test_query_cast_geometry_to_geography(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_cast_jsonb_to_string.yaml', transport)
+
     def test_jsonb_contains_article_latest(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_article_author_jsonb_contains_latest.yaml', transport)
 
@@ -1323,6 +1326,10 @@ class TestGraphQLExplainCommon:
     def test_documented_subscription(self, hge_ctx, backend):
         self.with_admin_secret("subscription", hge_ctx, self.dir() + hge_ctx.backend_suffix('/docs_subscription') + ".yaml")
 
+    @pytest.mark.parametrize("backend", ['bigquery'])
+    def test_array_relationship_orderby(self, hge_ctx, backend):
+        self.with_admin_secret("query", hge_ctx, self.dir() + hge_ctx.backend_suffix('/author_articles_orderby') + ".yaml")
+
     def with_admin_secret(self, explain_query_type, hge_ctx, f, hdrs=None, req_st=200, overwrite_expectations=False):
         conf = get_conf_f(f)
         admin_secret = hge_ctx.hge_key
@@ -1345,14 +1352,14 @@ class TestGraphQLExplainCommon:
             resp_sql = resp_json[0]['sql']
             exp_sql = conf['response'][0]['sql']
 
-            p = (resp_sql == exp_sql) and overwrite_expectations
-            if not p:
+            p = (resp_sql == exp_sql)
+            if (not p) and overwrite_expectations:
                 with open(f, 'w') as outfile:
                     conf['response'][0]['sql'] = resp_json[0]['sql']
                     yaml.YAML(typ='rt').dump(conf, outfile) # , default_flow_style=False)
 
             # Outputing response for embedding in test
-            assert resp_sql == exp_sql, \
+            assert p, \
                 f"Unexpected explain SQL in response:\n{textwrap.indent(json.dumps(resp_json, indent=2), '  ')}"
 
         elif explain_query_type == "subscription":
@@ -1361,14 +1368,14 @@ class TestGraphQLExplainCommon:
             resp_sql = resp_json['sql']
             exp_sql = conf['response']['sql']
 
-            p = (resp_sql == exp_sql) and overwrite_expectations
-            if not p:
+            p = (resp_sql == exp_sql)
+            if (not p) and overwrite_expectations:
                 with open(f, 'w') as outfile:
                     conf['response']['sql'] = resp_json['sql']
                     yaml.YAML().dump(conf, outfile)
 
             # Outputing response for embedding in test
-            assert resp_sql == exp_sql, \
+            assert p, \
                 f"Unexpected explain SQL in response:\n{textwrap.indent(json.dumps(resp_json, indent=2), '  ')}"
         else:
             assert False, "Test programmer error"

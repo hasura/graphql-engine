@@ -197,8 +197,10 @@
             "delete": "DeleteAuthors",
             "delete_by_pk": "DeleteAuthor"
          },
-         "custom_column_names": {
-            "id": "authorId"
+         "column_config": {
+            "id": {
+              "custom_name": "authorId"
+            }
          }
       }
     }
@@ -270,9 +272,11 @@
            "delete": "DeleteAuthors",
            "delete_by_pk": "DeleteAuthor"
         },
-        "custom_column_names": {
-           "id": "authorId"
-        }
+        "column_config": {
+            "id": {
+              "custom_name": "authorId"
+            }
+         }
       }
     }
 
@@ -444,11 +448,13 @@
       "configuration": {
         "identifier": "author",
         "custom_root_fields": {
-            "select": "Authors",
-            "select_aggregate": "AuthorAggregate",
+          "select": "Authors",
+          "select_aggregate": "AuthorAggregate",
         },
-        "custom_column_names": {
-            "id": "authorId"
+        "column_config": {
+          "id": {
+            "custom_name": "authorId"
+          }
         }
       }
     }

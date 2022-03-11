@@ -123,7 +123,7 @@ func TestProjectMetadataOps_Parse(t *testing.T) {
 			fields{
 				projectDirectory: "testdata/projectv3",
 			},
-			"testdata/metadata_parse_test/config-v3.golden.json",
+			"testdata/metadata_parse_test/config-v3.project.want.generated.golden.json",
 			false,
 		},
 		{
@@ -147,7 +147,7 @@ func TestProjectMetadataOps_Parse(t *testing.T) {
 			fields{
 				projectDirectory: "testdata/projectv2",
 			},
-			"testdata/metadata_parse_test/config-v2.golden.json",
+			"testdata/metadata_parse_test/config-v2.project.want.generated.golden.json",
 			false,
 		},
 		{
@@ -179,6 +179,9 @@ func TestProjectMetadataOps_Parse(t *testing.T) {
 				require.NotNil(t, got)
 				gotb, err := ioutil.ReadAll(got)
 				require.NoError(t, err)
+				// uncomment to update golden file
+				//assert.NoError(t, ioutil.WriteFile(tt.wantGolden, gotb, os.ModePerm))
+
 				wantb, err := ioutil.ReadFile(tt.wantGolden)
 				require.NoError(t, err)
 				require.JSONEq(t, string(wantb), string(gotb))
@@ -224,9 +227,15 @@ func TestProjectMetadataOps_Diff(t *testing.T) {
 			got, err := p.Diff()
 			if tt.wantErr {
 				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
 			}
 			gotb, err := ioutil.ReadAll(got)
 			require.NoError(t, err)
+
+			// uncomment to update golden file
+			//require.NoError(t, ioutil.WriteFile(tt.wantGolden, gotb, os.ModePerm))
+
 			wantb, err := ioutil.ReadFile(tt.wantGolden)
 			require.NoError(t, err)
 			require.Equal(t, string(wantb), string(gotb))

@@ -4,12 +4,12 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	goyaml "github.com/goccy/go-yaml"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 
 	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
+	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
 )
 
 func TestMetadataObject_Build(t *testing.T) {
@@ -17,29 +17,20 @@ func TestMetadataObject_Build(t *testing.T) {
 		MetadataDir string
 		logger      *logrus.Logger
 	}
-	type args struct {
-		metadata *yaml.MapSlice
-	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    string
-		wantErr bool
+		name       string
+		fields     fields
+		wantGolden string
+		wantErr    bool
 	}{
 		{
 			"can build from file",
 			fields{
-				MetadataDir: "testdata/metadata",
+				MetadataDir: "testdata/build_test/t1/metadata",
 				logger:      logrus.New(),
 			},
-			args{
-				metadata: new(yaml.MapSlice),
-			},
-			`graphql_schema_introspection:
-  disabled_for_roles:
-  - child
-`,
+
+			"testdata/build_test/t1/want.golden.json",
 			false,
 		},
 	}
@@ -49,13 +40,21 @@ func TestMetadataObject_Build(t *testing.T) {
 				MetadataDir: tt.fields.MetadataDir,
 				logger:      tt.fields.logger,
 			}
-			err := m.Build(tt.args.metadata)
+			got, err := m.Build()
 			if tt.wantErr {
-				require.Error(t, err)
+				assert.Error(t, err)
 			} else {
-				b, err := yaml.Marshal(tt.args.metadata)
 				assert.NoError(t, err)
-				assert.Equal(t, tt.want, string(b))
+				gotbs, err := yaml.Marshal(got)
+				assert.NoError(t, err)
+				jsonbs, err := goyaml.YAMLToJSON(gotbs)
+				assert.NoError(t, err)
+
+				// uncomment following lines to update golden file
+				//assert.NoError(t, ioutil.WriteFile(tt.wantGolden, jsonbs, os.ModePerm))
+				wantbs, err := ioutil.ReadFile(tt.wantGolden)
+				assert.NoError(t, err)
+				assert.Equal(t, string(wantbs), string(jsonbs))
 			}
 		})
 	}
@@ -67,9 +66,10 @@ func TestMetadataObject_Export(t *testing.T) {
 		logger      *logrus.Logger
 	}
 	type args struct {
-		metadata yaml.MapSlice
+		metadata map[string]yaml.Node
 	}
 	tests := []struct {
+		id      string
 		name    string
 		fields  fields
 		args    args
@@ -77,24 +77,29 @@ func TestMetadataObject_Export(t *testing.T) {
 		wantErr bool
 	}{
 		{
+			"t1",
 			"can export metadata with graphql_schema_introspection",
 			fields{
 				MetadataDir: "testdata/metadata",
 				logger:      logrus.New(),
 			},
 			args{
-				metadata: func() yaml.MapSlice {
-					var metadata yaml.MapSlice
-					jsonb, err := ioutil.ReadFile("testdata/metadata.json")
+				metadata: func() map[string]yaml.Node {
+					bs, err := ioutil.ReadFile("testdata/export_test/t1/metadata.json")
 					assert.NoError(t, err)
-					assert.NoError(t, yaml.Unmarshal(jsonb, &metadata))
-					return metadata
+					yamlbs, err := metadatautil.JSONToYAML(bs)
+					assert.NoError(t, err)
+					var v map[string]yaml.Node
+					assert.NoError(t, yaml.Unmarshal(yamlbs, &v))
+					return v
 				}(),
 			},
 			map[string][]byte{
-				"testdata/metadata/graphql_schema_introspection.yaml": []byte(`disabled_for_roles:
-- child
-`),
+				"testdata/metadata/graphql_schema_introspection.yaml": func() []byte {
+					bs, err := ioutil.ReadFile("testdata/export_test/t1/want.graphql_schema_introspection.yaml")
+					assert.NoError(t, err)
+					return bs
+				}(),
 			},
 			false,
 		},
@@ -107,21 +112,13 @@ func TestMetadataObject_Export(t *testing.T) {
 			}
 			got, err := obj.Export(tt.args.metadata)
 			if tt.wantErr {
-				require.Error(t, err)
+				assert.Error(t, err)
 			} else {
-				require.NoError(t, err)
-				var wantContent = map[string]string{}
-				var gotContent = map[string]string{}
 				for k, v := range got {
-					gotContent[k] = string(v)
-				}
-				for k, v := range tt.want {
-					wantContent[k] = string(v)
-				}
-				assert.NoError(t, err)
-				assert.NoError(t, err)
-				if diff := cmp.Diff(wantContent, gotContent); diff != "" {
-					t.Errorf("Export() mismatch (-want +got):\n%s", diff)
+					assert.Contains(t, tt.want, k)
+					// uncomment to update golden files
+					//assert.NoError(t, ioutil.WriteFile(fmt.Sprintf("testdata/export_test/%v/want.%v", tt.id, filepath.Base(k)), v, os.ModePerm))
+					assert.Equalf(t, string(tt.want[k]), string(v), "%v", k)
 				}
 			}
 		})
