@@ -6436,10 +6436,24 @@ instance (Hasura.RQL.Types.Backend.Backend b, Data.Hashable.Class.Hashable a) =>
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.IR.OrderBy.OrderByCol
 
 module Hasura.RQL.IR.Action
+
+-- | Internal representation for a selection of fields on the result of an
+--   action. Type parameter r will be either r ~ (RemoteRelationshipField
+--   UnpreparedValue) when the AST is emitted by the parser. r ~ Void when
+--   an execution tree is constructed so that a backend is absolved of
+--   dealing with remote relationships.
 data ActionFieldG (r :: Type)
+
+-- | Scalar value. G.Name is the original field name from the object type.
 ACFScalar :: Name -> ActionFieldG (r :: Type)
+
+-- | Remote relationship
 ACFRemote :: ActionRemoteRelationshipSelect r -> ActionFieldG (r :: Type)
+
+-- | Constant text value (used for __typename fields)
 ACFExpression :: Text -> ActionFieldG (r :: Type)
+
+-- | Nested object. G.Name is the original field name from the object type.
 ACFNestedObject :: Name -> !ActionFieldsG r -> ActionFieldG (r :: Type)
 type ActionFieldsG r = Fields (ActionFieldG r)
 type ActionFields = ActionFieldsG Void
@@ -21519,7 +21533,7 @@ transformAnnFields :: forall src. Backend src => AnnFieldsG src (RemoteRelations
 --   joins: for every field we encounter that maps to a remote destination
 --   (either a source or a remote schema), we replace it with a phantom
 --   field and <a>collect</a> the corresponding <a>RemoteJoin</a>.
-transformActionFields :: ActionFieldsG (RemoteRelationshipField UnpreparedValue) -> Collector (ActionFieldsG Void)
+transformActionFields :: ActionFieldsG (RemoteRelationshipField UnpreparedValue) -> Collector ActionFields
 
 -- | Transforms a GraphQL selection set.
 --   
@@ -25245,7 +25259,7 @@ resolveActionExecution :: Environment -> Logger Hasura -> UserInfo -> AnnActionE
 
 -- | Build action response from the Webhook JSON response when there are no
 --   relationships defined
-makeActionResponseNoRelations :: ActionFieldsG Void -> ActionWebhookResponse -> Value
+makeActionResponseNoRelations :: ActionFields -> ActionWebhookResponse -> Value
 
 -- | Resolve asynchronous action mutation which returns only the action
 --   uuid
@@ -25259,7 +25273,7 @@ resolveAsyncActionQuery :: UserInfo -> AnnActionAsyncQuery ('Postgres 'Vanilla) 
 --   architecture] above
 asyncActionsProcessor :: forall m. (MonadIO m, MonadBaseControl IO m, Forall (Pure m), HasReporter m, MonadMetadataStorage (MetadataStorageT m)) => Environment -> Logger Hasura -> IO SchemaCache -> TVar (Set LockedActionEventId) -> Manager -> Milliseconds -> Maybe GQLQueryText -> m (Forever m)
 callWebhook :: forall m r. (MonadIO m, MonadError QErr m, MonadTrace m, MonadReader r m, Has (Logger Hasura) r) => Environment -> Manager -> GraphQLType -> ActionOutputFields -> [Header] -> [HeaderConf] -> Bool -> ResolvedWebhook -> ActionWebhookPayload -> Timeout -> Maybe RequestTransform -> Maybe MetadataResponseTransform -> m (ActionWebhookResponse, ResponseHeaders)
-processOutputSelectionSet :: ArgumentExp v -> GraphQLType -> [(PGCol, PGScalarType)] -> ActionFieldsG Void -> StringifyNumbers -> AnnSimpleSelectG ('Postgres 'Vanilla) Void v
+processOutputSelectionSet :: ArgumentExp v -> GraphQLType -> [(PGCol, PGScalarType)] -> ActionFields -> StringifyNumbers -> AnnSimpleSelectG ('Postgres 'Vanilla) Void v
 actionFieldToAnnField :: ActionFieldG Void -> AnnFieldG ('Postgres 'Vanilla) Void v
 mkJsonAggSelect :: GraphQLType -> JsonAggSelect
 insertActionTx :: ActionName -> SessionVariables -> [Header] -> Value -> TxE QErr ActionId
