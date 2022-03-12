@@ -400,7 +400,7 @@ transformAnnFields fields = do
 -- 'RemoteJoin'.
 transformActionFields ::
   ActionFieldsG (RemoteRelationshipField UnpreparedValue) ->
-  Collector (ActionFieldsG Void)
+  Collector ActionFields
 transformActionFields fields = do
   -- Produces a list of transformed fields that may or may not have an
   -- associated remote join.
