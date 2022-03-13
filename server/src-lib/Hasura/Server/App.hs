@@ -36,7 +36,6 @@ import Data.HashSet qualified as S
 import Data.String (fromString)
 import Data.Text qualified as T
 import Data.Text.Conversions (convertText)
-import Data.Text.Encoding qualified as T
 import Data.Text.Extended
 import Data.Text.Lazy qualified as LT
 import Data.Text.Lazy.Encoding qualified as TL
@@ -61,6 +60,7 @@ import Hasura.Metadata.Class
 import Hasura.Prelude hiding (get, put)
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.Types
+import Hasura.RQL.Types.Endpoint as EP
 import Hasura.Server.API.Config (runGetConfig)
 import Hasura.Server.API.Metadata
 import Hasura.Server.API.PGDump qualified as PGD
@@ -933,8 +933,13 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
 
         req <-
           restReq & traverse \case
-            Spock.MethodStandard (Spock.HttpMethod m) ->
-              pure $ EndpointMethod $ T.decodeUtf8 $ HTTP.renderStdMethod m
+            Spock.MethodStandard (Spock.HttpMethod m) -> case m of
+              Spock.GET -> pure EP.GET
+              Spock.POST -> pure EP.POST
+              Spock.PUT -> pure EP.PUT
+              Spock.DELETE -> pure EP.DELETE
+              Spock.PATCH -> pure EP.PATCH
+              other -> throw400 BadRequest $ "Method " <> tshow other <> " not supported."
             _ -> throw400 BadRequest $ "Nonstandard method not allowed for REST endpoints"
         fmap JSONResp <$> runCustomEndpoint env execCtx requestId userInfo reqHeaders ipAddress req endpoints
 

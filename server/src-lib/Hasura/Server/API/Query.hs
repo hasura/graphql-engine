@@ -41,6 +41,7 @@ import Hasura.RQL.DML.Select
 import Hasura.RQL.DML.Types
 import Hasura.RQL.DML.Update
 import Hasura.RQL.Types
+import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.Run
 import Hasura.Server.Types
 import Hasura.Server.Utils

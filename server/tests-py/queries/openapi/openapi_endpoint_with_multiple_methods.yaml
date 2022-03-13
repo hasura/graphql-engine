@@ -93,7 +93,7 @@
                           affected_rows:
                             title: Int
                             type: integer
-              description: Responses for POST /api/rest/multi_method_endpoint
+              description: Responses for GET /api/rest/multi_method_endpoint
         put:
           summary: multi_method_endpoint
           description: "***\nThe GraphQl query for this endpoint is:\n``` graphql\n\
@@ -154,7 +154,7 @@
                           affected_rows:
                             title: Int
                             type: integer
-              description: Responses for POST /api/rest/multi_method_endpoint
+              description: Responses for PUT /api/rest/multi_method_endpoint
         post:
           summary: multi_method_endpoint
           description: "***\nThe GraphQl query for this endpoint is:\n``` graphql\n\
@@ -276,7 +276,7 @@
                           affected_rows:
                             title: Int
                             type: integer
-              description: Responses for POST /api/rest/multi_method_endpoint
+              description: Responses for DELETE /api/rest/multi_method_endpoint
         patch:
           summary: multi_method_endpoint
           description: "***\nThe GraphQl query for this endpoint is:\n``` graphql\n\
@@ -337,7 +337,7 @@
                           affected_rows:
                             title: Int
                             type: integer
-              description: Responses for POST /api/rest/multi_method_endpoint
+              description: Responses for PATCH /api/rest/multi_method_endpoint
     components: {}
 - description: Try to remove the endpoint
   url: /v1/query

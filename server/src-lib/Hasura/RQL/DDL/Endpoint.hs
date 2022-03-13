@@ -12,6 +12,7 @@ import Hasura.EncJSON
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.Types
+import Hasura.RQL.Types.Endpoint
 
 runCreateEndpoint ::
   ( CacheRWM m,

@@ -66,6 +66,7 @@ import Hasura.RQL.DDL.Schema.Cache.Permission
 import Hasura.RQL.DDL.Schema.Function
 import Hasura.RQL.DDL.Schema.Table
 import Hasura.RQL.Types hiding (fmFunction, tmTable)
+import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.Roles.Internal (CheckPermission (..))
 import Hasura.SQL.AnyBackend qualified as AB
