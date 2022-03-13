@@ -17,6 +17,7 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Network
 import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.Types
+import Hasura.RQL.Types.Endpoint
 import Hasura.SQL.AnyBackend qualified as AB
 import Language.GraphQL.Draft.Syntax qualified as G
 

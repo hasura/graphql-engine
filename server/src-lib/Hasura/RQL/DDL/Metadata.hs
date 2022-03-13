@@ -57,6 +57,7 @@ import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.DDL.Webhook.Transform.Class (mkReqTransformCtx)
 import Hasura.RQL.Types
+import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.Eventing.Backend (BackendEventTrigger (..))
 import Hasura.SQL.AnyBackend qualified as AB
 import Network.HTTP.Client.Transformable qualified as HTTP

@@ -44,6 +44,7 @@ import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Source
 import Hasura.RQL.DDL.Webhook.Transform.Validation
 import Hasura.RQL.Types
+import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.Run
 import Hasura.SQL.AnyBackend
