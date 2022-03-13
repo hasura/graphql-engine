@@ -32,7 +32,7 @@ As you can see from this:
   column in your database)*.
 
   Hasura uses the role/user information in the session variables and the actual request itself to validate
-  the request against the rules defined by you. If the request/operation is allowed, it generates an SQL
+  the request against the rules defined by you. If the request/operation is allowed, it generates a SQL
   query, which includes the row/column-level constraints from the access control rules, and sends it to
   the database to perform the required operation (*fetch the required rows for queries, insert/edit
   rows for mutations, etc.*).
