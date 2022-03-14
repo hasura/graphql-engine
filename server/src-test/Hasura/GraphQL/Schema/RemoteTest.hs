@@ -14,15 +14,18 @@ import Hasura.GraphQL.Execute.Resolve
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Parser.Column (UnpreparedValue)
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
+import Hasura.GraphQL.Parser.Monad
 import Hasura.GraphQL.Parser.Schema
 import Hasura.GraphQL.Parser.TestUtils
-import Hasura.GraphQL.RemoteServer (identityCustomizer)
+import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Remote
 import Hasura.Prelude
 import Hasura.RQL.IR.RemoteSchema
 import Hasura.RQL.IR.Root
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.Session
 import Language.GraphQL.Draft.Parser qualified as G
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -104,9 +107,26 @@ buildQueryParsers ::
 buildQueryParsers introspection = do
   let introResult = IntrospectionResult introspection $$(G.litName "Query") Nothing Nothing
       remoteSchemaInfo = RemoteSchemaInfo (ValidatedRemoteSchemaDef N.nullURI [] False 60 Nothing) identityCustomizer
-  ParsedIntrospection query _ _ <-
+      remoteSchemaRels = mempty
+      -- Since remote schemas can theoretically join against tables, we need to
+      -- have access to all relevant sources-specific information to build their
+      -- schema. Here, since there are no relationships to a source in this
+      -- test, we are free to give 'undefined' for such fields, as they won't be
+      -- evaluated.
+      sourceContext =
+        ( adminRoleName :: RoleName,
+          undefined :: SourceCache,
+          undefined :: QueryContext,
+          mempty :: CustomizeRemoteFieldName,
+          mempty :: RemoteSchemaMap,
+          mempty :: MkTypename,
+          mempty :: MkRootFieldName
+        )
+  RemoteSchemaParser query _ _ <-
     runError $
-      buildRemoteParser introResult remoteSchemaInfo
+      flip runReaderT sourceContext $
+        runSchemaT $
+          buildRemoteParser introResult remoteSchemaRels remoteSchemaInfo
   pure $
     head query <&> \case
       NotNamespaced remoteFld -> _rfField remoteFld
