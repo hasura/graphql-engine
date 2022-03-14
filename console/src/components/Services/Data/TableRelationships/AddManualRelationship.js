@@ -27,7 +27,6 @@ const AddManualRelationship = ({
   }));
 
   relAdd.rSchema = relAdd.rSchema || tableSchema.table_schema;
-
   const refTables = {};
   const trackedSchemaTables = getTrackedTables(
     getSchemaTables(allSchemas, relAdd.rSchema)
