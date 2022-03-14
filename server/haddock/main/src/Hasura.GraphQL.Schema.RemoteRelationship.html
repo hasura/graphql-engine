@@ -36,14 +36,14 @@
 </span><span id="line-36"></span><span>
 </span><span id="line-37"></span><span class="hs-comment">-- | Remote relationship field parsers</span><span>
 </span><span id="line-38"></span><span class="annot"><a href="Hasura.GraphQL.Schema.RemoteRelationship.html#remoteRelationshipField"><span class="hs-identifier hs-type">remoteRelationshipField</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-39"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688292157"><span class="annot"><a href="#local-6989586621688292157"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621688292156"><span class="annot"><a href="#local-6989586621688292156"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688292155"><span class="annot"><a href="#local-6989586621688292155"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span id="local-6989586621688292154"><span class="annot"><a href="#local-6989586621688292154"><span class="hs-identifier hs-type">lhsJoinField</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-40"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#MonadBuildSchemaBase"><span class="hs-identifier hs-type">MonadBuildSchemaBase</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292157"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292156"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292155"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-41"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html#RemoteFieldInfo"><span class="hs-identifier hs-type">RemoteFieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292154"><span class="hs-identifier hs-type">lhsJoinField</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-42"></span><span>  </span><span class="annot"><a href="#local-6989586621688292156"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292155"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-type">IR.RemoteRelationshipField</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688292553"><span class="annot"><a href="#local-6989586621688292553"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621688292552"><span class="annot"><a href="#local-6989586621688292552"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688292551"><span class="annot"><a href="#local-6989586621688292551"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span id="local-6989586621688292550"><span class="annot"><a href="#local-6989586621688292550"><span class="hs-identifier hs-type">lhsJoinField</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#MonadBuildSchemaBase"><span class="hs-identifier hs-type">MonadBuildSchemaBase</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292553"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292552"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292551"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-41"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html#RemoteFieldInfo"><span class="hs-identifier hs-type">RemoteFieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292550"><span class="hs-identifier hs-type">lhsJoinField</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-42"></span><span>  </span><span class="annot"><a href="#local-6989586621688292552"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292551"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-type">IR.RemoteRelationshipField</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-43"></span><span id="remoteRelationshipField"><span class="annot"><span class="annottext">remoteRelationshipField :: RemoteFieldInfo lhsJoinField
 -&gt; m (Maybe
         [FieldParser n (RemoteRelationshipField UnpreparedValue)])
-</span><a href="Hasura.GraphQL.Schema.RemoteRelationship.html#remoteRelationshipField"><span class="hs-identifier hs-var hs-var">remoteRelationshipField</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html#RemoteFieldInfo"><span class="hs-identifier hs-type">RemoteFieldInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688292151"><span id="local-6989586621688292152"><span class="annot"><span class="annottext">HashMap FieldName lhsJoinField
+</span><a href="Hasura.GraphQL.Schema.RemoteRelationship.html#remoteRelationshipField"><span class="hs-identifier hs-var hs-var">remoteRelationshipField</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html#RemoteFieldInfo"><span class="hs-identifier hs-type">RemoteFieldInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688292547"><span id="local-6989586621688292548"><span class="annot"><span class="annottext">HashMap FieldName lhsJoinField
 RemoteFieldInfoRHS
 _rfiRHS :: forall lhsJoinField.
 RemoteFieldInfo lhsJoinField -&gt; RemoteFieldInfoRHS
@@ -56,8 +56,8 @@ _rfiLHS :: HashMap FieldName lhsJoinField
         [FieldParser n (RemoteRelationshipField UnpreparedValue)])
 forall (m :: * -&gt; *) a. MaybeT m a -&gt; m (Maybe a)
 </span><span class="hs-identifier hs-var hs-var">runMaybeT</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-44"></span><span>  </span><span id="local-6989586621688292147"><span class="annot"><span class="annottext">GraphQLQueryType
-</span><a href="#local-6989586621688292147"><span class="hs-identifier hs-var">queryType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(r -&gt; GraphQLQueryType) -&gt; MaybeT m GraphQLQueryType
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621688292543"><span class="annot"><span class="annottext">GraphQLQueryType
+</span><a href="#local-6989586621688292543"><span class="hs-identifier hs-var">queryType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(r -&gt; GraphQLQueryType) -&gt; MaybeT m GraphQLQueryType
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">((r -&gt; GraphQLQueryType) -&gt; MaybeT m GraphQLQueryType)
 -&gt; (r -&gt; GraphQLQueryType) -&gt; MaybeT m GraphQLQueryType
@@ -76,14 +76,14 @@ forall (f :: * -&gt; *). Alternative f =&gt; Bool -&gt; f ()
 </span><span class="hs-identifier hs-var">guard</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; MaybeT m ()) -&gt; Bool -&gt; MaybeT m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">GraphQLQueryType
-</span><a href="#local-6989586621688292147"><span class="hs-identifier hs-var">queryType</span></a></span><span> </span><span class="annot"><span class="annottext">GraphQLQueryType -&gt; GraphQLQueryType -&gt; Bool
+</span><a href="#local-6989586621688292543"><span class="hs-identifier hs-var">queryType</span></a></span><span> </span><span class="annot"><span class="annottext">GraphQLQueryType -&gt; GraphQLQueryType -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">GraphQLQueryType
 </span><a href="Hasura.GraphQL.Execute.Types.html#QueryHasura"><span class="hs-identifier hs-var">ET.QueryHasura</span></a></span><span>
 </span><span id="line-48"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">RemoteFieldInfoRHS
-</span><a href="#local-6989586621688292151"><span class="hs-identifier hs-var">_rfiRHS</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-49"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html#RFISource"><span class="hs-identifier hs-type">RFISource</span></a></span><span> </span><span id="local-6989586621688292140"><span class="annot"><span class="annottext">AnyBackend RemoteSourceFieldInfo
-</span><a href="#local-6989586621688292140"><span class="hs-identifier hs-var">anyRemoteSourceFieldInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621688292547"><span class="hs-identifier hs-var">_rfiRHS</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-49"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html#RFISource"><span class="hs-identifier hs-type">RFISource</span></a></span><span> </span><span id="local-6989586621688292536"><span class="annot"><span class="annottext">AnyBackend RemoteSourceFieldInfo
+</span><a href="#local-6989586621688292536"><span class="hs-identifier hs-var">anyRemoteSourceFieldInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-50"></span><span>      </span><span class="annot"><span class="annottext">AnyBackend RemoteSourceFieldInfo
 -&gt; (forall (b :: BackendType).
     BackendSchema b =&gt;
@@ -96,13 +96,13 @@ forall (c :: BackendType -&gt; Constraint) (i :: BackendType -&gt; *) r.
 AllBackendsSatisfy c =&gt;
 AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
 </span><a href="Hasura.SQL.AnyBackend.html#dispatchAnyBackend"><span class="hs-identifier hs-var">dispatchAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#BackendSchema"><span class="hs-identifier hs-type">BackendSchema</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend RemoteSourceFieldInfo
-</span><a href="#local-6989586621688292140"><span class="hs-identifier hs-var">anyRemoteSourceFieldInfo</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688292138"><span class="annot"><span class="annottext">RemoteSourceFieldInfo b
-</span><a href="#local-6989586621688292138"><span class="hs-identifier hs-var">remoteSourceFieldInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-51"></span><span>        </span><span id="local-6989586621688292137"><span class="annot"><span class="annottext">[FieldParser
+</span><a href="#local-6989586621688292536"><span class="hs-identifier hs-var">anyRemoteSourceFieldInfo</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688292534"><span class="annot"><span class="annottext">RemoteSourceFieldInfo b
+</span><a href="#local-6989586621688292534"><span class="hs-identifier hs-var">remoteSourceFieldInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-51"></span><span>        </span><span id="local-6989586621688292533"><span class="annot"><span class="annottext">[FieldParser
    n
    (RemoteSourceSelect
       (RemoteRelationshipField UnpreparedValue) UnpreparedValue b)]
-</span><a href="#local-6989586621688292137"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m [FieldParser
+</span><a href="#local-6989586621688292533"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m [FieldParser
      n
      (RemoteSourceSelect
         (RemoteRelationshipField UnpreparedValue) UnpreparedValue b)]
@@ -149,7 +149,7 @@ RemoteSourceFieldInfo tgt
         (RemoteSourceSelect
            (RemoteRelationshipField UnpreparedValue) UnpreparedValue tgt)]
 </span><a href="Hasura.GraphQL.Schema.RemoteRelationship.html#remoteRelationshipToSourceField"><span class="hs-identifier hs-var">remoteRelationshipToSourceField</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSourceFieldInfo b
-</span><a href="#local-6989586621688292138"><span class="hs-identifier hs-var">remoteSourceFieldInfo</span></a></span><span>
+</span><a href="#local-6989586621688292534"><span class="hs-identifier hs-var">remoteSourceFieldInfo</span></a></span><span>
 </span><span id="line-52"></span><span>        </span><span class="annot"><span class="annottext">[FieldParser n (RemoteRelationshipField UnpreparedValue)]
 -&gt; MaybeT
      m [FieldParser n (RemoteRelationshipField UnpreparedValue)]
@@ -213,12 +213,12 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
    n
    (RemoteSourceSelect
       (RemoteRelationshipField UnpreparedValue) UnpreparedValue b)]
-</span><a href="#local-6989586621688292137"><span class="hs-identifier hs-var">fields</span></a></span><span>
-</span><span id="line-53"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html#RFISchema"><span class="hs-identifier hs-type">RFISchema</span></a></span><span> </span><span id="local-6989586621688292130"><span class="annot"><span class="annottext">RemoteSchemaFieldInfo
-</span><a href="#local-6989586621688292130"><span class="hs-identifier hs-var">remoteSchema</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-54"></span><span>      </span><span id="local-6989586621688292129"><span class="annot"><span class="annottext">FieldParser
+</span><a href="#local-6989586621688292533"><span class="hs-identifier hs-var">fields</span></a></span><span>
+</span><span id="line-53"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html#RFISchema"><span class="hs-identifier hs-type">RFISchema</span></a></span><span> </span><span id="local-6989586621688292526"><span class="annot"><span class="annottext">RemoteSchemaFieldInfo
+</span><a href="#local-6989586621688292526"><span class="hs-identifier hs-var">remoteSchema</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-54"></span><span>      </span><span id="local-6989586621688292525"><span class="annot"><span class="annottext">FieldParser
   n (RemoteSchemaSelect (RemoteRelationshipField UnpreparedValue))
-</span><a href="#local-6989586621688292129"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (Maybe
+</span><a href="#local-6989586621688292525"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (Maybe
      (FieldParser
         n (RemoteSchemaSelect (RemoteRelationshipField UnpreparedValue))))
 -&gt; MaybeT
@@ -254,8 +254,8 @@ HashMap FieldName lhsJoinField
         (FieldParser
            n (RemoteSchemaSelect (RemoteRelationshipField UnpreparedValue))))
 </span><a href="Hasura.GraphQL.Schema.RemoteRelationship.html#remoteRelationshipToSchemaField"><span class="hs-identifier hs-var">remoteRelationshipToSchemaField</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap FieldName lhsJoinField
-</span><a href="#local-6989586621688292152"><span class="hs-identifier hs-var">_rfiLHS</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaFieldInfo
-</span><a href="#local-6989586621688292130"><span class="hs-identifier hs-var">remoteSchema</span></a></span><span>
+</span><a href="#local-6989586621688292548"><span class="hs-identifier hs-var">_rfiLHS</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaFieldInfo
+</span><a href="#local-6989586621688292526"><span class="hs-identifier hs-var">remoteSchema</span></a></span><span>
 </span><span id="line-55"></span><span>      </span><span class="annot"><span class="annottext">[FieldParser n (RemoteRelationshipField UnpreparedValue)]
 -&gt; MaybeT
      m [FieldParser n (RemoteRelationshipField UnpreparedValue)]
@@ -288,22 +288,22 @@ RemoteSchemaSelect (RemoteRelationshipField vf)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">FieldParser
   n (RemoteSchemaSelect (RemoteRelationshipField UnpreparedValue))
-</span><a href="#local-6989586621688292129"><span class="hs-identifier hs-var">fields</span></a></span><span>
+</span><a href="#local-6989586621688292525"><span class="hs-identifier hs-var">fields</span></a></span><span>
 </span><span id="line-56"></span><span>
 </span><span id="line-57"></span><span class="hs-comment">-- | Parser(s) for remote relationship fields to a remote schema</span><span>
 </span><span id="line-58"></span><span class="annot"><a href="Hasura.GraphQL.Schema.RemoteRelationship.html#remoteRelationshipToSchemaField"><span class="hs-identifier hs-type">remoteRelationshipToSchemaField</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-59"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688292354"><span class="annot"><a href="#local-6989586621688292354"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621688292353"><span class="annot"><a href="#local-6989586621688292353"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688292352"><span class="annot"><a href="#local-6989586621688292352"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span id="local-6989586621688292351"><span class="annot"><a href="#local-6989586621688292351"><span class="hs-identifier hs-type">lhsJoinField</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-60"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#MonadBuildSchemaBase"><span class="hs-identifier hs-type">MonadBuildSchemaBase</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292354"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292353"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292352"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-61"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Map.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292351"><span class="hs-identifier hs-type">lhsJoinField</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688292750"><span class="annot"><a href="#local-6989586621688292750"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621688292749"><span class="annot"><a href="#local-6989586621688292749"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688292748"><span class="annot"><a href="#local-6989586621688292748"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span id="local-6989586621688292747"><span class="annot"><a href="#local-6989586621688292747"><span class="hs-identifier hs-type">lhsJoinField</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#MonadBuildSchemaBase"><span class="hs-identifier hs-type">MonadBuildSchemaBase</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292750"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292749"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292748"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-61"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Map.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292747"><span class="hs-identifier hs-type">lhsJoinField</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-62"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteSchemaFieldInfo"><span class="hs-identifier hs-type">RemoteSchemaFieldInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-63"></span><span>  </span><span class="annot"><a href="#local-6989586621688292353"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292352"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#RemoteSchemaSelect"><span class="hs-identifier hs-type">IR.RemoteSchemaSelect</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-type">IR.RemoteRelationshipField</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><a href="#local-6989586621688292749"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292748"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#RemoteSchemaSelect"><span class="hs-identifier hs-type">IR.RemoteSchemaSelect</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-type">IR.RemoteRelationshipField</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-64"></span><span id="remoteRelationshipToSchemaField"><span class="annot"><span class="annottext">remoteRelationshipToSchemaField :: HashMap FieldName lhsJoinField
 -&gt; RemoteSchemaFieldInfo
 -&gt; m (Maybe
         (FieldParser
            n (RemoteSchemaSelect (RemoteRelationshipField UnpreparedValue))))
-</span><a href="Hasura.GraphQL.Schema.RemoteRelationship.html#remoteRelationshipToSchemaField"><span class="hs-identifier hs-var hs-var">remoteRelationshipToSchemaField</span></a></span></span><span> </span><span id="local-6989586621688292125"><span class="annot"><span class="annottext">HashMap FieldName lhsJoinField
-</span><a href="#local-6989586621688292125"><span class="hs-identifier hs-var">lhsFields</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteSchemaFieldInfo"><span class="hs-identifier hs-type">RemoteSchemaFieldInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688292117"><span id="local-6989586621688292118"><span id="local-6989586621688292119"><span id="local-6989586621688292120"><span id="local-6989586621688292121"><span id="local-6989586621688292122"><span id="local-6989586621688292123"><span class="annot"><span class="annottext">[TypeDefinition [Name] RemoteSchemaInputValueDefinition]
+</span><a href="Hasura.GraphQL.Schema.RemoteRelationship.html#remoteRelationshipToSchemaField"><span class="hs-identifier hs-var hs-var">remoteRelationshipToSchemaField</span></a></span></span><span> </span><span id="local-6989586621688292521"><span class="annot"><span class="annottext">HashMap FieldName lhsJoinField
+</span><a href="#local-6989586621688292521"><span class="hs-identifier hs-var">lhsFields</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#RemoteSchemaFieldInfo"><span class="hs-identifier hs-type">RemoteSchemaFieldInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688292513"><span id="local-6989586621688292514"><span id="local-6989586621688292515"><span id="local-6989586621688292516"><span id="local-6989586621688292517"><span id="local-6989586621688292518"><span id="local-6989586621688292519"><span class="annot"><span class="annottext">[TypeDefinition [Name] RemoteSchemaInputValueDefinition]
 HashMap Name RemoteSchemaInputValueDefinition
 RelName
 RemoteSchemaName
@@ -335,8 +335,8 @@ _rrfiName :: RelName
            n (RemoteSchemaSelect (RemoteRelationshipField UnpreparedValue))))
 forall (m :: * -&gt; *) a. MaybeT m a -&gt; m (Maybe a)
 </span><span class="hs-identifier hs-var hs-var">runMaybeT</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-65"></span><span>  </span><span id="local-6989586621688292109"><span class="annot"><span class="annottext">HashMap RemoteSchemaName RemoteRelationshipQueryContext
-</span><a href="#local-6989586621688292109"><span class="hs-identifier hs-var">remoteRelationshipQueryCtx</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(r -&gt; HashMap RemoteSchemaName RemoteRelationshipQueryContext)
+</span><span id="line-65"></span><span>  </span><span id="local-6989586621688292505"><span class="annot"><span class="annottext">HashMap RemoteSchemaName RemoteRelationshipQueryContext
+</span><a href="#local-6989586621688292505"><span class="hs-identifier hs-var">remoteRelationshipQueryCtx</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(r -&gt; HashMap RemoteSchemaName RemoteRelationshipQueryContext)
 -&gt; MaybeT
      m (HashMap RemoteSchemaName RemoteRelationshipQueryContext)
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
@@ -358,10 +358,10 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; QueryContext
 forall a t. Has a t =&gt; t -&gt; a
 </span><span class="hs-identifier hs-var">getter</span></span><span>
-</span><span id="line-66"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#RemoteRelationshipQueryContext"><span class="hs-identifier hs-type">RemoteRelationshipQueryContext</span></a></span><span> </span><span id="local-6989586621688292106"><span class="annot"><span class="annottext">IntrospectionResult
-</span><a href="#local-6989586621688292106"><span class="hs-identifier hs-var">roleIntrospectionResultOriginal</span></a></span></span><span> </span><span class="annot"><span class="annottext">ParsedIntrospection
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688292105"><span class="annot"><span class="annottext">RemoteSchemaCustomizer
-</span><a href="#local-6989586621688292105"><span class="hs-identifier hs-var">remoteSchemaCustomizer</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-66"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#RemoteRelationshipQueryContext"><span class="hs-identifier hs-type">RemoteRelationshipQueryContext</span></a></span><span> </span><span id="local-6989586621688292502"><span class="annot"><span class="annottext">IntrospectionResult
+</span><a href="#local-6989586621688292502"><span class="hs-identifier hs-var">roleIntrospectionResultOriginal</span></a></span></span><span> </span><span class="annot"><span class="annottext">ParsedIntrospection
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688292501"><span class="annot"><span class="annottext">RemoteSchemaCustomizer
+</span><a href="#local-6989586621688292501"><span class="hs-identifier hs-var">remoteSchemaCustomizer</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-67"></span><span>    </span><span class="hs-comment">-- The remote relationship field should not be accessible</span><span>
 </span><span id="line-68"></span><span>    </span><span class="hs-comment">-- if the remote schema is not accessible to the said role</span><span>
 </span><span id="line-69"></span><span>    </span><span class="annot"><span class="annottext">Maybe RemoteRelationshipQueryContext
@@ -377,31 +377,31 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; Maybe RemoteRelationshipQueryContext
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
-</span><a href="#local-6989586621688292118"><span class="hs-identifier hs-var">_rrfiRemoteSchemaName</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap RemoteSchemaName RemoteRelationshipQueryContext
-</span><a href="#local-6989586621688292109"><span class="hs-identifier hs-var">remoteRelationshipQueryCtx</span></a></span><span>
-</span><span id="line-70"></span><span>  </span><span id="local-6989586621688292102"><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621688292102"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(r -&gt; RoleName) -&gt; MaybeT m RoleName
+</span><a href="#local-6989586621688292514"><span class="hs-identifier hs-var">_rrfiRemoteSchemaName</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap RemoteSchemaName RemoteRelationshipQueryContext
+</span><a href="#local-6989586621688292505"><span class="hs-identifier hs-var">remoteRelationshipQueryCtx</span></a></span><span>
+</span><span id="line-70"></span><span>  </span><span id="local-6989586621688292498"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621688292498"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(r -&gt; RoleName) -&gt; MaybeT m RoleName
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; RoleName
 forall a t. Has a t =&gt; t -&gt; a
 </span><span class="hs-identifier hs-var">getter</span></span><span>
-</span><span id="line-71"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688292101"><span class="annot"><span class="annottext">hasuraFieldNames :: HashSet FieldName
-</span><a href="#local-6989586621688292101"><span class="hs-identifier hs-var hs-var">hasuraFieldNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap FieldName lhsJoinField -&gt; HashSet FieldName
+</span><span id="line-71"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688292497"><span class="annot"><span class="annottext">hasuraFieldNames :: HashSet FieldName
+</span><a href="#local-6989586621688292497"><span class="hs-identifier hs-var hs-var">hasuraFieldNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap FieldName lhsJoinField -&gt; HashSet FieldName
 forall k a. HashMap k a -&gt; HashSet k
 </span><span class="hs-identifier hs-var">Map.keysSet</span></span><span> </span><span class="annot"><span class="annottext">HashMap FieldName lhsJoinField
-</span><a href="#local-6989586621688292125"><span class="hs-identifier hs-var">lhsFields</span></a></span><span>
-</span><span id="line-72"></span><span>      </span><span id="local-6989586621688292099"><span class="annot"><span class="annottext">relationshipDef :: ToSchemaRelationshipDef
-</span><a href="#local-6989586621688292099"><span class="hs-identifier hs-var hs-var">relationshipDef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
+</span><a href="#local-6989586621688292521"><span class="hs-identifier hs-var">lhsFields</span></a></span><span>
+</span><span id="line-72"></span><span>      </span><span id="local-6989586621688292495"><span class="annot"><span class="annottext">relationshipDef :: ToSchemaRelationshipDef
+</span><a href="#local-6989586621688292495"><span class="hs-identifier hs-var hs-var">relationshipDef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
 -&gt; HashSet FieldName -&gt; RemoteFields -&gt; ToSchemaRelationshipDef
 </span><a href="Hasura.RQL.Types.Relationships.ToSchema.html#ToSchemaRelationshipDef"><span class="hs-identifier hs-var">ToSchemaRelationshipDef</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
-</span><a href="#local-6989586621688292118"><span class="hs-identifier hs-var">_rrfiRemoteSchemaName</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet FieldName
-</span><a href="#local-6989586621688292101"><span class="hs-identifier hs-var">hasuraFieldNames</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteFields
-</span><a href="#local-6989586621688292121"><span class="hs-identifier hs-var">_rrfiRemoteFields</span></a></span><span>
-</span><span id="line-73"></span><span>  </span><span class="hs-special">(</span><span id="local-6989586621688292097"><span class="annot"><span class="annottext">[TypeDefinition [Name] RemoteSchemaInputValueDefinition]
-</span><a href="#local-6989586621688292097"><span class="hs-identifier hs-var">newInpValDefns</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinition</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaInputValueDefinition"><span class="hs-identifier hs-type">RemoteSchemaInputValueDefinition</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span id="local-6989586621688292096"><span class="annot"><span class="annottext">HashMap Name RemoteSchemaInputValueDefinition
-</span><a href="#local-6989586621688292096"><span class="hs-identifier hs-var">remoteFieldParamMap</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621688292514"><span class="hs-identifier hs-var">_rrfiRemoteSchemaName</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet FieldName
+</span><a href="#local-6989586621688292497"><span class="hs-identifier hs-var">hasuraFieldNames</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteFields
+</span><a href="#local-6989586621688292517"><span class="hs-identifier hs-var">_rrfiRemoteFields</span></a></span><span>
+</span><span id="line-73"></span><span>  </span><span class="hs-special">(</span><span id="local-6989586621688292493"><span class="annot"><span class="annottext">[TypeDefinition [Name] RemoteSchemaInputValueDefinition]
+</span><a href="#local-6989586621688292493"><span class="hs-identifier hs-var">newInpValDefns</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinition</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaInputValueDefinition"><span class="hs-identifier hs-type">RemoteSchemaInputValueDefinition</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span id="local-6989586621688292492"><span class="annot"><span class="annottext">HashMap Name RemoteSchemaInputValueDefinition
+</span><a href="#local-6989586621688292492"><span class="hs-identifier hs-var">remoteFieldParamMap</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-74"></span><span>    </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621688292102"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; RoleName -&gt; Bool
+</span><a href="#local-6989586621688292498"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; RoleName -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="Hasura.Session.html#adminRoleName"><span class="hs-identifier hs-var">adminRoleName</span></a></span><span>
@@ -417,12 +417,12 @@ forall a. Eq a =&gt; a -&gt; a -&gt; Bool
       HashMap Name RemoteSchemaInputValueDefinition)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[TypeDefinition [Name] RemoteSchemaInputValueDefinition]
-</span><a href="#local-6989586621688292119"><span class="hs-identifier hs-var">_rrfiInputValueDefinitions</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">HashMap Name RemoteSchemaInputValueDefinition
-</span><a href="#local-6989586621688292122"><span class="hs-identifier hs-var">_rrfiParamMap</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688292515"><span class="hs-identifier hs-var">_rrfiInputValueDefinitions</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">HashMap Name RemoteSchemaInputValueDefinition
+</span><a href="#local-6989586621688292518"><span class="hs-identifier hs-var">_rrfiParamMap</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-80"></span><span>      </span><span class="hs-keyword">else</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-81"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap FieldName lhsJoinField
-</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688292094"><span class="annot"><span class="annottext">RemoteSchemaFieldInfo
-</span><a href="#local-6989586621688292094"><span class="hs-identifier hs-var">roleRemoteField</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688292490"><span class="annot"><span class="annottext">RemoteSchemaFieldInfo
+</span><a href="#local-6989586621688292490"><span class="hs-identifier hs-var">roleRemoteField</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-82"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a.
 (Foldable (Either ValidationError), Alternative f) =&gt;
 Either ValidationError a -&gt; f a
@@ -459,12 +459,12 @@ ToSchemaRelationshipDef
 -&gt; HashMap FieldName joinField
 -&gt; m (HashMap FieldName joinField, RemoteSchemaFieldInfo)
 </span><a href="Hasura.RQL.DDL.RemoteRelationship.Validate.html#validateToSchemaRelationship"><span class="hs-identifier hs-var">validateToSchemaRelationship</span></a></span><span> </span><span class="annot"><span class="annottext">ToSchemaRelationshipDef
-</span><a href="#local-6989586621688292099"><span class="hs-identifier hs-var">relationshipDef</span></a></span><span> </span><span class="annot"><span class="annottext">LHSIdentifier
-</span><a href="#local-6989586621688292117"><span class="hs-identifier hs-var">_rrfiLHSIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">RelName
-</span><a href="#local-6989586621688292123"><span class="hs-identifier hs-var">_rrfiName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RemoteSchemaInfo
-</span><a href="#local-6989586621688292120"><span class="hs-identifier hs-var">_rrfiRemoteSchema</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">IntrospectionResult
-</span><a href="#local-6989586621688292106"><span class="hs-identifier hs-var">roleIntrospectionResultOriginal</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashMap FieldName lhsJoinField
-</span><a href="#local-6989586621688292125"><span class="hs-identifier hs-var">lhsFields</span></a></span><span>
+</span><a href="#local-6989586621688292495"><span class="hs-identifier hs-var">relationshipDef</span></a></span><span> </span><span class="annot"><span class="annottext">LHSIdentifier
+</span><a href="#local-6989586621688292513"><span class="hs-identifier hs-var">_rrfiLHSIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">RelName
+</span><a href="#local-6989586621688292519"><span class="hs-identifier hs-var">_rrfiName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RemoteSchemaInfo
+</span><a href="#local-6989586621688292516"><span class="hs-identifier hs-var">_rrfiRemoteSchema</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">IntrospectionResult
+</span><a href="#local-6989586621688292502"><span class="hs-identifier hs-var">roleIntrospectionResultOriginal</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashMap FieldName lhsJoinField
+</span><a href="#local-6989586621688292521"><span class="hs-identifier hs-var">lhsFields</span></a></span><span>
 </span><span id="line-86"></span><span>        </span><span class="annot"><span class="annottext">([TypeDefinition [Name] RemoteSchemaInputValueDefinition],
  HashMap Name RemoteSchemaInputValueDefinition)
 -&gt; MaybeT
@@ -475,20 +475,20 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RemoteSchemaFieldInfo
 -&gt; [TypeDefinition [Name] RemoteSchemaInputValueDefinition]
 </span><a href="Hasura.RQL.Types.Relationships.ToSchema.html#_rrfiInputValueDefinitions"><span class="hs-identifier hs-var hs-var">Remote._rrfiInputValueDefinitions</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaFieldInfo
-</span><a href="#local-6989586621688292094"><span class="hs-identifier hs-var">roleRemoteField</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaFieldInfo
+</span><a href="#local-6989586621688292490"><span class="hs-identifier hs-var">roleRemoteField</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaFieldInfo
 -&gt; HashMap Name RemoteSchemaInputValueDefinition
 </span><a href="Hasura.RQL.Types.Relationships.ToSchema.html#_rrfiParamMap"><span class="hs-identifier hs-var hs-var">Remote._rrfiParamMap</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaFieldInfo
-</span><a href="#local-6989586621688292094"><span class="hs-identifier hs-var">roleRemoteField</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-87"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688292091"><span class="annot"><span class="annottext">roleIntrospection :: RemoteSchemaIntrospection
-</span><a href="#local-6989586621688292091"><span class="hs-identifier hs-var">roleIntrospection</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaIntrospection"><span class="hs-identifier hs-type">RemoteSchemaIntrospection</span></a></span><span> </span><span id="local-6989586621688292089"><span class="annot"><span class="annottext">HashMap
+</span><a href="#local-6989586621688292490"><span class="hs-identifier hs-var">roleRemoteField</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-87"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688292487"><span class="annot"><span class="annottext">roleIntrospection :: RemoteSchemaIntrospection
+</span><a href="#local-6989586621688292487"><span class="hs-identifier hs-var">roleIntrospection</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaIntrospection"><span class="hs-identifier hs-type">RemoteSchemaIntrospection</span></a></span><span> </span><span id="local-6989586621688292485"><span class="annot"><span class="annottext">HashMap
   Name (TypeDefinition [Name] RemoteSchemaInputValueDefinition)
-</span><a href="#local-6989586621688292089"><span class="hs-identifier hs-var">typeDefns</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IntrospectionResult -&gt; RemoteSchemaIntrospection
+</span><a href="#local-6989586621688292485"><span class="hs-identifier hs-var">typeDefns</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IntrospectionResult -&gt; RemoteSchemaIntrospection
 </span><a href="Hasura.RQL.Types.SchemaCache.html#irDoc"><span class="hs-identifier hs-var hs-var">irDoc</span></a></span><span> </span><span class="annot"><span class="annottext">IntrospectionResult
-</span><a href="#local-6989586621688292106"><span class="hs-identifier hs-var">roleIntrospectionResultOriginal</span></a></span><span>
+</span><a href="#local-6989586621688292502"><span class="hs-identifier hs-var">roleIntrospectionResultOriginal</span></a></span><span>
 </span><span id="line-88"></span><span>      </span><span class="hs-comment">-- add the new input value definitions created by the remote relationship</span><span>
 </span><span id="line-89"></span><span>      </span><span class="hs-comment">-- to the existing schema introspection of the role</span><span>
-</span><span id="line-90"></span><span>      </span><span id="local-6989586621688292087"><span class="annot"><span class="annottext">remoteRelationshipIntrospection :: RemoteSchemaIntrospection
-</span><a href="#local-6989586621688292087"><span class="hs-identifier hs-var hs-var">remoteRelationshipIntrospection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap
+</span><span id="line-90"></span><span>      </span><span id="local-6989586621688292483"><span class="annot"><span class="annottext">remoteRelationshipIntrospection :: RemoteSchemaIntrospection
+</span><a href="#local-6989586621688292483"><span class="hs-identifier hs-var hs-var">remoteRelationshipIntrospection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap
   Name (TypeDefinition [Name] RemoteSchemaInputValueDefinition)
 -&gt; RemoteSchemaIntrospection
 </span><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaIntrospection"><span class="hs-identifier hs-var">RemoteSchemaIntrospection</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap
@@ -500,7 +500,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HashMap
   Name (TypeDefinition [Name] RemoteSchemaInputValueDefinition)
-</span><a href="#local-6989586621688292089"><span class="hs-identifier hs-var">typeDefns</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap
+</span><a href="#local-6989586621688292485"><span class="hs-identifier hs-var">typeDefns</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap
   Name (TypeDefinition [Name] RemoteSchemaInputValueDefinition)
 -&gt; HashMap
      Name (TypeDefinition [Name] RemoteSchemaInputValueDefinition)
@@ -516,28 +516,28 @@ forall k v. (Eq k, Hashable k) =&gt; (v -&gt; k) -&gt; [v] -&gt; HashMap k v
 forall possibleTypes inputType.
 TypeDefinition possibleTypes inputType -&gt; Name
 </span><a href="Hasura.RQL.Types.RemoteSchema.html#getTypeName"><span class="hs-identifier hs-var">getTypeName</span></a></span><span> </span><span class="annot"><span class="annottext">[TypeDefinition [Name] RemoteSchemaInputValueDefinition]
-</span><a href="#local-6989586621688292097"><span class="hs-identifier hs-var">newInpValDefns</span></a></span><span>
-</span><span id="line-91"></span><span>  </span><span id="local-6989586621688292084"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688292084"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; MaybeT m Name
+</span><a href="#local-6989586621688292493"><span class="hs-identifier hs-var">newInpValDefns</span></a></span><span>
+</span><span id="line-91"></span><span>  </span><span id="local-6989586621688292480"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688292480"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; MaybeT m Name
 forall (m :: * -&gt; *). MonadError QErr m =&gt; Text -&gt; m Name
 </span><a href="Hasura.GraphQL.Schema.Common.html#textToName"><span class="hs-identifier hs-var">textToName</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; MaybeT m Name) -&gt; Text -&gt; MaybeT m Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">RelName -&gt; Text
 </span><a href="Hasura.RQL.Types.Common.html#relNameToTxt"><span class="hs-identifier hs-var">relNameToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">RelName
-</span><a href="#local-6989586621688292123"><span class="hs-identifier hs-var">_rrfiName</span></a></span><span>
+</span><a href="#local-6989586621688292519"><span class="hs-identifier hs-var">_rrfiName</span></a></span><span>
 </span><span id="line-92"></span><span>
 </span><span id="line-93"></span><span>  </span><span class="hs-comment">-- This selection set parser, should be of the remote node's selection set parser, which comes</span><span>
 </span><span id="line-94"></span><span>  </span><span class="hs-comment">-- from the fieldCall</span><span>
-</span><span id="line-95"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688292082"><span class="annot"><span class="annottext">fieldCalls :: NonEmpty FieldCall
-</span><a href="#local-6989586621688292082"><span class="hs-identifier hs-var hs-var">fieldCalls</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteFields -&gt; NonEmpty FieldCall
+</span><span id="line-95"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688292478"><span class="annot"><span class="annottext">fieldCalls :: NonEmpty FieldCall
+</span><a href="#local-6989586621688292478"><span class="hs-identifier hs-var hs-var">fieldCalls</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteFields -&gt; NonEmpty FieldCall
 </span><a href="Hasura.RQL.Types.Relationships.ToSchema.html#unRemoteFields"><span class="hs-identifier hs-var hs-var">unRemoteFields</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteFields
-</span><a href="#local-6989586621688292121"><span class="hs-identifier hs-var">_rrfiRemoteFields</span></a></span><span>
-</span><span id="line-96"></span><span>      </span><span id="local-6989586621688292080"><span class="annot"><span class="annottext">parentTypeName :: Name
-</span><a href="#local-6989586621688292080"><span class="hs-identifier hs-var hs-var">parentTypeName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IntrospectionResult -&gt; Name
+</span><a href="#local-6989586621688292517"><span class="hs-identifier hs-var">_rrfiRemoteFields</span></a></span><span>
+</span><span id="line-96"></span><span>      </span><span id="local-6989586621688292476"><span class="annot"><span class="annottext">parentTypeName :: Name
+</span><a href="#local-6989586621688292476"><span class="hs-identifier hs-var hs-var">parentTypeName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IntrospectionResult -&gt; Name
 </span><a href="Hasura.RQL.Types.SchemaCache.html#irQueryRoot"><span class="hs-identifier hs-var hs-var">irQueryRoot</span></a></span><span> </span><span class="annot"><span class="annottext">IntrospectionResult
-</span><a href="#local-6989586621688292106"><span class="hs-identifier hs-var">roleIntrospectionResultOriginal</span></a></span><span>
-</span><span id="line-97"></span><span>  </span><span id="local-6989586621688292078"><span class="annot"><span class="annottext">GType
-</span><a href="#local-6989586621688292078"><span class="hs-identifier hs-var">nestedFieldType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m GType -&gt; MaybeT m GType
+</span><a href="#local-6989586621688292502"><span class="hs-identifier hs-var">roleIntrospectionResultOriginal</span></a></span><span>
+</span><span id="line-97"></span><span>  </span><span id="local-6989586621688292474"><span class="annot"><span class="annottext">GType
+</span><a href="#local-6989586621688292474"><span class="hs-identifier hs-var">nestedFieldType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m GType -&gt; MaybeT m GType
 forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
@@ -548,15 +548,15 @@ forall (n :: * -&gt; *) (m :: * -&gt; *).
 (MonadSchema n m, MonadError QErr m) =&gt;
 Name -&gt; RemoteSchemaIntrospection -&gt; NonEmpty FieldCall -&gt; m GType
 </span><a href="Hasura.GraphQL.Schema.RemoteRelationship.html#lookupNestedFieldType"><span class="hs-identifier hs-var">lookupNestedFieldType</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688292080"><span class="hs-identifier hs-var">parentTypeName</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaIntrospection
-</span><a href="#local-6989586621688292091"><span class="hs-identifier hs-var">roleIntrospection</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty FieldCall
-</span><a href="#local-6989586621688292082"><span class="hs-identifier hs-var">fieldCalls</span></a></span><span>
-</span><span id="line-98"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688292076"><span class="annot"><span class="annottext">typeName :: Name
-</span><a href="#local-6989586621688292076"><span class="hs-identifier hs-var hs-var">typeName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">GType -&gt; Name
+</span><a href="#local-6989586621688292476"><span class="hs-identifier hs-var">parentTypeName</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaIntrospection
+</span><a href="#local-6989586621688292487"><span class="hs-identifier hs-var">roleIntrospection</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty FieldCall
+</span><a href="#local-6989586621688292478"><span class="hs-identifier hs-var">fieldCalls</span></a></span><span>
+</span><span id="line-98"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688292472"><span class="annot"><span class="annottext">typeName :: Name
+</span><a href="#local-6989586621688292472"><span class="hs-identifier hs-var hs-var">typeName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">GType -&gt; Name
 </span><span class="hs-identifier hs-var">G.getBaseType</span></span><span> </span><span class="annot"><span class="annottext">GType
-</span><a href="#local-6989586621688292078"><span class="hs-identifier hs-var">nestedFieldType</span></a></span><span>
-</span><span id="line-99"></span><span>  </span><span id="local-6989586621688292074"><span class="annot"><span class="annottext">TypeDefinition [Name] RemoteSchemaInputValueDefinition
-</span><a href="#local-6989586621688292074"><span class="hs-identifier hs-var">fieldTypeDefinition</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621688292474"><span class="hs-identifier hs-var">nestedFieldType</span></a></span><span>
+</span><span id="line-99"></span><span>  </span><span id="local-6989586621688292470"><span class="annot"><span class="annottext">TypeDefinition [Name] RemoteSchemaInputValueDefinition
+</span><a href="#local-6989586621688292470"><span class="hs-identifier hs-var">fieldTypeDefinition</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-100"></span><span>    </span><span class="annot"><span class="annottext">Maybe (TypeDefinition [Name] RemoteSchemaInputValueDefinition)
 -&gt; MaybeT
      m (TypeDefinition [Name] RemoteSchemaInputValueDefinition)
@@ -567,8 +567,8 @@ forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 -&gt; Name
 -&gt; Maybe (TypeDefinition [Name] RemoteSchemaInputValueDefinition)
 </span><a href="Hasura.RQL.Types.RemoteSchema.html#lookupType"><span class="hs-identifier hs-var">lookupType</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaIntrospection
-</span><a href="#local-6989586621688292091"><span class="hs-identifier hs-var">roleIntrospection</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688292076"><span class="hs-identifier hs-var">typeName</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688292487"><span class="hs-identifier hs-var">roleIntrospection</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688292472"><span class="hs-identifier hs-var">typeName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-101"></span><span>    </span><span class="hs-comment">-- the below case will never happen because we get the type name</span><span>
 </span><span id="line-102"></span><span>    </span><span class="hs-comment">-- from the schema document itself i.e. if a field exists for the</span><span>
 </span><span id="line-103"></span><span>    </span><span class="hs-comment">-- given role, then it's return type also must exist</span><span>
@@ -596,13 +596,13 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;unexpected: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688292076"><span class="hs-identifier hs-var">typeName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688292472"><span class="hs-identifier hs-var">typeName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; not found &quot;</span></span><span>
 </span><span id="line-106"></span><span>  </span><span class="hs-comment">-- These are the arguments that are given by the user while executing a query</span><span>
-</span><span id="line-107"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688292069"><span class="annot"><span class="annottext">remoteFieldUserArguments :: [RemoteSchemaInputValueDefinition]
-</span><a href="#local-6989586621688292069"><span class="hs-identifier hs-var hs-var">remoteFieldUserArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Name, RemoteSchemaInputValueDefinition)
+</span><span id="line-107"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688292465"><span class="annot"><span class="annottext">remoteFieldUserArguments :: [RemoteSchemaInputValueDefinition]
+</span><a href="#local-6989586621688292465"><span class="hs-identifier hs-var hs-var">remoteFieldUserArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Name, RemoteSchemaInputValueDefinition)
  -&gt; RemoteSchemaInputValueDefinition)
 -&gt; [(Name, RemoteSchemaInputValueDefinition)]
 -&gt; [RemoteSchemaInputValueDefinition]
@@ -619,12 +619,12 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; [(Name, RemoteSchemaInputValueDefinition)]
 forall k v. HashMap k v -&gt; [(k, v)]
 </span><span class="hs-identifier hs-var">Map.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name RemoteSchemaInputValueDefinition
-</span><a href="#local-6989586621688292096"><span class="hs-identifier hs-var">remoteFieldParamMap</span></a></span><span>
-</span><span id="line-108"></span><span>  </span><span id="local-6989586621688292067"><span class="annot"><span class="annottext">FieldParser
+</span><a href="#local-6989586621688292492"><span class="hs-identifier hs-var">remoteFieldParamMap</span></a></span><span>
+</span><span id="line-108"></span><span>  </span><span id="local-6989586621688292463"><span class="annot"><span class="annottext">FieldParser
   n
   (GraphQLField
      (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable)
-</span><a href="#local-6989586621688292067"><span class="hs-identifier hs-var">remoteFld</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621688292463"><span class="hs-identifier hs-var">remoteFld</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-109"></span><span>    </span><span class="annot"><span class="annottext">RemoteSchemaCustomizer
 -&gt; MaybeT
      m
@@ -643,7 +643,7 @@ forall (m :: * -&gt; *) r a.
  Has CustomizeRemoteFieldName r) =&gt;
 RemoteSchemaCustomizer -&gt; m a -&gt; m a
 </span><a href="Hasura.GraphQL.Schema.Remote.html#withRemoteSchemaCustomization"><span class="hs-identifier hs-var">withRemoteSchemaCustomization</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaCustomizer
-</span><a href="#local-6989586621688292105"><span class="hs-identifier hs-var">remoteSchemaCustomizer</span></a></span><span> </span><span class="annot"><span class="annottext">(MaybeT
+</span><a href="#local-6989586621688292501"><span class="hs-identifier hs-var">remoteSchemaCustomizer</span></a></span><span> </span><span class="annot"><span class="annottext">(MaybeT
    m
    (FieldParser
       n
@@ -715,7 +715,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
         (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable)
 forall (m :: * -&gt; *) a. GType -&gt; FieldParser m a -&gt; FieldParser m a
 </span><a href="Hasura.GraphQL.Parser.Internal.Parser.html#wrapFieldParser"><span class="hs-identifier hs-var">P.wrapFieldParser</span></a></span><span> </span><span class="annot"><span class="annottext">GType
-</span><a href="#local-6989586621688292078"><span class="hs-identifier hs-var">nestedFieldType</span></a></span><span>
+</span><a href="#local-6989586621688292474"><span class="hs-identifier hs-var">nestedFieldType</span></a></span><span>
 </span><span id="line-112"></span><span>          </span><span class="annot"><span class="annottext">(FieldParser
    n
    (GraphQLField
@@ -756,13 +756,13 @@ RemoteSchemaIntrospection
         (GraphQLField
            (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))
 </span><a href="Hasura.GraphQL.Schema.Remote.html#remoteField"><span class="hs-identifier hs-var">remoteField</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaIntrospection
-</span><a href="#local-6989586621688292087"><span class="hs-identifier hs-var">remoteRelationshipIntrospection</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688292080"><span class="hs-identifier hs-var">parentTypeName</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688292084"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621688292483"><span class="hs-identifier hs-var">remoteRelationshipIntrospection</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688292476"><span class="hs-identifier hs-var">parentTypeName</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688292480"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">[RemoteSchemaInputValueDefinition]
-</span><a href="#local-6989586621688292069"><span class="hs-identifier hs-var">remoteFieldUserArguments</span></a></span><span> </span><span class="annot"><span class="annottext">TypeDefinition [Name] RemoteSchemaInputValueDefinition
-</span><a href="#local-6989586621688292074"><span class="hs-identifier hs-var">fieldTypeDefinition</span></a></span><span>
+</span><a href="#local-6989586621688292465"><span class="hs-identifier hs-var">remoteFieldUserArguments</span></a></span><span> </span><span class="annot"><span class="annottext">TypeDefinition [Name] RemoteSchemaInputValueDefinition
+</span><a href="#local-6989586621688292470"><span class="hs-identifier hs-var">fieldTypeDefinition</span></a></span><span>
 </span><span id="line-113"></span><span>
 </span><span id="line-114"></span><span>  </span><span class="annot"><span class="annottext">FieldParser
   n (RemoteSchemaSelect (RemoteRelationshipField UnpreparedValue))
@@ -789,7 +789,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
   n
   (GraphQLField
      (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable)
-</span><a href="#local-6989586621688292067"><span class="hs-identifier hs-var">remoteFld</span></a></span><span>
+</span><a href="#local-6989586621688292463"><span class="hs-identifier hs-var">remoteFld</span></a></span><span>
 </span><span id="line-116"></span><span>      </span><span class="annot"><span class="annottext">FieldParser
   n
   (GraphQLField
@@ -803,55 +803,55 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (m :: * -&gt; *) a b.
 Monad m =&gt;
 FieldParser m a -&gt; (a -&gt; m b) -&gt; FieldParser m b
-</span><a href="Hasura.GraphQL.Parser.Internal.Parser.html#bindField"><span class="hs-operator hs-var">`P.bindField`</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688292062"><span class="annot"><span class="annottext">fld :: GraphQLField
+</span><a href="Hasura.GraphQL.Parser.Internal.Parser.html#bindField"><span class="hs-operator hs-var">`P.bindField`</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688292458"><span class="annot"><span class="annottext">fld :: GraphQLField
   (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable
-</span><a href="#local-6989586621688292062"><span class="hs-identifier hs-var">fld</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#GraphQLField"><span class="hs-identifier hs-type">IR.GraphQLField</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_fArguments :: forall r var. GraphQLField r var -&gt; HashMap Name (Value var)
-</span><a href="Hasura.RQL.IR.RemoteSchema.html#_fArguments"><span class="hs-identifier hs-var">IR._fArguments</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621688292059"><span class="annot"><span class="annottext">HashMap Name (Value RemoteSchemaVariable)
-</span><a href="#local-6989586621688292059"><span class="hs-identifier hs-var">args</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">_fSelectionSet :: forall r var. GraphQLField r var -&gt; SelectionSet r var
-</span><a href="Hasura.RQL.IR.RemoteSchema.html#_fSelectionSet"><span class="hs-identifier hs-var">IR._fSelectionSet</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621688292057"><span class="annot"><span class="annottext">SelectionSet
+</span><a href="#local-6989586621688292458"><span class="hs-identifier hs-var">fld</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#GraphQLField"><span class="hs-identifier hs-type">IR.GraphQLField</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_fArguments :: forall r var. GraphQLField r var -&gt; HashMap Name (Value var)
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#_fArguments"><span class="hs-identifier hs-var">IR._fArguments</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621688292455"><span class="annot"><span class="annottext">HashMap Name (Value RemoteSchemaVariable)
+</span><a href="#local-6989586621688292455"><span class="hs-identifier hs-var">args</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">_fSelectionSet :: forall r var. GraphQLField r var -&gt; SelectionSet r var
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#_fSelectionSet"><span class="hs-identifier hs-var">IR._fSelectionSet</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621688292453"><span class="annot"><span class="annottext">SelectionSet
   (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable
-</span><a href="#local-6989586621688292057"><span class="hs-identifier hs-var">selSet</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">_fName :: forall r var. GraphQLField r var -&gt; Name
-</span><a href="Hasura.RQL.IR.RemoteSchema.html#_fName"><span class="hs-identifier hs-var">IR._fName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621688292055"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688292055"><span class="hs-identifier hs-var">fname</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-117"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688292054"><span class="annot"><span class="annottext">remoteArgs :: [RemoteFieldArgument]
-</span><a href="#local-6989586621688292054"><span class="hs-identifier hs-var hs-var">remoteArgs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621688292453"><span class="hs-identifier hs-var">selSet</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">_fName :: forall r var. GraphQLField r var -&gt; Name
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#_fName"><span class="hs-identifier hs-var">IR._fName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621688292451"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688292451"><span class="hs-identifier hs-var">fname</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-117"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688292450"><span class="annot"><span class="annottext">remoteArgs :: [RemoteFieldArgument]
+</span><a href="#local-6989586621688292450"><span class="hs-identifier hs-var hs-var">remoteArgs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-118"></span><span>              </span><span class="annot"><span class="annottext">HashMap Name (Value RemoteSchemaVariable)
 -&gt; [(Name, Value RemoteSchemaVariable)]
 forall k v. HashMap k v -&gt; [(k, v)]
 </span><span class="hs-identifier hs-var">Map.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value RemoteSchemaVariable)
-</span><a href="#local-6989586621688292059"><span class="hs-identifier hs-var">args</span></a></span><span> </span><span class="annot"><span class="annottext">[(Name, Value RemoteSchemaVariable)]
+</span><a href="#local-6989586621688292455"><span class="hs-identifier hs-var">args</span></a></span><span> </span><span class="annot"><span class="annottext">[(Name, Value RemoteSchemaVariable)]
 -&gt; ((Name, Value RemoteSchemaVariable) -&gt; RemoteFieldArgument)
 -&gt; [RemoteFieldArgument]
 forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
-</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621688292052"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688292052"><span class="hs-identifier hs-var">argName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688292051"><span class="annot"><span class="annottext">Value RemoteSchemaVariable
-</span><a href="#local-6989586621688292051"><span class="hs-identifier hs-var">argVal</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name -&gt; InputValue RemoteSchemaVariable -&gt; RemoteFieldArgument
+</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621688292448"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688292448"><span class="hs-identifier hs-var">argName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688292447"><span class="annot"><span class="annottext">Value RemoteSchemaVariable
+</span><a href="#local-6989586621688292447"><span class="hs-identifier hs-var">argVal</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name -&gt; InputValue RemoteSchemaVariable -&gt; RemoteFieldArgument
 </span><a href="Hasura.RQL.IR.RemoteSchema.html#RemoteFieldArgument"><span class="hs-identifier hs-var">IR.RemoteFieldArgument</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688292052"><span class="hs-identifier hs-var">argName</span></a></span><span> </span><span class="annot"><span class="annottext">(InputValue RemoteSchemaVariable -&gt; RemoteFieldArgument)
+</span><a href="#local-6989586621688292448"><span class="hs-identifier hs-var">argName</span></a></span><span> </span><span class="annot"><span class="annottext">(InputValue RemoteSchemaVariable -&gt; RemoteFieldArgument)
 -&gt; InputValue RemoteSchemaVariable -&gt; RemoteFieldArgument
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value RemoteSchemaVariable -&gt; InputValue RemoteSchemaVariable
 forall v. Value v -&gt; InputValue v
 </span><a href="Hasura.GraphQL.Parser.Schema.html#GraphQLValue"><span class="hs-identifier hs-var">P.GraphQLValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value RemoteSchemaVariable
-</span><a href="#local-6989586621688292051"><span class="hs-identifier hs-var">argVal</span></a></span><span>
-</span><span id="line-119"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688292048"><span class="annot"><span class="annottext">resultCustomizer :: ResultCustomizer
-</span><a href="#local-6989586621688292048"><span class="hs-identifier hs-var hs-var">resultCustomizer</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621688292447"><span class="hs-identifier hs-var">argVal</span></a></span><span>
+</span><span id="line-119"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688292444"><span class="annot"><span class="annottext">resultCustomizer :: ResultCustomizer
+</span><a href="#local-6989586621688292444"><span class="hs-identifier hs-var hs-var">resultCustomizer</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-120"></span><span>              </span><span class="annot"><span class="annottext">NonEmpty FieldCall -&gt; ResultCustomizer -&gt; ResultCustomizer
-</span><a href="#local-6989586621688292047"><span class="hs-identifier hs-var">applyFieldCalls</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty FieldCall
-</span><a href="#local-6989586621688292082"><span class="hs-identifier hs-var">fieldCalls</span></a></span><span> </span><span class="annot"><span class="annottext">(ResultCustomizer -&gt; ResultCustomizer)
+</span><a href="#local-6989586621688292443"><span class="hs-identifier hs-var">applyFieldCalls</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty FieldCall
+</span><a href="#local-6989586621688292478"><span class="hs-identifier hs-var">fieldCalls</span></a></span><span> </span><span class="annot"><span class="annottext">(ResultCustomizer -&gt; ResultCustomizer)
 -&gt; ResultCustomizer -&gt; ResultCustomizer
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-121"></span><span>                </span><span class="annot"><span class="annottext">AliasMapping -&gt; ResultCustomizer -&gt; ResultCustomizer
 </span><a href="Hasura.RQL.Types.ResultCustomization.html#applyAliasMapping"><span class="hs-identifier hs-var">applyAliasMapping</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; AliasMapping
 </span><a href="Hasura.RQL.Types.ResultCustomization.html#singletonAliasMapping"><span class="hs-identifier hs-var">singletonAliasMapping</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688292055"><span class="hs-identifier hs-var">fname</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FieldCall -&gt; Name
+</span><a href="#local-6989586621688292451"><span class="hs-identifier hs-var">fname</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FieldCall -&gt; Name
 </span><a href="Hasura.RQL.Types.Relationships.ToSchema.html#fcName"><span class="hs-identifier hs-var hs-var">fcName</span></a></span><span> </span><span class="annot"><span class="annottext">(FieldCall -&gt; Name) -&gt; FieldCall -&gt; Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty FieldCall -&gt; FieldCall
 forall a. NonEmpty a -&gt; a
 </span><span class="hs-identifier hs-var">NE.last</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty FieldCall
-</span><a href="#local-6989586621688292082"><span class="hs-identifier hs-var">fieldCalls</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(ResultCustomizer -&gt; ResultCustomizer)
+</span><a href="#local-6989586621688292478"><span class="hs-identifier hs-var">fieldCalls</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(ResultCustomizer -&gt; ResultCustomizer)
 -&gt; ResultCustomizer -&gt; ResultCustomizer
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
@@ -860,9 +860,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
      (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable
 -&gt; ResultCustomizer
 </span><a href="Hasura.GraphQL.Schema.Remote.html#makeResultCustomizer"><span class="hs-identifier hs-var">makeResultCustomizer</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaCustomizer
-</span><a href="#local-6989586621688292105"><span class="hs-identifier hs-var">remoteSchemaCustomizer</span></a></span><span> </span><span class="annot"><span class="annottext">GraphQLField
+</span><a href="#local-6989586621688292501"><span class="hs-identifier hs-var">remoteSchemaCustomizer</span></a></span><span> </span><span class="annot"><span class="annottext">GraphQLField
   (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable
-</span><a href="#local-6989586621688292062"><span class="hs-identifier hs-var">fld</span></a></span><span>
+</span><a href="#local-6989586621688292458"><span class="hs-identifier hs-var">fld</span></a></span><span>
 </span><span id="line-123"></span><span>        </span><span class="annot"><span class="annottext">RemoteSchemaSelect (RemoteRelationshipField UnpreparedValue)
 -&gt; n (RemoteSchemaSelect (RemoteRelationshipField UnpreparedValue))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -883,29 +883,29 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="Hasura.RQL.IR.RemoteSchema.html#RemoteSchemaSelect"><span class="hs-identifier hs-type">IR.RemoteSchemaSelect</span></a></span><span>
 </span><span id="line-125"></span><span>            </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_rselArgs :: [RemoteFieldArgument]
 </span><a href="Hasura.RQL.IR.RemoteSchema.html#_rselArgs"><span class="hs-identifier hs-var">IR._rselArgs</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[RemoteFieldArgument]
-</span><a href="#local-6989586621688292054"><span class="hs-identifier hs-var">remoteArgs</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688292450"><span class="hs-identifier hs-var">remoteArgs</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-126"></span><span>              </span><span class="annot"><span class="annottext">_rselResultCustomizer :: ResultCustomizer
 </span><a href="Hasura.RQL.IR.RemoteSchema.html#_rselResultCustomizer"><span class="hs-identifier hs-var">IR._rselResultCustomizer</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ResultCustomizer
-</span><a href="#local-6989586621688292048"><span class="hs-identifier hs-var">resultCustomizer</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688292444"><span class="hs-identifier hs-var">resultCustomizer</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-127"></span><span>              </span><span class="annot"><span class="annottext">_rselSelection :: SelectionSet
   (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable
 </span><a href="Hasura.RQL.IR.RemoteSchema.html#_rselSelection"><span class="hs-identifier hs-var">IR._rselSelection</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SelectionSet
   (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable
-</span><a href="#local-6989586621688292057"><span class="hs-identifier hs-var">selSet</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688292453"><span class="hs-identifier hs-var">selSet</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-128"></span><span>              </span><span class="annot"><span class="annottext">_rselFieldCall :: NonEmpty FieldCall
 </span><a href="Hasura.RQL.IR.RemoteSchema.html#_rselFieldCall"><span class="hs-identifier hs-var">IR._rselFieldCall</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmpty FieldCall
-</span><a href="#local-6989586621688292082"><span class="hs-identifier hs-var">fieldCalls</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688292478"><span class="hs-identifier hs-var">fieldCalls</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-129"></span><span>              </span><span class="annot"><span class="annottext">_rselRemoteSchema :: RemoteSchemaInfo
 </span><a href="Hasura.RQL.IR.RemoteSchema.html#_rselRemoteSchema"><span class="hs-identifier hs-var">IR._rselRemoteSchema</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaInfo
-</span><a href="#local-6989586621688292120"><span class="hs-identifier hs-var">_rrfiRemoteSchema</span></a></span><span>
+</span><a href="#local-6989586621688292516"><span class="hs-identifier hs-var">_rrfiRemoteSchema</span></a></span><span>
 </span><span id="line-130"></span><span>            </span><span class="hs-special">}</span><span>
 </span><span id="line-131"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-132"></span><span>    </span><span class="hs-comment">-- Apply parent field calls so that the result customizer modifies the nested field</span><span>
-</span><span id="line-133"></span><span>    </span><span class="annot"><a href="#local-6989586621688292047"><span class="hs-identifier hs-type">applyFieldCalls</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#FieldCall"><span class="hs-identifier hs-type">FieldCall</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#ResultCustomizer"><span class="hs-identifier hs-type">ResultCustomizer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#ResultCustomizer"><span class="hs-identifier hs-type">ResultCustomizer</span></a></span><span>
-</span><span id="line-134"></span><span>    </span><span id="local-6989586621688292047"><span class="annot"><span class="annottext">applyFieldCalls :: NonEmpty FieldCall -&gt; ResultCustomizer -&gt; ResultCustomizer
-</span><a href="#local-6989586621688292047"><span class="hs-identifier hs-var hs-var">applyFieldCalls</span></a></span></span><span> </span><span id="local-6989586621688292035"><span class="annot"><span class="annottext">NonEmpty FieldCall
-</span><a href="#local-6989586621688292035"><span class="hs-identifier hs-var">fieldCalls</span></a></span></span><span> </span><span id="local-6989586621688292034"><span class="annot"><span class="annottext">ResultCustomizer
-</span><a href="#local-6989586621688292034"><span class="hs-identifier hs-var">resultCustomizer</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-133"></span><span>    </span><span class="annot"><a href="#local-6989586621688292443"><span class="hs-identifier hs-type">applyFieldCalls</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#FieldCall"><span class="hs-identifier hs-type">FieldCall</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#ResultCustomizer"><span class="hs-identifier hs-type">ResultCustomizer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#ResultCustomizer"><span class="hs-identifier hs-type">ResultCustomizer</span></a></span><span>
+</span><span id="line-134"></span><span>    </span><span id="local-6989586621688292443"><span class="annot"><span class="annottext">applyFieldCalls :: NonEmpty FieldCall -&gt; ResultCustomizer -&gt; ResultCustomizer
+</span><a href="#local-6989586621688292443"><span class="hs-identifier hs-var hs-var">applyFieldCalls</span></a></span></span><span> </span><span id="local-6989586621688292431"><span class="annot"><span class="annottext">NonEmpty FieldCall
+</span><a href="#local-6989586621688292431"><span class="hs-identifier hs-var">fieldCalls</span></a></span></span><span> </span><span id="local-6989586621688292430"><span class="annot"><span class="annottext">ResultCustomizer
+</span><a href="#local-6989586621688292430"><span class="hs-identifier hs-var">resultCustomizer</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-135"></span><span>      </span><span class="annot"><span class="annottext">(FieldCall -&gt; ResultCustomizer -&gt; ResultCustomizer)
 -&gt; ResultCustomizer -&gt; [FieldCall] -&gt; ResultCustomizer
 forall (t :: * -&gt; *) a b.
@@ -920,32 +920,32 @@ Foldable t =&gt;
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">FieldCall -&gt; Name
 </span><a href="Hasura.RQL.Types.Relationships.ToSchema.html#fcName"><span class="hs-identifier hs-var hs-var">fcName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ResultCustomizer
-</span><a href="#local-6989586621688292034"><span class="hs-identifier hs-var">resultCustomizer</span></a></span><span> </span><span class="annot"><span class="annottext">([FieldCall] -&gt; ResultCustomizer)
+</span><a href="#local-6989586621688292430"><span class="hs-identifier hs-var">resultCustomizer</span></a></span><span> </span><span class="annot"><span class="annottext">([FieldCall] -&gt; ResultCustomizer)
 -&gt; [FieldCall] -&gt; ResultCustomizer
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty FieldCall -&gt; [FieldCall]
 forall a. NonEmpty a -&gt; [a]
 </span><span class="hs-identifier hs-var">NE.init</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty FieldCall
-</span><a href="#local-6989586621688292035"><span class="hs-identifier hs-var">fieldCalls</span></a></span><span>
+</span><a href="#local-6989586621688292431"><span class="hs-identifier hs-var">fieldCalls</span></a></span><span>
 </span><span id="line-136"></span><span>
-</span><span id="line-137"></span><span id="local-6989586621688292229"><span id="local-6989586621688292230"><span class="annot"><a href="Hasura.GraphQL.Schema.RemoteRelationship.html#lookupNestedFieldType%27"><span class="hs-identifier hs-type">lookupNestedFieldType'</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-138"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.html#MonadSchema"><span class="hs-identifier hs-type">MonadSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292230"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292229"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292229"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-137"></span><span id="local-6989586621688292625"><span id="local-6989586621688292626"><span class="annot"><a href="Hasura.GraphQL.Schema.RemoteRelationship.html#lookupNestedFieldType%27"><span class="hs-identifier hs-type">lookupNestedFieldType'</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-138"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.html#MonadSchema"><span class="hs-identifier hs-type">MonadSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292626"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292625"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292625"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-139"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-140"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaIntrospection"><span class="hs-identifier hs-type">RemoteSchemaIntrospection</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-141"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#FieldCall"><span class="hs-identifier hs-type">FieldCall</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-142"></span><span>  </span><span class="annot"><a href="#local-6989586621688292229"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.GType</span></span></span></span><span>
+</span><span id="line-142"></span><span>  </span><span class="annot"><a href="#local-6989586621688292625"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.GType</span></span></span></span><span>
 </span><span id="line-143"></span><span id="lookupNestedFieldType%27"><span class="annot"><span class="annottext">lookupNestedFieldType' :: Name -&gt; RemoteSchemaIntrospection -&gt; FieldCall -&gt; m GType
-</span><a href="Hasura.GraphQL.Schema.RemoteRelationship.html#lookupNestedFieldType%27"><span class="hs-identifier hs-var hs-var">lookupNestedFieldType'</span></a></span></span><span> </span><span id="local-6989586621688292029"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688292029"><span class="hs-identifier hs-var">parentTypeName</span></a></span></span><span> </span><span id="local-6989586621688292028"><span class="annot"><span class="annottext">RemoteSchemaIntrospection
-</span><a href="#local-6989586621688292028"><span class="hs-identifier hs-var">remoteSchemaIntrospection</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#FieldCall"><span class="hs-identifier hs-type">FieldCall</span></a></span><span> </span><span id="local-6989586621688292026"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688292026"><span class="hs-identifier hs-var">fcName</span></a></span></span><span> </span><span class="annot"><span class="annottext">RemoteArguments
+</span><a href="Hasura.GraphQL.Schema.RemoteRelationship.html#lookupNestedFieldType%27"><span class="hs-identifier hs-var hs-var">lookupNestedFieldType'</span></a></span></span><span> </span><span id="local-6989586621688292425"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688292425"><span class="hs-identifier hs-var">parentTypeName</span></a></span></span><span> </span><span id="local-6989586621688292424"><span class="annot"><span class="annottext">RemoteSchemaIntrospection
+</span><a href="#local-6989586621688292424"><span class="hs-identifier hs-var">remoteSchemaIntrospection</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#FieldCall"><span class="hs-identifier hs-type">FieldCall</span></a></span><span> </span><span id="local-6989586621688292422"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688292422"><span class="hs-identifier hs-var">fcName</span></a></span></span><span> </span><span class="annot"><span class="annottext">RemoteArguments
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-144"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaIntrospection
 -&gt; Name
 -&gt; Maybe (ObjectTypeDefinition RemoteSchemaInputValueDefinition)
 </span><a href="Hasura.RQL.Types.RemoteSchema.html#lookupObject"><span class="hs-identifier hs-var">lookupObject</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaIntrospection
-</span><a href="#local-6989586621688292028"><span class="hs-identifier hs-var">remoteSchemaIntrospection</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688292029"><span class="hs-identifier hs-var">parentTypeName</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688292424"><span class="hs-identifier hs-var">remoteSchemaIntrospection</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688292425"><span class="hs-identifier hs-var">parentTypeName</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-145"></span><span>    </span><span class="annot"><span class="annottext">Maybe (ObjectTypeDefinition RemoteSchemaInputValueDefinition)
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m GType
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
@@ -956,11 +956,11 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;object with name &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688292029"><span class="hs-identifier hs-var">parentTypeName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688292425"><span class="hs-identifier hs-var">parentTypeName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; not found&quot;</span></span><span>
-</span><span id="line-146"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.ObjectTypeDefinition</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688292017"><span id="local-6989586621688292018"><span id="local-6989586621688292019"><span id="local-6989586621688292020"><span id="local-6989586621688292021"><span class="annot"><span class="annottext">[Name]
+</span><span id="line-146"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.ObjectTypeDefinition</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688292413"><span id="local-6989586621688292414"><span id="local-6989586621688292415"><span id="local-6989586621688292416"><span id="local-6989586621688292417"><span class="annot"><span class="annottext">[Name]
 [Directive Void]
 [FieldDefinition RemoteSchemaInputValueDefinition]
 Maybe Description
@@ -986,7 +986,7 @@ forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Maybe
 </span><span class="hs-identifier hs-var">find</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688292026"><span class="hs-identifier hs-var">fcName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Bool)
+</span><a href="#local-6989586621688292422"><span class="hs-identifier hs-var">fcName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Bool)
 -&gt; (FieldDefinition RemoteSchemaInputValueDefinition -&gt; Name)
 -&gt; FieldDefinition RemoteSchemaInputValueDefinition
 -&gt; Bool
@@ -994,7 +994,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">FieldDefinition RemoteSchemaInputValueDefinition -&gt; Name
 forall inputType. FieldDefinition inputType -&gt; Name
 </span><span class="hs-identifier hs-var hs-var">G._fldName</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[FieldDefinition RemoteSchemaInputValueDefinition]
-</span><a href="#local-6989586621688292017"><span class="hs-identifier hs-var">_otdFieldsDefinition</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688292413"><span class="hs-identifier hs-var">_otdFieldsDefinition</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-148"></span><span>        </span><span class="annot"><span class="annottext">Maybe (FieldDefinition RemoteSchemaInputValueDefinition)
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m GType
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
@@ -1005,11 +1005,11 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;field with name &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688292026"><span class="hs-identifier hs-var">fcName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688292422"><span class="hs-identifier hs-var">fcName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; not found&quot;</span></span><span>
-</span><span id="line-149"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.FieldDefinition</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688292004"><span id="local-6989586621688292005"><span id="local-6989586621688292006"><span id="local-6989586621688292007"><span id="local-6989586621688292008"><span class="annot"><span class="annottext">[Directive Void]
+</span><span id="line-149"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.FieldDefinition</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688292400"><span id="local-6989586621688292401"><span id="local-6989586621688292402"><span id="local-6989586621688292403"><span id="local-6989586621688292404"><span class="annot"><span class="annottext">[Directive Void]
 [RemoteSchemaInputValueDefinition]
 Maybe Description
 Name
@@ -1028,65 +1028,65 @@ _fldName :: forall inputType. FieldDefinition inputType -&gt; Name
 </span><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">GType -&gt; m GType
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">GType
-</span><a href="#local-6989586621688292005"><span class="hs-identifier hs-var">_fldType</span></a></span><span>
+</span><a href="#local-6989586621688292401"><span class="hs-identifier hs-var">_fldType</span></a></span><span>
 </span><span id="line-150"></span><span>
-</span><span id="line-151"></span><span id="local-6989586621688292304"><span id="local-6989586621688292305"><span class="annot"><a href="Hasura.GraphQL.Schema.RemoteRelationship.html#lookupNestedFieldType"><span class="hs-identifier hs-type">lookupNestedFieldType</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-152"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.html#MonadSchema"><span class="hs-identifier hs-type">MonadSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292305"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292304"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292304"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-151"></span><span id="local-6989586621688292700"><span id="local-6989586621688292701"><span class="annot"><a href="Hasura.GraphQL.Schema.RemoteRelationship.html#lookupNestedFieldType"><span class="hs-identifier hs-type">lookupNestedFieldType</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-152"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.html#MonadSchema"><span class="hs-identifier hs-type">MonadSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292701"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292700"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292700"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-153"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-154"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaIntrospection"><span class="hs-identifier hs-type">RemoteSchemaIntrospection</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-155"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#FieldCall"><span class="hs-identifier hs-type">FieldCall</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-156"></span><span>  </span><span class="annot"><a href="#local-6989586621688292304"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.GType</span></span></span></span><span>
+</span><span id="line-156"></span><span>  </span><span class="annot"><a href="#local-6989586621688292700"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.GType</span></span></span></span><span>
 </span><span id="line-157"></span><span id="lookupNestedFieldType"><span class="annot"><span class="annottext">lookupNestedFieldType :: Name -&gt; RemoteSchemaIntrospection -&gt; NonEmpty FieldCall -&gt; m GType
-</span><a href="Hasura.GraphQL.Schema.RemoteRelationship.html#lookupNestedFieldType"><span class="hs-identifier hs-var hs-var">lookupNestedFieldType</span></a></span></span><span> </span><span id="local-6989586621688291999"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688291999"><span class="hs-identifier hs-var">parentTypeName</span></a></span></span><span> </span><span id="local-6989586621688291998"><span class="annot"><span class="annottext">RemoteSchemaIntrospection
-</span><a href="#local-6989586621688291998"><span class="hs-identifier hs-var">remoteSchemaIntrospection</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688291997"><span class="annot"><span class="annottext">FieldCall
-</span><a href="#local-6989586621688291997"><span class="hs-identifier hs-var">fieldCall</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-type">:|</span></span><span> </span><span id="local-6989586621688291995"><span class="annot"><span class="annottext">[FieldCall]
-</span><a href="#local-6989586621688291995"><span class="hs-identifier hs-var">rest</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-158"></span><span>  </span><span id="local-6989586621688291994"><span class="annot"><span class="annottext">GType
-</span><a href="#local-6989586621688291994"><span class="hs-identifier hs-var">fieldType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name -&gt; RemoteSchemaIntrospection -&gt; FieldCall -&gt; m GType
+</span><a href="Hasura.GraphQL.Schema.RemoteRelationship.html#lookupNestedFieldType"><span class="hs-identifier hs-var hs-var">lookupNestedFieldType</span></a></span></span><span> </span><span id="local-6989586621688292395"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688292395"><span class="hs-identifier hs-var">parentTypeName</span></a></span></span><span> </span><span id="local-6989586621688292394"><span class="annot"><span class="annottext">RemoteSchemaIntrospection
+</span><a href="#local-6989586621688292394"><span class="hs-identifier hs-var">remoteSchemaIntrospection</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688292393"><span class="annot"><span class="annottext">FieldCall
+</span><a href="#local-6989586621688292393"><span class="hs-identifier hs-var">fieldCall</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-type">:|</span></span><span> </span><span id="local-6989586621688292391"><span class="annot"><span class="annottext">[FieldCall]
+</span><a href="#local-6989586621688292391"><span class="hs-identifier hs-var">rest</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-158"></span><span>  </span><span id="local-6989586621688292390"><span class="annot"><span class="annottext">GType
+</span><a href="#local-6989586621688292390"><span class="hs-identifier hs-var">fieldType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name -&gt; RemoteSchemaIntrospection -&gt; FieldCall -&gt; m GType
 forall (n :: * -&gt; *) (m :: * -&gt; *).
 (MonadSchema n m, MonadError QErr m) =&gt;
 Name -&gt; RemoteSchemaIntrospection -&gt; FieldCall -&gt; m GType
 </span><a href="Hasura.GraphQL.Schema.RemoteRelationship.html#lookupNestedFieldType%27"><span class="hs-identifier hs-var">lookupNestedFieldType'</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688291999"><span class="hs-identifier hs-var">parentTypeName</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaIntrospection
-</span><a href="#local-6989586621688291998"><span class="hs-identifier hs-var">remoteSchemaIntrospection</span></a></span><span> </span><span class="annot"><span class="annottext">FieldCall
-</span><a href="#local-6989586621688291997"><span class="hs-identifier hs-var">fieldCall</span></a></span><span>
+</span><a href="#local-6989586621688292395"><span class="hs-identifier hs-var">parentTypeName</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaIntrospection
+</span><a href="#local-6989586621688292394"><span class="hs-identifier hs-var">remoteSchemaIntrospection</span></a></span><span> </span><span class="annot"><span class="annottext">FieldCall
+</span><a href="#local-6989586621688292393"><span class="hs-identifier hs-var">fieldCall</span></a></span><span>
 </span><span id="line-159"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">[FieldCall] -&gt; Maybe (NonEmpty FieldCall)
 forall a. [a] -&gt; Maybe (NonEmpty a)
 </span><span class="hs-identifier hs-var">NE.nonEmpty</span></span><span> </span><span class="annot"><span class="annottext">[FieldCall]
-</span><a href="#local-6989586621688291995"><span class="hs-identifier hs-var">rest</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688292391"><span class="hs-identifier hs-var">rest</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-160"></span><span>    </span><span class="annot"><span class="annottext">Maybe (NonEmpty FieldCall)
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">GType -&gt; m GType
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">GType
-</span><a href="#local-6989586621688291994"><span class="hs-identifier hs-var">fieldType</span></a></span><span>
-</span><span id="line-161"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688291992"><span class="annot"><span class="annottext">NonEmpty FieldCall
-</span><a href="#local-6989586621688291992"><span class="hs-identifier hs-var">rest'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621688292390"><span class="hs-identifier hs-var">fieldType</span></a></span><span>
+</span><span id="line-161"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688292388"><span class="annot"><span class="annottext">NonEmpty FieldCall
+</span><a href="#local-6989586621688292388"><span class="hs-identifier hs-var">rest'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-162"></span><span>      </span><span class="annot"><span class="annottext">Name -&gt; RemoteSchemaIntrospection -&gt; NonEmpty FieldCall -&gt; m GType
 forall (n :: * -&gt; *) (m :: * -&gt; *).
 (MonadSchema n m, MonadError QErr m) =&gt;
 Name -&gt; RemoteSchemaIntrospection -&gt; NonEmpty FieldCall -&gt; m GType
 </span><a href="Hasura.GraphQL.Schema.RemoteRelationship.html#lookupNestedFieldType"><span class="hs-identifier hs-var">lookupNestedFieldType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">GType -&gt; Name
 </span><span class="hs-identifier hs-var">G.getBaseType</span></span><span> </span><span class="annot"><span class="annottext">GType
-</span><a href="#local-6989586621688291994"><span class="hs-identifier hs-var">fieldType</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaIntrospection
-</span><a href="#local-6989586621688291998"><span class="hs-identifier hs-var">remoteSchemaIntrospection</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty FieldCall
-</span><a href="#local-6989586621688291992"><span class="hs-identifier hs-var">rest'</span></a></span><span>
+</span><a href="#local-6989586621688292390"><span class="hs-identifier hs-var">fieldType</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaIntrospection
+</span><a href="#local-6989586621688292394"><span class="hs-identifier hs-var">remoteSchemaIntrospection</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty FieldCall
+</span><a href="#local-6989586621688292388"><span class="hs-identifier hs-var">rest'</span></a></span><span>
 </span><span id="line-163"></span><span>
 </span><span id="line-164"></span><span class="hs-comment">-- | Parser(s) for remote relationship fields to a database table.</span><span>
 </span><span id="line-165"></span><span class="hs-comment">-- Note that when the target is a database table, an array relationship</span><span>
 </span><span id="line-166"></span><span class="hs-comment">-- declaration would have the '_aggregate' field in addition to the array</span><span>
 </span><span id="line-167"></span><span class="hs-comment">-- relationship field, hence [FieldParser ...] instead of 'FieldParser'</span><span>
 </span><span id="line-168"></span><span class="annot"><a href="Hasura.GraphQL.Schema.RemoteRelationship.html#remoteRelationshipToSourceField"><span class="hs-identifier hs-type">remoteRelationshipToSourceField</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-169"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688292375"><span class="annot"><a href="#local-6989586621688292375"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621688292374"><span class="annot"><a href="#local-6989586621688292374"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688292373"><span class="annot"><a href="#local-6989586621688292373"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span id="local-6989586621688292371"><span class="annot"><a href="#local-6989586621688292371"><span class="hs-identifier hs-type">tgt</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-170"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#MonadBuildSchemaBase"><span class="hs-identifier hs-type">MonadBuildSchemaBase</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292375"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292374"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292373"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#BackendSchema"><span class="hs-identifier hs-type">BackendSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292371"><span class="hs-identifier hs-type">tgt</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-171"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSource.html#RemoteSourceFieldInfo"><span class="hs-identifier hs-type">RemoteSourceFieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292371"><span class="hs-identifier hs-type">tgt</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-172"></span><span>  </span><span class="annot"><a href="#local-6989586621688292374"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292373"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.html#RemoteSourceSelect"><span class="hs-identifier hs-type">IR.RemoteSourceSelect</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-type">IR.RemoteRelationshipField</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292371"><span class="hs-identifier hs-type">tgt</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-169"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688292771"><span class="annot"><a href="#local-6989586621688292771"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621688292770"><span class="annot"><a href="#local-6989586621688292770"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688292769"><span class="annot"><a href="#local-6989586621688292769"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span id="local-6989586621688292767"><span class="annot"><a href="#local-6989586621688292767"><span class="hs-identifier hs-type">tgt</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-170"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#MonadBuildSchemaBase"><span class="hs-identifier hs-type">MonadBuildSchemaBase</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292771"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292770"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292769"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#BackendSchema"><span class="hs-identifier hs-type">BackendSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292767"><span class="hs-identifier hs-type">tgt</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-171"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSource.html#RemoteSourceFieldInfo"><span class="hs-identifier hs-type">RemoteSourceFieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292767"><span class="hs-identifier hs-type">tgt</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-172"></span><span>  </span><span class="annot"><a href="#local-6989586621688292770"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292769"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.html#RemoteSourceSelect"><span class="hs-identifier hs-type">IR.RemoteSourceSelect</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-type">IR.RemoteRelationshipField</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688292767"><span class="hs-identifier hs-type">tgt</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-173"></span><span id="remoteRelationshipToSourceField"><span class="annot"><span class="annottext">remoteRelationshipToSourceField :: RemoteSourceFieldInfo tgt
 -&gt; m [FieldParser
         n
         (RemoteSourceSelect
            (RemoteRelationshipField UnpreparedValue) UnpreparedValue tgt)]
-</span><a href="Hasura.GraphQL.Schema.RemoteRelationship.html#remoteRelationshipToSourceField"><span class="hs-identifier hs-var hs-var">remoteRelationshipToSourceField</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSource.html#RemoteSourceFieldInfo"><span class="hs-identifier hs-type">RemoteSourceFieldInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688291984"><span id="local-6989586621688291985"><span id="local-6989586621688291986"><span id="local-6989586621688291987"><span id="local-6989586621688291988"><span id="local-6989586621688291989"><span id="local-6989586621688291990"><span class="annot"><span class="annottext">HashMap FieldName (ScalarType tgt, Column tgt)
+</span><a href="Hasura.GraphQL.Schema.RemoteRelationship.html#remoteRelationshipToSourceField"><span class="hs-identifier hs-var hs-var">remoteRelationshipToSourceField</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSource.html#RemoteSourceFieldInfo"><span class="hs-identifier hs-type">RemoteSourceFieldInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688292380"><span id="local-6989586621688292381"><span id="local-6989586621688292382"><span id="local-6989586621688292383"><span id="local-6989586621688292384"><span id="local-6989586621688292385"><span id="local-6989586621688292386"><span class="annot"><span class="annottext">HashMap FieldName (ScalarType tgt, Column tgt)
 SourceConfig tgt
 TableName tgt
 SourceName
@@ -1133,33 +1133,33 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SourceTypeCustomization -&gt; Maybe SourceTypeCustomization
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">SourceTypeCustomization
-</span><a href="#local-6989586621688291986"><span class="hs-identifier hs-var">_rsfiSourceCustomization</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-175"></span><span>    </span><span id="local-6989586621688291975"><span class="annot"><span class="annottext">TableInfo tgt
-</span><a href="#local-6989586621688291975"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; TableName tgt -&gt; m (TableInfo tgt)
+</span><a href="#local-6989586621688292382"><span class="hs-identifier hs-var">_rsfiSourceCustomization</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-175"></span><span>    </span><span id="local-6989586621688292371"><span class="annot"><span class="annottext">TableInfo tgt
+</span><a href="#local-6989586621688292371"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; TableName tgt -&gt; m (TableInfo tgt)
 forall (b :: BackendType) r (m :: * -&gt; *).
 (Backend b, MonadError QErr m, MonadReader r m,
  Has SourceCache r) =&gt;
 SourceName -&gt; TableName b -&gt; m (TableInfo b)
-</span><a href="Hasura.GraphQL.Schema.Common.html#askTableInfo"><span class="hs-identifier hs-var">askTableInfo</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688292371"><span class="hs-identifier hs-type">tgt</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688291988"><span class="hs-identifier hs-var">_rsfiSource</span></a></span><span> </span><span class="annot"><span class="annottext">TableName tgt
-</span><a href="#local-6989586621688291985"><span class="hs-identifier hs-var">_rsfiTable</span></a></span><span>
-</span><span id="line-176"></span><span>    </span><span id="local-6989586621688291973"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688291973"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m Name
+</span><a href="Hasura.GraphQL.Schema.Common.html#askTableInfo"><span class="hs-identifier hs-var">askTableInfo</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688292767"><span class="hs-identifier hs-type">tgt</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688292384"><span class="hs-identifier hs-var">_rsfiSource</span></a></span><span> </span><span class="annot"><span class="annottext">TableName tgt
+</span><a href="#local-6989586621688292381"><span class="hs-identifier hs-var">_rsfiTable</span></a></span><span>
+</span><span id="line-176"></span><span>    </span><span id="local-6989586621688292369"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688292369"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m Name
 forall (m :: * -&gt; *). MonadError QErr m =&gt; Text -&gt; m Name
 </span><a href="Hasura.GraphQL.Schema.Common.html#textToName"><span class="hs-identifier hs-var">textToName</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; m Name) -&gt; Text -&gt; m Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">RelName -&gt; Text
 </span><a href="Hasura.RQL.Types.Common.html#relNameToTxt"><span class="hs-identifier hs-var">relNameToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">RelName
-</span><a href="#local-6989586621688291990"><span class="hs-identifier hs-var">_rsfiName</span></a></span><span>
-</span><span id="line-177"></span><span>    </span><span id="local-6989586621688291972"><span class="annot"><span class="annottext">Maybe (SelPermInfo tgt)
-</span><a href="#local-6989586621688291972"><span class="hs-identifier hs-var">maybePerms</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo tgt -&gt; m (Maybe (SelPermInfo tgt))
+</span><a href="#local-6989586621688292386"><span class="hs-identifier hs-var">_rsfiName</span></a></span><span>
+</span><span id="line-177"></span><span>    </span><span id="local-6989586621688292368"><span class="annot"><span class="annottext">Maybe (SelPermInfo tgt)
+</span><a href="#local-6989586621688292368"><span class="hs-identifier hs-var">maybePerms</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo tgt -&gt; m (Maybe (SelPermInfo tgt))
 forall (b :: BackendType) r (m :: * -&gt; *).
 (MonadReader r m, Has RoleName r) =&gt;
 TableInfo b -&gt; m (Maybe (SelPermInfo b))
-</span><a href="Hasura.GraphQL.Schema.Table.html#tableSelectPermissions"><span class="hs-identifier hs-var">tableSelectPermissions</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688292371"><span class="hs-identifier hs-type">tgt</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo tgt
-</span><a href="#local-6989586621688291975"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><a href="Hasura.GraphQL.Schema.Table.html#tableSelectPermissions"><span class="hs-identifier hs-var">tableSelectPermissions</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688292767"><span class="hs-identifier hs-type">tgt</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo tgt
+</span><a href="#local-6989586621688292371"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-178"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (SelPermInfo tgt)
-</span><a href="#local-6989586621688291972"><span class="hs-identifier hs-var">maybePerms</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688292368"><span class="hs-identifier hs-var">maybePerms</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-179"></span><span>      </span><span class="annot"><span class="annottext">Maybe (SelPermInfo tgt)
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[FieldParser
    n
@@ -1171,18 +1171,18 @@ TableInfo b -&gt; m (Maybe (SelPermInfo b))
            (RemoteRelationshipField UnpreparedValue) UnpreparedValue tgt)]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-180"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688291970"><span class="annot"><span class="annottext">SelPermInfo tgt
-</span><a href="#local-6989586621688291970"><span class="hs-identifier hs-var">tablePerms</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-181"></span><span>        </span><span id="local-6989586621688291969"><span class="annot"><span class="annottext">[FieldParser
+</span><span id="line-180"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688292366"><span class="annot"><span class="annottext">SelPermInfo tgt
+</span><a href="#local-6989586621688292366"><span class="hs-identifier hs-var">tablePerms</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-181"></span><span>        </span><span id="local-6989586621688292365"><span class="annot"><span class="annottext">[FieldParser
    n
    (SourceRelationshipSelection
       tgt (RemoteRelationshipField UnpreparedValue) UnpreparedValue)]
-</span><a href="#local-6989586621688291969"><span class="hs-identifier hs-var">parsers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">RelType
-</span><a href="#local-6989586621688291989"><span class="hs-identifier hs-var">_rsfiType</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688292365"><span class="hs-identifier hs-var">parsers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">RelType
+</span><a href="#local-6989586621688292385"><span class="hs-identifier hs-var">_rsfiType</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-182"></span><span>          </span><span class="annot"><span class="annottext">RelType
 </span><a href="Hasura.RQL.Types.Common.html#ObjRel"><span class="hs-identifier hs-var">ObjRel</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-183"></span><span>            </span><span id="local-6989586621688291967"><span class="annot"><span class="annottext">Maybe (Parser 'Output n (AnnotatedFields tgt))
-</span><a href="#local-6989586621688291967"><span class="hs-identifier hs-var">selectionSetParserM</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><span id="line-183"></span><span>            </span><span id="local-6989586621688292363"><span class="annot"><span class="annottext">Maybe (Parser 'Output n (AnnotatedFields tgt))
+</span><a href="#local-6989586621688292363"><span class="hs-identifier hs-var">selectionSetParserM</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceName
 -&gt; TableInfo tgt
 -&gt; m (Maybe (Parser 'Output n (AnnotatedFields tgt)))
 forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
@@ -1190,8 +1190,8 @@ MonadBuildSchema b r m n =&gt;
 SourceName
 -&gt; TableInfo b -&gt; m (Maybe (Parser 'Output n (AnnotatedFields b)))
 </span><a href="Hasura.GraphQL.Schema.Select.html#tableSelectionSet"><span class="hs-identifier hs-var">tableSelectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688291988"><span class="hs-identifier hs-var">_rsfiSource</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo tgt
-</span><a href="#local-6989586621688291975"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><a href="#local-6989586621688292384"><span class="hs-identifier hs-var">_rsfiSource</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo tgt
+</span><a href="#local-6989586621688292371"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-184"></span><span>            </span><span class="annot"><span class="annottext">[FieldParser
    n
    (SourceRelationshipSelection
@@ -1219,11 +1219,11 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
            tgt (RemoteRelationshipField UnpreparedValue) UnpreparedValue)]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (Parser 'Output n (AnnotatedFields tgt))
-</span><a href="#local-6989586621688291967"><span class="hs-identifier hs-var">selectionSetParserM</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688292363"><span class="hs-identifier hs-var">selectionSetParserM</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-185"></span><span>              </span><span class="annot"><span class="annottext">Maybe (Parser 'Output n (AnnotatedFields tgt))
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-186"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688291965"><span class="annot"><span class="annottext">Parser 'Output n (AnnotatedFields tgt)
-</span><a href="#local-6989586621688291965"><span class="hs-identifier hs-var">selectionSetParser</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-186"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688292361"><span class="annot"><span class="annottext">Parser 'Output n (AnnotatedFields tgt)
+</span><a href="#local-6989586621688292361"><span class="hs-identifier hs-var">selectionSetParser</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-187"></span><span>                </span><span class="annot"><span class="annottext">FieldParser
   n
   (SourceRelationshipSelection
@@ -1259,10 +1259,10 @@ forall (m :: * -&gt; *) a.
 MonadParse m =&gt;
 Name -&gt; Maybe Description -&gt; Parser 'Output m a -&gt; FieldParser m a
 </span><a href="Hasura.GraphQL.Parser.Internal.Parser.html#subselection_"><span class="hs-identifier hs-var">subselection_</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688291973"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621688292369"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Parser 'Output n (AnnotatedFields tgt)
-</span><a href="#local-6989586621688291965"><span class="hs-identifier hs-var">selectionSetParser</span></a></span><span> </span><span class="annot"><span class="annottext">FieldParser n (AnnotatedFields tgt)
+</span><a href="#local-6989586621688292361"><span class="hs-identifier hs-var">selectionSetParser</span></a></span><span> </span><span class="annot"><span class="annottext">FieldParser n (AnnotatedFields tgt)
 -&gt; (AnnotatedFields tgt
     -&gt; SourceRelationshipSelection
          tgt (RemoteRelationshipField UnpreparedValue) UnpreparedValue)
@@ -1271,8 +1271,8 @@ forall a. Maybe a
      (SourceRelationshipSelection
         tgt (RemoteRelationshipField UnpreparedValue) UnpreparedValue)
 forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
-</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688291963"><span class="annot"><span class="annottext">AnnotatedFields tgt
-</span><a href="#local-6989586621688291963"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688292359"><span class="annot"><span class="annottext">AnnotatedFields tgt
+</span><a href="#local-6989586621688292359"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-189"></span><span>                    </span><span class="annot"><span class="annottext">AnnObjectSelectG
   tgt (RemoteRelationshipField UnpreparedValue) (UnpreparedValue tgt)
 -&gt; SourceRelationshipSelection
@@ -1298,8 +1298,8 @@ forall (b :: BackendType) r v.
 AnnFieldsG b r v
 -&gt; TableName b -&gt; AnnBoolExp b v -&gt; AnnObjectSelectG b r v
 </span><a href="Hasura.RQL.IR.Select.html#AnnObjectSelectG"><span class="hs-identifier hs-var">IR.AnnObjectSelectG</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedFields tgt
-</span><a href="#local-6989586621688291963"><span class="hs-identifier hs-var">fields</span></a></span><span> </span><span class="annot"><span class="annottext">TableName tgt
-</span><a href="#local-6989586621688291985"><span class="hs-identifier hs-var">_rsfiTable</span></a></span><span> </span><span class="annot"><span class="annottext">(AnnBoolExp tgt (UnpreparedValue tgt)
+</span><a href="#local-6989586621688292359"><span class="hs-identifier hs-var">fields</span></a></span><span> </span><span class="annot"><span class="annottext">TableName tgt
+</span><a href="#local-6989586621688292381"><span class="hs-identifier hs-var">_rsfiTable</span></a></span><span> </span><span class="annot"><span class="annottext">(AnnBoolExp tgt (UnpreparedValue tgt)
  -&gt; AnnObjectSelectG
       tgt
       (RemoteRelationshipField UnpreparedValue)
@@ -1321,16 +1321,16 @@ forall (b :: BackendType).
 Backend b =&gt;
 SelPermInfo b -&gt; TablePerms b
 </span><a href="Hasura.GraphQL.Schema.Select.html#tablePermissionsInfo"><span class="hs-identifier hs-var">tablePermissionsInfo</span></a></span><span> </span><span class="annot"><span class="annottext">SelPermInfo tgt
-</span><a href="#local-6989586621688291970"><span class="hs-identifier hs-var">tablePerms</span></a></span><span>
+</span><a href="#local-6989586621688292366"><span class="hs-identifier hs-var">tablePerms</span></a></span><span>
 </span><span id="line-191"></span><span>          </span><span class="annot"><span class="annottext">RelType
 </span><a href="Hasura.RQL.Types.Common.html#ArrRel"><span class="hs-identifier hs-var">ArrRel</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-192"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688291957"><span class="annot"><span class="annottext">aggFieldName :: Name
-</span><a href="#local-6989586621688291957"><span class="hs-identifier hs-var hs-var">aggFieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688291973"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
+</span><span id="line-192"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688292353"><span class="annot"><span class="annottext">aggFieldName :: Name
+</span><a href="#local-6989586621688292353"><span class="hs-identifier hs-var hs-var">aggFieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688292369"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="hs-special">$$(</span><span class="annot"><span class="hs-identifier hs-type">G.litName</span></span><span> </span><span class="annot"><span class="hs-string">&quot;_aggregate&quot;</span></span><span class="hs-special">)</span><span>
-</span><span id="line-193"></span><span>            </span><span id="local-6989586621688291953"><span class="annot"><span class="annottext">Maybe (FieldParser n (SelectExp tgt))
-</span><a href="#local-6989586621688291953"><span class="hs-identifier hs-var">selectionSetParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><span id="line-193"></span><span>            </span><span id="local-6989586621688292349"><span class="annot"><span class="annottext">Maybe (FieldParser n (SelectExp tgt))
+</span><a href="#local-6989586621688292349"><span class="hs-identifier hs-var">selectionSetParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceName
 -&gt; TableInfo tgt
 -&gt; Name
 -&gt; Maybe Description
@@ -1343,13 +1343,13 @@ SourceName
 -&gt; Maybe Description
 -&gt; m (Maybe (FieldParser n (SelectExp b)))
 </span><a href="Hasura.GraphQL.Schema.Select.html#selectTable"><span class="hs-identifier hs-var">selectTable</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688291988"><span class="hs-identifier hs-var">_rsfiSource</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo tgt
-</span><a href="#local-6989586621688291975"><span class="hs-identifier hs-var">tableInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688291973"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621688292384"><span class="hs-identifier hs-var">_rsfiSource</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo tgt
+</span><a href="#local-6989586621688292371"><span class="hs-identifier hs-var">tableInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688292369"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-194"></span><span>            </span><span id="local-6989586621688291951"><span class="annot"><span class="annottext">Maybe (FieldParser n (AggSelectExp tgt))
-</span><a href="#local-6989586621688291951"><span class="hs-identifier hs-var">aggSelectionSetParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><span id="line-194"></span><span>            </span><span id="local-6989586621688292347"><span class="annot"><span class="annottext">Maybe (FieldParser n (AggSelectExp tgt))
+</span><a href="#local-6989586621688292347"><span class="hs-identifier hs-var">aggSelectionSetParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceName
 -&gt; TableInfo tgt
 -&gt; Name
 -&gt; Maybe Description
@@ -1362,9 +1362,9 @@ SourceName
 -&gt; Maybe Description
 -&gt; m (Maybe (FieldParser n (AggSelectExp b)))
 </span><a href="Hasura.GraphQL.Schema.Select.html#selectTableAggregate"><span class="hs-identifier hs-var">selectTableAggregate</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688291988"><span class="hs-identifier hs-var">_rsfiSource</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo tgt
-</span><a href="#local-6989586621688291975"><span class="hs-identifier hs-var">tableInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688291957"><span class="hs-identifier hs-var">aggFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621688292384"><span class="hs-identifier hs-var">_rsfiSource</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo tgt
+</span><a href="#local-6989586621688292371"><span class="hs-identifier hs-var">tableInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688292353"><span class="hs-identifier hs-var">aggFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-195"></span><span>            </span><span class="annot"><span class="annottext">[FieldParser
@@ -1406,7 +1406,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. [Maybe a] -&gt; [a]
 </span><span class="hs-identifier hs-var">catMaybes</span></span><span>
 </span><span id="line-197"></span><span>                </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Maybe (FieldParser n (SelectExp tgt))
-</span><a href="#local-6989586621688291953"><span class="hs-identifier hs-var">selectionSetParser</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (FieldParser n (SelectExp tgt))
+</span><a href="#local-6989586621688292349"><span class="hs-identifier hs-var">selectionSetParser</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (FieldParser n (SelectExp tgt))
 -&gt; (FieldParser n (SelectExp tgt)
     -&gt; FieldParser
          n
@@ -1434,7 +1434,7 @@ forall (b :: BackendType) r (vf :: BackendType -&gt; *).
 AnnSimpleSelectG b r (vf b) -&gt; SourceRelationshipSelection b r vf
 </span><a href="Hasura.RQL.IR.Select.html#SourceRelationshipArray"><span class="hs-identifier hs-var">IR.SourceRelationshipArray</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-198"></span><span>                  </span><span class="annot"><span class="annottext">Maybe (FieldParser n (AggSelectExp tgt))
-</span><a href="#local-6989586621688291951"><span class="hs-identifier hs-var">aggSelectionSetParser</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (FieldParser n (AggSelectExp tgt))
+</span><a href="#local-6989586621688292347"><span class="hs-identifier hs-var">aggSelectionSetParser</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (FieldParser n (AggSelectExp tgt))
 -&gt; (FieldParser n (AggSelectExp tgt)
     -&gt; FieldParser
          n
@@ -1494,7 +1494,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
    n
    (SourceRelationshipSelection
       tgt (RemoteRelationshipField UnpreparedValue) UnpreparedValue)]
-</span><a href="#local-6989586621688291969"><span class="hs-identifier hs-var">parsers</span></a></span><span> </span><span class="annot"><span class="annottext">[FieldParser
+</span><a href="#local-6989586621688292365"><span class="hs-identifier hs-var">parsers</span></a></span><span> </span><span class="annot"><span class="annottext">[FieldParser
    n
    (SourceRelationshipSelection
       tgt (RemoteRelationshipField UnpreparedValue) UnpreparedValue)]
@@ -1524,9 +1524,9 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
      (RemoteSourceSelect
         (RemoteRelationshipField UnpreparedValue) UnpreparedValue tgt)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688291946"><span class="annot"><span class="annottext">SourceRelationshipSelection
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688292342"><span class="annot"><span class="annottext">SourceRelationshipSelection
   tgt (RemoteRelationshipField UnpreparedValue) UnpreparedValue
-</span><a href="#local-6989586621688291946"><span class="hs-identifier hs-var">select</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621688292342"><span class="hs-identifier hs-var">select</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-202"></span><span>            </span><span class="annot"><span class="annottext">SourceName
 -&gt; SourceConfig tgt
 -&gt; SourceRelationshipSelection
@@ -1541,9 +1541,9 @@ SourceName
 -&gt; HashMap FieldName (ScalarType tgt, Column tgt)
 -&gt; RemoteSourceSelect r vf tgt
 </span><a href="Hasura.RQL.IR.Select.html#RemoteSourceSelect"><span class="hs-identifier hs-var">IR.RemoteSourceSelect</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688291988"><span class="hs-identifier hs-var">_rsfiSource</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig tgt
-</span><a href="#local-6989586621688291987"><span class="hs-identifier hs-var">_rsfiSourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">SourceRelationshipSelection
+</span><a href="#local-6989586621688292384"><span class="hs-identifier hs-var">_rsfiSource</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig tgt
+</span><a href="#local-6989586621688292383"><span class="hs-identifier hs-var">_rsfiSourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">SourceRelationshipSelection
   tgt (RemoteRelationshipField UnpreparedValue) UnpreparedValue
-</span><a href="#local-6989586621688291946"><span class="hs-identifier hs-var">select</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap FieldName (ScalarType tgt, Column tgt)
-</span><a href="#local-6989586621688291984"><span class="hs-identifier hs-var">_rsfiMapping</span></a></span><span>
+</span><a href="#local-6989586621688292342"><span class="hs-identifier hs-var">select</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap FieldName (ScalarType tgt, Column tgt)
+</span><a href="#local-6989586621688292380"><span class="hs-identifier hs-var">_rsfiMapping</span></a></span><span>
 </span><span id="line-203"></span></pre></body></html>
