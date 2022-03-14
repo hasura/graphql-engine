@@ -27769,8 +27769,8 @@ data ExitException
 ExitException :: !ExitCode -> !ByteString -> ExitException
 [eeCode] :: ExitException -> !ExitCode
 [eeMessage] :: ExitException -> !ByteString
-printErrExit :: MonadIO m => forall a. ExitCode -> String -> m a
-printErrJExit :: (ToJSON a, MonadIO m) => forall b. ExitCode -> a -> m b
+throwErrExit :: MonadIO m => forall a. ExitCode -> String -> m a
+throwErrJExit :: (ToJSON a, MonadIO m) => forall b. ExitCode -> a -> m b
 parseHGECommand :: EnabledLogTypes impl => Parser (RawHGECommand impl)
 parseArgs :: EnabledLogTypes impl => IO (HGEOptions impl)
 printJSON :: (ToJSON a, MonadIO m) => a -> m ()
@@ -27824,11 +27824,7 @@ mkLoggers :: (MonadIO m, MonadBaseControl IO m) => HashSet (EngineLogType Hasura
 
 -- | helper function to initialize or migrate the <tt>hdb_catalog</tt>
 --   schema (used by pro as well)
-migrateCatalogSchema :: (MonadIO m, MonadBaseControl IO m) => Environment -> Logger Hasura -> PGPool -> Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) -> Manager -> ServerConfigCtx -> SourceResolver ('Postgres 'Vanilla) -> SourceResolver 'MSSQL -> m (RebuildableSchemaCache, UTCTime)
-
--- | Run a transaction and if an error is encountered, log the error and
---   abort the program
-runTxIO :: PGPool -> TxMode -> TxE QErr a -> IO a
+migrateCatalogSchema :: (MonadIO m, MonadBaseControl IO m) => Environment -> Logger Hasura -> PGPool -> Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) -> Manager -> ServerConfigCtx -> SourceResolver ('Postgres 'Vanilla) -> SourceResolver 'MSSQL -> m RebuildableSchemaCache
 
 -- | A latch for the graceful shutdown of a server process.
 newtype ShutdownLatch
