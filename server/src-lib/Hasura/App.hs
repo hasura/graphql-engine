@@ -19,8 +19,8 @@ module Hasura.App
     newShutdownLatch,
     notifySchemaCacheSyncTx,
     parseArgs,
-    printErrExit,
-    printErrJExit,
+    throwErrExit,
+    throwErrJExit,
     printJSON,
     printYaml,
     readTlsAllowlist,
@@ -155,11 +155,11 @@ data ExitException = ExitException
 
 instance Exception ExitException
 
-printErrExit :: (MonadIO m) => forall a. ExitCode -> String -> m a
-printErrExit reason = liftIO . throwIO . ExitException reason . BC.pack
+throwErrExit :: (MonadIO m) => forall a. ExitCode -> String -> m a
+throwErrExit reason = liftIO . throwIO . ExitException reason . BC.pack
 
-printErrJExit :: (A.ToJSON a, MonadIO m) => forall b. ExitCode -> a -> m b
-printErrJExit reason = liftIO . throwIO . ExitException reason . BLC.toStrict . A.encode
+throwErrJExit :: (A.ToJSON a, MonadIO m) => forall b. ExitCode -> a -> m b
+throwErrJExit reason = liftIO . throwIO . ExitException reason . BLC.toStrict . A.encode
 
 parseHGECommand :: EnabledLogTypes impl => Parser (RawHGECommand impl)
 parseHGECommand =
@@ -203,7 +203,7 @@ parseArgs = do
   rawHGEOpts <- execParser opts
   env <- getEnvironment
   let eitherOpts = runWithEnv env $ mkHGEOptions rawHGEOpts
-  onLeft eitherOpts $ printErrExit InvalidEnvironmentVariableOptionsError
+  onLeft eitherOpts $ throwErrExit InvalidEnvironmentVariableOptionsError
   where
     opts =
       info
@@ -260,7 +260,7 @@ initGlobalCtx env metadataDbUrl defaultPgConnInfo = do
 
   case (metadataDbUrl, dbUrlConf) of
     (Nothing, Nothing) ->
-      printErrExit
+      throwErrExit
         InvalidDatabaseConnectionParamsError
         "Fatal Error: Either of --metadata-database-url or --database-url option expected"
     -- If no metadata storage specified consider use default database as
@@ -333,7 +333,7 @@ resolvePostgresConnInfo ::
 resolvePostgresConnInfo env dbUrlConf maybeRetries = do
   dbUrlText <-
     runExcept (resolveUrlConf env dbUrlConf) `onLeft` \err ->
-      liftIO (printErrExit InvalidDatabaseConnectionParamsError (BLC.unpack $ A.encode err))
+      liftIO (throwErrJExit InvalidDatabaseConnectionParamsError err)
   pure $ Q.ConnInfo retries $ Q.CDDatabaseURI $ txtToBs dbUrlText
   where
     retries = fromMaybe 1 maybeRetries
@@ -384,7 +384,7 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} serverMetrics = do
           soReadOnlyMode
 
   schemaCacheHttpManager <- liftIO $ HTTP.newManager HTTP.tlsManagerSettings
-  (rebuildableSchemaCache, _) <-
+  rebuildableSchemaCache <-
     lift . flip onException (flushLogger loggerCtx) $
       migrateCatalogSchema
         env
@@ -444,7 +444,7 @@ migrateCatalogSchema ::
   ServerConfigCtx ->
   SourceResolver ('Postgres 'Vanilla) ->
   SourceResolver ('MSSQL) ->
-  m (RebuildableSchemaCache, UTCTime)
+  m RebuildableSchemaCache
 migrateCatalogSchema
   env
   logger
@@ -454,11 +454,11 @@ migrateCatalogSchema
   serverConfigCtx
   pgSourceResolver
   mssqlSourceResolver = do
-    currentTime <- liftIO Clock.getCurrentTime
     initialiseResult <- runExceptT $ do
       -- TODO: should we allow the migration to happen during maintenance mode?
       -- Allowing this can be a sanity check, to see if the hdb_catalog in the
       -- DB has been set correctly
+      currentTime <- liftIO Clock.getCurrentTime
       (migrationResult, metadata) <-
         Q.runTx pool (Q.Serializable, Just Q.ReadWrite) $
           migrateCatalog
@@ -482,15 +482,9 @@ migrateCatalogSchema
               slKind = "catalog_migrate",
               slInfo = A.toJSON err
             }
-        liftIO (printErrExit DatabaseMigrationError (BLC.unpack $ A.encode err))
+        liftIO (throwErrJExit DatabaseMigrationError err)
     unLogger logger migrationResult
-    pure (schemaCache, currentTime)
-
--- | Run a transaction and if an error is encountered, log the error and abort the program
-runTxIO :: Q.PGPool -> Q.TxMode -> Q.TxE QErr a -> IO a
-runTxIO pool isoLevel tx = do
-  eVal <- liftIO $ runExceptT $ Q.runTx pool isoLevel tx
-  onLeft eVal (printErrJExit DatabaseMigrationError)
+    pure schemaCache
 
 -- | A latch for the graceful shutdown of a server process.
 newtype ShutdownLatch = ShutdownLatch {unShutdownLatch :: C.MVar ()}
@@ -675,7 +669,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
         _scHttpManager
         logger
 
-  authMode <- onLeft authModeRes (printErrExit AuthConfigurationError . T.unpack)
+  authMode <- onLeft authModeRes (throwErrExit AuthConfigurationError . T.unpack)
 
   HasuraApp app cacheRef actionSubState stopWsServer <-
     lift $
@@ -778,20 +772,21 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
       liftIO $ checkForUpdates loggerCtx _scHttpManager
 
   -- start a background thread for telemetry
-  dbUidE <- runMetadataStorageT getDatabaseUid
   _telemetryThread <-
     if soEnableTelemetry
       then do
         lift . unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
 
-        (dbId, pgVersion) <-
-          liftIO $
-            runTxIO _scMetadataDbPool (Q.ReadCommitted, Nothing) $
-              (,) <$> liftEither dbUidE <*> getPgVersion
+        dbUid <-
+          runMetadataStorageT getDatabaseUid
+            >>= (`onLeft` throwErrJExit DatabaseMigrationError)
+        pgVersion <-
+          (liftIO $ runExceptT $ Q.runTx _scMetadataDbPool (Q.ReadCommitted, Nothing) $ getPgVersion)
+            >>= (`onLeft` throwErrJExit DatabaseMigrationError)
 
         telemetryThread <-
           C.forkManagedT "runTelemetry" logger $
-            liftIO $ runTelemetry logger _scHttpManager (getSchemaCache cacheRef) dbId _scInstanceId pgVersion
+            liftIO $ runTelemetry logger _scHttpManager (getSchemaCache cacheRef) dbUid _scInstanceId pgVersion
         return $ Just telemetryThread
       else return Nothing
 
@@ -809,7 +804,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
     prepareScheduledEvents (Logger logger) = do
       liftIO $ logger $ mkGenericStrLog LevelInfo "scheduled_triggers" "preparing data"
       res <- runMetadataStorageT unlockAllLockedScheduledEvents
-      onLeft res $ printErrJExit EventSubSystemError
+      onLeft res $ throwErrJExit EventSubSystemError
 
     getProcessingScheduledEventsCount :: LockedEventsCtx -> IO Int
     getProcessingScheduledEventsCount LockedEventsCtx {..} = do
