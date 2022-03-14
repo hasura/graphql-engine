@@ -9,6 +9,7 @@ import {
   resetRelationshipForm,
   formRelName,
   getExistingFieldsMap,
+  resetManualRelationshipForm,
 } from './Actions';
 import { showErrorNotification } from '../../Common/Notification';
 import { setTable } from '../DataActions';
@@ -316,6 +317,7 @@ const Relationships = ({
 }) => {
   useEffect(() => {
     dispatch(resetRelationshipForm());
+    dispatch(resetManualRelationshipForm());
     dispatch(setTable(tableName));
   }, []);
 
