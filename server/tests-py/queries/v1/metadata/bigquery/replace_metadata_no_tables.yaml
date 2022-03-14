@@ -12,7 +12,7 @@ query:
     - name: hasura_global_limited
       kind: bigquery
       configuration:
-        service_account: {from_env: HASURA_BIGQUERY_SERVICE_ACCOUNT}
+        service_account: {from_env: HASURA_BIGQUERY_SERVICE_KEY}
         project_id: {from_env: HASURA_BIGQUERY_PROJECT_ID}
         datasets:
         - hasura

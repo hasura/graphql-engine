@@ -25,7 +25,7 @@ import Data.Text.Extended (commaSeparated)
 import GHC.Stack
 import Harness.Constants as Constants
 import Harness.Env
-import Harness.Exceptions (SomeException, handle, tryInOrder)
+import Harness.Exceptions (SomeException, handle)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.State (State)
@@ -36,10 +36,7 @@ import Hasura.Backends.BigQuery.Source (ServiceAccount)
 import Prelude
 
 getServiceAccount :: HasCallStack => IO ServiceAccount
-getServiceAccount =
-  tryInOrder
-    (getEnvJson Constants.bigqueryServiceAccountVar)
-    (getEnvJsonFile Constants.bigqueryServiceAccountFileVar)
+getServiceAccount = getEnvJson Constants.bigqueryServiceKeyVar
 
 getProjectId :: (HasCallStack) => IO Text
 getProjectId = getEnvString Constants.bigqueryProjectIdVar

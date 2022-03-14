@@ -31,6 +31,6 @@ See the [hasura.io: BigQuery getting started guide](https://hasura.io/docs/lates
 Integration tests are run against short-lived projects. The following prerequisites are expected:
 - A Google Cloud Console service account
 - `HASURA_BIGQUERY_PROJECT_ID` environment variable
-- `HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE` environment variable
+- `HASURA_BIGQUERY_SERVICE_KEY` environment variable
 
 See [these docs](https://github.com/hasura/graphql-engine/tree/master/server/tests-py#running-bigquery-tests) for more guidance on testing against a BigQuery data source.

@@ -164,16 +164,23 @@ Running integration tests against a BigQuery data source is a little more involv
 ```
 HASURA_BIGQUERY_PROJECT_ID=# the project ID of the service account
 HASURA_BIGQUERY_SERVICE_ACCOUNT_EMAIL=# eg. "<<SERVICE_ACCOUNT_NAME>>@<<PROJECT_NAME>>.iam.gserviceaccount.com"
-HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE=# the filepath to the downloaded service account key
+HASURA_BIGQUERY_SERVICE_KEY=# the service account key
 ```
 
 Before running the test suite either manually or via `dev.sh`:
 1. Ensure you have access to a [Google Cloud Console service account](https://cloud.google.com/iam/docs/creating-managing-service-accounts#creating). Store the project ID and account email in `HASURA_BIGQUERY_PROJECT_ID` and (optional) `HASURA_BIGQUERY_SERVICE_ACCOUNT_EMAIL` variables.
-2. [Create and download a new service account key](https://cloud.google.com/iam/docs/creating-managing-service-account-keys). Store the filepath in a `HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE` variable.
+2. [Create and download a new service account key](https://cloud.google.com/iam/docs/creating-managing-service-account-keys). Store the contents of file in a `HASURA_BIGQUERY_SERVICE_KEY` variable. 
+    ```bash
+    export HASURA_BIGQUERY_SERVICE_KEY=$(cat /path/to/service/account)
+    ```
 3. [Login and activate the service account](https://cloud.google.com/sdk/gcloud/reference/auth/activate-service-account), if it is not already activated.
 4. Verify the service account is accessible via the [BigQuery API](https://cloud.google.com/bigquery/docs/reference/rest):
-     1. Run `source scripts/verify-bigquery-creds.sh $HASURA_BIGQUERY_PROJECT_ID $HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE $HASURA_BIGQUERY_SERVICE_ACCOUNT_EMAIL`. If the query succeeds, the service account is setup correctly to run tests against BigQuery locally.
-5. Finally, run the BigQuery test suite with `HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE` and `HASURA_BIGQUERY_PROJECT_ID` environment variables set. For example:
+    1. Run the following command:
+    ```bash
+    source scripts/verify-bigquery-creds.sh $HASURA_BIGQUERY_PROJECT_ID $HASURA_BIGQUERY_SERVICE_KEY $HASURA_BIGQUERY_SERVICE_ACCOUNT_EMAIL
+    ```
+    If the query succeeds, the service account is setup correctly to run tests against BigQuery locally.
+5. Finally, run the BigQuery test suite with `HASURA_BIGQUERY_SERVICE_KEY` and `HASURA_BIGQUERY_PROJECT_ID` environment variables set. For example:
   ```
   scripts/dev.sh test --integration --backend bigquery -k TestGraphQLQueryBasicBigquery
   ```
@@ -256,7 +263,7 @@ This means, for example, that if `teardown.yaml` untracks a table, and `schema_t
 The current convention is to indicate the backend(s) tests can be run against in the class name. For example:
    * `TestGraphQLQueryBasicMySQL` for tests that can only be run on MySQL
    * `TestGraphQLQueryBasicCommon` for tests that can be run against more than one backend
-   * If a test class doesn't have a suffix specifying the backend, nor does its name end in `Common`, then it is likely a test written pre-v2.0 that 
+   * If a test class doesn't have a suffix specifying the backend, nor does its name end in `Common`, then it is likely a test written pre-v2.0 that
      can only be run on Postgres
 
 This naming convention enables easier test filtering with [pytest command line flags](https://docs.pytest.org/en/6.2.x/usage.html#specifying-tests-selecting-tests).

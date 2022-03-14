@@ -25,8 +25,7 @@ module Harness.Constants
     sqlserverLivenessCheckIntervalMicroseconds,
     sqlserverConnectInfo,
     sqlserverDb,
-    bigqueryServiceAccountFileVar,
-    bigqueryServiceAccountVar,
+    bigqueryServiceKeyVar,
     bigqueryProjectIdVar,
     bigqueryDataset,
     httpHealthCheckAttempts,
@@ -193,11 +192,8 @@ mysqlConnectInfo =
       Mysql.connectPort = mysqlPort
     }
 
-bigqueryServiceAccountFileVar :: String
-bigqueryServiceAccountFileVar = "HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE"
-
-bigqueryServiceAccountVar :: String
-bigqueryServiceAccountVar = "HASURA_BIGQUERY_SERVICE_ACCOUNT"
+bigqueryServiceKeyVar :: String
+bigqueryServiceKeyVar = "HASURA_BIGQUERY_SERVICE_KEY"
 
 bigqueryProjectIdVar :: String
 bigqueryProjectIdVar = "HASURA_BIGQUERY_PROJECT_ID"
