@@ -9,6 +9,7 @@ module Hasura.Backends.MSSQL.Execute.Insert
   )
 where
 
+import Data.HashMap.Strict qualified as HM
 import Database.MSSQL.Transaction qualified as Tx
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.FromIr as TSQL
@@ -181,7 +182,9 @@ buildInsertTx tableName withAlias stringifyNum insert = do
 --   Should be used as part of a bigger transaction in 'buildInsertTx'.
 buildUpsertTx :: TSQL.TableName -> AnnInsert 'MSSQL Void Expression -> IfMatched Expression -> Tx.TxET QErr IO ()
 buildUpsertTx tableName insert ifMatched = do
-  let insertColumnNames = concatMap (map fst . getInsertColumns) $ _aiInsObj $ _aiData insert
+  let presets = _aiDefVals $ _aiData insert
+      insertColumnNames =
+        concatMap (map fst . getInsertColumns) (_aiInsObj $ _aiData insert) <> HM.keys presets
       allTableColumns = _aiTableCols $ _aiData insert
       insertColumns = filter (\c -> ciColumn c `elem` insertColumnNames) allTableColumns
       createValuesTempTableQuery =

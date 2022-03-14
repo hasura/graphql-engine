@@ -24,7 +24,7 @@ import Language.GraphQL.Draft.Syntax (unName)
 fromInsert :: IR.AnnInsert 'MSSQL Void Expression -> Insert
 fromInsert IR.AnnInsert {..} =
   let IR.AnnIns {..} = _aiData
-      insertRows = normalizeInsertRows $ map (IR.getInsertColumns) _aiInsObj
+      insertRows = normalizeInsertRows _aiDefVals $ map IR.getInsertColumns _aiInsObj
       insertColumnNames = maybe [] (map fst) $ listToMaybe insertRows
       insertValues = map (Values . map snd) insertRows
       allColumnNames = map (ColumnName . unName . IR.ciName) _aiTableCols
@@ -58,11 +58,13 @@ fromInsert IR.AnnInsert {..} =
 -- >   OUTPUT INSERTED.id
 -- >   VALUES (1, 'Foo', 21), (2, 'Bar', DEFAULT)
 normalizeInsertRows ::
+  HM.HashMap (Column 'MSSQL) Expression ->
   [[(Column 'MSSQL, Expression)]] ->
   [[(Column 'MSSQL, Expression)]]
-normalizeInsertRows insertRows =
-  let insertColumns = nubOrd (concatMap (map fst) insertRows)
-      allColumnsWithDefaultValue = map (,DefaultExpression) $ insertColumns
+normalizeInsertRows presets insertRows =
+  let insertColumns = nubOrd (concatMap (map fst) insertRows <> HM.keys presets)
+      allColumnsWithDefaultValue =
+        map (\col -> (col, fromMaybe DefaultExpression $ HM.lookup col presets)) insertColumns
       addMissingColumns insertRow =
         HM.toList $ HM.fromList insertRow `HM.union` HM.fromList allColumnsWithDefaultValue
       sortByColumn = sortBy (\l r -> compare (fst l) (fst r))
@@ -78,7 +80,7 @@ toMerge ::
   IfMatched Expression ->
   FromIr Merge
 toMerge tableName insertRows allColumns IfMatched {..} = do
-  let normalizedInsertRows = normalizeInsertRows $ map (IR.getInsertColumns) insertRows
+  let normalizedInsertRows = normalizeInsertRows _imColumnPresets $ map IR.getInsertColumns insertRows
       insertColumnNames = maybe [] (map fst) $ listToMaybe normalizedInsertRows
       allColumnNames = map (ColumnName . unName . IR.ciName) allColumns
 
@@ -107,7 +109,7 @@ toMerge tableName insertRows allColumns IfMatched {..} = do
 toInsertValuesIntoTempTable :: TempTableName -> IR.AnnInsert 'MSSQL Void Expression -> InsertValuesIntoTempTable
 toInsertValuesIntoTempTable tempTable IR.AnnInsert {..} =
   let IR.AnnIns {..} = _aiData
-      insertRows = normalizeInsertRows $ map IR.getInsertColumns _aiInsObj
+      insertRows = normalizeInsertRows _aiDefVals $ map IR.getInsertColumns _aiInsObj
       insertColumnNames = maybe [] (map fst) $ listToMaybe insertRows
       insertValues = map (Values . map snd) insertRows
    in InsertValuesIntoTempTable
