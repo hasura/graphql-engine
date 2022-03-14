@@ -41,7 +41,7 @@ For Postgres schema `my_schema` and table `user_accounts` we generate the follow
 
 We would also convert all column names to `camelCase`.
 Similarly, all type names would use `PascalCase`, e.g. `my_schema_user_accounts_aggregate_fields` would become `MySchemaUserAccountsAggregateFields`.
-We would also modify other generated names e.g. `distinct_on` -> `distinctOn` and `stdev_pop` -> `StddevPop`.
+We would also modify other generated names e.g. `distinct_on` -> `distinctOn` and `stddev_pop` -> `stddevPop`.
 
 ### Notes
 
