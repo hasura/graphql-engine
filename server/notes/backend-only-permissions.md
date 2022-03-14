@@ -1,7 +1,7 @@
 This note is in [Hasura.RQL.DDL.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Permission.hs#L43).
 It is referenced at:
   - line 129 of [Hasura.RQL.Types.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/Types/Permission.hs#L129)
-  - line 171 of [Hasura.Session](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Session.hs#L171)
+  - line 175 of [Hasura.Session](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Session.hs#L175)
 
 # Backend only permissions
 
