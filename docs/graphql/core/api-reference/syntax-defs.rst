@@ -2118,7 +2118,7 @@ RequestTransformation
    * - version
      - false
      - "1" | "2"
-     - Sets the `RequestTransformation` schema version. Version `1` uses a `String` for the `body` field and Version `2` takes a :ref:`BodyTransform`. `Defaults to version `1`.
+     - Sets the ``RequestTransformation`` schema version. Version ``1`` uses a ``String`` for the ``body`` field and Version ``2`` takes a :ref:`BodyTransform`. Defaults to version ``1``. Warning: You must remove any  "version 2" schemas from your metadata prior to downgrading to ``v2.4.0`` or earlier.
    * - method
      - false
      - String
