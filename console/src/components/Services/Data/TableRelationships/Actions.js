@@ -696,7 +696,7 @@ export const addDbToDbRelationship = (
   }
 };
 
-export const dropDbToDbRelationship = (state, tableSchema, toggleEditor) => (
+export const dropDbToDbRelationship = (state, tableSchema, onSuccess) => (
   dispatch,
   getState
 ) => {
@@ -754,7 +754,7 @@ export const dropDbToDbRelationship = (state, tableSchema, toggleEditor) => (
   const errorMsg = 'Deleting remote relationship failed';
 
   const customOnSuccess = () => {
-    toggleEditor();
+    onSuccess();
   };
   const customOnError = () => {};
 
