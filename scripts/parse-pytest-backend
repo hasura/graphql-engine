@@ -38,7 +38,6 @@ case "$BACKEND" in
     source "scripts/bigquery.sh"
 
     verify_bigquery_pytest_env
-    export HASURA_BIGQUERY_SERVICE_ACCOUNT=$(cat "$HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE")
   ;;
   citus)
   ;;

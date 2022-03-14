@@ -1224,9 +1224,6 @@ backend-bigquery)
 
 	source "$CIRCLECI_FOLDER/../scripts/bigquery.sh" && verify_bigquery_pytest_env
 
-	HASURA_BIGQUERY_SERVICE_ACCOUNT=$(cat "$HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE")
-	export HASURA_BIGQUERY_SERVICE_ACCOUNT
-
 	run_hge_with_args serve
 	wait_for_port 8080
 
