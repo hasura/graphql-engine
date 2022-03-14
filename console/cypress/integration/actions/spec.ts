@@ -352,6 +352,7 @@ export const createActionTransform = () => {
   // give correct body
   clearRequestUrl();
   typeIntoRequestUrl('/{{$body.action.name}}');
+  cy.wait(AWAIT_SHORT);
   typeIntoRequestQueryParams([
     { key: 'id', value: '5' },
     { key: 'name', value: '{{$body.action.name}}' },

@@ -304,6 +304,7 @@ const DataSubSidebar = props => {
             currentSchema={currentSchema}
             pathname={pathname}
             databaseLoading={databaseLoading}
+            schemaLoading={schemaLoading}
             preLoadState={preLoadState}
           />
         </div>
