@@ -62,12 +62,18 @@ remoteRelationshipToSchemaField ::
   RemoteSchemaFieldInfo ->
   m (Maybe (FieldParser n (IR.RemoteSchemaSelect (IR.RemoteRelationshipField UnpreparedValue))))
 remoteRelationshipToSchemaField lhsFields RemoteSchemaFieldInfo {..} = runMaybeT do
-  remoteRelationshipQueryCtx <- asks $ qcRemoteRelationshipContext . getter
-  RemoteRelationshipQueryContext roleIntrospectionResultOriginal _ remoteSchemaCustomizer <-
-    -- The remote relationship field should not be accessible
-    -- if the remote schema is not accessible to the said role
-    hoistMaybe $ Map.lookup _rrfiRemoteSchemaName remoteRelationshipQueryCtx
+  remoteSchemaCache <- asks getter
+  remoteSchemaPermsCtx <- asks $ qcRemoteSchemaPermsCtx . getter
   roleName <- asks getter
+  remoteSchemaContext <-
+    Map.lookup _rrfiRemoteSchemaName remoteSchemaCache
+      `onNothing` throw500 ("invalid remote schema name: " <>> _rrfiRemoteSchemaName)
+  introspection <- hoistMaybe $ getIntrospectionResult remoteSchemaPermsCtx roleName remoteSchemaContext
+  let remoteSchemaRelationships = _rscRemoteRelationships remoteSchemaContext
+      roleIntrospection = irDoc introspection
+      remoteSchemaRoot = irQueryRoot introspection
+      remoteSchemaCustomizer = rsCustomizer $ _rscInfo remoteSchemaContext
+      RemoteSchemaIntrospection typeDefns = roleIntrospection
   let hasuraFieldNames = Map.keysSet lhsFields
       relationshipDef = ToSchemaRelationshipDef _rrfiRemoteSchemaName hasuraFieldNames _rrfiRemoteFields
   (newInpValDefns :: [G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition], remoteFieldParamMap) <-
@@ -82,10 +88,9 @@ remoteRelationshipToSchemaField lhsFields RemoteSchemaFieldInfo {..} = runMaybeT
           afold @(Either _) $
             -- TODO: this really needs to go way, we shouldn't be doing
             -- validation when building parsers
-            validateToSchemaRelationship relationshipDef _rrfiLHSIdentifier _rrfiName (_rrfiRemoteSchema, roleIntrospectionResultOriginal) lhsFields
+            validateToSchemaRelationship relationshipDef _rrfiLHSIdentifier _rrfiName (_rrfiRemoteSchema, introspection) lhsFields
         pure (Remote._rrfiInputValueDefinitions roleRemoteField, Remote._rrfiParamMap roleRemoteField)
-  let roleIntrospection@(RemoteSchemaIntrospection typeDefns) = irDoc roleIntrospectionResultOriginal
-      -- add the new input value definitions created by the remote relationship
+  let -- add the new input value definitions created by the remote relationship
       -- to the existing schema introspection of the role
       remoteRelationshipIntrospection = RemoteSchemaIntrospection $ typeDefns <> Map.fromListOn getTypeName newInpValDefns
   fieldName <- textToName $ relNameToTxt _rrfiName
@@ -93,8 +98,7 @@ remoteRelationshipToSchemaField lhsFields RemoteSchemaFieldInfo {..} = runMaybeT
   -- This selection set parser, should be of the remote node's selection set parser, which comes
   -- from the fieldCall
   let fieldCalls = unRemoteFields _rrfiRemoteFields
-      parentTypeName = irQueryRoot roleIntrospectionResultOriginal
-  nestedFieldType <- lift $ lookupNestedFieldType parentTypeName roleIntrospection fieldCalls
+  nestedFieldType <- lift $ lookupNestedFieldType remoteSchemaRoot roleIntrospection fieldCalls
   let typeName = G.getBaseType nestedFieldType
   fieldTypeDefinition <-
     onNothing (lookupType roleIntrospection typeName)
@@ -109,7 +113,7 @@ remoteRelationshipToSchemaField lhsFields RemoteSchemaFieldInfo {..} = runMaybeT
     withRemoteSchemaCustomization remoteSchemaCustomizer $
       lift $
         P.wrapFieldParser nestedFieldType
-          <$> remoteField remoteRelationshipIntrospection parentTypeName fieldName Nothing remoteFieldUserArguments fieldTypeDefinition
+          <$> remoteField remoteRelationshipIntrospection remoteSchemaRelationships remoteSchemaRoot fieldName Nothing remoteFieldUserArguments fieldTypeDefinition
 
   pure $
     remoteFld
