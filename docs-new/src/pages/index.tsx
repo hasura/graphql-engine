@@ -5,6 +5,7 @@ import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import styles from './index.module.scss';
 import hasuras from '../../static/img/hasuras.png';
+import VersionedLink from '../components/VersionedLink';
 
 function HomepageHeader() {
   const {siteConfig} = useDocusaurusContext();
@@ -14,16 +15,16 @@ function HomepageHeader() {
         <h1 className="hero__title">{siteConfig.title}</h1>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <div className={styles.links}>
-          <Link
+          <VersionedLink
             className="button button--primary button--lg"
-            to="/latest/graphql/core/index">
+            to="/graphql/core/index">
             Hasura Core Docs
-          </Link>
-          <Link
+          </VersionedLink>
+          <VersionedLink
             className="button button--success button--lg"
-            to="/latest/graphql/cloud/index">
+            to="/graphql/cloud/index">
             Hasura Cloud Docs
-          </Link>
+          </VersionedLink>
         </div>
         <div className={styles.links}>
           <Link
