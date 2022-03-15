@@ -14,7 +14,7 @@ const config = {
   trailingSlash: true,
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'throw',
-  favicon: '/img/favicon.png',
+  favicon: '/docs/img/favicon.png',
   organizationName: 'hasura',
   projectName: 'graphql-engine',
 
