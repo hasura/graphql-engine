@@ -341,8 +341,8 @@ unauthenticatedContext allRemotes remoteSchemaPermsCtx = do
       fakeRole = mkRoleNameSafe $$(NT.nonEmptyText "MyNameIsOzymandiasKingOfKingsLookOnMyWorksYeMightyAndDespair")
       -- we delete all references to remote joins
       alteredRemoteSchemas =
-        allRemotes <&> \(remoteSchemaCtx, _metadataObject) ->
-          remoteSchemaCtx {_rscRemoteRelationships = mempty}
+        allRemotes <&> first \context ->
+          context {_rscRemoteRelationships = mempty}
 
   runMonadSchema fakeRole fakeQueryContext mempty mempty do
     (queryFields, mutationFields, remoteErrors) <- case remoteSchemaPermsCtx of
@@ -352,7 +352,7 @@ unauthenticatedContext allRemotes remoteSchemaPermsCtx = do
       RemoteSchemaPermsDisabled -> do
         -- Permissions are disabled, unauthenticated users have access to remote schemas.
         (remoteFields, remoteSchemaErrors) <-
-          buildAndValidateRemoteSchemas allRemotes [] [] fakeRole remoteSchemaPermsCtx
+          buildAndValidateRemoteSchemas alteredRemoteSchemas [] [] fakeRole remoteSchemaPermsCtx
         pure
           ( fmap (fmap RFRemote) <$> concatMap piQuery remoteFields,
             fmap (fmap RFRemote) <$> concat (mapMaybe piMutation remoteFields),
