@@ -1029,7 +1029,16 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                   modifyErrA
                     ( do
                         (info, dependencies) <- bindErrorA -< buildEventTriggerInfo @b env source table eventTriggerConf
-                        recreateTriggerIfNeeded -< (table, tableInfo, triggerName, etcDefinition eventTriggerConf, sourceConfig, recreateEventTriggers <> reloadMetadataRecreateEventTrigger)
+                        recreateTriggerIfNeeded
+                          -<
+                            ( table,
+                              (_tciFieldInfoMap tableInfo),
+                              triggerName,
+                              etcDefinition eventTriggerConf,
+                              sourceConfig,
+                              (_tciPrimaryKey tableInfo),
+                              recreateEventTriggers <> reloadMetadataRecreateEventTrigger
+                            )
                         recordDependencies -< (metadataObject, schemaObjectId, dependencies)
                         returnA -< info
                     )
@@ -1044,16 +1053,17 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
           Inc.cache
             proc
               ( tableName,
-                tableInfo,
+                tableFieldInfoMap,
                 triggerName,
                 triggerDefinition,
                 sourceConfig,
+                primaryKey,
                 recreateEventTriggers
                 )
             -> do
               bindA
                 -< do
-                  let tableColumns = M.elems $ M.mapMaybe (^? _FIColumn) (_tciFieldInfoMap tableInfo)
+                  let tableColumns = M.elems $ M.mapMaybe (^? _FIColumn) tableFieldInfoMap
                   buildReason <- ask
                   serverConfigCtx <- askServerConfigCtx
                   let isCatalogUpdate =
@@ -1074,7 +1084,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                         tableColumns
                         triggerName
                         triggerDefinition
-                        (_tciPrimaryKey tableInfo)
+                        primaryKey
 
     buildCronTriggers ::
       ( ArrowChoice arr,
