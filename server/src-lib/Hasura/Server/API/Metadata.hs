@@ -433,7 +433,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMAddComputedField q -> runAddComputedField q
   RMDropComputedField q -> runDropComputedField q
   RMCreateEventTrigger q ->
-    dispatchMetadata
+    dispatchMetadataAndEventTrigger
       ( validateTransforms
           (unUnvalidate1 . cetqRequestTransform . _Just)
           (runCreateEventTriggerQuery . _unUnvalidate1)

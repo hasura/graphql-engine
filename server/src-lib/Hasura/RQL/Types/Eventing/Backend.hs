@@ -150,6 +150,21 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
     TriggerName ->
     m ()
 
+  -- | @dropDanglingSQLTriggger@ is used to delete the extraneous SQL triggers created
+  --   by an event trigger. The extraneous SQL triggers can be created when
+  --   an event trigger's definition is replaced to a new definition. For example,
+  --   an event trigger `authors_all` had an INSERT and UPDATE trigger defined
+  --   earlier and after it has UPDATE and DELETE triggers. So, in this case, we need
+  --   to drop the trigger created by us earlier for the INSERT trigger.
+  dropDanglingSQLTrigger ::
+    ( MonadIO m,
+      MonadError QErr m
+    ) =>
+    SourceConfig b ->
+    TriggerName ->
+    HashSet Ops ->
+    m ()
+
   redeliverEvent ::
     (MonadIO m, MonadError QErr m) =>
     SourceConfig b ->
@@ -192,6 +207,7 @@ instance BackendEventTrigger ('Postgres 'Vanilla) where
   recordError = PG.recordError
   recordError' = PG.recordError'
   dropTriggerAndArchiveEvents = PG.dropTriggerAndArchiveEvents
+  dropDanglingSQLTrigger = PG.dropDanglingSQLTrigger
   redeliverEvent = PG.redeliverEvent
   unlockEventsInSource = PG.unlockEventsInSource
   createTableEventTrigger = PG.createTableEventTrigger
@@ -205,6 +221,7 @@ instance BackendEventTrigger ('Postgres 'Citus) where
   recordError _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for Citus sources"
   recordError' _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for Citus sources"
   dropTriggerAndArchiveEvents _ _ = throw400 NotSupported "Event triggers are not supported for Citus sources"
+  dropDanglingSQLTrigger _ _ _ = throw400 NotSupported "Event triggers are not supported for Citus sources"
   redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for Citus sources"
   unlockEventsInSource _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for Citus sources"
   createTableEventTrigger _ _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for Citus sources"
@@ -218,6 +235,7 @@ instance BackendEventTrigger 'MSSQL where
   recordError _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
   recordError' _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
   dropTriggerAndArchiveEvents _ _ = throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
+  dropDanglingSQLTrigger _ _ _ = throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
   redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
   unlockEventsInSource _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
   createTableEventTrigger = MSSQL.createTableEventTrigger
@@ -231,6 +249,7 @@ instance BackendEventTrigger 'BigQuery where
   recordError _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   recordError' _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   dropTriggerAndArchiveEvents _ _ = throw400 NotSupported "Event triggers are not supported for BigQuery sources"
+  dropDanglingSQLTrigger _ _ _ = throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   unlockEventsInSource _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   createTableEventTrigger _ _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for BigQuery sources"
@@ -244,6 +263,7 @@ instance BackendEventTrigger 'MySQL where
   recordError _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
   recordError' _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
   dropTriggerAndArchiveEvents _ _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
+  dropDanglingSQLTrigger _ _ _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
   redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
   unlockEventsInSource _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
   createTableEventTrigger _ _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
@@ -271,6 +291,8 @@ instance BackendEventTrigger 'DataWrapper where
     runExceptT $ throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
   dropTriggerAndArchiveEvents _ _ =
     throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
+  dropDanglingSQLTrigger _ _ _ =
+    throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers"
   redeliverEvent _ _ =
     throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
   unlockEventsInSource _ _ =
