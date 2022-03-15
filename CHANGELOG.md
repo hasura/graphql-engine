@@ -105,7 +105,7 @@ function:
 - server: improve SQL generation for BigQuery backend queries involving `Orderby`.
 - server: fix regression where remote relationships would get exposed over Relay, which is unsupported
 - server: add support for customising the GraphQL schema descriptions of table columns in metadata
-- server: implement column presets for SQL Server (#8221)
+- server: column presets for SQL Server were broken and consequently insert and upsert mutations were failing with constraint violations. This change fixes this behavior (#8221).
 - server: fix caching bug with session variables in remote joins
 - server: fix regression where JWKs are refreshed once per second when both must-revalidate and max-age are specified in the Cache-Control header (#8299)
 - console: fixed an issue where editing both a column's name and its GraphQL field name at the same time caused an error
