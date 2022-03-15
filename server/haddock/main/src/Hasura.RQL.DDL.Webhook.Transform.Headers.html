@@ -47,7 +47,7 @@
 </span><span id="line-47"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#Transform"><span class="hs-identifier hs-type">Transform</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#Headers"><span class="hs-identifier hs-type">Headers</span></a></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-48"></span><span>  </span><span class="hs-keyword">newtype</span><span> </span><span id="TransformFn"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformFn"><span class="hs-identifier hs-var">TransformFn</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#Headers"><span class="hs-identifier hs-type">Headers</span></a></span><span>
 </span><span id="line-49"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span id="HeadersTransform"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#HeadersTransform"><span class="hs-identifier hs-var">HeadersTransform</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#HeadersTransformAction"><span class="hs-identifier hs-type">HeadersTransformAction</span></a></span><span>
-</span><span id="line-50"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688181063"><span id="local-6989586621688181065"><span class="annot"><span class="annottext">TransformFn Headers -&gt; TransformFn Headers -&gt; Bool
+</span><span id="line-50"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688181139"><span id="local-6989586621688181141"><span class="annot"><span class="annottext">TransformFn Headers -&gt; TransformFn Headers -&gt; Bool
 (TransformFn Headers -&gt; TransformFn Headers -&gt; Bool)
 -&gt; (TransformFn Headers -&gt; TransformFn Headers -&gt; Bool)
 -&gt; Eq (TransformFn Headers)
@@ -65,7 +65,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep (TransformFn Headers) x -&gt; TransformFn Headers
 $cfrom :: forall x. TransformFn Headers -&gt; Rep (TransformFn Headers) x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688181053"><span id="local-6989586621688181055"><span id="local-6989586621688181057"><span class="annot"><span class="annottext">Int -&gt; TransformFn Headers -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688181129"><span id="local-6989586621688181131"><span id="local-6989586621688181133"><span class="annot"><span class="annottext">Int -&gt; TransformFn Headers -&gt; ShowS
 [TransformFn Headers] -&gt; ShowS
 TransformFn Headers -&gt; String
 (Int -&gt; TransformFn Headers -&gt; ShowS)
@@ -81,7 +81,7 @@ $cshow :: TransformFn Headers -&gt; String
 showsPrec :: Int -&gt; TransformFn Headers -&gt; ShowS
 $cshowsPrec :: Int -&gt; TransformFn Headers -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-51"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688181048"><span id="local-6989586621688181050"><span class="annot"><span class="annottext">Value -&gt; Parser [TransformFn Headers]
+</span><span id="line-51"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688181124"><span id="local-6989586621688181126"><span class="annot"><span class="annottext">Value -&gt; Parser [TransformFn Headers]
 Value -&gt; Parser (TransformFn Headers)
 (Value -&gt; Parser (TransformFn Headers))
 -&gt; (Value -&gt; Parser [TransformFn Headers])
@@ -92,7 +92,7 @@ parseJSONList :: Value -&gt; Parser [TransformFn Headers]
 $cparseJSONList :: Value -&gt; Parser [TransformFn Headers]
 parseJSON :: Value -&gt; Parser (TransformFn Headers)
 $cparseJSON :: Value -&gt; Parser (TransformFn Headers)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688181039"><span id="local-6989586621688181041"><span id="local-6989586621688181043"><span id="local-6989586621688181045"><span class="annot"><span class="annottext">[TransformFn Headers] -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688181115"><span id="local-6989586621688181117"><span id="local-6989586621688181119"><span id="local-6989586621688181121"><span class="annot"><span class="annottext">[TransformFn Headers] -&gt; Encoding
 [TransformFn Headers] -&gt; Value
 TransformFn Headers -&gt; Encoding
 TransformFn Headers -&gt; Value
@@ -116,7 +116,7 @@ $ctoEncoding :: TransformFn Headers -&gt; Encoding
 toJSON :: TransformFn Headers -&gt; Value
 $ctoJSON :: TransformFn Headers -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-52"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688181035"><span class="annot"><span class="annottext">Eq (TransformFn Headers)
+</span><span id="line-52"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688181111"><span class="annot"><span class="annottext">Eq (TransformFn Headers)
 Eq (TransformFn Headers)
 -&gt; (Accesses -&gt; TransformFn Headers -&gt; TransformFn Headers -&gt; Bool)
 -&gt; Cacheable (TransformFn Headers)
@@ -125,62 +125,62 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; TransformFn Headers -&gt; TransformFn Headers -&gt; Bool
 $cunchanged :: Accesses -&gt; TransformFn Headers -&gt; TransformFn Headers -&gt; Bool
 $cp1Cacheable :: Eq (TransformFn Headers)
-</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688181032"><span class="annot"><span class="annottext">TransformFn Headers -&gt; ()
+</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688181108"><span class="annot"><span class="annottext">TransformFn Headers -&gt; ()
 (TransformFn Headers -&gt; ()) -&gt; NFData (TransformFn Headers)
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: TransformFn Headers -&gt; ()
 $crnf :: TransformFn Headers -&gt; ()
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-53"></span><span>
-</span><span id="line-54"></span><span>  </span><span id="local-6989586621688181030"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#transform"><span class="hs-identifier hs-type">transform</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-55"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688181030"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-54"></span><span>  </span><span id="local-6989586621688181106"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#transform"><span class="hs-identifier hs-type">transform</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-55"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688181106"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-56"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformFn"><span class="hs-identifier hs-type">TransformFn</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#Headers"><span class="hs-identifier hs-type">Headers</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-57"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#RequestTransformCtx"><span class="hs-identifier hs-type">RequestTransformCtx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-58"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#Headers"><span class="hs-identifier hs-type">Headers</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-59"></span><span>    </span><span class="annot"><a href="#local-6989586621688181030"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#Headers"><span class="hs-identifier hs-type">Headers</span></a></span></span><span>
-</span><span id="line-60"></span><span>  </span><span id="local-6989586621688181028"><span class="annot"><span class="annottext">transform :: TransformFn Headers -&gt; RequestTransformCtx -&gt; Headers -&gt; m Headers
-</span><a href="#local-6989586621688181028"><span class="hs-identifier hs-var hs-var hs-var hs-var">transform</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#HeadersTransform"><span class="hs-identifier hs-type">HeadersTransform</span></a></span><span> </span><span id="local-6989586621688181027"><span class="annot"><a href="#local-6989586621688181027"><span class="hs-identifier hs-var">transformation</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688181026"><span class="annot"><span class="annottext">RequestTransformCtx
-</span><a href="#local-6989586621688181026"><span class="hs-identifier hs-var">context</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#Headers"><span class="hs-identifier hs-type">Headers</span></a></span><span> </span><span id="local-6989586621688181025"><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621688181025"><span class="hs-identifier hs-var">originalHeaders</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-59"></span><span>    </span><span class="annot"><a href="#local-6989586621688181106"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#Headers"><span class="hs-identifier hs-type">Headers</span></a></span></span><span>
+</span><span id="line-60"></span><span>  </span><span id="local-6989586621688181104"><span class="annot"><span class="annottext">transform :: TransformFn Headers -&gt; RequestTransformCtx -&gt; Headers -&gt; m Headers
+</span><a href="#local-6989586621688181104"><span class="hs-identifier hs-var hs-var hs-var hs-var">transform</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#HeadersTransform"><span class="hs-identifier hs-type">HeadersTransform</span></a></span><span> </span><span id="local-6989586621688181103"><span class="annot"><a href="#local-6989586621688181103"><span class="hs-identifier hs-var">transformation</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688181102"><span class="annot"><span class="annottext">RequestTransformCtx
+</span><a href="#local-6989586621688181102"><span class="hs-identifier hs-var">context</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#Headers"><span class="hs-identifier hs-type">Headers</span></a></span><span> </span><span id="local-6989586621688181101"><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621688181101"><span class="hs-identifier hs-var">originalHeaders</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-61"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">HeadersTransformAction
-</span><a href="#local-6989586621688181027"><span class="hs-identifier hs-var">transformation</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-62"></span><span>      </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#ReplaceHeaders"><span class="hs-identifier hs-type">ReplaceHeaders</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#ReplaceHeaderFields"><span class="hs-identifier hs-type">ReplaceHeaderFields</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688181022"><span class="annot"><span class="annottext">[(CI Text, UnescapedTemplate)]
+</span><a href="#local-6989586621688181103"><span class="hs-identifier hs-var">transformation</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-62"></span><span>      </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#ReplaceHeaders"><span class="hs-identifier hs-type">ReplaceHeaders</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#ReplaceHeaderFields"><span class="hs-identifier hs-type">ReplaceHeaderFields</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688181098"><span class="annot"><span class="annottext">[(CI Text, UnescapedTemplate)]
 rhf_addHeaders :: ReplaceHeaderFields -&gt; [(CI Text, UnescapedTemplate)]
 rhf_addHeaders :: [(CI Text, UnescapedTemplate)]
-</span><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#rhf_addHeaders"><span class="hs-identifier hs-var hs-var">rhf_addHeaders</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688181020"><span class="annot"><span class="annottext">[CI Text]
+</span><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#rhf_addHeaders"><span class="hs-identifier hs-var hs-var">rhf_addHeaders</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688181096"><span class="annot"><span class="annottext">[CI Text]
 rhf_removeHeaders :: ReplaceHeaderFields -&gt; [CI Text]
 rhf_removeHeaders :: [CI Text]
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#rhf_removeHeaders"><span class="hs-identifier hs-var hs-var">rhf_removeHeaders</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-63"></span><span>        </span><span class="hs-comment">-- NOTE: 'TE.decodeUtf8' can fail with an impure exception; conversion</span><span>
 </span><span id="line-64"></span><span>        </span><span class="hs-comment">-- to bytes is infallible.</span><span>
-</span><span id="line-65"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688181018"><span class="annot"><span class="annottext">removeHeadersBytes :: [CI ByteString]
-</span><a href="#local-6989586621688181018"><span class="hs-identifier hs-var hs-var">removeHeadersBytes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(CI Text -&gt; CI ByteString) -&gt; [CI Text] -&gt; [CI ByteString]
+</span><span id="line-65"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688181094"><span class="annot"><span class="annottext">removeHeadersBytes :: [CI ByteString]
+</span><a href="#local-6989586621688181094"><span class="hs-identifier hs-var hs-var">removeHeadersBytes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(CI Text -&gt; CI ByteString) -&gt; [CI Text] -&gt; [CI ByteString]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Text -&gt; ByteString) -&gt; CI Text -&gt; CI ByteString
 forall s2 s1. FoldCase s2 =&gt; (s1 -&gt; s2) -&gt; CI s1 -&gt; CI s2
 </span><span class="hs-identifier hs-var">CI.map</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ByteString
 </span><span class="hs-identifier hs-var">TE.encodeUtf8</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[CI Text]
-</span><a href="#local-6989586621688181020"><span class="hs-identifier hs-var">rhf_removeHeaders</span></a></span><span>
-</span><span id="line-66"></span><span>            </span><span id="local-6989586621688181015"><span class="annot"><span class="annottext">filteredHeaders :: [Header]
-</span><a href="#local-6989586621688181015"><span class="hs-identifier hs-var hs-var">filteredHeaders</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621688181096"><span class="hs-identifier hs-var">rhf_removeHeaders</span></a></span><span>
+</span><span id="line-66"></span><span>            </span><span id="local-6989586621688181091"><span class="annot"><span class="annottext">filteredHeaders :: [Header]
+</span><a href="#local-6989586621688181091"><span class="hs-identifier hs-var hs-var">filteredHeaders</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-67"></span><span>              </span><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621688181025"><span class="hs-identifier hs-var">originalHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">[Header] -&gt; ([Header] -&gt; [Header]) -&gt; [Header]
+</span><a href="#local-6989586621688181101"><span class="hs-identifier hs-var">originalHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">[Header] -&gt; ([Header] -&gt; [Header]) -&gt; [Header]
 forall a b. a -&gt; (a -&gt; b) -&gt; b
 </span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">(Header -&gt; Bool) -&gt; [Header] -&gt; [Header]
 forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
-</span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621688181013"><span class="annot"><span class="annottext">CI ByteString
-</span><a href="#local-6989586621688181013"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688181012"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688181012"><span class="hs-identifier hs-var">_val</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621688181089"><span class="annot"><span class="annottext">CI ByteString
+</span><a href="#local-6989586621688181089"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688181088"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688181088"><span class="hs-identifier hs-var">_val</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-68"></span><span>                </span><span class="annot"><span class="annottext">CI ByteString
-</span><a href="#local-6989586621688181013"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">CI ByteString -&gt; [CI ByteString] -&gt; Bool
+</span><a href="#local-6989586621688181089"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">CI ByteString -&gt; [CI ByteString] -&gt; Bool
 forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><span class="hs-operator hs-var">`notElem`</span></span><span> </span><span class="annot"><span class="annottext">[CI ByteString]
-</span><a href="#local-6989586621688181018"><span class="hs-identifier hs-var">removeHeadersBytes</span></a></span><span>
+</span><a href="#local-6989586621688181094"><span class="hs-identifier hs-var">removeHeadersBytes</span></a></span><span>
 </span><span id="line-69"></span><span>
 </span><span id="line-70"></span><span>        </span><span class="hs-comment">-- NOTE: We use `ApplicativeDo` here to take advantage of</span><span>
 </span><span id="line-71"></span><span>        </span><span class="hs-comment">-- Validation's applicative sequencing.</span><span>
-</span><span id="line-72"></span><span>        </span><span id="local-6989586621688181010"><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621688181010"><span class="hs-identifier hs-var">newHeaders</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Either TransformErrorBundle [Header] -&gt; m [Header]
+</span><span id="line-72"></span><span>        </span><span id="local-6989586621688181086"><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621688181086"><span class="hs-identifier hs-var">newHeaders</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Either TransformErrorBundle [Header] -&gt; m [Header]
 forall e (m :: * -&gt; *) a. MonadError e m =&gt; Either e a -&gt; m a
 </span><span class="hs-identifier hs-var">liftEither</span></span><span> </span><span class="annot"><span class="annottext">(Either TransformErrorBundle [Header] -&gt; m [Header])
 -&gt; (Validation TransformErrorBundle [Header]
@@ -202,24 +202,24 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><span class="hs-identifier hs-var">for</span></span><span> </span><span class="annot"><span class="annottext">[(CI Text, UnescapedTemplate)]
-</span><a href="#local-6989586621688181022"><span class="hs-identifier hs-var">rhf_addHeaders</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621688181005"><span class="annot"><span class="annottext">CI Text
-</span><a href="#local-6989586621688181005"><span class="hs-identifier hs-var">rawKey</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688181004"><span class="annot"><span class="annottext">UnescapedTemplate
-</span><a href="#local-6989586621688181004"><span class="hs-identifier hs-var">rawValue</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-73"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688181003"><span class="annot"><span class="annottext">key :: CI ByteString
-</span><a href="#local-6989586621688181003"><span class="hs-identifier hs-var hs-var">key</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ByteString) -&gt; CI Text -&gt; CI ByteString
+</span><a href="#local-6989586621688181098"><span class="hs-identifier hs-var">rhf_addHeaders</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621688181081"><span class="annot"><span class="annottext">CI Text
+</span><a href="#local-6989586621688181081"><span class="hs-identifier hs-var">rawKey</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688181080"><span class="annot"><span class="annottext">UnescapedTemplate
+</span><a href="#local-6989586621688181080"><span class="hs-identifier hs-var">rawValue</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-73"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688181079"><span class="annot"><span class="annottext">key :: CI ByteString
+</span><a href="#local-6989586621688181079"><span class="hs-identifier hs-var hs-var">key</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ByteString) -&gt; CI Text -&gt; CI ByteString
 forall s2 s1. FoldCase s2 =&gt; (s1 -&gt; s2) -&gt; CI s1 -&gt; CI s2
 </span><span class="hs-identifier hs-var">CI.map</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ByteString
 </span><span class="hs-identifier hs-var">TE.encodeUtf8</span></span><span> </span><span class="annot"><span class="annottext">CI Text
-</span><a href="#local-6989586621688181005"><span class="hs-identifier hs-var">rawKey</span></a></span><span>
-</span><span id="line-74"></span><span>          </span><span id="local-6989586621688181002"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688181002"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">RequestTransformCtx
+</span><a href="#local-6989586621688181081"><span class="hs-identifier hs-var">rawKey</span></a></span><span>
+</span><span id="line-74"></span><span>          </span><span id="local-6989586621688181078"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688181078"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">RequestTransformCtx
 -&gt; UnescapedTemplate -&gt; Validation TransformErrorBundle ByteString
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#runUnescapedRequestTemplateTransform%27"><span class="hs-identifier hs-var">runUnescapedRequestTemplateTransform'</span></a></span><span> </span><span class="annot"><span class="annottext">RequestTransformCtx
-</span><a href="#local-6989586621688181026"><span class="hs-identifier hs-var">context</span></a></span><span> </span><span class="annot"><span class="annottext">UnescapedTemplate
-</span><a href="#local-6989586621688181004"><span class="hs-identifier hs-var">rawValue</span></a></span><span>
+</span><a href="#local-6989586621688181102"><span class="hs-identifier hs-var">context</span></a></span><span> </span><span class="annot"><span class="annottext">UnescapedTemplate
+</span><a href="#local-6989586621688181080"><span class="hs-identifier hs-var">rawValue</span></a></span><span>
 </span><span id="line-75"></span><span>          </span><span class="hs-identifier">pure</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CI ByteString
-</span><a href="#local-6989586621688181003"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688181002"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688181079"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688181078"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-76"></span><span>
 </span><span id="line-77"></span><span>        </span><span class="annot"><span class="annottext">Headers -&gt; m Headers
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -230,19 +230,19 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#Headers"><span class="hs-identifier hs-var">Headers</span></a></span><span> </span><span class="annot"><span class="annottext">([Header] -&gt; m Headers) -&gt; [Header] -&gt; m Headers
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621688181015"><span class="hs-identifier hs-var">filteredHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">[Header] -&gt; [Header] -&gt; [Header]
+</span><a href="#local-6989586621688181091"><span class="hs-identifier hs-var">filteredHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">[Header] -&gt; [Header] -&gt; [Header]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621688181010"><span class="hs-identifier hs-var">newHeaders</span></a></span><span>
+</span><a href="#local-6989586621688181086"><span class="hs-identifier hs-var">newHeaders</span></a></span><span>
 </span><span id="line-78"></span><span>
 </span><span id="line-79"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#validate"><span class="hs-identifier hs-type">validate</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-80"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TemplatingEngine"><span class="hs-identifier hs-type">TemplatingEngine</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-81"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformFn"><span class="hs-identifier hs-type">TransformFn</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#Headers"><span class="hs-identifier hs-type">Headers</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-82"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Validation</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-83"></span><span>  </span><span id="local-6989586621688181000"><span class="annot"><span class="annottext">validate :: TemplatingEngine
+</span><span id="line-83"></span><span>  </span><span id="local-6989586621688181076"><span class="annot"><span class="annottext">validate :: TemplatingEngine
 -&gt; TransformFn Headers -&gt; Validation TransformErrorBundle ()
-</span><a href="#local-6989586621688181000"><span class="hs-identifier hs-var hs-var hs-var hs-var">validate</span></a></span></span><span> </span><span id="local-6989586621688180999"><span class="annot"><span class="annottext">TemplatingEngine
-</span><a href="#local-6989586621688180999"><span class="hs-identifier hs-var">engine</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#HeadersTransform"><span class="hs-identifier hs-type">HeadersTransform</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#ReplaceHeaders"><span class="hs-identifier hs-type">ReplaceHeaders</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">fmap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">snd</span></span><span> </span><span class="annot"><span class="hs-operator hs-type">.</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#rhf_addHeaders"><span class="hs-identifier hs-var">rhf_addHeaders</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span id="local-6989586621688180998"><span class="annot"><a href="#local-6989586621688180998"><span class="hs-identifier hs-var">templates</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621688181076"><span class="hs-identifier hs-var hs-var hs-var hs-var">validate</span></a></span></span><span> </span><span id="local-6989586621688181075"><span class="annot"><span class="annottext">TemplatingEngine
+</span><a href="#local-6989586621688181075"><span class="hs-identifier hs-var">engine</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#HeadersTransform"><span class="hs-identifier hs-type">HeadersTransform</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#ReplaceHeaders"><span class="hs-identifier hs-type">ReplaceHeaders</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">fmap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">snd</span></span><span> </span><span class="annot"><span class="hs-operator hs-type">.</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#rhf_addHeaders"><span class="hs-identifier hs-var">rhf_addHeaders</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span id="local-6989586621688181074"><span class="annot"><a href="#local-6989586621688181074"><span class="hs-identifier hs-var">templates</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-84"></span><span>    </span><span class="annot"><span class="annottext">(UnescapedTemplate -&gt; Validation TransformErrorBundle ())
 -&gt; [UnescapedTemplate] -&gt; Validation TransformErrorBundle ()
 forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
@@ -251,11 +251,11 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 </span><span class="hs-identifier hs-var">traverse_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TemplatingEngine
 -&gt; UnescapedTemplate -&gt; Validation TransformErrorBundle ()
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#validateRequestUnescapedTemplateTransform%27"><span class="hs-identifier hs-var">validateRequestUnescapedTemplateTransform'</span></a></span><span> </span><span class="annot"><span class="annottext">TemplatingEngine
-</span><a href="#local-6989586621688180999"><span class="hs-identifier hs-var">engine</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[UnescapedTemplate]
-</span><a href="#local-6989586621688180998"><span class="hs-identifier hs-var">templates</span></a></span><span>
+</span><a href="#local-6989586621688181075"><span class="hs-identifier hs-var">engine</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[UnescapedTemplate]
+</span><a href="#local-6989586621688181074"><span class="hs-identifier hs-var">templates</span></a></span><span>
 </span><span id="line-85"></span><span>
 </span><span id="line-86"></span><span class="hs-comment">-- | The defunctionalized transformation on 'Headers'</span><span>
-</span><span id="line-87"></span><span id="local-6989586621688180995"><span id="local-6989586621688180996"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="HeadersTransformAction"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#HeadersTransformAction"><span class="hs-identifier hs-var">HeadersTransformAction</span></a></span></span><span>
+</span><span id="line-87"></span><span id="local-6989586621688181071"><span id="local-6989586621688181072"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="HeadersTransformAction"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#HeadersTransformAction"><span class="hs-identifier hs-var">HeadersTransformAction</span></a></span></span><span>
 </span><span id="line-88"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="ReplaceHeaders"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#ReplaceHeaders"><span class="hs-identifier hs-var">ReplaceHeaders</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#ReplaceHeaderFields"><span class="hs-identifier hs-type">ReplaceHeaderFields</span></a></span><span>
 </span><span id="line-89"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x. HeadersTransformAction -&gt; Rep HeadersTransformAction x)
 -&gt; (forall x.
@@ -268,7 +268,7 @@ forall a.
 $cto :: forall x. Rep HeadersTransformAction x -&gt; HeadersTransformAction
 $cfrom :: forall x. HeadersTransformAction -&gt; Rep HeadersTransformAction x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-90"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688180989"><span id="local-6989586621688180991"><span class="annot"><span class="annottext">HeadersTransformAction -&gt; HeadersTransformAction -&gt; Bool
+</span><span id="line-90"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688181065"><span id="local-6989586621688181067"><span class="annot"><span class="annottext">HeadersTransformAction -&gt; HeadersTransformAction -&gt; Bool
 (HeadersTransformAction -&gt; HeadersTransformAction -&gt; Bool)
 -&gt; (HeadersTransformAction -&gt; HeadersTransformAction -&gt; Bool)
 -&gt; Eq HeadersTransformAction
@@ -277,7 +277,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: HeadersTransformAction -&gt; HeadersTransformAction -&gt; Bool
 == :: HeadersTransformAction -&gt; HeadersTransformAction -&gt; Bool
 $c== :: HeadersTransformAction -&gt; HeadersTransformAction -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688180983"><span id="local-6989586621688180985"><span id="local-6989586621688180987"><span class="annot"><span class="annottext">Int -&gt; HeadersTransformAction -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688181059"><span id="local-6989586621688181061"><span id="local-6989586621688181063"><span class="annot"><span class="annottext">Int -&gt; HeadersTransformAction -&gt; ShowS
 [HeadersTransformAction] -&gt; ShowS
 HeadersTransformAction -&gt; String
 (Int -&gt; HeadersTransformAction -&gt; ShowS)
@@ -292,7 +292,7 @@ show :: HeadersTransformAction -&gt; String
 $cshow :: HeadersTransformAction -&gt; String
 showsPrec :: Int -&gt; HeadersTransformAction -&gt; ShowS
 $cshowsPrec :: Int -&gt; HeadersTransformAction -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688180979"><span id="local-6989586621688180981"><span class="annot"><span class="annottext">Value -&gt; Parser [HeadersTransformAction]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688181055"><span id="local-6989586621688181057"><span class="annot"><span class="annottext">Value -&gt; Parser [HeadersTransformAction]
 Value -&gt; Parser HeadersTransformAction
 (Value -&gt; Parser HeadersTransformAction)
 -&gt; (Value -&gt; Parser [HeadersTransformAction])
@@ -303,7 +303,7 @@ parseJSONList :: Value -&gt; Parser [HeadersTransformAction]
 $cparseJSONList :: Value -&gt; Parser [HeadersTransformAction]
 parseJSON :: Value -&gt; Parser HeadersTransformAction
 $cparseJSON :: Value -&gt; Parser HeadersTransformAction
-</span><a href="#local-6989586621688180979"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688180971"><span id="local-6989586621688180973"><span id="local-6989586621688180975"><span id="local-6989586621688180977"><span class="annot"><span class="annottext">[HeadersTransformAction] -&gt; Encoding
+</span><a href="#local-6989586621688181055"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688181047"><span id="local-6989586621688181049"><span id="local-6989586621688181051"><span id="local-6989586621688181053"><span class="annot"><span class="annottext">[HeadersTransformAction] -&gt; Encoding
 [HeadersTransformAction] -&gt; Value
 HeadersTransformAction -&gt; Encoding
 HeadersTransformAction -&gt; Value
@@ -326,8 +326,8 @@ toEncoding :: HeadersTransformAction -&gt; Encoding
 $ctoEncoding :: HeadersTransformAction -&gt; Encoding
 toJSON :: HeadersTransformAction -&gt; Value
 $ctoJSON :: HeadersTransformAction -&gt; Value
-</span><a href="#local-6989586621688180971"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-91"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688180968"><span class="annot"><span class="annottext">Eq HeadersTransformAction
+</span><a href="#local-6989586621688181047"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-91"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688181044"><span class="annot"><span class="annottext">Eq HeadersTransformAction
 Eq HeadersTransformAction
 -&gt; (Accesses
     -&gt; HeadersTransformAction -&gt; HeadersTransformAction -&gt; Bool)
@@ -340,22 +340,22 @@ unchanged :: Accesses
 $cunchanged :: Accesses
 -&gt; HeadersTransformAction -&gt; HeadersTransformAction -&gt; Bool
 $cp1Cacheable :: Eq HeadersTransformAction
-</span><a href="#local-6989586621688180968"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688180966"><span class="annot"><span class="annottext">HeadersTransformAction -&gt; ()
+</span><a href="#local-6989586621688181044"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688181042"><span class="annot"><span class="annottext">HeadersTransformAction -&gt; ()
 (HeadersTransformAction -&gt; ()) -&gt; NFData HeadersTransformAction
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: HeadersTransformAction -&gt; ()
 $crnf :: HeadersTransformAction -&gt; ()
-</span><a href="#local-6989586621688180966"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688181042"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-92"></span><span>
 </span><span id="line-93"></span><span class="hs-comment">-- | The user can supply a set of header keys to be filtered from the</span><span>
 </span><span id="line-94"></span><span class="hs-comment">-- request and a set of headers to be added to the request.</span><span>
-</span><span id="line-95"></span><span id="local-6989586621688180964"><span id="local-6989586621688180965"></span></span><span class="hs-keyword">data</span><span> </span><span id="ReplaceHeaderFields"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#ReplaceHeaderFields"><span class="hs-identifier hs-var">ReplaceHeaderFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ReplaceHeaderFields"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#ReplaceHeaderFields"><span class="hs-identifier hs-var">ReplaceHeaderFields</span></a></span></span><span>
+</span><span id="line-95"></span><span id="local-6989586621688181040"><span id="local-6989586621688181041"></span></span><span class="hs-keyword">data</span><span> </span><span id="ReplaceHeaderFields"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#ReplaceHeaderFields"><span class="hs-identifier hs-var">ReplaceHeaderFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ReplaceHeaderFields"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#ReplaceHeaderFields"><span class="hs-identifier hs-var">ReplaceHeaderFields</span></a></span></span><span>
 </span><span id="line-96"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="rhf_addHeaders"><span class="annot"><span class="annottext">ReplaceHeaderFields -&gt; [(CI Text, UnescapedTemplate)]
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#rhf_addHeaders"><span class="hs-identifier hs-var hs-var">rhf_addHeaders</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">CI.CI</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#UnescapedTemplate"><span class="hs-identifier hs-type">UnescapedTemplate</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">,</span><span>
 </span><span id="line-97"></span><span>    </span><span id="rhf_removeHeaders"><span class="annot"><span class="annottext">ReplaceHeaderFields -&gt; [CI Text]
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#rhf_removeHeaders"><span class="hs-identifier hs-var hs-var">rhf_removeHeaders</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">CI.CI</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span><span>
 </span><span id="line-98"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-99"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688180958"><span id="local-6989586621688180960"><span id="local-6989586621688180962"><span class="annot"><span class="annottext">Int -&gt; ReplaceHeaderFields -&gt; ShowS
+</span><span id="line-99"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688181034"><span id="local-6989586621688181036"><span id="local-6989586621688181038"><span class="annot"><span class="annottext">Int -&gt; ReplaceHeaderFields -&gt; ShowS
 [ReplaceHeaderFields] -&gt; ShowS
 ReplaceHeaderFields -&gt; String
 (Int -&gt; ReplaceHeaderFields -&gt; ShowS)
@@ -370,7 +370,7 @@ show :: ReplaceHeaderFields -&gt; String
 $cshow :: ReplaceHeaderFields -&gt; String
 showsPrec :: Int -&gt; ReplaceHeaderFields -&gt; ShowS
 $cshowsPrec :: Int -&gt; ReplaceHeaderFields -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688180954"><span id="local-6989586621688180956"><span class="annot"><span class="annottext">ReplaceHeaderFields -&gt; ReplaceHeaderFields -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688181030"><span id="local-6989586621688181032"><span class="annot"><span class="annottext">ReplaceHeaderFields -&gt; ReplaceHeaderFields -&gt; Bool
 (ReplaceHeaderFields -&gt; ReplaceHeaderFields -&gt; Bool)
 -&gt; (ReplaceHeaderFields -&gt; ReplaceHeaderFields -&gt; Bool)
 -&gt; Eq ReplaceHeaderFields
@@ -379,7 +379,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: ReplaceHeaderFields -&gt; ReplaceHeaderFields -&gt; Bool
 == :: ReplaceHeaderFields -&gt; ReplaceHeaderFields -&gt; Bool
 $c== :: ReplaceHeaderFields -&gt; ReplaceHeaderFields -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688180939"><span id="local-6989586621688180941"><span id="local-6989586621688180943"><span id="local-6989586621688180945"><span id="local-6989586621688180947"><span id="local-6989586621688180949"><span id="local-6989586621688180951"><span class="annot"><span class="annottext">Eq ReplaceHeaderFields
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688181015"><span id="local-6989586621688181017"><span id="local-6989586621688181019"><span id="local-6989586621688181021"><span id="local-6989586621688181023"><span id="local-6989586621688181025"><span id="local-6989586621688181027"><span class="annot"><span class="annottext">Eq ReplaceHeaderFields
 Eq ReplaceHeaderFields
 -&gt; (ReplaceHeaderFields -&gt; ReplaceHeaderFields -&gt; Ordering)
 -&gt; (ReplaceHeaderFields -&gt; ReplaceHeaderFields -&gt; Bool)
@@ -429,12 +429,12 @@ forall a.
 $cto :: forall x. Rep ReplaceHeaderFields x -&gt; ReplaceHeaderFields
 $cfrom :: forall x. ReplaceHeaderFields -&gt; Rep ReplaceHeaderFields x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-100"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688180934"><span class="annot"><span class="annottext">ReplaceHeaderFields -&gt; ()
+</span><span id="line-100"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688181010"><span class="annot"><span class="annottext">ReplaceHeaderFields -&gt; ()
 (ReplaceHeaderFields -&gt; ()) -&gt; NFData ReplaceHeaderFields
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: ReplaceHeaderFields -&gt; ()
 $crnf :: ReplaceHeaderFields -&gt; ()
-</span><a href="#local-6989586621688180934"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688180931"><span class="annot"><span class="annottext">Eq ReplaceHeaderFields
+</span><a href="#local-6989586621688181010"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688181007"><span class="annot"><span class="annottext">Eq ReplaceHeaderFields
 Eq ReplaceHeaderFields
 -&gt; (Accesses -&gt; ReplaceHeaderFields -&gt; ReplaceHeaderFields -&gt; Bool)
 -&gt; Cacheable ReplaceHeaderFields
@@ -443,17 +443,17 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; ReplaceHeaderFields -&gt; ReplaceHeaderFields -&gt; Bool
 $cunchanged :: Accesses -&gt; ReplaceHeaderFields -&gt; ReplaceHeaderFields -&gt; Bool
 $cp1Cacheable :: Eq ReplaceHeaderFields
-</span><a href="#local-6989586621688180931"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688181007"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-101"></span><span>
-</span><span id="line-102"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688180924"><span id="local-6989586621688180926"><span id="local-6989586621688180928"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#ReplaceHeaderFields"><span class="hs-identifier hs-type">ReplaceHeaderFields</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-103"></span><span>  </span><span id="local-6989586621688180923"><span class="annot"><span class="annottext">toJSON :: ReplaceHeaderFields -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#ReplaceHeaderFields"><span class="hs-identifier hs-type">ReplaceHeaderFields</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688180920"><span id="local-6989586621688180921"><span class="annot"><span class="annottext">[(CI Text, UnescapedTemplate)]
+</span><span id="line-102"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688181000"><span id="local-6989586621688181002"><span id="local-6989586621688181004"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#ReplaceHeaderFields"><span class="hs-identifier hs-type">ReplaceHeaderFields</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-103"></span><span>  </span><span id="local-6989586621688180999"><span class="annot"><span class="annottext">toJSON :: ReplaceHeaderFields -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#ReplaceHeaderFields"><span class="hs-identifier hs-type">ReplaceHeaderFields</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688180996"><span id="local-6989586621688180997"><span class="annot"><span class="annottext">[(CI Text, UnescapedTemplate)]
 [CI Text]
 rhf_removeHeaders :: [CI Text]
 rhf_addHeaders :: [(CI Text, UnescapedTemplate)]
 rhf_removeHeaders :: ReplaceHeaderFields -&gt; [CI Text]
 rhf_addHeaders :: ReplaceHeaderFields -&gt; [(CI Text, UnescapedTemplate)]
-</span><a href="#local-6989586621688180920"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621688180996"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-104"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">J.object</span></span><span>
 </span><span id="line-105"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
@@ -472,7 +472,7 @@ a b c -&gt; a (b, d) (c, d)
 </span><span class="hs-identifier hs-var">first</span></span><span> </span><span class="annot"><span class="annottext">CI Text -&gt; Text
 forall s. CI s -&gt; s
 </span><span class="hs-identifier hs-var hs-var">CI.original</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[(CI Text, UnescapedTemplate)]
-</span><a href="#local-6989586621688180921"><span class="hs-identifier hs-var">rhf_addHeaders</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688180997"><span class="hs-identifier hs-var">rhf_addHeaders</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-106"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;remove_headers&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
@@ -481,11 +481,11 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">CI Text -&gt; Text
 forall s. CI s -&gt; s
 </span><span class="hs-identifier hs-var hs-var">CI.original</span></span><span> </span><span class="annot"><span class="annottext">[CI Text]
-</span><a href="#local-6989586621688180920"><span class="hs-identifier hs-var">rhf_removeHeaders</span></a></span><span>
+</span><a href="#local-6989586621688180996"><span class="hs-identifier hs-var">rhf_removeHeaders</span></a></span><span>
 </span><span id="line-107"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-108"></span><span>
-</span><span id="line-109"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688180913"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#ReplaceHeaderFields"><span class="hs-identifier hs-type">ReplaceHeaderFields</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-110"></span><span>  </span><span id="local-6989586621688180912"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ReplaceHeaderFields
+</span><span id="line-109"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688180989"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#ReplaceHeaderFields"><span class="hs-identifier hs-type">ReplaceHeaderFields</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-110"></span><span>  </span><span id="local-6989586621688180988"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ReplaceHeaderFields
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser ReplaceHeaderFields)
 -&gt; Value
@@ -498,11 +498,11 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser ReplaceHeaderFields
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688180909"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688180909"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-111"></span><span>    </span><span id="local-6989586621688180908"><span class="annot"><span class="annottext">HashMap Text UnescapedTemplate
-</span><a href="#local-6989586621688180908"><span class="hs-identifier hs-var">addHeaders</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688180909"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe (HashMap Text UnescapedTemplate))
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688180985"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688180985"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-111"></span><span>    </span><span id="local-6989586621688180984"><span class="annot"><span class="annottext">HashMap Text UnescapedTemplate
+</span><a href="#local-6989586621688180984"><span class="hs-identifier hs-var">addHeaders</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688180985"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe (HashMap Text UnescapedTemplate))
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;add_headers&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe (HashMap Text UnescapedTemplate))
@@ -512,8 +512,8 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">J..!=</span></span><span> </span><span class="annot"><span class="annottext">HashMap Text UnescapedTemplate
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span>
-</span><span id="line-112"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688180905"><span class="annot"><span class="annottext">rhf_addHeaders :: [(CI Text, UnescapedTemplate)]
-</span><a href="#local-6989586621688180905"><span class="hs-identifier hs-var hs-var">rhf_addHeaders</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap (CI Text) UnescapedTemplate
+</span><span id="line-112"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688180981"><span class="annot"><span class="annottext">rhf_addHeaders :: [(CI Text, UnescapedTemplate)]
+</span><a href="#local-6989586621688180981"><span class="hs-identifier hs-var hs-var">rhf_addHeaders</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap (CI Text) UnescapedTemplate
 -&gt; [(CI Text, UnescapedTemplate)]
 forall k v. HashMap k v -&gt; [(k, v)]
 </span><span class="hs-identifier hs-var">M.toList</span></span><span> </span><span class="annot"><span class="annottext">(HashMap (CI Text) UnescapedTemplate
@@ -530,11 +530,11 @@ forall k2 k1 v.
 </span><span class="hs-identifier hs-var">mapKeys</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; CI Text
 forall s. FoldCase s =&gt; s -&gt; CI s
 </span><span class="hs-identifier hs-var">CI.mk</span></span><span> </span><span class="annot"><span class="annottext">HashMap Text UnescapedTemplate
-</span><a href="#local-6989586621688180908"><span class="hs-identifier hs-var">addHeaders</span></a></span><span>
+</span><a href="#local-6989586621688180984"><span class="hs-identifier hs-var">addHeaders</span></a></span><span>
 </span><span id="line-113"></span><span>
-</span><span id="line-114"></span><span>    </span><span id="local-6989586621688180901"><span class="annot"><span class="annottext">[HeaderKey]
-</span><a href="#local-6989586621688180901"><span class="hs-identifier hs-var">removeHeaders</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688180909"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe [HeaderKey])
+</span><span id="line-114"></span><span>    </span><span id="local-6989586621688180977"><span class="annot"><span class="annottext">[HeaderKey]
+</span><a href="#local-6989586621688180977"><span class="hs-identifier hs-var">removeHeaders</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688180985"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe [HeaderKey])
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;remove_headers&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe [HeaderKey]) -&gt; [HeaderKey] -&gt; Parser [HeaderKey]
@@ -543,25 +543,25 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span>
 </span><span id="line-115"></span><span>    </span><span class="hs-comment">-- NOTE: Ensure that the FromJSON instance is used for deserialization.</span><span>
-</span><span id="line-116"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688180900"><span class="annot"><span class="annottext">rhf_removeHeaders :: [CI Text]
-</span><a href="#local-6989586621688180900"><span class="hs-identifier hs-var hs-var">rhf_removeHeaders</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[HeaderKey] -&gt; [CI Text]
+</span><span id="line-116"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688180976"><span class="annot"><span class="annottext">rhf_removeHeaders :: [CI Text]
+</span><a href="#local-6989586621688180976"><span class="hs-identifier hs-var hs-var">rhf_removeHeaders</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[HeaderKey] -&gt; [CI Text]
 </span><span class="hs-identifier hs-var">coerce</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#HeaderKey"><span class="hs-identifier hs-type">HeaderKey</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">[HeaderKey]
-</span><a href="#local-6989586621688180901"><span class="hs-identifier hs-var">removeHeaders</span></a></span><span>
+</span><a href="#local-6989586621688180977"><span class="hs-identifier hs-var">removeHeaders</span></a></span><span>
 </span><span id="line-117"></span><span>
 </span><span id="line-118"></span><span>    </span><span class="hs-identifier">pure</span><span> </span><span class="annot"><span class="annottext">ReplaceHeaderFields :: [(CI Text, UnescapedTemplate)] -&gt; [CI Text] -&gt; ReplaceHeaderFields
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#ReplaceHeaderFields"><span class="hs-identifier hs-type">ReplaceHeaderFields</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">[(CI Text, UnescapedTemplate)]
 rhf_addHeaders :: [(CI Text, UnescapedTemplate)]
 rhf_addHeaders :: [(CI Text, UnescapedTemplate)]
-</span><a href="#local-6989586621688180905"><span class="hs-identifier hs-var hs-var">rhf_addHeaders</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[CI Text]
+</span><a href="#local-6989586621688180981"><span class="hs-identifier hs-var hs-var">rhf_addHeaders</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[CI Text]
 rhf_removeHeaders :: [CI Text]
 rhf_removeHeaders :: [CI Text]
-</span><a href="#local-6989586621688180900"><span class="hs-identifier hs-var hs-var">rhf_removeHeaders</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621688180976"><span class="hs-identifier hs-var hs-var">rhf_removeHeaders</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-119"></span><span>
 </span><span id="line-120"></span><span class="hs-comment">-- | This newtype exists solely to anchor a `FromJSON` instance and is</span><span>
 </span><span id="line-121"></span><span class="hs-comment">-- eliminated in the `TransformHeaders` `FromJSON` instance.</span><span>
-</span><span id="line-122"></span><span id="local-6989586621688180898"><span id="local-6989586621688180899"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="HeaderKey"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#HeaderKey"><span class="hs-identifier hs-var">HeaderKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HeaderKey"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#HeaderKey"><span class="hs-identifier hs-var">HeaderKey</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unHeaderKey"><span class="annot"><span class="annottext">HeaderKey -&gt; CI Text
+</span><span id="line-122"></span><span id="local-6989586621688180974"><span id="local-6989586621688180975"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="HeaderKey"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#HeaderKey"><span class="hs-identifier hs-var">HeaderKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HeaderKey"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#HeaderKey"><span class="hs-identifier hs-var">HeaderKey</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unHeaderKey"><span class="annot"><span class="annottext">HeaderKey -&gt; CI Text
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#unHeaderKey"><span class="hs-identifier hs-var hs-var">unHeaderKey</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CI.CI</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
-</span><span id="line-123"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688180890"><span id="local-6989586621688180892"><span id="local-6989586621688180894"><span class="annot"><span class="annottext">Int -&gt; HeaderKey -&gt; ShowS
+</span><span id="line-123"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688180966"><span id="local-6989586621688180968"><span id="local-6989586621688180970"><span class="annot"><span class="annottext">Int -&gt; HeaderKey -&gt; ShowS
 [HeaderKey] -&gt; ShowS
 HeaderKey -&gt; String
 (Int -&gt; HeaderKey -&gt; ShowS)
@@ -576,7 +576,7 @@ show :: HeaderKey -&gt; String
 $cshow :: HeaderKey -&gt; String
 showsPrec :: Int -&gt; HeaderKey -&gt; ShowS
 $cshowsPrec :: Int -&gt; HeaderKey -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688180886"><span id="local-6989586621688180888"><span class="annot"><span class="annottext">HeaderKey -&gt; HeaderKey -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688180962"><span id="local-6989586621688180964"><span class="annot"><span class="annottext">HeaderKey -&gt; HeaderKey -&gt; Bool
 (HeaderKey -&gt; HeaderKey -&gt; Bool)
 -&gt; (HeaderKey -&gt; HeaderKey -&gt; Bool) -&gt; Eq HeaderKey
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -584,7 +584,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: HeaderKey -&gt; HeaderKey -&gt; Bool
 == :: HeaderKey -&gt; HeaderKey -&gt; Bool
 $c== :: HeaderKey -&gt; HeaderKey -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688180871"><span id="local-6989586621688180873"><span id="local-6989586621688180875"><span id="local-6989586621688180877"><span id="local-6989586621688180879"><span id="local-6989586621688180881"><span id="local-6989586621688180883"><span class="annot"><span class="annottext">Eq HeaderKey
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688180947"><span id="local-6989586621688180949"><span id="local-6989586621688180951"><span id="local-6989586621688180953"><span id="local-6989586621688180955"><span id="local-6989586621688180957"><span id="local-6989586621688180959"><span class="annot"><span class="annottext">Eq HeaderKey
 Eq HeaderKey
 -&gt; (HeaderKey -&gt; HeaderKey -&gt; Ordering)
 -&gt; (HeaderKey -&gt; HeaderKey -&gt; Bool)
@@ -631,12 +631,12 @@ forall a.
 $cto :: forall x. Rep HeaderKey x -&gt; HeaderKey
 $cfrom :: forall x. HeaderKey -&gt; Rep HeaderKey x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-124"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688180867"><span class="annot"><span class="annottext">HeaderKey -&gt; ()
+</span><span id="line-124"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688180943"><span class="annot"><span class="annottext">HeaderKey -&gt; ()
 (HeaderKey -&gt; ()) -&gt; NFData HeaderKey
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: HeaderKey -&gt; ()
 $crnf :: HeaderKey -&gt; ()
-</span><a href="#local-6989586621688180867"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688180864"><span class="annot"><span class="annottext">Eq HeaderKey
+</span><a href="#local-6989586621688180943"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688180940"><span class="annot"><span class="annottext">Eq HeaderKey
 Eq HeaderKey
 -&gt; (Accesses -&gt; HeaderKey -&gt; HeaderKey -&gt; Bool)
 -&gt; Cacheable HeaderKey
@@ -645,24 +645,24 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; HeaderKey -&gt; HeaderKey -&gt; Bool
 $cunchanged :: Accesses -&gt; HeaderKey -&gt; HeaderKey -&gt; Bool
 $cp1Cacheable :: Eq HeaderKey
-</span><a href="#local-6989586621688180864"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688180940"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-125"></span><span>
-</span><span id="line-126"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688180861"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#HeaderKey"><span class="hs-identifier hs-type">HeaderKey</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-127"></span><span>  </span><span id="local-6989586621688180860"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser HeaderKey
-</span><a href="#local-6989586621688180860"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Text -&gt; Parser HeaderKey) -&gt; Value -&gt; Parser HeaderKey
+</span><span id="line-126"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688180937"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#HeaderKey"><span class="hs-identifier hs-type">HeaderKey</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-127"></span><span>  </span><span id="local-6989586621688180936"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser HeaderKey
+</span><a href="#local-6989586621688180936"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Text -&gt; Parser HeaderKey) -&gt; Value -&gt; Parser HeaderKey
 forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.withText</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><span class="hs-string">&quot;HeaderKey&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688180858"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688180858"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; CI Text
+</span><span class="hs-string">&quot;HeaderKey&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688180934"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688180934"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; CI Text
 forall s. FoldCase s =&gt; s -&gt; CI s
 </span><span class="hs-identifier hs-var">CI.mk</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688180858"><span class="hs-identifier hs-var">txt</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-128"></span><span>    </span><span id="local-6989586621688180857"><span class="annot"><span class="annottext">CI Text
-</span><a href="#local-6989586621688180857"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HeaderKey -&gt; Parser HeaderKey
+</span><a href="#local-6989586621688180934"><span class="hs-identifier hs-var">txt</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-128"></span><span>    </span><span id="local-6989586621688180933"><span class="annot"><span class="annottext">CI Text
+</span><a href="#local-6989586621688180933"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HeaderKey -&gt; Parser HeaderKey
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(HeaderKey -&gt; Parser HeaderKey) -&gt; HeaderKey -&gt; Parser HeaderKey
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">CI Text -&gt; HeaderKey
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Headers.html#HeaderKey"><span class="hs-identifier hs-var">HeaderKey</span></a></span><span> </span><span class="annot"><span class="annottext">CI Text
-</span><a href="#local-6989586621688180857"><span class="hs-identifier hs-var">key</span></a></span><span>
+</span><a href="#local-6989586621688180933"><span class="hs-identifier hs-var">key</span></a></span><span>
 </span><span id="line-129"></span></pre></body></html>
