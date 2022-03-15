@@ -30,6 +30,7 @@ import Data.Has (Has, getter)
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Data.HashSet qualified as HS
+import Data.HashSet qualified as Set
 import Data.List qualified as L
 import Data.TByteString qualified as TBS
 import Data.Text qualified as T
@@ -58,6 +59,7 @@ import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.DDL.Webhook.Transform.Class (mkReqTransformCtx)
 import Hasura.RQL.Types
 import Hasura.RQL.Types.Endpoint
+import Hasura.RQL.Types.EventTrigger qualified as ET
 import Hasura.RQL.Types.Eventing.Backend (BackendEventTrigger (..))
 import Hasura.SQL.AnyBackend qualified as AB
 import Network.HTTP.Client.Transformable qualified as HTTP
@@ -279,7 +281,8 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
             dispatch oldBackendSourceMetadata \oldSourceMetadata -> do
               let oldTriggersMap = getTriggersMap oldSourceMetadata
                   newTriggersMap = getTriggersMap newSourceMetadata
-                  droppedTriggers = OMap.keys $ oldTriggersMap `OMap.difference` newTriggersMap
+                  droppedEventTriggers = OMap.keys $ oldTriggersMap `OMap.difference` newTriggersMap
+                  retainedNewTriggers = newTriggersMap `OMap.intersection` oldTriggersMap
                   catcher e@QErr {qeCode}
                     | qeCode == Unexpected = pure () -- NOTE: This information should be returned by the inconsistent_metadata response, so doesn't need additional logging.
                     | otherwise = throwError e -- rethrow other errors
@@ -292,7 +295,20 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
               return $
                 flip catchError catcher do
                   sourceConfig <- askSourceConfig @b source
-                  for_ droppedTriggers $ dropTriggerAndArchiveEvents @b sourceConfig
+                  for_ droppedEventTriggers $ dropTriggerAndArchiveEvents @b sourceConfig
+                  for_ (OMap.toList retainedNewTriggers) $ \(retainedNewTriggerName, retainedNewTriggerConf) ->
+                    case OMap.lookup retainedNewTriggerName oldTriggersMap of
+                      Nothing -> pure ()
+                      Just oldTriggerConf -> do
+                        let newTriggerOps = etcDefinition retainedNewTriggerConf
+                            oldTriggerOps = etcDefinition oldTriggerConf
+                            isDroppedOp old new = isJust old && isNothing new
+                            droppedOps =
+                              [ (bool Nothing (Just INSERT) (isDroppedOp (tdInsert oldTriggerOps) (tdInsert newTriggerOps))),
+                                (bool Nothing (Just UPDATE) (isDroppedOp (tdUpdate oldTriggerOps) (tdUpdate newTriggerOps))),
+                                (bool Nothing (Just ET.DELETE) (isDroppedOp (tdDelete oldTriggerOps) (tdDelete newTriggerOps)))
+                              ]
+                        dropDanglingSQLTrigger @b sourceConfig retainedNewTriggerName (Set.fromList $ catMaybes droppedOps)
       where
         getTriggersMap = OMap.unions . map _tmEventTriggers . OMap.elems . _smTables
 
