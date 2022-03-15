@@ -19,7 +19,7 @@ spec :: SpecWith State
 spec =
   Context.run
     [ Context.Context
-        { name = Context.SQLServer,
+        { name = Context.Backend Context.SQLServer,
           mkLocalState = Context.noLocalState,
           setup = sqlserverSetup,
           teardown = sqlserverTeardown,

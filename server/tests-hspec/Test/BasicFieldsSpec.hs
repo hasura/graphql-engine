@@ -22,35 +22,35 @@ spec :: SpecWith State
 spec =
   Context.run
     [ Context.Context
-        { name = Context.MySQL,
+        { name = Context.Backend Context.MySQL,
           mkLocalState = Context.noLocalState,
           setup = Mysql.setup schema,
           teardown = Mysql.teardown schema,
           customOptions = Nothing
         },
       Context.Context
-        { name = Context.Postgres,
+        { name = Context.Backend Context.Postgres,
           mkLocalState = Context.noLocalState,
           setup = Postgres.setup schema,
           teardown = Postgres.teardown schema,
           customOptions = Nothing
         },
       Context.Context
-        { name = Context.Citus,
+        { name = Context.Backend Context.Citus,
           mkLocalState = Context.noLocalState,
           setup = Citus.setup schema,
           teardown = Citus.teardown schema,
           customOptions = Nothing
         },
       Context.Context
-        { name = Context.SQLServer,
+        { name = Context.Backend Context.SQLServer,
           mkLocalState = Context.noLocalState,
           setup = Sqlserver.setup schema,
           teardown = Sqlserver.teardown schema,
           customOptions = Nothing
         },
       Context.Context
-        { name = Context.BigQuery,
+        { name = Context.Backend Context.BigQuery,
           mkLocalState = Context.noLocalState,
           setup = Bigquery.setup schema,
           teardown = Bigquery.teardown schema,

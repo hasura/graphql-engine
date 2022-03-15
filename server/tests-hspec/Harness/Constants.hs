@@ -16,7 +16,7 @@ module Harness.Constants
     mysqlLivenessCheckIntervalMicroseconds,
     mysqlPassword,
     mysqlUser,
-    mysqlDatabase,
+    mysqlDb,
     mysqlHost,
     mysqlPort,
     mysqlConnectInfo,
@@ -173,8 +173,8 @@ mysqlPassword = "hasura"
 mysqlUser :: String
 mysqlUser = "hasura"
 
-mysqlDatabase :: String
-mysqlDatabase = "hasura"
+mysqlDb :: String
+mysqlDb = "hasura"
 
 mysqlHost :: String
 mysqlHost = "127.0.0.1"
@@ -187,7 +187,7 @@ mysqlConnectInfo =
   Mysql.defaultConnectInfo
     { Mysql.connectUser = mysqlUser,
       Mysql.connectPassword = mysqlPassword,
-      Mysql.connectDatabase = mysqlDatabase,
+      Mysql.connectDatabase = mysqlDb,
       Mysql.connectHost = mysqlHost,
       Mysql.connectPort = mysqlPort
     }

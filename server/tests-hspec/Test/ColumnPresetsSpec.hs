@@ -1,14 +1,18 @@
 -- | Testing column presets.
+--   See the main hasura documentation for more information.
+--
+--   - Postgres: https://hasura.io/docs/latest/graphql/core/databases/postgres/schema/default-values/column-presets.html
+--   - MSSQL: https://hasura.io/docs/latest/graphql/core/databases/ms-sql-server/schema/default-values/mssql-column-presets.html
 module Test.ColumnPresetsSpec (spec) where
 
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Sql (sql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
 import Harness.State (State)
 import Harness.Test.Context qualified as Context
+import Harness.Test.Schema qualified as Schema
 import Test.Hspec (SpecWith, it)
 import Prelude
 
@@ -20,17 +24,17 @@ spec :: SpecWith State
 spec =
   Context.run
     [ Context.Context
-        { name = Context.SQLServer,
+        { name = Context.Backend Context.SQLServer,
           mkLocalState = Context.noLocalState,
           setup = sqlserverSetup,
-          teardown = sqlserverTeardown,
+          teardown = Sqlserver.teardown schema,
           customOptions = Nothing
         },
       Context.Context
-        { name = Context.Postgres,
+        { name = Context.Backend Context.Postgres,
           mkLocalState = Context.noLocalState,
           setup = postgresSetup,
-          teardown = postgresTeardown,
+          teardown = Postgres.teardown schema,
           customOptions = Nothing
         }
     ]
@@ -43,7 +47,7 @@ spec =
 tests :: Context.Options -> SpecWith State
 tests opts = do
   ----------------------------------------
-  it "override column presets as admin" $ \state ->
+  it "admin role is unaffected by column presets" $ \state ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
@@ -74,7 +78,7 @@ data:
 |]
 
   ----------------------------------------
-  it "insert automatic uuid and default company" $ \state ->
+  it "applies the column presets to the 'author id' and 'company' columns" $ \state ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphqlWithHeaders
@@ -104,7 +108,7 @@ data:
 |]
 
   ----------------------------------------
-  it "Session variable column preset is not overridable by user" $ \state ->
+  it "Columns with session variables presets defined are not part of the schema" $ \state ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphqlWithHeaders
@@ -136,7 +140,7 @@ errors:
 |]
 
   ----------------------------------------
-  it "Static column preset is not overridable by user" $ \state ->
+  it "Columns with static presets defined are not part of the schema" $ \state ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphqlWithHeaders
@@ -166,55 +170,33 @@ errors:
 
 --------------------------------------------------------------------------------
 
--- * Postgrse backend
+-- * Backend
 
--- ** Setup
+-- ** Schema
+
+schema :: [Schema.Table]
+schema =
+  [ Schema.Table
+      { tableName = "author",
+        tableColumns =
+          [ Schema.column "uuid" Schema.TStr,
+            Schema.column "name" Schema.TStr,
+            Schema.column "company" Schema.TStr
+          ],
+        tablePrimaryKey = ["uuid"],
+        tableReferences = [],
+        tableData = []
+      }
+  ]
+
+--------------------------------------------------------------------------------
+
+-- ** Postgres backend
 
 postgresSetup :: (State, ()) -> IO ()
-postgresSetup (state, _) = do
-  -- Clear and reconfigure the metadata
-  GraphqlEngine.setSource state Postgres.defaultSourceMetadata
-  -- Setup
-  postgresSetupTables
-  postgresInsertValues
-  postgresTrackTables state
-  postgresCreateRelationships state
+postgresSetup (state, localState) = do
+  Postgres.setup schema (state, localState)
   postgresCreatePermissions state
-
-postgresSetupTables :: IO ()
-postgresSetupTables = do
-  -- Setup tables
-  Postgres.run_
-    [sql|
-CREATE TABLE hasura.author
-(
-    uuid VARCHAR(50) NOT NULL PRIMARY KEY,
-    name TEXT NOT NULL,
-    company TEXT NOT NULL
-);
-|]
-
-postgresInsertValues :: IO ()
-postgresInsertValues = do
-  pure ()
-
-postgresTrackTables :: State -> IO ()
-postgresTrackTables state = do
-  -- Track the tables
-  GraphqlEngine.postMetadata_
-    state
-    [yaml|
-type: pg_track_table
-args:
-  source: postgres
-  table:
-    schema: hasura
-    name: author
-|]
-
-postgresCreateRelationships :: State -> IO ()
-postgresCreateRelationships _ = do
-  pure ()
 
 postgresCreatePermissions :: State -> IO ()
 postgresCreatePermissions state = do
@@ -251,66 +233,14 @@ args:
     columns: '*'
 |]
 
--- ** Teardown
-
-postgresTeardown :: (State, ()) -> IO ()
-postgresTeardown _ = do
-  Postgres.run_
-    [sql|
-DROP TABLE hasura.author;
-|]
-
 --------------------------------------------------------------------------------
 
--- * SQL Server backend
-
--- ** Setup
+-- ** SQL Server backend
 
 sqlserverSetup :: (State, ()) -> IO ()
-sqlserverSetup (state, _) = do
-  -- Clear and reconfigure the metadata
-  GraphqlEngine.setSource state Sqlserver.defaultSourceMetadata
-  -- Setup
-  sqlserverSetupTables
-  sqlserverInsertValues
-  sqlserverTrackTables state
-  sqlserverCreateRelationships state
+sqlserverSetup (state, localState) = do
+  Sqlserver.setup schema (state, localState)
   sqlserverCreatePermissions state
-
-sqlserverSetupTables :: IO ()
-sqlserverSetupTables = do
-  -- Setup tables
-  Sqlserver.run_
-    [sql|
-CREATE TABLE hasura.author
-(
-    uuid VARCHAR(50) NOT NULL PRIMARY KEY,
-    name NVARCHAR(50) NOT NULL,
-    company NVARCHAR(50) NOT NULL
-);
-|]
-
-sqlserverInsertValues :: IO ()
-sqlserverInsertValues = do
-  pure ()
-
-sqlserverTrackTables :: State -> IO ()
-sqlserverTrackTables state = do
-  -- Track the tables
-  GraphqlEngine.postMetadata_
-    state
-    [yaml|
-type: mssql_track_table
-args:
-  source: mssql
-  table:
-    schema: hasura
-    name: author
-|]
-
-sqlserverCreateRelationships :: State -> IO ()
-sqlserverCreateRelationships _ = do
-  pure ()
 
 sqlserverCreatePermissions :: State -> IO ()
 sqlserverCreatePermissions state = do
@@ -345,13 +275,4 @@ args:
       uuid: X-Hasura-User-Id
       company: hasura
     columns: '*'
-|]
-
--- ** Teardown
-
-sqlserverTeardown :: (State, ()) -> IO ()
-sqlserverTeardown _ = do
-  Sqlserver.run_
-    [sql|
-DROP TABLE hasura.author;
 |]

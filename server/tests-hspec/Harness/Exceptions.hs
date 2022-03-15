@@ -5,6 +5,7 @@
 module Harness.Exceptions
   ( catchRethrow,
     tryInOrder,
+    module GHC.Stack,
     module Control.Exception.Safe,
     Exceptions (..),
   )

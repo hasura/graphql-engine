@@ -9,6 +9,10 @@ module Harness.Test.Context
     runWithLocalState,
     Context (..),
     ContextName (..),
+    BackendType (..),
+    defaultSource,
+    defaultBackendTypeString,
+    defaultSchema,
     noLocalState,
     Options (..),
     combineOptions,
@@ -21,6 +25,7 @@ import Data.Foldable (for_)
 import Data.Maybe (fromMaybe)
 import Harness.Exceptions (catchRethrow, mask)
 import Harness.State (State)
+import Harness.Test.BackendType
 import Test.Hspec (ActionWith, HasCallStack, SpecWith, aroundAllWith, describe)
 import Test.Hspec.Core.Spec (Item (..), mapSpecItem)
 import Prelude
@@ -185,19 +190,11 @@ data Context a = Context
 
 -- | A name describing the given context.
 data ContextName
-  = Postgres
-  | MySQL
-  | SQLServer
-  | BigQuery
-  | Citus
+  = Backend BackendType
   | Combine ContextName ContextName
 
 instance Show ContextName where
-  show Postgres = "Postgres"
-  show MySQL = "MySQL"
-  show SQLServer = "SQLServer"
-  show BigQuery = "BigQuery"
-  show Citus = "Citus"
+  show (Backend backend) = show backend
   show (Combine name1 name2) = show name1 ++ "-" ++ show name2
 
 -- | Default function for 'mkLocalState' when there's no local state.
