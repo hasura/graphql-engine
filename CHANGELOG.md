@@ -106,6 +106,7 @@ function:
 - server: fix regression where remote relationships would get exposed over Relay, which is unsupported
 - server: add support for customising the GraphQL schema descriptions of table columns in metadata
 - server: implement column presets for SQL Server (#8221)
+- server: fix caching bug with session variables in remote joins
 - console: fixed an issue where editing both a column's name and its GraphQL field name at the same time caused an error
 - console: enable searching tables within a schema
 - cli: fix inherited roles metadata not being updated when dropping all roles (#7872)
@@ -114,7 +115,6 @@ function:
 ## v2.2.2
 
 - server: fix regression where remote relationships would get exposed over Relay, which is unsupported
-- server: fix caching bug with session variables in remote joins
 
 ## v2.4.0-beta.1
 
