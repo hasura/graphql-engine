@@ -98,7 +98,7 @@ function:
 
 ### Bug fixes and improvements
 
-- server: add jsonb to string cast support - postgres 
+- server: add jsonb to string cast support - postgres
 - server: improve performance of fetching postgres catalog metadata for tables and functions
 - server: Queries present in query collections, such as allow-list, and rest-endpoints are now validated (against the schema)
 - server: Redesigns internal implementation of webhook transforms.
@@ -107,6 +107,7 @@ function:
 - server: add support for customising the GraphQL schema descriptions of table columns in metadata
 - server: implement column presets for SQL Server (#8221)
 - server: fix caching bug with session variables in remote joins
+- server: fix regression where JWKs are refreshed once per second when both must-revalidate and max-age are specified in the Cache-Control header (#8299)
 - console: fixed an issue where editing both a column's name and its GraphQL field name at the same time caused an error
 - console: enable searching tables within a schema
 - cli: fix inherited roles metadata not being updated when dropping all roles (#7872)
