@@ -29,9 +29,10 @@ import Harness.Exceptions (SomeException, handle)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.State (State)
+import Harness.Test.Context (BackendType (BigQuery), defaultBackendTypeString, defaultSource)
 import Harness.Test.Schema qualified as Schema
 import Hasura.Backends.BigQuery.Connection (initConnection)
-import Hasura.Backends.BigQuery.Execute (BigQuery (..), executeBigQuery)
+import Hasura.Backends.BigQuery.Execute qualified as Execute (BigQuery (..), executeBigQuery)
 import Hasura.Backends.BigQuery.Source (ServiceAccount)
 import Prelude
 
@@ -47,7 +48,7 @@ run_ :: (HasCallStack) => ServiceAccount -> Text -> String -> IO ()
 run_ serviceAccount projectId query =
   handle (\(e :: SomeException) -> bigQueryError e query) $ do
     conn <- initConnection serviceAccount projectId Nothing
-    res <- executeBigQuery conn BigQuery {query = fromString query, parameters = mempty}
+    res <- Execute.executeBigQuery conn Execute.BigQuery {Execute.query = fromString query, Execute.parameters = mempty}
     case res of
       Left err -> bigQueryError err query
       Right () -> pure ()
@@ -102,23 +103,25 @@ mkColumn Schema.Column {columnName, columnType, columnNullable, columnDefault} =
 
 -- | Serialize tableData into an SQL insert statement and execute it.
 insertTable :: Schema.Table -> IO ()
-insertTable Schema.Table {tableName, tableColumns, tableData} = do
-  serviceAccount <- getServiceAccount
-  projectId <- getProjectId
-  run_
-    serviceAccount
-    projectId
-    $ T.unpack $
-      T.unwords
-        [ "INSERT INTO",
-          T.pack Constants.bigqueryDataset <> "." <> tableName,
-          "(",
-          commaSeparated (Schema.columnName <$> tableColumns),
-          ")",
-          "VALUES",
-          commaSeparated $ mkRow <$> tableData,
-          ";"
-        ]
+insertTable Schema.Table {tableName, tableColumns, tableData}
+  | null tableData = pure ()
+  | otherwise = do
+    serviceAccount <- getServiceAccount
+    projectId <- getProjectId
+    run_
+      serviceAccount
+      projectId
+      $ T.unpack $
+        T.unwords
+          [ "INSERT INTO",
+            T.pack Constants.bigqueryDataset <> "." <> tableName,
+            "(",
+            commaSeparated (Schema.columnName <$> tableColumns),
+            ")",
+            "VALUES",
+            commaSeparated $ mkRow <$> tableData,
+            ";"
+          ]
 
 mkRow :: [Schema.ScalarValue] -> Text
 mkRow row =
@@ -127,22 +130,6 @@ mkRow row =
       commaSeparated $ Schema.serialize <$> row,
       ")"
     ]
-
--- | Post an http request to start tracking
--- Overriding here because bigquery's API is uncommon
-trackTable :: State -> Schema.Table -> IO ()
-trackTable state Schema.Table {tableName} = do
-  let datasetName = T.pack Constants.bigqueryDataset
-  GraphqlEngine.postMetadata_
-    state
-    [yaml|
-type: bigquery_track_table
-args:
-  source: bigquery
-  table:
-    dataset: *datasetName
-    name: *tableName
-|]
 
 -- | Serialize Table into an SQL DROP statement and execute it
 dropTable :: Schema.Table -> IO ()
@@ -159,17 +146,35 @@ dropTable Schema.Table {tableName} = do
           ";"
         ]
 
+-- | Post an http request to start tracking
+-- Overriding here because bigquery's API is uncommon
+trackTable :: State -> Schema.Table -> IO ()
+trackTable state Schema.Table {tableName} = do
+  let datasetName = T.pack Constants.bigqueryDataset
+      source = defaultSource BigQuery
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: bigquery_track_table
+args:
+  source: *source
+  table:
+    dataset: *datasetName
+    name: *tableName
+|]
+
 -- | Post an http request to stop tracking the table
 -- Overriding `Schema.trackTable` here because bigquery's API expects a `dataset` key
 untrackTable :: State -> Schema.Table -> IO ()
 untrackTable state Schema.Table {tableName} = do
   let datasetName = T.pack Constants.bigqueryDataset
+      source = defaultSource BigQuery
   GraphqlEngine.postMetadata_
     state
     [yaml|
 type: bigquery_untrack_table
 args:
-  source: bigquery
+  source: *source
   table:
     dataset: *datasetName
     name: *tableName
@@ -180,6 +185,8 @@ args:
 setup :: [Schema.Table] -> (State, ()) -> IO ()
 setup tables (state, _) = do
   let dataset = Constants.bigqueryDataset
+      source = defaultSource BigQuery
+      backendType = defaultBackendTypeString BigQuery
   -- Clear and reconfigure the metadata
   serviceAccount <- getServiceAccount
   projectId <- getProjectId
@@ -190,8 +197,8 @@ type: replace_metadata
 args:
   version: 3
   sources:
-  - name: bigquery
-    kind: bigquery
+  - name: *source
+    kind: *backendType
     tables: []
     configuration:
       service_account: *serviceAccount
@@ -205,8 +212,8 @@ args:
     trackTable state table
   -- Setup relationships
   for_ tables $ \table -> do
-    Schema.trackObjectRelationships "bigquery" (T.pack Constants.bigqueryDataset) table state
-    Schema.trackArrayRelationships "bigquery" (T.pack Constants.bigqueryDataset) table state
+    Schema.trackObjectRelationships BigQuery table state
+    Schema.trackArrayRelationships BigQuery table state
 
 -- | Teardown the schema and tracking in the most expected way.
 -- NOTE: Certain test modules may warrant having their own version.
@@ -214,7 +221,7 @@ teardown :: [Schema.Table] -> (State, ()) -> IO ()
 teardown (reverse -> tables) (state, _) = do
   -- Teardown relationships first
   for_ tables $ \table ->
-    Schema.untrackRelationships "bigquery" (T.pack Constants.bigqueryDataset) table state
+    Schema.untrackRelationships BigQuery table state
   -- Then teardown tables
   for_ tables $ \table -> do
     untrackTable state table

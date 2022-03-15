@@ -15,9 +15,7 @@ import Data.Aeson (Value)
 import Data.Aeson.Lens (key, values, _String)
 import Data.Foldable (for_)
 import Data.Maybe qualified as Unsafe (fromJust)
-import Data.Text qualified as T
 import Harness.Backend.Postgres qualified as Postgres
-import Harness.Constants qualified as Constants
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (shouldBeYaml, shouldReturnYaml, yaml)
@@ -87,7 +85,7 @@ type LHSContext = Value -> Context (Maybe Server)
 lhsPostgres :: LHSContext
 lhsPostgres tableName =
   Context
-    { name = Context.Postgres,
+    { name = Context.Backend Context.Postgres,
       mkLocalState = lhsPostgresMkLocalState,
       setup = lhsPostgresSetup tableName,
       teardown = lhsPostgresTeardown,
@@ -116,7 +114,7 @@ rhsPostgres =
     |]
       context =
         Context
-          { name = Context.Postgres,
+          { name = Context.Backend Context.Postgres,
             mkLocalState = Context.noLocalState,
             setup = rhsPostgresSetup,
             teardown = rhsPostgresTeardown,
@@ -174,7 +172,7 @@ lhsPostgresSetup :: Value -> (State, Maybe Server) -> IO ()
 lhsPostgresSetup rhsTableName (state, _) = do
   let sourceName = "source"
       sourceConfig = Postgres.defaultSourceConfiguration
-      schemaName = T.pack Constants.postgresDb
+      schemaName = Context.defaultSchema Context.Postgres
   -- Add remote source
   GraphqlEngine.postMetadata_
     state
@@ -187,7 +185,7 @@ args:
   -- setup tables only
   Postgres.createTable artist
   Postgres.insertTable artist
-  Schema.trackTable "postgres" sourceName schemaName artist state
+  Schema.trackTable Context.Postgres sourceName artist state
 
   GraphqlEngine.postMetadata_
     state
@@ -233,8 +231,7 @@ args:
 lhsPostgresTeardown :: (State, Maybe Server) -> IO ()
 lhsPostgresTeardown (state, _) = do
   let sourceName = "source"
-      schemaName = T.pack Constants.postgresDb
-  Schema.untrackTable "postgres" sourceName schemaName artist state
+  Schema.untrackTable Context.Postgres sourceName artist state
   Postgres.dropTable artist
 
 --------------------------------------------------------------------------------
@@ -244,7 +241,7 @@ rhsPostgresSetup :: (State, ()) -> IO ()
 rhsPostgresSetup (state, _) = do
   let sourceName = "target"
       sourceConfig = Postgres.defaultSourceConfiguration
-      schemaName = T.pack Constants.postgresDb
+      schemaName = Context.defaultSchema Context.Postgres
   -- Add remote source
   GraphqlEngine.postMetadata_
     state
@@ -257,7 +254,7 @@ args:
   -- setup tables only
   Postgres.createTable album
   Postgres.insertTable album
-  Schema.trackTable "postgres" sourceName schemaName album state
+  Schema.trackTable Context.Postgres sourceName album state
 
   GraphqlEngine.postMetadata_
     state
@@ -297,8 +294,7 @@ args:
 rhsPostgresTeardown :: (State, ()) -> IO ()
 rhsPostgresTeardown (state, _) = do
   let sourceName = "target"
-      schemaName = T.pack Constants.postgresDb
-  Schema.untrackTable "postgres" sourceName schemaName album state
+  Schema.untrackTable Context.Postgres sourceName album state
   Postgres.dropTable album
 
 --------------------------------------------------------------------------------

@@ -19,7 +19,7 @@ spec :: SpecWith State
 spec = do
   Context.run
     [ Context.Context
-        { name = Context.SQLServer,
+        { name = Context.Backend Context.SQLServer,
           mkLocalState = Context.noLocalState,
           setup = Sqlserver.setup schema,
           teardown = Sqlserver.teardown schema,
@@ -30,7 +30,7 @@ spec = do
 
   Context.run
     [ Context.Context
-        { name = Context.MySQL,
+        { name = Context.Backend Context.MySQL,
           mkLocalState = Context.noLocalState,
           setup = Mysql.setup schema,
           teardown = Mysql.teardown schema,
