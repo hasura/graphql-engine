@@ -23,11 +23,17 @@ determineJwkExpiryLifetimeTests = describe "determineJwkExpiryLifetime" $ do
     result <- determineJwkExpiryLifetime' [expires, cacheControl]
     result `shouldBe` (Right . Just $ secondsToNominalDiffTime 0)
 
-  it "must-revalidate in Cache-Control means an immediate expiry" $ do
+  it "must-revalidate without max-age in Cache-Control means an immediate expiry" $ do
+    let expires = expiresHeader (addUTCTime (secondsToNominalDiffTime 60) currentTimeForTest)
+    let cacheControl = cacheControlHeader "must-revalidate"
+    result <- determineJwkExpiryLifetime' [expires, cacheControl]
+    result `shouldBe` (Right . Just $ secondsToNominalDiffTime 0)
+
+  it "must-revalidate with max-age in Cache-Control uses max-age for token expiry" $ do
     let expires = expiresHeader (addUTCTime (secondsToNominalDiffTime 60) currentTimeForTest)
     let cacheControl = cacheControlHeader "max-age=10, must-revalidate"
     result <- determineJwkExpiryLifetime' [expires, cacheControl]
-    result `shouldBe` (Right . Just $ secondsToNominalDiffTime 0)
+    result `shouldBe` (Right . Just $ secondsToNominalDiffTime 10)
 
   it "no-store in Cache-Control means an immediate expiry" $ do
     let expires = expiresHeader (addUTCTime (secondsToNominalDiffTime 60) currentTimeForTest)
@@ -35,13 +41,13 @@ determineJwkExpiryLifetimeTests = describe "determineJwkExpiryLifetime" $ do
     result <- determineJwkExpiryLifetime' [expires, cacheControl]
     result `shouldBe` (Right . Just $ secondsToNominalDiffTime 0)
 
-  it "max-age in Cache-Control without no-cache, must-revalidate, no-store is used for token expiry" $ do
+  it "max-age in Cache-Control without no-cache, no-store is used for token expiry" $ do
     let expires = expiresHeader (addUTCTime (secondsToNominalDiffTime 60) currentTimeForTest)
     let cacheControl = cacheControlHeader "public, max-age=10"
     result <- determineJwkExpiryLifetime' [expires, cacheControl]
     result `shouldBe` (Right . Just $ secondsToNominalDiffTime 10)
 
-  it "s-maxage in Cache-Control without no-cache, must-revalidate, no-store is used for token expiry" $ do
+  it "s-maxage in Cache-Control without no-cache, no-store is used for token expiry" $ do
     let expires = expiresHeader (addUTCTime (secondsToNominalDiffTime 60) currentTimeForTest)
     let cacheControl = cacheControlHeader "public, s-maxage=10"
     result <- determineJwkExpiryLifetime' [expires, cacheControl]

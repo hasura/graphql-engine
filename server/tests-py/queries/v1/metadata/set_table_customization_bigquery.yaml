@@ -40,7 +40,9 @@
     type: bigquery_set_table_customization
     args:
       source: bigquery
-      table: table_to_customize
+      table:
+        dataset: hasura
+        name: table_to_customize
       configuration:
         custom_name: customized_table
         custom_column_names:
@@ -70,7 +72,9 @@
     type: bigquery_set_table_customization
     args:
       source: bigquery
-      table: table_to_customize
+      table:
+        dataset: hasura
+        name: table_to_customize
       configuration:
         custom_name: customized_table
         custom_column_names:

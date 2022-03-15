@@ -1,6 +1,7 @@
 module Hasura.Session
   ( RoleName,
     mkRoleName,
+    mkRoleNameSafe,
     adminRoleName,
     isAdmin,
     roleNameToTxt,
@@ -70,6 +71,9 @@ instance ToTxt RoleName where
 
 mkRoleName :: Text -> Maybe RoleName
 mkRoleName = fmap RoleName . mkNonEmptyText
+
+mkRoleNameSafe :: NonEmptyText -> RoleName
+mkRoleNameSafe = RoleName
 
 adminRoleName :: RoleName
 adminRoleName = RoleName $ mkNonEmptyTextUnsafe "admin"

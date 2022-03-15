@@ -68,7 +68,7 @@ Create a file ``.github/workflows/hasura-cloud-preview-app.yml`` in your GitHub 
         - uses: actions/checkout@v2
 
         - name: Hasura Cloud Preview Apps
-          uses: hasura/hasura-cloud-preview-apps@v0.1.4
+          uses: hasura/hasura-cloud-preview-apps@v0.1.5
           id: hasura_cloud_preview
           with:
             name: "repo-name-${{github.env.GITHUB_HEAD_REF}}${{github.event.number}}"
@@ -157,7 +157,7 @@ Create a file ``.github/workflows/delete-hasura-cloud-preview-app.yml`` in your 
         - uses: actions/checkout@v2
                 
         - name: Hasura Cloud Preview Apps
-          uses: hasura/hasura-cloud-preview-apps@v0.1.4
+          uses: hasura/hasura-cloud-preview-apps@v0.1.5
           with:
             name: "repo-name-${{github.env.GITHUB_HEAD_REF}}${{github.event.number}}"
             delete: true

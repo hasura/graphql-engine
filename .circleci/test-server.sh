@@ -1035,6 +1035,16 @@ jwk-url)
 	kill_hge_servers
 	unset HASURA_GRAPHQL_JWT_SECRET
 
+	echo "Test: Cache-Control with must-revalidate, max-age=3"
+	export HASURA_GRAPHQL_JWT_SECRET='{"jwk_url": "http://localhost:5001/jwk-cache-control?must-revalidate=true&must-revalidate=true"}'
+	run_hge_with_args serve
+	wait_for_port 8080
+
+	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url -k 'test_cache_control_header_max_age'
+
+	kill_hge_servers
+	unset HASURA_GRAPHQL_JWT_SECRET
+
 	echo "Test: Cache-Control with must-revalidate"
 	export HASURA_GRAPHQL_JWT_SECRET='{"jwk_url": "http://localhost:5001/jwk-cache-control?must-revalidate=true"}'
 	run_hge_with_args serve
@@ -1223,9 +1233,6 @@ backend-bigquery)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH BIGQUERY BACKEND ###########################################>\n"
 
 	source "$CIRCLECI_FOLDER/../scripts/bigquery.sh" && verify_bigquery_pytest_env
-
-	HASURA_BIGQUERY_SERVICE_ACCOUNT=$(cat "$HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE")
-	export HASURA_BIGQUERY_SERVICE_ACCOUNT
 
 	run_hge_with_args serve
 	wait_for_port 8080

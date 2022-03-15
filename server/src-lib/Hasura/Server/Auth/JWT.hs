@@ -404,9 +404,14 @@ determineJwkExpiryLifetime getCurrentTime' (Logger logger) responseHeaders =
     timeFromCacheControl = do
       header <- afold $ bsToTxt <$> lookup "Cache-Control" responseHeaders
       cacheControl <- parseCacheControl header `onLeft` \err -> logAndThrowInfo $ parseCacheControlErr $ T.pack err
-      if noCacheExists cacheControl || noStoreExists cacheControl || mustRevalidateExists cacheControl
-        then pure 0 -- In these cases we want don't want to cache the JWK, so we use an immediate expiry time
-        else fromInteger <$> MaybeT (findMaxAge cacheControl `onLeft` \err -> logAndThrowInfo $ parseCacheControlErr $ T.pack err)
+      maxAgeMaybe <- fmap fromInteger <$> findMaxAge cacheControl `onLeft` \err -> logAndThrowInfo $ parseCacheControlErr $ T.pack err
+      if
+          -- If a max-age is specified with a must-revalidate we use it, but if not we use an immediate expiry time
+          | mustRevalidateExists cacheControl -> pure $ fromMaybe 0 maxAgeMaybe
+          -- In these cases we want don't want to cache the JWK, so we use an immediate expiry time
+          | noCacheExists cacheControl || noStoreExists cacheControl -> pure 0
+          -- Use max-age, if it exists
+          | otherwise -> hoistMaybe maxAgeMaybe
 
     timeFromExpires :: MaybeT m NominalDiffTime
     timeFromExpires = do

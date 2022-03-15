@@ -8,8 +8,8 @@
 
 # checks that the required bigquery environment variables are available to run tests
 verify_bigquery_pytest_env() {
-    if [[ -z "${HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE:-}" || -z "${HASURA_BIGQUERY_PROJECT_ID:-}"  ]]; then
-        echo "HASURA_BIGQUERY_SERVICE_ACCOUNT_FILE and HASURA_BIGQUERY_PROJECT_ID environment variables are needed to run these tests."
+    if [[ -z "${HASURA_BIGQUERY_SERVICE_KEY:-}" || -z "${HASURA_BIGQUERY_PROJECT_ID:-}"  ]]; then
+        echo "HASURA_BIGQUERY_SERVICE_KEY and HASURA_BIGQUERY_PROJECT_ID environment variables are needed to run these tests."
         echo "See https://github.com/hasura/graphql-engine/tree/master/server/tests-py#running-bigquery-tests for more information."
         exit 1
     fi
