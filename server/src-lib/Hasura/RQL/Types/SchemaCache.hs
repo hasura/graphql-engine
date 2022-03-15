@@ -49,10 +49,10 @@ module Hasura.RQL.Types.SchemaCache
     remoteSchemaCustomizeFieldName,
     RemoteSchemaRelationships,
     RemoteSchemaCtx (..),
+    getIntrospectionResult,
     rscName,
     rscInfo,
     rscIntroOriginal,
-    rscParsed,
     rscRawIntrospectionResult,
     rscPermissions,
     rscRemoteRelationships,
@@ -102,7 +102,6 @@ module Hasura.RQL.Types.SchemaCache
     FunctionVolatility (..),
     FunctionArg (..),
     FunctionArgName (..),
-    --  , FunctionName(..)
     FunctionInfo (..),
     FunctionCache,
     CronTriggerInfo (..),
@@ -110,8 +109,6 @@ module Hasura.RQL.Types.SchemaCache
     initialResourceVersion,
     getBoolExpDeps,
     InlinedAllowlist,
-    ParsedIntrospectionG (..),
-    ParsedIntrospection,
   )
 where
 
@@ -127,9 +124,6 @@ import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection qualified as PG
 import Hasura.Base.Error
 import Hasura.GraphQL.Context (GQLContext, RoleContext)
-import Hasura.GraphQL.Namespace
-import Hasura.GraphQL.Parser qualified as P
-import Hasura.GraphQL.Parser.Column (UnpreparedValue)
 import Hasura.Incremental
   ( Cacheable,
     Dependency,
@@ -139,8 +133,6 @@ import Hasura.Incremental
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.IR.BoolExp
-import Hasura.RQL.IR.RemoteSchema
-import Hasura.RQL.IR.Root
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
@@ -228,14 +220,6 @@ data IntrospectionResult = IntrospectionResult
 
 instance Cacheable IntrospectionResult
 
-data ParsedIntrospectionG m = ParsedIntrospection
-  { piQuery :: [P.FieldParser m (NamespacedField (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))],
-    piMutation :: Maybe [P.FieldParser m (NamespacedField (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))],
-    piSubscription :: Maybe [P.FieldParser m (NamespacedField (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))]
-  }
-
-type ParsedIntrospection = ParsedIntrospectionG (P.ParseT Identity)
-
 type RemoteSchemaRelationships =
   InsOrdHashMap G.Name (InsOrdHashMap RelName (RemoteFieldInfo G.Name))
 
@@ -248,11 +232,22 @@ data RemoteSchemaCtx = RemoteSchemaCtx
     -- | The raw response from the introspection query against the remote server.
     -- We store this so we can efficiently service 'introspect_remote_schema'.
     _rscRawIntrospectionResult :: !BL.ByteString,
-    -- | FieldParsers with schema customizations applied
-    _rscParsed :: ParsedIntrospection,
     _rscPermissions :: !(M.HashMap RoleName IntrospectionResult),
     _rscRemoteRelationships :: RemoteSchemaRelationships
   }
+
+getIntrospectionResult :: RemoteSchemaPermsCtx -> RoleName -> RemoteSchemaCtx -> Maybe IntrospectionResult
+getIntrospectionResult remoteSchemaPermsCtx role remoteSchemaContext =
+  if
+      | -- admin doesn't have a custom annotated introspection, defaulting to the original one
+        role == adminRoleName ->
+        pure $ _rscIntroOriginal remoteSchemaContext
+      | -- if permissions are disabled, the role map will be empty, defaulting to the original one
+        remoteSchemaPermsCtx == RemoteSchemaPermsDisabled ->
+        pure $ _rscIntroOriginal remoteSchemaContext
+      | -- otherwise, look the role up in the map; if we find nothing, then the role doesn't have access
+        otherwise ->
+        M.lookup role (_rscPermissions remoteSchemaContext)
 
 $(makeLenses ''RemoteSchemaCtx)
 

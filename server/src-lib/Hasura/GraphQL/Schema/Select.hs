@@ -1094,9 +1094,19 @@ fieldSelection sourceName table tableInfo maybePkeyColumns = \case
   FIComputedField computedFieldInfo ->
     maybeToList <$> computedField sourceName computedFieldInfo table tableInfo
   FIRemoteRelationship remoteFieldInfo -> do
-    relationshipFields <- fromMaybe [] <$> remoteRelationshipField remoteFieldInfo
-    let lhsFields = _rfiLHS remoteFieldInfo
-    pure $ map (fmap (IR.AFRemote . IR.RemoteRelationshipSelect lhsFields)) relationshipFields
+    queryType <- asks $ qcQueryType . getter
+    case (queryType, _rfiRHS remoteFieldInfo) of
+      (ET.QueryRelay, RFISchema _) ->
+        -- Remote schemas aren't currently supported in Relay, and we therefore
+        -- cannot include remote relationships to them while building a
+        -- Relay-specific schema: attempting to do so would raise an error, as
+        -- 'remoteRelationshipField' would attempt to look into the
+        -- 'QueryContext' for information about the targeted schema.
+        pure []
+      _ -> do
+        relationshipFields <- fromMaybe [] <$> remoteRelationshipField remoteFieldInfo
+        let lhsFields = _rfiLHS remoteFieldInfo
+        pure $ map (fmap (IR.AFRemote . IR.RemoteRelationshipSelect lhsFields)) relationshipFields
 
 {- Note [Permission filter deduplication]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -1,20 +1,12 @@
 module Hasura.GraphQL.RemoteServer
   ( fetchRemoteSchema,
-    IntrospectionResult,
-    parseIntrospectionResult,
-    execRemoteGQ,
-    identityCustomizer,
-    introspectionQuery,
-    -- The following exports are needed for unit tests
-    getCustomizer,
-    validateSchemaCustomizationsDistinct,
     getSchemaIntrospection,
+    execRemoteGQ,
   )
 where
 
 import Control.Arrow.Extended (left)
 import Control.Exception (try)
-import Control.Exception.Safe (Exception (displayException), Typeable, impureThrow)
 import Control.Lens (set, (^.))
 import Data.Aeson ((.:), (.:?))
 import Data.Aeson qualified as J
@@ -31,10 +23,11 @@ import Data.Text qualified as T
 import Data.Text.Extended (dquoteList, (<<>))
 import Hasura.Base.Error
 import Hasura.GraphQL.Context
+import Hasura.GraphQL.Execute.Types
 import Hasura.GraphQL.Namespace (mkUnNamespacedRootFieldAlias)
-import Hasura.GraphQL.Parser.Collect ()
+import Hasura.GraphQL.Parser.Monad (ParseT, runSchemaT)
 import Hasura.GraphQL.Parser.Schema (InputValue (..), Variable (..), VariableInfo (..))
--- Needed for GHCi and HLS due to TH in cyclically dependent modules (see https://gitlab.haskell.org/ghc/ghc/-/issues/1012)
+import Hasura.GraphQL.Schema.Common (QueryContext (..))
 import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.HTTP
@@ -52,17 +45,169 @@ import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.URI (URI)
 import Network.Wreq qualified as Wreq
 
-introspectionQuery :: GQLReqOutgoing
-introspectionQuery =
-  $( do
-       fp <- makeRelativeToProject "src-rsr/introspection.json"
-       TH.qAddDependentFile fp
-       eitherResult <- TH.runIO $ J.eitherDecodeFileStrict fp
-       either fail TH.lift $ do
-         r@GQLReq {..} <- eitherResult
-         op <- left show $ getSingleOperation r
-         pure GQLReq {_grQuery = op, ..}
-   )
+-------------------------------------------------------------------------------
+-- Core API
+
+-- | Make an introspection query to the remote graphql server for the data we
+-- need to present and stitch the remote schema. This powers add_remote_schema,
+-- and also is called by schema cache rebuilding code in "Hasura.RQL.DDL.Schema.Cache".
+fetchRemoteSchema ::
+  forall m.
+  (MonadIO m, MonadError QErr m, Tracing.MonadTrace m) =>
+  Env.Environment ->
+  HTTP.Manager ->
+  RemoteSchemaName ->
+  ValidatedRemoteSchemaDef ->
+  m RemoteSchemaCtx
+fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
+  (_, _, _rscRawIntrospectionResult) <-
+    execRemoteGQ env manager adminUserInfo [] rsDef introspectionQuery
+
+  -- Parse the JSON into flat GraphQL type AST.
+  FromIntrospection _rscIntroOriginal <-
+    J.eitherDecode _rscRawIntrospectionResult `onLeft` (throwRemoteSchema . T.pack)
+
+  -- Possibly transform type names from the remote schema, per the user's 'RemoteSchemaDef'.
+  let rsCustomizer = getCustomizer (addDefaultRoots _rscIntroOriginal) _vrsdCustomization
+  validateSchemaCustomizations rsCustomizer (irDoc _rscIntroOriginal)
+
+  -- At this point, we can't resolve remote relationships; we store an empty map.
+  let _rscRemoteRelationships = mempty
+      _rscInfo = RemoteSchemaInfo {..}
+
+  -- Check that the parsed GraphQL type info is valid by running the schema
+  -- generation. The result is discarded, as the local schema will be built
+  -- properly for each role at schema generation time, but this allows us to
+  -- quickly reject an invalid schema.
+  void $
+    runSchemaT $
+      flip runReaderT minimumValidContext $
+        buildRemoteParser @_ @_ @(ParseT Identity) _rscIntroOriginal _rscRemoteRelationships _rscInfo
+
+  -- The 'rawIntrospectionResult' contains the 'Bytestring' response of
+  -- the introspection result of the remote server. We store this in the
+  -- 'RemoteSchemaCtx' because we can use this when the 'introspect_remote_schema'
+  -- is called by simple encoding the result to JSON.
+  return
+    RemoteSchemaCtx
+      { _rscPermissions = mempty,
+        ..
+      }
+  where
+    -- If there is no explicit mutation or subscription root type we need to check for
+    -- objects type definitions with the default names "Mutation" and "Subscription".
+    -- If found, we add the default roots explicitly to the IntrospectionResult.
+    -- This simplifies the customization code.
+    addDefaultRoots :: IntrospectionResult -> IntrospectionResult
+    addDefaultRoots IntrospectionResult {..} =
+      IntrospectionResult
+        { irMutationRoot = getRootTypeName $$(G.litName "Mutation") irMutationRoot,
+          irSubscriptionRoot = getRootTypeName $$(G.litName "Subscription") irSubscriptionRoot,
+          ..
+        }
+      where
+        getRootTypeName defaultName providedName =
+          providedName <|> (defaultName <$ lookupObject irDoc defaultName)
+
+    -- Minimum valid information required to run schema generation for
+    -- the remote schema.
+    minimumValidContext =
+      ( adminRoleName :: RoleName,
+        mempty :: SourceCache,
+        mempty :: CustomizeRemoteFieldName,
+        mempty :: RemoteSchemaMap,
+        mempty :: MkTypename,
+        mempty :: MkRootFieldName,
+        QueryContext
+          { -- doesn't apply to remote schemas
+            qcStringifyNum = LeaveNumbersAlone,
+            -- doesn't apply to remote schemas
+            qcDangerousBooleanCollapse = True,
+            -- we don't support remote schemas in Relay, but the check is
+            -- performed ahead of time, meaning that the value here is
+            -- irrelevant
+            qcQueryType = QueryHasura,
+            -- doesn't apply to remote schemas
+            qcFunctionPermsContext = FunctionPermissionsInferred,
+            -- we default to no permissions
+            qcRemoteSchemaPermsCtx = RemoteSchemaPermsDisabled,
+            -- doesn't apply to remote schemas
+            qcOptimizePermissionFilters = False
+          }
+      )
+
+-- | Retrieve the "introspected" form of the local GraphQL schema we generated
+-- for a given remote schema.  This is accomplished by looking up the "admin"
+-- version of the schema, and internally running the same introspection
+-- query we used to introspect other schemas against it.
+--
+-- TODO: document why this function exists. Why do we do that?!
+getSchemaIntrospection :: HashMap RoleName (RoleContext GQLContext) -> Maybe RemoteSchemaIntrospection
+getSchemaIntrospection gqlContext = do
+  RoleContext {..} <- Map.lookup adminRoleName gqlContext
+  fieldMap <- afold $ gqlQueryParser _rctxDefault $ fmap (fmap nameToVariable) $ G._todSelectionSet $ _grQuery introspectionQuery
+  RFRaw v <- OMap.lookup (mkUnNamespacedRootFieldAlias $$(G.litName "__schema")) fieldMap
+  fmap (irDoc . fromIntrospection) $ J.parseMaybe J.parseJSON $ J.object [("data", J.object [("__schema", JO.fromOrdered v)])]
+  where
+    -- Construct a dummy variable from a given variable name?
+    -- Its type is also its name?
+    nameToVariable :: G.Name -> Variable
+    nameToVariable n =
+      Variable
+        { vInfo = VIRequired n,
+          vType = G.TypeNamed (G.Nullability True) n,
+          vValue = JSONValue $ J.String "internal placeholder for `nameToVariable`"
+        }
+
+-- | Sends a GraphQL query to the given server.
+execRemoteGQ ::
+  ( MonadIO m,
+    MonadError QErr m,
+    Tracing.MonadTrace m
+  ) =>
+  Env.Environment ->
+  HTTP.Manager ->
+  UserInfo ->
+  [HTTP.Header] ->
+  ValidatedRemoteSchemaDef ->
+  GQLReqOutgoing ->
+  -- | Returns the response body and headers, along with the time taken for the
+  -- HTTP request to complete
+  m (DiffTime, [HTTP.Header], BL.ByteString)
+execRemoteGQ env manager userInfo reqHdrs rsdef gqlReq@GQLReq {..} = do
+  let gqlReqUnparsed = renderGQLReqOutgoing gqlReq
+
+  when (G._todType _grQuery == G.OperationTypeSubscription) $
+    throwRemoteSchema "subscription to remote server is not supported"
+  confHdrs <- makeHeadersFromConf env hdrConf
+  let clientHdrs = bool [] (mkClientHeadersForward reqHdrs) fwdClientHdrs
+      -- filter out duplicate headers
+      -- priority: conf headers > resolved userinfo vars > client headers
+      hdrMaps =
+        [ Map.fromList confHdrs,
+          Map.fromList userInfoToHdrs,
+          Map.fromList clientHdrs
+        ]
+      headers = Map.toList $ foldr Map.union Map.empty hdrMaps
+      finalHeaders = addDefaultHeaders headers
+  initReq <- onLeft (HTTP.mkRequestEither $ tshow url) (throwRemoteSchemaHttp url)
+  let req =
+        initReq & set HTTP.method "POST"
+          & set HTTP.headers finalHeaders
+          & set HTTP.body (Just $ J.encode gqlReqUnparsed)
+          & set HTTP.timeout (HTTP.responseTimeoutMicro (timeout * 1000000))
+
+  Tracing.tracedHttpRequest req \req' -> do
+    (time, res) <- withElapsedTime $ liftIO $ try $ HTTP.performRequest req' manager
+    resp <- onLeft res (throwRemoteSchemaHttp url)
+    pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)
+  where
+    ValidatedRemoteSchemaDef url hdrConf fwdClientHdrs timeout _mPrefix = rsdef
+
+    userInfoToHdrs = sessionVariablesToHeaders $ _uiSession userInfo
+
+-------------------------------------------------------------------------------
+-- Validation
 
 validateSchemaCustomizations ::
   forall m.
@@ -146,77 +291,26 @@ validateSchemaCustomizationsDistinct remoteSchemaCustomizer (RemoteSchemaIntrosp
               <> dquoteList dups
       _ -> pure ()
 
-parseIntrospectionResult :: J.Value -> Maybe IntrospectionResult
-parseIntrospectionResult = fmap fromIntrospection . J.parseMaybe J.parseJSON
+-------------------------------------------------------------------------------
+-- Introspection
 
--- | Make an introspection query to the remote graphql server for the data we
--- need to present and stitch the remote schema. This powers add_remote_schema,
--- and also is called by schema cache rebuilding code in "Hasura.RQL.DDL.Schema.Cache".
-fetchRemoteSchema ::
-  forall m.
-  (MonadIO m, MonadError QErr m, Tracing.MonadTrace m) =>
-  Env.Environment ->
-  HTTP.Manager ->
-  RemoteSchemaName ->
-  ValidatedRemoteSchemaDef ->
-  m RemoteSchemaCtx
-fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
-  (_, _, _rscRawIntrospectionResult) <-
-    execRemoteGQ env manager adminUserInfo [] rsDef introspectionQuery
-
-  -- Parse the JSON into flat GraphQL type AST
-  FromIntrospection _rscIntroOriginal <-
-    J.eitherDecode _rscRawIntrospectionResult `onLeft` (throwRemoteSchema . T.pack)
-
-  -- possibly transform type names from the remote schema, per the user's 'RemoteSchemaDef'
-  let rsCustomizer = getCustomizer (addDefaultRoots _rscIntroOriginal) _vrsdCustomization
-
-  validateSchemaCustomizations rsCustomizer (irDoc _rscIntroOriginal)
-
-  let _rscInfo = RemoteSchemaInfo {..}
-
-  -- At this point, we can't resolve remote relationships; we store an empty map.
-  let _rscRemoteRelationships = mempty
-
-  -- Check that the parsed GraphQL type info is valid by running the schema generation
-  _rscParsed <- buildRemoteParser _rscIntroOriginal _rscInfo
-
-  -- The 'rawIntrospectionResult' contains the 'Bytestring' response of
-  -- the introspection result of the remote server. We store this in the
-  -- 'RemoteSchemaCtx' because we can use this when the 'introspect_remote_schema'
-  -- is called by simple encoding the result to JSON.
-  return
-    RemoteSchemaCtx
-      { _rscPermissions = mempty,
-        ..
-      }
-  where
-    -- If there is no explicit mutation or subscription root type we need to check for
-    -- objects type definitions with the default names "Mutation" and "Subscription".
-    -- If found, we add the default roots explicitly to the IntrospectionResult.
-    -- This simplifies the customization code.
-    addDefaultRoots :: IntrospectionResult -> IntrospectionResult
-    addDefaultRoots IntrospectionResult {..} =
-      IntrospectionResult
-        { irMutationRoot = getRootTypeName $$(G.litName "Mutation") irMutationRoot,
-          irSubscriptionRoot = getRootTypeName $$(G.litName "Subscription") irSubscriptionRoot,
-          ..
-        }
-      where
-        getRootTypeName defaultName providedName =
-          providedName <|> (defaultName <$ lookupObject irDoc defaultName)
+introspectionQuery :: GQLReqOutgoing
+introspectionQuery =
+  $( do
+       fp <- makeRelativeToProject "src-rsr/introspection.json"
+       TH.qAddDependentFile fp
+       eitherResult <- TH.runIO $ J.eitherDecodeFileStrict fp
+       either fail TH.lift $ do
+         r@GQLReq {..} <- eitherResult
+         op <- left show $ getSingleOperation r
+         pure GQLReq {_grQuery = op, ..}
+   )
 
 -- | Parsing the introspection query result.  We use this newtype wrapper to
 -- avoid orphan instances and parse JSON in the way that we need for GraphQL
 -- introspection results.
 newtype FromIntrospection a = FromIntrospection {fromIntrospection :: a}
   deriving (Show, Eq, Generic, Functor)
-
-pErr :: (MonadFail m) => Text -> m a
-pErr = fail . T.unpack
-
-kindErr :: (MonadFail m) => Text -> Text -> m a
-kindErr gKind eKind = pErr $ "Invalid `kind: " <> gKind <> "` in " <> eKind
 
 instance J.FromJSON (FromIntrospection G.Description) where
   parseJSON = fmap (FromIntrospection . G.Description) . J.parseJSON
@@ -414,63 +508,8 @@ instance J.FromJSON (FromIntrospection IntrospectionResult) where
             subsRoot
     return $ FromIntrospection r
 
-objectWithoutNullValues :: [J.Pair] -> J.Value
-objectWithoutNullValues = J.object . filter notNull
-  where
-    notNull (_, J.Null) = False
-    notNull _ = True
-
-toObjectTypeDefinition :: G.Name -> G.ObjectTypeDefinition G.InputValueDefinition
-toObjectTypeDefinition name = G.ObjectTypeDefinition Nothing name [] [] []
-
-execRemoteGQ ::
-  ( MonadIO m,
-    MonadError QErr m,
-    Tracing.MonadTrace m
-  ) =>
-  Env.Environment ->
-  HTTP.Manager ->
-  UserInfo ->
-  [HTTP.Header] ->
-  ValidatedRemoteSchemaDef ->
-  GQLReqOutgoing ->
-  -- | Returns the response body and headers, along with the time taken for the
-  -- HTTP request to complete
-  m (DiffTime, [HTTP.Header], BL.ByteString)
-execRemoteGQ env manager userInfo reqHdrs rsdef gqlReq@GQLReq {..} = do
-  let gqlReqUnparsed = renderGQLReqOutgoing gqlReq
-
-  when (G._todType _grQuery == G.OperationTypeSubscription) $
-    throwRemoteSchema "subscription to remote server is not supported"
-  confHdrs <- makeHeadersFromConf env hdrConf
-  let clientHdrs = bool [] (mkClientHeadersForward reqHdrs) fwdClientHdrs
-      -- filter out duplicate headers
-      -- priority: conf headers > resolved userinfo vars > client headers
-      hdrMaps =
-        [ Map.fromList confHdrs,
-          Map.fromList userInfoToHdrs,
-          Map.fromList clientHdrs
-        ]
-      headers = Map.toList $ foldr Map.union Map.empty hdrMaps
-      finalHeaders = addDefaultHeaders headers
-  initReq <- onLeft (HTTP.mkRequestEither $ tshow url) (throwRemoteSchemaHttp url)
-  let req =
-        initReq & set HTTP.method "POST"
-          & set HTTP.headers finalHeaders
-          & set HTTP.body (Just $ J.encode gqlReqUnparsed)
-          & set HTTP.timeout (HTTP.responseTimeoutMicro (timeout * 1000000))
-
-  Tracing.tracedHttpRequest req \req' -> do
-    (time, res) <- withElapsedTime $ liftIO $ try $ HTTP.performRequest req' manager
-    resp <- onLeft res (throwRemoteSchemaHttp url)
-    pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)
-  where
-    ValidatedRemoteSchemaDef url hdrConf fwdClientHdrs timeout _mPrefix = rsdef
-
-    userInfoToHdrs = sessionVariablesToHeaders $ _uiSession userInfo
-
-identityCustomizer :: RemoteSchemaCustomizer
-identityCustomizer = RemoteSchemaCustomizer Nothing mempty mempty
+-------------------------------------------------------------------------------
+-- Customization
 
 getCustomizer :: IntrospectionResult -> Maybe RemoteSchemaCustomization -> RemoteSchemaCustomizer
 getCustomizer _ Nothing = identityCustomizer
@@ -524,58 +563,28 @@ getCustomizer IntrospectionResult {..} (Just RemoteSchemaCustomization {..}) = R
     _rscCustomizeTypeName = typeRenameMap
     _rscCustomizeFieldName = fieldRenameMap
 
-throwRemoteSchema ::
-  QErrM m =>
-  Text ->
-  m a
-throwRemoteSchema = throw400 RemoteSchemaError
+------------------------------------------------------------------------------
+-- Local error handling
 
-throwRemoteSchemaWithInternal ::
-  (QErrM m, J.ToJSON a) =>
-  Text ->
-  a ->
-  m b
-throwRemoteSchemaWithInternal msg v =
-  let err = err400 RemoteSchemaError msg
-   in throwError err {qeInternal = Just $ ExtraInternal $ J.toJSON v}
+pErr :: (MonadFail m) => Text -> m a
+pErr = fail . T.unpack
+
+kindErr :: (MonadFail m) => Text -> Text -> m a
+kindErr gKind eKind = pErr $ "Invalid `kind: " <> gKind <> "` in " <> eKind
+
+throwRemoteSchema :: QErrM m => Text -> m a
+throwRemoteSchema = throw400 RemoteSchemaError
 
 throwRemoteSchemaHttp ::
   QErrM m =>
   URI ->
   HTTP.HttpException ->
   m a
-throwRemoteSchemaHttp url =
-  throwRemoteSchemaWithInternal (T.pack httpExceptMsg) . httpExceptToJSON
+throwRemoteSchemaHttp url exception =
+  throwError $
+    baseError
+      { qeInternal = Just $ ExtraInternal $ httpExceptToJSON exception
+      }
   where
-    httpExceptMsg =
-      "HTTP exception occurred while sending the request to " <> show url
-
--- Utility function for generating RemoteScemaIntrospection
-
-newtype RemoteSchemaIntrospectionErr = RemoteSchemaIntrospectionErr
-  { remoteSchemaIntrospectionErr :: String
-  }
-  deriving (Show, Typeable)
-
-instance Exception RemoteSchemaIntrospectionErr where
-  displayException (RemoteSchemaIntrospectionErr msg) = "RemoteSchemaIntrospectionErr: " <> show msg
-
-errorE :: String -> c
-errorE = impureThrow . RemoteSchemaIntrospectionErr
-
-getSchemaIntrospection :: HashMap RoleName (RoleContext GQLContext) -> Maybe RemoteSchemaIntrospection
-getSchemaIntrospection gqlContext = do
-  RoleContext {..} <- Map.lookup adminRoleName gqlContext
-  fieldMap <- either (const Nothing) Just $ gqlQueryParser _rctxDefault $ fmap (fmap nameToVariable) $ G._todSelectionSet $ _grQuery introspectionQuery
-  RFRaw v <- OMap.lookup (mkUnNamespacedRootFieldAlias $$(G.litName "__schema")) fieldMap
-  fmap irDoc $ parseIntrospectionResult $ J.object [("data", J.object [("__schema", JO.fromOrdered v)])]
-
-nameToVariable :: G.Name -> Variable
-nameToVariable n = Variable vInf vTyp vVal
-  where
-    vInf = VIRequired n
-    vTyp = G.TypeNamed (G.Nullability True) n
-    vVal = dummyValue
-
-    dummyValue :: InputValue Void
-    dummyValue = JSONValue $ J.String $ "nameToVariable is being called"
+    baseError = err400 RemoteSchemaError httpExceptMsg
+    httpExceptMsg = "HTTP exception occurred while sending the request to " <> tshow url

@@ -47,8 +47,13 @@ const AddManualRelationship = ({
   };
 
   const removeFunc = relationship
-    ? (toggleEditor: unknown) => {
-        reduxDispatch(dropDbToDbRelationship(state, tableSchema, toggleEditor));
+    ? (toggleEditor: () => void) => {
+        reduxDispatch(
+          dropDbToDbRelationship(state, tableSchema, () => {
+            toggleEditor();
+            queryClient.refetchQueries(['metadata'], { active: true });
+          })
+        );
       }
     : null;
 

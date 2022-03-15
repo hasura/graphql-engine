@@ -16,11 +16,20 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Common (FieldName, Fields)
 import Language.GraphQL.Draft.Syntax qualified as G
 
+-- | Internal representation for a selection of fields on the result of an action.
+-- Type parameter r will be either
+-- r ~ (RemoteRelationshipField UnpreparedValue) when the AST is emitted by the parser.
+-- r ~ Void when an execution tree is constructed so that a backend is
+-- absolved of dealing with remote relationships.
 data ActionFieldG (r :: Type)
-  = ACFScalar G.Name
-  | ACFRemote (ActionRemoteRelationshipSelect r)
-  | ACFExpression Text
-  | ACFNestedObject G.Name !(ActionFieldsG r)
+  = -- | Scalar value. G.Name is the original field name from the object type.
+    ACFScalar G.Name
+  | -- | Remote relationship
+    ACFRemote (ActionRemoteRelationshipSelect r)
+  | -- | Constant text value (used for __typename fields)
+    ACFExpression Text
+  | -- | Nested object. G.Name is the original field name from the object type.
+    ACFNestedObject G.Name !(ActionFieldsG r)
   deriving (Eq, Show, Functor, Foldable, Traversable)
 
 type ActionFieldsG r = Fields (ActionFieldG r)

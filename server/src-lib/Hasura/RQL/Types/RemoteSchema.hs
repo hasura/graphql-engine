@@ -23,6 +23,7 @@ module Hasura.RQL.Types.RemoteSchema
     customizeTypeNameString,
     getUrlFromEnv,
     hasTypeOrFieldCustomizations,
+    identityCustomizer,
     lookupEnum,
     lookupInputObject,
     lookupInterface,
@@ -178,6 +179,9 @@ data RemoteSchemaCustomizer = RemoteSchemaCustomizer
     _rscCustomizeFieldName :: !(HashMap G.Name (HashMap G.Name G.Name))
   }
   deriving (Show, Eq, Generic)
+
+identityCustomizer :: RemoteSchemaCustomizer
+identityCustomizer = RemoteSchemaCustomizer Nothing mempty mempty
 
 instance NFData RemoteSchemaCustomizer
 

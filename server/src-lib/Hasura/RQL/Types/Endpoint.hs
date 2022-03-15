@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveAnyClass #-}
+
 module Hasura.RQL.Types.Endpoint
   ( EndpointName (..),
     EndpointMethod (..),
@@ -34,54 +36,43 @@ import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
 import Data.Trie qualified as T
-import Database.PG.Query qualified as Q
 import Hasura.Prelude
 import Hasura.RQL.Types.Endpoint.Trie as Trie
 import Hasura.RQL.Types.QueryCollection (CollectionName, QueryName)
 import Web.HttpApiData (FromHttpApiData (..))
 
-newtype EndpointMethod = EndpointMethod {unEndpointMethod :: Text}
+data EndpointMethod
+  = GET
+  | POST
+  | PUT
+  | DELETE
+  | PATCH
   deriving
-    (Show, Eq, Ord, Hashable, ToJSON, ToTxt, Generic, ToJSONKey)
+    (Show, Eq, Ord, Hashable, FromJSON, ToJSON, ToJSONKey, Generic)
 
-instance FromJSON EndpointMethod where
-  -- TODO: Use a more representititve datatype
-  parseJSON (String s) = do
-    if s `elem` ["GET", "POST", "PUT", "DELETE", "PATCH"]
-      then pure (EndpointMethod s)
-      else fail $ "Method " <> T.unpack s <> " not supported."
-  parseJSON _ = fail "Only standard HTTP methods supported"
+instance ToTxt EndpointMethod where
+  toTxt = tshow
 
 newtype EndpointName = EndpointName {unEndpointName :: NonEmptyText}
-  deriving
+  deriving newtype
     ( Show,
       Eq,
       Ord,
+      ToTxt,
       Hashable,
       ToJSON,
-      ToJSONKey,
-      FromJSON,
-      FromJSONKey,
-      Q.FromCol,
-      Q.ToPrepArg,
-      ToTxt,
-      Generic
+      FromJSON
     )
 
 newtype EndpointUrl = EndpointUrl {unEndpointUrl :: NonEmptyText}
-  deriving
+  deriving newtype
     ( Show,
       Eq,
       Ord,
+      ToTxt,
       Hashable,
       ToJSON,
-      ToJSONKey,
-      FromJSON,
-      FromJSONKey,
-      Q.FromCol,
-      Q.ToPrepArg,
-      ToTxt,
-      Generic
+      FromJSON
     )
 
 mkEndpointUrl :: ToTxt a => a -> Maybe EndpointUrl

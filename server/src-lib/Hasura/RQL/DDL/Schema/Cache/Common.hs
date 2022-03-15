@@ -53,6 +53,7 @@ import Hasura.Base.Error
 import Hasura.Incremental qualified as Inc
 import Hasura.Prelude
 import Hasura.RQL.Types
+import Hasura.RQL.Types.Endpoint
 import Hasura.Session
 import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 import Network.HTTP.Client.Transformable qualified as HTTP

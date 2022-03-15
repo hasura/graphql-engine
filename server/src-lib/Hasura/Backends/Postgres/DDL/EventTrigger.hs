@@ -9,6 +9,7 @@ module Hasura.Backends.Postgres.DDL.EventTrigger
     dropTriggerAndArchiveEvents,
     createTableEventTrigger,
     dropTriggerQ,
+    dropDanglingSQLTrigger,
     mkAllTriggersQ,
     getMaintenanceModeVersion,
     fetchUndeliveredEvents,
@@ -189,11 +190,23 @@ createTableEventTrigger ::
   Maybe (PrimaryKey ('Postgres pgKind) (ColumnInfo ('Postgres pgKind))) ->
   m (Either QErr ())
 createTableEventTrigger serverConfigCtx sourceConfig table columns triggerName opsDefinition _ = runPgSourceWriteTx sourceConfig $ do
-  -- Clean all existing triggers
-  liftTx $ dropTriggerQ triggerName -- executes DROP IF EXISTS.. sql
   -- Create the given triggers
   flip runReaderT serverConfigCtx $
     mkAllTriggersQ triggerName table columns opsDefinition
+
+dropDanglingSQLTrigger ::
+  ( MonadIO m,
+    MonadError QErr m
+  ) =>
+  SourceConfig ('Postgres pgKind) ->
+  TriggerName ->
+  HashSet Ops ->
+  m ()
+dropDanglingSQLTrigger sourceConfig triggerName ops =
+  liftEitherM $
+    liftIO $
+      runPgSourceWriteTx sourceConfig $
+        traverse_ (dropTriggerOp triggerName) ops
 
 updateColumnInEventTrigger ::
   QualifiedTable ->
@@ -464,21 +477,21 @@ setRetryTx e time = \case
 
 dropTriggerQ :: TriggerName -> Q.TxE QErr ()
 dropTriggerQ trn =
-  mapM_
-    ( \op ->
-        Q.unitQE
-          defaultTxErrorHandler
-          (Q.fromText $ getDropFuncSql op)
-          ()
-          False
-    )
-    [INSERT, UPDATE, DELETE]
+  mapM_ (dropTriggerOp trn) [INSERT, UPDATE, DELETE]
+
+dropTriggerOp :: TriggerName -> Ops -> Q.TxE QErr ()
+dropTriggerOp triggerName triggerOp =
+  Q.unitQE
+    defaultTxErrorHandler
+    (Q.fromText $ getDropFuncSql triggerOp)
+    ()
+    False
   where
     getDropFuncSql :: Ops -> Text
     getDropFuncSql op =
       "DROP FUNCTION IF EXISTS"
         <> " hdb_catalog."
-        <> pgIdenTrigger op trn
+        <> pgIdenTrigger op triggerName
         <> "()"
         <> " CASCADE"
 

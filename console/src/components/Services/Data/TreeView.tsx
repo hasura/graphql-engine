@@ -25,6 +25,32 @@ const activeStyle = {
   color: '#fd9540',
 };
 
+const filterItemsBySearch = (searchQuery: string, itemList: SourceItem[]) => {
+  const caseSensitiveResults: SourceItem[] = [];
+  const caseAgnosticResults: SourceItem[] = [];
+  itemList.forEach(item => {
+    if (item.name.search(searchQuery) > -1) {
+      caseSensitiveResults.push(item);
+    } else if (item.name.toLowerCase().search(searchQuery.toLowerCase()) > -1) {
+      caseAgnosticResults.push(item);
+    }
+  });
+
+  return [
+    ...caseSensitiveResults.sort((item1, item2) => {
+      return item1.name.search(searchQuery) > item2.name.search(searchQuery)
+        ? 1
+        : -1;
+    }),
+    ...caseAgnosticResults.sort((item1, item2) => {
+      return item1.name.toLowerCase().search(searchQuery.toLowerCase()) >
+        item2.name.toLowerCase().search(searchQuery.toLowerCase())
+        ? 1
+        : -1;
+    }),
+  ];
+};
+
 type LeafItemsViewProps = {
   item: SourceItem;
   currentSource: string;
@@ -130,6 +156,7 @@ type SchemaItemsViewProps = {
   setActiveSchema: (value: string) => void;
   pathname: string;
   databaseLoading: boolean;
+  schemaLoading: boolean;
 };
 const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
   item,
@@ -138,13 +165,27 @@ const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
   setActiveSchema,
   pathname,
   databaseLoading,
+  schemaLoading,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+
+  const [search, setSearch] = React.useState('');
+  const onSearchChange = React.useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSearch(e.target.value);
+    },
+    [search]
+  );
+
   const showActiveStyle =
     pathname === `/data/${currentSource}/schema/${item.name}`;
   useEffect(() => {
     setIsOpen(isActive);
   }, [isActive]);
+
+  const itemSearchResults = search
+    ? filterItemsBySearch(search, item.children || [])
+    : item.children;
 
   return (
     <>
@@ -169,32 +210,50 @@ const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
           {item.name}
         </span>
       </div>
-      <ul className={styles.reducedChildPadding}>
-        {isOpen && item.children ? (
-          !databaseLoading ? (
-            item.children.map((child, key) => (
-              <li key={key}>
-                <LeafItemsView
-                  item={child}
-                  currentSource={currentSource}
-                  currentSchema={item.name}
-                  key={key}
-                  pathname={pathname}
+      {isOpen && itemSearchResults ? (
+        !(databaseLoading || schemaLoading) ? (
+          item.children?.length ? (
+            <>
+              <div className="my-1 px-sm">
+                <input
+                  type="text"
+                  onChange={onSearchChange}
+                  className="form-control"
+                  placeholder={`Search tables in ${item.name}....`}
+                  data-test="search-tables"
                 />
-              </li>
-            ))
+              </div>
+              <ul className={styles.reducedChildPadding}>
+                {itemSearchResults.map((child, key) => (
+                  <li key={key}>
+                    <LeafItemsView
+                      item={child}
+                      currentSource={currentSource}
+                      currentSchema={item.name}
+                      key={key}
+                      pathname={pathname}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </>
           ) : (
-            <li>
-              <span
-                className={`${styles.sidebarTablePadding} ${styles.padd_bottom_small}`}
-              >
-                <i className="fa fa-table" />
-                <span className={styles.loaderBar} />
-              </span>
+            <li
+              className="font-normal px-sm"
+              data-test="table-sidebar-no-tables"
+            >
+              <i>No tables or views in this schema</i>
             </li>
           )
-        ) : null}
-      </ul>
+        ) : (
+          <span
+            className={`${styles.sidebarTablePadding} ${styles.padd_bottom_small}`}
+          >
+            <i className="fa fa-table" />
+            <span className={styles.loaderBar} />
+          </span>
+        )
+      ) : null}
     </>
   );
 };
@@ -207,6 +266,7 @@ type DatabaseItemsViewProps = {
   currentSchema: string;
   pathname: string;
   databaseLoading: boolean;
+  schemaLoading: boolean;
 };
 const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
   item,
@@ -216,6 +276,7 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
   currentSchema,
   pathname,
   databaseLoading,
+  schemaLoading,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const showActiveStyle = [
@@ -265,6 +326,7 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
                 key={key}
                 pathname={pathname}
                 databaseLoading={databaseLoading}
+                schemaLoading={schemaLoading}
               />
             </li>
           ))
@@ -291,6 +353,7 @@ type TreeViewProps = {
   currentSchema: string;
   pathname: string;
   databaseLoading: boolean;
+  schemaLoading: boolean;
   preLoadState: boolean;
 };
 const TreeView: React.FC<TreeViewProps> = ({
@@ -301,6 +364,7 @@ const TreeView: React.FC<TreeViewProps> = ({
   currentSchema,
   pathname,
   databaseLoading,
+  schemaLoading,
   preLoadState,
 }) => {
   const handleSelectDataSource = (dataSource: string) => {
@@ -348,6 +412,7 @@ const TreeView: React.FC<TreeViewProps> = ({
           currentSchema={currentSchema}
           pathname={pathname}
           databaseLoading={databaseLoading}
+          schemaLoading={schemaLoading}
         />
       ))}
     </div>

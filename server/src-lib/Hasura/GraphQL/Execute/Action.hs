@@ -139,9 +139,9 @@ resolveActionExecution env logger _userInfo AnnActionExecution {..} ActionExecCo
           _aaeResponseTransform
 
 -- | Build action response from the Webhook JSON response when there are no relationships defined
-makeActionResponseNoRelations :: RA.ActionFieldsG Void -> ActionWebhookResponse -> AO.Value
+makeActionResponseNoRelations :: RA.ActionFields -> ActionWebhookResponse -> AO.Value
 makeActionResponseNoRelations annFields webhookResponse =
-  let mkResponseObject :: RA.ActionFieldsG Void -> HashMap Text J.Value -> AO.Value
+  let mkResponseObject :: RA.ActionFields -> HashMap Text J.Value -> AO.Value
       mkResponseObject fields obj =
         AO.object $
           flip mapMaybe fields $ \(fieldName, annField) ->
@@ -603,7 +603,7 @@ processOutputSelectionSet ::
   RS.ArgumentExp v ->
   GraphQLType ->
   [(PGCol, PGScalarType)] ->
-  RA.ActionFieldsG Void ->
+  RA.ActionFields ->
   StringifyNumbers ->
   RS.AnnSimpleSelectG ('Postgres 'Vanilla) Void v
 processOutputSelectionSet tableRowInput actionOutputType definitionList actionFields =

@@ -19,11 +19,11 @@ import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashMap.Strict.Multi qualified as MMap
+import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
 import Data.OpenApi
 import Data.OpenApi.Declare
 import Data.Text qualified as T
-import Data.Text.Extended (commaSeparated)
 import Data.Text.NonEmpty
 import Data.Trie qualified as Trie
 import Hasura.GraphQL.Analyse
@@ -38,10 +38,10 @@ import Network.HTTP.Media.MediaType ((//))
 
 data EndpointData = EndpointData
   { _edUrl :: String,
-    _edMethod :: [Text],
+    _edMethod :: HashSet EndpointMethod,
     _edVarList :: [Referenced Param],
     _edProperties :: InsOrdHashMap Text (Referenced Schema),
-    _edResponse :: Maybe Response,
+    _edResponse :: HashMap EndpointMethod Response,
     _edDescription :: Text, -- contains API comments and graphql query
     _edName :: Text,
     _edErrs :: [Text]
@@ -128,15 +128,15 @@ Example stepthrough initiated by call to getSelectionSchema:
 mdDefinitions :: EndpointMetadata GQLQueryWithText -> [G.ExecutableDefinition G.Name]
 mdDefinitions = G.getExecutableDefinitions . unGQLQuery . getGQLQuery . _edQuery . _ceDefinition
 
-mkResponse :: [Text] -> String -> Maybe RemoteSchemaIntrospection -> Analysis G.Name -> Declare (Definitions Schema) (Maybe Response)
+mkResponse :: EndpointMethod -> String -> Maybe RemoteSchemaIntrospection -> Analysis G.Name -> Declare (Definitions Schema) (Maybe Response)
 mkResponse _ _ Nothing _ = pure Nothing
-mkResponse epMethods epUrl (Just rs) Analysis {..} = do
+mkResponse epMethod epUrl (Just rs) Analysis {..} = do
   fs <- getSelectionSchema rs (OMap.toList _aFields)
   pure $
     Just $
       mempty
         & content .~ OMap.singleton ("application" // "json") (mempty & schema ?~ Inline fs)
-        & description .~ "Responses for " <> commaSeparated epMethods <> " " <> T.pack epUrl
+        & description .~ "Responses for " <> tshow epMethod <> " " <> T.pack epUrl
 
 getSelectionSchema :: RemoteSchemaIntrospection -> [(G.Name, (FieldDef, Maybe (FieldAnalysis var)))] -> Declare (Definitions Schema) Schema
 getSelectionSchema rs fields = do
@@ -417,7 +417,7 @@ getURL d =
 extractEndpointInfo :: Maybe RemoteSchemaIntrospection -> EndpointMethod -> EndpointMetadata GQLQueryWithText -> Declare (Definitions Schema) EndpointData
 extractEndpointInfo sd method d = do
   _edProperties <- mkProperties sd _analysis
-  _edResponse <- mkResponse _edMethod _edUrl sd _analysis
+  _edResponse <- foldMap (Map.singleton method) <$> mkResponse method _edUrl sd _analysis
   pure EndpointData {..}
   where
     _eDef = mdDefinitions d
@@ -427,10 +427,13 @@ extractEndpointInfo sd method d = do
     _edVarList = getParams _analysis (_ceUrl d)
     _edDescription = getComment d
     _edName = unNonEmptyText $ unEndpointName $ _ceName d
-    _edMethod = [unEndpointMethod method] -- NOTE: Methods are grouped with into matching endpoints - Name used for grouping.
+    _edMethod = Set.singleton method -- NOTE: Methods are grouped with into matching endpoints - Name used for grouping.
     _edErrs = getAllAnalysisErrs _analysis
 
-getEndpointsData :: Maybe RemoteSchemaIntrospection -> SchemaCache -> Declare (Definitions Schema) [EndpointData]
+getEndpointsData ::
+  Maybe RemoteSchemaIntrospection ->
+  SchemaCache ->
+  Declare (Definitions Schema) [EndpointData]
 getEndpointsData sd sc = do
   let endpointTrie = scEndpoints sc
       methodMaps = Trie.elems endpointTrie
@@ -443,7 +446,11 @@ getEndpointsData sd sc = do
   pure $ map squashEndpointGroup endpointsGrouped
 
 squashEndpointGroup :: NonEmpty EndpointData -> EndpointData
-squashEndpointGroup g = (NE.head g) {_edMethod = concatMap _edMethod g}
+squashEndpointGroup g =
+  (NE.head g)
+    { _edMethod = foldMap _edMethod g,
+      _edResponse = foldMap _edResponse g
+    }
 
 serveJSON :: SchemaCache -> OpenApi
 serveJSON sc = spec & components . schemas .~ defs
@@ -494,21 +501,21 @@ declareOpenApiSpec sc = do
                       )
               )
 
-      mkOperation :: EndpointData -> Operation
-      mkOperation ed =
+      mkOperation :: EndpointMethod -> EndpointData -> Operation
+      mkOperation method ed =
         mempty
           & description ?~ _edDescription ed
           & summary ?~ _edName ed
           & parameters .~ (Inline xHasuraAdminSecret : _edVarList ed)
           & requestBody .~ toMaybe (not (null (_edProperties ed))) (Inline (mkRequestBody ed))
-          & responses .~ Responses Nothing (maybe mempty (OMap.singleton 200 . Inline) (_edResponse ed))
+          & responses .~ Responses Nothing (maybe mempty (OMap.singleton 200 . Inline) $ Map.lookup method $ _edResponse ed)
         where
           toMaybe b a = if b then Just a else Nothing
 
-      getOPName :: EndpointData -> Text -> Maybe Operation
+      getOPName :: EndpointData -> EndpointMethod -> Maybe Operation
       getOPName ed methodType =
-        if methodType `elem` _edMethod ed
-          then Just $ mkOperation ed
+        if methodType `Set.member` _edMethod ed
+          then Just $ mkOperation methodType ed
           else Nothing
 
       xHasuraAdminSecret :: Param
@@ -527,17 +534,18 @@ declareOpenApiSpec sc = do
       generatePathItem ed =
         let pathData =
               mempty
-                & get .~ getOPName ed "GET"
-                & post .~ getOPName ed "POST"
-                & put .~ getOPName ed "PUT"
-                & delete .~ getOPName ed "DELETE"
-                & patch .~ getOPName ed "PATCH"
+                & get .~ getOPName ed GET
+                & post .~ getOPName ed POST
+                & put .~ getOPName ed PUT
+                & delete .~ getOPName ed DELETE
+                & patch .~ getOPName ed PATCH
             completePathData =
               if pathData == mempty
                 then
                   mempty
                     & post
                       ?~ mkOperation
+                        POST
                         ed
                           { _edDescription =
                               "⚠️ Method("

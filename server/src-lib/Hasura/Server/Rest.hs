@@ -26,6 +26,7 @@ import Hasura.HTTP
 import Hasura.Metadata.Class
 import Hasura.Prelude hiding (get, put)
 import Hasura.RQL.Types
+import Hasura.RQL.Types.Endpoint
 import Hasura.Server.Limits
 import Hasura.Server.Logging
 import Hasura.Server.Types

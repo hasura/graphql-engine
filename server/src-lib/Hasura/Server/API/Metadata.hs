@@ -44,6 +44,7 @@ import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Source
 import Hasura.RQL.DDL.Webhook.Transform.Validation
 import Hasura.RQL.Types
+import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.Run
 import Hasura.SQL.AnyBackend
@@ -432,7 +433,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMAddComputedField q -> runAddComputedField q
   RMDropComputedField q -> runDropComputedField q
   RMCreateEventTrigger q ->
-    dispatchMetadata
+    dispatchMetadataAndEventTrigger
       ( validateTransforms
           (unUnvalidate1 . cetqRequestTransform . _Just)
           (runCreateEventTriggerQuery . _unUnvalidate1)
