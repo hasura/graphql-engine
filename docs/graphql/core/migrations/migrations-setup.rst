@@ -198,7 +198,7 @@ As you use the Hasura console UI served by the CLI to make changes to your schem
 files are automatically generated in the ``migrations/`` directory and the metadata is
 exported in the ``metadata/`` directory of your project.
 
-Let's create the following table ``address (id uuid, street text, zip text, city text, country text, author_id int)``
+Let's create the following table ``address (id uuid, street text, zip text, city text, country text, author_id uuid)``
 and then create a foreign-key to the ``author`` table via the ``author_id -> id`` columns.
 
 In the ``migrations/<database-name>`` directory, we can find new directories called ``<timestamp>_create_table_public_address``
