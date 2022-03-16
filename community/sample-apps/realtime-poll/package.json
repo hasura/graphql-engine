@@ -5,12 +5,12 @@
   "dependencies": {
     "@apollo/client": "^3.4.16",
     "graphql": "^15.6.0",
+    "graphql-ws": "^5.6.2",
     "react": "^17.0.2",
     "react-bootstrap": "^1.0.0",
     "react-dom": "^16.4.2",
     "react-google-charts": "^3.0.5",
-    "react-scripts": "^3.4.1",
-    "subscriptions-transport-ws": "^0.9.19"
+    "react-scripts": "^3.4.1"
   },
   "scripts": {
     "start": "react-scripts start",
