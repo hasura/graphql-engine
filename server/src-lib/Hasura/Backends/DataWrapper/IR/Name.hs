@@ -11,8 +11,10 @@ where
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Kind (Type)
 import Data.Text.Extended (ToTxt)
+import Hasura.Backends.DataWrapper.API qualified as API
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
+import Witch
 
 --------------------------------------------------------------------------------
 
@@ -35,6 +37,12 @@ newtype Name ty = Name {unName :: Text}
       ToJSONKey,
       ToTxt
     )
+
+instance From API.TableName (Name 'Table) where
+  from (API.TableName n) = coerce @Text @(Name 'Table) n
+
+instance From API.ColumnName (Name 'Column) where
+  from (API.ColumnName n) = coerce @Text @(Name 'Column) n
 
 -- | The "type" of "name" that the 'Name' type is meant to provide a textual
 -- representation for.
