@@ -110,6 +110,7 @@ function:
 - server: fix regression where JWKs are refreshed once per second when both must-revalidate and max-age are specified in the Cache-Control header (#8299)
 - console: fixed an issue where editing both a column's name and its GraphQL field name at the same time caused an error
 - console: enable searching tables within a schema
+- console: fixed the ability to create updated_at and created_at in the modify page (#8239)
 - console: disable search indexing with HTML meta tag
 - cli: fix inherited roles metadata not being updated when dropping all roles (#7872)
 - cli: add support for customization field in sources metadata (#8292)
