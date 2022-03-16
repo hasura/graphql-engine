@@ -1,0 +1,1026 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="%24con2tag_FxSikzJwEqdFVyMZURCT67"></span><span class="hs-comment">--</span><span>
+</span><span id="line-2"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.DataWrapper.API.V0.Query</span><span>
+</span><span id="line-3"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Query.html#Query"><span class="hs-identifier">Query</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Query.html#Field"><span class="hs-identifier">Field</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Query.html#ForeignKey"><span class="hs-identifier">ForeignKey</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Query.html#PrimaryKey"><span class="hs-identifier">PrimaryKey</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">M</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html"><span class="hs-identifier">Hasura.Backends.DataWrapper.API.V0.Column</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">API.V0</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html"><span class="hs-identifier">Hasura.Backends.DataWrapper.API.V0.Expression</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">API.V0</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.OrderBy.html"><span class="hs-identifier">Hasura.Backends.DataWrapper.API.V0.OrderBy</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">API.V0</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Table.html"><span class="hs-identifier">Hasura.Backends.DataWrapper.API.V0.Table</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">API.V0</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span class="hs-comment">-- | A serializable request to retrieve strutured data from some</span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- source.</span><span>
+</span><span id="line-24"></span><span id="local-6989586621688307428"><span id="local-6989586621688307429"></span></span><span class="hs-keyword">data</span><span> </span><span id="Query"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Query.html#Query"><span class="hs-identifier hs-var">Query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Query"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Query.html#Query"><span class="hs-identifier hs-var">Query</span></a></span></span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="fields"><span class="annot"><span class="annottext">Query -&gt; HashMap Text Field
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Query.html#fields"><span class="hs-identifier hs-var hs-var">fields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">M.HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Query.html#Field"><span class="hs-identifier hs-type">Field</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-26"></span><span>    </span><span id="from"><span class="annot"><span class="annottext">Query -&gt; TableName
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Query.html#from"><span class="hs-identifier hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#TableName"><span class="hs-identifier hs-type">API.V0.TableName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>    </span><span id="limit"><span class="annot"><span class="annottext">Query -&gt; Maybe Int
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Query.html#limit"><span class="hs-identifier hs-var hs-var">limit</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>    </span><span id="offset"><span class="annot"><span class="annottext">Query -&gt; Maybe Int
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Query.html#offset"><span class="hs-identifier hs-var hs-var">offset</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>    </span><span id="where_"><span class="annot"><span class="annottext">Query -&gt; Maybe Expression
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Query.html#where_"><span class="hs-identifier hs-var hs-var">where_</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">API.V0.Expression</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>    </span><span id="orderBy"><span class="annot"><span class="annottext">Query -&gt; [OrderBy]
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Query.html#orderBy"><span class="hs-identifier hs-var hs-var">orderBy</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.OrderBy.html#OrderBy"><span class="hs-identifier hs-type">API.V0.OrderBy</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688307417"><span id="local-6989586621688307419"><span class="annot"><span class="annottext">Query -&gt; Query -&gt; Bool
+(Query -&gt; Query -&gt; Bool) -&gt; (Query -&gt; Query -&gt; Bool) -&gt; Eq Query
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: Query -&gt; Query -&gt; Bool
+$c/= :: Query -&gt; Query -&gt; Bool
+== :: Query -&gt; Query -&gt; Bool
+$c== :: Query -&gt; Query -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307401"><span id="local-6989586621688307403"><span id="local-6989586621688307405"><span id="local-6989586621688307407"><span id="local-6989586621688307409"><span id="local-6989586621688307411"><span id="local-6989586621688307413"><span class="annot"><span class="annottext">Eq Query
+Eq Query
+-&gt; (Query -&gt; Query -&gt; Ordering)
+-&gt; (Query -&gt; Query -&gt; Bool)
+-&gt; (Query -&gt; Query -&gt; Bool)
+-&gt; (Query -&gt; Query -&gt; Bool)
+-&gt; (Query -&gt; Query -&gt; Bool)
+-&gt; (Query -&gt; Query -&gt; Query)
+-&gt; (Query -&gt; Query -&gt; Query)
+-&gt; Ord Query
+Query -&gt; Query -&gt; Bool
+Query -&gt; Query -&gt; Ordering
+Query -&gt; Query -&gt; Query
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: Query -&gt; Query -&gt; Query
+$cmin :: Query -&gt; Query -&gt; Query
+max :: Query -&gt; Query -&gt; Query
+$cmax :: Query -&gt; Query -&gt; Query
+&gt;= :: Query -&gt; Query -&gt; Bool
+$c&gt;= :: Query -&gt; Query -&gt; Bool
+&gt; :: Query -&gt; Query -&gt; Bool
+$c&gt; :: Query -&gt; Query -&gt; Bool
+&lt;= :: Query -&gt; Query -&gt; Bool
+$c&lt;= :: Query -&gt; Query -&gt; Bool
+&lt; :: Query -&gt; Query -&gt; Bool
+$c&lt; :: Query -&gt; Query -&gt; Bool
+compare :: Query -&gt; Query -&gt; Ordering
+$ccompare :: Query -&gt; Query -&gt; Ordering
+$cp1Ord :: Eq Query
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307394"><span id="local-6989586621688307396"><span id="local-6989586621688307398"><span class="annot"><span class="annottext">Int -&gt; Query -&gt; ShowS
+[Query] -&gt; ShowS
+Query -&gt; String
+(Int -&gt; Query -&gt; ShowS)
+-&gt; (Query -&gt; String) -&gt; ([Query] -&gt; ShowS) -&gt; Show Query
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [Query] -&gt; ShowS
+$cshowList :: [Query] -&gt; ShowS
+show :: Query -&gt; String
+$cshow :: Query -&gt; String
+showsPrec :: Int -&gt; Query -&gt; ShowS
+$cshowsPrec :: Int -&gt; Query -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. Query -&gt; Rep Query x)
+-&gt; (forall x. Rep Query x -&gt; Query) -&gt; Generic Query
+forall x. Rep Query x -&gt; Query
+forall x. Query -&gt; Rep Query x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep Query x -&gt; Query
+$cfrom :: forall x. Query -&gt; Rep Query x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cQuery"><span id="%24tQuery"><span id="local-6989586621688307361"><span id="local-6989586621688307363"><span id="local-6989586621688307365"><span id="local-6989586621688307367"><span id="local-6989586621688307369"><span id="local-6989586621688307371"><span id="local-6989586621688307373"><span id="local-6989586621688307375"><span id="local-6989586621688307377"><span id="local-6989586621688307379"><span id="local-6989586621688307381"><span id="local-6989586621688307383"><span id="local-6989586621688307385"><span id="local-6989586621688307387"><span class="annot"><span class="annottext">Typeable Query
+DataType
+Constr
+Typeable Query
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; Query -&gt; c Query)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Query)
+-&gt; (Query -&gt; Constr)
+-&gt; (Query -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Query))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c Query))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; Query -&gt; Query)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Query -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Query -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; Query -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Query -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; Query -&gt; m Query)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; Query -&gt; m Query)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; Query -&gt; m Query)
+-&gt; Data Query
+Query -&gt; DataType
+Query -&gt; Constr
+(forall b. Data b =&gt; b -&gt; b) -&gt; Query -&gt; Query
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; Query -&gt; c Query
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Query
+forall a.
+Typeable a
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; a -&gt; c a)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c a)
+-&gt; (a -&gt; Constr)
+-&gt; (a -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c a))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c a))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; a -&gt; a)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; Data a
+forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Query -&gt; u
+forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; Query -&gt; [u]
+forall r r'.
+(r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Query -&gt; r
+forall r r'.
+(r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Query -&gt; r
+forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Query -&gt; m Query
+forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Query -&gt; m Query
+forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Query
+forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; Query -&gt; c Query
+forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Query)
+forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c Query)
+$cQuery :: Constr
+$tQuery :: DataType
+gmapMo :: (forall d. Data d =&gt; d -&gt; m d) -&gt; Query -&gt; m Query
+$cgmapMo :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Query -&gt; m Query
+gmapMp :: (forall d. Data d =&gt; d -&gt; m d) -&gt; Query -&gt; m Query
+$cgmapMp :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Query -&gt; m Query
+gmapM :: (forall d. Data d =&gt; d -&gt; m d) -&gt; Query -&gt; m Query
+$cgmapM :: forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Query -&gt; m Query
+gmapQi :: Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Query -&gt; u
+$cgmapQi :: forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Query -&gt; u
+gmapQ :: (forall d. Data d =&gt; d -&gt; u) -&gt; Query -&gt; [u]
+$cgmapQ :: forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; Query -&gt; [u]
+gmapQr :: (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Query -&gt; r
+$cgmapQr :: forall r r'.
+(r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Query -&gt; r
+gmapQl :: (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Query -&gt; r
+$cgmapQl :: forall r r'.
+(r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Query -&gt; r
+gmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; Query -&gt; Query
+$cgmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; Query -&gt; Query
+dataCast2 :: (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c Query)
+$cdataCast2 :: forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c Query)
+dataCast1 :: (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Query)
+$cdataCast1 :: forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Query)
+dataTypeOf :: Query -&gt; DataType
+$cdataTypeOf :: Query -&gt; DataType
+toConstr :: Query -&gt; Constr
+$ctoConstr :: Query -&gt; Constr
+gunfold :: (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Query
+$cgunfold :: forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Query
+gfoldl :: (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; Query -&gt; c Query
+$cgfoldl :: forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; Query -&gt; c Query
+$cp1Data :: Typeable Query
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span class="hs-comment">-- | A serializable field targeted by a 'Query'.</span><span>
+</span><span id="line-37"></span><span id="local-6989586621688307356"><span id="local-6989586621688307357"></span></span><span class="hs-keyword">data</span><span> </span><span id="Field"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Query.html#Field"><span class="hs-identifier hs-var">Field</span></a></span></span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="ColumnField"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Query.html#ColumnField"><span class="hs-identifier hs-var">ColumnField</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnName"><span class="hs-identifier hs-type">API.V0.ColumnName</span></a></span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RelationshipField"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Query.html#RelationshipField"><span class="hs-identifier hs-var">RelationshipField</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">M.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Query.html#PrimaryKey"><span class="hs-identifier hs-type">PrimaryKey</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Query.html#ForeignKey"><span class="hs-identifier hs-type">ForeignKey</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Query.html#Query"><span class="hs-identifier hs-type">Query</span></a></span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688307349"><span id="local-6989586621688307351"><span class="annot"><span class="annottext">Field -&gt; Field -&gt; Bool
+(Field -&gt; Field -&gt; Bool) -&gt; (Field -&gt; Field -&gt; Bool) -&gt; Eq Field
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: Field -&gt; Field -&gt; Bool
+$c/= :: Field -&gt; Field -&gt; Bool
+== :: Field -&gt; Field -&gt; Bool
+$c== :: Field -&gt; Field -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307334"><span id="local-6989586621688307336"><span id="local-6989586621688307338"><span id="local-6989586621688307340"><span id="local-6989586621688307342"><span id="local-6989586621688307344"><span id="local-6989586621688307346"><span class="annot"><span class="annottext">Eq Field
+Eq Field
+-&gt; (Field -&gt; Field -&gt; Ordering)
+-&gt; (Field -&gt; Field -&gt; Bool)
+-&gt; (Field -&gt; Field -&gt; Bool)
+-&gt; (Field -&gt; Field -&gt; Bool)
+-&gt; (Field -&gt; Field -&gt; Bool)
+-&gt; (Field -&gt; Field -&gt; Field)
+-&gt; (Field -&gt; Field -&gt; Field)
+-&gt; Ord Field
+Field -&gt; Field -&gt; Bool
+Field -&gt; Field -&gt; Ordering
+Field -&gt; Field -&gt; Field
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: Field -&gt; Field -&gt; Field
+$cmin :: Field -&gt; Field -&gt; Field
+max :: Field -&gt; Field -&gt; Field
+$cmax :: Field -&gt; Field -&gt; Field
+&gt;= :: Field -&gt; Field -&gt; Bool
+$c&gt;= :: Field -&gt; Field -&gt; Bool
+&gt; :: Field -&gt; Field -&gt; Bool
+$c&gt; :: Field -&gt; Field -&gt; Bool
+&lt;= :: Field -&gt; Field -&gt; Bool
+$c&lt;= :: Field -&gt; Field -&gt; Bool
+&lt; :: Field -&gt; Field -&gt; Bool
+$c&lt; :: Field -&gt; Field -&gt; Bool
+compare :: Field -&gt; Field -&gt; Ordering
+$ccompare :: Field -&gt; Field -&gt; Ordering
+$cp1Ord :: Eq Field
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307328"><span id="local-6989586621688307330"><span id="local-6989586621688307332"><span class="annot"><span class="annottext">Int -&gt; Field -&gt; ShowS
+[Field] -&gt; ShowS
+Field -&gt; String
+(Int -&gt; Field -&gt; ShowS)
+-&gt; (Field -&gt; String) -&gt; ([Field] -&gt; ShowS) -&gt; Show Field
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [Field] -&gt; ShowS
+$cshowList :: [Field] -&gt; ShowS
+show :: Field -&gt; String
+$cshow :: Field -&gt; String
+showsPrec :: Int -&gt; Field -&gt; ShowS
+$cshowsPrec :: Int -&gt; Field -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. Field -&gt; Rep Field x)
+-&gt; (forall x. Rep Field x -&gt; Field) -&gt; Generic Field
+forall x. Rep Field x -&gt; Field
+forall x. Field -&gt; Rep Field x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep Field x -&gt; Field
+$cfrom :: forall x. Field -&gt; Rep Field x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cRelationshipField"><span id="%24cColumnField"><span id="%24tField"><span id="local-6989586621688307297"><span id="local-6989586621688307299"><span id="local-6989586621688307301"><span id="local-6989586621688307303"><span id="local-6989586621688307305"><span id="local-6989586621688307307"><span id="local-6989586621688307309"><span id="local-6989586621688307311"><span id="local-6989586621688307313"><span id="local-6989586621688307315"><span id="local-6989586621688307317"><span id="local-6989586621688307319"><span id="local-6989586621688307321"><span id="local-6989586621688307323"><span class="annot"><span class="annottext">Typeable Field
+DataType
+Constr
+Typeable Field
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; Field -&gt; c Field)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Field)
+-&gt; (Field -&gt; Constr)
+-&gt; (Field -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Field))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c Field))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; Field -&gt; Field)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Field -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Field -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; Field -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Field -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; Field -&gt; m Field)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; Field -&gt; m Field)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; Field -&gt; m Field)
+-&gt; Data Field
+Field -&gt; DataType
+Field -&gt; Constr
+(forall b. Data b =&gt; b -&gt; b) -&gt; Field -&gt; Field
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; Field -&gt; c Field
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Field
+forall a.
+Typeable a
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; a -&gt; c a)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c a)
+-&gt; (a -&gt; Constr)
+-&gt; (a -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c a))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c a))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; a -&gt; a)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; Data a
+forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Field -&gt; u
+forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; Field -&gt; [u]
+forall r r'.
+(r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Field -&gt; r
+forall r r'.
+(r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Field -&gt; r
+forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Field -&gt; m Field
+forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Field -&gt; m Field
+forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Field
+forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; Field -&gt; c Field
+forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Field)
+forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c Field)
+$cRelationshipField :: Constr
+$cColumnField :: Constr
+$tField :: DataType
+gmapMo :: (forall d. Data d =&gt; d -&gt; m d) -&gt; Field -&gt; m Field
+$cgmapMo :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Field -&gt; m Field
+gmapMp :: (forall d. Data d =&gt; d -&gt; m d) -&gt; Field -&gt; m Field
+$cgmapMp :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Field -&gt; m Field
+gmapM :: (forall d. Data d =&gt; d -&gt; m d) -&gt; Field -&gt; m Field
+$cgmapM :: forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Field -&gt; m Field
+gmapQi :: Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Field -&gt; u
+$cgmapQi :: forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Field -&gt; u
+gmapQ :: (forall d. Data d =&gt; d -&gt; u) -&gt; Field -&gt; [u]
+$cgmapQ :: forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; Field -&gt; [u]
+gmapQr :: (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Field -&gt; r
+$cgmapQr :: forall r r'.
+(r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Field -&gt; r
+gmapQl :: (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Field -&gt; r
+$cgmapQl :: forall r r'.
+(r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Field -&gt; r
+gmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; Field -&gt; Field
+$cgmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; Field -&gt; Field
+dataCast2 :: (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c Field)
+$cdataCast2 :: forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c Field)
+dataCast1 :: (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Field)
+$cdataCast1 :: forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Field)
+dataTypeOf :: Field -&gt; DataType
+$cdataTypeOf :: Field -&gt; DataType
+toConstr :: Field -&gt; Constr
+$ctoConstr :: Field -&gt; Constr
+gunfold :: (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Field
+$cgunfold :: forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Field
+gfoldl :: (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; Field -&gt; c Field
+$cgfoldl :: forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; Field -&gt; c Field
+$cp1Data :: Typeable Field
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span id="local-6989586621688307292"><span id="local-6989586621688307293"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="PrimaryKey"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Query.html#PrimaryKey"><span class="hs-identifier hs-var">PrimaryKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PrimaryKey"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Query.html#PrimaryKey"><span class="hs-identifier hs-var">PrimaryKey</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnName"><span class="hs-identifier hs-type">API.V0.ColumnName</span></a></span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cPrimaryKey"><span id="%24tPrimaryKey"><span id="local-6989586621688307262"><span id="local-6989586621688307264"><span id="local-6989586621688307266"><span id="local-6989586621688307268"><span id="local-6989586621688307270"><span id="local-6989586621688307272"><span id="local-6989586621688307274"><span id="local-6989586621688307276"><span id="local-6989586621688307278"><span id="local-6989586621688307280"><span id="local-6989586621688307282"><span id="local-6989586621688307284"><span id="local-6989586621688307286"><span id="local-6989586621688307288"><span class="annot"><span class="annottext">Typeable PrimaryKey
+DataType
+Constr
+Typeable PrimaryKey
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; PrimaryKey -&gt; c PrimaryKey)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c PrimaryKey)
+-&gt; (PrimaryKey -&gt; Constr)
+-&gt; (PrimaryKey -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c PrimaryKey))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e))
+    -&gt; Maybe (c PrimaryKey))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; PrimaryKey -&gt; PrimaryKey)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; PrimaryKey -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; PrimaryKey -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; PrimaryKey -&gt; [u])
+-&gt; (forall u.
+    Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; PrimaryKey -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; PrimaryKey -&gt; m PrimaryKey)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; PrimaryKey -&gt; m PrimaryKey)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; PrimaryKey -&gt; m PrimaryKey)
+-&gt; Data PrimaryKey
+PrimaryKey -&gt; DataType
+PrimaryKey -&gt; Constr
+(forall b. Data b =&gt; b -&gt; b) -&gt; PrimaryKey -&gt; PrimaryKey
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; PrimaryKey -&gt; c PrimaryKey
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c PrimaryKey
+forall a.
+Typeable a
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; a -&gt; c a)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c a)
+-&gt; (a -&gt; Constr)
+-&gt; (a -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c a))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c a))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; a -&gt; a)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; Data a
+forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; PrimaryKey -&gt; u
+forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; PrimaryKey -&gt; [u]
+forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; PrimaryKey -&gt; r
+forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; PrimaryKey -&gt; r
+forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; PrimaryKey -&gt; m PrimaryKey
+forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; PrimaryKey -&gt; m PrimaryKey
+forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c PrimaryKey
+forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; PrimaryKey -&gt; c PrimaryKey
+forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c PrimaryKey)
+forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c PrimaryKey)
+$cPrimaryKey :: Constr
+$tPrimaryKey :: DataType
+gmapMo :: (forall d. Data d =&gt; d -&gt; m d) -&gt; PrimaryKey -&gt; m PrimaryKey
+$cgmapMo :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; PrimaryKey -&gt; m PrimaryKey
+gmapMp :: (forall d. Data d =&gt; d -&gt; m d) -&gt; PrimaryKey -&gt; m PrimaryKey
+$cgmapMp :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; PrimaryKey -&gt; m PrimaryKey
+gmapM :: (forall d. Data d =&gt; d -&gt; m d) -&gt; PrimaryKey -&gt; m PrimaryKey
+$cgmapM :: forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; PrimaryKey -&gt; m PrimaryKey
+gmapQi :: Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; PrimaryKey -&gt; u
+$cgmapQi :: forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; PrimaryKey -&gt; u
+gmapQ :: (forall d. Data d =&gt; d -&gt; u) -&gt; PrimaryKey -&gt; [u]
+$cgmapQ :: forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; PrimaryKey -&gt; [u]
+gmapQr :: (r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; PrimaryKey -&gt; r
+$cgmapQr :: forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; PrimaryKey -&gt; r
+gmapQl :: (r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; PrimaryKey -&gt; r
+$cgmapQl :: forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; PrimaryKey -&gt; r
+gmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; PrimaryKey -&gt; PrimaryKey
+$cgmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; PrimaryKey -&gt; PrimaryKey
+dataCast2 :: (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c PrimaryKey)
+$cdataCast2 :: forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c PrimaryKey)
+dataCast1 :: (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c PrimaryKey)
+$cdataCast1 :: forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c PrimaryKey)
+dataTypeOf :: PrimaryKey -&gt; DataType
+$cdataTypeOf :: PrimaryKey -&gt; DataType
+toConstr :: PrimaryKey -&gt; Constr
+$ctoConstr :: PrimaryKey -&gt; Constr
+gunfold :: (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c PrimaryKey
+$cgunfold :: forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c PrimaryKey
+gfoldl :: (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; PrimaryKey -&gt; c PrimaryKey
+$cgfoldl :: forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; PrimaryKey -&gt; c PrimaryKey
+$cp1Data :: Typeable PrimaryKey
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. PrimaryKey -&gt; Rep PrimaryKey x)
+-&gt; (forall x. Rep PrimaryKey x -&gt; PrimaryKey) -&gt; Generic PrimaryKey
+forall x. Rep PrimaryKey x -&gt; PrimaryKey
+forall x. PrimaryKey -&gt; Rep PrimaryKey x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep PrimaryKey x -&gt; PrimaryKey
+$cfrom :: forall x. PrimaryKey -&gt; Rep PrimaryKey x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688307254"><span id="local-6989586621688307256"><span class="annot"><span class="annottext">PrimaryKey -&gt; PrimaryKey -&gt; Bool
+(PrimaryKey -&gt; PrimaryKey -&gt; Bool)
+-&gt; (PrimaryKey -&gt; PrimaryKey -&gt; Bool) -&gt; Eq PrimaryKey
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: PrimaryKey -&gt; PrimaryKey -&gt; Bool
+$c/= :: PrimaryKey -&gt; PrimaryKey -&gt; Bool
+== :: PrimaryKey -&gt; PrimaryKey -&gt; Bool
+$c== :: PrimaryKey -&gt; PrimaryKey -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307250"><span id="local-6989586621688307252"><span class="annot"><span class="annottext">Int -&gt; PrimaryKey -&gt; Int
+PrimaryKey -&gt; Int
+(Int -&gt; PrimaryKey -&gt; Int)
+-&gt; (PrimaryKey -&gt; Int) -&gt; Hashable PrimaryKey
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: PrimaryKey -&gt; Int
+$chash :: PrimaryKey -&gt; Int
+hashWithSalt :: Int -&gt; PrimaryKey -&gt; Int
+$chashWithSalt :: Int -&gt; PrimaryKey -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307234"><span id="local-6989586621688307236"><span id="local-6989586621688307238"><span id="local-6989586621688307240"><span id="local-6989586621688307242"><span id="local-6989586621688307244"><span id="local-6989586621688307246"><span class="annot"><span class="annottext">Eq PrimaryKey
+Eq PrimaryKey
+-&gt; (PrimaryKey -&gt; PrimaryKey -&gt; Ordering)
+-&gt; (PrimaryKey -&gt; PrimaryKey -&gt; Bool)
+-&gt; (PrimaryKey -&gt; PrimaryKey -&gt; Bool)
+-&gt; (PrimaryKey -&gt; PrimaryKey -&gt; Bool)
+-&gt; (PrimaryKey -&gt; PrimaryKey -&gt; Bool)
+-&gt; (PrimaryKey -&gt; PrimaryKey -&gt; PrimaryKey)
+-&gt; (PrimaryKey -&gt; PrimaryKey -&gt; PrimaryKey)
+-&gt; Ord PrimaryKey
+PrimaryKey -&gt; PrimaryKey -&gt; Bool
+PrimaryKey -&gt; PrimaryKey -&gt; Ordering
+PrimaryKey -&gt; PrimaryKey -&gt; PrimaryKey
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: PrimaryKey -&gt; PrimaryKey -&gt; PrimaryKey
+$cmin :: PrimaryKey -&gt; PrimaryKey -&gt; PrimaryKey
+max :: PrimaryKey -&gt; PrimaryKey -&gt; PrimaryKey
+$cmax :: PrimaryKey -&gt; PrimaryKey -&gt; PrimaryKey
+&gt;= :: PrimaryKey -&gt; PrimaryKey -&gt; Bool
+$c&gt;= :: PrimaryKey -&gt; PrimaryKey -&gt; Bool
+&gt; :: PrimaryKey -&gt; PrimaryKey -&gt; Bool
+$c&gt; :: PrimaryKey -&gt; PrimaryKey -&gt; Bool
+&lt;= :: PrimaryKey -&gt; PrimaryKey -&gt; Bool
+$c&lt;= :: PrimaryKey -&gt; PrimaryKey -&gt; Bool
+&lt; :: PrimaryKey -&gt; PrimaryKey -&gt; Bool
+$c&lt; :: PrimaryKey -&gt; PrimaryKey -&gt; Bool
+compare :: PrimaryKey -&gt; PrimaryKey -&gt; Ordering
+$ccompare :: PrimaryKey -&gt; PrimaryKey -&gt; Ordering
+$cp1Ord :: Eq PrimaryKey
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307228"><span id="local-6989586621688307230"><span id="local-6989586621688307232"><span class="annot"><span class="annottext">Int -&gt; PrimaryKey -&gt; ShowS
+[PrimaryKey] -&gt; ShowS
+PrimaryKey -&gt; String
+(Int -&gt; PrimaryKey -&gt; ShowS)
+-&gt; (PrimaryKey -&gt; String)
+-&gt; ([PrimaryKey] -&gt; ShowS)
+-&gt; Show PrimaryKey
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [PrimaryKey] -&gt; ShowS
+$cshowList :: [PrimaryKey] -&gt; ShowS
+show :: PrimaryKey -&gt; String
+$cshow :: PrimaryKey -&gt; String
+showsPrec :: Int -&gt; PrimaryKey -&gt; ShowS
+$cshowsPrec :: Int -&gt; PrimaryKey -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307224"><span id="local-6989586621688307226"><span class="annot"><span class="annottext">Value -&gt; Parser [PrimaryKey]
+Value -&gt; Parser PrimaryKey
+(Value -&gt; Parser PrimaryKey)
+-&gt; (Value -&gt; Parser [PrimaryKey]) -&gt; FromJSON PrimaryKey
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [PrimaryKey]
+$cparseJSONList :: Value -&gt; Parser [PrimaryKey]
+parseJSON :: Value -&gt; Parser PrimaryKey
+$cparseJSON :: Value -&gt; Parser PrimaryKey
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307215"><span id="local-6989586621688307217"><span id="local-6989586621688307219"><span id="local-6989586621688307221"><span class="annot"><span class="annottext">[PrimaryKey] -&gt; Encoding
+[PrimaryKey] -&gt; Value
+PrimaryKey -&gt; Encoding
+PrimaryKey -&gt; Value
+(PrimaryKey -&gt; Value)
+-&gt; (PrimaryKey -&gt; Encoding)
+-&gt; ([PrimaryKey] -&gt; Value)
+-&gt; ([PrimaryKey] -&gt; Encoding)
+-&gt; ToJSON PrimaryKey
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [PrimaryKey] -&gt; Encoding
+$ctoEncodingList :: [PrimaryKey] -&gt; Encoding
+toJSONList :: [PrimaryKey] -&gt; Value
+$ctoJSONList :: [PrimaryKey] -&gt; Value
+toEncoding :: PrimaryKey -&gt; Encoding
+$ctoEncoding :: PrimaryKey -&gt; Encoding
+toJSON :: PrimaryKey -&gt; Value
+$ctoJSON :: PrimaryKey -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span id="local-6989586621688307212"><span id="local-6989586621688307213"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="ForeignKey"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Query.html#ForeignKey"><span class="hs-identifier hs-var">ForeignKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ForeignKey"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Query.html#ForeignKey"><span class="hs-identifier hs-var">ForeignKey</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnName"><span class="hs-identifier hs-type">API.V0.ColumnName</span></a></span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cForeignKey"><span id="%24tForeignKey"><span id="local-6989586621688307182"><span id="local-6989586621688307184"><span id="local-6989586621688307186"><span id="local-6989586621688307188"><span id="local-6989586621688307190"><span id="local-6989586621688307192"><span id="local-6989586621688307194"><span id="local-6989586621688307196"><span id="local-6989586621688307198"><span id="local-6989586621688307200"><span id="local-6989586621688307202"><span id="local-6989586621688307204"><span id="local-6989586621688307206"><span id="local-6989586621688307208"><span class="annot"><span class="annottext">Typeable ForeignKey
+DataType
+Constr
+Typeable ForeignKey
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; ForeignKey -&gt; c ForeignKey)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c ForeignKey)
+-&gt; (ForeignKey -&gt; Constr)
+-&gt; (ForeignKey -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c ForeignKey))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e))
+    -&gt; Maybe (c ForeignKey))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; ForeignKey -&gt; ForeignKey)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ForeignKey -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ForeignKey -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; ForeignKey -&gt; [u])
+-&gt; (forall u.
+    Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; ForeignKey -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; ForeignKey -&gt; m ForeignKey)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; ForeignKey -&gt; m ForeignKey)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; ForeignKey -&gt; m ForeignKey)
+-&gt; Data ForeignKey
+ForeignKey -&gt; DataType
+ForeignKey -&gt; Constr
+(forall b. Data b =&gt; b -&gt; b) -&gt; ForeignKey -&gt; ForeignKey
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; ForeignKey -&gt; c ForeignKey
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c ForeignKey
+forall a.
+Typeable a
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; a -&gt; c a)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c a)
+-&gt; (a -&gt; Constr)
+-&gt; (a -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c a))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c a))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; a -&gt; a)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; Data a
+forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; ForeignKey -&gt; u
+forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; ForeignKey -&gt; [u]
+forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ForeignKey -&gt; r
+forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ForeignKey -&gt; r
+forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; ForeignKey -&gt; m ForeignKey
+forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; ForeignKey -&gt; m ForeignKey
+forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c ForeignKey
+forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; ForeignKey -&gt; c ForeignKey
+forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c ForeignKey)
+forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c ForeignKey)
+$cForeignKey :: Constr
+$tForeignKey :: DataType
+gmapMo :: (forall d. Data d =&gt; d -&gt; m d) -&gt; ForeignKey -&gt; m ForeignKey
+$cgmapMo :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; ForeignKey -&gt; m ForeignKey
+gmapMp :: (forall d. Data d =&gt; d -&gt; m d) -&gt; ForeignKey -&gt; m ForeignKey
+$cgmapMp :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; ForeignKey -&gt; m ForeignKey
+gmapM :: (forall d. Data d =&gt; d -&gt; m d) -&gt; ForeignKey -&gt; m ForeignKey
+$cgmapM :: forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; ForeignKey -&gt; m ForeignKey
+gmapQi :: Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; ForeignKey -&gt; u
+$cgmapQi :: forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; ForeignKey -&gt; u
+gmapQ :: (forall d. Data d =&gt; d -&gt; u) -&gt; ForeignKey -&gt; [u]
+$cgmapQ :: forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; ForeignKey -&gt; [u]
+gmapQr :: (r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ForeignKey -&gt; r
+$cgmapQr :: forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ForeignKey -&gt; r
+gmapQl :: (r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ForeignKey -&gt; r
+$cgmapQl :: forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ForeignKey -&gt; r
+gmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; ForeignKey -&gt; ForeignKey
+$cgmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; ForeignKey -&gt; ForeignKey
+dataCast2 :: (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c ForeignKey)
+$cdataCast2 :: forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c ForeignKey)
+dataCast1 :: (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c ForeignKey)
+$cdataCast1 :: forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c ForeignKey)
+dataTypeOf :: ForeignKey -&gt; DataType
+$cdataTypeOf :: ForeignKey -&gt; DataType
+toConstr :: ForeignKey -&gt; Constr
+$ctoConstr :: ForeignKey -&gt; Constr
+gunfold :: (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c ForeignKey
+$cgunfold :: forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c ForeignKey
+gfoldl :: (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; ForeignKey -&gt; c ForeignKey
+$cgfoldl :: forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; ForeignKey -&gt; c ForeignKey
+$cp1Data :: Typeable ForeignKey
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. ForeignKey -&gt; Rep ForeignKey x)
+-&gt; (forall x. Rep ForeignKey x -&gt; ForeignKey) -&gt; Generic ForeignKey
+forall x. Rep ForeignKey x -&gt; ForeignKey
+forall x. ForeignKey -&gt; Rep ForeignKey x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep ForeignKey x -&gt; ForeignKey
+$cfrom :: forall x. ForeignKey -&gt; Rep ForeignKey x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688307174"><span id="local-6989586621688307176"><span class="annot"><span class="annottext">ForeignKey -&gt; ForeignKey -&gt; Bool
+(ForeignKey -&gt; ForeignKey -&gt; Bool)
+-&gt; (ForeignKey -&gt; ForeignKey -&gt; Bool) -&gt; Eq ForeignKey
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ForeignKey -&gt; ForeignKey -&gt; Bool
+$c/= :: ForeignKey -&gt; ForeignKey -&gt; Bool
+== :: ForeignKey -&gt; ForeignKey -&gt; Bool
+$c== :: ForeignKey -&gt; ForeignKey -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307170"><span id="local-6989586621688307172"><span class="annot"><span class="annottext">Int -&gt; ForeignKey -&gt; Int
+ForeignKey -&gt; Int
+(Int -&gt; ForeignKey -&gt; Int)
+-&gt; (ForeignKey -&gt; Int) -&gt; Hashable ForeignKey
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: ForeignKey -&gt; Int
+$chash :: ForeignKey -&gt; Int
+hashWithSalt :: Int -&gt; ForeignKey -&gt; Int
+$chashWithSalt :: Int -&gt; ForeignKey -&gt; Int
+</span><a href="#local-6989586621688307170"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307155"><span id="local-6989586621688307157"><span id="local-6989586621688307159"><span id="local-6989586621688307161"><span id="local-6989586621688307163"><span id="local-6989586621688307165"><span id="local-6989586621688307167"><span class="annot"><span class="annottext">Eq ForeignKey
+Eq ForeignKey
+-&gt; (ForeignKey -&gt; ForeignKey -&gt; Ordering)
+-&gt; (ForeignKey -&gt; ForeignKey -&gt; Bool)
+-&gt; (ForeignKey -&gt; ForeignKey -&gt; Bool)
+-&gt; (ForeignKey -&gt; ForeignKey -&gt; Bool)
+-&gt; (ForeignKey -&gt; ForeignKey -&gt; Bool)
+-&gt; (ForeignKey -&gt; ForeignKey -&gt; ForeignKey)
+-&gt; (ForeignKey -&gt; ForeignKey -&gt; ForeignKey)
+-&gt; Ord ForeignKey
+ForeignKey -&gt; ForeignKey -&gt; Bool
+ForeignKey -&gt; ForeignKey -&gt; Ordering
+ForeignKey -&gt; ForeignKey -&gt; ForeignKey
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: ForeignKey -&gt; ForeignKey -&gt; ForeignKey
+$cmin :: ForeignKey -&gt; ForeignKey -&gt; ForeignKey
+max :: ForeignKey -&gt; ForeignKey -&gt; ForeignKey
+$cmax :: ForeignKey -&gt; ForeignKey -&gt; ForeignKey
+&gt;= :: ForeignKey -&gt; ForeignKey -&gt; Bool
+$c&gt;= :: ForeignKey -&gt; ForeignKey -&gt; Bool
+&gt; :: ForeignKey -&gt; ForeignKey -&gt; Bool
+$c&gt; :: ForeignKey -&gt; ForeignKey -&gt; Bool
+&lt;= :: ForeignKey -&gt; ForeignKey -&gt; Bool
+$c&lt;= :: ForeignKey -&gt; ForeignKey -&gt; Bool
+&lt; :: ForeignKey -&gt; ForeignKey -&gt; Bool
+$c&lt; :: ForeignKey -&gt; ForeignKey -&gt; Bool
+compare :: ForeignKey -&gt; ForeignKey -&gt; Ordering
+$ccompare :: ForeignKey -&gt; ForeignKey -&gt; Ordering
+$cp1Ord :: Eq ForeignKey
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307149"><span id="local-6989586621688307151"><span id="local-6989586621688307153"><span class="annot"><span class="annottext">Int -&gt; ForeignKey -&gt; ShowS
+[ForeignKey] -&gt; ShowS
+ForeignKey -&gt; String
+(Int -&gt; ForeignKey -&gt; ShowS)
+-&gt; (ForeignKey -&gt; String)
+-&gt; ([ForeignKey] -&gt; ShowS)
+-&gt; Show ForeignKey
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ForeignKey] -&gt; ShowS
+$cshowList :: [ForeignKey] -&gt; ShowS
+show :: ForeignKey -&gt; String
+$cshow :: ForeignKey -&gt; String
+showsPrec :: Int -&gt; ForeignKey -&gt; ShowS
+$cshowsPrec :: Int -&gt; ForeignKey -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307145"><span id="local-6989586621688307147"><span class="annot"><span class="annottext">Value -&gt; Parser [ForeignKey]
+Value -&gt; Parser ForeignKey
+(Value -&gt; Parser ForeignKey)
+-&gt; (Value -&gt; Parser [ForeignKey]) -&gt; FromJSON ForeignKey
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [ForeignKey]
+$cparseJSONList :: Value -&gt; Parser [ForeignKey]
+parseJSON :: Value -&gt; Parser ForeignKey
+$cparseJSON :: Value -&gt; Parser ForeignKey
+</span><a href="#local-6989586621688307145"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307137"><span id="local-6989586621688307139"><span id="local-6989586621688307141"><span id="local-6989586621688307143"><span class="annot"><span class="annottext">[ForeignKey] -&gt; Encoding
+[ForeignKey] -&gt; Value
+ForeignKey -&gt; Encoding
+ForeignKey -&gt; Value
+(ForeignKey -&gt; Value)
+-&gt; (ForeignKey -&gt; Encoding)
+-&gt; ([ForeignKey] -&gt; Value)
+-&gt; ([ForeignKey] -&gt; Encoding)
+-&gt; ToJSON ForeignKey
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [ForeignKey] -&gt; Encoding
+$ctoEncodingList :: [ForeignKey] -&gt; Encoding
+toJSONList :: [ForeignKey] -&gt; Value
+$ctoJSONList :: [ForeignKey] -&gt; Value
+toEncoding :: ForeignKey -&gt; Encoding
+$ctoEncoding :: ForeignKey -&gt; Encoding
+toJSON :: ForeignKey -&gt; Value
+$ctoJSON :: ForeignKey -&gt; Value
+</span><a href="#local-6989586621688307137"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-53"></span></pre></body></html>

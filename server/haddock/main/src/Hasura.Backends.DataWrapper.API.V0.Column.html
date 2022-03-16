@@ -1,0 +1,618 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-comment">--</span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.DataWrapper.API.V0.Column</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnInfo"><span class="hs-identifier">ColumnInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnName"><span class="hs-identifier">ColumnName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.Casing</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">snakeCase</span></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Scalar.Type.html"><span class="hs-identifier">Hasura.Backends.DataWrapper.API.V0.Scalar.Type</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">API.V0.Scalar</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.html"><span class="hs-identifier">Hasura.Incremental</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier">Cacheable</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span id="local-6989586621688306144"><span id="local-6989586621688306145"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="ColumnName"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnName"><span class="hs-identifier hs-var">ColumnName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ColumnName"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnName"><span class="hs-identifier hs-var">ColumnName</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688306139"><span id="local-6989586621688306141"><span class="annot"><span class="annottext">ColumnName -&gt; ColumnName -&gt; Bool
+(ColumnName -&gt; ColumnName -&gt; Bool)
+-&gt; (ColumnName -&gt; ColumnName -&gt; Bool) -&gt; Eq ColumnName
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ColumnName -&gt; ColumnName -&gt; Bool
+$c/= :: ColumnName -&gt; ColumnName -&gt; Bool
+== :: ColumnName -&gt; ColumnName -&gt; Bool
+$c== :: ColumnName -&gt; ColumnName -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688306123"><span id="local-6989586621688306125"><span id="local-6989586621688306127"><span id="local-6989586621688306129"><span id="local-6989586621688306131"><span id="local-6989586621688306133"><span id="local-6989586621688306135"><span class="annot"><span class="annottext">Eq ColumnName
+Eq ColumnName
+-&gt; (ColumnName -&gt; ColumnName -&gt; Ordering)
+-&gt; (ColumnName -&gt; ColumnName -&gt; Bool)
+-&gt; (ColumnName -&gt; ColumnName -&gt; Bool)
+-&gt; (ColumnName -&gt; ColumnName -&gt; Bool)
+-&gt; (ColumnName -&gt; ColumnName -&gt; Bool)
+-&gt; (ColumnName -&gt; ColumnName -&gt; ColumnName)
+-&gt; (ColumnName -&gt; ColumnName -&gt; ColumnName)
+-&gt; Ord ColumnName
+ColumnName -&gt; ColumnName -&gt; Bool
+ColumnName -&gt; ColumnName -&gt; Ordering
+ColumnName -&gt; ColumnName -&gt; ColumnName
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: ColumnName -&gt; ColumnName -&gt; ColumnName
+$cmin :: ColumnName -&gt; ColumnName -&gt; ColumnName
+max :: ColumnName -&gt; ColumnName -&gt; ColumnName
+$cmax :: ColumnName -&gt; ColumnName -&gt; ColumnName
+&gt;= :: ColumnName -&gt; ColumnName -&gt; Bool
+$c&gt;= :: ColumnName -&gt; ColumnName -&gt; Bool
+&gt; :: ColumnName -&gt; ColumnName -&gt; Bool
+$c&gt; :: ColumnName -&gt; ColumnName -&gt; Bool
+&lt;= :: ColumnName -&gt; ColumnName -&gt; Bool
+$c&lt;= :: ColumnName -&gt; ColumnName -&gt; Bool
+&lt; :: ColumnName -&gt; ColumnName -&gt; Bool
+$c&lt; :: ColumnName -&gt; ColumnName -&gt; Bool
+compare :: ColumnName -&gt; ColumnName -&gt; Ordering
+$ccompare :: ColumnName -&gt; ColumnName -&gt; Ordering
+$cp1Ord :: Eq ColumnName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688306116"><span id="local-6989586621688306118"><span id="local-6989586621688306120"><span class="annot"><span class="annottext">Int -&gt; ColumnName -&gt; ShowS
+[ColumnName] -&gt; ShowS
+ColumnName -&gt; String
+(Int -&gt; ColumnName -&gt; ShowS)
+-&gt; (ColumnName -&gt; String)
+-&gt; ([ColumnName] -&gt; ShowS)
+-&gt; Show ColumnName
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ColumnName] -&gt; ShowS
+$cshowList :: [ColumnName] -&gt; ShowS
+show :: ColumnName -&gt; String
+$cshow :: ColumnName -&gt; String
+showsPrec :: Int -&gt; ColumnName -&gt; ShowS
+$cshowsPrec :: Int -&gt; ColumnName -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. ColumnName -&gt; Rep ColumnName x)
+-&gt; (forall x. Rep ColumnName x -&gt; ColumnName) -&gt; Generic ColumnName
+forall x. Rep ColumnName x -&gt; ColumnName
+forall x. ColumnName -&gt; Rep ColumnName x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep ColumnName x -&gt; ColumnName
+$cfrom :: forall x. ColumnName -&gt; Rep ColumnName x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cColumnName"><span id="%24tColumnName"><span id="local-6989586621688306083"><span id="local-6989586621688306085"><span id="local-6989586621688306087"><span id="local-6989586621688306089"><span id="local-6989586621688306091"><span id="local-6989586621688306093"><span id="local-6989586621688306095"><span id="local-6989586621688306097"><span id="local-6989586621688306099"><span id="local-6989586621688306101"><span id="local-6989586621688306103"><span id="local-6989586621688306105"><span id="local-6989586621688306107"><span id="local-6989586621688306109"><span class="annot"><span class="annottext">Typeable ColumnName
+DataType
+Constr
+Typeable ColumnName
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; ColumnName -&gt; c ColumnName)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c ColumnName)
+-&gt; (ColumnName -&gt; Constr)
+-&gt; (ColumnName -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c ColumnName))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e))
+    -&gt; Maybe (c ColumnName))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; ColumnName -&gt; ColumnName)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ColumnName -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ColumnName -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; ColumnName -&gt; [u])
+-&gt; (forall u.
+    Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; ColumnName -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; ColumnName -&gt; m ColumnName)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; ColumnName -&gt; m ColumnName)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; ColumnName -&gt; m ColumnName)
+-&gt; Data ColumnName
+ColumnName -&gt; DataType
+ColumnName -&gt; Constr
+(forall b. Data b =&gt; b -&gt; b) -&gt; ColumnName -&gt; ColumnName
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; ColumnName -&gt; c ColumnName
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c ColumnName
+forall a.
+Typeable a
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; a -&gt; c a)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c a)
+-&gt; (a -&gt; Constr)
+-&gt; (a -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c a))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c a))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; a -&gt; a)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; Data a
+forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; ColumnName -&gt; u
+forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; ColumnName -&gt; [u]
+forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ColumnName -&gt; r
+forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ColumnName -&gt; r
+forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; ColumnName -&gt; m ColumnName
+forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; ColumnName -&gt; m ColumnName
+forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c ColumnName
+forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; ColumnName -&gt; c ColumnName
+forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c ColumnName)
+forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c ColumnName)
+$cColumnName :: Constr
+$tColumnName :: DataType
+gmapMo :: (forall d. Data d =&gt; d -&gt; m d) -&gt; ColumnName -&gt; m ColumnName
+$cgmapMo :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; ColumnName -&gt; m ColumnName
+gmapMp :: (forall d. Data d =&gt; d -&gt; m d) -&gt; ColumnName -&gt; m ColumnName
+$cgmapMp :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; ColumnName -&gt; m ColumnName
+gmapM :: (forall d. Data d =&gt; d -&gt; m d) -&gt; ColumnName -&gt; m ColumnName
+$cgmapM :: forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; ColumnName -&gt; m ColumnName
+gmapQi :: Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; ColumnName -&gt; u
+$cgmapQi :: forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; ColumnName -&gt; u
+gmapQ :: (forall d. Data d =&gt; d -&gt; u) -&gt; ColumnName -&gt; [u]
+$cgmapQ :: forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; ColumnName -&gt; [u]
+gmapQr :: (r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ColumnName -&gt; r
+$cgmapQr :: forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ColumnName -&gt; r
+gmapQl :: (r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ColumnName -&gt; r
+$cgmapQl :: forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ColumnName -&gt; r
+gmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; ColumnName -&gt; ColumnName
+$cgmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; ColumnName -&gt; ColumnName
+dataCast2 :: (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c ColumnName)
+$cdataCast2 :: forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c ColumnName)
+dataCast1 :: (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c ColumnName)
+$cdataCast1 :: forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c ColumnName)
+dataTypeOf :: ColumnName -&gt; DataType
+$cdataTypeOf :: ColumnName -&gt; DataType
+toConstr :: ColumnName -&gt; Constr
+$ctoConstr :: ColumnName -&gt; Constr
+gunfold :: (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c ColumnName
+$cgunfold :: forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c ColumnName
+gfoldl :: (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; ColumnName -&gt; c ColumnName
+$cgfoldl :: forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; ColumnName -&gt; c ColumnName
+$cp1Data :: Typeable ColumnName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688306076"><span id="local-6989586621688306078"><span class="annot"><span class="annottext">Value -&gt; Parser [ColumnName]
+Value -&gt; Parser ColumnName
+(Value -&gt; Parser ColumnName)
+-&gt; (Value -&gt; Parser [ColumnName]) -&gt; FromJSON ColumnName
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [ColumnName]
+$cparseJSONList :: Value -&gt; Parser [ColumnName]
+parseJSON :: Value -&gt; Parser ColumnName
+$cparseJSON :: Value -&gt; Parser ColumnName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688306067"><span id="local-6989586621688306069"><span id="local-6989586621688306071"><span id="local-6989586621688306073"><span class="annot"><span class="annottext">[ColumnName] -&gt; Encoding
+[ColumnName] -&gt; Value
+ColumnName -&gt; Encoding
+ColumnName -&gt; Value
+(ColumnName -&gt; Value)
+-&gt; (ColumnName -&gt; Encoding)
+-&gt; ([ColumnName] -&gt; Value)
+-&gt; ([ColumnName] -&gt; Encoding)
+-&gt; ToJSON ColumnName
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [ColumnName] -&gt; Encoding
+$ctoEncodingList :: [ColumnName] -&gt; Encoding
+toJSONList :: [ColumnName] -&gt; Value
+$ctoJSONList :: [ColumnName] -&gt; Value
+toEncoding :: ColumnName -&gt; Encoding
+$ctoEncoding :: ColumnName -&gt; Encoding
+toJSON :: ColumnName -&gt; Value
+$ctoJSON :: ColumnName -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688306064"><span class="annot"><span class="annottext">ColumnName -&gt; ()
+(ColumnName -&gt; ()) -&gt; NFData ColumnName
+forall a. (a -&gt; ()) -&gt; NFData a
+rnf :: ColumnName -&gt; ()
+$crnf :: ColumnName -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688306060"><span class="annot"><span class="annottext">Eq ColumnName
+Eq ColumnName
+-&gt; (Accesses -&gt; ColumnName -&gt; ColumnName -&gt; Bool)
+-&gt; Cacheable ColumnName
+Accesses -&gt; ColumnName -&gt; ColumnName -&gt; Bool
+forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
+unchanged :: Accesses -&gt; ColumnName -&gt; ColumnName -&gt; Bool
+$cunchanged :: Accesses -&gt; ColumnName -&gt; ColumnName -&gt; Bool
+$cp1Cacheable :: Eq ColumnName
+</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688306055"><span id="local-6989586621688306057"><span class="annot"><span class="annottext">Int -&gt; ColumnName -&gt; Int
+ColumnName -&gt; Int
+(Int -&gt; ColumnName -&gt; Int)
+-&gt; (ColumnName -&gt; Int) -&gt; Hashable ColumnName
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: ColumnName -&gt; Int
+$chash :: ColumnName -&gt; Int
+hashWithSalt :: Int -&gt; ColumnName -&gt; Int
+$chashWithSalt :: Int -&gt; ColumnName -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span id="local-6989586621688306052"><span id="local-6989586621688306053"></span></span><span class="hs-keyword">data</span><span> </span><span id="ColumnInfo"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnInfo"><span class="hs-identifier hs-var">ColumnInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ColumnInfo"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnInfo"><span class="hs-identifier hs-var">ColumnInfo</span></a></span></span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="dciName"><span class="annot"><span class="annottext">ColumnInfo -&gt; ColumnName
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#dciName"><span class="hs-identifier hs-var hs-var">dciName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnName"><span class="hs-identifier hs-type">ColumnName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>    </span><span id="dciType"><span class="annot"><span class="annottext">ColumnInfo -&gt; Type
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#dciType"><span class="hs-identifier hs-var hs-var">dciType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Scalar.Type.html#Type"><span class="hs-identifier hs-type">API.V0.Scalar.Type</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>    </span><span id="dciNullable"><span class="annot"><span class="annottext">ColumnInfo -&gt; Bool
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#dciNullable"><span class="hs-identifier hs-var hs-var">dciNullable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>    </span><span id="dciDescription"><span class="annot"><span class="annottext">ColumnInfo -&gt; Maybe Text
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#dciDescription"><span class="hs-identifier hs-var hs-var">dciDescription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688306043"><span id="local-6989586621688306045"><span class="annot"><span class="annottext">ColumnInfo -&gt; ColumnInfo -&gt; Bool
+(ColumnInfo -&gt; ColumnInfo -&gt; Bool)
+-&gt; (ColumnInfo -&gt; ColumnInfo -&gt; Bool) -&gt; Eq ColumnInfo
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ColumnInfo -&gt; ColumnInfo -&gt; Bool
+$c/= :: ColumnInfo -&gt; ColumnInfo -&gt; Bool
+== :: ColumnInfo -&gt; ColumnInfo -&gt; Bool
+$c== :: ColumnInfo -&gt; ColumnInfo -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688306028"><span id="local-6989586621688306030"><span id="local-6989586621688306032"><span id="local-6989586621688306034"><span id="local-6989586621688306036"><span id="local-6989586621688306038"><span id="local-6989586621688306040"><span class="annot"><span class="annottext">Eq ColumnInfo
+Eq ColumnInfo
+-&gt; (ColumnInfo -&gt; ColumnInfo -&gt; Ordering)
+-&gt; (ColumnInfo -&gt; ColumnInfo -&gt; Bool)
+-&gt; (ColumnInfo -&gt; ColumnInfo -&gt; Bool)
+-&gt; (ColumnInfo -&gt; ColumnInfo -&gt; Bool)
+-&gt; (ColumnInfo -&gt; ColumnInfo -&gt; Bool)
+-&gt; (ColumnInfo -&gt; ColumnInfo -&gt; ColumnInfo)
+-&gt; (ColumnInfo -&gt; ColumnInfo -&gt; ColumnInfo)
+-&gt; Ord ColumnInfo
+ColumnInfo -&gt; ColumnInfo -&gt; Bool
+ColumnInfo -&gt; ColumnInfo -&gt; Ordering
+ColumnInfo -&gt; ColumnInfo -&gt; ColumnInfo
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: ColumnInfo -&gt; ColumnInfo -&gt; ColumnInfo
+$cmin :: ColumnInfo -&gt; ColumnInfo -&gt; ColumnInfo
+max :: ColumnInfo -&gt; ColumnInfo -&gt; ColumnInfo
+$cmax :: ColumnInfo -&gt; ColumnInfo -&gt; ColumnInfo
+&gt;= :: ColumnInfo -&gt; ColumnInfo -&gt; Bool
+$c&gt;= :: ColumnInfo -&gt; ColumnInfo -&gt; Bool
+&gt; :: ColumnInfo -&gt; ColumnInfo -&gt; Bool
+$c&gt; :: ColumnInfo -&gt; ColumnInfo -&gt; Bool
+&lt;= :: ColumnInfo -&gt; ColumnInfo -&gt; Bool
+$c&lt;= :: ColumnInfo -&gt; ColumnInfo -&gt; Bool
+&lt; :: ColumnInfo -&gt; ColumnInfo -&gt; Bool
+$c&lt; :: ColumnInfo -&gt; ColumnInfo -&gt; Bool
+compare :: ColumnInfo -&gt; ColumnInfo -&gt; Ordering
+$ccompare :: ColumnInfo -&gt; ColumnInfo -&gt; Ordering
+$cp1Ord :: Eq ColumnInfo
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688306022"><span id="local-6989586621688306024"><span id="local-6989586621688306026"><span class="annot"><span class="annottext">Int -&gt; ColumnInfo -&gt; ShowS
+[ColumnInfo] -&gt; ShowS
+ColumnInfo -&gt; String
+(Int -&gt; ColumnInfo -&gt; ShowS)
+-&gt; (ColumnInfo -&gt; String)
+-&gt; ([ColumnInfo] -&gt; ShowS)
+-&gt; Show ColumnInfo
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ColumnInfo] -&gt; ShowS
+$cshowList :: [ColumnInfo] -&gt; ShowS
+show :: ColumnInfo -&gt; String
+$cshow :: ColumnInfo -&gt; String
+showsPrec :: Int -&gt; ColumnInfo -&gt; ShowS
+$cshowsPrec :: Int -&gt; ColumnInfo -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. ColumnInfo -&gt; Rep ColumnInfo x)
+-&gt; (forall x. Rep ColumnInfo x -&gt; ColumnInfo) -&gt; Generic ColumnInfo
+forall x. Rep ColumnInfo x -&gt; ColumnInfo
+forall x. ColumnInfo -&gt; Rep ColumnInfo x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep ColumnInfo x -&gt; ColumnInfo
+$cfrom :: forall x. ColumnInfo -&gt; Rep ColumnInfo x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cColumnInfo"><span id="%24tColumnInfo"><span id="local-6989586621688305991"><span id="local-6989586621688305993"><span id="local-6989586621688305995"><span id="local-6989586621688305997"><span id="local-6989586621688305999"><span id="local-6989586621688306001"><span id="local-6989586621688306003"><span id="local-6989586621688306005"><span id="local-6989586621688306007"><span id="local-6989586621688306009"><span id="local-6989586621688306011"><span id="local-6989586621688306013"><span id="local-6989586621688306015"><span id="local-6989586621688306017"><span class="annot"><span class="annottext">Typeable ColumnInfo
+DataType
+Constr
+Typeable ColumnInfo
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; ColumnInfo -&gt; c ColumnInfo)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c ColumnInfo)
+-&gt; (ColumnInfo -&gt; Constr)
+-&gt; (ColumnInfo -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c ColumnInfo))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e))
+    -&gt; Maybe (c ColumnInfo))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; ColumnInfo -&gt; ColumnInfo)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ColumnInfo -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ColumnInfo -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; ColumnInfo -&gt; [u])
+-&gt; (forall u.
+    Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; ColumnInfo -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; ColumnInfo -&gt; m ColumnInfo)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; ColumnInfo -&gt; m ColumnInfo)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; ColumnInfo -&gt; m ColumnInfo)
+-&gt; Data ColumnInfo
+ColumnInfo -&gt; DataType
+ColumnInfo -&gt; Constr
+(forall b. Data b =&gt; b -&gt; b) -&gt; ColumnInfo -&gt; ColumnInfo
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; ColumnInfo -&gt; c ColumnInfo
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c ColumnInfo
+forall a.
+Typeable a
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; a -&gt; c a)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c a)
+-&gt; (a -&gt; Constr)
+-&gt; (a -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c a))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c a))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; a -&gt; a)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; Data a
+forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; ColumnInfo -&gt; u
+forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; ColumnInfo -&gt; [u]
+forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ColumnInfo -&gt; r
+forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ColumnInfo -&gt; r
+forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; ColumnInfo -&gt; m ColumnInfo
+forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; ColumnInfo -&gt; m ColumnInfo
+forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c ColumnInfo
+forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; ColumnInfo -&gt; c ColumnInfo
+forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c ColumnInfo)
+forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c ColumnInfo)
+$cColumnInfo :: Constr
+$tColumnInfo :: DataType
+gmapMo :: (forall d. Data d =&gt; d -&gt; m d) -&gt; ColumnInfo -&gt; m ColumnInfo
+$cgmapMo :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; ColumnInfo -&gt; m ColumnInfo
+gmapMp :: (forall d. Data d =&gt; d -&gt; m d) -&gt; ColumnInfo -&gt; m ColumnInfo
+$cgmapMp :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; ColumnInfo -&gt; m ColumnInfo
+gmapM :: (forall d. Data d =&gt; d -&gt; m d) -&gt; ColumnInfo -&gt; m ColumnInfo
+$cgmapM :: forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; ColumnInfo -&gt; m ColumnInfo
+gmapQi :: Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; ColumnInfo -&gt; u
+$cgmapQi :: forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; ColumnInfo -&gt; u
+gmapQ :: (forall d. Data d =&gt; d -&gt; u) -&gt; ColumnInfo -&gt; [u]
+$cgmapQ :: forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; ColumnInfo -&gt; [u]
+gmapQr :: (r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ColumnInfo -&gt; r
+$cgmapQr :: forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ColumnInfo -&gt; r
+gmapQl :: (r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ColumnInfo -&gt; r
+$cgmapQl :: forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; ColumnInfo -&gt; r
+gmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; ColumnInfo -&gt; ColumnInfo
+$cgmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; ColumnInfo -&gt; ColumnInfo
+dataCast2 :: (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c ColumnInfo)
+$cdataCast2 :: forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c ColumnInfo)
+dataCast1 :: (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c ColumnInfo)
+$cdataCast1 :: forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c ColumnInfo)
+dataTypeOf :: ColumnInfo -&gt; DataType
+$cdataTypeOf :: ColumnInfo -&gt; DataType
+toConstr :: ColumnInfo -&gt; Constr
+$ctoConstr :: ColumnInfo -&gt; Constr
+gunfold :: (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c ColumnInfo
+$cgunfold :: forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c ColumnInfo
+gfoldl :: (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; ColumnInfo -&gt; c ColumnInfo
+$cgfoldl :: forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; ColumnInfo -&gt; c ColumnInfo
+$cp1Data :: Typeable ColumnInfo
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688305987"><span class="annot"><span class="annottext">ColumnInfo -&gt; ()
+(ColumnInfo -&gt; ()) -&gt; NFData ColumnInfo
+forall a. (a -&gt; ()) -&gt; NFData a
+rnf :: ColumnInfo -&gt; ()
+$crnf :: ColumnInfo -&gt; ()
+</span><a href="#local-6989586621688305987"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688305984"><span class="annot"><span class="annottext">Eq ColumnInfo
+Eq ColumnInfo
+-&gt; (Accesses -&gt; ColumnInfo -&gt; ColumnInfo -&gt; Bool)
+-&gt; Cacheable ColumnInfo
+Accesses -&gt; ColumnInfo -&gt; ColumnInfo -&gt; Bool
+forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
+unchanged :: Accesses -&gt; ColumnInfo -&gt; ColumnInfo -&gt; Bool
+$cunchanged :: Accesses -&gt; ColumnInfo -&gt; ColumnInfo -&gt; Bool
+$cp1Cacheable :: Eq ColumnInfo
+</span><a href="#local-6989586621688305984"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688305980"><span id="local-6989586621688305982"><span class="annot"><span class="annottext">Int -&gt; ColumnInfo -&gt; Int
+ColumnInfo -&gt; Int
+(Int -&gt; ColumnInfo -&gt; Int)
+-&gt; (ColumnInfo -&gt; Int) -&gt; Hashable ColumnInfo
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: ColumnInfo -&gt; Int
+$chash :: ColumnInfo -&gt; Int
+hashWithSalt :: Int -&gt; ColumnInfo -&gt; Int
+$chashWithSalt :: Int -&gt; ColumnInfo -&gt; Int
+</span><a href="#local-6989586621688305980"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688305973"><span id="local-6989586621688305975"><span id="local-6989586621688305977"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-38"></span><span>  </span><span id="local-6989586621688305972"><span class="annot"><span class="annottext">toJSON :: ColumnInfo -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-39"></span><span>    </span><span class="annot"><span class="annottext">Options -&gt; ColumnInfo -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">J.genericToJSON</span></span><span> </span><span class="annot"><span class="annottext">(Options -&gt; ColumnInfo -&gt; Value) -&gt; Options -&gt; ColumnInfo -&gt; Value
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-40"></span><span>      </span><span class="annot"><span class="annottext">Options
+</span><span class="hs-identifier hs-var">J.defaultOptions</span></span><span>
+</span><span id="line-41"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">fieldLabelModifier :: ShowS
+</span><a href="#local-6989586621688305968"><span class="hs-identifier hs-var">J.fieldLabelModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><span class="hs-identifier hs-var">snakeCase</span></span><span> </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; ShowS
+forall a. Int -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">drop</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">3</span></span><span>
+</span><span id="line-42"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688305963"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-45"></span><span>  </span><span id="local-6989586621688305962"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ColumnInfo
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-46"></span><span>    </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser ColumnInfo
+forall a.
+(Generic a, GFromJSON Zero (Rep a)) =&gt;
+Options -&gt; Value -&gt; Parser a
+</span><span class="hs-identifier hs-var">J.genericParseJSON</span></span><span> </span><span class="annot"><span class="annottext">(Options -&gt; Value -&gt; Parser ColumnInfo)
+-&gt; Options -&gt; Value -&gt; Parser ColumnInfo
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-47"></span><span>      </span><span class="annot"><span class="annottext">Options
+</span><span class="hs-identifier hs-var">J.defaultOptions</span></span><span>
+</span><span id="line-48"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">fieldLabelModifier :: ShowS
+</span><a href="#local-6989586621688305968"><span class="hs-identifier hs-var">J.fieldLabelModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><span class="hs-identifier hs-var">snakeCase</span></span><span> </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; ShowS
+forall a. Int -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">drop</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">3</span></span><span>
+</span><span id="line-49"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-50"></span></pre></body></html>
