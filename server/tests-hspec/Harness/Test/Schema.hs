@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | Common interface for setup/teardown for all backends - schema and data
 module Harness.Test.Schema
   ( Table (..),

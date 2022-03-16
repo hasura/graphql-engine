@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | This module defines all backend-agnostic scalars we use throughout the
 -- schema. This includes GraphQL scalars, and several other custom ones.
 module Hasura.GraphQL.Parser.Internal.Scalars

@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | Testing manual, misconfigured object relationships.
 --   Specifically, having manual relationships with one-to-many relationships.
 --   Test case for bug reported at https://github.com/hasura/graphql-engine/issues/7936

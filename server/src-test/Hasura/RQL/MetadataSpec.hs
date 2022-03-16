@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Hasura.RQL.MetadataSpec
   ( spec,
 

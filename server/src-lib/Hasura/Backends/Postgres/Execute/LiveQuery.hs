@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | Postgres Execute LiveQuery
 --
 -- Multiplex is an optimization which allows us to group similar queries into a

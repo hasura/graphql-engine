@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | Tests that `where' works.
 module Test.WhereSpec (spec) where
 

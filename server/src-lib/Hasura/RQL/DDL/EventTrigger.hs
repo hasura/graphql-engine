@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Hasura.RQL.DDL.EventTrigger
   ( CreateEventTriggerQuery,
     runCreateEventTriggerQuery,

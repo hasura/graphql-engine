@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.Logging
@@ -191,7 +192,9 @@ deriving instance Show (EngineLogType impl) => Show (EngineLog impl)
 
 deriving instance Eq (EngineLogType impl) => Eq (EngineLog impl)
 
--- empty splice to bring all the above definitions in scope
+-- Empty splice to bring all the above definitions in scope.
+--
+-- TODO: Restructure the code so that we can avoid this.
 $(pure [])
 
 instance J.ToJSON (EngineLogType impl) => J.ToJSON (EngineLog impl) where

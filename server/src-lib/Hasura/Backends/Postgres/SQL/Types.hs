@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | Postgres SQL Types
 --
 -- Combinators and helpers for dealing with Postgres types such as strings, numerals,

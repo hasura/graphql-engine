@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | Test ordering by fields.
 module Test.OrderingSpec (spec) where
 

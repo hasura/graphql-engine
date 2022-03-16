@@ -49,7 +49,6 @@ import Data.ByteString.Builder.Scientific (scientificBuilder)
 import Data.ByteString.Lazy qualified as LBS
 import Data.HashMap.Strict qualified as M
 import Data.Kind (Constraint, Type)
-import Data.Text qualified as T
 import Data.Text.Encoding (encodeUtf8)
 import Data.Text.Encoding qualified as TE
 import Data.Validation (Validation, fromEither)
@@ -129,7 +128,7 @@ data RequestTransformCtx = RequestTransformCtx
     rtcSessionVariables :: J.Value,
     rtcQueryParams :: Maybe J.Value,
     rtcEngine :: TemplatingEngine,
-    rtcFunctions :: M.HashMap T.Text (J.Value -> Either Kriti.CustomFunctionError J.Value)
+    rtcFunctions :: M.HashMap Text (J.Value -> Either Kriti.CustomFunctionError J.Value)
   }
 
 instance ToJSON RequestTransformCtx where
@@ -145,16 +144,36 @@ instance ToJSON RequestTransformCtx where
      in J.object (required <> catMaybes optional)
 
 -- | A smart constructor for constructing the 'RequestTransformCtx'
-mkReqTransformCtx :: T.Text -> Maybe SessionVariables -> TemplatingEngine -> HTTP.Request -> RequestTransformCtx
-mkReqTransformCtx url sessionVars engine reqData =
+--
+-- XXX: This function makes internal usage of 'TE.decodeUtf8', which throws an
+-- impure exception when the supplied 'ByteString' cannot be decoded into valid
+-- UTF8 text!
+mkReqTransformCtx ::
+  Text ->
+  Maybe SessionVariables ->
+  TemplatingEngine ->
+  HTTP.Request ->
   RequestTransformCtx
-    { rtcBaseUrl = Just $ J.toJSON url,
-      rtcBody = fromMaybe J.Null $ J.decode @J.Value =<< view HTTP.body reqData,
-      rtcSessionVariables = J.toJSON sessionVars,
-      rtcQueryParams = Just $ J.toJSON $ bimap TE.decodeUtf8 (fmap TE.decodeUtf8) <$> view HTTP.queryParams reqData,
-      rtcEngine = engine,
+mkReqTransformCtx url sessionVars rtcEngine reqData =
+  let rtcBaseUrl = Just $ J.toJSON url
+      rtcBody =
+        let mBody = view HTTP.body reqData >>= J.decode @J.Value
+         in fromMaybe J.Null mBody
+      rtcSessionVariables = J.toJSON sessionVars
+      rtcQueryParams =
+        let queryParams =
+              view HTTP.queryParams reqData & fmap \(key, val) ->
+                (TE.decodeUtf8 key, fmap TE.decodeUtf8 val)
+         in Just $ J.toJSON queryParams
       rtcFunctions = M.singleton "getSessionVariable" getSessionVar
-    }
+   in RequestTransformCtx
+        { rtcBaseUrl,
+          rtcBody,
+          rtcSessionVariables,
+          rtcQueryParams,
+          rtcEngine,
+          rtcFunctions
+        }
   where
     getSessionVar :: J.Value -> Either Kriti.CustomFunctionError J.Value
     getSessionVar inp = case inp of
@@ -170,7 +189,7 @@ mkReqTransformCtx url sessionVars engine reqData =
 data ResponseTransformCtx = ResponseTransformCtx
   { responseTransformBody :: J.Value,
     responseTransformReqCtx :: J.Value,
-    responseTransformFunctions :: M.HashMap T.Text (J.Value -> Either Kriti.CustomFunctionError J.Value),
+    responseTransformFunctions :: M.HashMap Text (J.Value -> Either Kriti.CustomFunctionError J.Value),
     responseTransformEngine :: TemplatingEngine
   }
 

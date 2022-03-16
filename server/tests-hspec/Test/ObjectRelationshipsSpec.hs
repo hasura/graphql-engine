@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | Testing object relationships.
 module Test.ObjectRelationshipsSpec (spec) where
 

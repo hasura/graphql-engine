@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | Test directives.
 module Test.DirectivesSpec (spec) where
 

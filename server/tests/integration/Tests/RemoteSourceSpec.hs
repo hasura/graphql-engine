@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | Tests for DB-to-DB joins.
 module Tests.RemoteSourceSpec
   ( spec,

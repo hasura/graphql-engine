@@ -1,4 +1,6 @@
 {-# LANGUAGE ApplicativeDo #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -O0 #-}
 
 -- | Types and functions related to the server initialisation

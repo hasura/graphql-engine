@@ -1,3 +1,6 @@
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | MSSQL Source
 --
 -- Implements the Source related methods of the

@@ -1,3 +1,6 @@
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 module Hasura.GraphQL.Execute.Action
   ( fetchActionLogResponses,
     runActionExecution,

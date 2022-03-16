@@ -1,3 +1,6 @@
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE ViewPatterns #-}
+
 {-# OPTIONS -Wno-redundant-constraints #-}
 
 -- | MySQL helpers.

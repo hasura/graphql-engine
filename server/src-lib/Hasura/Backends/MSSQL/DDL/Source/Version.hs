@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Hasura.Backends.MSSQL.DDL.Source.Version
   ( latestSourceCatalogVersion,
     setSourceCatalogVersion,

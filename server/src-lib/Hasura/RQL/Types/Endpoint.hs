@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.RQL.Types.Endpoint
   ( EndpointName (..),
