@@ -240,22 +240,19 @@ cabal install hoogle
 
 ### Step 2: Generating hoogle database
 
-A Hoogle database is a prebuilt index of a set of packages. Running the following `make`
-command in the repository root directory generates and stores the hoogle database for
-GraphQL Engine server code in `dist-newstyle/` directory.
-```bash
-make hoogle-generate
-```
+A Hoogle database is a prebuilt index of a set of packages. The `hoogle.sh` script in the
+top-level `scripts/` directory helps in generating the hoogle database for GraphQL Engine server
+code and store it in `dist-newstyle/` directory.
+
+    $ scripts/hoogle.sh generate
 
 ### Step 3: Running hoogle instance
 
-Running the following `make` command in the repository root directory starts a local hoogle server
-with the database generated in `Step 2`.
-```bash
-make hoogle-server
-```
+Running the following `hoogle.sh` script command starts a local hoogle server with the database
+generated in `Step 2`.
 
-Use `HOOGLE_PORT` variable assignment to specify custom port to start hoogle server.
-```bash
-make hoogle-server HOOGLE_PORT=8181
-```
+    $ scripts/hoogle.sh serve
+
+Use `--port` option to specify custom port to start hoogle server.
+
+    $ scripts/hoogle.sh serve --port 8181
