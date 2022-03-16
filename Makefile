@@ -9,6 +9,11 @@ ORMOLU_ARGS = --cabal-default-extensions
 ORMOLU = ormolu
 ORMOLU_VERSION = $(shell $(ORMOLU) --version | awk 'NR==1 { print $$2 }')
 
+HOOGLE = $(shell command -v hoogle 2> /dev/null)
+CABAL_DIST = dist-newstyle
+HOOGLE_DATABASE = $(CABAL_DIST)/hge.hoo
+HOOGLE_PORT = 1337
+
 # default target
 .PHONY: help
 ## help: prints help message
@@ -50,3 +55,24 @@ format-changed: format-hs-changed
 
 .PHONY: check-format
 check-format: check-format-hs
+
+.PHONY: check-hoogle
+## check-hoogle: Check for hoogle installation
+check-hoogle:
+	@if [ "$(HOOGLE)" = "" ]; then \
+		echo "ERROR: hoogle not found, please install"; exit 1; \
+	fi
+
+.PHONY: hoogle-generate
+## hoogle-generate: Generate hoogle database
+hoogle-generate: check-hoogle
+	@echo "Generating haddock hoogle files"
+	cabal haddock all
+	@echo "Generating hoogle database"
+	hoogle generate --local=$(CABAL_DIST) --database=$(HOOGLE_DATABASE)
+
+.PHONY: hoogle-server
+## hoogle-server: Start local hoogle server an port 8181
+hoogle-server: check-hoogle
+	@echo "Starting local hoogle server. Visit http://localhost:$(HOOGLE_PORT)"
+	@hoogle server --local --database=$(HOOGLE_DATABASE) --port $(HOOGLE_PORT)

@@ -35,6 +35,7 @@ package *
   haddock-hoogle: true
   haddock-hyperlink-source: true
   haddock-quickjump: true
+  haddock-internal: true
 
 package graphql-engine
   ghc-options: -j
