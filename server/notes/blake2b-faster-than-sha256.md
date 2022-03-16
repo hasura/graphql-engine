@@ -1,6 +1,6 @@
-This note is in [Hasura.GraphQL.Execute.LiveQuery.Poll](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Execute/LiveQuery/Poll.hs#L159).
+This note is in [Hasura.GraphQL.Execute.LiveQuery.Poll](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Execute/LiveQuery/Poll.hs#L161).
 It is referenced at:
-  - line 169 of [Hasura.GraphQL.Execute.LiveQuery.Poll](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Execute/LiveQuery/Poll.hs#L169)
+  - line 171 of [Hasura.GraphQL.Execute.LiveQuery.Poll](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Execute/LiveQuery/Poll.hs#L171)
 
 # Blake2b faster than SHA-256
 

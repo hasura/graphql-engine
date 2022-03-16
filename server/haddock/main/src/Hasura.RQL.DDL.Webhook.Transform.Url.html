@@ -39,14 +39,14 @@
 </span><span id="line-39"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="unUrl"><span class="annot"><span class="annottext">Url -&gt; Text
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Url.html#unUrl"><span class="hs-identifier hs-var hs-var">unUrl</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-40"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-41"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688180751"><span id="local-6989586621688180753"><span class="annot"><span class="annottext">Url -&gt; Url -&gt; Bool
+</span><span id="line-41"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688154416"><span id="local-6989586621688154418"><span class="annot"><span class="annottext">Url -&gt; Url -&gt; Bool
 (Url -&gt; Url -&gt; Bool) -&gt; (Url -&gt; Url -&gt; Bool) -&gt; Eq Url
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: Url -&gt; Url -&gt; Bool
 $c/= :: Url -&gt; Url -&gt; Bool
 == :: Url -&gt; Url -&gt; Bool
 $c== :: Url -&gt; Url -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688180744"><span id="local-6989586621688180746"><span id="local-6989586621688180748"><span class="annot"><span class="annottext">Int -&gt; Url -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688154409"><span id="local-6989586621688154411"><span id="local-6989586621688154413"><span class="annot"><span class="annottext">Int -&gt; Url -&gt; ShowS
 [Url] -&gt; ShowS
 Url -&gt; String
 (Int -&gt; Url -&gt; ShowS)
@@ -75,7 +75,7 @@ forall a.
 $cto :: forall x. Rep (TransformFn Url) x -&gt; TransformFn Url
 $cfrom :: forall x. TransformFn Url -&gt; Rep (TransformFn Url) x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-48"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688180730"><span id="local-6989586621688180732"><span class="annot"><span class="annottext">TransformFn Url -&gt; TransformFn Url -&gt; Bool
+</span><span id="line-48"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688154395"><span id="local-6989586621688154397"><span class="annot"><span class="annottext">TransformFn Url -&gt; TransformFn Url -&gt; Bool
 (TransformFn Url -&gt; TransformFn Url -&gt; Bool)
 -&gt; (TransformFn Url -&gt; TransformFn Url -&gt; Bool)
 -&gt; Eq (TransformFn Url)
@@ -84,7 +84,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: TransformFn Url -&gt; TransformFn Url -&gt; Bool
 == :: TransformFn Url -&gt; TransformFn Url -&gt; Bool
 $c== :: TransformFn Url -&gt; TransformFn Url -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688180724"><span id="local-6989586621688180726"><span id="local-6989586621688180728"><span class="annot"><span class="annottext">Int -&gt; TransformFn Url -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688154389"><span id="local-6989586621688154391"><span id="local-6989586621688154393"><span class="annot"><span class="annottext">Int -&gt; TransformFn Url -&gt; ShowS
 [TransformFn Url] -&gt; ShowS
 TransformFn Url -&gt; String
 (Int -&gt; TransformFn Url -&gt; ShowS)
@@ -99,7 +99,7 @@ show :: TransformFn Url -&gt; String
 $cshow :: TransformFn Url -&gt; String
 showsPrec :: Int -&gt; TransformFn Url -&gt; ShowS
 $cshowsPrec :: Int -&gt; TransformFn Url -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688180720"><span id="local-6989586621688180722"><span class="annot"><span class="annottext">Value -&gt; Parser [TransformFn Url]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688154385"><span id="local-6989586621688154387"><span class="annot"><span class="annottext">Value -&gt; Parser [TransformFn Url]
 Value -&gt; Parser (TransformFn Url)
 (Value -&gt; Parser (TransformFn Url))
 -&gt; (Value -&gt; Parser [TransformFn Url])
@@ -110,7 +110,7 @@ parseJSONList :: Value -&gt; Parser [TransformFn Url]
 $cparseJSONList :: Value -&gt; Parser [TransformFn Url]
 parseJSON :: Value -&gt; Parser (TransformFn Url)
 $cparseJSON :: Value -&gt; Parser (TransformFn Url)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688180711"><span id="local-6989586621688180713"><span id="local-6989586621688180715"><span id="local-6989586621688180717"><span class="annot"><span class="annottext">[TransformFn Url] -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688154376"><span id="local-6989586621688154378"><span id="local-6989586621688154380"><span id="local-6989586621688154382"><span class="annot"><span class="annottext">[TransformFn Url] -&gt; Encoding
 [TransformFn Url] -&gt; Value
 TransformFn Url -&gt; Encoding
 TransformFn Url -&gt; Value
@@ -134,7 +134,7 @@ $ctoEncoding :: TransformFn Url -&gt; Encoding
 toJSON :: TransformFn Url -&gt; Value
 $ctoJSON :: TransformFn Url -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-49"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688180707"><span class="annot"><span class="annottext">Eq (TransformFn Url)
+</span><span id="line-49"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688154372"><span class="annot"><span class="annottext">Eq (TransformFn Url)
 Eq (TransformFn Url)
 -&gt; (Accesses -&gt; TransformFn Url -&gt; TransformFn Url -&gt; Bool)
 -&gt; Cacheable (TransformFn Url)
@@ -143,33 +143,33 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; TransformFn Url -&gt; TransformFn Url -&gt; Bool
 $cunchanged :: Accesses -&gt; TransformFn Url -&gt; TransformFn Url -&gt; Bool
 $cp1Cacheable :: Eq (TransformFn Url)
-</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688180704"><span class="annot"><span class="annottext">TransformFn Url -&gt; ()
+</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688154369"><span class="annot"><span class="annottext">TransformFn Url -&gt; ()
 (TransformFn Url -&gt; ()) -&gt; NFData (TransformFn Url)
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: TransformFn Url -&gt; ()
 $crnf :: TransformFn Url -&gt; ()
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-50"></span><span>
-</span><span id="line-51"></span><span>  </span><span id="local-6989586621688180702"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#transform"><span class="hs-identifier hs-type">transform</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-52"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688180702"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-51"></span><span>  </span><span id="local-6989586621688154367"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#transform"><span class="hs-identifier hs-type">transform</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-52"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688154367"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-53"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformFn"><span class="hs-identifier hs-type">TransformFn</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Url.html#Url"><span class="hs-identifier hs-type">Url</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-54"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#RequestTransformCtx"><span class="hs-identifier hs-type">RequestTransformCtx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-55"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Url.html#Url"><span class="hs-identifier hs-type">Url</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-56"></span><span>    </span><span class="annot"><a href="#local-6989586621688180702"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Url.html#Url"><span class="hs-identifier hs-type">Url</span></a></span></span><span>
-</span><span id="line-57"></span><span>  </span><span id="local-6989586621688180700"><span class="annot"><span class="annottext">transform :: TransformFn Url -&gt; RequestTransformCtx -&gt; Url -&gt; m Url
-</span><a href="#local-6989586621688180700"><span class="hs-identifier hs-var hs-var hs-var hs-var">transform</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Url.html#UrlTransform"><span class="hs-identifier hs-type">UrlTransform</span></a></span><span> </span><span id="local-6989586621688180699"><span class="annot"><a href="#local-6989586621688180699"><span class="hs-identifier hs-var">transformation</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688180698"><span class="annot"><span class="annottext">RequestTransformCtx
-</span><a href="#local-6989586621688180698"><span class="hs-identifier hs-var">context</span></a></span></span><span> </span><span id="local-6989586621688180697"><span class="annot"><span class="annottext">Url
-</span><a href="#local-6989586621688180697"><span class="hs-identifier hs-var">_originalUrl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-56"></span><span>    </span><span class="annot"><a href="#local-6989586621688154367"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Url.html#Url"><span class="hs-identifier hs-type">Url</span></a></span></span><span>
+</span><span id="line-57"></span><span>  </span><span id="local-6989586621688154365"><span class="annot"><span class="annottext">transform :: TransformFn Url -&gt; RequestTransformCtx -&gt; Url -&gt; m Url
+</span><a href="#local-6989586621688154365"><span class="hs-identifier hs-var hs-var hs-var hs-var">transform</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Url.html#UrlTransform"><span class="hs-identifier hs-type">UrlTransform</span></a></span><span> </span><span id="local-6989586621688154364"><span class="annot"><a href="#local-6989586621688154364"><span class="hs-identifier hs-var">transformation</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688154363"><span class="annot"><span class="annottext">RequestTransformCtx
+</span><a href="#local-6989586621688154363"><span class="hs-identifier hs-var">context</span></a></span></span><span> </span><span id="local-6989586621688154362"><span class="annot"><span class="annottext">Url
+</span><a href="#local-6989586621688154362"><span class="hs-identifier hs-var">_originalUrl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-58"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">UrlTransformAction
-</span><a href="#local-6989586621688180699"><span class="hs-identifier hs-var">transformation</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-59"></span><span>      </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Url.html#ModifyUrl"><span class="hs-identifier hs-type">ModifyUrl</span></a></span><span> </span><span id="local-6989586621688180695"><span class="annot"><span class="annottext">UnescapedTemplate
-</span><a href="#local-6989586621688180695"><span class="hs-identifier hs-var">unescapedTemplate</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-60"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688180694"><span class="annot"><span class="annottext">template :: Template
-</span><a href="#local-6989586621688180694"><span class="hs-identifier hs-var hs-var">template</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UnescapedTemplate -&gt; Template
+</span><a href="#local-6989586621688154364"><span class="hs-identifier hs-var">transformation</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-59"></span><span>      </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Url.html#ModifyUrl"><span class="hs-identifier hs-type">ModifyUrl</span></a></span><span> </span><span id="local-6989586621688154360"><span class="annot"><span class="annottext">UnescapedTemplate
+</span><a href="#local-6989586621688154360"><span class="hs-identifier hs-var">unescapedTemplate</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-60"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688154359"><span class="annot"><span class="annottext">template :: Template
+</span><a href="#local-6989586621688154359"><span class="hs-identifier hs-var hs-var">template</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UnescapedTemplate -&gt; Template
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#wrapUnescapedTemplate"><span class="hs-identifier hs-var">wrapUnescapedTemplate</span></a></span><span> </span><span class="annot"><span class="annottext">UnescapedTemplate
-</span><a href="#local-6989586621688180695"><span class="hs-identifier hs-var">unescapedTemplate</span></a></span><span>
-</span><span id="line-61"></span><span>        </span><span id="local-6989586621688180693"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621688180693"><span class="hs-identifier hs-var">resultJson</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Either TransformErrorBundle Value -&gt; m Value
+</span><a href="#local-6989586621688154360"><span class="hs-identifier hs-var">unescapedTemplate</span></a></span><span>
+</span><span id="line-61"></span><span>        </span><span id="local-6989586621688154358"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688154358"><span class="hs-identifier hs-var">resultJson</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Either TransformErrorBundle Value -&gt; m Value
 forall e (m :: * -&gt; *) a. MonadError e m =&gt; Either e a -&gt; m a
 </span><span class="hs-identifier hs-var">liftEither</span></span><span> </span><span class="annot"><span class="annottext">(Either TransformErrorBundle Value -&gt; m Value)
 -&gt; Either TransformErrorBundle Value -&gt; m Value
@@ -177,38 +177,38 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Template
 -&gt; RequestTransformCtx -&gt; Either TransformErrorBundle Value
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#runRequestTemplateTransform"><span class="hs-identifier hs-var">runRequestTemplateTransform</span></a></span><span> </span><span class="annot"><span class="annottext">Template
-</span><a href="#local-6989586621688180694"><span class="hs-identifier hs-var">template</span></a></span><span> </span><span class="annot"><span class="annottext">RequestTransformCtx
-</span><a href="#local-6989586621688180698"><span class="hs-identifier hs-var">context</span></a></span><span>
-</span><span id="line-62"></span><span>        </span><span id="local-6989586621688180691"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688180691"><span class="hs-identifier hs-var">templatedUrlTxt</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621688180693"><span class="hs-identifier hs-var">resultJson</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-63"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">J.String</span></span><span> </span><span id="local-6989586621688180689"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688180689"><span class="hs-identifier hs-var">templatedUrlTxt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m Text
+</span><a href="#local-6989586621688154359"><span class="hs-identifier hs-var">template</span></a></span><span> </span><span class="annot"><span class="annottext">RequestTransformCtx
+</span><a href="#local-6989586621688154363"><span class="hs-identifier hs-var">context</span></a></span><span>
+</span><span id="line-62"></span><span>        </span><span id="local-6989586621688154356"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688154356"><span class="hs-identifier hs-var">templatedUrlTxt</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688154358"><span class="hs-identifier hs-var">resultJson</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-63"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">J.String</span></span><span> </span><span id="local-6989586621688154354"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688154354"><span class="hs-identifier hs-var">templatedUrlTxt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m Text
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688180689"><span class="hs-identifier hs-var">templatedUrlTxt</span></a></span><span>
-</span><span id="line-64"></span><span>          </span><span id="local-6989586621688180688"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621688180688"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-65"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688180687"><span class="annot"><span class="annottext">errTxt :: Text
-</span><a href="#local-6989586621688180687"><span class="hs-identifier hs-var hs-var">errTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688154354"><span class="hs-identifier hs-var">templatedUrlTxt</span></a></span><span>
+</span><span id="line-64"></span><span>          </span><span id="local-6989586621688154353"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688154353"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-65"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688154352"><span class="annot"><span class="annottext">errTxt :: Text
+</span><a href="#local-6989586621688154352"><span class="hs-identifier hs-var hs-var">errTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;URL Transforms must produce a JSON String: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621688180688"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><a href="#local-6989586621688154353"><span class="hs-identifier hs-var">val</span></a></span><span>
 </span><span id="line-66"></span><span>            </span><span class="annot"><span class="annottext">Text -&gt; Maybe Value -&gt; m Text
 forall (m :: * -&gt; *) a.
 MonadError TransformErrorBundle m =&gt;
 Text -&gt; Maybe Value -&gt; m a
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#throwErrorBundle"><span class="hs-identifier hs-var">throwErrorBundle</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688180687"><span class="hs-identifier hs-var">errTxt</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Value
+</span><a href="#local-6989586621688154352"><span class="hs-identifier hs-var">errTxt</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Value
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-67"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">String -&gt; Maybe URI
 </span><span class="hs-identifier hs-var">parseURI</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688180691"><span class="hs-identifier hs-var">templatedUrlTxt</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688154356"><span class="hs-identifier hs-var">templatedUrlTxt</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-68"></span><span>          </span><span class="annot"><span class="annottext">Maybe URI
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Value -&gt; m Url
 forall (m :: * -&gt; *) a.
@@ -218,36 +218,36 @@ Text -&gt; Maybe Value -&gt; m a
 </span><span class="hs-string">&quot;Invalid URL: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688180691"><span class="hs-identifier hs-var">templatedUrlTxt</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Value
+</span><a href="#local-6989586621688154356"><span class="hs-identifier hs-var">templatedUrlTxt</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Value
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-69"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688180684"><span class="annot"><span class="annottext">URI
-</span><a href="#local-6989586621688180684"><span class="hs-identifier hs-var">_validatedUrl</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Url -&gt; m Url
+</span><span id="line-69"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688154349"><span class="annot"><span class="annottext">URI
+</span><a href="#local-6989586621688154349"><span class="hs-identifier hs-var">_validatedUrl</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Url -&gt; m Url
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Url -&gt; m Url) -&gt; Url -&gt; m Url
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Url
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Url.html#Url"><span class="hs-identifier hs-var">Url</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688180691"><span class="hs-identifier hs-var">templatedUrlTxt</span></a></span><span>
+</span><a href="#local-6989586621688154356"><span class="hs-identifier hs-var">templatedUrlTxt</span></a></span><span>
 </span><span id="line-70"></span><span>
 </span><span id="line-71"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#validate"><span class="hs-identifier hs-type">validate</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-72"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TemplatingEngine"><span class="hs-identifier hs-type">TemplatingEngine</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-73"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformFn"><span class="hs-identifier hs-type">TransformFn</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Url.html#Url"><span class="hs-identifier hs-type">Url</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-74"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Validation</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-75"></span><span>  </span><span id="local-6989586621688180682"><span class="annot"><span class="annottext">validate :: TemplatingEngine
+</span><span id="line-75"></span><span>  </span><span id="local-6989586621688154347"><span class="annot"><span class="annottext">validate :: TemplatingEngine
 -&gt; TransformFn Url -&gt; Validation TransformErrorBundle ()
-</span><a href="#local-6989586621688180682"><span class="hs-identifier hs-var hs-var hs-var hs-var">validate</span></a></span></span><span> </span><span id="local-6989586621688180681"><span class="annot"><span class="annottext">TemplatingEngine
-</span><a href="#local-6989586621688180681"><span class="hs-identifier hs-var">engine</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Url.html#UrlTransform"><span class="hs-identifier hs-type">UrlTransform</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Url.html#ModifyUrl"><span class="hs-identifier hs-type">ModifyUrl</span></a></span><span> </span><span id="local-6989586621688180680"><span class="annot"><a href="#local-6989586621688180680"><span class="hs-identifier hs-var">template</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621688154347"><span class="hs-identifier hs-var hs-var hs-var hs-var">validate</span></a></span></span><span> </span><span id="local-6989586621688154346"><span class="annot"><span class="annottext">TemplatingEngine
+</span><a href="#local-6989586621688154346"><span class="hs-identifier hs-var">engine</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Url.html#UrlTransform"><span class="hs-identifier hs-type">UrlTransform</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Url.html#ModifyUrl"><span class="hs-identifier hs-type">ModifyUrl</span></a></span><span> </span><span id="local-6989586621688154345"><span class="annot"><a href="#local-6989586621688154345"><span class="hs-identifier hs-var">template</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-76"></span><span>    </span><span class="annot"><span class="annottext">TemplatingEngine
 -&gt; UnescapedTemplate -&gt; Validation TransformErrorBundle ()
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#validateRequestUnescapedTemplateTransform%27"><span class="hs-identifier hs-var">validateRequestUnescapedTemplateTransform'</span></a></span><span> </span><span class="annot"><span class="annottext">TemplatingEngine
-</span><a href="#local-6989586621688180681"><span class="hs-identifier hs-var">engine</span></a></span><span> </span><span class="annot"><span class="annottext">UnescapedTemplate
-</span><a href="#local-6989586621688180680"><span class="hs-identifier hs-var">template</span></a></span><span>
+</span><a href="#local-6989586621688154346"><span class="hs-identifier hs-var">engine</span></a></span><span> </span><span class="annot"><span class="annottext">UnescapedTemplate
+</span><a href="#local-6989586621688154345"><span class="hs-identifier hs-var">template</span></a></span><span>
 </span><span id="line-77"></span><span>
 </span><span id="line-78"></span><span class="hs-comment">-- | The defunctionalized transformation function on 'Url'</span><span>
 </span><span id="line-79"></span><span class="hs-keyword">newtype</span><span> </span><span id="UrlTransformAction"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Url.html#UrlTransformAction"><span class="hs-identifier hs-var">UrlTransformAction</span></a></span></span><span>
 </span><span id="line-80"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="ModifyUrl"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Url.html#ModifyUrl"><span class="hs-identifier hs-var">ModifyUrl</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#UnescapedTemplate"><span class="hs-identifier hs-type">UnescapedTemplate</span></a></span><span>
-</span><span id="line-81"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688180676"><span id="local-6989586621688180678"><span class="annot"><span class="annottext">UrlTransformAction -&gt; UrlTransformAction -&gt; Bool
+</span><span id="line-81"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688154341"><span id="local-6989586621688154343"><span class="annot"><span class="annottext">UrlTransformAction -&gt; UrlTransformAction -&gt; Bool
 (UrlTransformAction -&gt; UrlTransformAction -&gt; Bool)
 -&gt; (UrlTransformAction -&gt; UrlTransformAction -&gt; Bool)
 -&gt; Eq UrlTransformAction
@@ -256,7 +256,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: UrlTransformAction -&gt; UrlTransformAction -&gt; Bool
 == :: UrlTransformAction -&gt; UrlTransformAction -&gt; Bool
 $c== :: UrlTransformAction -&gt; UrlTransformAction -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688180672"><span id="local-6989586621688180674"><span class="annot"><span class="annottext">Rep UrlTransformAction x -&gt; UrlTransformAction
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688154337"><span id="local-6989586621688154339"><span class="annot"><span class="annottext">Rep UrlTransformAction x -&gt; UrlTransformAction
 UrlTransformAction -&gt; Rep UrlTransformAction x
 (forall x. UrlTransformAction -&gt; Rep UrlTransformAction x)
 -&gt; (forall x. Rep UrlTransformAction x -&gt; UrlTransformAction)
@@ -269,7 +269,7 @@ to :: Rep UrlTransformAction x -&gt; UrlTransformAction
 $cto :: forall x. Rep UrlTransformAction x -&gt; UrlTransformAction
 from :: UrlTransformAction -&gt; Rep UrlTransformAction x
 $cfrom :: forall x. UrlTransformAction -&gt; Rep UrlTransformAction x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688180666"><span id="local-6989586621688180668"><span id="local-6989586621688180670"><span class="annot"><span class="annottext">Int -&gt; UrlTransformAction -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688154331"><span id="local-6989586621688154333"><span id="local-6989586621688154335"><span class="annot"><span class="annottext">Int -&gt; UrlTransformAction -&gt; ShowS
 [UrlTransformAction] -&gt; ShowS
 UrlTransformAction -&gt; String
 (Int -&gt; UrlTransformAction -&gt; ShowS)
@@ -284,7 +284,7 @@ show :: UrlTransformAction -&gt; String
 $cshow :: UrlTransformAction -&gt; String
 showsPrec :: Int -&gt; UrlTransformAction -&gt; ShowS
 $cshowsPrec :: Int -&gt; UrlTransformAction -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688180662"><span id="local-6989586621688180664"><span class="annot"><span class="annottext">Value -&gt; Parser [UrlTransformAction]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688154327"><span id="local-6989586621688154329"><span class="annot"><span class="annottext">Value -&gt; Parser [UrlTransformAction]
 Value -&gt; Parser UrlTransformAction
 (Value -&gt; Parser UrlTransformAction)
 -&gt; (Value -&gt; Parser [UrlTransformAction])
@@ -295,7 +295,7 @@ parseJSONList :: Value -&gt; Parser [UrlTransformAction]
 $cparseJSONList :: Value -&gt; Parser [UrlTransformAction]
 parseJSON :: Value -&gt; Parser UrlTransformAction
 $cparseJSON :: Value -&gt; Parser UrlTransformAction
-</span><a href="#local-6989586621688180662"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688180654"><span id="local-6989586621688180656"><span id="local-6989586621688180658"><span id="local-6989586621688180660"><span class="annot"><span class="annottext">[UrlTransformAction] -&gt; Encoding
+</span><a href="#local-6989586621688154327"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688154319"><span id="local-6989586621688154321"><span id="local-6989586621688154323"><span id="local-6989586621688154325"><span class="annot"><span class="annottext">[UrlTransformAction] -&gt; Encoding
 [UrlTransformAction] -&gt; Value
 UrlTransformAction -&gt; Encoding
 UrlTransformAction -&gt; Value
@@ -318,8 +318,8 @@ toEncoding :: UrlTransformAction -&gt; Encoding
 $ctoEncoding :: UrlTransformAction -&gt; Encoding
 toJSON :: UrlTransformAction -&gt; Value
 $ctoJSON :: UrlTransformAction -&gt; Value
-</span><a href="#local-6989586621688180654"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-82"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688180651"><span class="annot"><span class="annottext">Eq UrlTransformAction
+</span><a href="#local-6989586621688154319"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-82"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688154316"><span class="annot"><span class="annottext">Eq UrlTransformAction
 Eq UrlTransformAction
 -&gt; (Accesses -&gt; UrlTransformAction -&gt; UrlTransformAction -&gt; Bool)
 -&gt; Cacheable UrlTransformAction
@@ -328,10 +328,10 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; UrlTransformAction -&gt; UrlTransformAction -&gt; Bool
 $cunchanged :: Accesses -&gt; UrlTransformAction -&gt; UrlTransformAction -&gt; Bool
 $cp1Cacheable :: Eq UrlTransformAction
-</span><a href="#local-6989586621688180651"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688180649"><span class="annot"><span class="annottext">UrlTransformAction -&gt; ()
+</span><a href="#local-6989586621688154316"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688154314"><span class="annot"><span class="annottext">UrlTransformAction -&gt; ()
 (UrlTransformAction -&gt; ()) -&gt; NFData UrlTransformAction
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: UrlTransformAction -&gt; ()
 $crnf :: UrlTransformAction -&gt; ()
-</span><a href="#local-6989586621688180649"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688154314"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-83"></span></pre></body></html>

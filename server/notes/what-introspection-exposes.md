@@ -1,7 +1,7 @@
-This note is in [Hasura.GraphQL.Schema.Introspect](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Introspect.hs#L151).
+This note is in [Hasura.GraphQL.Schema.Introspect](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Introspect.hs#L152).
 It is referenced at:
-  - line 199 of [Hasura.GraphQL.Schema.Introspect](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Introspect.hs#L199)
-  - line 273 of [Hasura.GraphQL.Schema.Introspect](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Introspect.hs#L273)
+  - line 200 of [Hasura.GraphQL.Schema.Introspect](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Introspect.hs#L200)
+  - line 274 of [Hasura.GraphQL.Schema.Introspect](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Introspect.hs#L274)
 
 # What introspection exposes
 

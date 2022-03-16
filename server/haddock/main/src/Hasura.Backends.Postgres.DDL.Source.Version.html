@@ -1,67 +1,69 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | Postgres DDL Source Version</span><span>
-</span><span id="line-2"></span><span class="hs-comment">--</span><span>
-</span><span id="line-3"></span><span class="hs-comment">-- Deals with catalog version - used by 'Hasura.Backends.Postgres.DDL.Source'.</span><span>
-</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.Postgres.DDL.Source.Version</span><span>
-</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.Version.html#getSourceCatalogVersion"><span class="hs-identifier">getSourceCatalogVersion</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.Version.html#latestSourceCatalogVersion"><span class="hs-identifier">latestSourceCatalogVersion</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.Version.html#latestSourceCatalogVersionText"><span class="hs-identifier">latestSourceCatalogVersionText</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.Version.html#setSourceCatalogVersion"><span class="hs-identifier">setSourceCatalogVersion</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-9"></span><span>  </span><span class="hs-special">)</span><span>
-</span><span id="line-10"></span><span class="hs-keyword">where</span><span>
-</span><span id="line-11"></span><span>
-</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Database.PG.Query</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Q</span></span><span>
-</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.html"><span class="hs-identifier">Hasura.Backends.Postgres.Connection</span></a></span><span>
-</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
-</span><span id="line-15"></span><span>
-</span><span id="line-16"></span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.Version.html#latestSourceCatalogVersion"><span class="hs-identifier hs-type">latestSourceCatalogVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span>
-</span><span id="line-17"></span><span id="latestSourceCatalogVersion"><span class="annot"><span class="annottext">latestSourceCatalogVersion :: Integer
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE QuasiQuotes #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- | Postgres DDL Source Version</span><span>
+</span><span id="line-4"></span><span class="hs-comment">--</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- Deals with catalog version - used by 'Hasura.Backends.Postgres.DDL.Source'.</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.Postgres.DDL.Source.Version</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.Version.html#getSourceCatalogVersion"><span class="hs-identifier">getSourceCatalogVersion</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.Version.html#latestSourceCatalogVersion"><span class="hs-identifier">latestSourceCatalogVersion</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.Version.html#latestSourceCatalogVersionText"><span class="hs-identifier">latestSourceCatalogVersionText</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.Version.html#setSourceCatalogVersion"><span class="hs-identifier">setSourceCatalogVersion</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Database.PG.Query</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Q</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.html"><span class="hs-identifier">Hasura.Backends.Postgres.Connection</span></a></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.Version.html#latestSourceCatalogVersion"><span class="hs-identifier hs-type">latestSourceCatalogVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span>
+</span><span id="line-19"></span><span id="latestSourceCatalogVersion"><span class="annot"><span class="annottext">latestSourceCatalogVersion :: Integer
 </span><a href="Hasura.Backends.Postgres.DDL.Source.Version.html#latestSourceCatalogVersion"><span class="hs-identifier hs-var hs-var">latestSourceCatalogVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Integer
 </span><span class="hs-number">2</span></span><span>
-</span><span id="line-18"></span><span>
-</span><span id="line-19"></span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.Version.html#latestSourceCatalogVersionText"><span class="hs-identifier hs-type">latestSourceCatalogVersionText</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-20"></span><span id="latestSourceCatalogVersionText"><span class="annot"><span class="annottext">latestSourceCatalogVersionText :: Text
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.Version.html#latestSourceCatalogVersionText"><span class="hs-identifier hs-type">latestSourceCatalogVersionText</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-22"></span><span id="latestSourceCatalogVersionText"><span class="annot"><span class="annottext">latestSourceCatalogVersionText :: Text
 </span><a href="Hasura.Backends.Postgres.DDL.Source.Version.html#latestSourceCatalogVersionText"><span class="hs-identifier hs-var hs-var">latestSourceCatalogVersionText</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">Integer
 </span><a href="Hasura.Backends.Postgres.DDL.Source.Version.html#latestSourceCatalogVersion"><span class="hs-identifier hs-var">latestSourceCatalogVersion</span></a></span><span>
-</span><span id="line-21"></span><span>
-</span><span id="line-22"></span><span id="local-6989586621688203243"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.Version.html#setSourceCatalogVersion"><span class="hs-identifier hs-type">setSourceCatalogVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688203243"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688203243"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
-</span><span id="line-23"></span><span id="setSourceCatalogVersion"><span class="annot"><span class="annottext">setSourceCatalogVersion :: m ()
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span id="local-6989586621688176909"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.Version.html#setSourceCatalogVersion"><span class="hs-identifier hs-type">setSourceCatalogVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688176909"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688176909"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-25"></span><span id="setSourceCatalogVersion"><span class="annot"><span class="annottext">setSourceCatalogVersion :: m ()
 </span><a href="Hasura.Backends.Postgres.DDL.Source.Version.html#setSourceCatalogVersion"><span class="hs-identifier hs-var hs-var">setSourceCatalogVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-24"></span><span>  </span><span class="annot"><span class="annottext">TxE QErr () -&gt; m ()
+</span><span id="line-26"></span><span>  </span><span class="annot"><span class="annottext">TxE QErr () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
 </span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#liftTx"><span class="hs-identifier hs-var">liftTx</span></a></span><span> </span><span class="annot"><span class="annottext">(TxE QErr () -&gt; m ()) -&gt; TxE QErr () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-25"></span><span>    </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr) -&gt; Query -&gt; Identity Text -&gt; Bool -&gt; TxE QErr ()
+</span><span id="line-27"></span><span>    </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr) -&gt; Query -&gt; Identity Text -&gt; Bool -&gt; TxE QErr ()
 forall (m :: * -&gt; *) r e.
 (MonadIO m, ToPrepArgs r) =&gt;
 (PGTxErr -&gt; e) -&gt; Query -&gt; r -&gt; Bool -&gt; TxET e m ()
 </span><span class="hs-identifier hs-var">Q.unitQE</span></span><span>
-</span><span id="line-26"></span><span>      </span><span class="annot"><span class="annottext">PGTxErr -&gt; QErr
+</span><span id="line-28"></span><span>      </span><span class="annot"><span class="annottext">PGTxErr -&gt; QErr
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#defaultTxErrorHandler"><span class="hs-identifier hs-var">defaultTxErrorHandler</span></a></span><span>
-</span><span id="line-27"></span><span>      </span><span class="annot"><span class="">[Q.sql|
+</span><span id="line-29"></span><span>      </span><span class="annot"><span class="">[Q.sql|
   INSERT INTO hdb_catalog.hdb_source_catalog_version(version, upgraded_on)
     VALUES ($1, NOW())
    ON CONFLICT ((version IS NOT NULL))
    DO UPDATE SET version = $1, upgraded_on = NOW()
   |]</span></span><span>
-</span><span id="line-33"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Identity Text
+</span><span id="line-35"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Identity Text
 forall a. a -&gt; Identity a
 </span><span class="hs-identifier hs-var">Identity</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="Hasura.Backends.Postgres.DDL.Source.Version.html#latestSourceCatalogVersionText"><span class="hs-identifier hs-var">latestSourceCatalogVersionText</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-34"></span><span>      </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-36"></span><span>      </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
-</span><span id="line-35"></span><span>
-</span><span id="line-36"></span><span id="local-6989586621688203238"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.Version.html#getSourceCatalogVersion"><span class="hs-identifier hs-type">getSourceCatalogVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688203238"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688203238"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span></span><span>
-</span><span id="line-37"></span><span id="getSourceCatalogVersion"><span class="annot"><span class="annottext">getSourceCatalogVersion :: m Text
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span id="local-6989586621688176904"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.Version.html#getSourceCatalogVersion"><span class="hs-identifier hs-type">getSourceCatalogVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688176904"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688176904"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span></span><span>
+</span><span id="line-39"></span><span id="getSourceCatalogVersion"><span class="annot"><span class="annottext">getSourceCatalogVersion :: m Text
 </span><a href="Hasura.Backends.Postgres.DDL.Source.Version.html#getSourceCatalogVersion"><span class="hs-identifier hs-var hs-var">getSourceCatalogVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-38"></span><span>  </span><span class="annot"><span class="annottext">TxE QErr Text -&gt; m Text
+</span><span id="line-40"></span><span>  </span><span class="annot"><span class="annottext">TxE QErr Text -&gt; m Text
 forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
 </span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#liftTx"><span class="hs-identifier hs-var">liftTx</span></a></span><span> </span><span class="annot"><span class="annottext">(TxE QErr Text -&gt; m Text) -&gt; TxE QErr Text -&gt; m Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-39"></span><span>    </span><span class="annot"><span class="annottext">Identity Text -&gt; Text
+</span><span id="line-41"></span><span>    </span><span class="annot"><span class="annottext">Identity Text -&gt; Text
 forall a. Identity a -&gt; a
 </span><span class="hs-identifier hs-var hs-var">runIdentity</span></span><span> </span><span class="annot"><span class="annottext">(Identity Text -&gt; Text)
 -&gt; (SingleRow (Identity Text) -&gt; Identity Text)
@@ -71,7 +73,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SingleRow (Identity Text) -&gt; Identity Text
 forall a. SingleRow a -&gt; a
 </span><span class="hs-identifier hs-var hs-var">Q.getRow</span></span><span>
-</span><span id="line-40"></span><span>      </span><span class="annot"><span class="annottext">(SingleRow (Identity Text) -&gt; Text)
+</span><span id="line-42"></span><span>      </span><span class="annot"><span class="annottext">(SingleRow (Identity Text) -&gt; Text)
 -&gt; TxET QErr IO (SingleRow (Identity Text)) -&gt; TxE QErr Text
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
@@ -80,10 +82,10 @@ forall (m :: * -&gt; *) a r e.
 (MonadIO m, FromRes a, ToPrepArgs r) =&gt;
 (PGTxErr -&gt; e) -&gt; Query -&gt; r -&gt; Bool -&gt; TxET e m a
 </span><span class="hs-identifier hs-var">Q.withQE</span></span><span>
-</span><span id="line-41"></span><span>        </span><span class="annot"><span class="annottext">PGTxErr -&gt; QErr
+</span><span id="line-43"></span><span>        </span><span class="annot"><span class="annottext">PGTxErr -&gt; QErr
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#defaultTxErrorHandler"><span class="hs-identifier hs-var">defaultTxErrorHandler</span></a></span><span>
-</span><span id="line-42"></span><span>        </span><span class="annot"><span class="">[Q.sql| SELECT version FROM hdb_catalog.hdb_source_catalog_version |]</span></span><span>
-</span><span id="line-43"></span><span>        </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-44"></span><span>        </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-44"></span><span>        </span><span class="annot"><span class="">[Q.sql| SELECT version FROM hdb_catalog.hdb_source_catalog_version |]</span></span><span>
+</span><span id="line-45"></span><span>        </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span>        </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
-</span><span id="line-45"></span></pre></body></html>
+</span><span id="line-47"></span></pre></body></html>
