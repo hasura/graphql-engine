@@ -203,6 +203,10 @@ instance ToJSON RequestTransformFn where
 -- TODO(SOLOMON): Add lens law unit tests
 
 -- | A lens for mapping from an actual 'HTTP.Request' term to our HKD.
+--
+-- XXX: This function makes internal usage of 'TE.decodeUtf8', which throws an
+-- impure exception when the supplied 'ByteString' cannot be decoded into valid
+-- UTF8 text!
 request :: Lens' HTTP.Request RequestData
 request = lens getter setter
   where
@@ -346,6 +350,10 @@ buildRespTransformCtx reqCtx sessionVars engine respBody =
       _ -> Left $ Kriti.CustomFunctionError "Session variable name should be a string"
 
 -- | Construct a Template Transformation function for Responses
+--
+-- XXX: This function makes internal usage of 'TE.decodeUtf8', which throws an
+-- impure exception when the supplied 'ByteString' cannot be decoded into valid
+-- UTF8 text!
 mkRespTemplateTransform :: TemplatingEngine -> BodyTransformAction -> ResponseTransformCtx -> Either TransformErrorBundle J.Value
 mkRespTemplateTransform _ RemoveBody _ = pure J.Null
 mkRespTemplateTransform engine (ModifyBody (Template template)) ResponseTransformCtx {..} =

@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | Postgres DDL Source Version
 --
 -- Deals with catalog version - used by 'Hasura.Backends.Postgres.DDL.Source'.

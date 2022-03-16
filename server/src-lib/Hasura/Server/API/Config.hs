@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | API related to server configuration
 module Hasura.Server.API.Config
 -- required by pro

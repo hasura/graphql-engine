@@ -60,8 +60,6 @@ instance Transform Headers where
   transform (HeadersTransform transformation) context (Headers originalHeaders) =
     case transformation of
       ReplaceHeaders ReplaceHeaderFields {rhf_addHeaders, rhf_removeHeaders} -> do
-        -- NOTE: 'TE.decodeUtf8' can fail with an impure exception; conversion
-        -- to bytes is infallible.
         let removeHeadersBytes = fmap (CI.map TE.encodeUtf8) rhf_removeHeaders
             filteredHeaders =
               originalHeaders & filter \(key, _val) ->

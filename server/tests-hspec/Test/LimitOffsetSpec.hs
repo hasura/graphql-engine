@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | Tests for limit/offset.
 module Test.LimitOffsetSpec (spec) where
 

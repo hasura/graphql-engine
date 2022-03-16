@@ -1,4 +1,5 @@
 {-# LANGUAGE ApplicativeDo #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.GraphQL.Schema.Introspect
   ( buildIntrospectionSchema,

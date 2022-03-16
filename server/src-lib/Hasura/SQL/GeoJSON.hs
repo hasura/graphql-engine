@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Hasura.SQL.GeoJSON
   ( Position (..),
     Point (..),

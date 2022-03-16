@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- |
 --  Send anonymized metrics to the telemetry server regarding usage of various
 --  features of Hasura.

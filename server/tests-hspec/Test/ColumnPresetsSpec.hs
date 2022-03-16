@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | Testing column presets.
 --   See the main hasura documentation for more information.
 --

@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Hasura.Eventing.ScheduledTrigger.Types
   ( CronTriggerStats (CronTriggerStats, ctsMaxScheduledTime, ctsName),
     RetryContext (RetryContext, _rctxConf),

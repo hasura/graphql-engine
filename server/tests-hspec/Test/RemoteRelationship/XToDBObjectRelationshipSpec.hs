@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | Tests for object remote relationships to databases. Remote relationships
 -- are relationships that are not local to a given source or remote schema, and
 -- are handled by the engine itself. Object relationsips are 1-to-1
@@ -6,7 +8,10 @@
 -- All tests use the same GraphQL syntax, and the only difference is in the
 -- setup: we do a cartesian product of all kinds of sources we support on the
 -- left-hand side and all databases we support on the right-hand side.
-module Test.RemoteRelationship.XToDBObjectRelationshipSpec (spec) where
+module Test.RemoteRelationship.XToDBObjectRelationshipSpec
+  ( spec,
+  )
+where
 
 import Data.Aeson (Value)
 import Harness.Backend.Postgres qualified as Postgres

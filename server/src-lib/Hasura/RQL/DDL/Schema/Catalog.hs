@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | Functions for fetching and updating @'Metadata' in the catalog.
 module Hasura.RQL.DDL.Schema.Catalog
   ( fetchMetadataFromCatalog,

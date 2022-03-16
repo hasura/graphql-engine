@@ -1,5 +1,7 @@
-{-# OPTIONS -Wno-redundant-constraints #-}
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
+
+{-# OPTIONS -Wno-redundant-constraints #-}
 
 -- | CitusQL helpers. Pretty much the same as postgres. Could refactor
 -- if we add more things here.

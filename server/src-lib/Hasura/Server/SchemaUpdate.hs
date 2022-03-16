@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.Server.SchemaUpdate
   ( startSchemaSyncListenerThread,

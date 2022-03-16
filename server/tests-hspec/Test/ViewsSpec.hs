@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | Test views.
 module Test.ViewsSpec (spec) where
 

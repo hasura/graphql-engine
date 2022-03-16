@@ -67,8 +67,6 @@ common common-all
     DeriveLift
     DeriveTraversable
     DerivingVia
-    EmptyCase
-    ExistentialQuantification
     FlexibleContexts
     FlexibleInstances
     FunctionalDependencies
@@ -82,19 +80,15 @@ common common-all
     NamedFieldPuns
     NoImplicitPrelude
     OverloadedStrings
-    QuantifiedConstraints
-    QuasiQuotes
     RankNTypes
     RecordWildCards
     RoleAnnotations
     ScopedTypeVariables
     StandaloneDeriving
     StrictData
-    TemplateHaskell
     TupleSections
     TypeApplications
     TypeFamilies
-    TypeFamilyDependencies
     TypeOperators
 
 common common-exe

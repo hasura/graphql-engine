@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | Types related to metadata management API
 module Hasura.RQL.DDL.Metadata.Types
   ( currentMetadataVersion,

@@ -1,3 +1,6 @@
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | Types and classes related to configuration when the server is initialised
 module Hasura.Server.Init.Config
   ( API (..),

@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | Internal representation of an insertion in a database table.
 --
 -- What makes this specific mutation tricky is that we support recursive

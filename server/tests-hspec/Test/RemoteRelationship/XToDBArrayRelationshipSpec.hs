@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | Tests for array remote relationships to databases. Remote relationships are
 -- relationships that are not local to a given source or remote schema, and are
 -- handled by the engine itself. Array relationsips are 1-to-many relationships.

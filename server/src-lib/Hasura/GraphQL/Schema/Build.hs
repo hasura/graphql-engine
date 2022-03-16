@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | This module provides building blocks for the GraphQL Schema that the
 -- GraphQL Engine presents.
 --

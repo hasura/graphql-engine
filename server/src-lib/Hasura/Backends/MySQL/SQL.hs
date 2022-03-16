@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Hasura.Backends.MySQL.SQL
   ( runSQL,
     RunSQL (..),

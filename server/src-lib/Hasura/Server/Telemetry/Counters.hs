@@ -1,4 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- |
 --  Counters used in telemetry collection. Additional counters can be added here.and

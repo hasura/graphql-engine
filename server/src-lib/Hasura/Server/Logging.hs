@@ -1,5 +1,6 @@
--- This is taken from wai-logger and customised for our use
+{-# LANGUAGE TemplateHaskell #-}
 
+-- | This is taken from wai-logger and customised for our use
 module Hasura.Server.Logging
   ( StartupLog (..),
     PGLog (..),

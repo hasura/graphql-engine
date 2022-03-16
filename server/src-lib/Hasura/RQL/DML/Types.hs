@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Hasura.RQL.DML.Types
   ( OrderByExp (..),
     DMLQuery (..),

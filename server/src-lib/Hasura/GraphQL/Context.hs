@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Hasura.GraphQL.Context
   ( RoleContext (..),
     GQLContext (..),

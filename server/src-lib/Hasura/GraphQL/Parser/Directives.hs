@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | Definition of all supported GraphQL directives.
 module Hasura.GraphQL.Parser.Directives
   ( -- list of directives, for the schema

@@ -1,4 +1,10 @@
-module Hasura.Backends.MSSQL.DDL.EventTrigger (createTableEventTrigger) where
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
+
+module Hasura.Backends.MSSQL.DDL.EventTrigger
+  ( createTableEventTrigger,
+  )
+where
 
 import Data.FileEmbed (makeRelativeToProject)
 import Data.Text qualified as T

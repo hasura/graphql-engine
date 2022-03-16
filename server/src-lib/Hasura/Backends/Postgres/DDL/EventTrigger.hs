@@ -1,3 +1,6 @@
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | Postgres DDL EventTrigger
 --
 -- Used for creating event triggers for metadata changes.

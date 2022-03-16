@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- |
 --  = Hasura.Eventing.HTTP
 --

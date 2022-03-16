@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | This module defines all basic Template Haskell functions we use in the rest
 -- of this folder, to generate code that deals with all possible known
 -- backends.

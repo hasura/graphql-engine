@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | The RQL query ('/v2/query')
 module Hasura.Server.API.V2Query
   ( RQLQuery,

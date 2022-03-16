@@ -1,4 +1,5 @@
 {-# LANGUAGE NumericUnderscores #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.Backends.BigQuery.Connection
   ( BigQueryProblem,

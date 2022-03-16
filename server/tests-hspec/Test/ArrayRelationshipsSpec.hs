@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | Testing array relationships.
 module Test.ArrayRelationshipsSpec (spec) where
 

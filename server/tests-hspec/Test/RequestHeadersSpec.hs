@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | Tests related to request headers
 module Test.RequestHeadersSpec (spec) where
 

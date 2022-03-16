@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | GraphQL quasi quoter with built-in interpolation.
 -- Interpolation works via the #{expression} syntax.
 module Harness.Quoter.Graphql (graphql) where

@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- | Postgres Connection Settings
@@ -189,15 +190,24 @@ $(deriveFromJSON (aesonDrop 3 (fmap toLower)) ''PGClientCerts)
 $(deriveToJSON (aesonDrop 3 (fmap toLower)) ''PGClientCerts)
 
 instance Bifunctor PGClientCerts where
-  bimap f g pgCerts = g <$> pgCerts {pgcSslPassword = f <$> (pgcSslPassword pgCerts)}
+  bimap f g oldCerts@(PGClientCerts {pgcSslPassword}) =
+    let certs = oldCerts {pgcSslPassword = f <$> pgcSslPassword}
+     in g <$> certs
 
 instance Bifoldable PGClientCerts where
   bifoldMap f g PGClientCerts {..} =
-    fold $ fmap g [pgcSslCert, pgcSslKey, pgcSslRootCert] <> maybe [] (pure . f) pgcSslPassword
+    let gs = foldMap g [pgcSslCert, pgcSslKey, pgcSslRootCert]
+        fs = foldMap f pgcSslPassword
+     in gs <> fs
 
 instance Bitraversable PGClientCerts where
   bitraverse f g PGClientCerts {..} =
-    PGClientCerts <$> g pgcSslCert <*> g pgcSslKey <*> g pgcSslRootCert <*> pure pgcSslMode <*> traverse f pgcSslPassword
+    PGClientCerts
+      <$> g pgcSslCert
+      <*> g pgcSslKey
+      <*> g pgcSslRootCert
+      <*> pure pgcSslMode
+      <*> traverse f pgcSslPassword
 
 instance (Cacheable p, Cacheable a) => Cacheable (PGClientCerts p a)
 

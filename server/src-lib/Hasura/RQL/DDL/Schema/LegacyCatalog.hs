@@ -1,3 +1,6 @@
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | Funtions related to @hdb_catalog@ schema prior to metadata separation (catalog version < 43).
 module Hasura.RQL.DDL.Schema.LegacyCatalog
   ( saveMetadataToHdbTables,

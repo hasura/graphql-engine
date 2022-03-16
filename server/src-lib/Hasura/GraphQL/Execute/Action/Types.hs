@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Hasura.GraphQL.Execute.Action.Types
   ( ActionContext (..),
     ActionExecution (..),

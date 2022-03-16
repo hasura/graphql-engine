@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | This module (along with the various @Hasura.RQL.DDL.Schema.*@ modules) provides operations to
 -- load and modify the Hasura catalog and schema cache.
 --
@@ -26,7 +28,7 @@ module Hasura.RQL.DDL.Schema
 where
 
 import Data.Aeson
-import Data.Aeson.TH
+import Data.Aeson.TH (deriveJSON)
 import Data.Text.Encoding qualified as TE
 import Database.PG.Query qualified as Q
 import Database.PostgreSQL.LibPQ qualified as PQ

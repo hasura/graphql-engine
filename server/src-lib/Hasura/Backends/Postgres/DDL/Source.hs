@@ -1,3 +1,6 @@
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | Postgres DDL Source
 --
 -- A Source is a connected database. One can have multiple sources of the same

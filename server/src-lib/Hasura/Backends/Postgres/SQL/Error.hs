@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | Postgres SQL Error
 --
 -- Functions and datatypes for interpreting Postgres errors.

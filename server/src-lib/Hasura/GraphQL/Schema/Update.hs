@@ -1,4 +1,5 @@
 {-# LANGUAGE ApplicativeDo #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- | This module provides common building blocks for composing Schema Parsers
 -- used in the schema of Update Mutations.
