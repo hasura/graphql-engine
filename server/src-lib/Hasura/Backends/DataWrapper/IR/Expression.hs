@@ -9,10 +9,13 @@ where
 --------------------------------------------------------------------------------
 
 import Data.Aeson (FromJSON, ToJSON)
+import Data.HashSet qualified as S
+import Hasura.Backends.DataWrapper.API qualified as API
 import Hasura.Backends.DataWrapper.IR.Column qualified as Column (Name)
 import Hasura.Backends.DataWrapper.IR.Scalar.Value qualified as Scalar (Value)
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
+import Witch
 
 --------------------------------------------------------------------------------
 
@@ -110,6 +113,20 @@ data Expression
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Cacheable, FromJSON, Hashable, NFData, ToJSON)
 
+instance From API.Expression Expression where
+  from = \case
+    API.Literal value -> Literal $ from value
+    API.In expr values -> In (from expr) (S.map from values)
+    API.And exprs -> And $ map from exprs
+    API.Or exprs -> Or $ map from exprs
+    API.Not expr -> Not $ from expr
+    API.IsNull expr -> IsNull $ from expr
+    API.IsNotNull expr -> IsNotNull $ from expr
+    API.Column name -> Column $ from name
+    API.Equal expr1 expr2 -> Equal (from expr1) (from expr2)
+    API.NotEqual expr1 expr2 -> NotEqual (from expr1) (from expr2)
+    API.ApplyOperator op expr1 expr2 -> ApplyOperator (from op) (from expr1) (from expr2)
+
 --------------------------------------------------------------------------------
 
 -- | Operators which are typically applied to two 'Expression's (via the
@@ -128,3 +145,9 @@ data Operator
   | GreaterThanOrEqual
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Cacheable, FromJSON, Hashable, NFData, ToJSON)
+
+instance From API.Operator Operator where
+  from API.LessThan = LessThan
+  from API.LessThanOrEqual = LessThanOrEqual
+  from API.GreaterThan = GreaterThan
+  from API.GreaterThanOrEqual = GreaterThanOrEqual

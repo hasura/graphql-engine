@@ -9,8 +9,10 @@ where
 
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Text.Extended (ToTxt (..))
+import Hasura.Backends.DataWrapper.API qualified as API
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
+import Witch
 
 --------------------------------------------------------------------------------
 
@@ -40,3 +42,9 @@ data Type
 
 instance ToTxt Type where
   toTxt = tshow
+
+instance From API.Type Type where
+  from = \case
+    API.StringTy -> String
+    API.NumberTy -> Number
+    API.BoolTy -> Bool
