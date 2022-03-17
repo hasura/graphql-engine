@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- |
 -- Module      : Hasura.Server.Auth.JWT
 -- Description : Implements JWT Configuration and Validation Logic.

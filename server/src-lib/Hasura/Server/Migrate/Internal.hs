@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Hasura.Server.Migrate.Internal
   ( getCatalogVersion,
     from3To4,

@@ -1,5 +1,7 @@
-{-# OPTIONS -Wno-redundant-constraints #-}
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
+
+{-# OPTIONS -Wno-redundant-constraints #-}
 
 -- | MySQL helpers.
 module Harness.Backend.Mysql
@@ -32,6 +34,7 @@ import Harness.Constants as Constants
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.State (State)
+import Harness.Test.Context (BackendType (MySQL), defaultBackendTypeString, defaultSource)
 import Harness.Test.Schema qualified as Schema
 import System.Process.Typed
 import Prelude
@@ -78,12 +81,14 @@ run_ query' =
 -- | Metadata source information for the default Mysql instance.
 defaultSourceMetadata :: Value
 defaultSourceMetadata =
-  [yaml|
-name: mysql
-kind: mysql
+  let source = defaultSource MySQL
+      backendType = defaultBackendTypeString MySQL
+   in [yaml|
+name: *source
+kind: *backendType
 tables: []
 configuration:
-  database: *mysqlDatabase
+  database: *mysqlDb
   user: *mysqlUser
   password: *mysqlPassword
   host: *mysqlHost
@@ -98,7 +103,7 @@ createTable Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableRe
     T.unpack $
       T.unwords
         [ "CREATE TABLE",
-          T.pack Constants.mysqlDatabase <> "." <> tableName,
+          T.pack Constants.mysqlDb <> "." <> tableName,
           "(",
           commaSeparated $
             (mkColumn <$> tableColumns)
@@ -151,19 +156,21 @@ mkReference Schema.Reference {referenceLocalColumn, referenceTargetTable, refere
 
 -- | Serialize tableData into an SQL insert statement and execute it.
 insertTable :: Schema.Table -> IO ()
-insertTable Schema.Table {tableName, tableColumns, tableData} =
-  run_ $
-    T.unpack $
-      T.unwords
-        [ "INSERT INTO",
-          T.pack Constants.mysqlDatabase <> "." <> tableName,
-          "(",
-          commaSeparated (Schema.columnName <$> tableColumns),
-          ")",
-          "VALUES",
-          commaSeparated $ mkRow <$> tableData,
-          ";"
-        ]
+insertTable Schema.Table {tableName, tableColumns, tableData}
+  | null tableData = pure ()
+  | otherwise = do
+    run_ $
+      T.unpack $
+        T.unwords
+          [ "INSERT INTO",
+            T.pack Constants.mysqlDb <> "." <> tableName,
+            "(",
+            commaSeparated (Schema.columnName <$> tableColumns),
+            ")",
+            "VALUES",
+            commaSeparated $ mkRow <$> tableData,
+            ";"
+          ]
 
 mkRow :: [Schema.ScalarValue] -> Text
 mkRow row =
@@ -173,10 +180,6 @@ mkRow row =
       ")"
     ]
 
--- | Post an http request to start tracking the table
-trackTable :: State -> Schema.Table -> IO ()
-trackTable state table = Schema.trackTable "mysql" "mysql" (T.pack Constants.mysqlDatabase) table state
-
 -- | Serialize Table into an SQL DROP statement and execute it
 dropTable :: Schema.Table -> IO ()
 dropTable Schema.Table {tableName} = do
@@ -184,13 +187,19 @@ dropTable Schema.Table {tableName} = do
     T.unpack $
       T.unwords
         [ "DROP TABLE", -- we don't want @IF EXISTS@ here, because we don't want this to fail silently
-          T.pack Constants.mysqlDatabase <> "." <> tableName,
+          T.pack Constants.mysqlDb <> "." <> tableName,
           ";"
         ]
 
+-- | Post an http request to start tracking the table
+trackTable :: State -> Schema.Table -> IO ()
+trackTable state table =
+  Schema.trackTable MySQL (defaultSource MySQL) table state
+
 -- | Post an http request to stop tracking the table
 untrackTable :: State -> Schema.Table -> IO ()
-untrackTable state table = Schema.untrackTable "mysql" "mysql" (T.pack Constants.mysqlDatabase) table state
+untrackTable state table =
+  Schema.untrackTable MySQL (defaultSource MySQL) table state
 
 -- | Setup the schema in the most expected way.
 -- NOTE: Certain test modules may warrant having their own local version.
@@ -205,17 +214,17 @@ setup tables (state, _) = do
     trackTable state table
   -- Setup relationships
   for_ tables $ \table -> do
-    Schema.trackObjectRelationships "mysql" (T.pack Constants.mysqlDatabase) table state
-    Schema.trackArrayRelationships "mysql" (T.pack Constants.mysqlDatabase) table state
+    Schema.trackObjectRelationships MySQL table state
+    Schema.trackArrayRelationships MySQL table state
 
 -- | Teardown the schema and tracking in the most expected way.
 -- NOTE: Certain test modules may warrant having their own version.
 teardown :: [Schema.Table] -> (State, ()) -> IO ()
-teardown (reverse -> tables) (state, _) = do
-  -- Teardown relationships first
-  for_ tables $ \table ->
-    Schema.untrackRelationships "mysql" (T.pack Constants.mysqlDatabase) table state
-  -- Then teardown tables
-  for_ tables $ \table -> do
-    untrackTable state table
-    dropTable table
+teardown tables (state, _) = do
+  for_ (reverse tables) $ \table ->
+    finally
+      (Schema.untrackRelationships MySQL table state)
+      ( finally
+          (untrackTable state table)
+          (dropTable table)
+      )

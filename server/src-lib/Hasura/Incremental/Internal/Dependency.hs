@@ -1,3 +1,4 @@
+{-# LANGUAGE EmptyCase #-}
 {-# OPTIONS_HADDOCK not-home #-}
 
 -- | Supporting functionality for fine-grained dependency tracking.

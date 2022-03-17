@@ -1,3 +1,6 @@
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 module Hasura.GraphQL.Schema.RemoteTest (spec) where
 
 import Control.Lens (Prism', prism', to, (^..), _Right)

@@ -28,11 +28,12 @@ module Network.HTTP.Client.Transformable
   )
 where
 
-import Control.Exception (throw)
-import Control.Lens (Lens', lens, set, view)
+import Control.Exception.Safe (impureThrow)
+import Control.Lens (Lens', lens, set, to, view, (^.), (^?), _Just)
+import Control.Lens.Iso (strict)
 import Control.Monad.Catch (MonadThrow, fromException)
 import Data.Aeson qualified as J
-import Data.Bifunctor (bimap)
+import Data.Bifunctor (first)
 import Data.ByteString (ByteString)
 import Data.ByteString qualified as B
 import Data.ByteString.Char8 qualified as C8
@@ -41,8 +42,10 @@ import Data.CaseInsensitive qualified as CI
 import Data.Function ((&))
 import Data.Int (Int64)
 import Data.Maybe (fromMaybe)
+import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
+import Data.Text.Strict.Lens qualified as Strict (utf8)
 import Network.HTTP.Client qualified as Client
 import Network.HTTP.Client.Internal qualified as Internal
 import Network.HTTP.Client.TLS as TLSClient
@@ -81,37 +84,53 @@ data Request = Request
   }
   deriving (Show)
 
+-- XXX: This function makes internal usage of `Strict.utf8`/`TE.decodeUtf8`,
+-- which throws an impure exception when the supplied `ByteString` cannot be
+-- decoded into valid UTF8 text!
 instance J.ToJSON Request where
-  toJSON req@Request {..} =
+  toJSON req@Request {rdRequest, rdBody} =
     J.object
-      [ "url" J..= view url req,
-        "method" J..= TE.decodeUtf8 (view method req),
-        "headers" J..= fmap (bimap (TE.decodeUtf8 . CI.original) TE.decodeUtf8) (view headers req),
-        "body" J..= fmap (TE.decodeUtf8 . BL.toStrict) rdBody,
-        "query_string" J..= TE.decodeUtf8 (Client.queryString rdRequest),
-        "response_timeout" J..= serializeRT (view timeout req)
+      [ "url" J..= (req ^. url),
+        "method" J..= (req ^. method . Strict.utf8),
+        "headers" J..= (req ^. headers . renderHeaders),
+        "body" J..= (rdBody ^? _Just . strict . Strict.utf8),
+        "query_string" J..= (rdRequest ^. to Client.queryString . Strict.utf8),
+        "response_timeout" J..= (req ^. timeout . renderResponseTimeout)
       ]
     where
-      serializeRT = \case
+      renderHeaders = to $ fmap \(keyBytes, valBytes) ->
+        let keyTxt = TE.decodeUtf8 . CI.original $ keyBytes
+            valTxt = TE.decodeUtf8 valBytes
+         in (keyTxt, valTxt)
+
+      renderResponseTimeout = to $ \case
         Internal.ResponseTimeoutMicro i -> show i
         Internal.ResponseTimeoutNone -> "None"
         Internal.ResponseTimeoutDefault -> "default"
 
--- | Convert a URL into a Request value. This function can throw
--- if the URL is invalid.
-mkRequestThrow :: MonadThrow m => T.Text -> m Request
-mkRequestThrow url' = do
-  req <- Client.parseRequest $ T.unpack url'
-  pure $ Request req Nothing
+-- | Convert a URL into a Request value.
+--
+-- NOTE: This function will throw an error in 'MonadThrow' if the URL is
+-- invalid.
+mkRequestThrow :: MonadThrow m => Text -> m Request
+mkRequestThrow urlTxt = do
+  request <- Client.parseRequest $ T.unpack urlTxt
+  pure $ Request request Nothing
 
--- | A concrete version of `mkRequestThrow` in the Either monad.
-mkRequestEither :: T.Text -> Either Client.HttpException Request
-mkRequestEither url' =
-  case mkRequestThrow url' of
-    Right res -> Right res
-    Left e -> case fromException @Client.HttpException e of
-      Just httpExcept -> Left httpExcept
-      Nothing -> throw e
+-- | 'mkRequestThrow' with the 'MonadThrow' instance specialized to 'Either'.
+--
+-- NOTE: While this function makes use of 'impureThrow', it should be
+-- impossible to trigger in practice.
+--
+-- 'mkRequestThrow' calls 'Client.parseRequest', which only ever throws
+-- 'Client.HttpException' errors (which should be "caught" by the
+-- 'fromException' cast).
+mkRequestEither :: Text -> Either Client.HttpException Request
+mkRequestEither urlTxt =
+  mkRequestThrow urlTxt & first
+    \someExc -> case fromException @Client.HttpException someExc of
+      Just httpExc -> httpExc
+      Nothing -> impureThrow someExc
 
 -- | Url is 'materialized view' into `Request` consisting of
 -- concatenation of `host`, `port`, `queryParams`, and `path` in the
@@ -127,13 +146,13 @@ mkRequestEither url' =
 -- We use the literal field to `view` the value but we must
 -- carefully set the subcomponents by hand during `set` operations. Be
 -- careful modifying this lens and verify against the unit tests..
-url :: Lens' Request T.Text
+url :: Lens' Request Text
 url = lens getUrl setUrl
   where
-    getUrl :: Request -> T.Text
+    getUrl :: Request -> Text
     getUrl Request {rdRequest} = T.pack $ URI.uriToString id (Client.getUri rdRequest) mempty
 
-    setUrl :: Request -> T.Text -> Request
+    setUrl :: Request -> Text -> Request
     setUrl req url' = fromMaybe req $ do
       uri <- URI.parseURI (T.unpack url')
       URI.URIAuth {..} <- URI.uriAuthority uri
@@ -243,7 +262,7 @@ getReqSize :: Request -> Int64
 getReqSize Request {rdBody} = maybe 0 BL.length rdBody
 
 toRequest :: Request -> Client.Request
-toRequest Request {..} = case rdBody of
+toRequest Request {rdRequest, rdBody} = case rdBody of
   Nothing -> rdRequest
   Just body' -> NHS.setRequestBody (Client.RequestBodyLBS body') rdRequest
 

@@ -67,8 +67,6 @@ common common-all
     DeriveLift
     DeriveTraversable
     DerivingVia
-    EmptyCase
-    ExistentialQuantification
     FlexibleContexts
     FlexibleInstances
     FunctionalDependencies
@@ -82,19 +80,15 @@ common common-all
     NamedFieldPuns
     NoImplicitPrelude
     OverloadedStrings
-    QuantifiedConstraints
-    QuasiQuotes
     RankNTypes
     RecordWildCards
     RoleAnnotations
     ScopedTypeVariables
     StandaloneDeriving
     StrictData
-    TemplateHaskell
     TupleSections
     TypeApplications
     TypeFamilies
-    TypeFamilyDependencies
     TypeOperators
 
 common common-exe
@@ -165,6 +159,9 @@ library
                      , safe-exceptions
                      , scientific
                      , semialign
+                     , servant
+                     , servant-client
+                     , servant-client-core
                      , some
                      , split
                      , template-haskell
@@ -181,6 +178,7 @@ library
                      , vector
                      , vector-instances
                      , wai
+                     , witch
                      , hashable-time
 
                      -- Encoder related
@@ -486,6 +484,7 @@ library
                      , Hasura.Backends.DataWrapper.Adapter.Metadata
                      , Hasura.Backends.DataWrapper.Adapter.Schema
                      , Hasura.Backends.DataWrapper.Adapter.Transport
+                     , Hasura.Backends.DataWrapper.Agent.Schema
                      , Hasura.Backends.DataWrapper.IR.Column
                      , Hasura.Backends.DataWrapper.IR.Expression
                      , Hasura.Backends.DataWrapper.IR.Function
@@ -497,6 +496,15 @@ library
                      , Hasura.Backends.DataWrapper.IR.Table
                      , Hasura.Backends.DataWrapper.Schema.Column
                      , Hasura.Backends.DataWrapper.Schema.Table
+                     , Hasura.Backends.DataWrapper.API
+                     , Hasura.Backends.DataWrapper.API.V0.API
+                     , Hasura.Backends.DataWrapper.API.V0.Column
+                     , Hasura.Backends.DataWrapper.API.V0.Expression
+                     , Hasura.Backends.DataWrapper.API.V0.OrderBy
+                     , Hasura.Backends.DataWrapper.API.V0.Query
+                     , Hasura.Backends.DataWrapper.API.V0.Scalar.Type
+                     , Hasura.Backends.DataWrapper.API.V0.Scalar.Value
+                     , Hasura.Backends.DataWrapper.API.V0.Table
 
                      -- Exposed for benchmark:
                      , Hasura.Cache.Bounded
@@ -1021,6 +1029,7 @@ test-suite tests-hspec
  -- Harness.Test
     Harness.Test.Context
     Harness.Test.Schema
+    Harness.Test.BackendType
 
  -- Harness.Quoter
     Harness.Quoter.Graphql

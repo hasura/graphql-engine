@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- | CORS (Cross Origin Resource Sharing) related configuration
 module Hasura.Server.Cors

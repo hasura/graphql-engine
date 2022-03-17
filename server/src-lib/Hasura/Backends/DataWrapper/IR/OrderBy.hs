@@ -8,9 +8,11 @@ where
 
 --------------------------------------------------------------------------------
 
+import Hasura.Backends.DataWrapper.API qualified as API
 import Hasura.Backends.DataWrapper.IR.Column qualified as Column (Name)
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
+import Witch
 
 --------------------------------------------------------------------------------
 
@@ -28,6 +30,10 @@ data OrderBy = OrderBy
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Cacheable, Hashable, NFData)
 
+instance From API.OrderBy OrderBy where
+  from API.OrderBy {column, ordering} =
+    OrderBy (from column) (from ordering)
+
 --------------------------------------------------------------------------------
 
 -- | 'Column.Name's may be sorted in either ascending or descending order.
@@ -38,3 +44,7 @@ data OrderType
   | Descending
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Cacheable, Hashable, NFData)
+
+instance From API.OrderType OrderType where
+  from API.Ascending = Ascending
+  from API.Descending = Ascending

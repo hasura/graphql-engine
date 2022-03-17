@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | Testing manual, misconfigured object relationships.
 --   Specifically, having manual relationships with one-to-many relationships.
 --   Test case for bug reported at https://github.com/hasura/graphql-engine/issues/7936
@@ -21,7 +23,7 @@ spec :: SpecWith State
 spec =
   Context.run
     [ Context.Context
-        { name = Context.Postgres,
+        { name = Context.Backend Context.Postgres,
           mkLocalState = Context.noLocalState,
           setup = postgresSetup,
           teardown = postgresTeardown,

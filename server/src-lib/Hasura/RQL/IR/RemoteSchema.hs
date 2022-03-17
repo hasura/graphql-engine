@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | Representation for queries going to remote schemas. Due to the existence of
 -- remote relationships from remote schemas, we can't simply reuse the GraphQL
 -- document AST we define in graphql-parser-hs, and instead redefine a custom

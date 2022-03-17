@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | Common interface for setup/teardown for all backends - schema and data
 module Harness.Test.Schema
   ( Table (..),
@@ -21,9 +23,11 @@ import Data.Foldable (for_)
 import Data.Text (Text, pack, replace)
 import Data.Time (UTCTime, defaultTimeLocale, formatTime)
 import Data.Time.Format (parseTimeOrError)
+import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.State (State)
+import Harness.Test.Context (BackendType, defaultBackendTypeString, defaultSchema, defaultSource)
 import Hasura.Prelude (tshow)
 import Prelude
 
@@ -113,30 +117,34 @@ parseUTCTimeOrError :: String -> ScalarValue
 parseUTCTimeOrError = VUTCTime . parseTimeOrError True defaultTimeLocale "%F %T"
 
 -- | Unified track table
-trackTable :: Text -> Text -> Text -> Table -> State -> IO ()
-trackTable backendType sourceName schema Table {tableName} state = do
-  let requestType = backendType <> "_track_table"
+trackTable :: HasCallStack => BackendType -> String -> Table -> State -> IO ()
+trackTable backend source Table {tableName} state = do
+  let backendType = defaultBackendTypeString backend
+      schema = defaultSchema backend
+      requestType = backendType <> "_track_table"
   GraphqlEngine.postMetadata_
     state
     [yaml|
 type: *requestType
 args:
-  source: *sourceName
+  source: *source
   table:
     schema: *schema
     name: *tableName
 |]
 
 -- | Unified untrack table
-untrackTable :: Text -> Text -> Text -> Table -> State -> IO ()
-untrackTable backendType sourceName schema Table {tableName} state = do
+untrackTable :: HasCallStack => BackendType -> String -> Table -> State -> IO ()
+untrackTable backend source Table {tableName} state = do
+  let backendType = defaultBackendTypeString backend
+      schema = defaultSchema backend
   let requestType = backendType <> "_untrack_table"
   GraphqlEngine.postMetadata_
     state
     [yaml|
 type: *requestType
 args:
-  source: *sourceName
+  source: *source
   table:
     schema: *schema
     name: *tableName
@@ -147,9 +155,11 @@ mkObjectRelationshipName :: Reference -> Text
 mkObjectRelationshipName Reference {referenceLocalColumn, referenceTargetTable} = referenceTargetTable <> "_by_" <> referenceLocalColumn
 
 -- | Unified track object relationships
-trackObjectRelationships :: Text -> Text -> Table -> State -> IO ()
-trackObjectRelationships source schema Table {tableName, tableReferences} state = do
-  let requestType = source <> "_create_object_relationship"
+trackObjectRelationships :: HasCallStack => BackendType -> Table -> State -> IO ()
+trackObjectRelationships backend Table {tableName, tableReferences} state = do
+  let source = defaultSource backend
+      schema = defaultSchema backend
+      requestType = source <> "_create_object_relationship"
   for_ tableReferences $ \ref@Reference {referenceLocalColumn} -> do
     let relationshipName = mkObjectRelationshipName ref
     GraphqlEngine.postMetadata_
@@ -171,9 +181,11 @@ mkArrayRelationshipName :: Text -> Text -> Text
 mkArrayRelationshipName tableName referenceLocalColumn = tableName <> "s_by_" <> referenceLocalColumn
 
 -- | Unified track array relationships
-trackArrayRelationships :: Text -> Text -> Table -> State -> IO ()
-trackArrayRelationships source schema Table {tableName, tableReferences} state = do
-  let requestType = source <> "_create_array_relationship"
+trackArrayRelationships :: HasCallStack => BackendType -> Table -> State -> IO ()
+trackArrayRelationships backend Table {tableName, tableReferences} state = do
+  let source = defaultSource backend
+      schema = defaultSchema backend
+      requestType = source <> "_create_array_relationship"
   for_ tableReferences $ \Reference {referenceLocalColumn, referenceTargetTable} -> do
     let relationshipName = mkArrayRelationshipName tableName referenceLocalColumn
     GraphqlEngine.postMetadata_
@@ -195,9 +207,11 @@ args:
 |]
 
 -- | Unified untrack relationships
-untrackRelationships :: Text -> Text -> Table -> State -> IO ()
-untrackRelationships source schema Table {tableName, tableReferences} state = do
-  let requestType = source <> "_drop_relationship"
+untrackRelationships :: HasCallStack => BackendType -> Table -> State -> IO ()
+untrackRelationships backend Table {tableName, tableReferences} state = do
+  let source = defaultSource backend
+      schema = defaultSchema backend
+      requestType = source <> "_drop_relationship"
   for_ tableReferences $ \ref@Reference {referenceLocalColumn, referenceTargetTable} -> do
     let arrayRelationshipName = mkArrayRelationshipName tableName referenceLocalColumn
         objectRelationshipName = mkObjectRelationshipName ref

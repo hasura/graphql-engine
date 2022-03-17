@@ -1,3 +1,5 @@
+{-# LANGUAGE TypeFamilyDependencies #-}
+
 module Hasura.RQL.DDL.Permission
   ( CreatePerm,
     runCreatePerm,

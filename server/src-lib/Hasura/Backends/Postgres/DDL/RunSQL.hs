@@ -1,3 +1,6 @@
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | Postgres DDL RunSQL
 --
 -- Escape hatch for running raw SQL against a postgres database.

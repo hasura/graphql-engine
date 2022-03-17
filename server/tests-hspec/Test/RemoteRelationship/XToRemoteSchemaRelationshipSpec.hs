@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | Tests for remote relationships to remote schemas. Remote relationships are
 -- relationships that are not local to a given source or remote schema, and are
 -- handled by the engine itself.
@@ -5,14 +7,15 @@
 -- All tests use the same GraphQL syntax, and the only difference is in the
 -- setup: for each left-hand side source we support we do a custom setup and run
 -- the tests.
-module Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec (spec) where
+module Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec
+  ( spec,
+  )
+where
 
 import Data.Morpheus.Document (gqlDocument)
 import Data.Morpheus.Types (Arg (..))
 import Data.Text (Text)
-import Data.Text qualified as T
 import Harness.Backend.Postgres qualified as Postgres
-import Harness.Constants qualified as Constants
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
@@ -33,7 +36,7 @@ spec = Context.runWithLocalState contexts tests
     contexts = map mkContext [lhsPostgres]
     lhsPostgres =
       Context
-        { name = Context.Postgres,
+        { name = Context.Backend Context.Postgres,
           mkLocalState = lhsPostgresMkLocalState,
           setup = lhsPostgresSetup,
           teardown = lhsPostgresTeardown,
@@ -109,7 +112,7 @@ lhsPostgresSetup :: (State, Maybe Server) -> IO ()
 lhsPostgresSetup (state, _) = do
   let sourceName = "source"
       sourceConfig = Postgres.defaultSourceConfiguration
-      schemaName = T.pack Constants.postgresDb
+      schemaName = Context.defaultSchema Context.Postgres
   -- Add remote source
   GraphqlEngine.postMetadata_
     state
@@ -122,7 +125,7 @@ args:
   -- setup tables only
   Postgres.createTable track
   Postgres.insertTable track
-  Schema.trackTable "postgres" sourceName schemaName track state
+  Schema.trackTable Context.Postgres sourceName track state
   GraphqlEngine.postMetadata_
     state
     [yaml|
@@ -148,8 +151,7 @@ args:
 lhsPostgresTeardown :: (State, Maybe Server) -> IO ()
 lhsPostgresTeardown (state, _) = do
   let sourceName = "source"
-      schemaName = T.pack Constants.postgresDb
-  Schema.untrackTable "postgres" sourceName schemaName track state
+  Schema.untrackTable Context.Postgres sourceName track state
   Postgres.dropTable track
 
 --------------------------------------------------------------------------------

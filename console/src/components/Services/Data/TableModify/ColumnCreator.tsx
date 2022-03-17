@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Dispatch } from '@/types';
-import { FrequentlyUsedColumn } from '@/dataSources/types';
+import {
+  DependentSQLGenerator,
+  FrequentlyUsedColumn,
+} from '@/dataSources/types';
 import { addColSql } from './ModifyActions';
 import { showErrorNotification } from '../../Common/Notification';
 import gqlPattern, { gqlColumnErrorNotif } from '../Common/GraphQLValidation';
@@ -32,7 +35,7 @@ const useColumnEditor = (dispatch: Dispatch, tableName: string) => {
     colNull: boolean;
     colUnique: boolean;
     colDefault: string;
-    colDependentSQLGenerator: undefined;
+    colDependentSQLGenerator?: DependentSQLGenerator;
   }>(initialColumnEditorState);
   const {
     colName,
@@ -117,6 +120,7 @@ const useColumnEditor = (dispatch: Dispatch, tableName: string) => {
           colName: column.name,
           colType: column.type,
           colDefault: column.default ?? '',
+          colDependentSQLGenerator: column.dependentSQLGenerator,
         });
       },
     },

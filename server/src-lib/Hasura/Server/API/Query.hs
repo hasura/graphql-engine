@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | The RQL query ('/v1/query')
 module Hasura.Server.API.Query
   ( RQLQuery,

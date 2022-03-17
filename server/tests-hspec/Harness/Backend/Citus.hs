@@ -1,5 +1,7 @@
-{-# OPTIONS -Wno-redundant-constraints #-}
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
+
+{-# OPTIONS -Wno-redundant-constraints #-}
 
 -- | CitusQL helpers. Pretty much the same as postgres. Could refactor
 -- if we add more things here.
@@ -18,7 +20,6 @@ module Harness.Backend.Citus
 where
 
 import Control.Concurrent
-import Control.Exception
 import Control.Monad.Reader
 import Data.Aeson (Value)
 import Data.Bool (bool)
@@ -29,11 +30,12 @@ import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated)
 import Database.PostgreSQL.Simple qualified as Postgres
-import GHC.Stack
 import Harness.Constants as Constants
+import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.State (State)
+import Harness.Test.Context (BackendType (Citus), defaultSource)
 import Harness.Test.Schema qualified as Schema
 import System.Process.Typed
 import Prelude
@@ -95,7 +97,7 @@ configuration:
   |]
 
 -- | Serialize Table into a Citus-SQL statement, as needed, and execute it on the Citus backend
-createTable :: Schema.Table -> IO ()
+createTable :: HasCallStack => Schema.Table -> IO ()
 createTable Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences} = do
   run_ $
     T.unpack $
@@ -153,20 +155,22 @@ mkReference Schema.Reference {referenceLocalColumn, referenceTargetTable, refere
     ]
 
 -- | Serialize tableData into a Citus-SQL insert statement and execute it.
-insertTable :: Schema.Table -> IO ()
-insertTable Schema.Table {tableName, tableColumns, tableData} =
-  run_ $
-    T.unpack $
-      T.unwords
-        [ "INSERT INTO",
-          T.pack Constants.citusDb <> "." <> tableName,
-          "(",
-          commaSeparated (Schema.columnName <$> tableColumns),
-          ")",
-          "VALUES",
-          commaSeparated $ mkRow <$> tableData,
-          ";"
-        ]
+insertTable :: HasCallStack => Schema.Table -> IO ()
+insertTable Schema.Table {tableName, tableColumns, tableData}
+  | null tableData = pure ()
+  | otherwise = do
+    run_ $
+      T.unpack $
+        T.unwords
+          [ "INSERT INTO",
+            T.pack Constants.citusDb <> "." <> tableName,
+            "(",
+            commaSeparated (Schema.columnName <$> tableColumns),
+            ")",
+            "VALUES",
+            commaSeparated $ mkRow <$> tableData,
+            ";"
+          ]
 
 mkRow :: [Schema.ScalarValue] -> Text
 mkRow row =
@@ -176,12 +180,8 @@ mkRow row =
       ")"
     ]
 
--- | Post an http request to start tracking the table
-trackTable :: State -> Schema.Table -> IO ()
-trackTable state table = Schema.trackTable "citus" "citus" (T.pack Constants.citusDb) table state
-
 -- | Serialize Table into a Citus-SQL DROP statement and execute it
-dropTable :: Schema.Table -> IO ()
+dropTable :: HasCallStack => Schema.Table -> IO ()
 dropTable Schema.Table {tableName} = do
   run_ $
     T.unpack $
@@ -191,13 +191,19 @@ dropTable Schema.Table {tableName} = do
           ";"
         ]
 
+-- | Post an http request to start tracking the table
+trackTable :: HasCallStack => State -> Schema.Table -> IO ()
+trackTable state table =
+  Schema.trackTable Citus (defaultSource Citus) table state
+
 -- | Post an http request to stop tracking the table
-untrackTable :: State -> Schema.Table -> IO ()
-untrackTable state table = Schema.untrackTable "citus" "citus" (T.pack Constants.citusDb) table state
+untrackTable :: HasCallStack => State -> Schema.Table -> IO ()
+untrackTable state table =
+  Schema.untrackTable Citus (defaultSource Citus) table state
 
 -- | Setup the schema in the most expected way.
 -- NOTE: Certain test modules may warrant having their own local version.
-setup :: [Schema.Table] -> (State, ()) -> IO ()
+setup :: HasCallStack => [Schema.Table] -> (State, ()) -> IO ()
 setup tables (state, _) = do
   -- Clear and reconfigure the metadata
   GraphqlEngine.setSource state defaultSourceMetadata
@@ -208,17 +214,17 @@ setup tables (state, _) = do
     trackTable state table
   -- Setup relationships
   for_ tables $ \table -> do
-    Schema.trackObjectRelationships "citus" (T.pack Constants.citusDb) table state
-    Schema.trackArrayRelationships "citus" (T.pack Constants.citusDb) table state
+    Schema.trackObjectRelationships Citus table state
+    Schema.trackArrayRelationships Citus table state
 
 -- | Teardown the schema and tracking in the most expected way.
 -- NOTE: Certain test modules may warrant having their own version.
-teardown :: [Schema.Table] -> (State, ()) -> IO ()
-teardown (reverse -> tables) (state, _) = do
-  -- Teardown relationships first
-  for_ tables $ \table ->
-    Schema.untrackRelationships "citus" (T.pack Constants.citusDb) table state
-  -- Then teardown tables
-  for_ tables $ \table -> do
-    untrackTable state table
-    dropTable table
+teardown :: HasCallStack => [Schema.Table] -> (State, ()) -> IO ()
+teardown tables (state, _) = do
+  for_ (reverse tables) $ \table ->
+    finally
+      (Schema.untrackRelationships Citus table state)
+      ( finally
+          (untrackTable state table)
+          (dropTable table)
+      )
