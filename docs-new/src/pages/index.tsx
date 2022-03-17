@@ -29,13 +29,8 @@ function HomepageHeader() {
         <div className={styles.links}>
           <Link
             className="button button--secondary button--lg"
-            to="/wiki/page-structure">
-            Docs Page Structure
-          </Link>
-          <Link
-            className="button button--warning button--lg"
-            to="/wiki/category/rst-vs-mdx-guide/">
-            RST vs MDX Guide
+            to="/wiki/">
+            Docs Wiki
           </Link>
         </div>
         <img src={hasuras} alt="Hasuras Image" />
