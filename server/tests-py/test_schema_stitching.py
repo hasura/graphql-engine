@@ -197,7 +197,7 @@ class TestRemoteSchemaBasic:
         """add 2 remote schemas with same node or types"""
         q = mk_add_remote_q('simple 2', 'http://localhost:5000/hello-graphql')
         st_code, resp = hge_ctx.v1q(q)
-        assert st_code == 400
+        assert st_code == 400, resp
         assert resp['code'] == 'unexpected'
 
     @pytest.mark.allow_server_upgrade_test
@@ -346,7 +346,7 @@ class TestAddRemoteSchemaTbls:
         """add remote schema which conflicts with hasura tables"""
         q = mk_add_remote_q('simple2', 'http://localhost:5000/hello-graphql')
         st_code, resp = hge_ctx.v1q(q)
-        assert st_code == 400
+        assert st_code == 400, resp
         assert resp['code'] == 'invalid-configuration'
 
     @pytest.mark.allow_server_upgrade_test

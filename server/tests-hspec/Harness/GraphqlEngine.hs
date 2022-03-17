@@ -21,12 +21,8 @@ module Harness.GraphqlEngine
     setSource,
     setSources,
 
-    -- * Misc. Helpers
-    graphqlEndpoint,
-
-    -- * Server Setup & Teardown
+    -- * Server Setup
     startServerThread,
-    stopServer,
 
     -- * Re-exports
     serverUrl,
@@ -36,7 +32,7 @@ where
 
 -------------------------------------------------------------------------------
 
-import Control.Concurrent (forkIO, killThread, threadDelay)
+import Control.Concurrent (forkIO, threadDelay)
 import Control.Exception.Safe (bracket)
 import Control.Monad.Trans.Managed (ManagedT (..), lowerManagedT)
 import Data.Aeson (Value, object, (.=))
@@ -85,7 +81,7 @@ post_ state path = void . postWithHeaders_ state path mempty
 postWithHeaders ::
   HasCallStack => State -> String -> Http.RequestHeaders -> Value -> IO Value
 postWithHeaders (getServer -> Server {urlPrefix, port}) path =
-  Http.postValue_ (urlPrefix ++ ":" ++ show port ++ path)
+  Http.postValue (urlPrefix ++ ":" ++ show port ++ path)
 
 -- | Post some JSON to graphql-engine, getting back more JSON.
 --
@@ -150,17 +146,6 @@ args:
 
 -------------------------------------------------------------------------------
 
--- | Extracts the full GraphQL endpoint URL from a given 'Server'.
---
--- @
---   > graphqlEndpoint (Server 8080 "http://localhost" someThreadId)
---   "http://localhost:8080/graphql"
--- @
-graphqlEndpoint :: Server -> String
-graphqlEndpoint server = serverUrl server ++ "/graphql"
-
--------------------------------------------------------------------------------
-
 -- | Choose a random port and start a graphql-engine server on that
 -- port accessible from localhost. It waits until the server is
 -- available before returning.
@@ -182,10 +167,6 @@ startServerThread murlPrefixport = do
   let server = Server {port = fromIntegral port, urlPrefix, threadId}
   Http.healthCheck (serverUrl server)
   pure server
-
--- | Forcibly stop a given 'Server'.
-stopServer :: Server -> IO ()
-stopServer Server {threadId} = killThread threadId
 
 -------------------------------------------------------------------------------
 

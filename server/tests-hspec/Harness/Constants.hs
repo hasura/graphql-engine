@@ -263,7 +263,7 @@ serveOptions =
 -- only used in 'serveOptions'.
 --
 -- This should be adjusted locally for debugging purposes; e.g. change it to
--- @Just L.Debug@ to enable all logs.
+-- @Just L.LevelDebug@ to enable all logs.
 --
 -- See 'L.LogLevel' for an enumeration of available log levels.
 engineLogLevel :: Maybe L.LogLevel
