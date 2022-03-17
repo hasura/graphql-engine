@@ -4,6 +4,10 @@
 
 ### Bug fixes and improvements
 
+## v2.4.0-beta.2
+
+### Bug fixes and improvements
+
 ## v2.4.0-beta.1
 
 ### Bug fixes and improvements
