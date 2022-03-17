@@ -1,7 +1,7 @@
 -- | Helper functions for HTTP requests.
 module Harness.Http
   ( get_,
-    postValue_,
+    postValue,
     healthCheck,
     Http.RequestHeaders,
   )
@@ -32,8 +32,8 @@ get_ url = do
 
 -- | Post the JSON to the given URL, and produces a very descriptive
 -- exception on failure.
-postValue_ :: HasCallStack => String -> Http.RequestHeaders -> Value -> IO Value
-postValue_ url headers value = do
+postValue :: HasCallStack => String -> Http.RequestHeaders -> Value -> IO Value
+postValue url headers value = do
   let request =
         Http.setRequestHeaders headers $
           Http.setRequestMethod Http.methodPost $

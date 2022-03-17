@@ -1,3 +1,4 @@
+{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE QuasiQuotes #-}
 
 -- | Tests for object remote relationships to databases. Remote relationships
@@ -14,11 +15,22 @@ module Test.RemoteRelationship.XToDBObjectRelationshipSpec
 where
 
 import Data.Aeson (Value)
+import Data.Char (isUpper, toLower)
+import Data.Foldable (traverse_)
+import Data.Function ((&))
+import Data.List (intercalate, sortBy)
+import Data.List.Split (dropBlanks, keepDelimsL, split, whenElt)
+import Data.Morpheus.Document (gqlDocument)
+import Data.Morpheus.Types qualified as Morpheus
+import Data.Text (Text)
+import Data.Typeable (Typeable)
+import GHC.Generics
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
-import Harness.State (Server, State)
+import Harness.RemoteServer qualified as RemoteServer
+import Harness.State (Server, State, stopServer)
 import Harness.Test.Context (Context (..))
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema qualified as Schema
@@ -31,7 +43,7 @@ import Prelude
 spec :: SpecWith State
 spec = Context.runWithLocalState contexts tests
   where
-    lhsContexts = [lhsPostgres]
+    lhsContexts = [lhsPostgres, lhsRemoteServer]
     rhsContexts = [rhsPostgres]
     contexts = combine <$> lhsContexts <*> rhsContexts
 
@@ -91,10 +103,15 @@ lhsPostgres tableName =
       customOptions = Nothing
     }
 
-{-
-lhsRemoteServer :: Value -> Context
-lhsRemoteServer tableName = Context "from RS" (lhsRemoteSetup tableName) lhsRemoteTeardown
--}
+lhsRemoteServer :: LHSContext
+lhsRemoteServer tableName =
+  Context
+    { name = Context.RemoteGraphQLServer,
+      mkLocalState = lhsRemoteServerMkLocalState,
+      setup = lhsRemoteServerSetup tableName,
+      teardown = lhsRemoteServerTeardown,
+      customOptions = Nothing
+    }
 
 --------------------------------------------------------------------------------
 
@@ -232,10 +249,210 @@ args:
   |]
 
 lhsPostgresTeardown :: (State, Maybe Server) -> IO ()
-lhsPostgresTeardown (state, _) = do
-  let sourceName = "source"
-  Schema.untrackTable Context.Postgres sourceName track state
-  Postgres.dropTable track
+lhsPostgresTeardown _ = Postgres.dropTable track
+
+--------------------------------------------------------------------------------
+-- LHS Remote Server
+
+-- | To circumvent Morpheus' default behaviour, which is to capitalize type
+-- names and field names for Haskell records to be consistent with their
+-- corresponding GraphQL equivalents, we define most of the schema manually with
+-- the following options.
+hasuraTypeOptions :: Morpheus.GQLTypeOptions
+hasuraTypeOptions =
+  Morpheus.defaultTypeOptions
+    { -- transformation to apply to constructors, for enums; we simply map to
+      -- lower case:
+      --   Asc -> asc
+      Morpheus.constructorTagModifier = map toLower,
+      -- transformation to apply to field names; we drop all characters up to and
+      -- including the first underscore:
+      --   hta_where -> where
+      Morpheus.fieldLabelModifier = tail . dropWhile (/= '_'),
+      -- transformation to apply to type names; we split the name on uppercase
+      -- letters, intercalate with underscore, and map everything to lowercase:
+      --   HasuraTrack -> hasura_track
+      Morpheus.typeNameModifier = \_ ->
+        map toLower
+          . intercalate "_"
+          . split (dropBlanks $ keepDelimsL $ whenElt isUpper)
+    }
+
+data Query m = Query
+  { hasura_track :: HasuraTrackArgs -> m [HasuraTrack m]
+  }
+  deriving (Generic)
+
+instance Typeable m => Morpheus.GQLType (Query m)
+
+data HasuraTrackArgs = HasuraTrackArgs
+  { ta_where :: Maybe HasuraTrackBoolExp,
+    ta_order_by :: Maybe [HasuraTrackOrderBy],
+    ta_limit :: Maybe Int
+  }
+  deriving (Generic)
+
+instance Morpheus.GQLType HasuraTrackArgs where
+  typeOptions _ _ = hasuraTypeOptions
+
+data HasuraTrack m = HasuraTrack
+  { t_id :: m (Maybe Int),
+    t_title :: m (Maybe Text),
+    t_album_id :: m (Maybe Int)
+  }
+  deriving (Generic)
+
+instance Typeable m => Morpheus.GQLType (HasuraTrack m) where
+  typeOptions _ _ = hasuraTypeOptions
+
+data HasuraTrackOrderBy = HasuraTrackOrderBy
+  { tob_id :: Maybe OrderType,
+    tob_title :: Maybe OrderType,
+    tob_album_id :: Maybe OrderType
+  }
+  deriving (Generic)
+
+instance Morpheus.GQLType HasuraTrackOrderBy where
+  typeOptions _ _ = hasuraTypeOptions
+
+data HasuraTrackBoolExp = HasuraTrackBoolExp
+  { tbe__and :: Maybe [HasuraTrackBoolExp],
+    tbe__or :: Maybe [HasuraTrackBoolExp],
+    tbe__not :: Maybe HasuraTrackBoolExp,
+    tbe_id :: Maybe IntCompExp,
+    tbe_title :: Maybe StringCompExp,
+    tbe_album_id :: Maybe IntCompExp
+  }
+  deriving (Generic)
+
+instance Morpheus.GQLType HasuraTrackBoolExp where
+  typeOptions _ _ = hasuraTypeOptions
+
+data OrderType = Asc | Desc
+  deriving (Show, Generic)
+
+instance Morpheus.GQLType OrderType where
+  typeOptions _ _ = hasuraTypeOptions
+
+[gqlDocument|
+
+input IntCompExp {
+  _eq: Int
+}
+
+input StringCompExp {
+  _eq: String
+}
+
+|]
+
+lhsRemoteServerMkLocalState :: State -> IO (Maybe Server)
+lhsRemoteServerMkLocalState _ = do
+  server <-
+    RemoteServer.run $
+      RemoteServer.generateQueryInterpreter (Query {hasura_track})
+  pure $ Just server
+  where
+    -- Implements the @hasura_track@ field of the @Query@ type.
+    hasura_track (HasuraTrackArgs {..}) = do
+      let filterFunction = case ta_where of
+            Nothing -> const True
+            Just whereArg -> flip matchTrack whereArg
+          orderByFunction = case ta_order_by of
+            Nothing -> \_ _ -> EQ
+            Just orderByArg -> orderTrack orderByArg
+          limitFunction = case ta_limit of
+            Nothing -> Prelude.id
+            Just limitArg -> take limitArg
+      pure $
+        tracks
+          & filter filterFunction
+          & sortBy orderByFunction
+          & limitFunction
+          & map mkTrack
+    -- Returns True iif the given track matches the given boolean expression.
+    matchTrack trackInfo@(trackId, trackTitle, maybeAlbumId) (HasuraTrackBoolExp {..}) =
+      and
+        [ maybe True (all (matchTrack trackInfo)) tbe__and,
+          maybe True (any (matchTrack trackInfo)) tbe__or,
+          maybe True (not . matchTrack trackInfo) tbe__not,
+          maybe True (matchInt trackId) tbe_id,
+          maybe True (matchString trackTitle) tbe_title,
+          maybe True (matchMaybeInt maybeAlbumId) tbe_album_id
+        ]
+    matchInt intField IntCompExp {..} = Just intField == _eq
+    matchString stringField StringCompExp {..} = Just stringField == _eq
+    matchMaybeInt maybeIntField IntCompExp {..} = maybeIntField == _eq
+    -- Returns an ordering between the two given tracks.
+    orderTrack
+      orderByList
+      (trackId1, trackTitle1, trackAlbumId1)
+      (trackId2, trackTitle2, trackAlbumId2) =
+        flip foldMap orderByList \HasuraTrackOrderBy {..} ->
+          if
+              | Just idOrder <- tob_id -> case idOrder of
+                Asc -> compare trackId1 trackId2
+                Desc -> compare trackId2 trackId1
+              | Just titleOrder <- tob_title -> case titleOrder of
+                Asc -> compare trackTitle1 trackTitle2
+                Desc -> compare trackTitle2 trackTitle1
+              | Just albumIdOrder <- tob_album_id ->
+                compareWithNullLast albumIdOrder trackAlbumId1 trackAlbumId2
+              | otherwise ->
+                error "empty track_order object"
+    compareWithNullLast Desc x1 x2 = compareWithNullLast Asc x2 x1
+    compareWithNullLast Asc Nothing Nothing = EQ
+    compareWithNullLast Asc (Just _) Nothing = LT
+    compareWithNullLast Asc Nothing (Just _) = GT
+    compareWithNullLast Asc (Just x1) (Just x2) = compare x1 x2
+    tracks =
+      [ (1, "track1_album1", Just 1),
+        (2, "track2_album1", Just 1),
+        (3, "track3_album1", Just 1),
+        (4, "track1_album2", Just 2),
+        (5, "track2_album2", Just 2),
+        (6, "track1_album3", Just 3),
+        (7, "track2_album3", Just 3),
+        (8, "track_no_album", Nothing)
+      ]
+    mkTrack (trackId, title, albumId) =
+      HasuraTrack
+        { t_id = pure $ Just trackId,
+          t_title = pure $ Just title,
+          t_album_id = pure albumId
+        }
+
+lhsRemoteServerSetup :: Value -> (State, Maybe Server) -> IO ()
+lhsRemoteServerSetup tableName (state, maybeRemoteServer) = case maybeRemoteServer of
+  Nothing -> error "XToDBObjectRelationshipSpec: remote server local state did not succesfully create a server"
+  Just remoteServer -> do
+    let remoteSchemaEndpoint = GraphqlEngine.serverUrl remoteServer ++ "/graphql"
+    GraphqlEngine.postMetadata_
+      state
+      [yaml|
+type: bulk
+args:
+- type: add_remote_schema
+  args:
+    name: source
+    definition:
+      url: *remoteSchemaEndpoint
+- type: create_remote_schema_remote_relationship
+  args:
+    remote_schema: source
+    type_name: hasura_track
+    name: album
+    definition:
+      to_source:
+        source: target
+        table: *tableName
+        relationship_type: object
+        field_mapping:
+          album_id: id
+      |]
+
+lhsRemoteServerTeardown :: (State, Maybe Server) -> IO ()
+lhsRemoteServerTeardown (_, maybeServer) = traverse_ stopServer maybeServer
 
 --------------------------------------------------------------------------------
 -- RHS Postgres
@@ -295,10 +512,7 @@ args:
   |]
 
 rhsPostgresTeardown :: (State, ()) -> IO ()
-rhsPostgresTeardown (state, _) = do
-  let sourceName = "target"
-  Schema.untrackTable Context.Postgres sourceName album state
-  Postgres.dropTable album
+rhsPostgresTeardown _ = Postgres.dropTable album
 
 --------------------------------------------------------------------------------
 -- Tests
@@ -375,7 +589,7 @@ executionTests opts = describe "execution" $ do
                   {title: {_eq: "track_no_album"}}
                 ]
               },
-              order_by: {id: asc}
+              order_by: [{id: asc}]
             ) {
               title
               album {
@@ -411,7 +625,7 @@ permissionTests opts = describe "permission" $ do
           [graphql|
           query {
             track: hasura_track(
-              order_by: {id: asc}
+              order_by: [{id: asc}]
             ) {
               title
               album {

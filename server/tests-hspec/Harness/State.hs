@@ -7,10 +7,11 @@ module Harness.State
     Server (..),
     getServer,
     serverUrl,
+    stopServer,
   )
 where
 
-import Control.Concurrent
+import Control.Concurrent (ThreadId, killThread)
 import Data.Word
 import Hasura.Prelude hiding (State)
 
@@ -41,3 +42,7 @@ getServer State {server} = server
 -- @
 serverUrl :: Server -> String
 serverUrl Server {urlPrefix, port} = urlPrefix ++ ":" ++ show port
+
+-- | Forcibly stop a given 'Server'.
+stopServer :: Server -> IO ()
+stopServer Server {threadId} = killThread threadId

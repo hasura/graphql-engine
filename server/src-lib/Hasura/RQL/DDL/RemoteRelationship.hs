@@ -364,7 +364,7 @@ getRemoteSchemaEntityJoinColumns ::
 getRemoteSchemaEntityJoinColumns remoteSchemaName introspection typeName = do
   typeDefinition <-
     onNothing (lookupType introspection typeName) $
-      throw400 NotFound ("no such type defined in remote schema: " <>> remoteSchemaName)
+      throw400 NotFound ("no type named " <> typeName <<> " defined in remote schema " <>> remoteSchemaName)
   case typeDefinition of
     G.TypeDefinitionObject objectDefinition ->
       pure $

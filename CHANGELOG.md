@@ -1,6 +1,50 @@
 # Hasura GraphQL Engine Changelog
 
 ## Next release
+
+### Remote relationships from remote schemas
+
+This release adds three new metadata API commands:
+- `create_remote_schema_remote_relationship`
+- `update_remote_schema_remote_relationship`
+- `delete_remote_schema_remote_relationship`
+
+that allows to create remote relationships between remote schemas on
+the left-hand side and databases or remote schemas on the right-hand
+side. Both use the same syntax as remote relationships from databases:
+
+```yaml
+type: create_remote_schema_remote_relationship
+args:
+  remote_schema: LeftHandSide
+  type_name: LeftHandSideTypeName
+  name: RelationshipName
+  definition:
+    to_remote_schema:
+      remote_schema: RightHandSideSchema
+      lhs_fields: [LHSJoinKeyName]
+      remote_field:
+        rhsFieldName:
+          arguments:
+            ids: $LHSJoinKeyName
+
+type: create_remote_schema_remote_relationship
+args:
+  remote_schema: LeftHandSide
+  type_name: LeftHandSideTypeName
+  name: RelationshipName
+  definition:
+    to_source:
+      source: RightHandSideSource
+      table: {schema: public, name: RHSTable}
+      relationship_type: object
+      field_mapping:
+        LHSJoinKeyName: RHSColumnName
+```
+
+Similarly to DB-to-DB relationships, only `Postgres` is supported on
+the right-hand side for now.
+
 ### Deprecations
 * The `custom_column_names` property of TableConfig used on `<db>_track_table` and `set_table_customization` metadata APIs has been deprecated in favour of the new `column_config` property. `custom_column_names` will still work for now, however, values used in `column_config` will take precedence over values from `custom_column_names` and any overlapped values in `custom_column_names` will be discarded.
 

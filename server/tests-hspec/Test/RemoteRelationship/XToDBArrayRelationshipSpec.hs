@@ -1,3 +1,4 @@
+{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE QuasiQuotes #-}
 
 -- | Tests for array remote relationships to databases. Remote relationships are
@@ -15,13 +16,24 @@ where
 import Control.Lens (findOf, has, only, (^?!))
 import Data.Aeson (Value)
 import Data.Aeson.Lens (key, values, _String)
-import Data.Foldable (for_)
+import Data.Char (isUpper, toLower)
+import Data.Foldable (for_, traverse_)
+import Data.Function ((&))
+import Data.List (intercalate, sortBy)
+import Data.List.Split (dropBlanks, keepDelimsL, split, whenElt)
 import Data.Maybe qualified as Unsafe (fromJust)
+import Data.Morpheus.Document (gqlDocument)
+import Data.Morpheus.Types
+import Data.Morpheus.Types qualified as Morpheus
+import Data.Text (Text)
+import Data.Typeable (Typeable)
+import GHC.Generics (Generic)
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (shouldBeYaml, shouldReturnYaml, yaml)
-import Harness.State (Server, State)
+import Harness.RemoteServer qualified as RemoteServer
+import Harness.State (Server, State, stopServer)
 import Harness.Test.Context (Context (..))
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema qualified as Schema
@@ -34,7 +46,7 @@ import Prelude
 spec :: SpecWith State
 spec = Context.runWithLocalState contexts tests
   where
-    lhsContexts = [lhsPostgres]
+    lhsContexts = [lhsPostgres, lhsRemoteServer]
     rhsContexts = [rhsPostgres]
     contexts = combine <$> lhsContexts <*> rhsContexts
 
@@ -94,10 +106,15 @@ lhsPostgres tableName =
       customOptions = Nothing
     }
 
-{-
-lhsRemoteServer :: Value -> Context
-lhsRemoteServer tableName = Context "from RS" (lhsRemoteSetup tableName) lhsRemoteTeardown
--}
+lhsRemoteServer :: LHSContext
+lhsRemoteServer tableName =
+  Context
+    { name = Context.RemoteGraphQLServer,
+      mkLocalState = lhsRemoteServerMkLocalState,
+      setup = lhsRemoteServerSetup tableName,
+      teardown = lhsRemoteServerTeardown,
+      customOptions = Nothing
+    }
 
 --------------------------------------------------------------------------------
 
@@ -231,10 +248,197 @@ args:
   |]
 
 lhsPostgresTeardown :: (State, Maybe Server) -> IO ()
-lhsPostgresTeardown (state, _) = do
-  let sourceName = "source"
-  Schema.untrackTable Context.Postgres sourceName artist state
-  Postgres.dropTable artist
+lhsPostgresTeardown _ = Postgres.dropTable artist
+
+--------------------------------------------------------------------------------
+-- LHS Remote Server
+
+-- | To circumvent Morpheus' default behaviour, which is to capitalize type
+-- names and field names for Haskell records to be consistent with their
+-- corresponding GraphQL equivalents, we define most of the schema manually with
+-- the following options.
+hasuraTypeOptions :: Morpheus.GQLTypeOptions
+hasuraTypeOptions =
+  Morpheus.defaultTypeOptions
+    { -- transformation to apply to constructors, for enums; we simply map to
+      -- lower case:
+      --   Asc -> asc
+      Morpheus.constructorTagModifier = map toLower,
+      -- transformation to apply to field names; we drop all characters up to and
+      -- including the first underscore:
+      --   hta_where -> where
+      Morpheus.fieldLabelModifier = tail . dropWhile (/= '_'),
+      -- transformation to apply to type names; we split the name on uppercase
+      -- letters, intercalate with underscore, and map everything to lowercase:
+      --   HasuraTrack -> hasura_track
+      Morpheus.typeNameModifier = \_ ->
+        map toLower
+          . intercalate "_"
+          . split (dropBlanks $ keepDelimsL $ whenElt isUpper)
+    }
+
+data Query m = Query
+  { hasura_artist :: HasuraArtistArgs -> m [HasuraArtist m]
+  }
+  deriving (Generic)
+
+instance Typeable m => Morpheus.GQLType (Query m)
+
+data HasuraArtistArgs = HasuraArtistArgs
+  { aa_where :: Maybe HasuraArtistBoolExp,
+    aa_order_by :: Maybe [HasuraArtistOrderBy],
+    aa_limit :: Maybe Int
+  }
+  deriving (Generic)
+
+instance Morpheus.GQLType HasuraArtistArgs where
+  typeOptions _ _ = hasuraTypeOptions
+
+data HasuraArtist m = HasuraArtist
+  { a_id :: m (Maybe Int),
+    a_name :: m (Maybe Text)
+  }
+  deriving (Generic)
+
+instance Typeable m => Morpheus.GQLType (HasuraArtist m) where
+  typeOptions _ _ = hasuraTypeOptions
+
+data HasuraArtistOrderBy = HasuraArtistOrderBy
+  { aob_id :: Maybe OrderType,
+    aob_name :: Maybe OrderType
+  }
+  deriving (Generic)
+
+instance Morpheus.GQLType HasuraArtistOrderBy where
+  typeOptions _ _ = hasuraTypeOptions
+
+data HasuraArtistBoolExp = HasuraArtistBoolExp
+  { abe__and :: Maybe [HasuraArtistBoolExp],
+    abe__or :: Maybe [HasuraArtistBoolExp],
+    abe__not :: Maybe HasuraArtistBoolExp,
+    abe_id :: Maybe IntCompExp,
+    abe_name :: Maybe StringCompExp
+  }
+  deriving (Generic)
+
+instance Morpheus.GQLType HasuraArtistBoolExp where
+  typeOptions _ _ = hasuraTypeOptions
+
+data OrderType = Asc | Desc
+  deriving (Show, Generic)
+
+instance Morpheus.GQLType OrderType where
+  typeOptions _ _ = hasuraTypeOptions
+
+[gqlDocument|
+
+input IntCompExp {
+  _eq: Int
+}
+
+input StringCompExp {
+  _eq: String
+}
+
+|]
+
+lhsRemoteServerMkLocalState :: State -> IO (Maybe Server)
+lhsRemoteServerMkLocalState _ = do
+  server <-
+    RemoteServer.run $
+      RemoteServer.generateQueryInterpreter (Query {hasura_artist})
+  pure $ Just server
+  where
+    -- Implements the @hasura_artist@ field of the @Query@ type.
+    hasura_artist (HasuraArtistArgs {..}) = do
+      let filterFunction = case aa_where of
+            Nothing -> const True
+            Just whereArg -> flip matchArtist whereArg
+          orderByFunction = case aa_order_by of
+            Nothing -> \_ _ -> EQ
+            Just orderByArg -> orderArtist orderByArg
+          limitFunction = case aa_limit of
+            Nothing -> Prelude.id
+            Just limitArg -> take limitArg
+      pure $
+        artists
+          & filter filterFunction
+          & sortBy orderByFunction
+          & limitFunction
+          & map mkArtist
+    -- Returns True iif the given artist matches the given boolean expression.
+    matchArtist artistInfo@(artistId, artistName) (HasuraArtistBoolExp {..}) =
+      and
+        [ maybe True (all (matchArtist artistInfo)) abe__and,
+          maybe True (any (matchArtist artistInfo)) abe__or,
+          maybe True (not . matchArtist artistInfo) abe__not,
+          maybe True (matchMaybeInt artistId) abe_id,
+          maybe True (matchString artistName) abe_name
+        ]
+    matchString stringField StringCompExp {..} = Just stringField == _eq
+    matchMaybeInt maybeIntField IntCompExp {..} = maybeIntField == _eq
+    -- Returns an ordering between the two given artists.
+    orderArtist
+      orderByList
+      (artistId1, artistName1)
+      (artistId2, artistName2) =
+        flip foldMap orderByList \HasuraArtistOrderBy {..} ->
+          if
+              | Just idOrder <- aob_id ->
+                compareWithNullLast idOrder artistId1 artistId2
+              | Just nameOrder <- aob_name -> case nameOrder of
+                Asc -> compare artistName1 artistName2
+                Desc -> compare artistName2 artistName1
+              | otherwise ->
+                error "empty artist_order object"
+    compareWithNullLast Desc x1 x2 = compareWithNullLast Asc x2 x1
+    compareWithNullLast Asc Nothing Nothing = EQ
+    compareWithNullLast Asc (Just _) Nothing = LT
+    compareWithNullLast Asc Nothing (Just _) = GT
+    compareWithNullLast Asc (Just x1) (Just x2) = compare x1 x2
+    artists =
+      [ (Just 1, "artist1"),
+        (Just 2, "artist2"),
+        (Just 3, "artist_no_albums"),
+        (Nothing, "artist_no_id")
+      ]
+    mkArtist (artistId, artistName) =
+      HasuraArtist
+        { a_id = pure artistId,
+          a_name = pure $ Just artistName
+        }
+
+lhsRemoteServerSetup :: Value -> (State, Maybe Server) -> IO ()
+lhsRemoteServerSetup tableName (state, maybeRemoteServer) = case maybeRemoteServer of
+  Nothing -> error "XToDBArrayRelationshipSpec: remote server local state did not succesfully create a server"
+  Just remoteServer -> do
+    let remoteSchemaEndpoint = GraphqlEngine.serverUrl remoteServer ++ "/graphql"
+    GraphqlEngine.postMetadata_
+      state
+      [yaml|
+type: bulk
+args:
+- type: add_remote_schema
+  args:
+    name: source
+    definition:
+      url: *remoteSchemaEndpoint
+- type: create_remote_schema_remote_relationship
+  args:
+    remote_schema: source
+    type_name: hasura_artist
+    name: albums
+    definition:
+      to_source:
+        source: target
+        table: *tableName
+        relationship_type: array
+        field_mapping:
+          id: artist_id
+      |]
+
+lhsRemoteServerTeardown :: (State, Maybe Server) -> IO ()
+lhsRemoteServerTeardown (_, maybeServer) = traverse_ stopServer maybeServer
 
 --------------------------------------------------------------------------------
 -- RHS Postgres
@@ -294,16 +498,13 @@ args:
   |]
 
 rhsPostgresTeardown :: (State, ()) -> IO ()
-rhsPostgresTeardown (state, _) = do
-  let sourceName = "target"
-  Schema.untrackTable Context.Postgres sourceName album state
-  Postgres.dropTable album
+rhsPostgresTeardown _ = Postgres.dropTable album
 
 --------------------------------------------------------------------------------
 -- Tests
 
 tests :: Context.Options -> SpecWith (State, Maybe Server)
-tests opts = describe "array-relationship" $ do
+tests opts = describe "array-relationship" do
   schemaTests opts
   executionTests opts
   permissionTests opts
@@ -311,7 +512,7 @@ tests opts = describe "array-relationship" $ do
 schemaTests :: Context.Options -> SpecWith (State, Maybe Server)
 schemaTests _opts =
   -- we introspect the schema and validate it
-  it "graphql-schema" $ \(state, _) -> do
+  it "graphql-schema" \(state, _) -> do
     let query =
           [graphql|
           fragment type_info on __Type {
@@ -442,9 +643,9 @@ schemaTests _opts =
 
 -- | Basic queries using DB-to-DB joins
 executionTests :: Context.Options -> SpecWith (State, Maybe Server)
-executionTests opts = describe "execution" $ do
+executionTests opts = describe "execution" do
   -- fetches the relationship data
-  it "related-data" $ \(state, _) -> do
+  it "related-data" \(state, _) -> do
     let query =
           [graphql|
           query {
@@ -471,7 +672,7 @@ executionTests opts = describe "execution" $ do
       expectedResponse
 
   -- when there are no matching rows, the relationship response should be []
-  it "related-data-empty-array" $ \(state, _) -> do
+  it "related-data-empty-array" \(state, _) -> do
     let query =
           [graphql|
           query {
@@ -496,7 +697,7 @@ executionTests opts = describe "execution" $ do
       expectedResponse
 
   -- when any of the join columns are null, the relationship should be null
-  it "related-data-null" $ \(state, _) -> do
+  it "related-data-null" \(state, _) -> do
     let query =
           [graphql|
           query {
@@ -521,7 +722,7 @@ executionTests opts = describe "execution" $ do
       expectedResponse
 
   -- when the lhs response has both null and non-null values for join columns
-  it "related-data-non-null-and-null" $ \(state, _) -> do
+  it "related-data-non-null-and-null" \(state, _) -> do
     let query =
           [graphql|
           query {
@@ -532,7 +733,7 @@ executionTests opts = describe "execution" $ do
                   {name: {_eq: "artist_no_id"}}
                 ]
               },
-              order_by: {id: asc}
+              order_by: [{id: asc}]
             ) {
               name
               albums {
@@ -565,15 +766,15 @@ executionTests opts = describe "execution" $ do
 
 -- | tests that describe an array relationship's data in the presence of permisisons
 permissionTests :: Context.Options -> SpecWith (State, Maybe Server)
-permissionTests opts = describe "permission" $ do
+permissionTests opts = describe "permission" do
   -- only the allowed rows on the target table are queryable
-  it "only-allowed-rows" $ \(state, _) -> do
+  it "only-allowed-rows" \(state, _) -> do
     let userHeaders = [("x-hasura-role", "role1"), ("x-hasura-artist-id", "1")]
         query =
           [graphql|
           query {
             artist: hasura_artist(
-              order_by: {id: asc}
+              order_by: [{id: asc}]
             ) {
               name
               albums {
@@ -605,7 +806,7 @@ permissionTests opts = describe "permission" $ do
   -- we use an introspection query to check column permissions:
   -- 1. the type 'hasura_album' has only 'artist_id' and 'title', the allowed columns
   -- 2. the albums field in 'hasura_artist' type is of type 'hasura_album'
-  it "only-allowed-columns" $ \(state, _) -> do
+  it "only-allowed-columns" \(state, _) -> do
     let userHeaders = [("x-hasura-role", "role1"), ("x-hasura-artist-id", "1")]
         query =
           [graphql|
@@ -643,7 +844,7 @@ permissionTests opts = describe "permission" $ do
       expectedResponse
 
   -- _aggregate field should not be generated when 'allow_aggregations' isn't set to 'true'
-  it "aggregations-not-allowed" $ \(state, _) -> do
+  it "aggregations-not-allowed" \(state, _) -> do
     let userHeaders = [("x-hasura-role", "role1")]
         query =
           [graphql|
@@ -670,7 +871,7 @@ permissionTests opts = describe "permission" $ do
       expectedResponse
 
   -- _aggregate field should only be allowed when 'allow_aggregations' is set to 'true'
-  it "aggregations-allowed" $ \(state, _) -> do
+  it "aggregations-allowed" \(state, _) -> do
     let userHeaders = [("x-hasura-role", "role2")]
         query =
           [graphql|
@@ -698,7 +899,7 @@ permissionTests opts = describe "permission" $ do
       expectedResponse
 
   -- permission limit should kick in when no query limit is specified
-  it "no-query-limit" $ \(state, _) -> do
+  it "no-query-limit" \(state, _) -> do
     let userHeaders = [("x-hasura-role", "role2"), ("x-hasura-artist-id", "1")]
         query =
           [graphql|
@@ -727,7 +928,7 @@ permissionTests opts = describe "permission" $ do
       expectedResponse
 
   -- query limit should be applied when query limit <= permission limit
-  it "user-limit-less-than-permission-limit" $ \(state, _) -> do
+  it "user-limit-less-than-permission-limit" \(state, _) -> do
     let userHeaders = [("x-hasura-role", "role2"), ("x-hasura-artist-id", "1")]
         query =
           [graphql|
@@ -755,7 +956,7 @@ permissionTests opts = describe "permission" $ do
       expectedResponse
 
   -- permission limit should be applied when query limit > permission limit
-  it "user-limit-greater-than-permission-limit" $ \(state, _) -> do
+  it "user-limit-greater-than-permission-limit" \(state, _) -> do
     let userHeaders = [("x-hasura-role", "role2"), ("x-hasura-artist-id", "1")]
         query =
           [graphql|
@@ -784,7 +985,7 @@ permissionTests opts = describe "permission" $ do
       expectedResponse
 
   -- permission limit should only apply on 'nodes' but not on 'aggregate'
-  it "aggregations" $ \(state, _) -> do
+  it "aggregations" \(state, _) -> do
     let userHeaders = [("x-hasura-role", "role2"), ("x-hasura-artist-id", "1")]
         query =
           [graphql|
@@ -821,7 +1022,7 @@ permissionTests opts = describe "permission" $ do
       expectedResponse
 
   -- query limit applies to both 'aggregate' and 'nodes'
-  it "aggregations-query-limit" $ \(state, _) -> do
+  it "aggregations-query-limit" \(state, _) -> do
     let userHeaders = [("x-hasura-role", "role2"), ("x-hasura-artist-id", "1")]
         query =
           [graphql|

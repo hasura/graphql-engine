@@ -191,10 +191,12 @@ data Context a = Context
 -- | A name describing the given context.
 data ContextName
   = Backend BackendType
+  | RemoteGraphQLServer
   | Combine ContextName ContextName
 
 instance Show ContextName where
   show (Backend backend) = show backend
+  show RemoteGraphQLServer = "RemoteGraphQLServer"
   show (Combine name1 name2) = show name1 ++ "-" ++ show name2
 
 -- | Default function for 'mkLocalState' when there's no local state.

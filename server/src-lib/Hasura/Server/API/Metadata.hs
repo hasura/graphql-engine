@@ -112,6 +112,10 @@ data RQLMetadataV1
   | -- Remote schemas permissions
     RMAddRemoteSchemaPermissions !AddRemoteSchemaPermission
   | RMDropRemoteSchemaPermissions !DropRemoteSchemaPermissions
+  | -- Remote Schema remote relationships
+    RMCreateRemoteSchemaRemoteRelationship CreateRemoteSchemaRemoteRelationship
+  | RMUpdateRemoteSchemaRemoteRelationship CreateRemoteSchemaRemoteRelationship
+  | RMDeleteRemoteSchemaRemoteRelationship DeleteRemoteSchemaRemoteRelationship
   | -- Scheduled triggers
     RMCreateCronTrigger !(Unvalidated CreateCronTrigger)
   | RMDeleteCronTrigger !ScheduledTriggerName
@@ -185,6 +189,9 @@ instance FromJSON RQLMetadataV1 where
       "introspect_remote_schema" -> RMIntrospectRemoteSchema <$> args
       "add_remote_schema_permissions" -> RMAddRemoteSchemaPermissions <$> args
       "drop_remote_schema_permissions" -> RMDropRemoteSchemaPermissions <$> args
+      "create_remote_schema_remote_relationship" -> RMCreateRemoteSchemaRemoteRelationship <$> args
+      "update_remote_schema_remote_relationship" -> RMUpdateRemoteSchemaRemoteRelationship <$> args
+      "delete_remote_schema_remote_relationship" -> RMDeleteRemoteSchemaRemoteRelationship <$> args
       "create_cron_trigger" -> RMCreateCronTrigger <$> args
       "delete_cron_trigger" -> RMDeleteCronTrigger <$> args
       "create_scheduled_event" -> RMCreateScheduledEvent <$> args
@@ -317,6 +324,7 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
       (MaintenanceModeDisabled, ReadOnlyModeDisabled) -> do
         -- set modified metadata in storage
         newResourceVersion <- setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
+
         -- notify schema cache sync
         notifySchemaCacheSync newResourceVersion instanceId cacheInvalidations
         (_, modSchemaCache', _) <-
@@ -449,6 +457,9 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMIntrospectRemoteSchema q -> runIntrospectRemoteSchema q
   RMAddRemoteSchemaPermissions q -> runAddRemoteSchemaPermissions q
   RMDropRemoteSchemaPermissions q -> runDropRemoteSchemaPermissions q
+  RMCreateRemoteSchemaRemoteRelationship q -> runCreateRemoteSchemaRemoteRelationship q
+  RMUpdateRemoteSchemaRemoteRelationship q -> runUpdateRemoteSchemaRemoteRelationship q
+  RMDeleteRemoteSchemaRemoteRelationship q -> runDeleteRemoteSchemaRemoteRelationship q
   RMCreateCronTrigger q ->
     validateTransforms
       (unUnvalidate . cctRequestTransform . _Just)

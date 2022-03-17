@@ -74,6 +74,10 @@ data RQLMetadataV1
   | -- Remote schemas permissions
     RMAddRemoteSchemaPermissions !AddRemoteSchemaPermission
   | RMDropRemoteSchemaPermissions !DropRemoteSchemaPermissions
+  | -- Remote Schema remote relationships
+    RMCreateRemoteSchemaRemoteRelationship CreateRemoteSchemaRemoteRelationship
+  | RMUpdateRemoteSchemaRemoteRelationship CreateRemoteSchemaRemoteRelationship
+  | RMDeleteRemoteSchemaRemoteRelationship DeleteRemoteSchemaRemoteRelationship
   | -- Scheduled triggers
     RMCreateCronTrigger !(Unvalidated CreateCronTrigger)
   | RMDeleteCronTrigger !ScheduledTriggerName
