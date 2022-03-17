@@ -115,6 +115,14 @@ function:
 - cli: fix inherited roles metadata not being updated when dropping all roles (#7872)
 - cli: add support for customization field in sources metadata (#8292)
 
+## v2.4.0-beta.2
+
+- server: fix regression where remote relationships would get exposed over Relay, which is unsupported
+
+## v2.3.1
+
+- server: fix regression where remote relationships would get exposed over Relay, which is unsupported
+
 ## v2.2.2
 
 - server: fix regression where remote relationships would get exposed over Relay, which is unsupported
