@@ -7,6 +7,7 @@
     "start": "docusaurus start",
     "fresh-start": "yarn clear && yarn start",
     "build": "docusaurus build",
+    "build:base-url": "yarn run build --out-dir build/docs",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",

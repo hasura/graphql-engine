@@ -1,6 +1,6 @@
 import React from "react";
-import BrowserOnly from "@docusaurus/BrowserOnly";
 import Link from "@docusaurus/Link";
+import useBaseUrl from "@docusaurus/useBaseUrl";
 import GithubIcon from "@site/static/icons/github.svg";
 import TwitterIcon from "@site/static/icons/twitter.svg";
 import DiscordIcon from "@site/static/icons/discord.svg";
@@ -11,8 +11,8 @@ import styles from "./styles.module.scss";
 const CustomFooter = () => (
 <footer className={styles["custom-footer-wrapper"]}>
   <div className={styles["logo-wrapper"]}>
-    <img src="/img/logo-light.svg" className={styles["dark-theme-logo"]} />
-    <img src="/img/logo.svg" className={styles["light-theme-logo"]} />
+    <img src={useBaseUrl("/img/logo-light.svg")} className={styles["dark-theme-logo"]} />
+    <img src={useBaseUrl("/img/logo.svg")} className={styles["light-theme-logo"]} />
   </div>
   <div className={styles["copyright"]}>
     {`© ${new Date().getFullYear()} Hasura Inc. All rights reserved`}
