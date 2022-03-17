@@ -6,7 +6,15 @@
 
 ## v2.4.0-beta.2
 
-### Bug fixes and improvements
+- server: fix regression where remote relationships would get exposed over Relay, which is unsupported
+
+## v2.3.1
+
+- server: fix regression where remote relationships would get exposed over Relay, which is unsupported
+
+## v2.2.2
+
+- server: fix regression where remote relationships would get exposed over Relay, which is unsupported
 
 ## v2.4.0-beta.1
 
