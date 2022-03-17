@@ -202,7 +202,7 @@ your schema, database migration files are automatically generated in the
 directory of your project.
 
 Let's create the following table
-`address (id uuid, street text, zip text, city text, country text, author_id int)`
+`address (id uuid, street text, zip text, city text, country text, author_id uuid)`
 and then create a foreign-key to the `author` table via the
 `author_id -> id` columns.
 
