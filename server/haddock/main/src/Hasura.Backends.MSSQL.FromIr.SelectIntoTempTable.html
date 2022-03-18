@@ -11,84 +11,77 @@
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html"><span class="hs-identifier">Hasura.RQL.Types.Column</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">IR</span></span><span>
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
-</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">unName</span></span><span class="hs-special">)</span><span>
-</span><span id="line-15"></span><span>
-</span><span id="line-16"></span><span class="hs-comment">-- | Create a temporary table with the same schema as the given table.</span><span>
-</span><span id="line-17"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.SelectIntoTempTable.html#toSelectIntoTempTable"><span class="hs-identifier hs-type">toSelectIntoTempTable</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#TempTableName"><span class="hs-identifier hs-type">TempTableName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">IR.ColumnInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#SITTConstraints"><span class="hs-identifier hs-type">SITTConstraints</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#SelectIntoTempTable"><span class="hs-identifier hs-type">SelectIntoTempTable</span></a></span><span>
-</span><span id="line-18"></span><span id="toSelectIntoTempTable"><span class="annot"><span class="annottext">toSelectIntoTempTable :: TempTableName
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-comment">-- | Create a temporary table with the same schema as the given table.</span><span>
+</span><span id="line-16"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.SelectIntoTempTable.html#toSelectIntoTempTable"><span class="hs-identifier hs-type">toSelectIntoTempTable</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#TempTableName"><span class="hs-identifier hs-type">TempTableName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">IR.ColumnInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#SITTConstraints"><span class="hs-identifier hs-type">SITTConstraints</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#SelectIntoTempTable"><span class="hs-identifier hs-type">SelectIntoTempTable</span></a></span><span>
+</span><span id="line-17"></span><span id="toSelectIntoTempTable"><span class="annot"><span class="annottext">toSelectIntoTempTable :: TempTableName
 -&gt; TableName
 -&gt; [ColumnInfo 'MSSQL]
 -&gt; SITTConstraints
 -&gt; SelectIntoTempTable
-</span><a href="Hasura.Backends.MSSQL.FromIr.SelectIntoTempTable.html#toSelectIntoTempTable"><span class="hs-identifier hs-var hs-var">toSelectIntoTempTable</span></a></span></span><span> </span><span id="local-6989586621688323180"><span class="annot"><span class="annottext">TempTableName
-</span><a href="#local-6989586621688323180"><span class="hs-identifier hs-var">tempTableName</span></a></span></span><span> </span><span id="local-6989586621688323179"><span class="annot"><span class="annottext">TableName
-</span><a href="#local-6989586621688323179"><span class="hs-identifier hs-var">fromTable</span></a></span></span><span> </span><span id="local-6989586621688323178"><span class="annot"><span class="annottext">[ColumnInfo 'MSSQL]
-</span><a href="#local-6989586621688323178"><span class="hs-identifier hs-var">allColumns</span></a></span></span><span> </span><span id="local-6989586621688323177"><span class="annot"><span class="annottext">SITTConstraints
-</span><a href="#local-6989586621688323177"><span class="hs-identifier hs-var">withConstraints</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-19"></span><span>  </span><span class="annot"><span class="annottext">SelectIntoTempTable :: TempTableName
+</span><a href="Hasura.Backends.MSSQL.FromIr.SelectIntoTempTable.html#toSelectIntoTempTable"><span class="hs-identifier hs-var hs-var">toSelectIntoTempTable</span></a></span></span><span> </span><span id="local-6989586621688322740"><span class="annot"><span class="annottext">TempTableName
+</span><a href="#local-6989586621688322740"><span class="hs-identifier hs-var">tempTableName</span></a></span></span><span> </span><span id="local-6989586621688322739"><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621688322739"><span class="hs-identifier hs-var">fromTable</span></a></span></span><span> </span><span id="local-6989586621688322738"><span class="annot"><span class="annottext">[ColumnInfo 'MSSQL]
+</span><a href="#local-6989586621688322738"><span class="hs-identifier hs-var">allColumns</span></a></span></span><span> </span><span id="local-6989586621688322737"><span class="annot"><span class="annottext">SITTConstraints
+</span><a href="#local-6989586621688322737"><span class="hs-identifier hs-var">withConstraints</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-18"></span><span>  </span><span class="annot"><span class="annottext">SelectIntoTempTable :: TempTableName
 -&gt; [UnifiedColumn]
 -&gt; TableName
 -&gt; SITTConstraints
 -&gt; SelectIntoTempTable
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#SelectIntoTempTable"><span class="hs-identifier hs-type">SelectIntoTempTable</span></a></span><span>
-</span><span id="line-20"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:sittTempTableName:SelectIntoTempTable :: TempTableName
+</span><span id="line-19"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:sittTempTableName:SelectIntoTempTable :: TempTableName
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AsittTempTableName%3ASelectIntoTempTable"><span class="hs-identifier hs-var">sittTempTableName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TempTableName
-</span><a href="#local-6989586621688323180"><span class="hs-identifier hs-var">tempTableName</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-21"></span><span>      </span><span class="annot"><span class="annottext">$sel:sittColumns:SelectIntoTempTable :: [UnifiedColumn]
+</span><a href="#local-6989586621688322740"><span class="hs-identifier hs-var">tempTableName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>      </span><span class="annot"><span class="annottext">$sel:sittColumns:SelectIntoTempTable :: [UnifiedColumn]
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AsittColumns%3ASelectIntoTempTable"><span class="hs-identifier hs-var">sittColumns</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ColumnInfo 'MSSQL -&gt; UnifiedColumn)
 -&gt; [ColumnInfo 'MSSQL] -&gt; [UnifiedColumn]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL -&gt; UnifiedColumn
 </span><a href="Hasura.Backends.MSSQL.FromIr.SelectIntoTempTable.html#columnInfoToUnifiedColumn"><span class="hs-identifier hs-var">columnInfoToUnifiedColumn</span></a></span><span> </span><span class="annot"><span class="annottext">[ColumnInfo 'MSSQL]
-</span><a href="#local-6989586621688323178"><span class="hs-identifier hs-var">allColumns</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-22"></span><span>      </span><span class="annot"><span class="annottext">$sel:sittFromTableName:SelectIntoTempTable :: TableName
+</span><a href="#local-6989586621688322738"><span class="hs-identifier hs-var">allColumns</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>      </span><span class="annot"><span class="annottext">$sel:sittFromTableName:SelectIntoTempTable :: TableName
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AsittFromTableName%3ASelectIntoTempTable"><span class="hs-identifier hs-var">sittFromTableName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableName
-</span><a href="#local-6989586621688323179"><span class="hs-identifier hs-var">fromTable</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-23"></span><span>      </span><span class="annot"><span class="annottext">$sel:sittConstraints:SelectIntoTempTable :: SITTConstraints
+</span><a href="#local-6989586621688322739"><span class="hs-identifier hs-var">fromTable</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>      </span><span class="annot"><span class="annottext">$sel:sittConstraints:SelectIntoTempTable :: SITTConstraints
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AsittConstraints%3ASelectIntoTempTable"><span class="hs-identifier hs-var">sittConstraints</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SITTConstraints
-</span><a href="#local-6989586621688323177"><span class="hs-identifier hs-var">withConstraints</span></a></span><span>
-</span><span id="line-24"></span><span>    </span><span class="hs-special">}</span><span>
-</span><span id="line-25"></span><span>
-</span><span id="line-26"></span><span class="hs-comment">-- | Extracts the type and column name of a ColumnInfo</span><span>
-</span><span id="line-27"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.SelectIntoTempTable.html#columnInfoToUnifiedColumn"><span class="hs-identifier hs-type">columnInfoToUnifiedColumn</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">IR.ColumnInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#UnifiedColumn"><span class="hs-identifier hs-type">UnifiedColumn</span></a></span><span>
-</span><span id="line-28"></span><span id="columnInfoToUnifiedColumn"><span class="annot"><span class="annottext">columnInfoToUnifiedColumn :: ColumnInfo 'MSSQL -&gt; UnifiedColumn
-</span><a href="Hasura.Backends.MSSQL.FromIr.SelectIntoTempTable.html#columnInfoToUnifiedColumn"><span class="hs-identifier hs-var hs-var">columnInfoToUnifiedColumn</span></a></span></span><span> </span><span id="local-6989586621688323170"><span class="annot"><span class="annottext">ColumnInfo 'MSSQL
-</span><a href="#local-6989586621688323170"><span class="hs-identifier hs-var">colInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-29"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL -&gt; ColumnType 'MSSQL
+</span><a href="#local-6989586621688322737"><span class="hs-identifier hs-var">withConstraints</span></a></span><span>
+</span><span id="line-23"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span class="hs-comment">-- | Extracts the type and column name of a ColumnInfo</span><span>
+</span><span id="line-26"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.SelectIntoTempTable.html#columnInfoToUnifiedColumn"><span class="hs-identifier hs-type">columnInfoToUnifiedColumn</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">IR.ColumnInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#UnifiedColumn"><span class="hs-identifier hs-type">UnifiedColumn</span></a></span><span>
+</span><span id="line-27"></span><span id="columnInfoToUnifiedColumn"><span class="annot"><span class="annottext">columnInfoToUnifiedColumn :: ColumnInfo 'MSSQL -&gt; UnifiedColumn
+</span><a href="Hasura.Backends.MSSQL.FromIr.SelectIntoTempTable.html#columnInfoToUnifiedColumn"><span class="hs-identifier hs-var hs-var">columnInfoToUnifiedColumn</span></a></span></span><span> </span><span id="local-6989586621688322730"><span class="annot"><span class="annottext">ColumnInfo 'MSSQL
+</span><a href="#local-6989586621688322730"><span class="hs-identifier hs-var">colInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL -&gt; ColumnType 'MSSQL
 forall (b :: BackendType). ColumnInfo b -&gt; ColumnType b
 </span><a href="Hasura.RQL.Types.Column.html#ciType"><span class="hs-identifier hs-var hs-var">IR.ciType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL
-</span><a href="#local-6989586621688323170"><span class="hs-identifier hs-var">colInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-30"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnScalar"><span class="hs-identifier hs-type">IR.ColumnScalar</span></a></span><span> </span><span id="local-6989586621688323167"><span class="annot"><span class="annottext">ScalarType 'MSSQL
-</span><a href="#local-6989586621688323167"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-31"></span><span>      </span><span class="annot"><span class="annottext">UnifiedColumn :: Text -&gt; ScalarType -&gt; UnifiedColumn
+</span><a href="#local-6989586621688322730"><span class="hs-identifier hs-var">colInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnScalar"><span class="hs-identifier hs-type">IR.ColumnScalar</span></a></span><span> </span><span id="local-6989586621688322727"><span class="annot"><span class="annottext">ScalarType 'MSSQL
+</span><a href="#local-6989586621688322727"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-30"></span><span>      </span><span class="annot"><span class="annottext">UnifiedColumn :: ColumnName -&gt; ScalarType -&gt; UnifiedColumn
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#UnifiedColumn"><span class="hs-identifier hs-type">UnifiedColumn</span></a></span><span>
-</span><span id="line-32"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:name:UnifiedColumn :: Text
-</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3Aname%3AUnifiedColumn"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
-</span><span class="hs-identifier hs-var hs-var">unName</span></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Text) -&gt; Name -&gt; Text
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL -&gt; Name
-forall (b :: BackendType). ColumnInfo b -&gt; Name
-</span><a href="Hasura.RQL.Types.Column.html#ciName"><span class="hs-identifier hs-var hs-var">IR.ciName</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL
-</span><a href="#local-6989586621688323170"><span class="hs-identifier hs-var">colInfo</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-33"></span><span>          </span><span class="annot"><span class="annottext">$sel:type':UnifiedColumn :: ScalarType
+</span><span id="line-31"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:name:UnifiedColumn :: ColumnName
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3Aname%3AUnifiedColumn"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL -&gt; Column 'MSSQL
+forall (b :: BackendType). ColumnInfo b -&gt; Column b
+</span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var hs-var">IR.ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL
+</span><a href="#local-6989586621688322730"><span class="hs-identifier hs-var">colInfo</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>          </span><span class="annot"><span class="annottext">$sel:type':UnifiedColumn :: ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3Atype%27%3AUnifiedColumn"><span class="hs-identifier hs-var">type'</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ScalarType 'MSSQL
 ScalarType
-</span><a href="#local-6989586621688323167"><span class="hs-identifier hs-var">t</span></a></span><span>
-</span><span id="line-34"></span><span>        </span><span class="hs-special">}</span><span>
-</span><span id="line-35"></span><span>    </span><span class="hs-comment">-- Enum values are represented as text value so they will always be of type text</span><span>
-</span><span id="line-36"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnEnumReference"><span class="hs-identifier hs-type">IR.ColumnEnumReference</span></a></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-37"></span><span>      </span><span class="annot"><span class="annottext">UnifiedColumn :: Text -&gt; ScalarType -&gt; UnifiedColumn
+</span><a href="#local-6989586621688322727"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-33"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-34"></span><span>    </span><span class="hs-comment">-- Enum values are represented as text value so they will always be of type text</span><span>
+</span><span id="line-35"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnEnumReference"><span class="hs-identifier hs-type">IR.ColumnEnumReference</span></a></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-36"></span><span>      </span><span class="annot"><span class="annottext">UnifiedColumn :: ColumnName -&gt; ScalarType -&gt; UnifiedColumn
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#UnifiedColumn"><span class="hs-identifier hs-type">UnifiedColumn</span></a></span><span>
-</span><span id="line-38"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:name:UnifiedColumn :: Text
-</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3Aname%3AUnifiedColumn"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
-</span><span class="hs-identifier hs-var hs-var">unName</span></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Text) -&gt; Name -&gt; Text
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL -&gt; Name
-forall (b :: BackendType). ColumnInfo b -&gt; Name
-</span><a href="Hasura.RQL.Types.Column.html#ciName"><span class="hs-identifier hs-var hs-var">IR.ciName</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL
-</span><a href="#local-6989586621688323170"><span class="hs-identifier hs-var">colInfo</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-39"></span><span>          </span><span class="annot"><span class="annottext">$sel:type':UnifiedColumn :: ScalarType
+</span><span id="line-37"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:name:UnifiedColumn :: ColumnName
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3Aname%3AUnifiedColumn"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL -&gt; Column 'MSSQL
+forall (b :: BackendType). ColumnInfo b -&gt; Column b
+</span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var hs-var">IR.ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL
+</span><a href="#local-6989586621688322730"><span class="hs-identifier hs-var">colInfo</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>          </span><span class="annot"><span class="annottext">$sel:type':UnifiedColumn :: ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3Atype%27%3AUnifiedColumn"><span class="hs-identifier hs-var">type'</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#TextType"><span class="hs-identifier hs-var">TextType</span></a></span><span>
-</span><span id="line-40"></span><span>        </span><span class="hs-special">}</span><span>
-</span><span id="line-41"></span></pre></body></html>
+</span><span id="line-39"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-40"></span></pre></body></html>
