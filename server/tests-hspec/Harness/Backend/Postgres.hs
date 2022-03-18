@@ -130,7 +130,7 @@ scalarType = \case
 mkColumn :: Schema.Column -> Text
 mkColumn Schema.Column {columnName, columnType, columnNullable, columnDefault} =
   T.unwords
-    [ columnName,
+    [ wrapIdentifier columnName,
       scalarType columnType,
       bool "NOT NULL" "DEFAULT NULL" columnNullable,
       maybe "" ("DEFAULT " <>) columnDefault
@@ -141,7 +141,7 @@ mkPrimaryKey key =
   T.unwords
     [ "PRIMARY KEY",
       "(",
-      commaSeparated key,
+      commaSeparated $ map wrapIdentifier key,
       ")"
     ]
 
@@ -150,12 +150,12 @@ mkReference Schema.Reference {referenceLocalColumn, referenceTargetTable, refere
   T.unwords
     [ "CONSTRAINT FOREIGN KEY",
       "(",
-      referenceLocalColumn,
+      wrapIdentifier referenceLocalColumn,
       ")",
       "REFERENCES",
       referenceTargetTable,
       "(",
-      referenceTargetColumn,
+      wrapIdentifier referenceTargetColumn,
       ")",
       "ON DELETE CASCADE",
       "ON UPDATE CASCADE"
@@ -170,14 +170,21 @@ insertTable Schema.Table {tableName, tableColumns, tableData}
       T.unpack $
         T.unwords
           [ "INSERT INTO",
-            T.pack Constants.postgresDb <> "." <> tableName,
+            T.pack Constants.postgresDb <> "." <> wrapIdentifier tableName,
             "(",
-            commaSeparated (Schema.columnName <$> tableColumns),
+            commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
             ")",
             "VALUES",
             commaSeparated $ mkRow <$> tableData,
             ";"
           ]
+
+-- | Identifiers which may be case-sensitive needs to be wrapped in @""@.
+--
+--   More information can be found in the postgres docs:
+--   https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS
+wrapIdentifier :: Text -> Text
+wrapIdentifier identifier = "\"" <> identifier <> "\""
 
 mkRow :: [Schema.ScalarValue] -> Text
 mkRow row =

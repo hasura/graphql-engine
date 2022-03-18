@@ -467,8 +467,8 @@ fromSelectIntoTempTable SelectIntoTempTable {sittTempTableName, sittColumns, sit
         -- So, the "timestamp" type is neither insertable nor explicitly updatable. Its values are unique binary numbers within a database.
         -- We're using "binary" type instead so that we can copy a timestamp row value safely into the temporary table.
         -- See https://docs.microsoft.com/en-us/sql/t-sql/data-types/rowversion-transact-sql for more details.
-        TimestampType -> "CAST(" <+> fromNameText columnName <+> " AS binary(8)) AS " <+> fromNameText columnName
-        _ -> fromNameText columnName
+        TimestampType -> "CAST(" <+> fromColumnName columnName <+> " AS binary(8)) AS " <+> fromColumnName columnName
+        _ -> fromColumnName columnName
 
 -- | @TempTableName "deleted"@ becomes @\#deleted@
 fromTempTableName :: TempTableName -> Printer

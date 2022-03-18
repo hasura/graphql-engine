@@ -127,7 +127,7 @@ scalarType = \case
 mkColumn :: Schema.Column -> Text
 mkColumn Schema.Column {columnName, columnType, columnNullable, columnDefault} =
   T.unwords
-    [ columnName,
+    [ wrapIdentifier columnName,
       scalarType columnType,
       bool "NOT NULL" "DEFAULT NULL" columnNullable,
       maybe "" ("DEFAULT " <>) columnDefault
@@ -138,7 +138,7 @@ mkPrimaryKey key =
   T.unwords
     [ "PRIMARY KEY",
       "(",
-      commaSeparated key,
+      commaSeparated $ map wrapIdentifier key,
       ")"
     ]
 
@@ -147,12 +147,12 @@ mkReference Schema.Reference {referenceLocalColumn, referenceTargetTable, refere
   T.unwords
     [ "FOREIGN KEY",
       "(",
-      referenceLocalColumn,
+      wrapIdentifier referenceLocalColumn,
       ")",
       "REFERENCES",
       referenceTargetTable,
       "(",
-      referenceTargetColumn,
+      wrapIdentifier referenceTargetColumn,
       ")",
       "ON DELETE CASCADE",
       "ON UPDATE CASCADE"
@@ -167,14 +167,21 @@ insertTable Schema.Table {tableName, tableColumns, tableData}
       T.unpack $
         T.unwords
           [ "INSERT INTO",
-            T.pack Constants.sqlserverDb <> "." <> tableName,
+            T.pack Constants.sqlserverDb <> "." <> wrapIdentifier tableName,
             "(",
-            commaSeparated (Schema.columnName <$> tableColumns),
+            commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
             ")",
             "VALUES",
             commaSeparated $ mkRow <$> tableData,
             ";"
           ]
+
+-- | MSSQL identifiers which may contain spaces or be case-sensitive needs to be wrapped in @[]@.
+--
+--   More information can be found in the mssql docs:
+--   https://docs.microsoft.com/en-us/sql/relational-databases/databases/database-identifiers
+wrapIdentifier :: Text -> Text
+wrapIdentifier identifier = "[" <> identifier <> "]"
 
 mkRow :: [Schema.ScalarValue] -> Text
 mkRow row =

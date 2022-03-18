@@ -11,7 +11,6 @@ import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Prelude
 import Hasura.RQL.Types.Column qualified as IR
 import Hasura.SQL.Backend
-import Language.GraphQL.Draft.Syntax (unName)
 
 -- | Create a temporary table with the same schema as the given table.
 toSelectIntoTempTable :: TempTableName -> TableName -> [IR.ColumnInfo 'MSSQL] -> SITTConstraints -> SelectIntoTempTable
@@ -29,12 +28,12 @@ columnInfoToUnifiedColumn colInfo =
   case IR.ciType colInfo of
     IR.ColumnScalar t ->
       UnifiedColumn
-        { name = unName $ IR.ciName colInfo,
+        { name = IR.ciColumn colInfo,
           type' = t
         }
     -- Enum values are represented as text value so they will always be of type text
     IR.ColumnEnumReference {} ->
       UnifiedColumn
-        { name = unName $ IR.ciName colInfo,
+        { name = IR.ciColumn colInfo,
           type' = TextType
         }

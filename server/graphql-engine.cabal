@@ -1040,6 +1040,7 @@ test-suite tests-hspec
     Test.ArrayRelationshipsSpec
     Test.BasicFieldsSpec
     Test.ColumnPresetsSpec
+    Test.CustomFieldNamesSpec
     Test.DirectivesSpec
     Test.HelloWorldSpec
     Test.LimitOffsetSpec

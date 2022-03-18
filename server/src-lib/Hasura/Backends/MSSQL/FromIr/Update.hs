@@ -18,7 +18,6 @@ import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Column qualified as IR
 import Hasura.SQL.Backend
-import Language.GraphQL.Draft.Syntax (unName)
 
 fromUpdate :: IR.AnnotatedUpdate 'MSSQL -> FromIr Update
 fromUpdate (IR.AnnotatedUpdateG table (permFilter, whereClause) _ backendUpdate _ allColumns) = do
@@ -27,7 +26,7 @@ fromUpdate (IR.AnnotatedUpdateG table (permFilter, whereClause) _ backendUpdate 
     ( do
         permissionsFilter <- fromGBoolExp permFilter
         whereExpression <- fromGBoolExp whereClause
-        let columnNames = map (ColumnName . unName . IR.ciName) allColumns
+        let columnNames = map IR.ciColumn allColumns
         pure
           Update
             { updateTable =

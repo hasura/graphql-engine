@@ -10,7 +10,6 @@ import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Column qualified as IR
 import Hasura.SQL.Backend
-import Language.GraphQL.Draft.Syntax (unName)
 
 fromDelete :: IR.AnnDel 'MSSQL -> FromIr Delete
 fromDelete (IR.AnnDel table (permFilter, whereClause) _ allColumns) = do
@@ -19,7 +18,7 @@ fromDelete (IR.AnnDel table (permFilter, whereClause) _ allColumns) = do
     ( do
         permissionsFilter <- fromGBoolExp permFilter
         whereExpression <- fromGBoolExp whereClause
-        let columnNames = map (ColumnName . unName . IR.ciName) allColumns
+        let columnNames = map IR.ciColumn allColumns
         pure
           Delete
             { deleteTable =
