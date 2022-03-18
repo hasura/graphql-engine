@@ -98,6 +98,7 @@ export const LS_KEYS = {
   versionUpdateCheckLastClosed: 'console:versionUpdateCheckLastClosed',
   vpcBannerLastDismissed: 'console:vpcBannerLastDismissed',
   webhookTransformEnvVars: 'console:webhookTransformEnvVars',
+  featureFlag: 'console:featureFlag',
 };
 
 export const clearGraphiqlLS = () => {
