@@ -65,6 +65,7 @@
 - ignore: {name: Use newtype instead of data}
 - ignore: {name: Use bimap}
 - ignore: {name: Use $>}
+- ignore: {name: Use <$>}
 - ignore: {name: "Use ?~"}
 - ignore: {name: Use <=<}
 - ignore: {name: Use sequenceA}
