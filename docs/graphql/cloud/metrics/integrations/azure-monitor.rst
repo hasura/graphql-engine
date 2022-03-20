@@ -14,7 +14,7 @@ Azure Monitor Integration
  
 Introduction
 ------------
-You can export metrics and operation logs of your Hasura Cloud project to `Azure Monitor <https://azure.microsoft.com/en-in/services/monitor/>`_.
+You can export metrics, operation logs and traces of your Hasura Cloud project to `Azure Monitor <https://azure.microsoft.com/en-in/services/monitor/>`_.
 This can be configured on the integrations tab on the project's setting page.
 
 .. note::
@@ -67,6 +67,13 @@ Prerequisites
         :alt: Service Principal Role
         :width: 1146px 
 
+* Create an `Application Insights resource <https://docs.microsoft.com/en-us/azure/azure-monitor/app/create-new-resource>`_ in Azure.
+
+* From the ``Overview`` tab of the created Application Insights resource, retrieve ``Instrumentation Key``
+  
+  .. thumbnail:: /img/graphql/cloud/metrics/azure-instrumentation-key.png
+        :alt: Instrumentation Key
+        :width: 1146px
 
 Configure Azure Monitor integration
 -----------------------------------
@@ -97,21 +104,19 @@ In addition to the above parameters, the following fields are also needed:
    * - Custom Attributes **(Optional)**
      - Custom Attributes associated with your logs. A default source tag ``hasura-logs`` is added to all exported logs. 
 
-After adding appropriate values in the Azure monitor Integration panel, click ``Save``.
+After adding appropriate values in the Azure monitor Integration panel, click ``Connect Integration``.
 
 Checking the status of the integration
 --------------------------------------
 
-The green/red dot signifies the status of the integration. Green signifies successful exporting of logs to Azure monitor. 
-When logs are successfully exported, ``Last Exported`` is continuously updated, indicating the timestamp of the last log
-line successfully exported to your Azure monitor dashboard.
+The green/red dot signifies the status of the integration. For each of the telemetry types(logs, metrics, traces) green signifies successful exporting of the telemetry to Azure monitor. 
+``Last Exported`` is continuously updated, indicating the timestamp of the last telemetry(log, metric, trace) successfully exported to your Azure monitor dashboard.
 
 .. thumbnail:: /img/graphql/cloud/metrics/configure-azure-monitor-done.png
    :alt: Azure monitor Integration successfully configured
    :width: 1146px
 
-In case there is an error while exporting logs to Azure monitor, the dot is red and the HTTP status code of the error and
-the message is displayed right below it.
+In case of error while exporting any of telemetries(logs, metrics, traces) to Azure monitor, the dot becomes red and the error messages/instructios are displayed. Click ``Update Settings`` button to update the config parameters.
 
 .. thumbnail:: /img/graphql/cloud/metrics/configure-azure-monitor-fail.png
    :alt: Azure monitor Integration unable to push logs
@@ -178,4 +183,20 @@ logs. Custom log types are displayed in the left of the Query panel.
     :alt: Logs successfully exported to Azure monitor
     :width: 1146px
    
-   
+
+
+View traces
+-----------
+
+To navigate to `Azure monitor traces dashboard <https://portal.azure.com/#blade/Microsoft_Azure_Monitoring/AzureMonitoringBrowseBlade/applicationsInsights>`_
+, click ``View traces``.
+
+.. thumbnail:: /img/graphql/cloud/metrics/azure-monitor-view-traces.png
+    :alt: Application Insights Instrumentation Key
+    :width: 1146px
+
+Select the appropriate ``Application Insights`` and click ``Transaction search``. The traces can be filtered using ``Trace`` and ``Dependency`` Event types. Clicking any of the ``Dependency`` result shows the ``End-to-end transaction details`` for the corresponding trace.
+
+.. thumbnail:: /img/graphql/cloud/metrics/azure-monitor-trace-flame-graph.png
+   :alt: Traces successfully exported to Azure monitor
+   :width: 1146px
