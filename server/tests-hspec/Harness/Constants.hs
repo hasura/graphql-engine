@@ -43,7 +43,7 @@ import Data.HashSet qualified as Set
 import Data.Word (Word16)
 import Database.MySQL.Simple qualified as Mysql
 import Database.PG.Query qualified as Q
-import Hasura.GraphQL.Execute.LiveQuery.Options qualified as LQ
+import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types
@@ -234,7 +234,7 @@ serveOptions =
       soStringifyNum = StringifyNumbers,
       soDangerousBooleanCollapse = False,
       soEnabledAPIs = testSuiteEnabledApis,
-      soLiveQueryOpts = LQ.mkLiveQueriesOptions Nothing Nothing,
+      soLiveQueryOpts = ES.mkSubscriptionsOptions Nothing Nothing,
       soEnableAllowlist = False,
       soEnabledLogTypes = Set.fromList L.userAllowedLogTypes,
       soLogLevel = fromMaybe (L.LevelOther "test-suite") engineLogLevel,

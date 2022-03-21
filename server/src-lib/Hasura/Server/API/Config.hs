@@ -10,7 +10,7 @@ where
 
 import Data.Aeson.TH
 import Data.HashSet qualified as Set
-import Hasura.GraphQL.Execute.LiveQuery.Options qualified as LQ
+import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.Prelude
 import Hasura.RQL.Types
   ( FunctionPermissionsCtx,
@@ -39,7 +39,7 @@ data ServerConfig = ServerConfig
     scfgIsJwtSet :: !Bool,
     scfgJwt :: ![JWTInfo],
     scfgIsAllowListEnabled :: !Bool,
-    scfgLiveQueries :: !LQ.LiveQueriesOptions,
+    scfgLiveQueries :: !ES.LiveQueriesOptions,
     scfgConsoleAssetsDir :: !(Maybe Text),
     scfgExperimentalFeatures :: !(Set.HashSet ExperimentalFeature)
   }
@@ -52,7 +52,7 @@ runGetConfig ::
   RemoteSchemaPermsCtx ->
   AuthMode ->
   Bool ->
-  LQ.LiveQueriesOptions ->
+  ES.LiveQueriesOptions ->
   Maybe Text ->
   Set.HashSet ExperimentalFeature ->
   ServerConfig

@@ -21,7 +21,7 @@ import Hasura.Backends.MSSQL.ToQuery
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
-import Hasura.GraphQL.Execute.LiveQuery.Plan
+import Hasura.GraphQL.Execute.Subscription.Plan
 import Hasura.GraphQL.Logging
 import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.Transport.Backend

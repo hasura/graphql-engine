@@ -1,23 +1,21 @@
-{-# LANGUAGE TemplateHaskell #-}
-
--- | Multiplexed live query poller threads; see "Hasura.GraphQL.Execute.LiveQuery" for details.
-module Hasura.GraphQL.Execute.LiveQuery.Poll
+-- | Multiplexed subscription poller threads; see "Hasura.GraphQL.Execute.Subscription" for details.
+module Hasura.GraphQL.Execute.Subscription.Poll.Common
   ( -- * Pollers
     Poller (..),
     PollerId (..),
     PollerIOState (..),
-    pollQuery,
     PollerKey (..),
     PollerMap,
     dumpPollerMap,
     PollDetails (..),
     BatchExecutionDetails (..),
     CohortExecutionDetails (..),
-    LiveQueryPostPollHook,
-    defaultLiveQueryPostPollHook,
+    SubscriptionPostPollHook,
+    defaultSubscriptionPostPollHook,
 
     -- * Cohorts
     Cohort (..),
+    CohortSnapshot (..),
     CohortId,
     newCohortId,
     CohortVariables,
@@ -33,45 +31,38 @@ module Hasura.GraphQL.Execute.LiveQuery.Poll
     unSubscriberMetadata,
     SubscriberMap,
     OnChange,
-    LGQResponse,
-    LiveQueryResponse (..),
-    LiveQueryMetadata (..),
+    SubscriptionGQResponse,
+    SubscriptionResponse (..),
+    SubscriptionMetadata (..),
     SubscriberExecutionDetails (..),
 
     -- * Batch
     BatchId (..),
+
+    -- * Hash
+    ResponseHash (..),
+    mkRespHash,
   )
 where
 
-import Control.Concurrent.Async qualified as A
 import Control.Concurrent.STM qualified as STM
 import Control.Immortal qualified as Immortal
-import Control.Lens
 import Crypto.Hash qualified as CH
-import Data.Aeson.Extended qualified as J
+import Data.Aeson qualified as J
 import Data.ByteString qualified as BS
-import Data.HashMap.Strict qualified as Map
-import Data.List.Split (chunksOf)
-import Data.Monoid (Sum (..))
-import Data.Text.Extended
 import Data.Time.Clock qualified as Clock
 import Data.UUID qualified as UUID
 import Data.UUID.V4 qualified as UUID
-import GHC.AssertNF.CPP
-import Hasura.Base.Error
-import Hasura.GraphQL.Execute.Backend
-import Hasura.GraphQL.Execute.LiveQuery.Options
-import Hasura.GraphQL.Execute.LiveQuery.Plan
-import Hasura.GraphQL.Execute.LiveQuery.TMap qualified as TMap
+import Hasura.GraphQL.Execute.Subscription.Options
+import Hasura.GraphQL.Execute.Subscription.Plan
+import Hasura.GraphQL.Execute.Subscription.TMap qualified as TMap
 import Hasura.GraphQL.ParameterizedQueryHash (ParameterizedQueryHash)
-import Hasura.GraphQL.Transport.Backend
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.GraphQL.Transport.WebSocket.Protocol (OperationId)
 import Hasura.GraphQL.Transport.WebSocket.Server qualified as WS
 import Hasura.Logging qualified as L
 import Hasura.Prelude
-import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.Common (SourceName, getNonNegativeInt)
+import Hasura.RQL.Types.Common (SourceName)
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
 import ListT qualified
@@ -112,19 +103,19 @@ data Subscriber = Subscriber
     _sOnChangeCallback :: !OnChange
   }
 
--- | live query onChange metadata, used for adding more extra analytics data
-data LiveQueryMetadata = LiveQueryMetadata
-  { _lqmExecutionTime :: !Clock.DiffTime
+-- | Subscription onChange metadata, used for adding more extra analytics data
+data SubscriptionMetadata = SubscriptionMetadata
+  { _sqmExecutionTime :: !Clock.DiffTime
   }
 
-data LiveQueryResponse = LiveQueryResponse
+data SubscriptionResponse = SubscriptionResponse
   { _lqrPayload :: !BS.ByteString,
     _lqrExecutionTime :: !Clock.DiffTime
   }
 
-type LGQResponse = GQResult LiveQueryResponse
+type SubscriptionGQResponse = GQResult SubscriptionResponse
 
-type OnChange = LGQResponse -> IO ()
+type OnChange = SubscriptionGQResponse -> IO ()
 
 type SubscriberMap = TMap.TMap SubscriberId Subscriber
 
@@ -218,39 +209,6 @@ data CohortSnapshot = CohortSnapshot
     _csExistingSubscribers :: ![Subscriber],
     _csNewSubscribers :: ![Subscriber]
   }
-
-pushResultToCohort ::
-  GQResult BS.ByteString ->
-  Maybe ResponseHash ->
-  LiveQueryMetadata ->
-  CohortSnapshot ->
-  -- | subscribers to which data has been pushed, subscribers which already
-  -- have this data (this information is exposed by metrics reporting)
-  IO ([SubscriberExecutionDetails], [SubscriberExecutionDetails])
-pushResultToCohort result !respHashM (LiveQueryMetadata dTime) cohortSnapshot = do
-  prevRespHashM <- STM.readTVarIO respRef
-  -- write to the current websockets if needed
-  (subscribersToPush, subscribersToIgnore) <-
-    if isExecError result || respHashM /= prevRespHashM
-      then do
-        $assertNFHere respHashM -- so we don't write thunks to mutable vars
-        STM.atomically $ STM.writeTVar respRef respHashM
-        return (newSinks <> curSinks, mempty)
-      else return (newSinks, curSinks)
-  pushResultToSubscribers subscribersToPush
-  pure $
-    over
-      (each . each)
-      ( \Subscriber {..} ->
-          SubscriberExecutionDetails _sId _sMetadata
-      )
-      (subscribersToPush, subscribersToIgnore)
-  where
-    CohortSnapshot _ respRef curSinks newSinks = cohortSnapshot
-
-    response = result <&> \payload -> LiveQueryResponse payload dTime
-    pushResultToSubscribers =
-      A.mapConcurrently_ $ \Subscriber {..} -> _sOnChangeCallback response
 
 -- -----------------------------------------------------------------------------
 -- Pollers
@@ -385,6 +343,7 @@ batchExecutionDetailMinimal BatchExecutionDetails {..} =
             <> batchRespSize
         )
 
+-- TODO consider refactoring into two types: one that is returned from pollLiveQuery and pollStreamingQuery, and a parent type containing pollerId, sourceName, and so on, which is assembled at the callsites of those two functions. Move postPollHook out of those functions to callsites
 data PollDetails = PollDetails
   { -- | the unique ID (basically a thread that run as a 'Poller') for the
     -- 'Poller'
@@ -392,14 +351,14 @@ data PollDetails = PollDetails
     -- | the multiplexed SQL query to be run against the database with all the
     -- variables together
     _pdGeneratedSql :: !Text,
-    -- | the time taken to get a snapshot of cohorts from our 'LiveQueriesState'
+    -- | the time taken to get a snapshot of cohorts from our 'SubscriptionsState'
     -- data structure
     _pdSnapshotTime :: !Clock.DiffTime,
     -- | list of execution batches and their details
     _pdBatches :: ![BatchExecutionDetails],
     -- | total time spent on a poll cycle
     _pdTotalTime :: !Clock.DiffTime,
-    _pdLiveQueryOptions :: !LiveQueriesOptions,
+    _pdLiveQueryOptions :: !SubscriptionsOptions,
     _pdSource :: !SourceName,
     _pdRole :: !RoleName,
     _pdParameterizedQueryHash :: !ParameterizedQueryHash
@@ -431,111 +390,8 @@ pollDetailMinimal PollDetails {..} =
 instance L.ToEngineLog PollDetails L.Hasura where
   toEngineLog pl = (L.LevelInfo, L.ELTLivequeryPollerLog, pollDetailMinimal pl)
 
-type LiveQueryPostPollHook = PollDetails -> IO ()
+type SubscriptionPostPollHook = PollDetails -> IO ()
 
--- the default LiveQueryPostPollHook
-defaultLiveQueryPostPollHook :: L.Logger L.Hasura -> LiveQueryPostPollHook
-defaultLiveQueryPostPollHook = L.unLogger
-
--- | Where the magic happens: the top-level action run periodically by each
--- active 'Poller'. This needs to be async exception safe.
-pollQuery ::
-  forall b.
-  BackendTransport b =>
-  PollerId ->
-  LiveQueriesOptions ->
-  (SourceName, SourceConfig b) ->
-  RoleName ->
-  ParameterizedQueryHash ->
-  MultiplexedQuery b ->
-  CohortMap ->
-  LiveQueryPostPollHook ->
-  IO ()
-pollQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap postPollHook = do
-  (totalTime, (snapshotTime, batchesDetails)) <- withElapsedTime $ do
-    -- snapshot the current cohorts and split them into batches
-    (snapshotTime, cohortBatches) <- withElapsedTime $ do
-      -- get a snapshot of all the cohorts
-      -- this need not be done in a transaction
-      cohorts <- STM.atomically $ TMap.toList cohortMap
-      cohortSnapshots <- mapM (STM.atomically . getCohortSnapshot) cohorts
-      -- cohorts are broken down into batches specified by the batch size
-      let cohortBatches = chunksOf (getNonNegativeInt (unBatchSize batchSize)) cohortSnapshots
-      -- associating every batch with their BatchId
-      pure $ zip (BatchId <$> [1 ..]) cohortBatches
-
-    -- concurrently process each batch
-    batchesDetails <- A.forConcurrently cohortBatches $ \(batchId, cohorts) -> do
-      (queryExecutionTime, mxRes) <- runDBSubscription @b sourceConfig query $ over (each . _2) _csVariables cohorts
-
-      let lqMeta = LiveQueryMetadata $ convertDuration queryExecutionTime
-          operations = getCohortOperations cohorts mxRes
-          -- batch response size is the sum of the response sizes of the cohorts
-          batchResponseSize =
-            case mxRes of
-              Left _ -> Nothing
-              Right resp -> Just $ getSum $ foldMap (Sum . BS.length . snd) resp
-      (pushTime, cohortsExecutionDetails) <- withElapsedTime $
-        A.forConcurrently operations $ \(res, cohortId, respData, snapshot) -> do
-          (pushedSubscribers, ignoredSubscribers) <-
-            pushResultToCohort res (fst <$> respData) lqMeta snapshot
-          pure
-            CohortExecutionDetails
-              { _cedCohortId = cohortId,
-                _cedVariables = _csVariables snapshot,
-                _cedPushedTo = pushedSubscribers,
-                _cedIgnored = ignoredSubscribers,
-                _cedResponseSize = snd <$> respData,
-                _cedBatchId = batchId
-              }
-      pure $
-        BatchExecutionDetails
-          queryExecutionTime
-          pushTime
-          batchId
-          cohortsExecutionDetails
-          batchResponseSize
-
-    pure (snapshotTime, batchesDetails)
-
-  let pollDetails =
-        PollDetails
-          { _pdPollerId = pollerId,
-            _pdGeneratedSql = toTxt query,
-            _pdSnapshotTime = snapshotTime,
-            _pdBatches = batchesDetails,
-            _pdLiveQueryOptions = lqOpts,
-            _pdTotalTime = totalTime,
-            _pdSource = sourceName,
-            _pdRole = roleName,
-            _pdParameterizedQueryHash = parameterizedQueryHash
-          }
-  postPollHook pollDetails
-  where
-    LiveQueriesOptions batchSize _ = lqOpts
-
-    getCohortSnapshot (cohortVars, handlerC) = do
-      let Cohort resId respRef curOpsTV newOpsTV = handlerC
-      curOpsL <- TMap.toList curOpsTV
-      newOpsL <- TMap.toList newOpsTV
-      forM_ newOpsL $ \(k, action) -> TMap.insert action k curOpsTV
-      TMap.reset newOpsTV
-      let cohortSnapshot = CohortSnapshot cohortVars respRef (map snd curOpsL) (map snd newOpsL)
-      return (resId, cohortSnapshot)
-
-    getCohortOperations cohorts = \case
-      Left e ->
-        -- TODO: this is internal error
-        let resp = throwError $ GQExecError [encodeGQLErr False e]
-         in [(resp, cohortId, Nothing, snapshot) | (cohortId, snapshot) <- cohorts]
-      Right responses -> do
-        let cohortSnapshotMap = Map.fromList cohorts
-        flip mapMaybe responses $ \(cohortId, respBS) ->
-          let respHash = mkRespHash respBS
-              respSize = BS.length respBS
-           in -- TODO: currently we ignore the cases when the cohortId from
-              -- Postgres response is not present in the cohort map of this batch
-              -- (this shouldn't happen but if it happens it means a logic error and
-              -- we should log it)
-              (pure respBS,cohortId,Just (respHash, respSize),)
-                <$> Map.lookup cohortId cohortSnapshotMap
+-- the default SubscriptionPostPollHook
+defaultSubscriptionPostPollHook :: L.Logger L.Hasura -> SubscriptionPostPollHook
+defaultSubscriptionPostPollHook = L.unLogger

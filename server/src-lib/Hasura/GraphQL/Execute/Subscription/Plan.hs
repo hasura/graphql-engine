@@ -70,7 +70,7 @@
 -- as “contains”:
 --
 -- @
--- 'LiveQueriesState' > 'Poller' > 'Cohort' > 'Subscriber'
+-- 'SubscriptionsState' > 'Poller' > 'Cohort' > 'Subscriber'
 -- @
 --
 -- Here’s a brief summary of each type’s role:
@@ -84,10 +84,10 @@
 --   * A 'Poller' is a worker thread for a single, multiplexed query. It fetches data for a set of
 --     'Cohort's that all use the same parameterized query, but have different sets of variables.
 --
---   * Finally, the 'LiveQueriesState' is the top-level container that holds all the active 'Poller's.
+--   * Finally, the 'SubscriptionsState' is the top-level container that holds all the active 'Poller's.
 --
 -- Additional details are provided by the documentation for individual bindings.
-module Hasura.GraphQL.Execute.LiveQuery.Plan
+module Hasura.GraphQL.Execute.Subscription.Plan
   ( CohortId,
     dummyCohortId,
     newCohortId,
@@ -96,14 +96,20 @@ module Hasura.GraphQL.Execute.LiveQuery.Plan
     CohortVariables,
     mkCohortVariables,
     ValidatedVariables (..),
+    mkUnsafeValidateVariables,
     ValidatedQueryVariables,
     ValidatedSyntheticVariables,
-    LiveQueryPlan (..),
-    LiveQueryPlanExplanation (..),
-    ParameterizedLiveQueryPlan (..),
+    SubscriptionQueryPlan (..),
+    SubscriptionQueryPlanExplanation (..),
+    ParameterizedSubscriptionQueryPlan (..),
+    cvSessionVariables,
+    cvQueryVariables,
+    cvSyntheticVariables,
+    unValidatedVariables,
   )
 where
 
+import Control.Lens (makeLenses)
 import Data.Aeson.Extended qualified as J
 import Data.Aeson.TH qualified as J
 import Data.HashMap.Strict qualified as Map
@@ -119,6 +125,40 @@ import Hasura.RQL.Types
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 import PostgreSQL.Binary.Encoding qualified as PE
+
+----------------------------------------------------------------------------------------------------
+-- Variable validation
+
+-- | When running multiplexed queries, we have to be especially careful about user
+-- input, since invalid values will cause the query to fail, causing collateral
+-- damage for anyone else multiplexed into the same query.  Therefore, we
+-- pre-validate variables against Postgres by executing a no-op query of the shape
+--
+-- > SELECT 'v1'::t1, 'v2'::t2, ..., 'vn'::tn
+--
+-- so if any variable values are invalid, the error will be caught early.
+newtype ValidatedVariables f = ValidatedVariables {_unValidatedVariables :: (f TxtEncodedVal)}
+
+deriving instance (Show (f TxtEncodedVal)) => Show (ValidatedVariables f)
+
+deriving instance (Eq (f TxtEncodedVal)) => Eq (ValidatedVariables f)
+
+deriving instance (Hashable (f TxtEncodedVal)) => Hashable (ValidatedVariables f)
+
+deriving instance (J.ToJSON (f TxtEncodedVal)) => J.ToJSON (ValidatedVariables f)
+
+deriving instance (Semigroup (f TxtEncodedVal)) => Semigroup (ValidatedVariables f)
+
+deriving instance (Monoid (f TxtEncodedVal)) => Monoid (ValidatedVariables f)
+
+$(makeLenses 'ValidatedVariables)
+
+type ValidatedQueryVariables = ValidatedVariables (Map.HashMap G.Name)
+
+type ValidatedSyntheticVariables = ValidatedVariables []
+
+mkUnsafeValidateVariables :: f TxtEncodedVal -> ValidatedVariables f
+mkUnsafeValidateVariables = ValidatedVariables
 
 ----------------------------------------------------------------------------------------------------
 -- Cohort
@@ -161,6 +201,8 @@ data CohortVariables = CohortVariables
 
 instance Hashable CohortVariables
 
+$(makeLenses 'CohortVariables)
+
 -- | Builds a cohort's variables by only using the session variables that
 -- are required for the subscription
 mkCohortVariables ::
@@ -202,62 +244,39 @@ instance Q.ToPrepArg CohortVariablesArray where
       encoder = PE.array 114 . PE.dimensionArray foldl' (PE.encodingArray . PE.json_ast)
 
 ----------------------------------------------------------------------------------------------------
--- Variable validation
-
--- | When running multiplexed queries, we have to be especially careful about user
--- input, since invalid values will cause the query to fail, causing collateral
--- damage for anyone else multiplexed into the same query.  Therefore, we
--- pre-validate variables against Postgres by executing a no-op query of the shape
---
--- > SELECT 'v1'::t1, 'v2'::t2, ..., 'vn'::tn
---
--- so if any variable values are invalid, the error will be caught early.
-newtype ValidatedVariables f = ValidatedVariables (f TxtEncodedVal)
-
-deriving instance (Show (f TxtEncodedVal)) => Show (ValidatedVariables f)
-
-deriving instance (Eq (f TxtEncodedVal)) => Eq (ValidatedVariables f)
-
-deriving instance (Hashable (f TxtEncodedVal)) => Hashable (ValidatedVariables f)
-
-deriving instance (J.ToJSON (f TxtEncodedVal)) => J.ToJSON (ValidatedVariables f)
-
-deriving instance (Semigroup (f TxtEncodedVal)) => Semigroup (ValidatedVariables f)
-
-deriving instance (Monoid (f TxtEncodedVal)) => Monoid (ValidatedVariables f)
-
-type ValidatedQueryVariables = ValidatedVariables (Map.HashMap G.Name)
-
-type ValidatedSyntheticVariables = ValidatedVariables []
-
-----------------------------------------------------------------------------------------------------
 -- Live query plans
 
--- | A self-contained, ready-to-execute live query plan. Contains enough information
+-- | A self-contained, ready-to-execute subscription plan. Contains enough information
 -- to find an existing poller that this can be added to /or/ to create a new poller
 -- if necessary.
-data LiveQueryPlan (b :: BackendType) q = LiveQueryPlan
-  { _lqpParameterizedPlan :: !(ParameterizedLiveQueryPlan b q),
-    _lqpSourceConfig :: !(SourceConfig b),
-    _lqpVariables :: !CohortVariables,
+data SubscriptionQueryPlan (b :: BackendType) q = SubscriptionQueryPlan
+  { _sqpParameterizedPlan :: !(ParameterizedSubscriptionQueryPlan b q),
+    _sqpSourceConfig :: !(SourceConfig b),
+    _sqpVariables :: !CohortVariables,
     -- | We need to know if the source has a namespace so that we can wrap it around
     -- the response from the DB
-    _lqpNamespace :: !(Maybe G.Name)
+    _sqpNamespace :: !(Maybe G.Name)
   }
 
-data ParameterizedLiveQueryPlan (b :: BackendType) q = ParameterizedLiveQueryPlan
+data ParameterizedSubscriptionQueryPlan (b :: BackendType) q = ParameterizedSubscriptionQueryPlan
   { _plqpRole :: !RoleName,
     _plqpQuery :: !q
   }
   deriving (Show)
 
-$(J.deriveToJSON hasuraJSON ''ParameterizedLiveQueryPlan)
+$(J.deriveToJSON hasuraJSON ''ParameterizedSubscriptionQueryPlan)
 
-data LiveQueryPlanExplanation = LiveQueryPlanExplanation
-  { _lqpeSql :: !Text,
-    _lqpePlan :: ![Text],
-    _lqpeVariables :: !CohortVariables
+data SubscriptionQueryPlanExplanation = SubscriptionQueryPlanExplanation
+  { _sqpeSql :: !Text,
+    _sqpePlan :: ![Text],
+    _sqpeVariables :: !CohortVariables
   }
   deriving (Show)
 
-$(J.deriveToJSON hasuraJSON ''LiveQueryPlanExplanation)
+$(J.deriveToJSON hasuraJSON ''SubscriptionQueryPlanExplanation)
+
+--------------------------------------------------------------------------
+--- Streaming Subscriptions
+
+newtype CursorVariableValues = CursorVariableValues (HashMap G.Name TxtEncodedVal)
+  deriving (J.FromJSON, J.ToJSON, Eq, Show)
