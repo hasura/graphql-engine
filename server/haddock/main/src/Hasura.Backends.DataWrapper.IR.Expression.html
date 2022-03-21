@@ -32,7 +32,7 @@
 </span><span id="line-32"></span><span class="hs-comment">-- datasource with clearer documentation.</span><span>
 </span><span id="line-33"></span><span class="hs-comment">--</span><span>
 </span><span id="line-34"></span><span class="hs-comment">-- e.g. https://www.postgresql.org/docs/13/sql-expressions.html</span><span>
-</span><span id="line-35"></span><span id="local-6989586621688309676"><span id="local-6989586621688309677"></span></span><span class="hs-keyword">data</span><span> </span><span id="Expression"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Expression.html#Expression"><span class="hs-identifier hs-var">Expression</span></a></span></span><span>
+</span><span id="line-35"></span><span id="local-6989586621688313020"><span id="local-6989586621688313021"></span></span><span class="hs-keyword">data</span><span> </span><span id="Expression"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Expression.html#Expression"><span class="hs-identifier hs-var">Expression</span></a></span></span><span>
 </span><span id="line-36"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | A constant 'Scalar.Value'.</span><span>
 </span><span id="line-37"></span><span>    </span><span id="Literal"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Expression.html#Literal"><span class="hs-identifier hs-var">Literal</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Scalar.Value.html#Value"><span class="hs-identifier hs-type">Scalar.Value</span></a></span><span>
 </span><span id="line-38"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | A construct for making multiple comparisons between groups of</span><span>
@@ -110,7 +110,7 @@
 </span><span id="line-110"></span><span>    </span><span class="hs-comment">-- XXX(jkachmar): Consider renaming 'Operator' to @ComparisonOperator@ and</span><span>
 </span><span id="line-111"></span><span>    </span><span class="hs-comment">-- this sub-expression to @ApplyComparisonOperator@ for clarity.</span><span>
 </span><span id="line-112"></span><span>    </span><span id="ApplyOperator"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Expression.html#ApplyOperator"><span class="hs-identifier hs-var">ApplyOperator</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Expression.html#Operator"><span class="hs-identifier hs-type">Operator</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span>
-</span><span id="line-113"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cApplyOperator"><span id="%24cNotEqual"><span id="%24cEqual"><span id="%24cColumn"><span id="%24cIsNotNull"><span id="%24cIsNull"><span id="%24cNot"><span id="%24cOr"><span id="%24cAnd"><span id="%24cIn"><span id="%24cLiteral"><span id="%24tExpression"><span id="local-6989586621688309636"><span id="local-6989586621688309638"><span id="local-6989586621688309640"><span id="local-6989586621688309642"><span id="local-6989586621688309644"><span id="local-6989586621688309646"><span id="local-6989586621688309648"><span id="local-6989586621688309650"><span id="local-6989586621688309652"><span id="local-6989586621688309654"><span id="local-6989586621688309656"><span id="local-6989586621688309658"><span id="local-6989586621688309660"><span id="local-6989586621688309662"><span class="annot"><span class="annottext">Typeable Expression
+</span><span id="line-113"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cApplyOperator"><span id="%24cNotEqual"><span id="%24cEqual"><span id="%24cColumn"><span id="%24cIsNotNull"><span id="%24cIsNull"><span id="%24cNot"><span id="%24cOr"><span id="%24cAnd"><span id="%24cIn"><span id="%24cLiteral"><span id="%24tExpression"><span id="local-6989586621688312980"><span id="local-6989586621688312982"><span id="local-6989586621688312984"><span id="local-6989586621688312986"><span id="local-6989586621688312988"><span id="local-6989586621688312990"><span id="local-6989586621688312992"><span id="local-6989586621688312994"><span id="local-6989586621688312996"><span id="local-6989586621688312998"><span id="local-6989586621688313000"><span id="local-6989586621688313002"><span id="local-6989586621688313004"><span id="local-6989586621688313006"><span class="annot"><span class="annottext">Typeable Expression
 DataType
 Constr
 Typeable Expression
@@ -278,7 +278,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; Expression -&gt; c Expression
 $cp1Data :: Typeable Expression
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688309619"><span id="local-6989586621688309621"><span class="annot"><span class="annottext">Expression -&gt; Expression -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312963"><span id="local-6989586621688312965"><span class="annot"><span class="annottext">Expression -&gt; Expression -&gt; Bool
 (Expression -&gt; Expression -&gt; Bool)
 -&gt; (Expression -&gt; Expression -&gt; Bool) -&gt; Eq Expression
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -294,7 +294,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Expression x -&gt; Expression
 $cfrom :: forall x. Expression -&gt; Rep Expression x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688309600"><span id="local-6989586621688309602"><span id="local-6989586621688309604"><span id="local-6989586621688309606"><span id="local-6989586621688309608"><span id="local-6989586621688309610"><span id="local-6989586621688309612"><span class="annot"><span class="annottext">Eq Expression
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312944"><span id="local-6989586621688312946"><span id="local-6989586621688312948"><span id="local-6989586621688312950"><span id="local-6989586621688312952"><span id="local-6989586621688312954"><span id="local-6989586621688312956"><span class="annot"><span class="annottext">Eq Expression
 Eq Expression
 -&gt; (Expression -&gt; Expression -&gt; Ordering)
 -&gt; (Expression -&gt; Expression -&gt; Bool)
@@ -332,7 +332,7 @@ $c&lt; :: Expression -&gt; Expression -&gt; Bool
 compare :: Expression -&gt; Expression -&gt; Ordering
 $ccompare :: Expression -&gt; Expression -&gt; Ordering
 $cp1Ord :: Eq Expression
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688309593"><span id="local-6989586621688309595"><span id="local-6989586621688309597"><span class="annot"><span class="annottext">Int -&gt; Expression -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312937"><span id="local-6989586621688312939"><span id="local-6989586621688312941"><span class="annot"><span class="annottext">Int -&gt; Expression -&gt; ShowS
 [Expression] -&gt; ShowS
 Expression -&gt; String
 (Int -&gt; Expression -&gt; ShowS)
@@ -348,7 +348,7 @@ $cshow :: Expression -&gt; String
 showsPrec :: Int -&gt; Expression -&gt; ShowS
 $cshowsPrec :: Int -&gt; Expression -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-114"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688309589"><span class="annot"><span class="annottext">Eq Expression
+</span><span id="line-114"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688312933"><span class="annot"><span class="annottext">Eq Expression
 Eq Expression
 -&gt; (Accesses -&gt; Expression -&gt; Expression -&gt; Bool)
 -&gt; Cacheable Expression
@@ -357,7 +357,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; Expression -&gt; Expression -&gt; Bool
 $cunchanged :: Accesses -&gt; Expression -&gt; Expression -&gt; Bool
 $cp1Cacheable :: Eq Expression
-</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688309584"><span id="local-6989586621688309586"><span class="annot"><span class="annottext">Value -&gt; Parser [Expression]
+</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312928"><span id="local-6989586621688312930"><span class="annot"><span class="annottext">Value -&gt; Parser [Expression]
 Value -&gt; Parser Expression
 (Value -&gt; Parser Expression)
 -&gt; (Value -&gt; Parser [Expression]) -&gt; FromJSON Expression
@@ -367,7 +367,7 @@ parseJSONList :: Value -&gt; Parser [Expression]
 $cparseJSONList :: Value -&gt; Parser [Expression]
 parseJSON :: Value -&gt; Parser Expression
 $cparseJSON :: Value -&gt; Parser Expression
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688309579"><span id="local-6989586621688309581"><span class="annot"><span class="annottext">Int -&gt; Expression -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312923"><span id="local-6989586621688312925"><span class="annot"><span class="annottext">Int -&gt; Expression -&gt; Int
 Expression -&gt; Int
 (Int -&gt; Expression -&gt; Int)
 -&gt; (Expression -&gt; Int) -&gt; Hashable Expression
@@ -376,12 +376,12 @@ hash :: Expression -&gt; Int
 $chash :: Expression -&gt; Int
 hashWithSalt :: Int -&gt; Expression -&gt; Int
 $chashWithSalt :: Int -&gt; Expression -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688309576"><span class="annot"><span class="annottext">Expression -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312920"><span class="annot"><span class="annottext">Expression -&gt; ()
 (Expression -&gt; ()) -&gt; NFData Expression
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: Expression -&gt; ()
 $crnf :: Expression -&gt; ()
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688309567"><span id="local-6989586621688309569"><span id="local-6989586621688309571"><span id="local-6989586621688309573"><span class="annot"><span class="annottext">[Expression] -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312911"><span id="local-6989586621688312913"><span id="local-6989586621688312915"><span id="local-6989586621688312917"><span class="annot"><span class="annottext">[Expression] -&gt; Encoding
 [Expression] -&gt; Value
 Expression -&gt; Encoding
 Expression -&gt; Value
@@ -407,32 +407,32 @@ $ctoJSON :: Expression -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-115"></span><span>
 </span><span id="line-116"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">API.Expression</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-117"></span><span>  </span><span id="local-6989586621688309563"><span class="annot"><span class="annottext">from :: Expression -&gt; Expression
+</span><span id="line-117"></span><span>  </span><span id="local-6989586621688312907"><span class="annot"><span class="annottext">from :: Expression -&gt; Expression
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-118"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Literal"><span class="hs-identifier hs-type">API.Literal</span></a></span><span> </span><span id="local-6989586621688309560"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621688309560"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Expression
+</span><span id="line-118"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Literal"><span class="hs-identifier hs-type">API.Literal</span></a></span><span> </span><span id="local-6989586621688312904"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688312904"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Expression
 </span><a href="Hasura.Backends.DataWrapper.IR.Expression.html#Literal"><span class="hs-identifier hs-var">Literal</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Expression) -&gt; Value -&gt; Expression
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Value
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621688309560"><span class="hs-identifier hs-var">value</span></a></span><span>
-</span><span id="line-119"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#In"><span class="hs-identifier hs-type">API.In</span></a></span><span> </span><span id="local-6989586621688309558"><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621688309558"><span class="hs-identifier hs-var">expr</span></a></span></span><span> </span><span id="local-6989586621688309557"><span class="annot"><span class="annottext">HashSet Value
-</span><a href="#local-6989586621688309557"><span class="hs-identifier hs-var">values</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Expression -&gt; HashSet Value -&gt; Expression
+</span><a href="#local-6989586621688312904"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><span id="line-119"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#In"><span class="hs-identifier hs-type">API.In</span></a></span><span> </span><span id="local-6989586621688312902"><span class="annot"><span class="annottext">Expression
+</span><a href="#local-6989586621688312902"><span class="hs-identifier hs-var">expr</span></a></span></span><span> </span><span id="local-6989586621688312901"><span class="annot"><span class="annottext">HashSet Value
+</span><a href="#local-6989586621688312901"><span class="hs-identifier hs-var">values</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Expression -&gt; HashSet Value -&gt; Expression
 </span><a href="Hasura.Backends.DataWrapper.IR.Expression.html#In"><span class="hs-identifier hs-var">In</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Expression -&gt; Expression
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621688309558"><span class="hs-identifier hs-var">expr</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Value -&gt; Value) -&gt; HashSet Value -&gt; HashSet Value
+</span><a href="#local-6989586621688312902"><span class="hs-identifier hs-var">expr</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Value -&gt; Value) -&gt; HashSet Value -&gt; HashSet Value
 forall b a.
 (Hashable b, Eq b) =&gt;
 (a -&gt; b) -&gt; HashSet a -&gt; HashSet b
 </span><span class="hs-identifier hs-var">S.map</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Value
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">HashSet Value
-</span><a href="#local-6989586621688309557"><span class="hs-identifier hs-var">values</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-120"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#And"><span class="hs-identifier hs-type">API.And</span></a></span><span> </span><span id="local-6989586621688309554"><span class="annot"><span class="annottext">[Expression]
-</span><a href="#local-6989586621688309554"><span class="hs-identifier hs-var">exprs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Expression] -&gt; Expression
+</span><a href="#local-6989586621688312901"><span class="hs-identifier hs-var">values</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-120"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#And"><span class="hs-identifier hs-type">API.And</span></a></span><span> </span><span id="local-6989586621688312898"><span class="annot"><span class="annottext">[Expression]
+</span><a href="#local-6989586621688312898"><span class="hs-identifier hs-var">exprs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Expression] -&gt; Expression
 </span><a href="Hasura.Backends.DataWrapper.IR.Expression.html#And"><span class="hs-identifier hs-var">And</span></a></span><span> </span><span class="annot"><span class="annottext">([Expression] -&gt; Expression) -&gt; [Expression] -&gt; Expression
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Expression -&gt; Expression) -&gt; [Expression] -&gt; [Expression]
@@ -440,9 +440,9 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">[Expression]
-</span><a href="#local-6989586621688309554"><span class="hs-identifier hs-var">exprs</span></a></span><span>
-</span><span id="line-121"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Or"><span class="hs-identifier hs-type">API.Or</span></a></span><span> </span><span id="local-6989586621688309552"><span class="annot"><span class="annottext">[Expression]
-</span><a href="#local-6989586621688309552"><span class="hs-identifier hs-var">exprs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Expression] -&gt; Expression
+</span><a href="#local-6989586621688312898"><span class="hs-identifier hs-var">exprs</span></a></span><span>
+</span><span id="line-121"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Or"><span class="hs-identifier hs-type">API.Or</span></a></span><span> </span><span id="local-6989586621688312896"><span class="annot"><span class="annottext">[Expression]
+</span><a href="#local-6989586621688312896"><span class="hs-identifier hs-var">exprs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Expression] -&gt; Expression
 </span><a href="Hasura.Backends.DataWrapper.IR.Expression.html#Or"><span class="hs-identifier hs-var">Or</span></a></span><span> </span><span class="annot"><span class="annottext">([Expression] -&gt; Expression) -&gt; [Expression] -&gt; Expression
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Expression -&gt; Expression) -&gt; [Expression] -&gt; [Expression]
@@ -450,73 +450,73 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">[Expression]
-</span><a href="#local-6989586621688309552"><span class="hs-identifier hs-var">exprs</span></a></span><span>
-</span><span id="line-122"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Not"><span class="hs-identifier hs-type">API.Not</span></a></span><span> </span><span id="local-6989586621688309550"><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621688309550"><span class="hs-identifier hs-var">expr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression
+</span><a href="#local-6989586621688312896"><span class="hs-identifier hs-var">exprs</span></a></span><span>
+</span><span id="line-122"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Not"><span class="hs-identifier hs-type">API.Not</span></a></span><span> </span><span id="local-6989586621688312894"><span class="annot"><span class="annottext">Expression
+</span><a href="#local-6989586621688312894"><span class="hs-identifier hs-var">expr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression
 </span><a href="Hasura.Backends.DataWrapper.IR.Expression.html#Not"><span class="hs-identifier hs-var">Not</span></a></span><span> </span><span class="annot"><span class="annottext">(Expression -&gt; Expression) -&gt; Expression -&gt; Expression
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621688309550"><span class="hs-identifier hs-var">expr</span></a></span><span>
-</span><span id="line-123"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#IsNull"><span class="hs-identifier hs-type">API.IsNull</span></a></span><span> </span><span id="local-6989586621688309548"><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621688309548"><span class="hs-identifier hs-var">expr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression
+</span><a href="#local-6989586621688312894"><span class="hs-identifier hs-var">expr</span></a></span><span>
+</span><span id="line-123"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#IsNull"><span class="hs-identifier hs-type">API.IsNull</span></a></span><span> </span><span id="local-6989586621688312892"><span class="annot"><span class="annottext">Expression
+</span><a href="#local-6989586621688312892"><span class="hs-identifier hs-var">expr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression
 </span><a href="Hasura.Backends.DataWrapper.IR.Expression.html#IsNull"><span class="hs-identifier hs-var">IsNull</span></a></span><span> </span><span class="annot"><span class="annottext">(Expression -&gt; Expression) -&gt; Expression -&gt; Expression
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621688309548"><span class="hs-identifier hs-var">expr</span></a></span><span>
-</span><span id="line-124"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#IsNotNull"><span class="hs-identifier hs-type">API.IsNotNull</span></a></span><span> </span><span id="local-6989586621688309546"><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621688309546"><span class="hs-identifier hs-var">expr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression
+</span><a href="#local-6989586621688312892"><span class="hs-identifier hs-var">expr</span></a></span><span>
+</span><span id="line-124"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#IsNotNull"><span class="hs-identifier hs-type">API.IsNotNull</span></a></span><span> </span><span id="local-6989586621688312890"><span class="annot"><span class="annottext">Expression
+</span><a href="#local-6989586621688312890"><span class="hs-identifier hs-var">expr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression
 </span><a href="Hasura.Backends.DataWrapper.IR.Expression.html#IsNotNull"><span class="hs-identifier hs-var">IsNotNull</span></a></span><span> </span><span class="annot"><span class="annottext">(Expression -&gt; Expression) -&gt; Expression -&gt; Expression
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621688309546"><span class="hs-identifier hs-var">expr</span></a></span><span>
-</span><span id="line-125"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Column"><span class="hs-identifier hs-type">API.Column</span></a></span><span> </span><span id="local-6989586621688309544"><span class="annot"><span class="annottext">ColumnName
-</span><a href="#local-6989586621688309544"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Expression
+</span><a href="#local-6989586621688312890"><span class="hs-identifier hs-var">expr</span></a></span><span>
+</span><span id="line-125"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Column"><span class="hs-identifier hs-type">API.Column</span></a></span><span> </span><span id="local-6989586621688312888"><span class="annot"><span class="annottext">ColumnName
+</span><a href="#local-6989586621688312888"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Expression
 </span><a href="Hasura.Backends.DataWrapper.IR.Expression.html#Column"><span class="hs-identifier hs-var">Column</span></a></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Expression) -&gt; Name -&gt; Expression
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ColumnName -&gt; Name
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">ColumnName
-</span><a href="#local-6989586621688309544"><span class="hs-identifier hs-var">name</span></a></span><span>
-</span><span id="line-126"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Equal"><span class="hs-identifier hs-type">API.Equal</span></a></span><span> </span><span id="local-6989586621688309542"><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621688309542"><span class="hs-identifier hs-var">expr1</span></a></span></span><span> </span><span id="local-6989586621688309541"><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621688309541"><span class="hs-identifier hs-var">expr2</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression -&gt; Expression
+</span><a href="#local-6989586621688312888"><span class="hs-identifier hs-var">name</span></a></span><span>
+</span><span id="line-126"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Equal"><span class="hs-identifier hs-type">API.Equal</span></a></span><span> </span><span id="local-6989586621688312886"><span class="annot"><span class="annottext">Expression
+</span><a href="#local-6989586621688312886"><span class="hs-identifier hs-var">expr1</span></a></span></span><span> </span><span id="local-6989586621688312885"><span class="annot"><span class="annottext">Expression
+</span><a href="#local-6989586621688312885"><span class="hs-identifier hs-var">expr2</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression -&gt; Expression
 </span><a href="Hasura.Backends.DataWrapper.IR.Expression.html#Equal"><span class="hs-identifier hs-var">Equal</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Expression -&gt; Expression
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621688309542"><span class="hs-identifier hs-var">expr1</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Expression -&gt; Expression
+</span><a href="#local-6989586621688312886"><span class="hs-identifier hs-var">expr1</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Expression -&gt; Expression
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621688309541"><span class="hs-identifier hs-var">expr2</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-127"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#NotEqual"><span class="hs-identifier hs-type">API.NotEqual</span></a></span><span> </span><span id="local-6989586621688309539"><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621688309539"><span class="hs-identifier hs-var">expr1</span></a></span></span><span> </span><span id="local-6989586621688309538"><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621688309538"><span class="hs-identifier hs-var">expr2</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression -&gt; Expression
+</span><a href="#local-6989586621688312885"><span class="hs-identifier hs-var">expr2</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-127"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#NotEqual"><span class="hs-identifier hs-type">API.NotEqual</span></a></span><span> </span><span id="local-6989586621688312883"><span class="annot"><span class="annottext">Expression
+</span><a href="#local-6989586621688312883"><span class="hs-identifier hs-var">expr1</span></a></span></span><span> </span><span id="local-6989586621688312882"><span class="annot"><span class="annottext">Expression
+</span><a href="#local-6989586621688312882"><span class="hs-identifier hs-var">expr2</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression -&gt; Expression
 </span><a href="Hasura.Backends.DataWrapper.IR.Expression.html#NotEqual"><span class="hs-identifier hs-var">NotEqual</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Expression -&gt; Expression
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621688309539"><span class="hs-identifier hs-var">expr1</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Expression -&gt; Expression
+</span><a href="#local-6989586621688312883"><span class="hs-identifier hs-var">expr1</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Expression -&gt; Expression
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621688309538"><span class="hs-identifier hs-var">expr2</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-128"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#ApplyOperator"><span class="hs-identifier hs-type">API.ApplyOperator</span></a></span><span> </span><span id="local-6989586621688309536"><span class="annot"><span class="annottext">Operator
-</span><a href="#local-6989586621688309536"><span class="hs-identifier hs-var">op</span></a></span></span><span> </span><span id="local-6989586621688309535"><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621688309535"><span class="hs-identifier hs-var">expr1</span></a></span></span><span> </span><span id="local-6989586621688309534"><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621688309534"><span class="hs-identifier hs-var">expr2</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Operator -&gt; Expression -&gt; Expression -&gt; Expression
+</span><a href="#local-6989586621688312882"><span class="hs-identifier hs-var">expr2</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-128"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#ApplyOperator"><span class="hs-identifier hs-type">API.ApplyOperator</span></a></span><span> </span><span id="local-6989586621688312880"><span class="annot"><span class="annottext">Operator
+</span><a href="#local-6989586621688312880"><span class="hs-identifier hs-var">op</span></a></span></span><span> </span><span id="local-6989586621688312879"><span class="annot"><span class="annottext">Expression
+</span><a href="#local-6989586621688312879"><span class="hs-identifier hs-var">expr1</span></a></span></span><span> </span><span id="local-6989586621688312878"><span class="annot"><span class="annottext">Expression
+</span><a href="#local-6989586621688312878"><span class="hs-identifier hs-var">expr2</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Operator -&gt; Expression -&gt; Expression -&gt; Expression
 </span><a href="Hasura.Backends.DataWrapper.IR.Expression.html#ApplyOperator"><span class="hs-identifier hs-var">ApplyOperator</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Operator -&gt; Operator
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">Operator
-</span><a href="#local-6989586621688309536"><span class="hs-identifier hs-var">op</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Expression -&gt; Expression
+</span><a href="#local-6989586621688312880"><span class="hs-identifier hs-var">op</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Expression -&gt; Expression
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621688309535"><span class="hs-identifier hs-var">expr1</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Expression -&gt; Expression
+</span><a href="#local-6989586621688312879"><span class="hs-identifier hs-var">expr1</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Expression -&gt; Expression
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621688309534"><span class="hs-identifier hs-var">expr2</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688312878"><span class="hs-identifier hs-var">expr2</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-129"></span><span>
 </span><span id="line-130"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-131"></span><span>
@@ -529,12 +529,12 @@ forall source target. From source target =&gt; source -&gt; target
 </span><span id="line-138"></span><span class="hs-comment">--</span><span>
 </span><span id="line-139"></span><span class="hs-comment">-- We should define the semantics of these comparisons in a way that is clear</span><span>
 </span><span id="line-140"></span><span class="hs-comment">-- and carefully considered.</span><span>
-</span><span id="line-141"></span><span id="local-6989586621688309532"><span id="local-6989586621688309533"></span></span><span class="hs-keyword">data</span><span> </span><span id="Operator"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Expression.html#Operator"><span class="hs-identifier hs-var">Operator</span></a></span></span><span>
+</span><span id="line-141"></span><span id="local-6989586621688312876"><span id="local-6989586621688312877"></span></span><span class="hs-keyword">data</span><span> </span><span id="Operator"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Expression.html#Operator"><span class="hs-identifier hs-var">Operator</span></a></span></span><span>
 </span><span id="line-142"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="LessThan"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Expression.html#LessThan"><span class="hs-identifier hs-var">LessThan</span></a></span></span><span>
 </span><span id="line-143"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="LessThanOrEqual"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Expression.html#LessThanOrEqual"><span class="hs-identifier hs-var">LessThanOrEqual</span></a></span></span><span>
 </span><span id="line-144"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="GreaterThan"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Expression.html#GreaterThan"><span class="hs-identifier hs-var">GreaterThan</span></a></span></span><span>
 </span><span id="line-145"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="GreaterThanOrEqual"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Expression.html#GreaterThanOrEqual"><span class="hs-identifier hs-var">GreaterThanOrEqual</span></a></span></span><span>
-</span><span id="line-146"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cGreaterThanOrEqual"><span id="%24cGreaterThan"><span id="%24cLessThanOrEqual"><span id="%24cLessThan"><span id="%24tOperator"><span id="local-6989586621688309499"><span id="local-6989586621688309501"><span id="local-6989586621688309503"><span id="local-6989586621688309505"><span id="local-6989586621688309507"><span id="local-6989586621688309509"><span id="local-6989586621688309511"><span id="local-6989586621688309513"><span id="local-6989586621688309515"><span id="local-6989586621688309517"><span id="local-6989586621688309519"><span id="local-6989586621688309521"><span id="local-6989586621688309523"><span id="local-6989586621688309525"><span class="annot"><span class="annottext">Typeable Operator
+</span><span id="line-146"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cGreaterThanOrEqual"><span id="%24cGreaterThan"><span id="%24cLessThanOrEqual"><span id="%24cLessThan"><span id="%24tOperator"><span id="local-6989586621688312843"><span id="local-6989586621688312845"><span id="local-6989586621688312847"><span id="local-6989586621688312849"><span id="local-6989586621688312851"><span id="local-6989586621688312853"><span id="local-6989586621688312855"><span id="local-6989586621688312857"><span id="local-6989586621688312859"><span id="local-6989586621688312861"><span id="local-6989586621688312863"><span id="local-6989586621688312865"><span id="local-6989586621688312867"><span id="local-6989586621688312869"><span class="annot"><span class="annottext">Typeable Operator
 DataType
 Constr
 Typeable Operator
@@ -693,7 +693,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; Operator -&gt; c Operator
 $cp1Data :: Typeable Operator
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688309490"><span id="local-6989586621688309492"><span class="annot"><span class="annottext">Operator -&gt; Operator -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312834"><span id="local-6989586621688312836"><span class="annot"><span class="annottext">Operator -&gt; Operator -&gt; Bool
 (Operator -&gt; Operator -&gt; Bool)
 -&gt; (Operator -&gt; Operator -&gt; Bool) -&gt; Eq Operator
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -709,7 +709,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Operator x -&gt; Operator
 $cfrom :: forall x. Operator -&gt; Rep Operator x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688309473"><span id="local-6989586621688309475"><span id="local-6989586621688309477"><span id="local-6989586621688309479"><span id="local-6989586621688309481"><span id="local-6989586621688309483"><span id="local-6989586621688309485"><span class="annot"><span class="annottext">Eq Operator
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312817"><span id="local-6989586621688312819"><span id="local-6989586621688312821"><span id="local-6989586621688312823"><span id="local-6989586621688312825"><span id="local-6989586621688312827"><span id="local-6989586621688312829"><span class="annot"><span class="annottext">Eq Operator
 Eq Operator
 -&gt; (Operator -&gt; Operator -&gt; Ordering)
 -&gt; (Operator -&gt; Operator -&gt; Bool)
@@ -747,7 +747,7 @@ $c&lt; :: Operator -&gt; Operator -&gt; Bool
 compare :: Operator -&gt; Operator -&gt; Ordering
 $ccompare :: Operator -&gt; Operator -&gt; Ordering
 $cp1Ord :: Eq Operator
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688309467"><span id="local-6989586621688309469"><span id="local-6989586621688309471"><span class="annot"><span class="annottext">Int -&gt; Operator -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312811"><span id="local-6989586621688312813"><span id="local-6989586621688312815"><span class="annot"><span class="annottext">Int -&gt; Operator -&gt; ShowS
 [Operator] -&gt; ShowS
 Operator -&gt; String
 (Int -&gt; Operator -&gt; ShowS)
@@ -761,7 +761,7 @@ $cshow :: Operator -&gt; String
 showsPrec :: Int -&gt; Operator -&gt; ShowS
 $cshowsPrec :: Int -&gt; Operator -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-147"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688309464"><span class="annot"><span class="annottext">Eq Operator
+</span><span id="line-147"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688312808"><span class="annot"><span class="annottext">Eq Operator
 Eq Operator
 -&gt; (Accesses -&gt; Operator -&gt; Operator -&gt; Bool) -&gt; Cacheable Operator
 Accesses -&gt; Operator -&gt; Operator -&gt; Bool
@@ -769,7 +769,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; Operator -&gt; Operator -&gt; Bool
 $cunchanged :: Accesses -&gt; Operator -&gt; Operator -&gt; Bool
 $cp1Cacheable :: Eq Operator
-</span><a href="#local-6989586621688309464"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688309460"><span id="local-6989586621688309462"><span class="annot"><span class="annottext">Value -&gt; Parser [Operator]
+</span><a href="#local-6989586621688312808"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312804"><span id="local-6989586621688312806"><span class="annot"><span class="annottext">Value -&gt; Parser [Operator]
 Value -&gt; Parser Operator
 (Value -&gt; Parser Operator)
 -&gt; (Value -&gt; Parser [Operator]) -&gt; FromJSON Operator
@@ -779,7 +779,7 @@ parseJSONList :: Value -&gt; Parser [Operator]
 $cparseJSONList :: Value -&gt; Parser [Operator]
 parseJSON :: Value -&gt; Parser Operator
 $cparseJSON :: Value -&gt; Parser Operator
-</span><a href="#local-6989586621688309460"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688309456"><span id="local-6989586621688309458"><span class="annot"><span class="annottext">Int -&gt; Operator -&gt; Int
+</span><a href="#local-6989586621688312804"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312800"><span id="local-6989586621688312802"><span class="annot"><span class="annottext">Int -&gt; Operator -&gt; Int
 Operator -&gt; Int
 (Int -&gt; Operator -&gt; Int) -&gt; (Operator -&gt; Int) -&gt; Hashable Operator
 forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -787,12 +787,12 @@ hash :: Operator -&gt; Int
 $chash :: Operator -&gt; Int
 hashWithSalt :: Int -&gt; Operator -&gt; Int
 $chashWithSalt :: Int -&gt; Operator -&gt; Int
-</span><a href="#local-6989586621688309456"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688309454"><span class="annot"><span class="annottext">Operator -&gt; ()
+</span><a href="#local-6989586621688312800"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312798"><span class="annot"><span class="annottext">Operator -&gt; ()
 (Operator -&gt; ()) -&gt; NFData Operator
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: Operator -&gt; ()
 $crnf :: Operator -&gt; ()
-</span><a href="#local-6989586621688309454"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688309446"><span id="local-6989586621688309448"><span id="local-6989586621688309450"><span id="local-6989586621688309452"><span class="annot"><span class="annottext">[Operator] -&gt; Encoding
+</span><a href="#local-6989586621688312798"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312790"><span id="local-6989586621688312792"><span id="local-6989586621688312794"><span id="local-6989586621688312796"><span class="annot"><span class="annottext">[Operator] -&gt; Encoding
 [Operator] -&gt; Value
 Operator -&gt; Encoding
 Operator -&gt; Value
@@ -815,11 +815,11 @@ toEncoding :: Operator -&gt; Encoding
 $ctoEncoding :: Operator -&gt; Encoding
 toJSON :: Operator -&gt; Value
 $ctoJSON :: Operator -&gt; Value
-</span><a href="#local-6989586621688309446"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688312790"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-148"></span><span>
 </span><span id="line-149"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Operator"><span class="hs-identifier hs-type">API.Operator</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Expression.html#Operator"><span class="hs-identifier hs-type">Operator</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-150"></span><span>  </span><span id="local-6989586621688309444"><span class="annot"><span class="annottext">from :: Operator -&gt; Operator
-</span><a href="#local-6989586621688309444"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">Operator
+</span><span id="line-150"></span><span>  </span><span id="local-6989586621688312788"><span class="annot"><span class="annottext">from :: Operator -&gt; Operator
+</span><a href="#local-6989586621688312788"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">Operator
 </span><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#LessThan"><span class="hs-identifier hs-var">API.LessThan</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Operator
 </span><a href="Hasura.Backends.DataWrapper.IR.Expression.html#LessThan"><span class="hs-identifier hs-var">LessThan</span></a></span><span>
 </span><span id="line-151"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">Operator

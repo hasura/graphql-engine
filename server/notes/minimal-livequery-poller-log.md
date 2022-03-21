@@ -1,7 +1,7 @@
-This note is in [Hasura.GraphQL.Execute.LiveQuery.Poll](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Execute/LiveQuery/Poll.hs#L409).
+This note is in [Hasura.GraphQL.Execute.Subscription.Poll.Common](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Execute/Subscription/Poll/Common.hs#L368).
 It is referenced at:
-  - line 372 of [Hasura.GraphQL.Execute.LiveQuery.Poll](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Execute/LiveQuery/Poll.hs#L372)
-  - line 419 of [Hasura.GraphQL.Execute.LiveQuery.Poll](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Execute/LiveQuery/Poll.hs#L419)
+  - line 330 of [Hasura.GraphQL.Execute.Subscription.Poll.Common](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Execute/Subscription/Poll/Common.hs#L330)
+  - line 378 of [Hasura.GraphQL.Execute.Subscription.Poll.Common](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Execute/Subscription/Poll/Common.hs#L378)
 
 # Minimal LiveQuery Poller Log
 

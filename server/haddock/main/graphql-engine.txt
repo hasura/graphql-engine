@@ -999,7 +999,7 @@ instance GHC.Show.Show Hasura.GraphQL.Execute.Types.GraphQLQueryType
 instance Data.Hashable.Class.Hashable Hasura.GraphQL.Execute.Types.GraphQLQueryType
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.Types.GraphQLQueryType
 
-module Hasura.GraphQL.Execute.LiveQuery.TMap
+module Hasura.GraphQL.Execute.Subscription.TMap
 
 -- | A coarse-grained transactional map implemented by simply wrapping a
 --   <a>HashMap</a> in a <a>TVar</a>. Compared to <a>StmContainers.Map</a>,
@@ -1015,6 +1015,10 @@ lookup :: (Eq k, Hashable k) => k -> TMap k v -> STM (Maybe v)
 insert :: (Eq k, Hashable k) => v -> k -> TMap k v -> STM ()
 delete :: (Eq k, Hashable k) => k -> TMap k v -> STM ()
 toList :: TMap k v -> STM [(k, v)]
+filterWithKey :: (k -> v -> Bool) -> TMap k v -> STM ()
+replace :: TMap k v -> HashMap k v -> STM ()
+union :: (Eq k, Hashable k) => TMap k v -> TMap k v -> STM (TMap k v)
+getMap :: TMap k v -> STM (HashMap k v)
 
 module Hasura.GC
 
@@ -1242,8 +1246,8 @@ PGInvalidColumnReference :: PGSyntaxErrorOrAccessRuleViolation
 _PGSyntaxErrorOrAccessRuleViolation :: Prism' PGErrorType (Maybe (PGErrorCode PGSyntaxErrorOrAccessRuleViolation))
 _PGIntegrityConstraintViolation :: Prism' PGErrorType (Maybe (PGErrorCode PGIntegrityConstraintViolation))
 _PGDataException :: Prism' PGErrorType (Maybe (PGErrorCode PGDataException))
-_PGErrorSpecific :: forall a_a1gZx a_a1gBE. Prism (PGErrorCode a_a1gZx) (PGErrorCode a_a1gBE) a_a1gZx a_a1gBE
-_PGErrorGeneric :: forall a_a1gBE. Prism' (PGErrorCode a_a1gBE) ()
+_PGErrorSpecific :: forall a_a1h9q a_a1gLx. Prism (PGErrorCode a_a1h9q) (PGErrorCode a_a1gLx) a_a1h9q a_a1gLx
+_PGErrorGeneric :: forall a_a1gLx. Prism' (PGErrorCode a_a1gLx) ()
 pgErrorType :: PGStmtErrDetail -> Maybe PGErrorType
 instance GHC.Base.Functor Hasura.Backends.Postgres.SQL.Error.PGErrorCode
 instance GHC.Classes.Eq a => GHC.Classes.Eq (Hasura.Backends.Postgres.SQL.Error.PGErrorCode a)
@@ -2075,6 +2079,24 @@ instance GHC.Base.Monoid Hasura.RQL.Types.ResultCustomization.AliasMapping
 instance GHC.Base.Semigroup Hasura.RQL.Types.ResultCustomization.AliasMapping
 instance GHC.Base.Monoid Hasura.RQL.Types.ResultCustomization.ResultCustomizer
 instance GHC.Base.Semigroup Hasura.RQL.Types.ResultCustomization.ResultCustomizer
+
+module Hasura.RQL.Types.Subscription
+
+-- | CursorOrdering is used in the streaming subscriptions to specify how
+--   to order the cursor.
+data CursorOrdering
+COAscending :: CursorOrdering
+CODescending :: CursorOrdering
+data SubscriptionType
+Streaming :: SubscriptionType
+LiveQuery :: SubscriptionType
+instance GHC.Generics.Generic Hasura.RQL.Types.Subscription.CursorOrdering
+instance GHC.Classes.Eq Hasura.RQL.Types.Subscription.CursorOrdering
+instance GHC.Show.Show Hasura.RQL.Types.Subscription.CursorOrdering
+instance GHC.Generics.Generic Hasura.RQL.Types.Subscription.SubscriptionType
+instance GHC.Classes.Eq Hasura.RQL.Types.Subscription.SubscriptionType
+instance GHC.Show.Show Hasura.RQL.Types.Subscription.SubscriptionType
+instance Data.Hashable.Class.Hashable Hasura.RQL.Types.Subscription.CursorOrdering
 
 module Hasura.SQL.GeoJSON
 data Position
@@ -4678,7 +4700,7 @@ qrCollectionName :: Lens' QueryReference CollectionName
 data EndpointDef query
 EndpointDef :: !query -> EndpointDef query
 [_edQuery] :: EndpointDef query -> !query
-edQuery :: forall query_a48O7 query_a4909. Iso (EndpointDef query_a48O7) (EndpointDef query_a4909) query_a48O7 query_a4909
+edQuery :: forall query_a494z query_a49gB. Iso (EndpointDef query_a494z) (EndpointDef query_a49gB) query_a494z query_a49gB
 type EndpointTrie query = MultiMapPathTrie Text EndpointMethod (EndpointMetadata query)
 buildEndpointsTrie :: Ord query => [EndpointMetadata query] -> EndpointTrie query
 
@@ -4694,11 +4716,11 @@ EndpointMetadata :: !EndpointName -> !EndpointUrl -> !NonEmpty EndpointMethod ->
 [_ceMethods] :: EndpointMetadata query -> !NonEmpty EndpointMethod
 [_ceDefinition] :: EndpointMetadata query -> !EndpointDef query
 [_ceComment] :: EndpointMetadata query -> !Maybe Text
-ceUrl :: forall query_a490n. Lens' (EndpointMetadata query_a490n) EndpointUrl
-ceName :: forall query_a490n. Lens' (EndpointMetadata query_a490n) EndpointName
-ceMethods :: forall query_a490n. Lens' (EndpointMetadata query_a490n) (NonEmpty EndpointMethod)
-ceDefinition :: forall query_a490n query_a49nt. Lens (EndpointMetadata query_a490n) (EndpointMetadata query_a49nt) (EndpointDef query_a490n) (EndpointDef query_a49nt)
-ceComment :: forall query_a490n. Lens' (EndpointMetadata query_a490n) (Maybe Text)
+ceUrl :: forall query_a49gP. Lens' (EndpointMetadata query_a49gP) EndpointUrl
+ceName :: forall query_a49gP. Lens' (EndpointMetadata query_a49gP) EndpointName
+ceMethods :: forall query_a49gP. Lens' (EndpointMetadata query_a49gP) (NonEmpty EndpointMethod)
+ceDefinition :: forall query_a49gP query_a49DV. Lens (EndpointMetadata query_a49gP) (EndpointMetadata query_a49DV) (EndpointDef query_a49gP) (EndpointDef query_a49DV)
+ceComment :: forall query_a49gP. Lens' (EndpointMetadata query_a49gP) (Maybe Text)
 data DropEndpoint
 DropEndpoint :: !EndpointName -> DropEndpoint
 [_deName] :: DropEndpoint -> !EndpointName
@@ -5927,9 +5949,9 @@ RelDef :: !RelName -> !a -> !Maybe Text -> RelDef a
 [_rdName] :: RelDef a -> !RelName
 [_rdUsing] :: RelDef a -> !a
 [_rdComment] :: RelDef a -> !Maybe Text
-rdUsing :: forall a_a5aAr a_a5aHj. Lens (RelDef a_a5aAr) (RelDef a_a5aHj) a_a5aAr a_a5aHj
-rdName :: forall a_a5aAr. Lens' (RelDef a_a5aAr) RelName
-rdComment :: forall a_a5aAr. Lens' (RelDef a_a5aAr) (Maybe Text)
+rdUsing :: forall a_a5aQT a_a5aXL. Lens (RelDef a_a5aQT) (RelDef a_a5aXL) a_a5aQT a_a5aXL
+rdName :: forall a_a5aQT. Lens' (RelDef a_a5aQT) RelName
+rdComment :: forall a_a5aQT. Lens' (RelDef a_a5aQT) (Maybe Text)
 data RelManualConfig (b :: BackendType)
 RelManualConfig :: !TableName b -> !HashMap (Column b) (Column b) -> !Maybe InsertOrder -> RelManualConfig (b :: BackendType)
 [rmTable] :: RelManualConfig (b :: BackendType) -> !TableName b
@@ -6041,8 +6063,8 @@ FunctionArg :: !Maybe FunctionArgName -> !FunctionArgType b -> !HasDefault -> Fu
 data InputArgument a
 IAUserProvided :: !a -> InputArgument a
 IASessionVariables :: !FunctionArgName -> InputArgument a
-_IASessionVariables :: forall a_a5oGa. Prism' (InputArgument a_a5oGa) FunctionArgName
-_IAUserProvided :: forall a_a5paS a_a5oGa. Prism (InputArgument a_a5paS) (InputArgument a_a5oGa) a_a5paS a_a5oGa
+_IASessionVariables :: forall a_a5oWC. Prism' (InputArgument a_a5oWC) FunctionArgName
+_IAUserProvided :: forall a_a5prk a_a5oWC. Prism (InputArgument a_a5prk) (InputArgument a_a5oWC) a_a5prk a_a5oWC
 type FunctionInputArgument b = InputArgument (FunctionArg b)
 
 -- | Indicates whether the user requested the corresponding function to be
@@ -6099,19 +6121,19 @@ FunctionInfo :: FunctionName b -> Name -> Name -> Name -> SystemDefined -> Funct
 [_fiPermissions] :: FunctionInfo (b :: BackendType) -> FunctionPermissionsMap
 [_fiJsonAggSelect] :: FunctionInfo (b :: BackendType) -> JsonAggSelect
 [_fiComment] :: FunctionInfo (b :: BackendType) -> Maybe Text
-fiVolatility :: forall b_a5prW. Lens' (FunctionInfo b_a5prW) FunctionVolatility
-fiSystemDefined :: forall b_a5prW. Lens' (FunctionInfo b_a5prW) SystemDefined
-fiSQLName :: forall b_a5prW. Lens' (FunctionInfo b_a5prW) (FunctionName b_a5prW)
-fiReturnType :: forall b_a5prW. Lens' (FunctionInfo b_a5prW) (TableName b_a5prW)
-fiPermissions :: forall b_a5prW. Lens' (FunctionInfo b_a5prW) FunctionPermissionsMap
-fiJsonAggSelect :: forall b_a5prW. Lens' (FunctionInfo b_a5prW) JsonAggSelect
-fiInputArgs :: forall b_a5prW. Lens' (FunctionInfo b_a5prW) (Seq (FunctionInputArgument b_a5prW))
-fiGQLName :: forall b_a5prW. Lens' (FunctionInfo b_a5prW) Name
-fiGQLArgsName :: forall b_a5prW. Lens' (FunctionInfo b_a5prW) Name
-fiGQLAggregateName :: forall b_a5prW. Lens' (FunctionInfo b_a5prW) Name
-fiExposedAs :: forall b_a5prW. Lens' (FunctionInfo b_a5prW) FunctionExposedAs
-fiDescription :: forall b_a5prW. Lens' (FunctionInfo b_a5prW) (Maybe Text)
-fiComment :: forall b_a5prW. Lens' (FunctionInfo b_a5prW) (Maybe Text)
+fiVolatility :: forall b_a5pIo. Lens' (FunctionInfo b_a5pIo) FunctionVolatility
+fiSystemDefined :: forall b_a5pIo. Lens' (FunctionInfo b_a5pIo) SystemDefined
+fiSQLName :: forall b_a5pIo. Lens' (FunctionInfo b_a5pIo) (FunctionName b_a5pIo)
+fiReturnType :: forall b_a5pIo. Lens' (FunctionInfo b_a5pIo) (TableName b_a5pIo)
+fiPermissions :: forall b_a5pIo. Lens' (FunctionInfo b_a5pIo) FunctionPermissionsMap
+fiJsonAggSelect :: forall b_a5pIo. Lens' (FunctionInfo b_a5pIo) JsonAggSelect
+fiInputArgs :: forall b_a5pIo. Lens' (FunctionInfo b_a5pIo) (Seq (FunctionInputArgument b_a5pIo))
+fiGQLName :: forall b_a5pIo. Lens' (FunctionInfo b_a5pIo) Name
+fiGQLArgsName :: forall b_a5pIo. Lens' (FunctionInfo b_a5pIo) Name
+fiGQLAggregateName :: forall b_a5pIo. Lens' (FunctionInfo b_a5pIo) Name
+fiExposedAs :: forall b_a5pIo. Lens' (FunctionInfo b_a5pIo) FunctionExposedAs
+fiDescription :: forall b_a5pIo. Lens' (FunctionInfo b_a5pIo) (Maybe Text)
+fiComment :: forall b_a5pIo. Lens' (FunctionInfo b_a5pIo) (Maybe Text)
 
 -- | Apply function name customization to function arguments, as detailed
 --   in 'rfcs/function-root-field-customisation.md'. We want the different
@@ -6488,10 +6510,10 @@ ActionRemoteRelationshipSelect :: HashMap FieldName Name -> r -> ActionRemoteRel
 --   an execution tree is constructed so that a backend is absolved of
 --   dealing with remote relationships.
 [_arrsRelationship] :: ActionRemoteRelationshipSelect r -> r
-_ACFNestedObject :: forall r_a5ZWr. Prism' (ActionFieldG r_a5ZWr) (Name, ActionFieldsG r_a5ZWr)
-_ACFExpression :: forall r_a5ZWr. Prism' (ActionFieldG r_a5ZWr) Text
-_ACFRemote :: forall r_a5ZWr. Prism' (ActionFieldG r_a5ZWr) (ActionRemoteRelationshipSelect r_a5ZWr)
-_ACFScalar :: forall r_a5ZWr. Prism' (ActionFieldG r_a5ZWr) Name
+_ACFNestedObject :: forall r_a60cT. Prism' (ActionFieldG r_a60cT) (Name, ActionFieldsG r_a60cT)
+_ACFExpression :: forall r_a60cT. Prism' (ActionFieldG r_a60cT) Text
+_ACFRemote :: forall r_a60cT. Prism' (ActionFieldG r_a60cT) (ActionRemoteRelationshipSelect r_a60cT)
+_ACFScalar :: forall r_a60cT. Prism' (ActionFieldG r_a60cT) Name
 instance Data.Traversable.Traversable Hasura.RQL.IR.Action.ActionRemoteRelationshipSelect
 instance Data.Foldable.Foldable Hasura.RQL.IR.Action.ActionRemoteRelationshipSelect
 instance GHC.Base.Functor Hasura.RQL.IR.Action.ActionRemoteRelationshipSelect
@@ -6503,12 +6525,13 @@ instance GHC.Base.Functor Hasura.RQL.IR.Action.ActionFieldG
 instance GHC.Show.Show r => GHC.Show.Show (Hasura.RQL.IR.Action.ActionFieldG r)
 instance GHC.Classes.Eq r => GHC.Classes.Eq (Hasura.RQL.IR.Action.ActionFieldG r)
 
-module Hasura.GraphQL.Execute.LiveQuery.Options
-data LiveQueriesOptions
-LiveQueriesOptions :: !BatchSize -> !RefetchInterval -> LiveQueriesOptions
-[_lqoBatchSize] :: LiveQueriesOptions -> !BatchSize
-[_lqoRefetchInterval] :: LiveQueriesOptions -> !RefetchInterval
-mkLiveQueriesOptions :: Maybe BatchSize -> Maybe RefetchInterval -> LiveQueriesOptions
+module Hasura.GraphQL.Execute.Subscription.Options
+data SubscriptionsOptions
+SubscriptionsOptions :: !BatchSize -> !RefetchInterval -> SubscriptionsOptions
+[_lqoBatchSize] :: SubscriptionsOptions -> !BatchSize
+[_lqoRefetchInterval] :: SubscriptionsOptions -> !RefetchInterval
+type LiveQueriesOptions = SubscriptionsOptions
+mkSubscriptionsOptions :: Maybe BatchSize -> Maybe RefetchInterval -> SubscriptionsOptions
 newtype BatchSize
 BatchSize :: NonNegativeInt -> BatchSize
 [unBatchSize] :: BatchSize -> NonNegativeInt
@@ -6517,18 +6540,18 @@ newtype RefetchInterval
 RefetchInterval :: NonNegativeDiffTime -> RefetchInterval
 [unRefetchInterval] :: RefetchInterval -> NonNegativeDiffTime
 mkRefetchInterval :: DiffTime -> Maybe RefetchInterval
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.GraphQL.Execute.LiveQuery.Options.BatchSize
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.LiveQuery.Options.BatchSize
-instance GHC.Classes.Eq Hasura.GraphQL.Execute.LiveQuery.Options.BatchSize
-instance GHC.Show.Show Hasura.GraphQL.Execute.LiveQuery.Options.BatchSize
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.GraphQL.Execute.LiveQuery.Options.RefetchInterval
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.LiveQuery.Options.RefetchInterval
-instance GHC.Classes.Eq Hasura.GraphQL.Execute.LiveQuery.Options.RefetchInterval
-instance GHC.Show.Show Hasura.GraphQL.Execute.LiveQuery.Options.RefetchInterval
-instance GHC.Classes.Eq Hasura.GraphQL.Execute.LiveQuery.Options.LiveQueriesOptions
-instance GHC.Show.Show Hasura.GraphQL.Execute.LiveQuery.Options.LiveQueriesOptions
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.LiveQuery.Options.LiveQueriesOptions
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.GraphQL.Execute.LiveQuery.Options.LiveQueriesOptions
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.GraphQL.Execute.Subscription.Options.BatchSize
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.Subscription.Options.BatchSize
+instance GHC.Classes.Eq Hasura.GraphQL.Execute.Subscription.Options.BatchSize
+instance GHC.Show.Show Hasura.GraphQL.Execute.Subscription.Options.BatchSize
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.GraphQL.Execute.Subscription.Options.RefetchInterval
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.Subscription.Options.RefetchInterval
+instance GHC.Classes.Eq Hasura.GraphQL.Execute.Subscription.Options.RefetchInterval
+instance GHC.Show.Show Hasura.GraphQL.Execute.Subscription.Options.RefetchInterval
+instance GHC.Classes.Eq Hasura.GraphQL.Execute.Subscription.Options.SubscriptionsOptions
+instance GHC.Show.Show Hasura.GraphQL.Execute.Subscription.Options.SubscriptionsOptions
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.Subscription.Options.SubscriptionsOptions
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.GraphQL.Execute.Subscription.Options.SubscriptionsOptions
 
 
 -- | <h1>Hasura.Eventing.HTTP</h1>
@@ -7566,8 +7589,8 @@ CustomFunctionNames :: Name -> Name -> CustomFunctionNames
 data ComputedFieldReturn (b :: BackendType)
 CFRScalar :: !ScalarType b -> ComputedFieldReturn (b :: BackendType)
 CFRSetofTable :: !TableName b -> ComputedFieldReturn (b :: BackendType)
-_CFRSetofTable :: forall b_a6RM3. Prism' (ComputedFieldReturn b_a6RM3) (TableName b_a6RM3)
-_CFRScalar :: forall b_a6RM3. Prism' (ComputedFieldReturn b_a6RM3) (ScalarType b_a6RM3)
+_CFRSetofTable :: forall b_a6S2B. Prism' (ComputedFieldReturn b_a6S2B) (TableName b_a6S2B)
+_CFRScalar :: forall b_a6S2B. Prism' (ComputedFieldReturn b_a6S2B) (ScalarType b_a6S2B)
 data ComputedFieldFunction (b :: BackendType)
 ComputedFieldFunction :: !FunctionName b -> !Seq (FunctionArg b) -> !FunctionTableArgument -> !Maybe FunctionSessionArgument -> !Maybe PGDescription -> ComputedFieldFunction (b :: BackendType)
 [_cffName] :: ComputedFieldFunction (b :: BackendType) -> !FunctionName b
@@ -7582,11 +7605,11 @@ ComputedFieldInfo :: !XComputedField b -> !ComputedFieldName -> !ComputedFieldFu
 [_cfiFunction] :: ComputedFieldInfo (b :: BackendType) -> !ComputedFieldFunction b
 [_cfiReturnType] :: ComputedFieldInfo (b :: BackendType) -> !ComputedFieldReturn b
 [_cfiDescription] :: ComputedFieldInfo (b :: BackendType) -> !Maybe Text
-cfiXComputedFieldInfo :: forall b_a6Sux. Lens' (ComputedFieldInfo b_a6Sux) (XComputedField b_a6Sux)
-cfiReturnType :: forall b_a6Sux. Lens' (ComputedFieldInfo b_a6Sux) (ComputedFieldReturn b_a6Sux)
-cfiName :: forall b_a6Sux. Lens' (ComputedFieldInfo b_a6Sux) ComputedFieldName
-cfiFunction :: forall b_a6Sux. Lens' (ComputedFieldInfo b_a6Sux) (ComputedFieldFunction b_a6Sux)
-cfiDescription :: forall b_a6Sux. Lens' (ComputedFieldInfo b_a6Sux) (Maybe Text)
+cfiXComputedFieldInfo :: forall b_a6SL5. Lens' (ComputedFieldInfo b_a6SL5) (XComputedField b_a6SL5)
+cfiReturnType :: forall b_a6SL5. Lens' (ComputedFieldInfo b_a6SL5) (ComputedFieldReturn b_a6SL5)
+cfiName :: forall b_a6SL5. Lens' (ComputedFieldInfo b_a6SL5) ComputedFieldName
+cfiFunction :: forall b_a6SL5. Lens' (ComputedFieldInfo b_a6SL5) (ComputedFieldFunction b_a6SL5)
+cfiDescription :: forall b_a6SL5. Lens' (ComputedFieldInfo b_a6SL5) (Maybe Text)
 onlyScalarComputedFields :: [ComputedFieldInfo backend] -> [ComputedFieldInfo backend]
 instance GHC.Generics.Generic (Hasura.RQL.Types.ComputedField.ComputedFieldFunction b)
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.RQL.Types.ComputedField.ComputedFieldFunction b)
@@ -7683,8 +7706,8 @@ ColumnScalar :: !ScalarType b -> ColumnType (b :: BackendType)
 --   distinguish this case, since we treat it <i>completely</i> differently
 --   in the GraphQL schema.
 ColumnEnumReference :: !EnumReference b -> ColumnType (b :: BackendType)
-_ColumnEnumReference :: forall b_a75s2. Prism' (ColumnType b_a75s2) (EnumReference b_a75s2)
-_ColumnScalar :: forall b_a75s2. Prism' (ColumnType b_a75s2) (ScalarType b_a75s2)
+_ColumnEnumReference :: forall b_a75IA. Prism' (ColumnType b_a75IA) (EnumReference b_a75IA)
+_ColumnScalar :: forall b_a75IA. Prism' (ColumnType b_a75IA) (ScalarType b_a75IA)
 
 -- | A parser to parse a json value with enforcing column type
 type ValueParser b m v = CollectableType (ColumnType b) -> Value -> m v
@@ -7874,8 +7897,8 @@ data GExists (b :: BackendType) a
 GExists :: !TableName b -> !GBoolExp b a -> GExists (b :: BackendType) a
 [_geTable] :: GExists (b :: BackendType) a -> !TableName b
 [_geWhere] :: GExists (b :: BackendType) a -> !GBoolExp b a
-geWhere :: forall b_a7rPQ a_a7rPR a_a7uDV. Lens (GExists b_a7rPQ a_a7rPR) (GExists b_a7rPQ a_a7uDV) (GBoolExp b_a7rPQ a_a7rPR) (GBoolExp b_a7rPQ a_a7uDV)
-geTable :: forall b_a7rPQ a_a7rPR. Lens' (GExists b_a7rPQ a_a7rPR) (TableName b_a7rPQ)
+geWhere :: forall b_a7s6o a_a7s6p a_a7uUt. Lens (GExists b_a7s6o a_a7s6p) (GExists b_a7s6o a_a7uUt) (GBoolExp b_a7s6o a_a7s6p) (GBoolExp b_a7s6o a_a7uUt)
+geTable :: forall b_a7s6o a_a7s6p. Lens' (GExists b_a7s6o a_a7s6p) (TableName b_a7s6o)
 
 -- | We don't allow conditions across relationships in permissions: the
 --   type we use as the terms in GBoolExp is this one, ColExp, which only
@@ -7891,11 +7914,11 @@ ColExp :: !FieldName -> !Value -> ColExp
 newtype BoolExp (b :: BackendType)
 BoolExp :: GBoolExp b ColExp -> BoolExp (b :: BackendType)
 [unBoolExp] :: BoolExp (b :: BackendType) -> GBoolExp b ColExp
-_BoolFld :: forall b_a7rPS a_a7rPT. Prism' (GBoolExp b_a7rPS a_a7rPT) a_a7rPT
-_BoolExists :: forall b_a7rPS a_a7rPT. Prism' (GBoolExp b_a7rPS a_a7rPT) (GExists b_a7rPS a_a7rPT)
-_BoolNot :: forall b_a7rPS a_a7rPT. Prism' (GBoolExp b_a7rPS a_a7rPT) (GBoolExp b_a7rPS a_a7rPT)
-_BoolOr :: forall b_a7rPS a_a7rPT. Prism' (GBoolExp b_a7rPS a_a7rPT) [GBoolExp b_a7rPS a_a7rPT]
-_BoolAnd :: forall b_a7rPS a_a7rPT. Prism' (GBoolExp b_a7rPS a_a7rPT) [GBoolExp b_a7rPS a_a7rPT]
+_BoolFld :: forall b_a7s6q a_a7s6r. Prism' (GBoolExp b_a7s6q a_a7s6r) a_a7s6r
+_BoolExists :: forall b_a7s6q a_a7s6r. Prism' (GBoolExp b_a7s6q a_a7s6r) (GExists b_a7s6q a_a7s6r)
+_BoolNot :: forall b_a7s6q a_a7s6r. Prism' (GBoolExp b_a7s6q a_a7s6r) (GBoolExp b_a7s6q a_a7s6r)
+_BoolOr :: forall b_a7s6q a_a7s6r. Prism' (GBoolExp b_a7s6q a_a7s6r) [GBoolExp b_a7s6q a_a7s6r]
+_BoolAnd :: forall b_a7s6q a_a7s6r. Prism' (GBoolExp b_a7s6q a_a7s6r) [GBoolExp b_a7s6q a_a7s6r]
 
 -- | Permissions get translated into boolean expressions that are threaded
 --   throuhgout the parsers. For the leaf values of those permissions, we
@@ -8227,9 +8250,9 @@ PermDef :: !RoleName -> !a -> !Maybe Text -> PermDef a
 [_pdRole] :: PermDef a -> !RoleName
 [_pdPermission] :: PermDef a -> !a
 [_pdComment] :: PermDef a -> !Maybe Text
-pdRole :: forall a_a8jZJ. Lens' (PermDef a_a8jZJ) RoleName
-pdPermission :: forall a_a8jZJ a_a8kiX. Lens (PermDef a_a8jZJ) (PermDef a_a8kiX) a_a8jZJ a_a8kiX
-pdComment :: forall a_a8jZJ. Lens' (PermDef a_a8jZJ) (Maybe Text)
+pdRole :: forall a_a8kgh. Lens' (PermDef a_a8kgh) RoleName
+pdPermission :: forall a_a8kgh a_a8kzv. Lens (PermDef a_a8kgh) (PermDef a_a8kzv) a_a8kgh a_a8kzv
+pdComment :: forall a_a8kgh. Lens' (PermDef a_a8kgh) (Maybe Text)
 data InsPerm (b :: BackendType)
 InsPerm :: !BoolExp b -> !Maybe (ColumnValues b Value) -> !Maybe (PermColSpec b) -> !Maybe Bool -> InsPerm (b :: BackendType)
 [ipCheck] :: InsPerm (b :: BackendType) -> !BoolExp b
@@ -14314,15 +14337,15 @@ convertGraphQLField :: Eq var => GraphQLField Void var -> Field NoFragments var
 --   on the abstract type) that is common across all the member selection
 --   sets and used that as the base selection.
 reduceAbstractTypeSelectionSet :: Eq var => DeduplicatedSelectionSet Void var -> (ObjectSelectionSet Void var, HashMap Name (ObjectSelectionSet Void var))
-_FieldRemote :: forall r_ahRkR var_ahRkS. Prism' (Field r_ahRkR var_ahRkS) (SchemaRemoteRelationshipSelect r_ahRkR)
-_FieldGraphQL :: forall r_ahRkR var_ahSLh var_ahRkS. Prism (Field r_ahRkR var_ahSLh) (Field r_ahRkR var_ahRkS) (GraphQLField r_ahRkR var_ahSLh) (GraphQLField r_ahRkR var_ahRkS)
-fSelectionSet :: forall r_ahRkP var_ahRkQ r_ahSNi. Lens (GraphQLField r_ahRkP var_ahRkQ) (GraphQLField r_ahSNi var_ahRkQ) (SelectionSet r_ahRkP var_ahRkQ) (SelectionSet r_ahSNi var_ahRkQ)
-fName :: forall r_ahRkP var_ahRkQ. Lens' (GraphQLField r_ahRkP var_ahRkQ) Name
-fDirectives :: forall r_ahRkP var_ahRkQ. Lens' (GraphQLField r_ahRkP var_ahRkQ) [Directive var_ahRkQ]
-fArguments :: forall r_ahRkP var_ahRkQ. Lens' (GraphQLField r_ahRkP var_ahRkQ) (HashMap Name (Value var_ahRkQ))
-fAlias :: forall r_ahRkP var_ahRkQ. Lens' (GraphQLField r_ahRkP var_ahRkQ) Name
-dssMemberSelectionSets :: forall r_ahRkV var_ahRkW r_ahSQA var_ahSQB. Lens (DeduplicatedSelectionSet r_ahRkV var_ahRkW) (DeduplicatedSelectionSet r_ahSQA var_ahSQB) (HashMap Name (ObjectSelectionSet r_ahRkV var_ahRkW)) (HashMap Name (ObjectSelectionSet r_ahSQA var_ahSQB))
-dssCommonFields :: forall r_ahRkV var_ahRkW. Lens' (DeduplicatedSelectionSet r_ahRkV var_ahRkW) (HashSet Name)
+_FieldRemote :: forall r_ahRBn var_ahRBo. Prism' (Field r_ahRBn var_ahRBo) (SchemaRemoteRelationshipSelect r_ahRBn)
+_FieldGraphQL :: forall r_ahRBn var_ahT1N var_ahRBo. Prism (Field r_ahRBn var_ahT1N) (Field r_ahRBn var_ahRBo) (GraphQLField r_ahRBn var_ahT1N) (GraphQLField r_ahRBn var_ahRBo)
+fSelectionSet :: forall r_ahRBl var_ahRBm r_ahT3O. Lens (GraphQLField r_ahRBl var_ahRBm) (GraphQLField r_ahT3O var_ahRBm) (SelectionSet r_ahRBl var_ahRBm) (SelectionSet r_ahT3O var_ahRBm)
+fName :: forall r_ahRBl var_ahRBm. Lens' (GraphQLField r_ahRBl var_ahRBm) Name
+fDirectives :: forall r_ahRBl var_ahRBm. Lens' (GraphQLField r_ahRBl var_ahRBm) [Directive var_ahRBm]
+fArguments :: forall r_ahRBl var_ahRBm. Lens' (GraphQLField r_ahRBl var_ahRBm) (HashMap Name (Value var_ahRBm))
+fAlias :: forall r_ahRBl var_ahRBm. Lens' (GraphQLField r_ahRBl var_ahRBm) Name
+dssMemberSelectionSets :: forall r_ahRBr var_ahRBs r_ahT76 var_ahT77. Lens (DeduplicatedSelectionSet r_ahRBr var_ahRBs) (DeduplicatedSelectionSet r_ahT76 var_ahT77) (HashMap Name (ObjectSelectionSet r_ahRBr var_ahRBs)) (HashMap Name (ObjectSelectionSet r_ahT76 var_ahT77))
+dssCommonFields :: forall r_ahRBr var_ahRBs. Lens' (DeduplicatedSelectionSet r_ahRBr var_ahRBs) (HashSet Name)
 instance Data.Traversable.Traversable Hasura.RQL.IR.RemoteSchema.SchemaRemoteRelationshipSelect
 instance Data.Foldable.Foldable Hasura.RQL.IR.RemoteSchema.SchemaRemoteRelationshipSelect
 instance GHC.Base.Functor Hasura.RQL.IR.RemoteSchema.SchemaRemoteRelationshipSelect
@@ -14563,10 +14586,10 @@ FIColumn :: !ColumnInfo b -> FieldInfo (b :: BackendType)
 FIRelationship :: !RelInfo b -> FieldInfo (b :: BackendType)
 FIComputedField :: !ComputedFieldInfo b -> FieldInfo (b :: BackendType)
 FIRemoteRelationship :: !RemoteFieldInfo (DBJoinField b) -> FieldInfo (b :: BackendType)
-_FIRemoteRelationship :: forall b_ai8qa. Prism' (FieldInfo b_ai8qa) (RemoteFieldInfo (DBJoinField b_ai8qa))
-_FIComputedField :: forall b_ai8qa. Prism' (FieldInfo b_ai8qa) (ComputedFieldInfo b_ai8qa)
-_FIRelationship :: forall b_ai8qa. Prism' (FieldInfo b_ai8qa) (RelInfo b_ai8qa)
-_FIColumn :: forall b_ai8qa. Prism' (FieldInfo b_ai8qa) (ColumnInfo b_ai8qa)
+_FIRemoteRelationship :: forall b_ai8GG. Prism' (FieldInfo b_ai8GG) (RemoteFieldInfo (DBJoinField b_ai8GG))
+_FIComputedField :: forall b_ai8GG. Prism' (FieldInfo b_ai8GG) (ComputedFieldInfo b_ai8GG)
+_FIRelationship :: forall b_ai8GG. Prism' (FieldInfo b_ai8GG) (RelInfo b_ai8GG)
+_FIColumn :: forall b_ai8GG. Prism' (FieldInfo b_ai8GG) (ColumnInfo b_ai8GG)
 type FieldInfoMap = HashMap FieldName
 fieldInfoName :: forall b. Backend b => FieldInfo b -> FieldName
 fieldInfoGraphQLName :: FieldInfo b -> Maybe Name
@@ -14638,10 +14661,10 @@ RolePermInfo :: !Maybe (InsPermInfo b) -> !Maybe (SelPermInfo b) -> !Maybe (UpdP
 [_permSel] :: RolePermInfo (b :: BackendType) -> !Maybe (SelPermInfo b)
 [_permUpd] :: RolePermInfo (b :: BackendType) -> !Maybe (UpdPermInfo b)
 [_permDel] :: RolePermInfo (b :: BackendType) -> !Maybe (DelPermInfo b)
-permUpd :: forall b_ai97P. Lens' (RolePermInfo b_ai97P) (Maybe (UpdPermInfo b_ai97P))
-permSel :: forall b_ai97P. Lens' (RolePermInfo b_ai97P) (Maybe (SelPermInfo b_ai97P))
-permIns :: forall b_ai97P. Lens' (RolePermInfo b_ai97P) (Maybe (InsPermInfo b_ai97P))
-permDel :: forall b_ai97P. Lens' (RolePermInfo b_ai97P) (Maybe (DelPermInfo b_ai97P))
+permUpd :: forall b_ai9ol. Lens' (RolePermInfo b_ai9ol) (Maybe (UpdPermInfo b_ai9ol))
+permSel :: forall b_ai9ol. Lens' (RolePermInfo b_ai9ol) (Maybe (SelPermInfo b_ai9ol))
+permIns :: forall b_ai9ol. Lens' (RolePermInfo b_ai9ol) (Maybe (InsPermInfo b_ai9ol))
+permDel :: forall b_ai9ol. Lens' (RolePermInfo b_ai9ol) (Maybe (DelPermInfo b_ai9ol))
 type RolePermInfoMap b = HashMap RoleName (RolePermInfo b)
 data ViewInfo
 ViewInfo :: !Bool -> !Bool -> !Bool -> ViewInfo
@@ -14659,10 +14682,10 @@ TableConfig :: TableCustomRootFields -> HashMap (Column b) ColumnConfig -> Maybe
 [_tcColumnConfig] :: TableConfig b -> HashMap (Column b) ColumnConfig
 [_tcCustomName] :: TableConfig b -> Maybe Name
 [_tcComment] :: TableConfig b -> Comment
-tcCustomRootFields :: forall b_aic7J. Lens' (TableConfig b_aic7J) TableCustomRootFields
-tcCustomName :: forall b_aic7J. Lens' (TableConfig b_aic7J) (Maybe Name)
-tcComment :: forall b_aic7J. Lens' (TableConfig b_aic7J) Comment
-tcColumnConfig :: forall b_aic7J b_aicHF. Lens (TableConfig b_aic7J) (TableConfig b_aicHF) (HashMap (Column b_aic7J) ColumnConfig) (HashMap (Column b_aicHF) ColumnConfig)
+tcCustomRootFields :: forall b_aicof. Lens' (TableConfig b_aicof) TableCustomRootFields
+tcCustomName :: forall b_aicof. Lens' (TableConfig b_aicof) (Maybe Name)
+tcComment :: forall b_aicof. Lens' (TableConfig b_aicof) Comment
+tcColumnConfig :: forall b_aicof b_aicYb. Lens (TableConfig b_aicof) (TableConfig b_aicYb) (HashMap (Column b_aicof) ColumnConfig) (HashMap (Column b_aicYb) ColumnConfig)
 emptyTableConfig :: TableConfig b
 data Constraint (b :: BackendType)
 Constraint :: !ConstraintName b -> !OID -> Constraint (b :: BackendType)
@@ -14672,8 +14695,8 @@ data PrimaryKey (b :: BackendType) a
 PrimaryKey :: !Constraint b -> !NESeq a -> PrimaryKey (b :: BackendType) a
 [_pkConstraint] :: PrimaryKey (b :: BackendType) a -> !Constraint b
 [_pkColumns] :: PrimaryKey (b :: BackendType) a -> !NESeq a
-pkConstraint :: forall b_aicIh a_aicIi b_aiern. Lens (PrimaryKey b_aicIh a_aicIi) (PrimaryKey b_aiern a_aicIi) (Constraint b_aicIh) (Constraint b_aiern)
-pkColumns :: forall b_aicIh a_aicIi a_aierm. Lens (PrimaryKey b_aicIh a_aicIi) (PrimaryKey b_aicIh a_aierm) (NESeq a_aicIi) (NESeq a_aierm)
+pkConstraint :: forall b_aicYN a_aicYO b_aieHT. Lens (PrimaryKey b_aicYN a_aicYO) (PrimaryKey b_aieHT a_aicYO) (Constraint b_aicYN) (Constraint b_aieHT)
+pkColumns :: forall b_aicYN a_aicYO a_aieHS. Lens (PrimaryKey b_aicYN a_aicYO) (PrimaryKey b_aicYN a_aieHS) (NESeq a_aicYO) (NESeq a_aieHS)
 data ForeignKey (b :: BackendType)
 ForeignKey :: !Constraint b -> !TableName b -> !HashMap (Column b) (Column b) -> ForeignKey (b :: BackendType)
 [_fkConstraint] :: ForeignKey (b :: BackendType) -> !Constraint b
@@ -14699,17 +14722,17 @@ TableCoreInfo :: !TableName b -> !Maybe PGDescription -> !SystemDefined -> !Fiel
 [_tciEnumValues] :: TableCoreInfoG (b :: BackendType) field primaryKeyColumn -> !Maybe EnumValues
 [_tciCustomConfig] :: TableCoreInfoG (b :: BackendType) field primaryKeyColumn -> !TableConfig b
 [_tciExtraTableMetadata] :: TableCoreInfoG (b :: BackendType) field primaryKeyColumn -> !ExtraTableMetadata b
-tciViewInfo :: forall b_aierQ field_aierR primaryKeyColumn_aierS. Lens' (TableCoreInfoG b_aierQ field_aierR primaryKeyColumn_aierS) (Maybe ViewInfo)
-tciUniqueConstraints :: forall b_aierQ field_aierR primaryKeyColumn_aierS. Lens' (TableCoreInfoG b_aierQ field_aierR primaryKeyColumn_aierS) (HashSet (Constraint b_aierQ))
-tciSystemDefined :: forall b_aierQ field_aierR primaryKeyColumn_aierS. Lens' (TableCoreInfoG b_aierQ field_aierR primaryKeyColumn_aierS) SystemDefined
-tciPrimaryKey :: forall b_aierQ field_aierR primaryKeyColumn_aierS primaryKeyColumn_aifBI. Lens (TableCoreInfoG b_aierQ field_aierR primaryKeyColumn_aierS) (TableCoreInfoG b_aierQ field_aierR primaryKeyColumn_aifBI) (Maybe (PrimaryKey b_aierQ primaryKeyColumn_aierS)) (Maybe (PrimaryKey b_aierQ primaryKeyColumn_aifBI))
-tciName :: forall b_aierQ field_aierR primaryKeyColumn_aierS. Lens' (TableCoreInfoG b_aierQ field_aierR primaryKeyColumn_aierS) (TableName b_aierQ)
-tciForeignKeys :: forall b_aierQ field_aierR primaryKeyColumn_aierS. Lens' (TableCoreInfoG b_aierQ field_aierR primaryKeyColumn_aierS) (HashSet (ForeignKey b_aierQ))
-tciFieldInfoMap :: forall b_aierQ field_aierR primaryKeyColumn_aierS field_aifBH. Lens (TableCoreInfoG b_aierQ field_aierR primaryKeyColumn_aierS) (TableCoreInfoG b_aierQ field_aifBH primaryKeyColumn_aierS) (FieldInfoMap field_aierR) (FieldInfoMap field_aifBH)
-tciExtraTableMetadata :: forall b_aierQ field_aierR primaryKeyColumn_aierS. Lens' (TableCoreInfoG b_aierQ field_aierR primaryKeyColumn_aierS) (ExtraTableMetadata b_aierQ)
-tciEnumValues :: forall b_aierQ field_aierR primaryKeyColumn_aierS. Lens' (TableCoreInfoG b_aierQ field_aierR primaryKeyColumn_aierS) (Maybe EnumValues)
-tciDescription :: forall b_aierQ field_aierR primaryKeyColumn_aierS. Lens' (TableCoreInfoG b_aierQ field_aierR primaryKeyColumn_aierS) (Maybe PGDescription)
-tciCustomConfig :: forall b_aierQ field_aierR primaryKeyColumn_aierS. Lens' (TableCoreInfoG b_aierQ field_aierR primaryKeyColumn_aierS) (TableConfig b_aierQ)
+tciViewInfo :: forall b_aieIm field_aieIn primaryKeyColumn_aieIo. Lens' (TableCoreInfoG b_aieIm field_aieIn primaryKeyColumn_aieIo) (Maybe ViewInfo)
+tciUniqueConstraints :: forall b_aieIm field_aieIn primaryKeyColumn_aieIo. Lens' (TableCoreInfoG b_aieIm field_aieIn primaryKeyColumn_aieIo) (HashSet (Constraint b_aieIm))
+tciSystemDefined :: forall b_aieIm field_aieIn primaryKeyColumn_aieIo. Lens' (TableCoreInfoG b_aieIm field_aieIn primaryKeyColumn_aieIo) SystemDefined
+tciPrimaryKey :: forall b_aieIm field_aieIn primaryKeyColumn_aieIo primaryKeyColumn_aifSe. Lens (TableCoreInfoG b_aieIm field_aieIn primaryKeyColumn_aieIo) (TableCoreInfoG b_aieIm field_aieIn primaryKeyColumn_aifSe) (Maybe (PrimaryKey b_aieIm primaryKeyColumn_aieIo)) (Maybe (PrimaryKey b_aieIm primaryKeyColumn_aifSe))
+tciName :: forall b_aieIm field_aieIn primaryKeyColumn_aieIo. Lens' (TableCoreInfoG b_aieIm field_aieIn primaryKeyColumn_aieIo) (TableName b_aieIm)
+tciForeignKeys :: forall b_aieIm field_aieIn primaryKeyColumn_aieIo. Lens' (TableCoreInfoG b_aieIm field_aieIn primaryKeyColumn_aieIo) (HashSet (ForeignKey b_aieIm))
+tciFieldInfoMap :: forall b_aieIm field_aieIn primaryKeyColumn_aieIo field_aifSd. Lens (TableCoreInfoG b_aieIm field_aieIn primaryKeyColumn_aieIo) (TableCoreInfoG b_aieIm field_aifSd primaryKeyColumn_aieIo) (FieldInfoMap field_aieIn) (FieldInfoMap field_aifSd)
+tciExtraTableMetadata :: forall b_aieIm field_aieIn primaryKeyColumn_aieIo. Lens' (TableCoreInfoG b_aieIm field_aieIn primaryKeyColumn_aieIo) (ExtraTableMetadata b_aieIm)
+tciEnumValues :: forall b_aieIm field_aieIn primaryKeyColumn_aieIo. Lens' (TableCoreInfoG b_aieIm field_aieIn primaryKeyColumn_aieIo) (Maybe EnumValues)
+tciDescription :: forall b_aieIm field_aieIn primaryKeyColumn_aieIo. Lens' (TableCoreInfoG b_aieIm field_aieIn primaryKeyColumn_aieIo) (Maybe PGDescription)
+tciCustomConfig :: forall b_aieIm field_aieIn primaryKeyColumn_aieIo. Lens' (TableCoreInfoG b_aieIm field_aieIn primaryKeyColumn_aieIo) (TableConfig b_aieIm)
 
 -- | Fully-processed table info that includes non-column fields.
 type TableCoreInfo b = TableCoreInfoG b (FieldInfo b) (ColumnInfo b)
@@ -14720,10 +14743,10 @@ TableInfo :: TableCoreInfo b -> !RolePermInfoMap b -> !EventTriggerInfoMap b -> 
 [_tiRolePermInfoMap] :: TableInfo (b :: BackendType) -> !RolePermInfoMap b
 [_tiEventTriggerInfoMap] :: TableInfo (b :: BackendType) -> !EventTriggerInfoMap b
 [_tiAdminRolePermInfo] :: TableInfo (b :: BackendType) -> RolePermInfo b
-tiRolePermInfoMap :: forall b_aifEl. Lens' (TableInfo b_aifEl) (RolePermInfoMap b_aifEl)
-tiEventTriggerInfoMap :: forall b_aifEl. Lens' (TableInfo b_aifEl) (EventTriggerInfoMap b_aifEl)
-tiCoreInfo :: forall b_aifEl. Lens' (TableInfo b_aifEl) (TableCoreInfo b_aifEl)
-tiAdminRolePermInfo :: forall b_aifEl. Lens' (TableInfo b_aifEl) (RolePermInfo b_aifEl)
+tiRolePermInfoMap :: forall b_aifUR. Lens' (TableInfo b_aifUR) (RolePermInfoMap b_aifUR)
+tiEventTriggerInfoMap :: forall b_aifUR. Lens' (TableInfo b_aifUR) (EventTriggerInfoMap b_aifUR)
+tiCoreInfo :: forall b_aifUR. Lens' (TableInfo b_aifUR) (TableCoreInfo b_aifUR)
+tiAdminRolePermInfo :: forall b_aifUR. Lens' (TableInfo b_aifUR) (RolePermInfo b_aifUR)
 tiName :: Lens' (TableInfo b) (TableName b)
 tableInfoName :: TableInfo b -> TableName b
 type TableCoreCache b = HashMap (TableName b) (TableCoreInfo b)
@@ -14886,12 +14909,12 @@ SourceInfo :: !SourceName -> !TableCache b -> !FunctionCache b -> !SourceConfig 
 [_siConfiguration] :: SourceInfo b -> !SourceConfig b
 [_siQueryTagsConfig] :: SourceInfo b -> !Maybe QueryTagsConfig
 [_siCustomization] :: SourceInfo b -> !SourceCustomization
-siTables :: forall b_aiVmE. Lens' (SourceInfo b_aiVmE) (TableCache b_aiVmE)
-siQueryTagsConfig :: forall b_aiVmE. Lens' (SourceInfo b_aiVmE) (Maybe QueryTagsConfig)
-siName :: forall b_aiVmE. Lens' (SourceInfo b_aiVmE) SourceName
-siFunctions :: forall b_aiVmE. Lens' (SourceInfo b_aiVmE) (FunctionCache b_aiVmE)
-siCustomization :: forall b_aiVmE. Lens' (SourceInfo b_aiVmE) SourceCustomization
-siConfiguration :: forall b_aiVmE. Lens' (SourceInfo b_aiVmE) (SourceConfig b_aiVmE)
+siTables :: forall b_aiVDa. Lens' (SourceInfo b_aiVDa) (TableCache b_aiVDa)
+siQueryTagsConfig :: forall b_aiVDa. Lens' (SourceInfo b_aiVDa) (Maybe QueryTagsConfig)
+siName :: forall b_aiVDa. Lens' (SourceInfo b_aiVDa) SourceName
+siFunctions :: forall b_aiVDa. Lens' (SourceInfo b_aiVDa) (FunctionCache b_aiVDa)
+siCustomization :: forall b_aiVDa. Lens' (SourceInfo b_aiVDa) SourceCustomization
+siConfiguration :: forall b_aiVDa. Lens' (SourceInfo b_aiVDa) (SourceConfig b_aiVDa)
 type BackendSourceInfo = AnyBackend SourceInfo
 type SourceCache = HashMap SourceName BackendSourceInfo
 unsafeSourceInfo :: forall b. HasTag b => BackendSourceInfo -> Maybe (SourceInfo b)
@@ -14974,11 +14997,11 @@ TypeRelationship :: !RelationshipName -> !RelType -> !SourceName -> !t -> !HashM
 [_trSource] :: TypeRelationship t f -> !SourceName
 [_trRemoteTable] :: TypeRelationship t f -> !t
 [_trFieldMapping] :: TypeRelationship t f -> !HashMap ObjectFieldName f
-trType :: forall t_aiZv0 f_aiZv1. Lens' (TypeRelationship t_aiZv0 f_aiZv1) RelType
-trSource :: forall t_aiZv0 f_aiZv1. Lens' (TypeRelationship t_aiZv0 f_aiZv1) SourceName
-trRemoteTable :: forall t_aiZv0 f_aiZv1 t_aiZTW. Lens (TypeRelationship t_aiZv0 f_aiZv1) (TypeRelationship t_aiZTW f_aiZv1) t_aiZv0 t_aiZTW
-trName :: forall t_aiZv0 f_aiZv1. Lens' (TypeRelationship t_aiZv0 f_aiZv1) RelationshipName
-trFieldMapping :: forall t_aiZv0 f_aiZv1 f_aiZTV. Lens (TypeRelationship t_aiZv0 f_aiZv1) (TypeRelationship t_aiZv0 f_aiZTV) (HashMap ObjectFieldName f_aiZv1) (HashMap ObjectFieldName f_aiZTV)
+trType :: forall t_aiZLw f_aiZLx. Lens' (TypeRelationship t_aiZLw f_aiZLx) RelType
+trSource :: forall t_aiZLw f_aiZLx. Lens' (TypeRelationship t_aiZLw f_aiZLx) SourceName
+trRemoteTable :: forall t_aiZLw f_aiZLx t_aj0as. Lens (TypeRelationship t_aiZLw f_aiZLx) (TypeRelationship t_aj0as f_aiZLx) t_aiZLw t_aj0as
+trName :: forall t_aiZLw f_aiZLx. Lens' (TypeRelationship t_aiZLw f_aiZLx) RelationshipName
+trFieldMapping :: forall t_aiZLw f_aiZLx f_aj0ar. Lens (TypeRelationship t_aiZLw f_aiZLx) (TypeRelationship t_aiZLw f_aj0ar) (HashMap ObjectFieldName f_aiZLx) (HashMap ObjectFieldName f_aj0ar)
 newtype ObjectTypeName
 ObjectTypeName :: Name -> ObjectTypeName
 [unObjectTypeName] :: ObjectTypeName -> Name
@@ -15235,15 +15258,15 @@ ActionDefinition :: ![a] -> !GraphQLType -> !ActionType -> ![HeaderConf] -> !Boo
 [_adHandler] :: ActionDefinition a b -> !b
 [_adRequestTransform] :: ActionDefinition a b -> !Maybe RequestTransform
 [_adResponseTransform] :: ActionDefinition a b -> !Maybe MetadataResponseTransform
-adType :: forall a_ajlWo b_ajlWp. Lens' (ActionDefinition a_ajlWo b_ajlWp) ActionType
-adTimeout :: forall a_ajlWo b_ajlWp. Lens' (ActionDefinition a_ajlWo b_ajlWp) Timeout
-adResponseTransform :: forall a_ajlWo b_ajlWp. Lens' (ActionDefinition a_ajlWo b_ajlWp) (Maybe MetadataResponseTransform)
-adRequestTransform :: forall a_ajlWo b_ajlWp. Lens' (ActionDefinition a_ajlWo b_ajlWp) (Maybe RequestTransform)
-adOutputType :: forall a_ajlWo b_ajlWp. Lens' (ActionDefinition a_ajlWo b_ajlWp) GraphQLType
-adHeaders :: forall a_ajlWo b_ajlWp. Lens' (ActionDefinition a_ajlWo b_ajlWp) [HeaderConf]
-adHandler :: forall a_ajlWo b_ajlWp b_ajmhI. Lens (ActionDefinition a_ajlWo b_ajlWp) (ActionDefinition a_ajlWo b_ajmhI) b_ajlWp b_ajmhI
-adForwardClientHeaders :: forall a_ajlWo b_ajlWp. Lens' (ActionDefinition a_ajlWo b_ajlWp) Bool
-adArguments :: forall a_ajlWo b_ajlWp a_ajmhH. Lens (ActionDefinition a_ajlWo b_ajlWp) (ActionDefinition a_ajmhH b_ajlWp) [a_ajlWo] [a_ajmhH]
+adType :: forall a_ajmcU b_ajmcV. Lens' (ActionDefinition a_ajmcU b_ajmcV) ActionType
+adTimeout :: forall a_ajmcU b_ajmcV. Lens' (ActionDefinition a_ajmcU b_ajmcV) Timeout
+adResponseTransform :: forall a_ajmcU b_ajmcV. Lens' (ActionDefinition a_ajmcU b_ajmcV) (Maybe MetadataResponseTransform)
+adRequestTransform :: forall a_ajmcU b_ajmcV. Lens' (ActionDefinition a_ajmcU b_ajmcV) (Maybe RequestTransform)
+adOutputType :: forall a_ajmcU b_ajmcV. Lens' (ActionDefinition a_ajmcU b_ajmcV) GraphQLType
+adHeaders :: forall a_ajmcU b_ajmcV. Lens' (ActionDefinition a_ajmcU b_ajmcV) [HeaderConf]
+adHandler :: forall a_ajmcU b_ajmcV b_ajmye. Lens (ActionDefinition a_ajmcU b_ajmcV) (ActionDefinition a_ajmcU b_ajmye) b_ajmcV b_ajmye
+adForwardClientHeaders :: forall a_ajmcU b_ajmcV. Lens' (ActionDefinition a_ajmcU b_ajmcV) Bool
+adArguments :: forall a_ajmcU b_ajmcV a_ajmyd. Lens (ActionDefinition a_ajmcU b_ajmcV) (ActionDefinition a_ajmyd b_ajmcV) [a_ajmcU] [a_ajmyd]
 type ResolvedActionDefinition = ActionDefinition (ArgumentDefinition (GType, NonObjectCustomType)) ResolvedWebhook
 data ActionPermissionInfo
 ActionPermissionInfo :: !RoleName -> ActionPermissionInfo
@@ -15368,32 +15391,32 @@ type LockedActionEventId = EventId
 newtype LockedActionIdArray
 LockedActionIdArray :: [LockedActionEventId] -> LockedActionIdArray
 [unCohortIdArray] :: LockedActionIdArray -> [LockedActionEventId]
-aaaqStringifyNum :: forall b_ajmUh r_ajmUi. Lens' (AnnActionAsyncQuery b_ajmUh r_ajmUi) StringifyNumbers
-aaaqSource :: forall b_ajmUh r_ajmUi. Lens' (AnnActionAsyncQuery b_ajmUh r_ajmUi) (ActionSourceInfo b_ajmUh)
-aaaqOutputType :: forall b_ajmUh r_ajmUi. Lens' (AnnActionAsyncQuery b_ajmUh r_ajmUi) GraphQLType
-aaaqName :: forall b_ajmUh r_ajmUi. Lens' (AnnActionAsyncQuery b_ajmUh r_ajmUi) ActionName
-aaaqForwardClientHeaders :: forall b_ajmUh r_ajmUi. Lens' (AnnActionAsyncQuery b_ajmUh r_ajmUi) Bool
-aaaqFields :: forall b_ajmUh r_ajmUi r_ajnTe. Lens (AnnActionAsyncQuery b_ajmUh r_ajmUi) (AnnActionAsyncQuery b_ajmUh r_ajnTe) (AsyncActionQueryFieldsG r_ajmUi) (AsyncActionQueryFieldsG r_ajnTe)
-aaaqDefinitionList :: forall b_ajmUh r_ajmUi. Lens' (AnnActionAsyncQuery b_ajmUh r_ajmUi) [(Column b_ajmUh, ScalarType b_ajmUh)]
-aaaqActionId :: forall b_ajmUh r_ajmUi. Lens' (AnnActionAsyncQuery b_ajmUh r_ajmUi) ActionId
-aaeWebhook :: forall r_ajmUl. Lens' (AnnActionExecution r_ajmUl) ResolvedWebhook
-aaeTimeOut :: forall r_ajmUl. Lens' (AnnActionExecution r_ajmUl) Timeout
-aaeResponseTransform :: forall r_ajmUl. Lens' (AnnActionExecution r_ajmUl) (Maybe MetadataResponseTransform)
-aaeRequestTransform :: forall r_ajmUl. Lens' (AnnActionExecution r_ajmUl) (Maybe RequestTransform)
-aaePayload :: forall r_ajmUl. Lens' (AnnActionExecution r_ajmUl) Value
-aaeOutputType :: forall r_ajmUl. Lens' (AnnActionExecution r_ajmUl) GraphQLType
-aaeOutputFields :: forall r_ajmUl. Lens' (AnnActionExecution r_ajmUl) ActionOutputFields
-aaeName :: forall r_ajmUl. Lens' (AnnActionExecution r_ajmUl) ActionName
-aaeHeaders :: forall r_ajmUl. Lens' (AnnActionExecution r_ajmUl) [HeaderConf]
-aaeForwardClientHeaders :: forall r_ajmUl. Lens' (AnnActionExecution r_ajmUl) Bool
-aaeFields :: forall r_ajmUl r_ajnZ3. Lens (AnnActionExecution r_ajmUl) (AnnActionExecution r_ajnZ3) (ActionFieldsG r_ajmUl) (ActionFieldsG r_ajnZ3)
+aaaqStringifyNum :: forall b_ajnaN r_ajnaO. Lens' (AnnActionAsyncQuery b_ajnaN r_ajnaO) StringifyNumbers
+aaaqSource :: forall b_ajnaN r_ajnaO. Lens' (AnnActionAsyncQuery b_ajnaN r_ajnaO) (ActionSourceInfo b_ajnaN)
+aaaqOutputType :: forall b_ajnaN r_ajnaO. Lens' (AnnActionAsyncQuery b_ajnaN r_ajnaO) GraphQLType
+aaaqName :: forall b_ajnaN r_ajnaO. Lens' (AnnActionAsyncQuery b_ajnaN r_ajnaO) ActionName
+aaaqForwardClientHeaders :: forall b_ajnaN r_ajnaO. Lens' (AnnActionAsyncQuery b_ajnaN r_ajnaO) Bool
+aaaqFields :: forall b_ajnaN r_ajnaO r_ajo9K. Lens (AnnActionAsyncQuery b_ajnaN r_ajnaO) (AnnActionAsyncQuery b_ajnaN r_ajo9K) (AsyncActionQueryFieldsG r_ajnaO) (AsyncActionQueryFieldsG r_ajo9K)
+aaaqDefinitionList :: forall b_ajnaN r_ajnaO. Lens' (AnnActionAsyncQuery b_ajnaN r_ajnaO) [(Column b_ajnaN, ScalarType b_ajnaN)]
+aaaqActionId :: forall b_ajnaN r_ajnaO. Lens' (AnnActionAsyncQuery b_ajnaN r_ajnaO) ActionId
+aaeWebhook :: forall r_ajnaR. Lens' (AnnActionExecution r_ajnaR) ResolvedWebhook
+aaeTimeOut :: forall r_ajnaR. Lens' (AnnActionExecution r_ajnaR) Timeout
+aaeResponseTransform :: forall r_ajnaR. Lens' (AnnActionExecution r_ajnaR) (Maybe MetadataResponseTransform)
+aaeRequestTransform :: forall r_ajnaR. Lens' (AnnActionExecution r_ajnaR) (Maybe RequestTransform)
+aaePayload :: forall r_ajnaR. Lens' (AnnActionExecution r_ajnaR) Value
+aaeOutputType :: forall r_ajnaR. Lens' (AnnActionExecution r_ajnaR) GraphQLType
+aaeOutputFields :: forall r_ajnaR. Lens' (AnnActionExecution r_ajnaR) ActionOutputFields
+aaeName :: forall r_ajnaR. Lens' (AnnActionExecution r_ajnaR) ActionName
+aaeHeaders :: forall r_ajnaR. Lens' (AnnActionExecution r_ajnaR) [HeaderConf]
+aaeForwardClientHeaders :: forall r_ajnaR. Lens' (AnnActionExecution r_ajnaR) Bool
+aaeFields :: forall r_ajnaR r_ajofz. Lens (AnnActionExecution r_ajnaR) (AnnActionExecution r_ajofz) (ActionFieldsG r_ajnaR) (ActionFieldsG r_ajofz)
 asiName :: Lens' ActionsInfo ActionName
 asiForwardClientHeaders :: Lens' ActionsInfo Bool
-_AsyncErrors :: forall r_ajmUk. Prism' (AsyncActionQueryFieldG r_ajmUk) ()
-_AsyncCreatedAt :: forall r_ajmUk. Prism' (AsyncActionQueryFieldG r_ajmUk) ()
-_AsyncId :: forall r_ajmUk. Prism' (AsyncActionQueryFieldG r_ajmUk) ()
-_AsyncOutput :: forall r_ajo75 r_ajmUk. Prism (AsyncActionQueryFieldG r_ajo75) (AsyncActionQueryFieldG r_ajmUk) (ActionFieldsG r_ajo75) (ActionFieldsG r_ajmUk)
-_AsyncTypename :: forall r_ajmUk. Prism' (AsyncActionQueryFieldG r_ajmUk) Text
+_AsyncErrors :: forall r_ajnaQ. Prism' (AsyncActionQueryFieldG r_ajnaQ) ()
+_AsyncCreatedAt :: forall r_ajnaQ. Prism' (AsyncActionQueryFieldG r_ajnaQ) ()
+_AsyncId :: forall r_ajnaQ. Prism' (AsyncActionQueryFieldG r_ajnaQ) ()
+_AsyncOutput :: forall r_ajonB r_ajnaQ. Prism (AsyncActionQueryFieldG r_ajonB) (AsyncActionQueryFieldG r_ajnaQ) (ActionFieldsG r_ajonB) (ActionFieldsG r_ajnaQ)
+_AsyncTypename :: forall r_ajnaQ. Prism' (AsyncActionQueryFieldG r_ajnaQ) Text
 instance GHC.Generics.Generic Hasura.RQL.Types.Action.ActionsInfo
 instance GHC.Classes.Eq Hasura.RQL.Types.Action.ActionsInfo
 instance GHC.Show.Show Hasura.RQL.Types.Action.ActionsInfo
@@ -16872,18 +16895,18 @@ TableMetadata :: !TableName b -> !Bool -> !TableConfig b -> !Relationships (ObjR
 [_tmUpdatePermissions] :: TableMetadata b -> !Permissions (UpdPermDef b)
 [_tmDeletePermissions] :: TableMetadata b -> !Permissions (DelPermDef b)
 [_tmEventTriggers] :: TableMetadata b -> !EventTriggers b
-tmUpdatePermissions :: forall b_al2mG. Lens' (TableMetadata b_al2mG) (Permissions (UpdPermDef b_al2mG))
-tmTable :: forall b_al2mG. Lens' (TableMetadata b_al2mG) (TableName b_al2mG)
-tmSelectPermissions :: forall b_al2mG. Lens' (TableMetadata b_al2mG) (Permissions (SelPermDef b_al2mG))
-tmRemoteRelationships :: forall b_al2mG. Lens' (TableMetadata b_al2mG) RemoteRelationships
-tmObjectRelationships :: forall b_al2mG. Lens' (TableMetadata b_al2mG) (Relationships (ObjRelDef b_al2mG))
-tmIsEnum :: forall b_al2mG. Lens' (TableMetadata b_al2mG) Bool
-tmInsertPermissions :: forall b_al2mG. Lens' (TableMetadata b_al2mG) (Permissions (InsPermDef b_al2mG))
-tmEventTriggers :: forall b_al2mG. Lens' (TableMetadata b_al2mG) (EventTriggers b_al2mG)
-tmDeletePermissions :: forall b_al2mG. Lens' (TableMetadata b_al2mG) (Permissions (DelPermDef b_al2mG))
-tmConfiguration :: forall b_al2mG. Lens' (TableMetadata b_al2mG) (TableConfig b_al2mG)
-tmComputedFields :: forall b_al2mG. Lens' (TableMetadata b_al2mG) (ComputedFields b_al2mG)
-tmArrayRelationships :: forall b_al2mG. Lens' (TableMetadata b_al2mG) (Relationships (ArrRelDef b_al2mG))
+tmUpdatePermissions :: forall b_al2Dc. Lens' (TableMetadata b_al2Dc) (Permissions (UpdPermDef b_al2Dc))
+tmTable :: forall b_al2Dc. Lens' (TableMetadata b_al2Dc) (TableName b_al2Dc)
+tmSelectPermissions :: forall b_al2Dc. Lens' (TableMetadata b_al2Dc) (Permissions (SelPermDef b_al2Dc))
+tmRemoteRelationships :: forall b_al2Dc. Lens' (TableMetadata b_al2Dc) RemoteRelationships
+tmObjectRelationships :: forall b_al2Dc. Lens' (TableMetadata b_al2Dc) (Relationships (ObjRelDef b_al2Dc))
+tmIsEnum :: forall b_al2Dc. Lens' (TableMetadata b_al2Dc) Bool
+tmInsertPermissions :: forall b_al2Dc. Lens' (TableMetadata b_al2Dc) (Permissions (InsPermDef b_al2Dc))
+tmEventTriggers :: forall b_al2Dc. Lens' (TableMetadata b_al2Dc) (EventTriggers b_al2Dc)
+tmDeletePermissions :: forall b_al2Dc. Lens' (TableMetadata b_al2Dc) (Permissions (DelPermDef b_al2Dc))
+tmConfiguration :: forall b_al2Dc. Lens' (TableMetadata b_al2Dc) (TableConfig b_al2Dc)
+tmComputedFields :: forall b_al2Dc. Lens' (TableMetadata b_al2Dc) (ComputedFields b_al2Dc)
+tmArrayRelationships :: forall b_al2Dc. Lens' (TableMetadata b_al2Dc) (Relationships (ArrRelDef b_al2Dc))
 mkTableMeta :: TableName b -> Bool -> TableConfig b -> TableMetadata b
 data FunctionMetadata b
 FunctionMetadata :: !FunctionName b -> !FunctionConfig -> ![FunctionPermissionInfo] -> !Maybe Text -> FunctionMetadata b
@@ -16891,10 +16914,10 @@ FunctionMetadata :: !FunctionName b -> !FunctionConfig -> ![FunctionPermissionIn
 [_fmConfiguration] :: FunctionMetadata b -> !FunctionConfig
 [_fmPermissions] :: FunctionMetadata b -> ![FunctionPermissionInfo]
 [_fmComment] :: FunctionMetadata b -> !Maybe Text
-fmPermissions :: forall b_al2YP. Lens' (FunctionMetadata b_al2YP) [FunctionPermissionInfo]
-fmFunction :: forall b_al2YP b_al3Is. Lens (FunctionMetadata b_al2YP) (FunctionMetadata b_al3Is) (FunctionName b_al2YP) (FunctionName b_al3Is)
-fmConfiguration :: forall b_al2YP. Lens' (FunctionMetadata b_al2YP) FunctionConfig
-fmComment :: forall b_al2YP. Lens' (FunctionMetadata b_al2YP) (Maybe Text)
+fmPermissions :: forall b_al3fl. Lens' (FunctionMetadata b_al3fl) [FunctionPermissionInfo]
+fmFunction :: forall b_al3fl b_al3YY. Lens (FunctionMetadata b_al3fl) (FunctionMetadata b_al3YY) (FunctionName b_al3fl) (FunctionName b_al3YY)
+fmConfiguration :: forall b_al3fl. Lens' (FunctionMetadata b_al3fl) FunctionConfig
+fmComment :: forall b_al3fl. Lens' (FunctionMetadata b_al3fl) (Maybe Text)
 type Tables b = InsOrdHashMap (TableName b) (TableMetadata b)
 type Functions b = InsOrdHashMap (FunctionName b) (FunctionMetadata b)
 type RemoteSchemas = InsOrdHashMap RemoteSchemaName RemoteSchemaMetadata
@@ -16910,12 +16933,12 @@ SourceMetadata :: !SourceName -> !Tables b -> !Functions b -> !SourceConnConfigu
 [_smConfiguration] :: SourceMetadata b -> !SourceConnConfiguration b
 [_smQueryTags] :: SourceMetadata b -> !Maybe QueryTagsConfig
 [_smCustomization] :: SourceMetadata b -> !SourceCustomization
-smTables :: forall b_al3Ja. Lens' (SourceMetadata b_al3Ja) (Tables b_al3Ja)
-smQueryTags :: forall b_al3Ja. Lens' (SourceMetadata b_al3Ja) (Maybe QueryTagsConfig)
-smName :: forall b_al3Ja. Lens' (SourceMetadata b_al3Ja) SourceName
-smFunctions :: forall b_al3Ja. Lens' (SourceMetadata b_al3Ja) (Functions b_al3Ja)
-smCustomization :: forall b_al3Ja. Lens' (SourceMetadata b_al3Ja) SourceCustomization
-smConfiguration :: forall b_al3Ja. Lens' (SourceMetadata b_al3Ja) (SourceConnConfiguration b_al3Ja)
+smTables :: forall b_al3ZG. Lens' (SourceMetadata b_al3ZG) (Tables b_al3ZG)
+smQueryTags :: forall b_al3ZG. Lens' (SourceMetadata b_al3ZG) (Maybe QueryTagsConfig)
+smName :: forall b_al3ZG. Lens' (SourceMetadata b_al3ZG) SourceName
+smFunctions :: forall b_al3ZG. Lens' (SourceMetadata b_al3ZG) (Functions b_al3ZG)
+smCustomization :: forall b_al3ZG. Lens' (SourceMetadata b_al3ZG) SourceCustomization
+smConfiguration :: forall b_al3ZG. Lens' (SourceMetadata b_al3ZG) (SourceConnConfiguration b_al3ZG)
 mkSourceMetadata :: forall (b :: BackendType). Backend b => SourceName -> SourceConnConfiguration b -> SourceCustomization -> BackendSourceMetadata
 type BackendSourceMetadata = AnyBackend SourceMetadata
 toSourceMetadata :: forall b. Backend b => Prism' BackendSourceMetadata (SourceMetadata b)
@@ -17660,47 +17683,47 @@ insertFunctionArg :: FunctionArgName -> Int -> a -> FunctionArgsExpG a -> Functi
 data CountDistinct
 SelectCountDistinct :: CountDistinct
 SelectCountNonDistinct :: CountDistinct
-asnStrfyNum :: forall b_am5c2 f_am5c3 v_am5c4. Lens' (AnnSelectG b_am5c2 f_am5c3 v_am5c4) StringifyNumbers
-asnPerm :: forall b_am5c2 f_am5c3 v_am5c4. Lens' (AnnSelectG b_am5c2 f_am5c3 v_am5c4) (TablePermG b_am5c2 v_am5c4)
-asnFrom :: forall b_am5c2 f_am5c3 v_am5c4. Lens' (AnnSelectG b_am5c2 f_am5c3 v_am5c4) (SelectFromG b_am5c2 v_am5c4)
-asnFields :: forall b_am5c2 f_am5c3 v_am5c4 f_amGzS. Lens (AnnSelectG b_am5c2 f_am5c3 v_am5c4) (AnnSelectG b_am5c2 f_amGzS v_am5c4) (Fields (f_am5c3 v_am5c4)) (Fields (f_amGzS v_am5c4))
-asnArgs :: forall b_am5c2 f_am5c3 v_am5c4. Lens' (AnnSelectG b_am5c2 f_am5c3 v_am5c4) (SelectArgsG b_am5c2 v_am5c4)
-aosTableFrom :: forall b_am5aD r_am5aE v_am5aF. Lens' (AnnObjectSelectG b_am5aD r_am5aE v_am5aF) (TableName b_am5aD)
-aosTableFilter :: forall b_am5aD r_am5aE v_am5aF. Lens' (AnnObjectSelectG b_am5aD r_am5aE v_am5aF) (AnnBoolExp b_am5aD v_am5aF)
-aosFields :: forall b_am5aD r_am5aE v_am5aF r_amGDA. Lens (AnnObjectSelectG b_am5aD r_am5aE v_am5aF) (AnnObjectSelectG b_am5aD r_amGDA v_am5aF) (AnnFieldsG b_am5aD r_am5aE v_am5aF) (AnnFieldsG b_am5aD r_amGDA v_am5aF)
-aarRelationshipName :: forall b_am5aQ a_am5aR. Lens' (AnnRelationSelectG b_am5aQ a_am5aR) RelName
-aarColumnMapping :: forall b_am5aQ a_am5aR b_amGFU. Lens (AnnRelationSelectG b_am5aQ a_am5aR) (AnnRelationSelectG b_amGFU a_am5aR) (HashMap (Column b_am5aQ) (Column b_am5aQ)) (HashMap (Column b_amGFU) (Column b_amGFU))
-aarAnnSelect :: forall b_am5aQ a_am5aR a_amGFT. Lens (AnnRelationSelectG b_am5aQ a_am5aR) (AnnRelationSelectG b_am5aQ a_amGFT) a_am5aR a_amGFT
-csXRelay :: forall b_am5bR r_am5bS v_am5bT. Lens' (ConnectionSelect b_am5bR r_am5bS v_am5bT) (XRelay b_am5bR)
-csSplit :: forall b_am5bR r_am5bS v_am5bT. Lens' (ConnectionSelect b_am5bR r_am5bS v_am5bT) (Maybe (NonEmpty (ConnectionSplit b_am5bR v_am5bT)))
-csSlice :: forall b_am5bR r_am5bS v_am5bT. Lens' (ConnectionSelect b_am5bR r_am5bS v_am5bT) (Maybe ConnectionSlice)
-csSelect :: forall b_am5bR r_am5bS v_am5bT r_amGI7. Lens (ConnectionSelect b_am5bR r_am5bS v_am5bT) (ConnectionSelect b_am5bR r_amGI7 v_am5bT) (AnnSelectG b_am5bR (ConnectionField b_am5bR r_am5bS) v_am5bT) (AnnSelectG b_am5bR (ConnectionField b_am5bR r_amGI7) v_am5bT)
-csPrimaryKeyColumns :: forall b_am5bR r_am5bS v_am5bT. Lens' (ConnectionSelect b_am5bR r_am5bS v_am5bT) (PrimaryKeyColumns b_am5bR)
-saWhere :: forall b_am5bK v_am5bL. Lens' (SelectArgsG b_am5bK v_am5bL) (Maybe (AnnBoolExp b_am5bK v_am5bL))
-saOrderBy :: forall b_am5bK v_am5bL. Lens' (SelectArgsG b_am5bK v_am5bL) (Maybe (NonEmpty (AnnotatedOrderByItemG b_am5bK v_am5bL)))
-saOffset :: forall b_am5bK v_am5bL. Lens' (SelectArgsG b_am5bK v_am5bL) (Maybe Int64)
-saLimit :: forall b_am5bK v_am5bL. Lens' (SelectArgsG b_am5bK v_am5bL) (Maybe Int)
-saDistinct :: forall b_am5bK v_am5bL. Lens' (SelectArgsG b_am5bK v_am5bL) (Maybe (NonEmpty (Column b_am5bK)))
-_AFExpression :: forall b_am5bu r_am5bv v_am5bw. Prism' (AnnFieldG b_am5bu r_am5bv v_am5bw) Text
-_AFNodeId :: forall b_am5bu r_am5bv v_am5bw. Prism' (AnnFieldG b_am5bu r_am5bv v_am5bw) (XRelay b_am5bu, TableName b_am5bu, PrimaryKeyColumns b_am5bu)
-_AFRemote :: forall b_am5bu r_am5bv v_am5bw. Prism' (AnnFieldG b_am5bu r_am5bv v_am5bw) (RemoteRelationshipSelect b_am5bu r_am5bv)
-_AFComputedField :: forall b_am5bu r_am5bv v_am5bw. Prism' (AnnFieldG b_am5bu r_am5bv v_am5bw) (XComputedField b_am5bu, ComputedFieldName, ComputedFieldSelect b_am5bu r_am5bv v_am5bw)
-_AFArrayRelation :: forall b_am5bu r_am5bv v_am5bw. Prism' (AnnFieldG b_am5bu r_am5bv v_am5bw) (ArraySelectG b_am5bu r_am5bv v_am5bw)
-_AFObjectRelation :: forall b_am5bu r_am5bv v_am5bw. Prism' (AnnFieldG b_am5bu r_am5bv v_am5bw) (ObjectRelationSelectG b_am5bu r_am5bv v_am5bw)
-_AFColumn :: forall b_am5bu r_am5bv v_am5bw. Prism' (AnnFieldG b_am5bu r_am5bv v_am5bw) (AnnColumnField b_am5bu v_am5bw)
-_AOCComputedField :: forall b_am5bD v_am5bE. Prism' (AnnotatedOrderByElement b_am5bD v_am5bE) (ComputedFieldOrderBy b_am5bD v_am5bE)
-_AOCArrayAggregation :: forall b_am5bD v_am5bE. Prism' (AnnotatedOrderByElement b_am5bD v_am5bE) (RelInfo b_am5bD, AnnBoolExp b_am5bD v_am5bE, AnnotatedAggregateOrderBy b_am5bD)
-_AOCObjectRelation :: forall b_am5bD v_am5bE. Prism' (AnnotatedOrderByElement b_am5bD v_am5bE) (RelInfo b_am5bD, AnnBoolExp b_am5bD v_am5bE, AnnotatedOrderByElement b_am5bD v_am5bE)
-_AOCColumn :: forall b_am5bD v_am5bE. Prism' (AnnotatedOrderByElement b_am5bD v_am5bE) (ColumnInfo b_am5bD)
-_TAFExp :: forall b_am5bp r_am5bq v_am5br. Prism' (TableAggregateFieldG b_am5bp r_am5bq v_am5br) Text
-_TAFNodes :: forall b_am5bp r_amH1k v_amH1l r_am5bq v_am5br. Prism (TableAggregateFieldG b_am5bp r_amH1k v_amH1l) (TableAggregateFieldG b_am5bp r_am5bq v_am5br) (XNodesAgg b_am5bp, AnnFieldsG b_am5bp r_amH1k v_amH1l) (XNodesAgg b_am5bp, AnnFieldsG b_am5bp r_am5bq v_am5br)
-_TAFAgg :: forall b_am5bp r_am5bq v_am5br. Prism' (TableAggregateFieldG b_am5bp r_am5bq v_am5br) (AggregateFields b_am5bp)
-_ConnectionEdges :: forall b_amH53 r_amH54 v_amH55 b_am5b9 r_am5ba v_am5bb. Prism (ConnectionField b_amH53 r_amH54 v_amH55) (ConnectionField b_am5b9 r_am5ba v_am5bb) (EdgeFields b_amH53 r_amH54 v_amH55) (EdgeFields b_am5b9 r_am5ba v_am5bb)
-_ConnectionPageInfo :: forall b_am5b9 r_am5ba v_am5bb. Prism' (ConnectionField b_am5b9 r_am5ba v_am5bb) PageInfoFields
-_ConnectionTypename :: forall b_am5b9 r_am5ba v_am5bb. Prism' (ConnectionField b_am5b9 r_am5ba v_am5bb) Text
-_EdgeNode :: forall b_amH8A r_amH8B v_amH8C b_am5b6 r_am5b7 v_am5b8. Prism (EdgeField b_amH8A r_amH8B v_amH8C) (EdgeField b_am5b6 r_am5b7 v_am5b8) (AnnFieldsG b_amH8A r_amH8B v_amH8C) (AnnFieldsG b_am5b6 r_am5b7 v_am5b8)
-_EdgeCursor :: forall b_am5b6 r_am5b7 v_am5b8. Prism' (EdgeField b_am5b6 r_am5b7 v_am5b8) ()
-_EdgeTypename :: forall b_am5b6 r_am5b7 v_am5b8. Prism' (EdgeField b_am5b6 r_am5b7 v_am5b8) Text
+asnStrfyNum :: forall b_am5sy f_am5sz v_am5sA. Lens' (AnnSelectG b_am5sy f_am5sz v_am5sA) StringifyNumbers
+asnPerm :: forall b_am5sy f_am5sz v_am5sA. Lens' (AnnSelectG b_am5sy f_am5sz v_am5sA) (TablePermG b_am5sy v_am5sA)
+asnFrom :: forall b_am5sy f_am5sz v_am5sA. Lens' (AnnSelectG b_am5sy f_am5sz v_am5sA) (SelectFromG b_am5sy v_am5sA)
+asnFields :: forall b_am5sy f_am5sz v_am5sA f_amGQo. Lens (AnnSelectG b_am5sy f_am5sz v_am5sA) (AnnSelectG b_am5sy f_amGQo v_am5sA) (Fields (f_am5sz v_am5sA)) (Fields (f_amGQo v_am5sA))
+asnArgs :: forall b_am5sy f_am5sz v_am5sA. Lens' (AnnSelectG b_am5sy f_am5sz v_am5sA) (SelectArgsG b_am5sy v_am5sA)
+aosTableFrom :: forall b_am5r9 r_am5ra v_am5rb. Lens' (AnnObjectSelectG b_am5r9 r_am5ra v_am5rb) (TableName b_am5r9)
+aosTableFilter :: forall b_am5r9 r_am5ra v_am5rb. Lens' (AnnObjectSelectG b_am5r9 r_am5ra v_am5rb) (AnnBoolExp b_am5r9 v_am5rb)
+aosFields :: forall b_am5r9 r_am5ra v_am5rb r_amGU6. Lens (AnnObjectSelectG b_am5r9 r_am5ra v_am5rb) (AnnObjectSelectG b_am5r9 r_amGU6 v_am5rb) (AnnFieldsG b_am5r9 r_am5ra v_am5rb) (AnnFieldsG b_am5r9 r_amGU6 v_am5rb)
+aarRelationshipName :: forall b_am5rm a_am5rn. Lens' (AnnRelationSelectG b_am5rm a_am5rn) RelName
+aarColumnMapping :: forall b_am5rm a_am5rn b_amGWq. Lens (AnnRelationSelectG b_am5rm a_am5rn) (AnnRelationSelectG b_amGWq a_am5rn) (HashMap (Column b_am5rm) (Column b_am5rm)) (HashMap (Column b_amGWq) (Column b_amGWq))
+aarAnnSelect :: forall b_am5rm a_am5rn a_amGWp. Lens (AnnRelationSelectG b_am5rm a_am5rn) (AnnRelationSelectG b_am5rm a_amGWp) a_am5rn a_amGWp
+csXRelay :: forall b_am5sn r_am5so v_am5sp. Lens' (ConnectionSelect b_am5sn r_am5so v_am5sp) (XRelay b_am5sn)
+csSplit :: forall b_am5sn r_am5so v_am5sp. Lens' (ConnectionSelect b_am5sn r_am5so v_am5sp) (Maybe (NonEmpty (ConnectionSplit b_am5sn v_am5sp)))
+csSlice :: forall b_am5sn r_am5so v_am5sp. Lens' (ConnectionSelect b_am5sn r_am5so v_am5sp) (Maybe ConnectionSlice)
+csSelect :: forall b_am5sn r_am5so v_am5sp r_amGYD. Lens (ConnectionSelect b_am5sn r_am5so v_am5sp) (ConnectionSelect b_am5sn r_amGYD v_am5sp) (AnnSelectG b_am5sn (ConnectionField b_am5sn r_am5so) v_am5sp) (AnnSelectG b_am5sn (ConnectionField b_am5sn r_amGYD) v_am5sp)
+csPrimaryKeyColumns :: forall b_am5sn r_am5so v_am5sp. Lens' (ConnectionSelect b_am5sn r_am5so v_am5sp) (PrimaryKeyColumns b_am5sn)
+saWhere :: forall b_am5sg v_am5sh. Lens' (SelectArgsG b_am5sg v_am5sh) (Maybe (AnnBoolExp b_am5sg v_am5sh))
+saOrderBy :: forall b_am5sg v_am5sh. Lens' (SelectArgsG b_am5sg v_am5sh) (Maybe (NonEmpty (AnnotatedOrderByItemG b_am5sg v_am5sh)))
+saOffset :: forall b_am5sg v_am5sh. Lens' (SelectArgsG b_am5sg v_am5sh) (Maybe Int64)
+saLimit :: forall b_am5sg v_am5sh. Lens' (SelectArgsG b_am5sg v_am5sh) (Maybe Int)
+saDistinct :: forall b_am5sg v_am5sh. Lens' (SelectArgsG b_am5sg v_am5sh) (Maybe (NonEmpty (Column b_am5sg)))
+_AFExpression :: forall b_am5s0 r_am5s1 v_am5s2. Prism' (AnnFieldG b_am5s0 r_am5s1 v_am5s2) Text
+_AFNodeId :: forall b_am5s0 r_am5s1 v_am5s2. Prism' (AnnFieldG b_am5s0 r_am5s1 v_am5s2) (XRelay b_am5s0, TableName b_am5s0, PrimaryKeyColumns b_am5s0)
+_AFRemote :: forall b_am5s0 r_am5s1 v_am5s2. Prism' (AnnFieldG b_am5s0 r_am5s1 v_am5s2) (RemoteRelationshipSelect b_am5s0 r_am5s1)
+_AFComputedField :: forall b_am5s0 r_am5s1 v_am5s2. Prism' (AnnFieldG b_am5s0 r_am5s1 v_am5s2) (XComputedField b_am5s0, ComputedFieldName, ComputedFieldSelect b_am5s0 r_am5s1 v_am5s2)
+_AFArrayRelation :: forall b_am5s0 r_am5s1 v_am5s2. Prism' (AnnFieldG b_am5s0 r_am5s1 v_am5s2) (ArraySelectG b_am5s0 r_am5s1 v_am5s2)
+_AFObjectRelation :: forall b_am5s0 r_am5s1 v_am5s2. Prism' (AnnFieldG b_am5s0 r_am5s1 v_am5s2) (ObjectRelationSelectG b_am5s0 r_am5s1 v_am5s2)
+_AFColumn :: forall b_am5s0 r_am5s1 v_am5s2. Prism' (AnnFieldG b_am5s0 r_am5s1 v_am5s2) (AnnColumnField b_am5s0 v_am5s2)
+_AOCComputedField :: forall b_am5s9 v_am5sa. Prism' (AnnotatedOrderByElement b_am5s9 v_am5sa) (ComputedFieldOrderBy b_am5s9 v_am5sa)
+_AOCArrayAggregation :: forall b_am5s9 v_am5sa. Prism' (AnnotatedOrderByElement b_am5s9 v_am5sa) (RelInfo b_am5s9, AnnBoolExp b_am5s9 v_am5sa, AnnotatedAggregateOrderBy b_am5s9)
+_AOCObjectRelation :: forall b_am5s9 v_am5sa. Prism' (AnnotatedOrderByElement b_am5s9 v_am5sa) (RelInfo b_am5s9, AnnBoolExp b_am5s9 v_am5sa, AnnotatedOrderByElement b_am5s9 v_am5sa)
+_AOCColumn :: forall b_am5s9 v_am5sa. Prism' (AnnotatedOrderByElement b_am5s9 v_am5sa) (ColumnInfo b_am5s9)
+_TAFExp :: forall b_am5rV r_am5rW v_am5rX. Prism' (TableAggregateFieldG b_am5rV r_am5rW v_am5rX) Text
+_TAFNodes :: forall b_am5rV r_amHhQ v_amHhR r_am5rW v_am5rX. Prism (TableAggregateFieldG b_am5rV r_amHhQ v_amHhR) (TableAggregateFieldG b_am5rV r_am5rW v_am5rX) (XNodesAgg b_am5rV, AnnFieldsG b_am5rV r_amHhQ v_amHhR) (XNodesAgg b_am5rV, AnnFieldsG b_am5rV r_am5rW v_am5rX)
+_TAFAgg :: forall b_am5rV r_am5rW v_am5rX. Prism' (TableAggregateFieldG b_am5rV r_am5rW v_am5rX) (AggregateFields b_am5rV)
+_ConnectionEdges :: forall b_amHlz r_amHlA v_amHlB b_am5rF r_am5rG v_am5rH. Prism (ConnectionField b_amHlz r_amHlA v_amHlB) (ConnectionField b_am5rF r_am5rG v_am5rH) (EdgeFields b_amHlz r_amHlA v_amHlB) (EdgeFields b_am5rF r_am5rG v_am5rH)
+_ConnectionPageInfo :: forall b_am5rF r_am5rG v_am5rH. Prism' (ConnectionField b_am5rF r_am5rG v_am5rH) PageInfoFields
+_ConnectionTypename :: forall b_am5rF r_am5rG v_am5rH. Prism' (ConnectionField b_am5rF r_am5rG v_am5rH) Text
+_EdgeNode :: forall b_amHp6 r_amHp7 v_amHp8 b_am5rC r_am5rD v_am5rE. Prism (EdgeField b_amHp6 r_amHp7 v_amHp8) (EdgeField b_am5rC r_am5rD v_am5rE) (AnnFieldsG b_amHp6 r_amHp7 v_amHp8) (AnnFieldsG b_am5rC r_am5rD v_am5rE)
+_EdgeCursor :: forall b_am5rC r_am5rD v_am5rE. Prism' (EdgeField b_am5rC r_am5rD v_am5rE) ()
+_EdgeTypename :: forall b_am5rC r_am5rD v_am5rE. Prism' (EdgeField b_am5rC r_am5rD v_am5rE) Text
 instance Data.Hashable.Class.Hashable Hasura.RQL.IR.Select.ConnectionSlice
 instance GHC.Generics.Generic Hasura.RQL.IR.Select.ConnectionSlice
 instance GHC.Classes.Eq Hasura.RQL.IR.Select.ConnectionSlice
@@ -17886,9 +17909,9 @@ type MutationOutput b = MutationOutputG b Void (SQLExpression b)
 type MutFlds b = MutFldsG b Void (SQLExpression b)
 buildEmptyMutResp :: MutationOutput backend -> EncJSON
 hasNestedFld :: MutationOutputG backend r a -> Bool
-_MRet :: forall b_anxtA r_anxtB v_anxtC b_anvyX r_anvyY v_anvyZ. Prism (MutFldG b_anxtA r_anxtB v_anxtC) (MutFldG b_anvyX r_anvyY v_anvyZ) (AnnFieldsG b_anxtA r_anxtB v_anxtC) (AnnFieldsG b_anvyX r_anvyY v_anvyZ)
-_MExp :: forall b_anvyX r_anvyY v_anvyZ. Prism' (MutFldG b_anvyX r_anvyY v_anvyZ) Text
-_MCount :: forall b_anvyX r_anvyY v_anvyZ. Prism' (MutFldG b_anvyX r_anvyY v_anvyZ) ()
+_MRet :: forall b_anxK6 r_anxK7 v_anxK8 b_anvPt r_anvPu v_anvPv. Prism (MutFldG b_anxK6 r_anxK7 v_anxK8) (MutFldG b_anvPt r_anvPu v_anvPv) (AnnFieldsG b_anxK6 r_anxK7 v_anxK8) (AnnFieldsG b_anvPt r_anvPu v_anvPv)
+_MExp :: forall b_anvPt r_anvPu v_anvPv. Prism' (MutFldG b_anvPt r_anvPu v_anvPv) Text
+_MCount :: forall b_anvPt r_anvPu v_anvPv. Prism' (MutFldG b_anvPt r_anvPu v_anvPv) ()
 instance Hasura.RQL.Types.Backend.Backend b => Data.Traversable.Traversable (Hasura.RQL.IR.Returning.MutFldG b r)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Foldable.Foldable (Hasura.RQL.IR.Returning.MutFldG b r)
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Base.Functor (Hasura.RQL.IR.Returning.MutFldG b r)
@@ -17910,12 +17933,12 @@ AnnotatedUpdateG :: !TableName b -> !(AnnBoolExp b v, AnnBoolExp b v) -> !AnnBoo
 [_auOutput] :: AnnotatedUpdateG (b :: BackendType) (r :: Type) v -> !MutationOutputG b r v
 [_auAllCols] :: AnnotatedUpdateG (b :: BackendType) (r :: Type) v -> ![ColumnInfo b]
 type AnnotatedUpdate b = AnnotatedUpdateG b Void (SQLExpression b)
-auWhere :: forall b_anAR2 r_anAR3 v_anAR4. Lens' (AnnotatedUpdateG b_anAR2 r_anAR3 v_anAR4) (AnnBoolExp b_anAR2 v_anAR4, AnnBoolExp b_anAR2 v_anAR4)
-auTable :: forall b_anAR2 r_anAR3 v_anAR4. Lens' (AnnotatedUpdateG b_anAR2 r_anAR3 v_anAR4) (TableName b_anAR2)
-auOutput :: forall b_anAR2 r_anAR3 v_anAR4 r_anBLD. Lens (AnnotatedUpdateG b_anAR2 r_anAR3 v_anAR4) (AnnotatedUpdateG b_anAR2 r_anBLD v_anAR4) (MutationOutputG b_anAR2 r_anAR3 v_anAR4) (MutationOutputG b_anAR2 r_anBLD v_anAR4)
-auCheck :: forall b_anAR2 r_anAR3 v_anAR4. Lens' (AnnotatedUpdateG b_anAR2 r_anAR3 v_anAR4) (AnnBoolExp b_anAR2 v_anAR4)
-auBackend :: forall b_anAR2 r_anAR3 v_anAR4. Lens' (AnnotatedUpdateG b_anAR2 r_anAR3 v_anAR4) (BackendUpdate b_anAR2 v_anAR4)
-auAllCols :: forall b_anAR2 r_anAR3 v_anAR4. Lens' (AnnotatedUpdateG b_anAR2 r_anAR3 v_anAR4) [ColumnInfo b_anAR2]
+auWhere :: forall b_anB7y r_anB7z v_anB7A. Lens' (AnnotatedUpdateG b_anB7y r_anB7z v_anB7A) (AnnBoolExp b_anB7y v_anB7A, AnnBoolExp b_anB7y v_anB7A)
+auTable :: forall b_anB7y r_anB7z v_anB7A. Lens' (AnnotatedUpdateG b_anB7y r_anB7z v_anB7A) (TableName b_anB7y)
+auOutput :: forall b_anB7y r_anB7z v_anB7A r_anC29. Lens (AnnotatedUpdateG b_anB7y r_anB7z v_anB7A) (AnnotatedUpdateG b_anB7y r_anC29 v_anB7A) (MutationOutputG b_anB7y r_anB7z v_anB7A) (MutationOutputG b_anB7y r_anC29 v_anB7A)
+auCheck :: forall b_anB7y r_anB7z v_anB7A. Lens' (AnnotatedUpdateG b_anB7y r_anB7z v_anB7A) (AnnBoolExp b_anB7y v_anB7A)
+auBackend :: forall b_anB7y r_anB7z v_anB7A. Lens' (AnnotatedUpdateG b_anB7y r_anB7z v_anB7A) (BackendUpdate b_anB7y v_anB7A)
+auAllCols :: forall b_anB7y r_anB7z v_anB7A. Lens' (AnnotatedUpdateG b_anB7y r_anB7z v_anB7A) [ColumnInfo b_anB7y]
 instance Hasura.RQL.Types.Backend.Backend b => Data.Traversable.Traversable (Hasura.RQL.IR.Update.AnnotatedUpdateG b r)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Foldable.Foldable (Hasura.RQL.IR.Update.AnnotatedUpdateG b r)
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Base.Functor (Hasura.RQL.IR.Update.AnnotatedUpdateG b r)
@@ -18019,13 +18042,13 @@ InsertQueryP1 :: TableName b -> [Column b] -> [[SQLExpression b]] -> Maybe (OnCo
 [iqp1CheckCond] :: InsertQueryP1 (b :: BackendType) -> (AnnBoolExpSQL b, Maybe (AnnBoolExpSQL b))
 [iqp1Output] :: InsertQueryP1 (b :: BackendType) -> MutationOutput b
 [iqp1AllCols] :: InsertQueryP1 (b :: BackendType) -> [ColumnInfo b]
-aiOutput :: forall b_anDGg r_anDGh v_anDGi r_anHQq. Lens (AnnInsert b_anDGg r_anDGh v_anDGi) (AnnInsert b_anDGg r_anHQq v_anDGi) (MutationOutputG b_anDGg r_anDGh v_anDGi) (MutationOutputG b_anDGg r_anHQq v_anDGi)
-aiIsSingle :: forall b_anDGg r_anDGh v_anDGi. Lens' (AnnInsert b_anDGg r_anDGh v_anDGi) Bool
-aiFieldName :: forall b_anDGg r_anDGh v_anDGi. Lens' (AnnInsert b_anDGg r_anDGh v_anDGi) Text
-aiData :: forall b_anDGg r_anDGh v_anDGi. Lens' (AnnInsert b_anDGg r_anDGh v_anDGi) (MultiObjIns b_anDGg v_anDGi)
-_AIArrayRelationship :: forall b_anDG6 v_anDG7. Prism' (AnnotatedInsert b_anDG6 v_anDG7) (XNestedInserts b_anDG6, ArrRelIns b_anDG6 v_anDG7)
-_AIObjectRelationship :: forall b_anDG6 v_anDG7. Prism' (AnnotatedInsert b_anDG6 v_anDG7) (XNestedInserts b_anDG6, ObjRelIns b_anDG6 v_anDG7)
-_AIColumn :: forall b_anDG6 v_anDG7. Prism' (AnnotatedInsert b_anDG6 v_anDG7) (Column b_anDG6, v_anDG7)
+aiOutput :: forall b_anDWM r_anDWN v_anDWO r_anI6W. Lens (AnnInsert b_anDWM r_anDWN v_anDWO) (AnnInsert b_anDWM r_anI6W v_anDWO) (MutationOutputG b_anDWM r_anDWN v_anDWO) (MutationOutputG b_anDWM r_anI6W v_anDWO)
+aiIsSingle :: forall b_anDWM r_anDWN v_anDWO. Lens' (AnnInsert b_anDWM r_anDWN v_anDWO) Bool
+aiFieldName :: forall b_anDWM r_anDWN v_anDWO. Lens' (AnnInsert b_anDWM r_anDWN v_anDWO) Text
+aiData :: forall b_anDWM r_anDWN v_anDWO. Lens' (AnnInsert b_anDWM r_anDWN v_anDWO) (MultiObjIns b_anDWM v_anDWO)
+_AIArrayRelationship :: forall b_anDWC v_anDWD. Prism' (AnnotatedInsert b_anDWC v_anDWD) (XNestedInserts b_anDWC, ArrRelIns b_anDWC v_anDWD)
+_AIObjectRelationship :: forall b_anDWC v_anDWD. Prism' (AnnotatedInsert b_anDWC v_anDWD) (XNestedInserts b_anDWC, ObjRelIns b_anDWC v_anDWD)
+_AIColumn :: forall b_anDWC v_anDWD. Prism' (AnnotatedInsert b_anDWC v_anDWD) (Column b_anDWC, v_anDWD)
 getInsertColumns :: AnnotatedInsertRow b v -> [(Column b, v)]
 getInsertObjectRelationships :: AnnotatedInsertRow b v -> [ObjRelIns b v]
 getInsertArrayRelationships :: AnnotatedInsertRow b v -> [ArrRelIns b v]
@@ -18055,10 +18078,10 @@ AnnDel :: TableName b -> (AnnBoolExp b v, AnnBoolExp b v) -> MutationOutputG b r
 [_adOutput] :: AnnDelG (b :: BackendType) (r :: Type) v -> MutationOutputG b r v
 [_adAllCols] :: AnnDelG (b :: BackendType) (r :: Type) v -> [ColumnInfo b]
 type AnnDel b = AnnDelG b Void (SQLExpression b)
-adWhere :: forall b_anNVp r_anNVq v_anNVr. Lens' (AnnDelG b_anNVp r_anNVq v_anNVr) (AnnBoolExp b_anNVp v_anNVr, AnnBoolExp b_anNVp v_anNVr)
-adTable :: forall b_anNVp r_anNVq v_anNVr. Lens' (AnnDelG b_anNVp r_anNVq v_anNVr) (TableName b_anNVp)
-adOutput :: forall b_anNVp r_anNVq v_anNVr r_anOTh. Lens (AnnDelG b_anNVp r_anNVq v_anNVr) (AnnDelG b_anNVp r_anOTh v_anNVr) (MutationOutputG b_anNVp r_anNVq v_anNVr) (MutationOutputG b_anNVp r_anOTh v_anNVr)
-adAllCols :: forall b_anNVp r_anNVq v_anNVr. Lens' (AnnDelG b_anNVp r_anNVq v_anNVr) [ColumnInfo b_anNVp]
+adWhere :: forall b_anObV r_anObW v_anObX. Lens' (AnnDelG b_anObV r_anObW v_anObX) (AnnBoolExp b_anObV v_anObX, AnnBoolExp b_anObV v_anObX)
+adTable :: forall b_anObV r_anObW v_anObX. Lens' (AnnDelG b_anObV r_anObW v_anObX) (TableName b_anObV)
+adOutput :: forall b_anObV r_anObW v_anObX r_anP9N. Lens (AnnDelG b_anObV r_anObW v_anObX) (AnnDelG b_anObV r_anP9N v_anObX) (MutationOutputG b_anObV r_anObW v_anObX) (MutationOutputG b_anObV r_anP9N v_anObX)
+adAllCols :: forall b_anObV r_anObW v_anObX. Lens' (AnnDelG b_anObV r_anObW v_anObX) [ColumnInfo b_anObV]
 instance Hasura.RQL.Types.Backend.Backend b => Data.Traversable.Traversable (Hasura.RQL.IR.Delete.AnnDelG b r)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Foldable.Foldable (Hasura.RQL.IR.Delete.AnnDelG b r)
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Base.Functor (Hasura.RQL.IR.Delete.AnnDelG b r)
@@ -20895,20 +20918,20 @@ CreateEventTriggerQuery :: !SourceName -> !TriggerName -> !TableName b -> !Maybe
 [_cetqReplace] :: CreateEventTriggerQuery (b :: BackendType) -> !Bool
 [_cetqRequestTransform] :: CreateEventTriggerQuery (b :: BackendType) -> !Maybe RequestTransform
 [_cetqResponseTrasnform] :: CreateEventTriggerQuery (b :: BackendType) -> !Maybe MetadataResponseTransform
-cetqWebhookFromEnv :: forall b_ar4t9. Lens' (CreateEventTriggerQuery b_ar4t9) (Maybe Text)
-cetqWebhook :: forall b_ar4t9. Lens' (CreateEventTriggerQuery b_ar4t9) (Maybe InputWebhook)
-cetqUpdate :: forall b_ar4t9. Lens' (CreateEventTriggerQuery b_ar4t9) (Maybe (SubscribeOpSpec b_ar4t9))
-cetqTable :: forall b_ar4t9. Lens' (CreateEventTriggerQuery b_ar4t9) (TableName b_ar4t9)
-cetqSource :: forall b_ar4t9. Lens' (CreateEventTriggerQuery b_ar4t9) SourceName
-cetqRetryConf :: forall b_ar4t9. Lens' (CreateEventTriggerQuery b_ar4t9) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_ar4t9. Lens' (CreateEventTriggerQuery b_ar4t9) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_ar4t9. Lens' (CreateEventTriggerQuery b_ar4t9) (Maybe RequestTransform)
-cetqReplace :: forall b_ar4t9. Lens' (CreateEventTriggerQuery b_ar4t9) Bool
-cetqName :: forall b_ar4t9. Lens' (CreateEventTriggerQuery b_ar4t9) TriggerName
-cetqInsert :: forall b_ar4t9. Lens' (CreateEventTriggerQuery b_ar4t9) (Maybe (SubscribeOpSpec b_ar4t9))
-cetqHeaders :: forall b_ar4t9. Lens' (CreateEventTriggerQuery b_ar4t9) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_ar4t9. Lens' (CreateEventTriggerQuery b_ar4t9) (Maybe Bool)
-cetqDelete :: forall b_ar4t9. Lens' (CreateEventTriggerQuery b_ar4t9) (Maybe (SubscribeOpSpec b_ar4t9))
+cetqWebhookFromEnv :: forall b_ar4JF. Lens' (CreateEventTriggerQuery b_ar4JF) (Maybe Text)
+cetqWebhook :: forall b_ar4JF. Lens' (CreateEventTriggerQuery b_ar4JF) (Maybe InputWebhook)
+cetqUpdate :: forall b_ar4JF. Lens' (CreateEventTriggerQuery b_ar4JF) (Maybe (SubscribeOpSpec b_ar4JF))
+cetqTable :: forall b_ar4JF. Lens' (CreateEventTriggerQuery b_ar4JF) (TableName b_ar4JF)
+cetqSource :: forall b_ar4JF. Lens' (CreateEventTriggerQuery b_ar4JF) SourceName
+cetqRetryConf :: forall b_ar4JF. Lens' (CreateEventTriggerQuery b_ar4JF) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_ar4JF. Lens' (CreateEventTriggerQuery b_ar4JF) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_ar4JF. Lens' (CreateEventTriggerQuery b_ar4JF) (Maybe RequestTransform)
+cetqReplace :: forall b_ar4JF. Lens' (CreateEventTriggerQuery b_ar4JF) Bool
+cetqName :: forall b_ar4JF. Lens' (CreateEventTriggerQuery b_ar4JF) TriggerName
+cetqInsert :: forall b_ar4JF. Lens' (CreateEventTriggerQuery b_ar4JF) (Maybe (SubscribeOpSpec b_ar4JF))
+cetqHeaders :: forall b_ar4JF. Lens' (CreateEventTriggerQuery b_ar4JF) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_ar4JF. Lens' (CreateEventTriggerQuery b_ar4JF) (Maybe Bool)
+cetqDelete :: forall b_ar4JF. Lens' (CreateEventTriggerQuery b_ar4JF) (Maybe (SubscribeOpSpec b_ar4JF))
 data DeleteEventTriggerQuery (b :: BackendType)
 DeleteEventTriggerQuery :: !SourceName -> !TriggerName -> DeleteEventTriggerQuery (b :: BackendType)
 [_detqSource] :: DeleteEventTriggerQuery (b :: BackendType) -> !SourceName
@@ -21555,6 +21578,251 @@ dropRemoteSchemaRemoteRelationshipInMetadata :: RemoteSchemaName -> Name -> RelN
 runIntrospectRemoteSchema :: (CacheRM m, QErrM m) => RemoteSchemaNameQuery -> m EncJSON
 runUpdateRemoteSchema :: (QErrM m, CacheRWM m, MonadIO m, HasHttpManagerM m, MetadataM m, MonadTrace m) => Environment -> AddRemoteSchemaQuery -> m EncJSON
 
+
+-- | <h1>Reasonably efficient PostgreSQL live queries</h1>
+--   
+--   The module implements <i>query multiplexing</i>, which is our
+--   implementation strategy for live queries (i.e. GraphQL subscriptions)
+--   made against Postgres. Fundamentally, our implementation is built
+--   around polling, which is never ideal, but it’s a lot easier to
+--   implement than trying to do something event-based. To minimize the
+--   resource cost of polling, we use <i>multiplexing</i>, which is
+--   essentially a two-tier batching strategy.
+--   
+--   <h2>The high-level idea</h2>
+--   
+--   The objective is to minimize the number of concurrent polling workers
+--   to reduce database load as much as possible. A very naïve strategy
+--   would be to group identical queries together so we only have one
+--   poller per <i>unique</i> active subscription. That’s a good start, but
+--   of course, in practice, most queries differ slightly. However, it
+--   happens that they very frequently /only differ in their variables/
+--   (that is, GraphQL query variables and session variables), and in those
+--   cases, we try to generated parameterized SQL. This means that the same
+--   prepared SQL query can be reused, just with a different set of
+--   variables.
+--   
+--   To give a concrete example, consider the following query:
+--   
+--   <pre>
+--   subscription vote_count($post_id: Int!) {
+--     vote_count(where: {post_id: {_eq: $post_id}}) {
+--       votes
+--     }
+--   }
+--   </pre>
+--   
+--   No matter what the client provides for <tt>$post_id</tt>, we will
+--   always generate the same SQL:
+--   
+--   <pre>
+--   SELECT votes FROM vote_count WHERE post_id = $1
+--   </pre>
+--   
+--   If multiple clients subscribe to <tt>vote_count</tt>, we can certainly
+--   reuse the same prepared query. For example, imagine we had 10
+--   concurrent subscribers, each listening on a distinct
+--   <tt>$post_id</tt>:
+--   
+--   <pre>
+--   let postIds = [3, 11, 32, 56, 13, 97, 24, 43, 109, 48]
+--   </pre>
+--   
+--   We could iterate over <tt>postIds</tt> in Haskell, executing the same
+--   prepared query 10 times:
+--   
+--   <pre>
+--   for postIds $ \postId -&gt;
+--     Q.listQE defaultTxErrorHandler preparedQuery (Identity postId) True
+--   </pre>
+--   
+--   Sadly, that on its own isn’t good enough. The overhead of running each
+--   query is large enough that Postgres becomes overwhelmed if we have to
+--   serve lots of concurrent subscribers. Therefore, what we want to be
+--   able to do is somehow make one query instead of ten.
+--   
+--   <h3>Multiplexing</h3>
+--   
+--   This is where multiplexing comes in. By taking advantage of Postgres
+--   <a>lateral joins</a>, we can do the iteration in Postgres rather than
+--   in Haskell, allowing us to pay the query overhead just once for all
+--   ten subscribers. Essentially, lateral joins add <a>map</a>-like
+--   functionality to SQL, so we can run our query once per
+--   <tt>$post_id</tt>:
+--   
+--   <pre>
+--   SELECT results.votes
+--   FROM unnest($1::integer[]) query_variables (post_id)
+--   LEFT JOIN LATERAL (
+--     SELECT coalesce(json_agg(votes), '[]')
+--     FROM vote_count WHERE vote_count.post_id = query_variables.post_id
+--   ) results ON true
+--   </pre>
+--   
+--   If we generalize this approach just a little bit more, we can apply
+--   this transformation to arbitrary queries parameterized over arbitrary
+--   session and query variables!
+--   
+--   <h2>Implementation overview</h2>
+--   
+--   To support query multiplexing, we maintain a tree of the following
+--   types, where <tt>&gt;</tt> should be read as “contains”:
+--   
+--   <pre>
+--   <tt>SubscriptionsState</tt> &gt; <tt>Poller</tt> &gt; <tt>Cohort</tt> &gt; <tt>Subscriber</tt>
+--   </pre>
+--   
+--   Here’s a brief summary of each type’s role:
+--   
+--   <ul>
+--   <li>A <tt>Subscriber</tt> is an actual client with an open websocket
+--   connection.</li>
+--   <li>A <tt>Cohort</tt> is a set of <tt>Subscriber</tt>s that are all
+--   subscribed to the same query /with the exact same variables/. (By
+--   batching these together, we can do better than multiplexing, since we
+--   can just query the data once.)</li>
+--   <li>A <tt>Poller</tt> is a worker thread for a single, multiplexed
+--   query. It fetches data for a set of <tt>Cohort</tt>s that all use the
+--   same parameterized query, but have different sets of variables.</li>
+--   <li>Finally, the <tt>SubscriptionsState</tt> is the top-level
+--   container that holds all the active <tt>Poller</tt>s.</li>
+--   </ul>
+--   
+--   Additional details are provided by the documentation for individual
+--   bindings.
+module Hasura.GraphQL.Execute.Subscription.Plan
+
+-- | When running multiplexed queries, we have to be especially careful
+--   about user input, since invalid values will cause the query to fail,
+--   causing collateral damage for anyone else multiplexed into the same
+--   query. Therefore, we pre-validate variables against Postgres by
+--   executing a no-op query of the shape
+--   
+--   <pre>
+--   SELECT 'v1'::t1, 'v2'::t2, ..., 'vn'::tn
+--   </pre>
+--   
+--   so if any variable values are invalid, the error will be caught early.
+newtype ValidatedVariables f
+ValidatedVariables :: f TxtEncodedVal -> ValidatedVariables f
+[_unValidatedVariables] :: ValidatedVariables f -> f TxtEncodedVal
+unValidatedVariables :: forall f_asnHj f_asnPk. Iso (ValidatedVariables f_asnHj) (ValidatedVariables f_asnPk) (f_asnHj TxtEncodedVal) (f_asnPk TxtEncodedVal)
+type ValidatedQueryVariables = ValidatedVariables (HashMap Name)
+type ValidatedSyntheticVariables = ValidatedVariables []
+mkUnsafeValidateVariables :: f TxtEncodedVal -> ValidatedVariables f
+newtype CohortId
+CohortId :: UUID -> CohortId
+[unCohortId] :: CohortId -> UUID
+newCohortId :: MonadIO m => m CohortId
+dummyCohortId :: CohortId
+data CohortVariables
+CohortVariables :: !SessionVariables -> !ValidatedQueryVariables -> !ValidatedSyntheticVariables -> CohortVariables
+[_cvSessionVariables] :: CohortVariables -> !SessionVariables
+[_cvQueryVariables] :: CohortVariables -> !ValidatedQueryVariables
+
+-- | To allow more queries to be multiplexed together, we introduce
+--   “synthetic” variables for <i>all</i> SQL literals in a query, even if
+--   they don’t correspond to any GraphQL variable. For example, the query
+--   
+--   <pre>
+--   subscription latest_tracks($condition: tracks_bool_exp!) {
+--     tracks(where: $tracks_bool_exp) {
+--       id
+--       title
+--     }
+--   }
+--   </pre>
+--   
+--   might be executed with similar values for <tt>$condition</tt>, such as
+--   <tt>{"album_id": {"_eq": "1"}}</tt> and <tt>{"album_id": {"_eq":
+--   "2"}}</tt>.
+--   
+--   Normally, we wouldn’t bother parameterizing over the <tt>1</tt> and
+--   <tt>2</tt> literals in the resulting query because we can’t cache that
+--   query plan (since different <tt>$condition</tt> values could lead to
+--   different SQL). However, for live queries, we can still take advantage
+--   of the similarity between the two queries by multiplexing them
+--   together, so we replace them with references to synthetic variables.
+[_cvSyntheticVariables] :: CohortVariables -> !ValidatedSyntheticVariables
+cvSyntheticVariables :: Lens' CohortVariables ValidatedSyntheticVariables
+cvSessionVariables :: Lens' CohortVariables SessionVariables
+cvQueryVariables :: Lens' CohortVariables ValidatedQueryVariables
+
+-- | Builds a cohort's variables by only using the session variables that
+--   are required for the subscription
+mkCohortVariables :: HashSet SessionVariable -> SessionVariables -> ValidatedQueryVariables -> ValidatedSyntheticVariables -> CohortVariables
+newtype CohortIdArray
+CohortIdArray :: [CohortId] -> CohortIdArray
+[unCohortIdArray] :: CohortIdArray -> [CohortId]
+newtype CohortVariablesArray
+CohortVariablesArray :: [CohortVariables] -> CohortVariablesArray
+[unCohortVariablesArray] :: CohortVariablesArray -> [CohortVariables]
+
+-- | A self-contained, ready-to-execute subscription plan. Contains enough
+--   information to find an existing poller that this can be added to
+--   <i>or</i> to create a new poller if necessary.
+data SubscriptionQueryPlan (b :: BackendType) q
+SubscriptionQueryPlan :: !ParameterizedSubscriptionQueryPlan b q -> !SourceConfig b -> !CohortVariables -> !Maybe Name -> SubscriptionQueryPlan (b :: BackendType) q
+[_sqpParameterizedPlan] :: SubscriptionQueryPlan (b :: BackendType) q -> !ParameterizedSubscriptionQueryPlan b q
+[_sqpSourceConfig] :: SubscriptionQueryPlan (b :: BackendType) q -> !SourceConfig b
+[_sqpVariables] :: SubscriptionQueryPlan (b :: BackendType) q -> !CohortVariables
+
+-- | We need to know if the source has a namespace so that we can wrap it
+--   around the response from the DB
+[_sqpNamespace] :: SubscriptionQueryPlan (b :: BackendType) q -> !Maybe Name
+data ParameterizedSubscriptionQueryPlan (b :: BackendType) q
+ParameterizedSubscriptionQueryPlan :: !RoleName -> !q -> ParameterizedSubscriptionQueryPlan (b :: BackendType) q
+[_plqpRole] :: ParameterizedSubscriptionQueryPlan (b :: BackendType) q -> !RoleName
+[_plqpQuery] :: ParameterizedSubscriptionQueryPlan (b :: BackendType) q -> !q
+data SubscriptionQueryPlanExplanation
+SubscriptionQueryPlanExplanation :: !Text -> ![Text] -> !CohortVariables -> SubscriptionQueryPlanExplanation
+[_sqpeSql] :: SubscriptionQueryPlanExplanation -> !Text
+[_sqpePlan] :: SubscriptionQueryPlanExplanation -> ![Text]
+[_sqpeVariables] :: SubscriptionQueryPlanExplanation -> !CohortVariables
+newtype CursorVariableValues
+CursorVariableValues :: HashMap Name TxtEncodedVal -> CursorVariableValues
+instance GHC.Show.Show Hasura.GraphQL.Execute.Subscription.Plan.CursorVariableValues
+instance GHC.Classes.Eq Hasura.GraphQL.Execute.Subscription.Plan.CursorVariableValues
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.Subscription.Plan.CursorVariableValues
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.GraphQL.Execute.Subscription.Plan.CursorVariableValues
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.Subscription.Plan.SubscriptionQueryPlanExplanation
+instance GHC.Show.Show Hasura.GraphQL.Execute.Subscription.Plan.SubscriptionQueryPlanExplanation
+instance Data.Aeson.Types.ToJSON.ToJSON q => Data.Aeson.Types.ToJSON.ToJSON (Hasura.GraphQL.Execute.Subscription.Plan.ParameterizedSubscriptionQueryPlan b q)
+instance GHC.Classes.Eq Hasura.GraphQL.Execute.Subscription.Plan.CohortIdArray
+instance GHC.Show.Show Hasura.GraphQL.Execute.Subscription.Plan.CohortIdArray
+instance GHC.Classes.Eq Hasura.GraphQL.Execute.Subscription.Plan.CohortVariablesArray
+instance GHC.Show.Show Hasura.GraphQL.Execute.Subscription.Plan.CohortVariablesArray
+instance GHC.Show.Show q => GHC.Show.Show (Hasura.GraphQL.Execute.Subscription.Plan.ParameterizedSubscriptionQueryPlan b q)
+instance Database.PG.Query.Class.ToPrepArg Hasura.GraphQL.Execute.Subscription.Plan.CohortVariablesArray
+instance Database.PG.Query.Class.ToPrepArg Hasura.GraphQL.Execute.Subscription.Plan.CohortIdArray
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.Subscription.Plan.CohortVariables
+instance Database.PG.Query.Class.FromCol Hasura.GraphQL.Execute.Subscription.Plan.CohortId
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.GraphQL.Execute.Subscription.Plan.CohortId
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.Subscription.Plan.CohortId
+instance Data.Hashable.Class.Hashable Hasura.GraphQL.Execute.Subscription.Plan.CohortId
+instance GHC.Classes.Eq Hasura.GraphQL.Execute.Subscription.Plan.CohortId
+instance GHC.Show.Show Hasura.GraphQL.Execute.Subscription.Plan.CohortId
+instance GHC.Generics.Generic Hasura.GraphQL.Execute.Subscription.Plan.CohortVariables
+instance GHC.Classes.Eq Hasura.GraphQL.Execute.Subscription.Plan.CohortVariables
+instance GHC.Show.Show Hasura.GraphQL.Execute.Subscription.Plan.CohortVariables
+instance Data.Hashable.Class.Hashable Hasura.GraphQL.Execute.Subscription.Plan.CohortVariables
+instance GHC.Show.Show (f Hasura.SQL.Value.TxtEncodedVal) => GHC.Show.Show (Hasura.GraphQL.Execute.Subscription.Plan.ValidatedVariables f)
+instance GHC.Classes.Eq (f Hasura.SQL.Value.TxtEncodedVal) => GHC.Classes.Eq (Hasura.GraphQL.Execute.Subscription.Plan.ValidatedVariables f)
+instance Data.Hashable.Class.Hashable (f Hasura.SQL.Value.TxtEncodedVal) => Data.Hashable.Class.Hashable (Hasura.GraphQL.Execute.Subscription.Plan.ValidatedVariables f)
+instance Data.Aeson.Types.ToJSON.ToJSON (f Hasura.SQL.Value.TxtEncodedVal) => Data.Aeson.Types.ToJSON.ToJSON (Hasura.GraphQL.Execute.Subscription.Plan.ValidatedVariables f)
+instance GHC.Base.Semigroup (f Hasura.SQL.Value.TxtEncodedVal) => GHC.Base.Semigroup (Hasura.GraphQL.Execute.Subscription.Plan.ValidatedVariables f)
+instance GHC.Base.Monoid (f Hasura.SQL.Value.TxtEncodedVal) => GHC.Base.Monoid (Hasura.GraphQL.Execute.Subscription.Plan.ValidatedVariables f)
+
+
+-- | MSSQL SQL Value
+--   
+--   Provide a function to translate from a column value to its literal
+--   (textual) value specific to MSSQL. Used in the <tt>BackendExecute</tt>
+--   instance.
+module Hasura.Backends.MSSQL.SQL.Value
+txtEncodedVal :: Value -> TxtEncodedVal
+txtEncodedColVal :: ColumnValue 'MSSQL -> TxtEncodedVal
+
 module Hasura.GraphQL.Execute.RemoteJoin.Types
 
 -- | A JoinTree represents the set of operations that need to be executed
@@ -21883,239 +22151,6 @@ instance Control.Monad.Writer.Class.MonadWriter (GHC.Maybe.Maybe Hasura.GraphQL.
 instance GHC.Base.Monad Hasura.GraphQL.Execute.RemoteJoin.Collect.Collector
 instance GHC.Base.Applicative Hasura.GraphQL.Execute.RemoteJoin.Collect.Collector
 instance GHC.Base.Functor Hasura.GraphQL.Execute.RemoteJoin.Collect.Collector
-
-
--- | <h1>Reasonably efficient PostgreSQL live queries</h1>
---   
---   The module implements <i>query multiplexing</i>, which is our
---   implementation strategy for live queries (i.e. GraphQL subscriptions)
---   made against Postgres. Fundamentally, our implementation is built
---   around polling, which is never ideal, but it’s a lot easier to
---   implement than trying to do something event-based. To minimize the
---   resource cost of polling, we use <i>multiplexing</i>, which is
---   essentially a two-tier batching strategy.
---   
---   <h2>The high-level idea</h2>
---   
---   The objective is to minimize the number of concurrent polling workers
---   to reduce database load as much as possible. A very naïve strategy
---   would be to group identical queries together so we only have one
---   poller per <i>unique</i> active subscription. That’s a good start, but
---   of course, in practice, most queries differ slightly. However, it
---   happens that they very frequently /only differ in their variables/
---   (that is, GraphQL query variables and session variables), and in those
---   cases, we try to generated parameterized SQL. This means that the same
---   prepared SQL query can be reused, just with a different set of
---   variables.
---   
---   To give a concrete example, consider the following query:
---   
---   <pre>
---   subscription vote_count($post_id: Int!) {
---     vote_count(where: {post_id: {_eq: $post_id}}) {
---       votes
---     }
---   }
---   </pre>
---   
---   No matter what the client provides for <tt>$post_id</tt>, we will
---   always generate the same SQL:
---   
---   <pre>
---   SELECT votes FROM vote_count WHERE post_id = $1
---   </pre>
---   
---   If multiple clients subscribe to <tt>vote_count</tt>, we can certainly
---   reuse the same prepared query. For example, imagine we had 10
---   concurrent subscribers, each listening on a distinct
---   <tt>$post_id</tt>:
---   
---   <pre>
---   let postIds = [3, 11, 32, 56, 13, 97, 24, 43, 109, 48]
---   </pre>
---   
---   We could iterate over <tt>postIds</tt> in Haskell, executing the same
---   prepared query 10 times:
---   
---   <pre>
---   for postIds $ \postId -&gt;
---     Q.listQE defaultTxErrorHandler preparedQuery (Identity postId) True
---   </pre>
---   
---   Sadly, that on its own isn’t good enough. The overhead of running each
---   query is large enough that Postgres becomes overwhelmed if we have to
---   serve lots of concurrent subscribers. Therefore, what we want to be
---   able to do is somehow make one query instead of ten.
---   
---   <h3>Multiplexing</h3>
---   
---   This is where multiplexing comes in. By taking advantage of Postgres
---   <a>lateral joins</a>, we can do the iteration in Postgres rather than
---   in Haskell, allowing us to pay the query overhead just once for all
---   ten subscribers. Essentially, lateral joins add <a>map</a>-like
---   functionality to SQL, so we can run our query once per
---   <tt>$post_id</tt>:
---   
---   <pre>
---   SELECT results.votes
---   FROM unnest($1::integer[]) query_variables (post_id)
---   LEFT JOIN LATERAL (
---     SELECT coalesce(json_agg(votes), '[]')
---     FROM vote_count WHERE vote_count.post_id = query_variables.post_id
---   ) results ON true
---   </pre>
---   
---   If we generalize this approach just a little bit more, we can apply
---   this transformation to arbitrary queries parameterized over arbitrary
---   session and query variables!
---   
---   <h2>Implementation overview</h2>
---   
---   To support query multiplexing, we maintain a tree of the following
---   types, where <tt>&gt;</tt> should be read as “contains”:
---   
---   <pre>
---   <tt>LiveQueriesState</tt> &gt; <tt>Poller</tt> &gt; <tt>Cohort</tt> &gt; <tt>Subscriber</tt>
---   </pre>
---   
---   Here’s a brief summary of each type’s role:
---   
---   <ul>
---   <li>A <tt>Subscriber</tt> is an actual client with an open websocket
---   connection.</li>
---   <li>A <tt>Cohort</tt> is a set of <tt>Subscriber</tt>s that are all
---   subscribed to the same query /with the exact same variables/. (By
---   batching these together, we can do better than multiplexing, since we
---   can just query the data once.)</li>
---   <li>A <tt>Poller</tt> is a worker thread for a single, multiplexed
---   query. It fetches data for a set of <tt>Cohort</tt>s that all use the
---   same parameterized query, but have different sets of variables.</li>
---   <li>Finally, the <tt>LiveQueriesState</tt> is the top-level container
---   that holds all the active <tt>Poller</tt>s.</li>
---   </ul>
---   
---   Additional details are provided by the documentation for individual
---   bindings.
-module Hasura.GraphQL.Execute.LiveQuery.Plan
-newtype CohortId
-CohortId :: UUID -> CohortId
-[unCohortId] :: CohortId -> UUID
-newCohortId :: MonadIO m => m CohortId
-dummyCohortId :: CohortId
-data CohortVariables
-CohortVariables :: !SessionVariables -> !ValidatedQueryVariables -> !ValidatedSyntheticVariables -> CohortVariables
-[_cvSessionVariables] :: CohortVariables -> !SessionVariables
-[_cvQueryVariables] :: CohortVariables -> !ValidatedQueryVariables
-
--- | To allow more queries to be multiplexed together, we introduce
---   “synthetic” variables for <i>all</i> SQL literals in a query, even if
---   they don’t correspond to any GraphQL variable. For example, the query
---   
---   <pre>
---   subscription latest_tracks($condition: tracks_bool_exp!) {
---     tracks(where: $tracks_bool_exp) {
---       id
---       title
---     }
---   }
---   </pre>
---   
---   might be executed with similar values for <tt>$condition</tt>, such as
---   <tt>{"album_id": {"_eq": "1"}}</tt> and <tt>{"album_id": {"_eq":
---   "2"}}</tt>.
---   
---   Normally, we wouldn’t bother parameterizing over the <tt>1</tt> and
---   <tt>2</tt> literals in the resulting query because we can’t cache that
---   query plan (since different <tt>$condition</tt> values could lead to
---   different SQL). However, for live queries, we can still take advantage
---   of the similarity between the two queries by multiplexing them
---   together, so we replace them with references to synthetic variables.
-[_cvSyntheticVariables] :: CohortVariables -> !ValidatedSyntheticVariables
-
--- | Builds a cohort's variables by only using the session variables that
---   are required for the subscription
-mkCohortVariables :: HashSet SessionVariable -> SessionVariables -> ValidatedQueryVariables -> ValidatedSyntheticVariables -> CohortVariables
-newtype CohortIdArray
-CohortIdArray :: [CohortId] -> CohortIdArray
-[unCohortIdArray] :: CohortIdArray -> [CohortId]
-newtype CohortVariablesArray
-CohortVariablesArray :: [CohortVariables] -> CohortVariablesArray
-[unCohortVariablesArray] :: CohortVariablesArray -> [CohortVariables]
-
--- | When running multiplexed queries, we have to be especially careful
---   about user input, since invalid values will cause the query to fail,
---   causing collateral damage for anyone else multiplexed into the same
---   query. Therefore, we pre-validate variables against Postgres by
---   executing a no-op query of the shape
---   
---   <pre>
---   SELECT 'v1'::t1, 'v2'::t2, ..., 'vn'::tn
---   </pre>
---   
---   so if any variable values are invalid, the error will be caught early.
-newtype ValidatedVariables f
-ValidatedVariables :: f TxtEncodedVal -> ValidatedVariables f
-type ValidatedQueryVariables = ValidatedVariables (HashMap Name)
-type ValidatedSyntheticVariables = ValidatedVariables []
-
--- | A self-contained, ready-to-execute live query plan. Contains enough
---   information to find an existing poller that this can be added to
---   <i>or</i> to create a new poller if necessary.
-data LiveQueryPlan (b :: BackendType) q
-LiveQueryPlan :: !ParameterizedLiveQueryPlan b q -> !SourceConfig b -> !CohortVariables -> !Maybe Name -> LiveQueryPlan (b :: BackendType) q
-[_lqpParameterizedPlan] :: LiveQueryPlan (b :: BackendType) q -> !ParameterizedLiveQueryPlan b q
-[_lqpSourceConfig] :: LiveQueryPlan (b :: BackendType) q -> !SourceConfig b
-[_lqpVariables] :: LiveQueryPlan (b :: BackendType) q -> !CohortVariables
-
--- | We need to know if the source has a namespace so that we can wrap it
---   around the response from the DB
-[_lqpNamespace] :: LiveQueryPlan (b :: BackendType) q -> !Maybe Name
-data ParameterizedLiveQueryPlan (b :: BackendType) q
-ParameterizedLiveQueryPlan :: !RoleName -> !q -> ParameterizedLiveQueryPlan (b :: BackendType) q
-[_plqpRole] :: ParameterizedLiveQueryPlan (b :: BackendType) q -> !RoleName
-[_plqpQuery] :: ParameterizedLiveQueryPlan (b :: BackendType) q -> !q
-data LiveQueryPlanExplanation
-LiveQueryPlanExplanation :: !Text -> ![Text] -> !CohortVariables -> LiveQueryPlanExplanation
-[_lqpeSql] :: LiveQueryPlanExplanation -> !Text
-[_lqpePlan] :: LiveQueryPlanExplanation -> ![Text]
-[_lqpeVariables] :: LiveQueryPlanExplanation -> !CohortVariables
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.LiveQuery.Plan.LiveQueryPlanExplanation
-instance GHC.Show.Show Hasura.GraphQL.Execute.LiveQuery.Plan.LiveQueryPlanExplanation
-instance Data.Aeson.Types.ToJSON.ToJSON q => Data.Aeson.Types.ToJSON.ToJSON (Hasura.GraphQL.Execute.LiveQuery.Plan.ParameterizedLiveQueryPlan b q)
-instance Database.PG.Query.Class.FromCol Hasura.GraphQL.Execute.LiveQuery.Plan.CohortId
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.GraphQL.Execute.LiveQuery.Plan.CohortId
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.LiveQuery.Plan.CohortId
-instance Data.Hashable.Class.Hashable Hasura.GraphQL.Execute.LiveQuery.Plan.CohortId
-instance GHC.Classes.Eq Hasura.GraphQL.Execute.LiveQuery.Plan.CohortId
-instance GHC.Show.Show Hasura.GraphQL.Execute.LiveQuery.Plan.CohortId
-instance GHC.Classes.Eq Hasura.GraphQL.Execute.LiveQuery.Plan.CohortIdArray
-instance GHC.Show.Show Hasura.GraphQL.Execute.LiveQuery.Plan.CohortIdArray
-instance GHC.Generics.Generic Hasura.GraphQL.Execute.LiveQuery.Plan.CohortVariables
-instance GHC.Classes.Eq Hasura.GraphQL.Execute.LiveQuery.Plan.CohortVariables
-instance GHC.Show.Show Hasura.GraphQL.Execute.LiveQuery.Plan.CohortVariables
-instance GHC.Classes.Eq Hasura.GraphQL.Execute.LiveQuery.Plan.CohortVariablesArray
-instance GHC.Show.Show Hasura.GraphQL.Execute.LiveQuery.Plan.CohortVariablesArray
-instance GHC.Show.Show q => GHC.Show.Show (Hasura.GraphQL.Execute.LiveQuery.Plan.ParameterizedLiveQueryPlan b q)
-instance GHC.Show.Show (f Hasura.SQL.Value.TxtEncodedVal) => GHC.Show.Show (Hasura.GraphQL.Execute.LiveQuery.Plan.ValidatedVariables f)
-instance GHC.Classes.Eq (f Hasura.SQL.Value.TxtEncodedVal) => GHC.Classes.Eq (Hasura.GraphQL.Execute.LiveQuery.Plan.ValidatedVariables f)
-instance Data.Hashable.Class.Hashable (f Hasura.SQL.Value.TxtEncodedVal) => Data.Hashable.Class.Hashable (Hasura.GraphQL.Execute.LiveQuery.Plan.ValidatedVariables f)
-instance Data.Aeson.Types.ToJSON.ToJSON (f Hasura.SQL.Value.TxtEncodedVal) => Data.Aeson.Types.ToJSON.ToJSON (Hasura.GraphQL.Execute.LiveQuery.Plan.ValidatedVariables f)
-instance GHC.Base.Semigroup (f Hasura.SQL.Value.TxtEncodedVal) => GHC.Base.Semigroup (Hasura.GraphQL.Execute.LiveQuery.Plan.ValidatedVariables f)
-instance GHC.Base.Monoid (f Hasura.SQL.Value.TxtEncodedVal) => GHC.Base.Monoid (Hasura.GraphQL.Execute.LiveQuery.Plan.ValidatedVariables f)
-instance Database.PG.Query.Class.ToPrepArg Hasura.GraphQL.Execute.LiveQuery.Plan.CohortVariablesArray
-instance Data.Hashable.Class.Hashable Hasura.GraphQL.Execute.LiveQuery.Plan.CohortVariables
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.LiveQuery.Plan.CohortVariables
-instance Database.PG.Query.Class.ToPrepArg Hasura.GraphQL.Execute.LiveQuery.Plan.CohortIdArray
-
-
--- | MSSQL SQL Value
---   
---   Provide a function to translate from a column value to its literal
---   (textual) value specific to MSSQL. Used in the <tt>BackendExecute</tt>
---   instance.
-module Hasura.Backends.MSSQL.SQL.Value
-txtEncodedVal :: Value -> TxtEncodedVal
-txtEncodedColVal :: ColumnValue 'MSSQL -> TxtEncodedVal
 
 module Hasura.GraphQL.Execute.Action.Types
 newtype ActionExecution
@@ -24479,9 +24514,9 @@ QueryParametersInfo :: !HashMap Name (ColumnValue b) -> !Seq (ColumnValue b) -> 
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> !HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_axbvi. Lens' (QueryParametersInfo b_axbvi) (Seq (ColumnValue b_axbvi))
-qpiReusableVariableValues :: forall b_axbvi. Lens' (QueryParametersInfo b_axbvi) (HashMap Name (ColumnValue b_axbvi))
-qpiReferencedSessionVariables :: forall b_axbvi. Lens' (QueryParametersInfo b_axbvi) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_axchF. Lens' (QueryParametersInfo b_axchF) (Seq (ColumnValue b_axchF))
+qpiReusableVariableValues :: forall b_axchF. Lens' (QueryParametersInfo b_axchF) (HashMap Name (ColumnValue b_axchF))
+qpiReferencedSessionVariables :: forall b_axchF. Lens' (QueryParametersInfo b_axchF) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
@@ -24501,7 +24536,7 @@ resolveMultiplexedValue :: (MonadState (QueryParametersInfo ('Postgres pgKind)) 
 executeMultiplexedQuery :: MonadTx m => MultiplexedQuery -> [(CohortId, CohortVariables)] -> m [(CohortId, ByteString)]
 
 -- | Internal; used by both <a>executeMultiplexedQuery</a> and
---   <tt>pgDBLiveQueryExplain</tt>.
+--   <tt>pgDBSubscriptionExplain</tt>.
 executeQuery :: (MonadTx m, FromRow a) => Query -> [(CohortId, CohortVariables)] -> m [a]
 instance Data.Hashable.Class.Hashable Hasura.Backends.Postgres.Execute.LiveQuery.MultiplexedQuery
 instance GHC.Classes.Eq Hasura.Backends.Postgres.Execute.LiveQuery.MultiplexedQuery
@@ -25227,9 +25262,9 @@ class (Backend b, ToTxt (MultiplexedQuery b), Monad (ExecutionMonad b)) => Backe
 }
 mkDBQueryPlan :: forall m. (BackendExecute b, MonadError QErr m, MonadQueryTags m, MonadReader QueryTagsComment m) => UserInfo -> SourceName -> SourceConfig b -> QueryDB b Void (UnpreparedValue b) -> m (DBStepInfo b)
 mkDBMutationPlan :: forall m. (BackendExecute b, MonadError QErr m, MonadQueryTags m, MonadReader QueryTagsComment m) => UserInfo -> StringifyNumbers -> SourceName -> SourceConfig b -> MutationDB b Void (UnpreparedValue b) -> m (DBStepInfo b)
-mkDBSubscriptionPlan :: forall m. (BackendExecute b, MonadError QErr m, MonadIO m, MonadBaseControl IO m, MonadReader QueryTagsComment m) => UserInfo -> SourceName -> SourceConfig b -> Maybe Name -> RootFieldMap (QueryDB b Void (UnpreparedValue b)) -> m (LiveQueryPlan b (MultiplexedQuery b))
+mkDBSubscriptionPlan :: forall m. (BackendExecute b, MonadError QErr m, MonadIO m, MonadBaseControl IO m, MonadReader QueryTagsComment m) => UserInfo -> SourceName -> SourceConfig b -> Maybe Name -> RootFieldMap (QueryDB b Void (UnpreparedValue b)) -> m (SubscriptionQueryPlan b (MultiplexedQuery b))
 mkDBQueryExplain :: forall m. (BackendExecute b, MonadError QErr m) => RootFieldAlias -> UserInfo -> SourceName -> SourceConfig b -> QueryDB b Void (UnpreparedValue b) -> m (AnyBackend DBStepInfo)
-mkLiveQueryExplain :: (BackendExecute b, MonadError QErr m, MonadIO m, MonadBaseControl IO m) => LiveQueryPlan b (MultiplexedQuery b) -> m LiveQueryPlanExplanation
+mkSubscriptionExplain :: (BackendExecute b, MonadError QErr m, MonadIO m, MonadBaseControl IO m) => SubscriptionQueryPlan b (MultiplexedQuery b) -> m SubscriptionQueryPlanExplanation
 mkDBRemoteRelationshipPlan :: forall m. (BackendExecute b, MonadError QErr m, MonadQueryTags m) => UserInfo -> SourceName -> SourceConfig b -> NonEmpty Object -> HashMap FieldName (Column b, ScalarType b) -> FieldName -> (FieldName, SourceRelationshipSelection b Void UnpreparedValue) -> m (DBStepInfo b)
 
 -- | This is a helper function to convert a remote source's relationship to
@@ -25647,7 +25682,7 @@ PreparedSql :: !Query -> !PrepArgMap -> PreparedSql
 [_psPrepArgs] :: PreparedSql -> !PrepArgMap
 pgDBQueryPlan :: forall pgKind m. (MonadError QErr m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => UserInfo -> SourceName -> SourceConfig ('Postgres pgKind) -> QueryDB ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) -> m (DBStepInfo ('Postgres pgKind))
 pgDBQueryExplain :: forall pgKind m. (MonadError QErr m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => RootFieldAlias -> UserInfo -> SourceName -> SourceConfig ('Postgres pgKind) -> QueryDB ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) -> m (AnyBackend DBStepInfo)
-pgDBLiveQueryExplain :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m) => LiveQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)) -> m LiveQueryPlanExplanation
+pgDBSubscriptionExplain :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m) => SubscriptionQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)) -> m SubscriptionQueryPlanExplanation
 convertDelete :: forall pgKind m. (MonadError QErr m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => UserInfo -> AnnDelG ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) -> StringifyNumbers -> QueryTagsComment -> m (TraceT (TxET QErr IO) EncJSON)
 convertUpdate :: forall pgKind m. (MonadError QErr m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => UserInfo -> AnnotatedUpdateG ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) -> StringifyNumbers -> QueryTagsComment -> m (TraceT (TxET QErr IO) EncJSON)
 convertInsert :: forall pgKind m. (MonadError QErr m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => UserInfo -> AnnInsert ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) -> StringifyNumbers -> QueryTagsComment -> m (TraceT (TxET QErr IO) EncJSON)
@@ -25657,7 +25692,7 @@ convertInsert :: forall pgKind m. (MonadError QErr m, Backend ('Postgres pgKind)
 --   <a>MDBFunction</a>).
 convertFunction :: forall pgKind m. (MonadError QErr m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => UserInfo -> JsonAggSelect -> AnnSimpleSelectG ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) -> QueryTagsComment -> m (TraceT (TxET QErr IO) EncJSON)
 pgDBMutationPlan :: forall pgKind m. (MonadError QErr m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => UserInfo -> StringifyNumbers -> SourceName -> SourceConfig ('Postgres pgKind) -> MutationDB ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) -> m (DBStepInfo ('Postgres pgKind))
-pgDBSubscriptionPlan :: forall pgKind m. (MonadError QErr m, MonadIO m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => UserInfo -> SourceName -> SourceConfig ('Postgres pgKind) -> Maybe Name -> RootFieldMap (QueryDB ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind))) -> m (LiveQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)))
+pgDBSubscriptionPlan :: forall pgKind m. (MonadError QErr m, MonadIO m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => UserInfo -> SourceName -> SourceConfig ('Postgres pgKind) -> Maybe Name -> RootFieldMap (QueryDB ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind))) -> m (SubscriptionQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)))
 mkCurPlanTx :: UserInfo -> PreparedSql -> (TraceT (TxET QErr IO) EncJSON, Maybe PreparedSql)
 irToRootFieldPlan :: (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => PrepArgMap -> QueryDB ('Postgres pgKind) Void SQLExp -> PreparedSql
 appendPreparedSQLWithQueryTags :: PreparedSql -> QueryTagsComment -> PreparedSql
@@ -25717,10 +25752,10 @@ MultiplexedQuery' :: Reselect -> MultiplexedQuery'
 msDBQueryPlan :: forall m. MonadError QErr m => UserInfo -> SourceName -> SourceConfig 'MSSQL -> QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL) -> m (DBStepInfo 'MSSQL)
 runShowplan :: MonadIO m => Query -> TxET QErr m [Text]
 msDBQueryExplain :: MonadError QErr m => RootFieldAlias -> UserInfo -> SourceName -> SourceConfig 'MSSQL -> QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL) -> m (AnyBackend DBStepInfo)
-msDBLiveQueryExplain :: (MonadIO m, MonadBaseControl IO m, MonadError QErr m) => LiveQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL) -> m LiveQueryPlanExplanation
+msDBSubscriptionExplain :: (MonadIO m, MonadBaseControl IO m, MonadError QErr m) => SubscriptionQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL) -> m SubscriptionQueryPlanExplanation
 multiplexRootReselect :: [(CohortId, CohortVariables)] -> Reselect -> Select
 msDBMutationPlan :: forall m. MonadError QErr m => UserInfo -> StringifyNumbers -> SourceName -> SourceConfig 'MSSQL -> MutationDB 'MSSQL Void (UnpreparedValue 'MSSQL) -> m (DBStepInfo 'MSSQL)
-msDBSubscriptionPlan :: forall m. (MonadError QErr m, MonadIO m, MonadBaseControl IO m) => UserInfo -> SourceName -> SourceConfig 'MSSQL -> Maybe Name -> RootFieldMap (QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL)) -> m (LiveQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL))
+msDBSubscriptionPlan :: forall m. (MonadError QErr m, MonadIO m, MonadBaseControl IO m) => UserInfo -> SourceName -> SourceConfig 'MSSQL -> Maybe Name -> RootFieldMap (QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL)) -> m (SubscriptionQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL))
 prepareStateCohortVariables :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m) => SourceConfig 'MSSQL -> SessionVariables -> PrepareState -> m CohortVariables
 
 -- | Ensure that the set of variables (with value instantiations) that
@@ -26591,8 +26626,8 @@ instance Hasura.Server.Init.Config.FromEnv Database.PG.Query.Transaction.TxIsola
 instance Hasura.Server.Init.Config.FromEnv Hasura.Server.Cors.CorsConfig
 instance Hasura.Server.Init.Config.FromEnv [Hasura.Server.Init.Config.API]
 instance Hasura.Server.Init.Config.FromEnv [Hasura.Server.Types.ExperimentalFeature]
-instance Hasura.Server.Init.Config.FromEnv Hasura.GraphQL.Execute.LiveQuery.Options.BatchSize
-instance Hasura.Server.Init.Config.FromEnv Hasura.GraphQL.Execute.LiveQuery.Options.RefetchInterval
+instance Hasura.Server.Init.Config.FromEnv Hasura.GraphQL.Execute.Subscription.Options.BatchSize
+instance Hasura.Server.Init.Config.FromEnv Hasura.GraphQL.Execute.Subscription.Options.RefetchInterval
 instance Hasura.Server.Init.Config.FromEnv Data.Time.Clock.Units.Milliseconds
 instance Hasura.Server.Init.Config.FromEnv Data.Time.Clock.Units.Seconds
 instance Hasura.Server.Init.Config.FromEnv Hasura.Server.Auth.JWT.JWTConfig
@@ -27217,9 +27252,9 @@ instance GHC.Show.Show Hasura.GraphQL.Transport.WebSocket.Server.MessageDetails
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Transport.WebSocket.Server.WSId
 
 
--- | Multiplexed live query poller threads; see
---   <a>Hasura.GraphQL.Execute.LiveQuery</a> for details.
-module Hasura.GraphQL.Execute.LiveQuery.Poll
+-- | Multiplexed subscription poller threads; see
+--   <a>Hasura.GraphQL.Execute.Subscription</a> for details.
+module Hasura.GraphQL.Execute.Subscription.Poll.Common
 newtype SubscriberId
 SubscriberId :: UUID -> SubscriberId
 [unSubscriberId] :: SubscriberId -> UUID
@@ -27241,17 +27276,17 @@ Subscriber :: !SubscriberId -> !SubscriberMetadata -> !RequestId -> !Maybe Opera
 [_sOperationName] :: Subscriber -> !Maybe OperationName
 [_sOnChangeCallback] :: Subscriber -> !OnChange
 
--- | live query onChange metadata, used for adding more extra analytics
+-- | Subscription onChange metadata, used for adding more extra analytics
 --   data
-data LiveQueryMetadata
-LiveQueryMetadata :: !DiffTime -> LiveQueryMetadata
-[_lqmExecutionTime] :: LiveQueryMetadata -> !DiffTime
-data LiveQueryResponse
-LiveQueryResponse :: !ByteString -> !DiffTime -> LiveQueryResponse
-[_lqrPayload] :: LiveQueryResponse -> !ByteString
-[_lqrExecutionTime] :: LiveQueryResponse -> !DiffTime
-type LGQResponse = GQResult LiveQueryResponse
-type OnChange = LGQResponse -> IO ()
+data SubscriptionMetadata
+SubscriptionMetadata :: !DiffTime -> SubscriptionMetadata
+[_sqmExecutionTime] :: SubscriptionMetadata -> !DiffTime
+data SubscriptionResponse
+SubscriptionResponse :: !ByteString -> !DiffTime -> SubscriptionResponse
+[_lqrPayload] :: SubscriptionResponse -> !ByteString
+[_lqrExecutionTime] :: SubscriptionResponse -> !DiffTime
+type SubscriptionGQResponse = GQResult SubscriptionResponse
+type OnChange = SubscriptionGQResponse -> IO ()
 type SubscriberMap = TMap SubscriberId Subscriber
 
 -- | A batched group of <a>Subscriber</a>s who are not only listening to
@@ -27319,7 +27354,6 @@ CohortSnapshot :: !CohortVariables -> !TVar (Maybe ResponseHash) -> ![Subscriber
 [_csPreviousResponse] :: CohortSnapshot -> !TVar (Maybe ResponseHash)
 [_csExistingSubscribers] :: CohortSnapshot -> ![Subscriber]
 [_csNewSubscribers] :: CohortSnapshot -> ![Subscriber]
-pushResultToCohort :: GQResult ByteString -> Maybe ResponseHash -> LiveQueryMetadata -> CohortSnapshot -> IO ([SubscriberExecutionDetails], [SubscriberExecutionDetails])
 
 -- | A unique, multiplexed query. Each <a>Poller</a> has its own polling
 --   thread that periodically polls Postgres and pushes results to each of
@@ -27410,7 +27444,7 @@ BatchExecutionDetails :: !DiffTime -> !DiffTime -> !BatchId -> ![CohortExecution
 -- | see Note [Minimal LiveQuery Poller Log]
 batchExecutionDetailMinimal :: BatchExecutionDetails -> Value
 data PollDetails
-PollDetails :: !PollerId -> !Text -> !DiffTime -> ![BatchExecutionDetails] -> !DiffTime -> !LiveQueriesOptions -> !SourceName -> !RoleName -> !ParameterizedQueryHash -> PollDetails
+PollDetails :: !PollerId -> !Text -> !DiffTime -> ![BatchExecutionDetails] -> !DiffTime -> !SubscriptionsOptions -> !SourceName -> !RoleName -> !ParameterizedQueryHash -> PollDetails
 
 -- | the unique ID (basically a thread that run as a <a>Poller</a>) for the
 --   <a>Poller</a>
@@ -27421,7 +27455,7 @@ PollDetails :: !PollerId -> !Text -> !DiffTime -> ![BatchExecutionDetails] -> !D
 [_pdGeneratedSql] :: PollDetails -> !Text
 
 -- | the time taken to get a snapshot of cohorts from our
---   <tt>LiveQueriesState</tt> data structure
+--   <tt>SubscriptionsState</tt> data structure
 [_pdSnapshotTime] :: PollDetails -> !DiffTime
 
 -- | list of execution batches and their details
@@ -27429,81 +27463,98 @@ PollDetails :: !PollerId -> !Text -> !DiffTime -> ![BatchExecutionDetails] -> !D
 
 -- | total time spent on a poll cycle
 [_pdTotalTime] :: PollDetails -> !DiffTime
-[_pdLiveQueryOptions] :: PollDetails -> !LiveQueriesOptions
+[_pdLiveQueryOptions] :: PollDetails -> !SubscriptionsOptions
 [_pdSource] :: PollDetails -> !SourceName
 [_pdRole] :: PollDetails -> !RoleName
 [_pdParameterizedQueryHash] :: PollDetails -> !ParameterizedQueryHash
 
 -- | see Note [Minimal LiveQuery Poller Log]
 pollDetailMinimal :: PollDetails -> Value
-type LiveQueryPostPollHook = PollDetails -> IO ()
-defaultLiveQueryPostPollHook :: Logger Hasura -> LiveQueryPostPollHook
+type SubscriptionPostPollHook = PollDetails -> IO ()
+defaultSubscriptionPostPollHook :: Logger Hasura -> SubscriptionPostPollHook
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.Subscription.Poll.Common.SubscriberId
+instance Data.Hashable.Class.Hashable Hasura.GraphQL.Execute.Subscription.Poll.Common.SubscriberId
+instance GHC.Generics.Generic Hasura.GraphQL.Execute.Subscription.Poll.Common.SubscriberId
+instance GHC.Classes.Eq Hasura.GraphQL.Execute.Subscription.Poll.Common.SubscriberId
+instance GHC.Show.Show Hasura.GraphQL.Execute.Subscription.Poll.Common.SubscriberId
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.Subscription.Poll.Common.SubscriberMetadata
+instance GHC.Classes.Eq Hasura.GraphQL.Execute.Subscription.Poll.Common.SubscriberMetadata
+instance GHC.Show.Show Hasura.GraphQL.Execute.Subscription.Poll.Common.SubscriberMetadata
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.Subscription.Poll.Common.BatchId
+instance GHC.Classes.Eq Hasura.GraphQL.Execute.Subscription.Poll.Common.BatchId
+instance GHC.Show.Show Hasura.GraphQL.Execute.Subscription.Poll.Common.BatchId
+instance GHC.Classes.Eq Hasura.GraphQL.Execute.Subscription.Poll.Common.ResponseHash
+instance GHC.Show.Show Hasura.GraphQL.Execute.Subscription.Poll.Common.ResponseHash
+instance GHC.Generics.Generic Hasura.GraphQL.Execute.Subscription.Poll.Common.PollerKey
+instance GHC.Classes.Eq Hasura.GraphQL.Execute.Subscription.Poll.Common.PollerKey
+instance GHC.Show.Show Hasura.GraphQL.Execute.Subscription.Poll.Common.PollerKey
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.Subscription.Poll.Common.PollerId
+instance GHC.Generics.Generic Hasura.GraphQL.Execute.Subscription.Poll.Common.PollerId
+instance GHC.Classes.Eq Hasura.GraphQL.Execute.Subscription.Poll.Common.PollerId
+instance GHC.Show.Show Hasura.GraphQL.Execute.Subscription.Poll.Common.PollerId
+instance GHC.Classes.Eq Hasura.GraphQL.Execute.Subscription.Poll.Common.SubscriberExecutionDetails
+instance GHC.Show.Show Hasura.GraphQL.Execute.Subscription.Poll.Common.SubscriberExecutionDetails
+instance GHC.Classes.Eq Hasura.GraphQL.Execute.Subscription.Poll.Common.CohortExecutionDetails
+instance GHC.Show.Show Hasura.GraphQL.Execute.Subscription.Poll.Common.CohortExecutionDetails
+instance GHC.Classes.Eq Hasura.GraphQL.Execute.Subscription.Poll.Common.BatchExecutionDetails
+instance GHC.Show.Show Hasura.GraphQL.Execute.Subscription.Poll.Common.BatchExecutionDetails
+instance GHC.Classes.Eq Hasura.GraphQL.Execute.Subscription.Poll.Common.PollDetails
+instance GHC.Show.Show Hasura.GraphQL.Execute.Subscription.Poll.Common.PollDetails
+instance Hasura.Logging.ToEngineLog Hasura.GraphQL.Execute.Subscription.Poll.Common.PollDetails Hasura.Logging.Hasura
+instance Data.Hashable.Class.Hashable Hasura.GraphQL.Execute.Subscription.Poll.Common.PollerKey
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.Subscription.Poll.Common.PollerKey
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.Subscription.Poll.Common.ResponseHash
+
+
+-- | Multiplexed subscription poller threads; see
+--   <a>Hasura.GraphQL.Execute.Subscription</a> for details.
+module Hasura.GraphQL.Execute.Subscription.Poll.LiveQuery
+pushResultToCohort :: GQResult ByteString -> Maybe ResponseHash -> SubscriptionMetadata -> CohortSnapshot -> IO ([SubscriberExecutionDetails], [SubscriberExecutionDetails])
 
 -- | Where the magic happens: the top-level action run periodically by each
 --   active <a>Poller</a>. This needs to be async exception safe.
-pollQuery :: forall b. BackendTransport b => PollerId -> LiveQueriesOptions -> (SourceName, SourceConfig b) -> RoleName -> ParameterizedQueryHash -> MultiplexedQuery b -> CohortMap -> LiveQueryPostPollHook -> IO ()
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.LiveQuery.Poll.SubscriberId
-instance Data.Hashable.Class.Hashable Hasura.GraphQL.Execute.LiveQuery.Poll.SubscriberId
-instance GHC.Generics.Generic Hasura.GraphQL.Execute.LiveQuery.Poll.SubscriberId
-instance GHC.Classes.Eq Hasura.GraphQL.Execute.LiveQuery.Poll.SubscriberId
-instance GHC.Show.Show Hasura.GraphQL.Execute.LiveQuery.Poll.SubscriberId
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.LiveQuery.Poll.SubscriberMetadata
-instance GHC.Classes.Eq Hasura.GraphQL.Execute.LiveQuery.Poll.SubscriberMetadata
-instance GHC.Show.Show Hasura.GraphQL.Execute.LiveQuery.Poll.SubscriberMetadata
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.LiveQuery.Poll.BatchId
-instance GHC.Classes.Eq Hasura.GraphQL.Execute.LiveQuery.Poll.BatchId
-instance GHC.Show.Show Hasura.GraphQL.Execute.LiveQuery.Poll.BatchId
-instance GHC.Classes.Eq Hasura.GraphQL.Execute.LiveQuery.Poll.ResponseHash
-instance GHC.Show.Show Hasura.GraphQL.Execute.LiveQuery.Poll.ResponseHash
-instance GHC.Generics.Generic Hasura.GraphQL.Execute.LiveQuery.Poll.PollerKey
-instance GHC.Classes.Eq Hasura.GraphQL.Execute.LiveQuery.Poll.PollerKey
-instance GHC.Show.Show Hasura.GraphQL.Execute.LiveQuery.Poll.PollerKey
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.LiveQuery.Poll.PollerId
-instance GHC.Generics.Generic Hasura.GraphQL.Execute.LiveQuery.Poll.PollerId
-instance GHC.Classes.Eq Hasura.GraphQL.Execute.LiveQuery.Poll.PollerId
-instance GHC.Show.Show Hasura.GraphQL.Execute.LiveQuery.Poll.PollerId
-instance GHC.Classes.Eq Hasura.GraphQL.Execute.LiveQuery.Poll.SubscriberExecutionDetails
-instance GHC.Show.Show Hasura.GraphQL.Execute.LiveQuery.Poll.SubscriberExecutionDetails
-instance GHC.Classes.Eq Hasura.GraphQL.Execute.LiveQuery.Poll.CohortExecutionDetails
-instance GHC.Show.Show Hasura.GraphQL.Execute.LiveQuery.Poll.CohortExecutionDetails
-instance GHC.Classes.Eq Hasura.GraphQL.Execute.LiveQuery.Poll.BatchExecutionDetails
-instance GHC.Show.Show Hasura.GraphQL.Execute.LiveQuery.Poll.BatchExecutionDetails
-instance GHC.Classes.Eq Hasura.GraphQL.Execute.LiveQuery.Poll.PollDetails
-instance GHC.Show.Show Hasura.GraphQL.Execute.LiveQuery.Poll.PollDetails
-instance Hasura.Logging.ToEngineLog Hasura.GraphQL.Execute.LiveQuery.Poll.PollDetails Hasura.Logging.Hasura
-instance Data.Hashable.Class.Hashable Hasura.GraphQL.Execute.LiveQuery.Poll.PollerKey
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.LiveQuery.Poll.PollerKey
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.LiveQuery.Poll.ResponseHash
+pollLiveQuery :: forall b. BackendTransport b => PollerId -> SubscriptionsOptions -> (SourceName, SourceConfig b) -> RoleName -> ParameterizedQueryHash -> MultiplexedQuery b -> CohortMap -> SubscriptionPostPollHook -> IO ()
 
 
--- | Top-level management of live query poller threads. The implementation
---   of the polling itself is in
---   <a>Hasura.GraphQL.Execute.LiveQuery.Poll</a>. See
---   <a>Hasura.GraphQL.Execute.LiveQuery</a> for high-level details.
-module Hasura.GraphQL.Execute.LiveQuery.State
+-- | Multiplexed subscription poller threads; see
+--   <a>Hasura.GraphQL.Execute.Subscription</a> for details.
+module Hasura.GraphQL.Execute.Subscription.Poll
 
--- | The top-level datatype that holds the state for all active live
---   queries.
+
+-- | Top-level management of subscription poller threads. The
+--   implementation of the polling itself is in
+--   <a>Hasura.GraphQL.Execute.Subscription.Poll</a>. See
+--   <a>Hasura.GraphQL.Execute.Subscription</a> for high-level details.
+module Hasura.GraphQL.Execute.Subscription.State
+
+-- | The top-level datatype that holds the state for all active
+--   subscriptions.
 --   
 --   NOTE!: This must be kept consistent with a websocket connection's
 --   <tt>OperationMap</tt>, in <tt>onClose</tt> and <tt>onStart</tt>.
-data LiveQueriesState
-LiveQueriesState :: !LiveQueriesOptions -> !PollerMap -> !LiveQueryPostPollHook -> !AsyncActionSubscriptionState -> LiveQueriesState
-[_lqsOptions] :: LiveQueriesState -> !LiveQueriesOptions
-[_lqsLiveQueryMap] :: LiveQueriesState -> !PollerMap
+data SubscriptionsState
+SubscriptionsState :: !LiveQueriesOptions -> !PollerMap -> !SubscriptionPostPollHook -> !AsyncActionSubscriptionState -> SubscriptionsState
+[_ssLiveQueryOptions] :: SubscriptionsState -> !LiveQueriesOptions
+[_ssLiveQueryMap] :: SubscriptionsState -> !PollerMap
 
 -- | A hook function which is run after each fetch cycle
-[_lqsPostPollHook] :: LiveQueriesState -> !LiveQueryPostPollHook
-[_lqsAsyncActions] :: LiveQueriesState -> !AsyncActionSubscriptionState
-initLiveQueriesState :: LiveQueriesOptions -> LiveQueryPostPollHook -> IO LiveQueriesState
-dumpLiveQueriesState :: Bool -> LiveQueriesState -> IO Value
-data LiveQueryId
-LiveQueryId :: !PollerKey -> !CohortKey -> !SubscriberId -> LiveQueryId
-[_lqiPoller] :: LiveQueryId -> !PollerKey
-[_lqiCohort] :: LiveQueryId -> !CohortKey
-[_lqiSubscriber] :: LiveQueryId -> !SubscriberId
-addLiveQuery :: forall b. BackendTransport b => Logger Hasura -> ServerMetrics -> SubscriberMetadata -> LiveQueriesState -> SourceName -> ParameterizedQueryHash -> Maybe OperationName -> RequestId -> LiveQueryPlan b (MultiplexedQuery b) -> OnChange -> IO LiveQueryId
-removeLiveQuery :: Logger Hasura -> ServerMetrics -> LiveQueriesState -> LiveQueryId -> IO ()
+[_ssPostPollHook] :: SubscriptionsState -> !SubscriptionPostPollHook
+[_ssAsyncActions] :: SubscriptionsState -> !AsyncActionSubscriptionState
+initSubscriptionsState :: LiveQueriesOptions -> SubscriptionPostPollHook -> IO SubscriptionsState
+dumpSubscriptionsState :: Bool -> SubscriptionsState -> IO Value
+
+-- | SubscriberDetails contains the data required to locate a subscriber in
+--   the correct cohort within the correct poller in the operation map.
+data SubscriberDetails a
+SubscriberDetails :: !PollerKey -> !a -> !SubscriberId -> SubscriberDetails a
+[_sdPoller] :: SubscriberDetails a -> !PollerKey
+[_sdCohort] :: SubscriberDetails a -> !a
+[_sdSubscriber] :: SubscriberDetails a -> !SubscriberId
+type LiveQuerySubscriberDetails = SubscriberDetails CohortKey
+
+-- | Fork a thread handling a regular (live query) subscription
+addLiveQuery :: forall b. BackendTransport b => Logger Hasura -> ServerMetrics -> SubscriberMetadata -> SubscriptionsState -> SourceName -> ParameterizedQueryHash -> Maybe OperationName -> RequestId -> SubscriptionQueryPlan b (MultiplexedQuery b) -> OnChange -> IO LiveQuerySubscriberDetails
+removeLiveQuery :: Logger Hasura -> ServerMetrics -> SubscriptionsState -> LiveQuerySubscriberDetails -> IO ()
 
 -- | An async action query whose relationships are refered to table in a
 --   source. We need to generate an SQL statement with the action response
@@ -27511,15 +27562,15 @@ removeLiveQuery :: Logger Hasura -> ServerMetrics -> LiveQueriesState -> LiveQue
 --   with relationship rows. For more details see Note [Resolving async
 --   action query]
 data LiveAsyncActionQueryOnSource
-LiveAsyncActionQueryOnSource :: !LiveQueryId -> !ActionLogResponseMap -> !LiveQueryId -> ActionLogResponseMap -> IO (Maybe LiveQueryId) -> LiveAsyncActionQueryOnSource
-[_laaqpCurrentLqId] :: LiveAsyncActionQueryOnSource -> !LiveQueryId
+LiveAsyncActionQueryOnSource :: !LiveQuerySubscriberDetails -> !ActionLogResponseMap -> !LiveQuerySubscriberDetails -> ActionLogResponseMap -> IO (Maybe LiveQuerySubscriberDetails) -> LiveAsyncActionQueryOnSource
+[_laaqpCurrentLqId] :: LiveAsyncActionQueryOnSource -> !LiveQuerySubscriberDetails
 [_laaqpPrevActionLogMap] :: LiveAsyncActionQueryOnSource -> !ActionLogResponseMap
 
 -- | An IO action to restart the live query poller with updated action log
 --   responses fetched from metadata storage Restarting a live query
 --   re-generates the SQL statement with new action log responses to send
 --   latest action response to the client.
-[_laaqpRestartLq] :: LiveAsyncActionQueryOnSource -> !LiveQueryId -> ActionLogResponseMap -> IO (Maybe LiveQueryId)
+[_laaqpRestartLq] :: LiveAsyncActionQueryOnSource -> !LiveQuerySubscriberDetails -> ActionLogResponseMap -> IO (Maybe LiveQuerySubscriberDetails)
 data LiveAsyncActionQueryWithNoRelationships
 LiveAsyncActionQueryWithNoRelationships :: !ActionLogResponseMap -> IO () -> !IO () -> LiveAsyncActionQueryWithNoRelationships
 
@@ -27545,7 +27596,7 @@ AsyncActionQueryLive :: !NonEmpty ActionId -> !QErr -> IO () -> !LiveAsyncAction
 type AsyncActionSubscriptionState = TMap OperationId AsyncActionQueryLive
 addAsyncActionLiveQuery :: AsyncActionSubscriptionState -> OperationId -> NonEmpty ActionId -> (QErr -> IO ()) -> LiveAsyncActionQuery -> IO ()
 removeAsyncActionLiveQuery :: AsyncActionSubscriptionState -> OperationId -> IO ()
-instance GHC.Show.Show Hasura.GraphQL.Execute.LiveQuery.State.LiveQueryId
+instance GHC.Show.Show a => GHC.Show.Show (Hasura.GraphQL.Execute.Subscription.State.SubscriberDetails a)
 
 
 -- | Module related to async action query subscriptions
@@ -27609,10 +27660,10 @@ MutationExecutionPlan :: ExecutionPlan -> ResolvedExecutionPlan
 -- | either action query or live query execution; remote schemas and
 --   introspection not supported
 SubscriptionExecutionPlan :: SubscriptionExecution -> ResolvedExecutionPlan
-newtype MultiplexedLiveQueryPlan (b :: BackendType)
-MultiplexedLiveQueryPlan :: LiveQueryPlan b (MultiplexedQuery b) -> MultiplexedLiveQueryPlan (b :: BackendType)
-newtype LiveQueryPlan
-LQP :: AnyBackend MultiplexedLiveQueryPlan -> LiveQueryPlan
+newtype MultiplexedSubscriptionQueryPlan (b :: BackendType)
+MultiplexedSubscriptionQueryPlan :: SubscriptionQueryPlan b (MultiplexedQuery b) -> MultiplexedSubscriptionQueryPlan (b :: BackendType)
+newtype SubscriptionQueryPlan
+SubscriptionQueryPlan :: AnyBackend MultiplexedSubscriptionQueryPlan -> SubscriptionQueryPlan
 
 -- | The comprehensive subscription plan. We only support either 1. Fields
 --   with only async action queries with no associated relationships or 2.
@@ -27621,7 +27672,7 @@ LQP :: AnyBackend MultiplexedLiveQueryPlan -> LiveQueryPlan
 --   tables in the source
 data SubscriptionExecution
 SEAsyncActionsWithNoRelationships :: !RootFieldMap (ActionId, ActionLogResponse -> Either QErr EncJSON) -> SubscriptionExecution
-SEOnSourceDB :: !HashSet ActionId -> !ActionLogResponseMap -> ExceptT QErr IO (SourceName, LiveQueryPlan) -> SubscriptionExecution
+SEOnSourceDB :: !HashSet ActionId -> !ActionLogResponseMap -> ExceptT QErr IO (SourceName, SubscriptionQueryPlan) -> SubscriptionExecution
 buildSubscriptionPlan :: forall m. (MonadError QErr m, MonadQueryTags m) => UserInfo -> RootFieldMap (QueryRootField UnpreparedValue) -> ParameterizedQueryHash -> m SubscriptionExecution
 checkQueryInAllowlist :: MonadError QErr m => Bool -> AllowlistMode -> UserInfo -> GQLReqParsed -> SchemaCache -> m ()
 getResolvedExecPlan :: forall m. (MonadError QErr m, MonadMetadataStorage (MetadataStorageT m), MonadIO m, MonadTrace m, MonadGQLExecutionCheck m, MonadQueryTags m) => Environment -> Logger Hasura -> UserInfo -> SQLGenCtx -> ReadOnlyMode -> SchemaCache -> SchemaCacheVer -> GraphQLQueryType -> Manager -> [Header] -> (GQLReqUnparsed, GQLReqParsed) -> RequestId -> m (ParameterizedQueryHash, ResolvedExecutionPlan)
@@ -27667,9 +27718,9 @@ WSConnData :: !TVar WSConnState -> !OperationMap -> !ErrRespType -> !GraphQLQuer
 [_wscErrRespTy] :: WSConnData -> !ErrRespType
 [_wscAPIType] :: WSConnData -> !GraphQLQueryType
 data WSServerEnv
-WSServerEnv :: !Logger Hasura -> !LiveQueriesState -> !IO (SchemaCache, SchemaCacheVer) -> !Manager -> !CorsPolicy -> !SQLGenCtx -> ReadOnlyMode -> !WSServer -> !Bool -> !KeepAliveDelay -> !ServerMetrics -> WSServerEnv
+WSServerEnv :: !Logger Hasura -> !SubscriptionsState -> !IO (SchemaCache, SchemaCacheVer) -> !Manager -> !CorsPolicy -> !SQLGenCtx -> ReadOnlyMode -> !WSServer -> !Bool -> !KeepAliveDelay -> !ServerMetrics -> WSServerEnv
 [_wseLogger] :: WSServerEnv -> !Logger Hasura
-[_wseLiveQMap] :: WSServerEnv -> !LiveQueriesState
+[_wseLiveQMap] :: WSServerEnv -> !SubscriptionsState
 
 -- | an action that always returns the latest version of the schema cache.
 --   See <tt>SchemaCacheRef</tt>.
@@ -27682,7 +27733,7 @@ WSServerEnv :: !Logger Hasura -> !LiveQueriesState -> !IO (SchemaCache, SchemaCa
 [_wseEnableAllowlist] :: WSServerEnv -> !Bool
 [_wseKeepAliveDelay] :: WSServerEnv -> !KeepAliveDelay
 [_wseServerMetrics] :: WSServerEnv -> !ServerMetrics
-type OperationMap = Map OperationId (LiveQueryId, Maybe OperationName)
+type OperationMap = Map OperationId (LiveQuerySubscriberDetails, Maybe OperationName)
 type WSServer = WSServer WSConnData
 type WSConn = WSConn WSConnData
 instance GHC.Classes.Eq Hasura.GraphQL.Transport.WebSocket.Types.WsHeaders
@@ -27882,7 +27933,7 @@ mkWsErrorLog :: Maybe SessionVariables -> WsConnInfo -> WSEvent -> WSLog
 logWSEvent :: MonadIO m => Logger Hasura -> WSConn -> WSEvent -> m ()
 sendMsg :: MonadIO m => WSConn -> ServerMsg -> m ()
 sendCloseWithMsg :: MonadIO m => Logger Hasura -> WSConn -> ServerErrorCode -> Maybe ServerMsg -> Maybe Word16 -> m ()
-sendMsgWithMetadata :: MonadIO m => WSConn -> ServerMsg -> Maybe OperationName -> Maybe ParameterizedQueryHash -> LiveQueryMetadata -> m ()
+sendMsgWithMetadata :: MonadIO m => WSConn -> ServerMsg -> Maybe OperationName -> Maybe ParameterizedQueryHash -> SubscriptionMetadata -> m ()
 onConn :: (MonadIO m, MonadReader WSServerEnv m) => OnConnH m WSConnData
 onStart :: forall m. (MonadIO m, MonadGQLExecutionCheck m, MonadQueryLog m, MonadTrace m, MonadExecuteQuery m, MonadBaseControl IO m, MonadMetadataStorage (MetadataStorageT m), MonadQueryTags m, HasResourceLimits m) => Environment -> HashSet (EngineLogType Hasura) -> WSServerEnv -> WSConn -> StartMsg -> WSActions WSConnData -> m ()
 onMessage :: (MonadIO m, UserAuthentication (TraceT m), MonadGQLExecutionCheck m, MonadQueryLog m, HasReporter m, MonadExecuteQuery m, MonadBaseControl IO m, MonadMetadataStorage (MetadataStorageT m), MonadQueryTags m, HasResourceLimits m) => Environment -> HashSet (EngineLogType Hasura) -> AuthMode -> WSServerEnv -> WSConn -> ByteString -> WSActions WSConnData -> m ()
@@ -27891,7 +27942,7 @@ onPong :: MonadIO m => WSConn -> Maybe PingPongPayload -> m ()
 onStop :: MonadIO m => WSServerEnv -> WSConn -> StopMsg -> m ()
 stopOperation :: WSServerEnv -> WSConn -> OperationId -> IO () -> IO ()
 onConnInit :: (MonadIO m, UserAuthentication (TraceT m)) => Logger Hasura -> Manager -> WSConn -> AuthMode -> Maybe ConnParams -> WSOnErrorMessageAction WSConnData -> WSKeepAliveMessageAction WSConnData -> TraceT m ()
-onClose :: MonadIO m => Logger Hasura -> ServerMetrics -> LiveQueriesState -> WSConn -> m ()
+onClose :: MonadIO m => Logger Hasura -> ServerMetrics -> SubscriptionsState -> WSConn -> m ()
 instance Hasura.Logging.ToEngineLog Hasura.GraphQL.Transport.WebSocket.WSLog Hasura.Logging.Hasura
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Transport.WebSocket.WSLogInfo
 instance GHC.Classes.Eq Hasura.GraphQL.Transport.WebSocket.WSLogInfo
@@ -27912,7 +27963,7 @@ instance GHC.Show.Show Hasura.GraphQL.Transport.WebSocket.OpDetail
 module Hasura.GraphQL.Transport.WSServerApp
 createWSServerApp :: (MonadIO m, MonadBaseControl IO m, Forall (Pure m), UserAuthentication (TraceT m), MonadGQLExecutionCheck m, MonadWSLog m, MonadQueryLog m, HasReporter m, MonadExecuteQuery m, MonadMetadataStorage (MetadataStorageT m), MonadQueryTags m, HasResourceLimits m) => Environment -> HashSet (EngineLogType Hasura) -> AuthMode -> WSServerEnv -> WSConnectionInitTimeout -> HasuraServerApp m
 stopWSServerApp :: WSServerEnv -> IO ()
-createWSServerEnv :: MonadIO m => Logger Hasura -> LiveQueriesState -> IO (SchemaCache, SchemaCacheVer) -> Manager -> CorsPolicy -> SQLGenCtx -> ReadOnlyMode -> Bool -> KeepAliveDelay -> ServerMetrics -> m WSServerEnv
+createWSServerEnv :: MonadIO m => Logger Hasura -> SubscriptionsState -> IO (SchemaCache, SchemaCacheVer) -> Manager -> CorsPolicy -> SQLGenCtx -> ReadOnlyMode -> Bool -> KeepAliveDelay -> ServerMetrics -> m WSServerEnv
 mkWSActions :: Logger Hasura -> WSSubProtocol -> WSActions WSConnData
 
 module Hasura.GraphQL.Explain
@@ -27980,7 +28031,7 @@ runWebSockets :: ConnectionOptions -> RequestHead -> IpAddress -> (IpAddress -> 
 
 module Hasura.Server.App
 data ServerCtx
-ServerCtx :: !Logger Hasura -> !SchemaCacheRef -> !AuthMode -> !Manager -> !SQLGenCtx -> !HashSet API -> !InstanceId -> !LiveQueriesState -> !Bool -> !Store EmptyMetrics -> !ResponseInternalErrorsConfig -> !Environment -> !RemoteSchemaPermsCtx -> !FunctionPermissionsCtx -> !MaintenanceMode -> !HashSet ExperimentalFeature -> !HashSet (EngineLogType Hasura) -> !EventingMode -> !ReadOnlyMode -> ServerCtx
+ServerCtx :: !Logger Hasura -> !SchemaCacheRef -> !AuthMode -> !Manager -> !SQLGenCtx -> !HashSet API -> !InstanceId -> !SubscriptionsState -> !Bool -> !Store EmptyMetrics -> !ResponseInternalErrorsConfig -> !Environment -> !RemoteSchemaPermsCtx -> !FunctionPermissionsCtx -> !MaintenanceMode -> !HashSet ExperimentalFeature -> !HashSet (EngineLogType Hasura) -> !EventingMode -> !ReadOnlyMode -> ServerCtx
 [scLogger] :: ServerCtx -> !Logger Hasura
 [scCacheRef] :: ServerCtx -> !SchemaCacheRef
 [scAuthMode] :: ServerCtx -> !AuthMode
@@ -27988,7 +28039,7 @@ ServerCtx :: !Logger Hasura -> !SchemaCacheRef -> !AuthMode -> !Manager -> !SQLG
 [scSQLGenCtx] :: ServerCtx -> !SQLGenCtx
 [scEnabledAPIs] :: ServerCtx -> !HashSet API
 [scInstanceId] :: ServerCtx -> !InstanceId
-[scLQState] :: ServerCtx -> !LiveQueriesState
+[scSubscriptionState] :: ServerCtx -> !SubscriptionsState
 [scEnableAllowlist] :: ServerCtx -> !Bool
 [scEkgStore] :: ServerCtx -> !Store EmptyMetrics
 [scResponseInternalErrorsConfig] :: ServerCtx -> !ResponseInternalErrorsConfig
@@ -28078,7 +28129,7 @@ HasuraApp :: !Application -> !SchemaCacheRef -> !AsyncActionSubscriptionState ->
 [_hapSchemaRef] :: HasuraApp -> !SchemaCacheRef
 [_hapAsyncActionSubscriptionState] :: HasuraApp -> !AsyncActionSubscriptionState
 [_hapShutdownWsServer] :: HasuraApp -> !IO ()
-mkWaiApp :: forall m. (MonadIO m, MonadStateless IO m, Forall (Pure m), ConsoleRenderer m, HttpLog m, UserAuthentication (TraceT m), MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, HasReporter m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorage (MetadataStorageT m), MonadResolveSource m, MonadQueryTags m) => (ServerCtx -> SpockT m ()) -> Environment -> Logger Hasura -> SQLGenCtx -> Bool -> Manager -> AuthMode -> CorsConfig -> Bool -> Maybe Text -> Bool -> InstanceId -> HashSet API -> LiveQueriesOptions -> ResponseInternalErrorsConfig -> Maybe LiveQueryPostPollHook -> SchemaCacheRef -> Store EmptyMetrics -> ServerMetrics -> RemoteSchemaPermsCtx -> FunctionPermissionsCtx -> ConnectionOptions -> KeepAliveDelay -> MaintenanceMode -> EventingMode -> ReadOnlyMode -> HashSet ExperimentalFeature -> HashSet (EngineLogType Hasura) -> WSConnectionInitTimeout -> m HasuraApp
+mkWaiApp :: forall m. (MonadIO m, MonadStateless IO m, Forall (Pure m), ConsoleRenderer m, HttpLog m, UserAuthentication (TraceT m), MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, HasReporter m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorage (MetadataStorageT m), MonadResolveSource m, MonadQueryTags m) => (ServerCtx -> SpockT m ()) -> Environment -> Logger Hasura -> SQLGenCtx -> Bool -> Manager -> AuthMode -> CorsConfig -> Bool -> Maybe Text -> Bool -> InstanceId -> HashSet API -> LiveQueriesOptions -> ResponseInternalErrorsConfig -> Maybe SubscriptionPostPollHook -> SchemaCacheRef -> Store EmptyMetrics -> ServerMetrics -> RemoteSchemaPermsCtx -> FunctionPermissionsCtx -> ConnectionOptions -> KeepAliveDelay -> MaintenanceMode -> EventingMode -> ReadOnlyMode -> HashSet ExperimentalFeature -> HashSet (EngineLogType Hasura) -> WSConnectionInitTimeout -> m HasuraApp
 httpApp :: forall m. (MonadIO m, MonadBaseControl IO m, ConsoleRenderer m, HttpLog m, UserAuthentication (TraceT m), MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, HasReporter m, MonadExecuteQuery m, MonadMetadataStorage (MetadataStorageT m), HasResourceLimits m, MonadResolveSource m, MonadQueryTags m) => (ServerCtx -> SpockT m ()) -> CorsConfig -> ServerCtx -> Bool -> Maybe Text -> Bool -> SpockT m ()
 raiseGenericApiError :: (MonadIO m, HttpLog m) => Logger Hasura -> HashSet (EngineLogType Hasura) -> [Header] -> QErr -> ActionT m ()
 instance Hasura.Server.App.ConsoleRenderer m => Hasura.Server.App.ConsoleRenderer (Hasura.Tracing.TraceT m)
@@ -28208,12 +28259,12 @@ flushLogger :: MonadIO m => LoggerCtx impl -> m ()
 --   last, so that we retain as many "thread stopping" log messages as
 --   possible. The order in which the finalizers is run is determined by
 --   the order in which they are introduced in the code.
-runHGEServer :: forall m impl. (MonadIO m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication (TraceT m), HttpLog m, ConsoleRenderer m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, MonadExecuteQuery m, HasReporter m, HasResourceLimits m, MonadMetadataStorage (MetadataStorageT m), MonadResolveSource m, MonadQueryTags m) => (ServerCtx -> SpockT m ()) -> Environment -> ServeOptions impl -> ServeCtx -> UTCTime -> Maybe LiveQueryPostPollHook -> ServerMetrics -> Store EmptyMetrics -> ManagedT m ()
+runHGEServer :: forall m impl. (MonadIO m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication (TraceT m), HttpLog m, ConsoleRenderer m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, MonadExecuteQuery m, HasReporter m, HasResourceLimits m, MonadMetadataStorage (MetadataStorageT m), MonadResolveSource m, MonadQueryTags m) => (ServerCtx -> SpockT m ()) -> Environment -> ServeOptions impl -> ServeCtx -> UTCTime -> Maybe SubscriptionPostPollHook -> ServerMetrics -> Store EmptyMetrics -> ManagedT m ()
 
 -- | Part of a factorization of <a>runHGEServer</a> to expose the
 --   constructed WAI application for testing purposes. See
 --   <a>runHGEServer</a> for documentation.
-mkHGEServer :: forall m impl. (MonadIO m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication (TraceT m), HttpLog m, ConsoleRenderer m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, MonadExecuteQuery m, HasReporter m, HasResourceLimits m, MonadMetadataStorage (MetadataStorageT m), MonadResolveSource m, MonadQueryTags m) => (ServerCtx -> SpockT m ()) -> Environment -> ServeOptions impl -> ServeCtx -> UTCTime -> Maybe LiveQueryPostPollHook -> ServerMetrics -> Store EmptyMetrics -> ManagedT m Application
+mkHGEServer :: forall m impl. (MonadIO m, MonadMask m, MonadStateless IO m, Forall (Pure m), UserAuthentication (TraceT m), HttpLog m, ConsoleRenderer m, MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, MonadExecuteQuery m, HasReporter m, HasResourceLimits m, MonadMetadataStorage (MetadataStorageT m), MonadResolveSource m, MonadQueryTags m) => (ServerCtx -> SpockT m ()) -> Environment -> ServeOptions impl -> ServeCtx -> UTCTime -> Maybe SubscriptionPostPollHook -> ServerMetrics -> Store EmptyMetrics -> ManagedT m Application
 accessDeniedErrMsg :: Text
 runInSeparateTx :: MonadIO m => TxE QErr a -> MetadataStorageT (PGMetadataStorageAppT m) a
 notifySchemaCacheSyncTx :: MetadataResourceVersion -> InstanceId -> CacheInvalidations -> TxE QErr ()
