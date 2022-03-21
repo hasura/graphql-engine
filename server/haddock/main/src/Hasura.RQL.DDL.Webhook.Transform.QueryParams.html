@@ -41,7 +41,7 @@
 </span><span id="line-40"></span><span>
 </span><span id="line-41"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#Transform"><span class="hs-identifier hs-type">Transform</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParams"><span class="hs-identifier hs-type">QueryParams</span></a></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-42"></span><span>  </span><span class="hs-keyword">newtype</span><span> </span><span id="TransformFn"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformFn"><span class="hs-identifier hs-var">TransformFn</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParams"><span class="hs-identifier hs-type">QueryParams</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="QueryParamsTransform"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParamsTransform"><span class="hs-identifier hs-var">QueryParamsTransform</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParamsTransformAction"><span class="hs-identifier hs-type">QueryParamsTransformAction</span></a></span><span>
-</span><span id="line-43"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688286143"><span id="local-6989586621688286145"><span id="local-6989586621688286147"><span class="annot"><span class="annottext">Int -&gt; TransformFn QueryParams -&gt; ShowS
+</span><span id="line-43"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688286757"><span id="local-6989586621688286759"><span id="local-6989586621688286761"><span class="annot"><span class="annottext">Int -&gt; TransformFn QueryParams -&gt; ShowS
 [TransformFn QueryParams] -&gt; ShowS
 TransformFn QueryParams -&gt; String
 (Int -&gt; TransformFn QueryParams -&gt; ShowS)
@@ -56,7 +56,7 @@ show :: TransformFn QueryParams -&gt; String
 $cshow :: TransformFn QueryParams -&gt; String
 showsPrec :: Int -&gt; TransformFn QueryParams -&gt; ShowS
 $cshowsPrec :: Int -&gt; TransformFn QueryParams -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688286138"><span id="local-6989586621688286140"><span class="annot"><span class="annottext">TransformFn QueryParams -&gt; TransformFn QueryParams -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688286752"><span id="local-6989586621688286754"><span class="annot"><span class="annottext">TransformFn QueryParams -&gt; TransformFn QueryParams -&gt; Bool
 (TransformFn QueryParams -&gt; TransformFn QueryParams -&gt; Bool)
 -&gt; (TransformFn QueryParams -&gt; TransformFn QueryParams -&gt; Bool)
 -&gt; Eq (TransformFn QueryParams)
@@ -81,12 +81,12 @@ Rep (TransformFn QueryParams) x -&gt; TransformFn QueryParams
 $cfrom :: forall x.
 TransformFn QueryParams -&gt; Rep (TransformFn QueryParams) x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-44"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688286132"><span class="annot"><span class="annottext">TransformFn QueryParams -&gt; ()
+</span><span id="line-44"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688286746"><span class="annot"><span class="annottext">TransformFn QueryParams -&gt; ()
 (TransformFn QueryParams -&gt; ()) -&gt; NFData (TransformFn QueryParams)
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: TransformFn QueryParams -&gt; ()
 $crnf :: TransformFn QueryParams -&gt; ()
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688286128"><span class="annot"><span class="annottext">Eq (TransformFn QueryParams)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688286742"><span class="annot"><span class="annottext">Eq (TransformFn QueryParams)
 Eq (TransformFn QueryParams)
 -&gt; (Accesses
     -&gt; TransformFn QueryParams -&gt; TransformFn QueryParams -&gt; Bool)
@@ -99,7 +99,7 @@ unchanged :: Accesses
 $cunchanged :: Accesses
 -&gt; TransformFn QueryParams -&gt; TransformFn QueryParams -&gt; Bool
 $cp1Cacheable :: Eq (TransformFn QueryParams)
-</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688286123"><span id="local-6989586621688286125"><span class="annot"><span class="annottext">Value -&gt; Parser [TransformFn QueryParams]
+</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688286737"><span id="local-6989586621688286739"><span class="annot"><span class="annottext">Value -&gt; Parser [TransformFn QueryParams]
 Value -&gt; Parser (TransformFn QueryParams)
 (Value -&gt; Parser (TransformFn QueryParams))
 -&gt; (Value -&gt; Parser [TransformFn QueryParams])
@@ -110,7 +110,7 @@ parseJSONList :: Value -&gt; Parser [TransformFn QueryParams]
 $cparseJSONList :: Value -&gt; Parser [TransformFn QueryParams]
 parseJSON :: Value -&gt; Parser (TransformFn QueryParams)
 $cparseJSON :: Value -&gt; Parser (TransformFn QueryParams)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688286114"><span id="local-6989586621688286116"><span id="local-6989586621688286118"><span id="local-6989586621688286120"><span class="annot"><span class="annottext">[TransformFn QueryParams] -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688286728"><span id="local-6989586621688286730"><span id="local-6989586621688286732"><span id="local-6989586621688286734"><span class="annot"><span class="annottext">[TransformFn QueryParams] -&gt; Encoding
 [TransformFn QueryParams] -&gt; Value
 TransformFn QueryParams -&gt; Encoding
 TransformFn QueryParams -&gt; Value
@@ -135,20 +135,20 @@ toJSON :: TransformFn QueryParams -&gt; Value
 $ctoJSON :: TransformFn QueryParams -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-45"></span><span>
-</span><span id="line-46"></span><span>  </span><span id="local-6989586621688286112"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#transform"><span class="hs-identifier hs-type">transform</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688286112"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformFn"><span class="hs-identifier hs-type">TransformFn</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParams"><span class="hs-identifier hs-type">QueryParams</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#RequestTransformCtx"><span class="hs-identifier hs-type">RequestTransformCtx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParams"><span class="hs-identifier hs-type">QueryParams</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688286112"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParams"><span class="hs-identifier hs-type">QueryParams</span></a></span></span><span>
-</span><span id="line-47"></span><span>  </span><span id="local-6989586621688286110"><span class="annot"><span class="annottext">transform :: TransformFn QueryParams
+</span><span id="line-46"></span><span>  </span><span id="local-6989586621688286726"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#transform"><span class="hs-identifier hs-type">transform</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688286726"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformFn"><span class="hs-identifier hs-type">TransformFn</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParams"><span class="hs-identifier hs-type">QueryParams</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#RequestTransformCtx"><span class="hs-identifier hs-type">RequestTransformCtx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParams"><span class="hs-identifier hs-type">QueryParams</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688286726"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParams"><span class="hs-identifier hs-type">QueryParams</span></a></span></span><span>
+</span><span id="line-47"></span><span>  </span><span id="local-6989586621688286724"><span class="annot"><span class="annottext">transform :: TransformFn QueryParams
 -&gt; RequestTransformCtx -&gt; QueryParams -&gt; m QueryParams
-</span><a href="#local-6989586621688286110"><span class="hs-identifier hs-var hs-var hs-var hs-var">transform</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParamsTransform"><span class="hs-identifier hs-type">QueryParamsTransform</span></a></span><span> </span><span id="local-6989586621688286109"><span class="annot"><a href="#local-6989586621688286109"><span class="hs-identifier hs-var">transformation</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688286108"><span class="annot"><span class="annottext">RequestTransformCtx
-</span><a href="#local-6989586621688286108"><span class="hs-identifier hs-var">context</span></a></span></span><span> </span><span class="annot"><span class="annottext">QueryParams
+</span><a href="#local-6989586621688286724"><span class="hs-identifier hs-var hs-var hs-var hs-var">transform</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParamsTransform"><span class="hs-identifier hs-type">QueryParamsTransform</span></a></span><span> </span><span id="local-6989586621688286723"><span class="annot"><a href="#local-6989586621688286723"><span class="hs-identifier hs-var">transformation</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688286722"><span class="annot"><span class="annottext">RequestTransformCtx
+</span><a href="#local-6989586621688286722"><span class="hs-identifier hs-var">context</span></a></span></span><span> </span><span class="annot"><span class="annottext">QueryParams
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-48"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">QueryParamsTransformAction
-</span><a href="#local-6989586621688286109"><span class="hs-identifier hs-var">transformation</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-49"></span><span>      </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParamsTransformAction"><span class="hs-identifier hs-type">QueryParamsTransformAction</span></a></span><span> </span><span id="local-6989586621688286106"><span class="annot"><span class="annottext">[(UnescapedTemplate, Maybe UnescapedTemplate)]
-</span><a href="#local-6989586621688286106"><span class="hs-identifier hs-var">replacements</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621688286723"><span class="hs-identifier hs-var">transformation</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-49"></span><span>      </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParamsTransformAction"><span class="hs-identifier hs-type">QueryParamsTransformAction</span></a></span><span> </span><span id="local-6989586621688286720"><span class="annot"><span class="annottext">[(UnescapedTemplate, Maybe UnescapedTemplate)]
+</span><a href="#local-6989586621688286720"><span class="hs-identifier hs-var">replacements</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-50"></span><span>        </span><span class="hs-comment">-- NOTE: We use `ApplicativeDo` here to take advantage of</span><span>
 </span><span id="line-51"></span><span>        </span><span class="hs-comment">-- Validation's applicative sequencing.</span><span>
-</span><span id="line-52"></span><span>        </span><span id="local-6989586621688286105"><span class="annot"><span class="annottext">Query
-</span><a href="#local-6989586621688286105"><span class="hs-identifier hs-var">queryParams</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Either TransformErrorBundle Query -&gt; m Query
+</span><span id="line-52"></span><span>        </span><span id="local-6989586621688286719"><span class="annot"><span class="annottext">Query
+</span><a href="#local-6989586621688286719"><span class="hs-identifier hs-var">queryParams</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Either TransformErrorBundle Query -&gt; m Query
 forall e (m :: * -&gt; *) a. MonadError e m =&gt; Either e a -&gt; m a
 </span><span class="hs-identifier hs-var">liftEither</span></span><span> </span><span class="annot"><span class="annottext">(Either TransformErrorBundle Query -&gt; m Query)
 -&gt; (Validation TransformErrorBundle Query
@@ -170,17 +170,17 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><span class="hs-identifier hs-var">for</span></span><span> </span><span class="annot"><span class="annottext">[(UnescapedTemplate, Maybe UnescapedTemplate)]
-</span><a href="#local-6989586621688286106"><span class="hs-identifier hs-var">replacements</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621688286100"><span class="annot"><span class="annottext">UnescapedTemplate
-</span><a href="#local-6989586621688286100"><span class="hs-identifier hs-var">rawKey</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688286099"><span class="annot"><span class="annottext">Maybe UnescapedTemplate
-</span><a href="#local-6989586621688286099"><span class="hs-identifier hs-var">rawValue</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-53"></span><span>          </span><span id="local-6989586621688286098"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688286098"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">RequestTransformCtx
+</span><a href="#local-6989586621688286720"><span class="hs-identifier hs-var">replacements</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621688286714"><span class="annot"><span class="annottext">UnescapedTemplate
+</span><a href="#local-6989586621688286714"><span class="hs-identifier hs-var">rawKey</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688286713"><span class="annot"><span class="annottext">Maybe UnescapedTemplate
+</span><a href="#local-6989586621688286713"><span class="hs-identifier hs-var">rawValue</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-53"></span><span>          </span><span id="local-6989586621688286712"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688286712"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">RequestTransformCtx
 -&gt; UnescapedTemplate -&gt; Validation TransformErrorBundle ByteString
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#runUnescapedRequestTemplateTransform%27"><span class="hs-identifier hs-var">runUnescapedRequestTemplateTransform'</span></a></span><span> </span><span class="annot"><span class="annottext">RequestTransformCtx
-</span><a href="#local-6989586621688286108"><span class="hs-identifier hs-var">context</span></a></span><span> </span><span class="annot"><span class="annottext">UnescapedTemplate
-</span><a href="#local-6989586621688286100"><span class="hs-identifier hs-var">rawKey</span></a></span><span>
-</span><span id="line-54"></span><span>          </span><span id="local-6989586621688286097"><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688286097"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(UnescapedTemplate -&gt; Validation TransformErrorBundle ByteString)
+</span><a href="#local-6989586621688286722"><span class="hs-identifier hs-var">context</span></a></span><span> </span><span class="annot"><span class="annottext">UnescapedTemplate
+</span><a href="#local-6989586621688286714"><span class="hs-identifier hs-var">rawKey</span></a></span><span>
+</span><span id="line-54"></span><span>          </span><span id="local-6989586621688286711"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688286711"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(UnescapedTemplate -&gt; Validation TransformErrorBundle ByteString)
 -&gt; Maybe UnescapedTemplate
 -&gt; Validation TransformErrorBundle (Maybe ByteString)
 forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
@@ -189,23 +189,23 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 </span><span class="hs-identifier hs-var">traverse</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RequestTransformCtx
 -&gt; UnescapedTemplate -&gt; Validation TransformErrorBundle ByteString
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#runUnescapedRequestTemplateTransform%27"><span class="hs-identifier hs-var">runUnescapedRequestTemplateTransform'</span></a></span><span> </span><span class="annot"><span class="annottext">RequestTransformCtx
-</span><a href="#local-6989586621688286108"><span class="hs-identifier hs-var">context</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe UnescapedTemplate
-</span><a href="#local-6989586621688286099"><span class="hs-identifier hs-var">rawValue</span></a></span><span>
+</span><a href="#local-6989586621688286722"><span class="hs-identifier hs-var">context</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe UnescapedTemplate
+</span><a href="#local-6989586621688286713"><span class="hs-identifier hs-var">rawValue</span></a></span><span>
 </span><span id="line-55"></span><span>          </span><span class="hs-identifier">pure</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688286098"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688286097"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688286712"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688286711"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-56"></span><span>        </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="annot"><span class="annottext">Query -&gt; QueryParams
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParams"><span class="hs-identifier hs-var">QueryParams</span></a></span><span> </span><span class="annot"><span class="annottext">Query
-</span><a href="#local-6989586621688286105"><span class="hs-identifier hs-var">queryParams</span></a></span><span>
+</span><a href="#local-6989586621688286719"><span class="hs-identifier hs-var">queryParams</span></a></span><span>
 </span><span id="line-57"></span><span>
 </span><span id="line-58"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#validate"><span class="hs-identifier hs-type">validate</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-59"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TemplatingEngine"><span class="hs-identifier hs-type">TemplatingEngine</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-60"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformFn"><span class="hs-identifier hs-type">TransformFn</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParams"><span class="hs-identifier hs-type">QueryParams</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-61"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Validation</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-62"></span><span>  </span><span id="local-6989586621688286094"><span class="annot"><span class="annottext">validate :: TemplatingEngine
+</span><span id="line-62"></span><span>  </span><span id="local-6989586621688286708"><span class="annot"><span class="annottext">validate :: TemplatingEngine
 -&gt; TransformFn QueryParams -&gt; Validation TransformErrorBundle ()
-</span><a href="#local-6989586621688286094"><span class="hs-identifier hs-var hs-var hs-var hs-var">validate</span></a></span></span><span> </span><span id="local-6989586621688286093"><span class="annot"><span class="annottext">TemplatingEngine
-</span><a href="#local-6989586621688286093"><span class="hs-identifier hs-var">engine</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParamsTransform"><span class="hs-identifier hs-type">QueryParamsTransform</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParamsTransformAction"><span class="hs-identifier hs-type">QueryParamsTransformAction</span></a></span><span> </span><span id="local-6989586621688286092"><span class="annot"><a href="#local-6989586621688286092"><span class="hs-identifier hs-var">params</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621688286708"><span class="hs-identifier hs-var hs-var hs-var hs-var">validate</span></a></span></span><span> </span><span id="local-6989586621688286707"><span class="annot"><span class="annottext">TemplatingEngine
+</span><a href="#local-6989586621688286707"><span class="hs-identifier hs-var">engine</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParamsTransform"><span class="hs-identifier hs-type">QueryParamsTransform</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParamsTransformAction"><span class="hs-identifier hs-type">QueryParamsTransformAction</span></a></span><span> </span><span id="local-6989586621688286706"><span class="annot"><a href="#local-6989586621688286706"><span class="hs-identifier hs-var">params</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-63"></span><span>    </span><span class="annot"><span class="annottext">[(UnescapedTemplate, Maybe UnescapedTemplate)]
 -&gt; ((UnescapedTemplate, Maybe UnescapedTemplate)
     -&gt; Validation TransformErrorBundle ())
@@ -214,15 +214,15 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Foldable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><span class="hs-identifier hs-var">for_</span></span><span> </span><span class="annot"><span class="annottext">[(UnescapedTemplate, Maybe UnescapedTemplate)]
-</span><a href="#local-6989586621688286092"><span class="hs-identifier hs-var">params</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621688286090"><span class="annot"><span class="annottext">UnescapedTemplate
-</span><a href="#local-6989586621688286090"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688286089"><span class="annot"><span class="annottext">Maybe UnescapedTemplate
-</span><a href="#local-6989586621688286089"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621688286706"><span class="hs-identifier hs-var">params</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621688286704"><span class="annot"><span class="annottext">UnescapedTemplate
+</span><a href="#local-6989586621688286704"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688286703"><span class="annot"><span class="annottext">Maybe UnescapedTemplate
+</span><a href="#local-6989586621688286703"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-64"></span><span>      </span><span class="hs-comment">-- Note: We are using ApplicativeDo here:</span><span>
 </span><span id="line-65"></span><span>      </span><span class="annot"><span class="annottext">TemplatingEngine
 -&gt; UnescapedTemplate -&gt; Validation TransformErrorBundle ()
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#validateRequestUnescapedTemplateTransform%27"><span class="hs-identifier hs-var">validateRequestUnescapedTemplateTransform'</span></a></span><span> </span><span class="annot"><span class="annottext">TemplatingEngine
-</span><a href="#local-6989586621688286093"><span class="hs-identifier hs-var">engine</span></a></span><span> </span><span class="annot"><span class="annottext">UnescapedTemplate
-</span><a href="#local-6989586621688286090"><span class="hs-identifier hs-var">key</span></a></span><span>
+</span><a href="#local-6989586621688286707"><span class="hs-identifier hs-var">engine</span></a></span><span> </span><span class="annot"><span class="annottext">UnescapedTemplate
+</span><a href="#local-6989586621688286704"><span class="hs-identifier hs-var">key</span></a></span><span>
 </span><span id="line-66"></span><span>      </span><span class="annot"><span class="annottext">(UnescapedTemplate -&gt; Validation TransformErrorBundle ())
 -&gt; Maybe UnescapedTemplate -&gt; Validation TransformErrorBundle ()
 forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
@@ -231,12 +231,12 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 </span><span class="hs-identifier hs-var">traverse_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TemplatingEngine
 -&gt; UnescapedTemplate -&gt; Validation TransformErrorBundle ()
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#validateRequestUnescapedTemplateTransform%27"><span class="hs-identifier hs-var">validateRequestUnescapedTemplateTransform'</span></a></span><span> </span><span class="annot"><span class="annottext">TemplatingEngine
-</span><a href="#local-6989586621688286093"><span class="hs-identifier hs-var">engine</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe UnescapedTemplate
-</span><a href="#local-6989586621688286089"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><a href="#local-6989586621688286707"><span class="hs-identifier hs-var">engine</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe UnescapedTemplate
+</span><a href="#local-6989586621688286703"><span class="hs-identifier hs-var">val</span></a></span><span>
 </span><span id="line-67"></span><span>      </span><span class="hs-identifier">pure</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-68"></span><span>
 </span><span id="line-69"></span><span class="hs-comment">-- | The defunctionalized transformation 'QueryParams'</span><span>
-</span><span id="line-70"></span><span id="local-6989586621688286086"><span id="local-6989586621688286087"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="QueryParamsTransformAction"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParamsTransformAction"><span class="hs-identifier hs-var">QueryParamsTransformAction</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="QueryParamsTransformAction"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParamsTransformAction"><span class="hs-identifier hs-var">QueryParamsTransformAction</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#UnescapedTemplate"><span class="hs-identifier hs-type">UnescapedTemplate</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#UnescapedTemplate"><span class="hs-identifier hs-type">UnescapedTemplate</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-70"></span><span id="local-6989586621688286700"><span id="local-6989586621688286701"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="QueryParamsTransformAction"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParamsTransformAction"><span class="hs-identifier hs-var">QueryParamsTransformAction</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="QueryParamsTransformAction"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParamsTransformAction"><span class="hs-identifier hs-var">QueryParamsTransformAction</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#UnescapedTemplate"><span class="hs-identifier hs-type">UnescapedTemplate</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#UnescapedTemplate"><span class="hs-identifier hs-type">UnescapedTemplate</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-71"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x.
  QueryParamsTransformAction -&gt; Rep QueryParamsTransformAction x)
 -&gt; (forall x.
@@ -253,7 +253,7 @@ Rep QueryParamsTransformAction x -&gt; QueryParamsTransformAction
 $cfrom :: forall x.
 QueryParamsTransformAction -&gt; Rep QueryParamsTransformAction x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-72"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688286078"><span id="local-6989586621688286080"><span id="local-6989586621688286082"><span class="annot"><span class="annottext">Int -&gt; QueryParamsTransformAction -&gt; ShowS
+</span><span id="line-72"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688286692"><span id="local-6989586621688286694"><span id="local-6989586621688286696"><span class="annot"><span class="annottext">Int -&gt; QueryParamsTransformAction -&gt; ShowS
 [QueryParamsTransformAction] -&gt; ShowS
 QueryParamsTransformAction -&gt; String
 (Int -&gt; QueryParamsTransformAction -&gt; ShowS)
@@ -268,7 +268,7 @@ show :: QueryParamsTransformAction -&gt; String
 $cshow :: QueryParamsTransformAction -&gt; String
 showsPrec :: Int -&gt; QueryParamsTransformAction -&gt; ShowS
 $cshowsPrec :: Int -&gt; QueryParamsTransformAction -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688286074"><span id="local-6989586621688286076"><span class="annot"><span class="annottext">QueryParamsTransformAction -&gt; QueryParamsTransformAction -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688286688"><span id="local-6989586621688286690"><span class="annot"><span class="annottext">QueryParamsTransformAction -&gt; QueryParamsTransformAction -&gt; Bool
 (QueryParamsTransformAction -&gt; QueryParamsTransformAction -&gt; Bool)
 -&gt; (QueryParamsTransformAction
     -&gt; QueryParamsTransformAction -&gt; Bool)
@@ -279,13 +279,13 @@ $c/= :: QueryParamsTransformAction -&gt; QueryParamsTransformAction -&gt; Bool
 == :: QueryParamsTransformAction -&gt; QueryParamsTransformAction -&gt; Bool
 $c== :: QueryParamsTransformAction -&gt; QueryParamsTransformAction -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-73"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688286072"><span class="annot"><span class="annottext">QueryParamsTransformAction -&gt; ()
+</span><span id="line-73"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688286686"><span class="annot"><span class="annottext">QueryParamsTransformAction -&gt; ()
 (QueryParamsTransformAction -&gt; ())
 -&gt; NFData QueryParamsTransformAction
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: QueryParamsTransformAction -&gt; ()
 $crnf :: QueryParamsTransformAction -&gt; ()
-</span><a href="#local-6989586621688286072"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688286069"><span class="annot"><span class="annottext">Eq QueryParamsTransformAction
+</span><a href="#local-6989586621688286686"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688286683"><span class="annot"><span class="annottext">Eq QueryParamsTransformAction
 Eq QueryParamsTransformAction
 -&gt; (Accesses
     -&gt; QueryParamsTransformAction
@@ -300,12 +300,12 @@ unchanged :: Accesses
 $cunchanged :: Accesses
 -&gt; QueryParamsTransformAction -&gt; QueryParamsTransformAction -&gt; Bool
 $cp1Cacheable :: Eq QueryParamsTransformAction
-</span><a href="#local-6989586621688286069"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688286683"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-74"></span><span>
-</span><span id="line-75"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688286062"><span id="local-6989586621688286064"><span id="local-6989586621688286066"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParamsTransformAction"><span class="hs-identifier hs-type">QueryParamsTransformAction</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-76"></span><span>  </span><span id="local-6989586621688286061"><span class="annot"><span class="annottext">toJSON :: QueryParamsTransformAction -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParamsTransformAction"><span class="hs-identifier hs-type">QueryParamsTransformAction</span></a></span><span> </span><span id="local-6989586621688286059"><span class="annot"><span class="annottext">[(UnescapedTemplate, Maybe UnescapedTemplate)]
-</span><a href="#local-6989586621688286059"><span class="hs-identifier hs-var">qs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap UnescapedTemplate (Maybe UnescapedTemplate) -&gt; Value
+</span><span id="line-75"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688286676"><span id="local-6989586621688286678"><span id="local-6989586621688286680"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParamsTransformAction"><span class="hs-identifier hs-type">QueryParamsTransformAction</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-76"></span><span>  </span><span id="local-6989586621688286675"><span class="annot"><span class="annottext">toJSON :: QueryParamsTransformAction -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParamsTransformAction"><span class="hs-identifier hs-type">QueryParamsTransformAction</span></a></span><span> </span><span id="local-6989586621688286673"><span class="annot"><span class="annottext">[(UnescapedTemplate, Maybe UnescapedTemplate)]
+</span><a href="#local-6989586621688286673"><span class="hs-identifier hs-var">qs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap UnescapedTemplate (Maybe UnescapedTemplate) -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">(HashMap UnescapedTemplate (Maybe UnescapedTemplate) -&gt; Value)
 -&gt; HashMap UnescapedTemplate (Maybe UnescapedTemplate) -&gt; Value
@@ -314,12 +314,12 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; HashMap UnescapedTemplate (Maybe UnescapedTemplate)
 forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">M.fromList</span></span><span> </span><span class="annot"><span class="annottext">[(UnescapedTemplate, Maybe UnescapedTemplate)]
-</span><a href="#local-6989586621688286059"><span class="hs-identifier hs-var">qs</span></a></span><span>
+</span><a href="#local-6989586621688286673"><span class="hs-identifier hs-var">qs</span></a></span><span>
 </span><span id="line-77"></span><span>
-</span><span id="line-78"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688286055"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParamsTransformAction"><span class="hs-identifier hs-type">QueryParamsTransformAction</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-79"></span><span>  </span><span id="local-6989586621688286054"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser QueryParamsTransformAction
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span id="local-6989586621688286052"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621688286052"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(UnescapedTemplate, Maybe UnescapedTemplate)]
+</span><span id="line-78"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688286669"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParamsTransformAction"><span class="hs-identifier hs-type">QueryParamsTransformAction</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-79"></span><span>  </span><span id="local-6989586621688286668"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser QueryParamsTransformAction
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span id="local-6989586621688286666"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688286666"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(UnescapedTemplate, Maybe UnescapedTemplate)]
 -&gt; QueryParamsTransformAction
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.QueryParams.html#QueryParamsTransformAction"><span class="hs-identifier hs-var">QueryParamsTransformAction</span></a></span><span> </span><span class="annot"><span class="annottext">([(UnescapedTemplate, Maybe UnescapedTemplate)]
  -&gt; QueryParamsTransformAction)
@@ -340,5 +340,5 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 -&gt; Parser (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621688286052"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621688286666"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-80"></span></pre></body></html>
