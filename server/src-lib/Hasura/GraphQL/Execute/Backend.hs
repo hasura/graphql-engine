@@ -21,8 +21,8 @@ import Database.PG.Query qualified as Q
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Action.Types (ActionExecutionPlan)
-import Hasura.GraphQL.Execute.LiveQuery.Plan
 import Hasura.GraphQL.Execute.RemoteJoin.Types
+import Hasura.GraphQL.Execute.Subscription.Plan
 import Hasura.GraphQL.Namespace (RootFieldAlias, RootFieldMap)
 import Hasura.GraphQL.Parser hiding (Type)
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
@@ -98,7 +98,7 @@ class
     SourceConfig b ->
     Maybe G.Name ->
     RootFieldMap (QueryDB b Void (UnpreparedValue b)) ->
-    m (LiveQueryPlan b (MultiplexedQuery b))
+    m (SubscriptionQueryPlan b (MultiplexedQuery b))
   mkDBQueryExplain ::
     forall m.
     ( MonadError QErr m
@@ -109,13 +109,13 @@ class
     SourceConfig b ->
     QueryDB b Void (UnpreparedValue b) ->
     m (AB.AnyBackend DBStepInfo)
-  mkLiveQueryExplain ::
+  mkSubscriptionExplain ::
     ( MonadError QErr m,
       MonadIO m,
       MonadBaseControl IO m
     ) =>
-    LiveQueryPlan b (MultiplexedQuery b) ->
-    m LiveQueryPlanExplanation
+    SubscriptionQueryPlan b (MultiplexedQuery b) ->
+    m SubscriptionQueryPlanExplanation
 
   mkDBRemoteRelationshipPlan ::
     forall m.

@@ -8,8 +8,8 @@ import Control.Concurrent.Extended qualified as C
 import Control.Concurrent.STM qualified as STM
 import Data.List.NonEmpty qualified as NE
 import Hasura.GraphQL.Execute.Action
-import Hasura.GraphQL.Execute.LiveQuery.State
-import Hasura.GraphQL.Execute.LiveQuery.TMap qualified as TMap
+import Hasura.GraphQL.Execute.Subscription.State
+import Hasura.GraphQL.Execute.Subscription.TMap qualified as TMap
 import Hasura.Metadata.Class
 import Hasura.Prelude
 

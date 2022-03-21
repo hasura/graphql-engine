@@ -48,10 +48,10 @@ import Hasura.GraphQL.Execute.Backend
     ExplainPlan (..),
     convertRemoteSourceRelationship,
   )
-import Hasura.GraphQL.Execute.LiveQuery.Plan
-  ( LiveQueryPlan (..),
-    LiveQueryPlanExplanation (..),
-    ParameterizedLiveQueryPlan (..),
+import Hasura.GraphQL.Execute.Subscription.Plan
+  ( ParameterizedSubscriptionQueryPlan (..),
+    SubscriptionQueryPlan (..),
+    SubscriptionQueryPlanExplanation (..),
     mkCohortVariables,
     newCohortId,
   )
@@ -107,7 +107,7 @@ instance
   mkDBMutationPlan = pgDBMutationPlan
   mkDBSubscriptionPlan = pgDBSubscriptionPlan
   mkDBQueryExplain = pgDBQueryExplain
-  mkLiveQueryExplain = pgDBLiveQueryExplain
+  mkSubscriptionExplain = pgDBSubscriptionExplain
   mkDBRemoteRelationshipPlan = pgDBRemoteRelationshipPlan
 
 -- query
@@ -159,16 +159,16 @@ pgDBQueryExplain fieldName userInfo sourceName sourceConfig rootSelection = do
     AB.mkAnyBackend $
       DBStepInfo @('Postgres pgKind) sourceName sourceConfig Nothing action
 
-pgDBLiveQueryExplain ::
+pgDBSubscriptionExplain ::
   ( MonadError QErr m,
     MonadIO m,
     MT.MonadBaseControl IO m
   ) =>
-  LiveQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)) ->
-  m LiveQueryPlanExplanation
-pgDBLiveQueryExplain plan = do
-  let parameterizedPlan = _lqpParameterizedPlan plan
-      pgExecCtx = _pscExecCtx $ _lqpSourceConfig plan
+  SubscriptionQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)) ->
+  m SubscriptionQueryPlanExplanation
+pgDBSubscriptionExplain plan = do
+  let parameterizedPlan = _sqpParameterizedPlan plan
+      pgExecCtx = _pscExecCtx $ _sqpSourceConfig plan
       queryText = Q.getQueryText . PGL.unMultiplexedQuery $ _plqpQuery parameterizedPlan
       -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
       -- query, maybe resulting in privilege escalation:
@@ -178,8 +178,8 @@ pgDBLiveQueryExplain plan = do
     liftEitherM $
       runExceptT $
         runTx pgExecCtx Q.ReadOnly $
-          map runIdentity <$> PGL.executeQuery explainQuery [(cohortId, _lqpVariables plan)]
-  pure $ LiveQueryPlanExplanation queryText explanationLines $ _lqpVariables plan
+          map runIdentity <$> PGL.executeQuery explainQuery [(cohortId, _sqpVariables plan)]
+  pure $ SubscriptionQueryPlanExplanation queryText explanationLines $ _sqpVariables plan
 
 -- mutation
 
@@ -300,7 +300,7 @@ pgDBSubscriptionPlan ::
   SourceConfig ('Postgres pgKind) ->
   Maybe G.Name ->
   RootFieldMap (QueryDB ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind))) ->
-  m (LiveQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)))
+  m (SubscriptionQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)))
 pgDBSubscriptionPlan userInfo _sourceName sourceConfig namespace unpreparedAST = do
   (preparedAST, PGL.QueryParametersInfo {..}) <-
     flip runStateT mempty $
@@ -310,7 +310,7 @@ pgDBSubscriptionPlan userInfo _sourceName sourceConfig namespace unpreparedAST =
       multiplexedQueryWithQueryTags =
         multiplexedQuery {PGL.unMultiplexedQuery = appendSQLWithQueryTags (PGL.unMultiplexedQuery multiplexedQuery) mutationQueryTagsComment}
       roleName = _uiRole userInfo
-      parameterizedPlan = ParameterizedLiveQueryPlan roleName multiplexedQueryWithQueryTags
+      parameterizedPlan = ParameterizedSubscriptionQueryPlan roleName multiplexedQueryWithQueryTags
 
   -- We need to ensure that the values provided for variables are correct according to Postgres.
   -- Without this check an invalid value for a variable for one instance of the subscription will
@@ -326,7 +326,7 @@ pgDBSubscriptionPlan userInfo _sourceName sourceConfig namespace unpreparedAST =
           validatedQueryVars
           validatedSyntheticVars
 
-  pure $ LiveQueryPlan parameterizedPlan sourceConfig cohortVariables namespace
+  pure $ SubscriptionQueryPlan parameterizedPlan sourceConfig cohortVariables namespace
 
 -- turn the current plan into a transaction
 mkCurPlanTx ::

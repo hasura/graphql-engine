@@ -12,7 +12,7 @@ where
 import Control.Concurrent.STM qualified as STM
 import Data.Time.Clock qualified as TC
 import Hasura.GraphQL.Execute qualified as E
-import Hasura.GraphQL.Execute.LiveQuery.State qualified as LQ
+import Hasura.GraphQL.Execute.Subscription.State qualified as ES
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.GraphQL.Transport.Instances ()
 import Hasura.GraphQL.Transport.WebSocket.Protocol
@@ -70,7 +70,7 @@ data WSConnData = WSConnData
 
 data WSServerEnv = WSServerEnv
   { _wseLogger :: !(L.Logger L.Hasura),
-    _wseLiveQMap :: !LQ.LiveQueriesState,
+    _wseLiveQMap :: !ES.SubscriptionsState,
     -- | an action that always returns the latest version of the schema cache. See 'SchemaCacheRef'.
     _wseGCtxMap :: !(IO (SchemaCache, SchemaCacheVer)),
     _wseHManager :: !HTTP.Manager,
@@ -83,7 +83,7 @@ data WSServerEnv = WSServerEnv
     _wseServerMetrics :: !ServerMetrics
   }
 
-type OperationMap = STMMap.Map OperationId (LQ.LiveQueryId, Maybe OperationName)
+type OperationMap = STMMap.Map OperationId (ES.LiveQuerySubscriberDetails, Maybe OperationName)
 
 type WSServer = WS.WSServer WSConnData
 

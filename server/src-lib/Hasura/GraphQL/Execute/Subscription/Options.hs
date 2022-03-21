@@ -1,10 +1,11 @@
-module Hasura.GraphQL.Execute.LiveQuery.Options
-  ( LiveQueriesOptions (..),
+module Hasura.GraphQL.Execute.Subscription.Options
+  ( SubscriptionsOptions (..),
+    LiveQueriesOptions,
     BatchSize,
     unBatchSize,
     RefetchInterval,
     unRefetchInterval,
-    mkLiveQueriesOptions,
+    mkSubscriptionsOptions,
     mkBatchSize,
     mkRefetchInterval,
   )
@@ -14,29 +15,31 @@ import Data.Aeson qualified as J
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 
-data LiveQueriesOptions = LiveQueriesOptions
+data SubscriptionsOptions = SubscriptionsOptions
   { _lqoBatchSize :: !BatchSize,
     _lqoRefetchInterval :: !RefetchInterval
   }
   deriving (Show, Eq)
 
-mkLiveQueriesOptions :: Maybe BatchSize -> Maybe RefetchInterval -> LiveQueriesOptions
-mkLiveQueriesOptions batchSize refetchInterval =
-  LiveQueriesOptions
+type LiveQueriesOptions = SubscriptionsOptions
+
+mkSubscriptionsOptions :: Maybe BatchSize -> Maybe RefetchInterval -> SubscriptionsOptions
+mkSubscriptionsOptions batchSize refetchInterval =
+  SubscriptionsOptions
     { _lqoBatchSize = fromMaybe (BatchSize 100) batchSize,
       _lqoRefetchInterval = fromMaybe (RefetchInterval 1) refetchInterval
     }
 
-instance J.ToJSON LiveQueriesOptions where
-  toJSON (LiveQueriesOptions batchSize refetchInterval) =
+instance J.ToJSON SubscriptionsOptions where
+  toJSON (SubscriptionsOptions batchSize refetchInterval) =
     J.object
       [ "batch_size" J..= batchSize,
         "refetch_delay" J..= refetchInterval
       ]
 
-instance J.FromJSON LiveQueriesOptions where
+instance J.FromJSON SubscriptionsOptions where
   parseJSON = J.withObject "live query options" \o ->
-    LiveQueriesOptions <$> o J..: "batch_size"
+    SubscriptionsOptions <$> o J..: "batch_size"
       <*> o J..: "refetch_delay"
 
 newtype BatchSize = BatchSize {unBatchSize :: NonNegativeInt}

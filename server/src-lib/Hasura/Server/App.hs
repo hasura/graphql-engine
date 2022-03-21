@@ -45,9 +45,9 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute qualified as E
 import Hasura.GraphQL.Execute.Backend qualified as EB
-import Hasura.GraphQL.Execute.LiveQuery.Options qualified as EL
-import Hasura.GraphQL.Execute.LiveQuery.Poll qualified as EL
-import Hasura.GraphQL.Execute.LiveQuery.State qualified as EL
+import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
+import Hasura.GraphQL.Execute.Subscription.Poll qualified as ES
+import Hasura.GraphQL.Execute.Subscription.State qualified as ES
 import Hasura.GraphQL.Explain qualified as GE
 import Hasura.GraphQL.Logging (MonadQueryLog)
 import Hasura.GraphQL.Transport.HTTP qualified as GH
@@ -109,7 +109,7 @@ data ServerCtx = ServerCtx
     scSQLGenCtx :: !SQLGenCtx,
     scEnabledAPIs :: !(S.HashSet API),
     scInstanceId :: !InstanceId,
-    scLQState :: !EL.LiveQueriesState,
+    scSubscriptionState :: !ES.SubscriptionsState,
     scEnableAllowlist :: !Bool,
     scEkgStore :: !(EKG.Store EKG.EmptyMetrics),
     scResponseInternalErrorsConfig :: !ResponseInternalErrorsConfig,
@@ -675,7 +675,7 @@ configApiGetHandler serverCtx@ServerCtx {..} consoleAssetsDir =
                 scRemoteSchemaPermsCtx
                 scAuthMode
                 scEnableAllowlist
-                (EL._lqsOptions $ scLQState)
+                (ES._ssLiveQueryOptions $ scSubscriptionState)
                 consoleAssetsDir
                 scExperimentalFeatures
         return (emptyHttpLogMetadata @m, JSONResp $ HttpResponse (encJFromJValue res) [])
@@ -683,7 +683,7 @@ configApiGetHandler serverCtx@ServerCtx {..} consoleAssetsDir =
 data HasuraApp = HasuraApp
   { _hapApplication :: !Wai.Application,
     _hapSchemaRef :: !SchemaCacheRef,
-    _hapAsyncActionSubscriptionState :: !EL.AsyncActionSubscriptionState,
+    _hapAsyncActionSubscriptionState :: !ES.AsyncActionSubscriptionState,
     _hapShutdownWsServer :: !(IO ())
   }
 
@@ -734,9 +734,9 @@ mkWaiApp ::
   InstanceId ->
   -- | set of the enabled 'API's
   S.HashSet API ->
-  EL.LiveQueriesOptions ->
+  ES.LiveQueriesOptions ->
   ResponseInternalErrorsConfig ->
-  Maybe EL.LiveQueryPostPollHook ->
+  Maybe ES.SubscriptionPostPollHook ->
   SchemaCacheRef ->
   EKG.Store EKG.EmptyMetrics ->
   ServerMetrics ->
@@ -785,13 +785,13 @@ mkWaiApp
     let getSchemaCache' = first lastBuiltSchemaCache <$> readSchemaCacheRef schemaCacheRef
 
     let corsPolicy = mkDefaultCorsPolicy corsCfg
-        postPollHook = fromMaybe (EL.defaultLiveQueryPostPollHook logger) liveQueryHook
+        postPollHook = fromMaybe (ES.defaultSubscriptionPostPollHook logger) liveQueryHook
 
-    lqState <- liftIO $ EL.initLiveQueriesState lqOpts postPollHook
+    subscriptionsState <- liftIO $ ES.initSubscriptionsState lqOpts postPollHook
     wsServerEnv <-
       WS.createWSServerEnv
         logger
-        lqState
+        subscriptionsState
         getSchemaCache'
         httpManager
         corsPolicy
@@ -810,7 +810,7 @@ mkWaiApp
               scSQLGenCtx = sqlGenCtx,
               scEnabledAPIs = apis,
               scInstanceId = instanceId,
-              scLQState = lqState,
+              scSubscriptionState = subscriptionsState,
               scEnableAllowlist = enableAL,
               scEkgStore = ekgStore,
               scEnvironment = env,
@@ -835,7 +835,7 @@ mkWaiApp
     waiApp <- liftWithStateless $ \lowerIO ->
       pure $ WSC.websocketsOr connectionOptions (\ip conn -> lowerIO $ wsServerApp ip conn) spockApp
 
-    return $ HasuraApp waiApp schemaCacheRef (EL._lqsAsyncActions lqState) stopWSServer
+    return $ HasuraApp waiApp schemaCacheRef (ES._ssAsyncActions subscriptionsState) stopWSServer
 
 httpApp ::
   forall m.
@@ -1028,13 +1028,13 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
       spockAction encodeQErr id $
         mkGetHandler $ do
           onlyAdmin
-          respJ <- liftIO $ EL.dumpLiveQueriesState False $ scLQState serverCtx
+          respJ <- liftIO $ ES.dumpSubscriptionsState False $ scSubscriptionState serverCtx
           return (emptyHttpLogMetadata @m, JSONResp $ HttpResponse (encJFromJValue respJ) [])
     Spock.get "dev/subscriptions/extended" $
       spockAction encodeQErr id $
         mkGetHandler $ do
           onlyAdmin
-          respJ <- liftIO $ EL.dumpLiveQueriesState True $ scLQState serverCtx
+          respJ <- liftIO $ ES.dumpSubscriptionsState True $ scSubscriptionState serverCtx
           return (emptyHttpLogMetadata @m, JSONResp $ HttpResponse (encJFromJValue respJ) [])
   Spock.get "api/swagger/json" $
     spockAction encodeQErr id $

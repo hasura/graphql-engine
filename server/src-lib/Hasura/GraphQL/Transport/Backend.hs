@@ -7,7 +7,7 @@ import Data.ByteString qualified as B
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
-import Hasura.GraphQL.Execute.LiveQuery.Plan
+import Hasura.GraphQL.Execute.Subscription.Plan
 import Hasura.GraphQL.Logging (MonadQueryLog)
 import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.Transport.HTTP.Protocol

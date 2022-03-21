@@ -25,7 +25,7 @@ import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
 import Hasura.Cache.Bounded qualified as Cache (CacheSize, parseCacheSize)
 import Hasura.Eventing.EventTrigger (defaultFetchBatchSize)
-import Hasura.GraphQL.Execute.LiveQuery.Options qualified as LQ
+import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types
@@ -364,7 +364,7 @@ mkServeOptions rso = do
     mkLQOpts = do
       mxRefetchIntM <- withEnv (rsoMxRefetchInt rso) $ fst mxRefetchDelayEnv
       mxBatchSizeM <- withEnv (rsoMxBatchSize rso) $ fst mxBatchSizeEnv
-      return $ LQ.mkLiveQueriesOptions mxBatchSizeM mxRefetchIntM
+      return $ ES.mkSubscriptionsOptions mxBatchSizeM mxRefetchIntM
 
 mkExamplesDoc :: [[String]] -> PP.Doc
 mkExamplesDoc exampleLines =
@@ -1118,7 +1118,7 @@ parseGracefulShutdownTimeout =
           <> help (snd gracefulShutdownEnv)
       )
 
-parseMxRefetchInt :: Parser (Maybe LQ.RefetchInterval)
+parseMxRefetchInt :: Parser (Maybe ES.RefetchInterval)
 parseMxRefetchInt =
   optional $
     option
@@ -1128,7 +1128,7 @@ parseMxRefetchInt =
           <> help (snd mxRefetchDelayEnv)
       )
 
-parseMxBatchSize :: Parser (Maybe LQ.BatchSize)
+parseMxBatchSize :: Parser (Maybe ES.BatchSize)
 parseMxBatchSize =
   optional $
     option

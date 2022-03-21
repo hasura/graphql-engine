@@ -81,7 +81,7 @@ import Hasura.GraphQL.Execute
 import Hasura.GraphQL.Execute.Action
 import Hasura.GraphQL.Execute.Action.Subscription
 import Hasura.GraphQL.Execute.Backend qualified as EB
-import Hasura.GraphQL.Execute.LiveQuery.Poll qualified as EL
+import Hasura.GraphQL.Execute.Subscription.Poll qualified as ES
 import Hasura.GraphQL.Logging (MonadQueryLog (..))
 import Hasura.GraphQL.Transport.HTTP
   ( CacheStoreSuccess (CacheStoreSkipped),
@@ -569,7 +569,7 @@ runHGEServer ::
 
   -- | start time
   UTCTime ->
-  Maybe EL.LiveQueryPostPollHook ->
+  Maybe ES.SubscriptionPostPollHook ->
   ServerMetrics ->
   EKG.Store EKG.EmptyMetrics ->
   ManagedT m ()
@@ -643,7 +643,7 @@ mkHGEServer ::
 
   -- | start time
   UTCTime ->
-  Maybe EL.LiveQueryPostPollHook ->
+  Maybe ES.SubscriptionPostPollHook ->
   ServerMetrics ->
   EKG.Store EKG.EmptyMetrics ->
   ManagedT m Application

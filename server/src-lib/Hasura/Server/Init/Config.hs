@@ -53,7 +53,7 @@ import Data.Text qualified as T
 import Data.Time
 import Data.URL.Template
 import Database.PG.Query qualified as Q
-import Hasura.GraphQL.Execute.LiveQuery.Options qualified as LQ
+import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types
@@ -161,8 +161,8 @@ data RawServeOptions impl = RawServeOptions
     rsoStringifyNum :: Bool,
     rsoDangerousBooleanCollapse :: Maybe Bool,
     rsoEnabledAPIs :: Maybe [API],
-    rsoMxRefetchInt :: Maybe LQ.RefetchInterval,
-    rsoMxBatchSize :: Maybe LQ.BatchSize,
+    rsoMxRefetchInt :: Maybe ES.RefetchInterval,
+    rsoMxBatchSize :: Maybe ES.BatchSize,
     rsoEnableAllowlist :: Bool,
     rsoEnabledLogTypes :: Maybe [L.EngineLogType impl],
     rsoLogLevel :: Maybe L.LogLevel,
@@ -232,7 +232,7 @@ data ServeOptions impl = ServeOptions
     soStringifyNum :: StringifyNumbers,
     soDangerousBooleanCollapse :: Bool,
     soEnabledAPIs :: Set.HashSet API,
-    soLiveQueryOpts :: LQ.LiveQueriesOptions,
+    soLiveQueryOpts :: ES.LiveQueriesOptions,
     soEnableAllowlist :: Bool,
     soEnabledLogTypes :: Set.HashSet (L.EngineLogType impl),
     soLogLevel :: L.LogLevel,
@@ -429,15 +429,15 @@ instance FromEnv [API] where
 instance FromEnv [ExperimentalFeature] where
   fromEnv = readExperimentalFeatures
 
-instance FromEnv LQ.BatchSize where
+instance FromEnv ES.BatchSize where
   fromEnv s = do
     val <- readEither s
-    maybe (Left "batch size should be a non negative integer") Right $ LQ.mkBatchSize val
+    maybe (Left "batch size should be a non negative integer") Right $ ES.mkBatchSize val
 
-instance FromEnv LQ.RefetchInterval where
+instance FromEnv ES.RefetchInterval where
   fromEnv x = do
     val <- fmap (milliseconds . fromInteger) . readEither $ x
-    maybe (Left "refetch interval should be a non negative integer") Right $ LQ.mkRefetchInterval val
+    maybe (Left "refetch interval should be a non negative integer") Right $ ES.mkRefetchInterval val
 
 instance FromEnv Milliseconds where
   fromEnv = fmap fromInteger . readEither

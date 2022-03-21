@@ -37,7 +37,7 @@ instance BackendExecute 'MySQL where
   mkDBMutationPlan = error "mkDBMutationPlan: MySQL backend does not support this operation yet."
   mkDBSubscriptionPlan _ _ _ _ = error "mkDBSubscriptionPlan: MySQL backend does not support this operation yet."
   mkDBQueryExplain = mysqlDBQueryExplain
-  mkLiveQueryExplain _ = error "mkLiveQueryExplain: MySQL backend does not support this operation yet."
+  mkSubscriptionExplain _ = error "mkSubscriptionExplain: MySQL backend does not support this operation yet."
   mkDBRemoteRelationshipPlan = error "mkDBRemoteRelationshipPlan: MySQL does not support this operation yet."
 
 mysqlDBQueryPlan ::

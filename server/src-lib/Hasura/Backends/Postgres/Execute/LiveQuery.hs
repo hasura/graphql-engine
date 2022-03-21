@@ -36,7 +36,7 @@ import Hasura.Backends.Postgres.Translate.Column (toTxtValue)
 import Hasura.Backends.Postgres.Translate.Select qualified as DS
 import Hasura.Backends.Postgres.Types.Column
 import Hasura.Base.Error
-import Hasura.GraphQL.Execute.LiveQuery.Plan
+import Hasura.GraphQL.Execute.Subscription.Plan
 import Hasura.GraphQL.Parser
 import Hasura.GraphQL.Parser.Schema qualified as PS
 import Hasura.Prelude
@@ -220,7 +220,7 @@ executeMultiplexedQuery ::
   m [(CohortId, B.ByteString)]
 executeMultiplexedQuery (MultiplexedQuery query) = executeQuery query
 
--- | Internal; used by both 'executeMultiplexedQuery' and 'pgDBLiveQueryExplain'.
+-- | Internal; used by both 'executeMultiplexedQuery' and 'pgDBSubscriptionExplain'.
 executeQuery ::
   (MonadTx m, Q.FromRow a) =>
   Q.Query ->

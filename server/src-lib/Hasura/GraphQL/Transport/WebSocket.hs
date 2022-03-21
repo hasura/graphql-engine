@@ -47,10 +47,10 @@ import Hasura.EncJSON
 import Hasura.GraphQL.Execute qualified as E
 import Hasura.GraphQL.Execute.Action qualified as EA
 import Hasura.GraphQL.Execute.Backend qualified as EB
-import Hasura.GraphQL.Execute.LiveQuery.Plan qualified as LQ
-import Hasura.GraphQL.Execute.LiveQuery.Poll qualified as LQ
-import Hasura.GraphQL.Execute.LiveQuery.State qualified as LQ
 import Hasura.GraphQL.Execute.RemoteJoin qualified as RJ
+import Hasura.GraphQL.Execute.Subscription.Plan qualified as ES
+import Hasura.GraphQL.Execute.Subscription.Poll qualified as ES
+import Hasura.GraphQL.Execute.Subscription.State qualified as ES
 import Hasura.GraphQL.Logging
 import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.ParameterizedQueryHash (ParameterizedQueryHash)
@@ -92,7 +92,7 @@ import Network.HTTP.Types qualified as HTTP
 import Network.WebSockets qualified as WS
 import StmContainers.Map qualified as STMMap
 
--- | 'LQ.LiveQueryId' comes from 'Hasura.GraphQL.Execute.LiveQuery.State.addLiveQuery'. We use
+-- | 'ES.LiveQueryId' comes from 'Hasura.GraphQL.Execute.LiveQuery.State.addLiveQuery'. We use
 -- this to track a connection's operations so we can remove them from 'LiveQueryState', and
 -- log.
 --
@@ -249,9 +249,9 @@ sendMsgWithMetadata ::
   ServerMsg ->
   Maybe OperationName ->
   Maybe ParameterizedQueryHash ->
-  LQ.LiveQueryMetadata ->
+  ES.SubscriptionMetadata ->
   m ()
-sendMsgWithMetadata wsConn msg opName paramQueryHash (LQ.LiveQueryMetadata execTime) =
+sendMsgWithMetadata wsConn msg opName paramQueryHash (ES.SubscriptionMetadata execTime) =
   liftIO $ WS.sendMsg wsConn $ WS.WSQueueResponse bs wsInfo
   where
     bs = encodeServerMsg msg
@@ -479,7 +479,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
       case cachedValue of
         Just cachedResponseData -> do
           logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindCached
-          sendSuccResp cachedResponseData opName parameterizedQueryHash $ LQ.LiveQueryMetadata 0
+          sendSuccResp cachedResponseData opName parameterizedQueryHash $ ES.SubscriptionMetadata 0
         Nothing -> do
           conclusion <- runExceptT $
             runLimits $
@@ -543,7 +543,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                 telemTimeIO = convertDuration telemTimeIO_DT
             telemTimeTot <- Seconds <$> timerTot
             sendSuccResp (encodeEncJSONResults results) opName parameterizedQueryHash $
-              LQ.LiveQueryMetadata telemTimeIO_DT
+              ES.SubscriptionMetadata telemTimeIO_DT
             -- Telemetry. NOTE: don't time network IO:
             Telem.recordTimingMetric Telem.RequestDimensions {..} Telem.RequestTimings {..}
 
@@ -612,14 +612,14 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                                     pure $
                                       encJToLBS $
                                         encodeEncJSONResults results
-                          sendMsgWithMetadata wsConn dataMsg opName (Just parameterizedQueryHash) $ LQ.LiveQueryMetadata dTime
+                          sendMsgWithMetadata wsConn dataMsg opName (Just parameterizedQueryHash) $ ES.SubscriptionMetadata dTime
 
                     asyncActionQueryLive =
-                      LQ.LAAQNoRelationships $
-                        LQ.LiveAsyncActionQueryWithNoRelationships sendResponseIO (sendCompleted (Just requestId) (Just parameterizedQueryHash))
+                      ES.LAAQNoRelationships $
+                        ES.LiveAsyncActionQueryWithNoRelationships sendResponseIO (sendCompleted (Just requestId) (Just parameterizedQueryHash))
 
-                LQ.addAsyncActionLiveQuery
-                  (LQ._lqsAsyncActions lqMap)
+                ES.addAsyncActionLiveQuery
+                  (ES._ssAsyncActions lqMap)
                   opId
                   actionIds
                   (sendError requestId)
@@ -640,15 +640,15 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
               logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
               liftIO $ do
                 let asyncActionQueryLive =
-                      LQ.LAAQOnSourceDB $
-                        LQ.LiveAsyncActionQueryOnSource lqId actionLogMap $
+                      ES.LAAQOnSourceDB $
+                        ES.LiveAsyncActionQueryOnSource lqId actionLogMap $
                           restartLiveQuery parameterizedQueryHash requestId liveQueryBuilder
 
                     onUnexpectedException err = do
                       sendError requestId err
                       stopOperation serverEnv wsConn opId (pure ()) -- Don't log in case opId don't exist
-                LQ.addAsyncActionLiveQuery
-                  (LQ._lqsAsyncActions lqMap)
+                ES.addAsyncActionLiveQuery
+                  (ES._ssAsyncActions lqMap)
                   opId
                   nonEmptyActionIds
                   onUnexpectedException
@@ -703,7 +703,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
             telemTimeIO = convertDuration $ sum $ fmap arpTimeIO results
         telemTimeTot <- Seconds <$> timerTot
         sendSuccResp (encodeAnnotatedResponseParts results) opName pqh $
-          LQ.LiveQueryMetadata $ sum $ fmap arpTimeIO results
+          ES.SubscriptionMetadata $ sum $ fmap arpTimeIO results
         -- Telemetry. NOTE: don't time network IO:
         Telem.recordTimingMetric Telem.RequestDimensions {..} Telem.RequestTimings {..}
 
@@ -798,7 +798,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
       EncJSON ->
       Maybe OperationName ->
       ParameterizedQueryHash ->
-      LQ.LiveQueryMetadata ->
+      ES.SubscriptionMetadata ->
       ExceptT () m ()
     sendSuccResp encJson opName queryHash =
       sendMsgWithMetadata
@@ -814,20 +814,20 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
       throwError ()
 
     restartLiveQuery parameterizedQueryHash requestId liveQueryBuilder lqId actionLogMap = do
-      LQ.removeLiveQuery logger (_wseServerMetrics serverEnv) lqMap lqId
+      ES.removeLiveQuery logger (_wseServerMetrics serverEnv) lqMap lqId
       either (const Nothing) Just <$> startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap
 
     startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap = do
       liveQueryE <- runExceptT $ liveQueryBuilder actionLogMap
-      for liveQueryE $ \(sourceName, E.LQP exists) -> do
+      for liveQueryE $ \(sourceName, E.SubscriptionQueryPlan exists) -> do
         let !opName = _grOperationName q
-            subscriberMetadata = LQ.mkSubscriberMetadata (WS.getWSId wsConn) opId opName requestId
+            subscriberMetadata = ES.mkSubscriberMetadata (WS.getWSId wsConn) opId opName requestId
         -- NOTE!: we mask async exceptions higher in the call stack, but it's
         -- crucial we don't lose lqId after addLiveQuery returns successfully.
         !lqId <- liftIO $ AB.dispatchAnyBackend @BackendTransport
           exists
-          \(E.MultiplexedLiveQueryPlan liveQueryPlan) ->
-            LQ.addLiveQuery
+          \(E.MultiplexedSubscriptionQueryPlan liveQueryPlan) ->
+            ES.addLiveQuery
               logger
               (_wseServerMetrics serverEnv)
               subscriberMetadata
@@ -837,7 +837,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
               opName
               requestId
               liveQueryPlan
-              (liveQOnChange opName parameterizedQueryHash $ LQ._lqpNamespace liveQueryPlan)
+              (liveQOnChange opName parameterizedQueryHash $ ES._sqpNamespace liveQueryPlan)
         liftIO $ $assertNFHere (lqId, opName) -- so we don't write thunks to mutable vars
         STM.atomically $
           -- NOTE: see crucial `lookup` check above, ensuring this doesn't clobber:
@@ -845,18 +845,18 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
         pure lqId
 
     -- on change, send message on the websocket
-    liveQOnChange :: Maybe OperationName -> ParameterizedQueryHash -> Maybe Name -> LQ.OnChange
+    liveQOnChange :: Maybe OperationName -> ParameterizedQueryHash -> Maybe Name -> ES.OnChange
     liveQOnChange opName queryHash namespace = \case
-      Right (LQ.LiveQueryResponse bs dTime) ->
+      Right (ES.SubscriptionResponse bs dTime) ->
         sendMsgWithMetadata
           wsConn
           (sendDataMsg $ DataMsg opId $ pure $ maybe LBS.fromStrict wrapNamespace namespace bs)
           opName
           (Just queryHash)
-          (LQ.LiveQueryMetadata dTime)
+          (ES.SubscriptionMetadata dTime)
       resp ->
         sendMsg wsConn $
-          sendDataMsg $ DataMsg opId $ LBS.fromStrict . LQ._lqrPayload <$> resp
+          sendDataMsg $ DataMsg opId $ LBS.fromStrict . ES._lqrPayload <$> resp
 
     -- If the source has a namespace then we need to wrap the response
     -- from the DB in that namespace.
@@ -952,7 +952,7 @@ stopOperation serverEnv wsConn opId logWhenOpNotExist = do
   case opM of
     Just (lqId, opNameM) -> do
       logWSEvent logger wsConn $ EOperation $ opDet opNameM
-      LQ.removeLiveQuery logger (_wseServerMetrics serverEnv) lqMap lqId
+      ES.removeLiveQuery logger (_wseServerMetrics serverEnv) lqMap lqId
     Nothing -> logWhenOpNotExist
   STM.atomically $ STMMap.delete opId opMap
   where
@@ -1035,7 +1035,7 @@ onClose ::
   MonadIO m =>
   L.Logger L.Hasura ->
   ServerMetrics ->
-  LQ.LiveQueriesState ->
+  ES.SubscriptionsState ->
   WSConn ->
   m ()
 onClose logger serverMetrics lqMap wsConn = do
@@ -1043,6 +1043,6 @@ onClose logger serverMetrics lqMap wsConn = do
   operations <- liftIO $ STM.atomically $ ListT.toList $ STMMap.listT opMap
   liftIO $
     for_ operations $ \(_, (lqId, _)) ->
-      LQ.removeLiveQuery logger serverMetrics lqMap lqId
+      ES.removeLiveQuery logger serverMetrics lqMap lqId
   where
     opMap = _wscOpMap $ WS.getData wsConn

@@ -8,7 +8,7 @@ import Data.Text.Encoding (decodeUtf8)
 import Data.Text.Extended
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Types.Internal (Value)
-import Hasura.GraphQL.Execute.LiveQuery.Plan ()
+import Hasura.GraphQL.Execute.Subscription.Plan ()
 import Hasura.Prelude
 import Hasura.RQL.Types.Column qualified as RQL
 import Hasura.SQL.Backend
