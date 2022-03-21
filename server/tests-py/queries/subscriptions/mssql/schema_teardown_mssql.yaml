@@ -4,5 +4,6 @@ args:
   args:
     source: mssql
     sql: |
-      drop table hge_tests.test_t1
+      drop table hge_tests.test_subscriptions
+
       drop schema hge_tests
