@@ -197,7 +197,7 @@ class TestSubscriptionBasic:
         ev = ws_client.get_ws_query_event('2',3)
         assert ev['type'] == 'complete' and ev['id'] == '2', ev
 
-## NOTE: The same tests as in TestSubcscriptionBasic but with
+## NOTE: The same tests as in TestSubscriptionBasic but with
 ##       the subscription transport being used is `graphql-ws`
 ## FIXME: There's an issue with the tests being parametrized with both
 ##        postgres and mssql data sources enabled(See issue #2084).
@@ -644,3 +644,31 @@ class TestSubscriptionCustomizedSourceCommon:
         ev = ws_client.get_ws_query_event('2',15)
         assert ev['type'] == 'error' and ev['id'] == '2', ev
         assert ev['payload']['errors'] == [OrderedDict([('extensions', OrderedDict([('path', '$'), ('code', 'validation-failed')])), ('message', 'subscriptions must select one top level field')])], ev
+
+@pytest.mark.parametrize("backend", ['mssql'])
+@usefixtures('per_class_tests_db_state', 'ws_conn_init')
+class TestSubscriptionMSSQLChunkedResults:
+    @classmethod
+    def dir(cls):
+        return 'queries/subscriptions/mssql'
+
+    query = """
+     subscription {
+       hge_tests_test_subscriptions {
+         field1
+       }
+     }
+    """
+
+    def test_chunked_results(self, ws_client):
+        obj = {
+            'id': '1',
+            'payload': {
+                'query': self.query
+            },
+            'type': 'start'
+        }
+        ws_client.send(obj)
+        ev = ws_client.get_ws_query_event('1',15)
+        assert ev['type'] == 'data' and ev['id'] == '1', ev
+        assert not "errors" in ev['payload'], ev
