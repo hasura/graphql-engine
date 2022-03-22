@@ -10,13 +10,14 @@ const config = {
   title: 'Hasura GraphQL Docs',
   tagline: 'Instant GraphQL on all your data',
   url: 'https://hasura.io',
-  baseUrl: '/docusaurus/',
+  baseUrl: '/docs-testing/',
   trailingSlash: true,
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'throw',
-  favicon: '/docusaurus/img/favicon.png',
+  favicon: '/docs-testing/img/favicon.png',
   organizationName: 'hasura',
   projectName: 'graphql-engine',
+  noIndex: true,
 
   presets: [
     [
