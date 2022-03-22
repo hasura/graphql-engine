@@ -8,7 +8,7 @@
 --   This is especially useful for the params and request body documentation.
 --
 -- The response body recurses over the SelectionSet Fields associated with an endpoint and looks up types by name in
---   a `RemoteSchemaIntrospection` result generated from the `SchemaCache`.
+--   a `SchemaIntrospection` result generated from the `SchemaCache`.
 --
 -- Response bodies are mostly delcared inline, since the associated query will likely be unique and determine the fields
 --   contained in the response.
@@ -27,11 +27,9 @@ import Data.Text qualified as T
 import Data.Text.NonEmpty
 import Data.Trie qualified as Trie
 import Hasura.GraphQL.Analyse
-import Hasura.GraphQL.RemoteServer (getSchemaIntrospection)
 import Hasura.Prelude hiding (get, put)
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.QueryCollection
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Media.MediaType ((//))
@@ -68,7 +66,7 @@ Example stepthrough initiated by call to getSelectionSchema:
                               (Field{ _fName = Name{unName = "id"},
                                     _fSelectionSet = []}),
   * Lookup introspection schema, Under mutation_root (inferred from operationtype = OperationTypeMutation)
-    RemoteSchemaIntrospection
+    SchemaIntrospection
     (fromList
         [..., (Name{unName = "mutation_root"},
           TypeDefinitionObject
@@ -128,9 +126,8 @@ Example stepthrough initiated by call to getSelectionSchema:
 mdDefinitions :: EndpointMetadata GQLQueryWithText -> [G.ExecutableDefinition G.Name]
 mdDefinitions = G.getExecutableDefinitions . unGQLQuery . getGQLQuery . _edQuery . _ceDefinition
 
-mkResponse :: EndpointMethod -> String -> Maybe RemoteSchemaIntrospection -> Analysis G.Name -> Declare (Definitions Schema) (Maybe Response)
-mkResponse _ _ Nothing _ = pure Nothing
-mkResponse epMethod epUrl (Just rs) Analysis {..} = do
+mkResponse :: EndpointMethod -> String -> G.SchemaIntrospection -> Analysis G.Name -> Declare (Definitions Schema) (Maybe Response)
+mkResponse epMethod epUrl rs Analysis {..} = do
   fs <- getSelectionSchema rs (OMap.toList _aFields)
   pure $
     Just $
@@ -138,7 +135,7 @@ mkResponse epMethod epUrl (Just rs) Analysis {..} = do
         & content .~ OMap.singleton ("application" // "json") (mempty & schema ?~ Inline fs)
         & description .~ "Responses for " <> tshow epMethod <> " " <> T.pack epUrl
 
-getSelectionSchema :: RemoteSchemaIntrospection -> [(G.Name, (FieldDef, Maybe (FieldAnalysis var)))] -> Declare (Definitions Schema) Schema
+getSelectionSchema :: G.SchemaIntrospection -> [(G.Name, (FieldDef, Maybe (FieldAnalysis var)))] -> Declare (Definitions Schema) Schema
 getSelectionSchema rs fields = do
   ps <- traverse (pure . G.unName . fst &&&& (\(fN, (td, fA)) -> getDefinitionSchema rs fN td fA {- (\(fN,(td,fA)) -> pure $ (G.unName fN,) $ getDefinitionSchema rs td fA) -})) fields
   pure $ mempty & properties .~ OMap.fromList (map (second Inline) ps)
@@ -150,7 +147,7 @@ setPattern :: Maybe Pattern -> Schema -> Schema
 setPattern p s = s {_schemaPattern = p}
 
 getDefinitionSchema ::
-  RemoteSchemaIntrospection ->
+  G.SchemaIntrospection ->
   G.Name ->
   FieldDef ->
   Maybe (FieldAnalysis var) ->
@@ -182,7 +179,7 @@ getDefinitionSchema rs tn fd fA =
               & setPattern patt
     )
 
-typeToSchemaM :: Monad m => FieldDef -> (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition -> m Schema) -> m Schema
+typeToSchemaM :: Monad m => FieldDef -> (G.TypeDefinition [G.Name] G.InputValueDefinition -> m Schema) -> m Schema
 typeToSchemaM (FieldInfo _nullability tName) k = k tName
 typeToSchemaM (FieldList n t) k = do
   t' <- typeToSchemaM t k
@@ -230,15 +227,13 @@ getType gt@(G.TypeNamed _ na) = case referenceType True t of
     t = T.toLower $ G.unName na
 getType t = Left t -- Non scalar types are deferred to reference types for processing using introspection
 
-mkProperties :: Maybe RemoteSchemaIntrospection -> Analysis G.Name -> Declare (Definitions Schema) (InsOrdHashMap Text (Referenced Schema))
-mkProperties sd Analysis {..} = OMap.fromList <$> traverse (mkProperty sdMap) ds
+mkProperties :: G.SchemaIntrospection -> Analysis G.Name -> Declare (Definitions Schema) (InsOrdHashMap Text (Referenced Schema))
+mkProperties (G.SchemaIntrospection sd) Analysis {..} = OMap.fromList <$> traverse (mkProperty sdMap) ds
   where
     ds = Map.toList _aVars
-    sdMap = case sd of
-      Nothing -> OMap.empty
-      Just (RemoteSchemaIntrospection sd') -> OMap.fromList $ map (first G.unName) $ Map.toList sd'
+    sdMap = OMap.fromList $ map (first G.unName) $ Map.toList sd
 
-mkProperty :: InsOrdHashMap Text (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition) -> (G.Name, (G.GType, Maybe (G.Value Void))) -> Declare (Definitions Schema) (Text, Referenced Schema)
+mkProperty :: InsOrdHashMap Text (G.TypeDefinition [G.Name] G.InputValueDefinition) -> (G.Name, (G.GType, Maybe (G.Value Void))) -> Declare (Definitions Schema) (Text, Referenced Schema)
 mkProperty sd (_vdName, (_vdType, _vdDefaultValue)) = do
   d <- case getType _vdType of
     Left t -> handleRefType sd t
@@ -253,7 +248,7 @@ mkProperty sd (_vdName, (_vdType, _vdDefaultValue)) = do
 
   pure (G.unName _vdName, d)
 
-handleRefType :: OMap.InsOrdHashMap Text (G.TypeDefinition a RemoteSchemaInputValueDefinition) -> G.GType -> Declare (Definitions Schema) (Referenced Schema)
+handleRefType :: OMap.InsOrdHashMap Text (G.TypeDefinition a G.InputValueDefinition) -> G.GType -> Declare (Definitions Schema) (Referenced Schema)
 handleRefType sd = \case
   G.TypeNamed nullability nameWrapper -> do
     let n = G.unName nameWrapper
@@ -270,7 +265,7 @@ handleRefType sd = \case
 
 -- TODO: No reference types should be nullable and only references to reference types
 
-declareReference :: G.Nullability -> Text -> OMap.InsOrdHashMap Text (G.TypeDefinition a RemoteSchemaInputValueDefinition) -> Declare (Definitions Schema) ()
+declareReference :: G.Nullability -> Text -> OMap.InsOrdHashMap Text (G.TypeDefinition a G.InputValueDefinition) -> Declare (Definitions Schema) ()
 declareReference nullability n ts = do
   isAvailable <- referenceAvailable n
   unless isAvailable do
@@ -293,20 +288,20 @@ declareReference nullability n ts = do
 referenceAvailable :: Text -> DeclareT (Definitions Schema) Identity Bool
 referenceAvailable n = OMap.member n <$> look
 
-getPropertyReferences :: InsOrdHashMap Text (G.TypeDefinition a RemoteSchemaInputValueDefinition) -> Maybe [RemoteSchemaInputValueDefinition] -> InsOrdHashMap Text (Referenced Schema)
+getPropertyReferences :: InsOrdHashMap Text (G.TypeDefinition a G.InputValueDefinition) -> Maybe [G.InputValueDefinition] -> InsOrdHashMap Text (Referenced Schema)
 getPropertyReferences _ Nothing = mempty
 getPropertyReferences sd (Just ds) =
   let ds' = fmap (processProperty' sd) ds
    in OMap.fromList ds'
 
-processProperty' :: InsOrdHashMap Text (G.TypeDefinition a RemoteSchemaInputValueDefinition) -> RemoteSchemaInputValueDefinition -> (Text, Referenced Schema)
-processProperty' sd (RemoteSchemaInputValueDefinition d _preset) =
+processProperty' :: InsOrdHashMap Text (G.TypeDefinition a G.InputValueDefinition) -> G.InputValueDefinition -> (Text, Referenced Schema)
+processProperty' sd d =
   let n = G._ivdName d
       t = G._ivdType d
       rt = handleRefType' sd t
    in (G.unName n, rt)
 
-handleRefType' :: OMap.InsOrdHashMap Text (G.TypeDefinition a RemoteSchemaInputValueDefinition) -> G.GType -> Referenced Schema
+handleRefType' :: OMap.InsOrdHashMap Text (G.TypeDefinition a G.InputValueDefinition) -> G.GType -> Referenced Schema
 handleRefType' sd = \case
   G.TypeNamed _nullability nameWrapper ->
     let n = G.unName nameWrapper
@@ -328,7 +323,7 @@ typeDescription = \case
   (G.TypeDefinitionEnum o) -> G.unDescription <$> G._etdDescription o
   (G.TypeDefinitionInputObject o) -> G.unDescription <$> G._iotdDescription o
 
-typeProperties :: G.TypeDefinition possibleTypes RemoteSchemaInputValueDefinition -> Maybe [RemoteSchemaInputValueDefinition]
+typeProperties :: G.TypeDefinition possibleTypes G.InputValueDefinition -> Maybe [G.InputValueDefinition]
 typeProperties = \case
   (G.TypeDefinitionScalar _) -> Nothing
   (G.TypeDefinitionInterface _) -> Nothing
@@ -353,14 +348,14 @@ referenceType True = \case
   "id" -> (Just OpenApiString, Nothing)
   _ -> (Nothing, Nothing)
 
-processProperties :: InsOrdHashMap Text (G.TypeDefinition a RemoteSchemaInputValueDefinition) -> Maybe [RemoteSchemaInputValueDefinition] -> DeclareT (Definitions Schema) Identity (InsOrdHashMap Text (Referenced Schema))
+processProperties :: InsOrdHashMap Text (G.TypeDefinition a G.InputValueDefinition) -> Maybe [G.InputValueDefinition] -> DeclareT (Definitions Schema) Identity (InsOrdHashMap Text (Referenced Schema))
 processProperties _ Nothing = pure mempty
 processProperties sd (Just ds) = do
   ds' <- traverse (processProperty sd) ds
   pure $ OMap.fromList ds'
 
-processProperty :: InsOrdHashMap Text (G.TypeDefinition a RemoteSchemaInputValueDefinition) -> RemoteSchemaInputValueDefinition -> DeclareT (Definitions Schema) Identity (Text, Referenced Schema)
-processProperty sd (RemoteSchemaInputValueDefinition d _preset) = do
+processProperty :: InsOrdHashMap Text (G.TypeDefinition a G.InputValueDefinition) -> G.InputValueDefinition -> DeclareT (Definitions Schema) Identity (Text, Referenced Schema)
+processProperty sd d = do
   let n = G._ivdName d
       t = G._ivdType d
   rt <- handleRefType sd t
@@ -414,7 +409,7 @@ getURL d =
     formatVariable variable = "{" <> dropColonPrefix variable <> "}"
     dropColonPrefix = T.drop 1
 
-extractEndpointInfo :: Maybe RemoteSchemaIntrospection -> EndpointMethod -> EndpointMetadata GQLQueryWithText -> Declare (Definitions Schema) EndpointData
+extractEndpointInfo :: G.SchemaIntrospection -> EndpointMethod -> EndpointMetadata GQLQueryWithText -> Declare (Definitions Schema) EndpointData
 extractEndpointInfo sd method d = do
   _edProperties <- mkProperties sd _analysis
   _edResponse <- foldMap (Map.singleton method) <$> mkResponse method _edUrl sd _analysis
@@ -422,7 +417,7 @@ extractEndpointInfo sd method d = do
   where
     _eDef = mdDefinitions d
     -- mdDefinition returns a list, but there should only be one definition associated, so it is safe to fold
-    _analysis = fromMaybe mempty (fold $ mapMaybe (\e -> fmap (analyzeGraphqlQuery e) sd) _eDef)
+    _analysis = fromMaybe mempty (foldMap (\e -> analyzeGraphqlQuery e sd) _eDef)
     _edUrl = T.unpack . getURL $ d
     _edVarList = getParams _analysis (_ceUrl d)
     _edDescription = getComment d
@@ -431,7 +426,7 @@ extractEndpointInfo sd method d = do
     _edErrs = getAllAnalysisErrs _analysis
 
 getEndpointsData ::
-  Maybe RemoteSchemaIntrospection ->
+  G.SchemaIntrospection ->
   SchemaCache ->
   Declare (Definitions Schema) [EndpointData]
 getEndpointsData sd sc = do
@@ -479,11 +474,7 @@ isRequestBodyRequired ed = not $ all isNotRequired (_edProperties ed)
 
 declareOpenApiSpec :: SchemaCache -> Declare (Definitions Schema) OpenApi
 declareOpenApiSpec sc = do
-  let _schemaIntrospection = getSchemaIntrospection (scGQLContext sc)
-      warnings = case _schemaIntrospection of
-        Nothing -> "\n\n⚠️ Schema introspection failed"
-        _ -> ""
-
+  let _schemaIntrospection = scAdminIntrospection sc
       mkRequestBody :: EndpointData -> RequestBody
       mkRequestBody ed =
         mempty
@@ -563,7 +554,7 @@ declareOpenApiSpec sc = do
 
       openAPIPaths = mkOpenAPISchema endpointLst
 
-      allWarnings = foldl addEndpointWarnings warnings endpointLst
+      allWarnings = foldl addEndpointWarnings "" endpointLst
       addEndpointWarnings :: Text -> EndpointData -> Text
       addEndpointWarnings oldWarn EndpointData {..} =
         if null _edErrs

@@ -707,6 +707,7 @@ library
                      , Hasura.GraphQL.Parser.Internal.Types
                      , Hasura.GraphQL.Parser.Monad
                      , Hasura.GraphQL.Parser.Schema
+                     , Hasura.GraphQL.Parser.Schema.Convert
                      , Hasura.GraphQL.RemoteServer
                      , Hasura.GraphQL.Schema
                      , Hasura.GraphQL.Schema.Action
