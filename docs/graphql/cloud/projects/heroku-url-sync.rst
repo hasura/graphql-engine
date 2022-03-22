@@ -4,18 +4,73 @@
 
 .. _heroku_database_url_sync:
 
-Heroku database URL sync
-========================
+Heroku database integration
+===========================
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 Introduction
 ------------
 
-Hasura Cloud can keep your project's Heroku database URL i.e. the ``PG_DATABASE_URL`` env var in sync with Postgres from a Heroku app.
+Hasura Cloud makes it easy for you to use Heroku Postgres as a datasource in your Hasura Cloud projects. It makes sure that the ``DATABASE_URL`` environment variable of your Heroku App stays in sync with a given environment variable of your Hasura Cloud project. This means that whenever the database credentials of your Heroku Postgres are rotated, this integration ensures that the linked environment variable in your Hasura Cloud project also gets updated.
+
+.. _cloud_connect_existing_heroku_db:
+
+Connecting an existing Heroku database
+--------------------------------------
+
+You can connect your Heroku database to your Hasura project by following these steps:
+
+1. Go to your Hasura Cloud dashboard and head to the settings section of the desired project
+2. Go to ``Integrations`` tab and click on the Heroku integration under ``Databases``
+
+   .. thumbnail:: /img/graphql/cloud/projects/heroku-integration.png
+      :alt: Heroku Integration
+      :width: 1100px
+
+3. Login into Heroku, enter an env var name of your choice (say ``PG_DATABASE_URL``) and connect the desired database from the list of databases
+
+   After a couple of seconds the env var will be updated with your connected database url and you can see it in the ``Env Vars`` tab of your project.
+
+4. Now you can go ahead to your project console's ``Data`` tab and connect the database through the env var that you created.
+
+   .. thumbnail:: /img/graphql/cloud/projects/heroku-db-connect.png
+     :alt: Heroku DB Connect
+     :width: 600px
+
+This completes your integration setup, you can now go ahead, track tables and try out Hasura's GraphQL APIs.
+
+.. note::
+
+   Deleting the Heroku integration from your ``Integrations`` section does not delete
+   the associated env var, it only stops the database url sync. Should you want to remove
+   the env var also, it is recommended to remove the connected database from your console
+   and then deleting the associated env var to prevent metadata inconsistency.
+
+Creating a new Heroku database
+------------------------------
+
+1. Go to your project console's ``Data`` tab and click ``Data Manager`` on top left corner of the page.
+
+2. Click the ``Connect Database`` button and choose the ``Create Heroku Database`` tab.
+
+   .. thumbnail:: /img/graphql/cloud/projects/console-heroku-db-create.png
+      :alt: Heroku DB Create
+      :width: 700px
+
+3. Click the ``Heroku`` button to login and create a database.
+
+This creates a Heroku app, installs Heroku Postgres in it and sets the Postgres connection URI in ``PG_DATABASE_URL_*`` env var of your Hasura
+Cloud project. It also adds a datasource in Hasura that refers to the created Postgres database using the env var.
+
+
+Heroku database URL sync
+------------------------
+
+If you use Hasura Cloud's Heroku integration, it keeps your project's Heroku database URL i.e. the associated env var in sync with the Postgres URL from a Heroku app.
 This is especially helpful in cases when the database credentials of Heroku Postgres are rotated automatically by Heroku.
 
 .. note::
@@ -24,23 +79,38 @@ This is especially helpful in cases when the database credentials of Heroku Post
    can restart the sync with the Heroku account that they have connected their Hasura Cloud account to.
 
 Enable Heroku database URL sync
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you create a project with a Heroku trial database using the Hasura console, your project has the Heroku database URL sync enabled by
 default, which means, Hasura Cloud keeps the database URL of your project in sync with the related Heroku Postgres.
 
-Opt out
--------
+If you have already connected your Heroku database to your Hasura Cloud project and would like to enable database URL sync on it, you can remove and re-add the database url env var
+with the Heroku integration as shown :ref:`above <cloud_connect_existing_heroku_db>`
 
-If your project has Heroku database URL sync enabled, you can opt out as follows:
+Opt out of Heroku database URL sync
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1. Go to the ``Env vars`` tab of your project and click on the ``PG_DATABASE_URL`` env var.
+If your project has Heroku database URL sync enabled, you can opt out using the following methods:
+
+Option 1:
+*********
+
+1. Go to the ``Env vars`` tab of your project and click on the env var that is involved in the Heroku database URL sync.
 
 2. Click on ``Opt out of the sync`` button next to Heroku note.
 
-   .. thumbnail:: /img/graphql/cloud/projects/heroku-db-sync-enabled.png
-      :alt: Add collaborator
+   .. thumbnail:: /img/graphql/cloud/projects/heroku-db-sync-enabled-new.png
+      :alt: Enabled DB Sync
       :width: 1100px
+
+Option 2:
+*********
+
+You can also opt out of Heroku database URL sync by deleting the integration from project integrations page.
+
+.. thumbnail:: /img/graphql/cloud/projects/heroku-delete-integration.png
+   :alt: Delete Heroku Integration
+   :width: 1100px
 
 How it works?
 -------------
@@ -56,6 +126,5 @@ Whenever Postgres credentials of a Heroku app are rotated:
 
 1. The ``DATABASE_URL`` config variable of the Heroku app gets updated with the new credentials.
 2. The config variable change triggers a new release, which notifies Hasura Cloud's webhook.
-3. When Hasura Cloud is notified about the new release, it fetches the newest database URL from Heroku and updates the
-   ``PG_DATABASE_URL`` env var of your project with it.
+3. When Hasura Cloud is notified about the new release, it fetches the newest database URL from Heroku and updates the connected env var of your project with it.
 4. This way, your project is always configured with the correct database URL.
