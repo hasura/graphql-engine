@@ -161,6 +161,7 @@ function:
 - console: disable search indexing with HTML meta tag
 - cli: fix inherited roles metadata not being updated when dropping all roles (#7872)
 - cli: add support for customization field in sources metadata (#8292)
+- ci: ubuntu and centos flavoured graphql-engine images are now available
 
 ## v2.4.0-beta.2
 
