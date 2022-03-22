@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | Metadata related types, functions and helpers.
 --
 -- Provides a single function which loads the MSSQL database metadata.

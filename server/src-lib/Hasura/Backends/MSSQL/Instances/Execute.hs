@@ -37,7 +37,7 @@ import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
-import Hasura.GraphQL.Execute.LiveQuery.Plan
+import Hasura.GraphQL.Execute.Subscription.Plan
 import Hasura.GraphQL.Namespace (RootFieldAlias (..), RootFieldMap)
 import Hasura.GraphQL.Parser
 import Hasura.Prelude
@@ -58,7 +58,7 @@ instance BackendExecute 'MSSQL where
   mkDBMutationPlan = msDBMutationPlan
   mkDBSubscriptionPlan = msDBSubscriptionPlan
   mkDBQueryExplain = msDBQueryExplain
-  mkLiveQueryExplain = msDBLiveQueryExplain
+  mkSubscriptionExplain = msDBSubscriptionExplain
 
   -- NOTE: Currently unimplemented!.
   --
@@ -139,20 +139,18 @@ msDBQueryExplain fieldName userInfo sourceName sourceConfig qrf = do
     AB.mkAnyBackend $
       DBStepInfo @'MSSQL sourceName sourceConfig Nothing odbcQuery
 
-msDBLiveQueryExplain ::
+msDBSubscriptionExplain ::
   (MonadIO m, MonadBaseControl IO m, MonadError QErr m) =>
-  LiveQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL) ->
-  m LiveQueryPlanExplanation
-msDBLiveQueryExplain (LiveQueryPlan plan sourceConfig variables _) = do
+  SubscriptionQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL) ->
+  m SubscriptionQueryPlanExplanation
+msDBSubscriptionExplain (SubscriptionQueryPlan plan sourceConfig variables _) = do
   let (MultiplexedQuery' reselect) = _plqpQuery plan
       query = toQueryPretty $ fromSelect $ multiplexRootReselect [(dummyCohortId, variables)] reselect
       mssqlExecCtx = (_mscExecCtx sourceConfig)
   explainInfo <- liftEitherM $ runExceptT $ (mssqlRunReadOnly mssqlExecCtx) (runShowplan query)
-  pure $ LiveQueryPlanExplanation (T.toTxt query) explainInfo variables
+  pure $ SubscriptionQueryPlanExplanation (T.toTxt query) explainInfo variables
 
---------------------------------------------------------------------------------
--- Producing the correct SQL-level list comprehension to multiplex a query
-
+-- | Producing the correct SQL-level list comprehension to multiplex a query
 -- Problem description:
 --
 -- Generate a query that repeats the same query N times but with
@@ -160,7 +158,9 @@ msDBLiveQueryExplain (LiveQueryPlan plan sourceConfig variables _) = do
 --
 -- [ Select x y | (x,y) <- [..] ]
 --
-
+-- Caution: Be aware that this query has a @FOR JSON@ clause at the top-level
+-- and hence its results may be split up across multiple rows. Use
+-- 'Database.MSSQL.Transaction.forJsonQueryE' to handle this.
 multiplexRootReselect ::
   [(CohortId, CohortVariables)] ->
   TSQL.Reselect ->
@@ -258,14 +258,14 @@ msDBSubscriptionPlan ::
   SourceConfig 'MSSQL ->
   Maybe G.Name ->
   RootFieldMap (QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL)) ->
-  m (LiveQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL))
+  m (SubscriptionQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL))
 msDBSubscriptionPlan UserInfo {_uiSession, _uiRole} _sourceName sourceConfig namespace rootFields = do
   (reselect, prepareState) <- planSubscription (OMap.mapKeys _rfaAlias rootFields) _uiSession
   cohortVariables <- prepareStateCohortVariables sourceConfig _uiSession prepareState
-  let parameterizedPlan = ParameterizedLiveQueryPlan _uiRole $ MultiplexedQuery' reselect
+  let parameterizedPlan = ParameterizedSubscriptionQueryPlan _uiRole $ MultiplexedQuery' reselect
 
   pure $
-    LiveQueryPlan parameterizedPlan sourceConfig cohortVariables namespace
+    SubscriptionQueryPlan parameterizedPlan sourceConfig cohortVariables namespace
 
 prepareStateCohortVariables :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m) => SourceConfig 'MSSQL -> SessionVariables -> PrepareState -> m CohortVariables
 prepareStateCohortVariables sourceConfig session prepState = do

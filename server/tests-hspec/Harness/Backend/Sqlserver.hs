@@ -1,5 +1,7 @@
-{-# OPTIONS -Wno-redundant-constraints #-}
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
+
+{-# OPTIONS -Wno-redundant-constraints #-}
 
 -- | SQLServer helpers.
 module Harness.Backend.Sqlserver
@@ -18,7 +20,6 @@ module Harness.Backend.Sqlserver
 where
 
 import Control.Concurrent
-import Control.Exception
 import Control.Monad.Reader
 import Data.Aeson (Value)
 import Data.Bool (bool)
@@ -28,11 +29,12 @@ import Data.Text (Text)
 import Data.Text qualified as T (pack, unpack, unwords)
 import Data.Text.Extended (commaSeparated)
 import Database.ODBC.SQLServer qualified as Sqlserver
-import GHC.Stack
 import Harness.Constants qualified as Constants
+import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.State (State)
+import Harness.Test.Context (BackendType (SQLServer), defaultBackendTypeString, defaultSource)
 import Harness.Test.Schema qualified as Schema
 import System.Process.Typed
 import Prelude
@@ -79,9 +81,11 @@ run_ query' =
 -- | Metadata source information for the default MSSQL instance.
 defaultSourceMetadata :: Value
 defaultSourceMetadata =
-  [yaml|
-name: mssql
-kind: mssql
+  let source = defaultSource SQLServer
+      backendType = defaultBackendTypeString SQLServer
+   in [yaml|
+name: *source
+kind: *backendType
 tables: []
 configuration: *defaultSourceConfiguration
   |]
@@ -123,7 +127,7 @@ scalarType = \case
 mkColumn :: Schema.Column -> Text
 mkColumn Schema.Column {columnName, columnType, columnNullable, columnDefault} =
   T.unwords
-    [ columnName,
+    [ wrapIdentifier columnName,
       scalarType columnType,
       bool "NOT NULL" "DEFAULT NULL" columnNullable,
       maybe "" ("DEFAULT " <>) columnDefault
@@ -134,7 +138,7 @@ mkPrimaryKey key =
   T.unwords
     [ "PRIMARY KEY",
       "(",
-      commaSeparated key,
+      commaSeparated $ map wrapIdentifier key,
       ")"
     ]
 
@@ -143,32 +147,41 @@ mkReference Schema.Reference {referenceLocalColumn, referenceTargetTable, refere
   T.unwords
     [ "FOREIGN KEY",
       "(",
-      referenceLocalColumn,
+      wrapIdentifier referenceLocalColumn,
       ")",
       "REFERENCES",
       referenceTargetTable,
       "(",
-      referenceTargetColumn,
+      wrapIdentifier referenceTargetColumn,
       ")",
       "ON DELETE CASCADE",
       "ON UPDATE CASCADE"
     ]
 
 -- | Serialize tableData into a T-SQL insert statement and execute it.
-insertTable :: Schema.Table -> IO ()
-insertTable Schema.Table {tableName, tableColumns, tableData} =
-  run_ $
-    T.unpack $
-      T.unwords
-        [ "INSERT INTO",
-          T.pack Constants.sqlserverDb <> "." <> tableName,
-          "(",
-          commaSeparated (Schema.columnName <$> tableColumns),
-          ")",
-          "VALUES",
-          commaSeparated $ mkRow <$> tableData,
-          ";"
-        ]
+insertTable :: HasCallStack => Schema.Table -> IO ()
+insertTable Schema.Table {tableName, tableColumns, tableData}
+  | null tableData = pure ()
+  | otherwise = do
+    run_ $
+      T.unpack $
+        T.unwords
+          [ "INSERT INTO",
+            T.pack Constants.sqlserverDb <> "." <> wrapIdentifier tableName,
+            "(",
+            commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
+            ")",
+            "VALUES",
+            commaSeparated $ mkRow <$> tableData,
+            ";"
+          ]
+
+-- | MSSQL identifiers which may contain spaces or be case-sensitive needs to be wrapped in @[]@.
+--
+--   More information can be found in the mssql docs:
+--   https://docs.microsoft.com/en-us/sql/relational-databases/databases/database-identifiers
+wrapIdentifier :: Text -> Text
+wrapIdentifier identifier = "[" <> identifier <> "]"
 
 mkRow :: [Schema.ScalarValue] -> Text
 mkRow row =
@@ -178,12 +191,8 @@ mkRow row =
       ")"
     ]
 
--- | Post an http request to start tracking the table
-trackTable :: State -> Schema.Table -> IO ()
-trackTable state table = Schema.trackTable "mssql" "mssql" (T.pack Constants.sqlserverDb) table state
-
 -- | Serialize Table into a T-SQL DROP statement and execute it
-dropTable :: Schema.Table -> IO ()
+dropTable :: HasCallStack => Schema.Table -> IO ()
 dropTable Schema.Table {tableName} = do
   run_ $
     T.unpack $
@@ -193,13 +202,19 @@ dropTable Schema.Table {tableName} = do
           ";"
         ]
 
+-- | Post an http request to start tracking the table
+trackTable :: HasCallStack => State -> Schema.Table -> IO ()
+trackTable state table =
+  Schema.trackTable SQLServer (defaultSource SQLServer) table state
+
 -- | Post an http request to stop tracking the table
-untrackTable :: State -> Schema.Table -> IO ()
-untrackTable state table = Schema.untrackTable "mssql" "mssql" (T.pack Constants.sqlserverDb) table state
+untrackTable :: HasCallStack => State -> Schema.Table -> IO ()
+untrackTable state table =
+  Schema.untrackTable SQLServer (defaultSource SQLServer) table state
 
 -- | Setup the schema in the most expected way.
 -- NOTE: Certain test modules may warrant having their own local version.
-setup :: [Schema.Table] -> (State, ()) -> IO ()
+setup :: HasCallStack => [Schema.Table] -> (State, ()) -> IO ()
 setup tables (state, _) = do
   -- Clear and reconfigure the metadata
   GraphqlEngine.setSource state defaultSourceMetadata
@@ -210,17 +225,17 @@ setup tables (state, _) = do
     trackTable state table
   -- Setup relationships
   for_ tables $ \table -> do
-    Schema.trackObjectRelationships "mssql" (T.pack Constants.sqlserverDb) table state
-    Schema.trackArrayRelationships "mssql" (T.pack Constants.sqlserverDb) table state
+    Schema.trackObjectRelationships SQLServer table state
+    Schema.trackArrayRelationships SQLServer table state
 
 -- | Teardown the schema and tracking in the most expected way.
 -- NOTE: Certain test modules may warrant having their own version.
-teardown :: [Schema.Table] -> (State, ()) -> IO ()
-teardown (reverse -> tables) (state, _) = do
-  -- Teardown relationship first
-  for_ tables $ \table ->
-    Schema.untrackRelationships "mssql" (T.pack Constants.sqlserverDb) table state
-  -- Then teardown tables
-  for_ tables $ \table -> do
-    untrackTable state table
-    dropTable table
+teardown :: HasCallStack => [Schema.Table] -> (State, ()) -> IO ()
+teardown tables (state, _) = do
+  for_ (reverse tables) $ \table ->
+    finally
+      (Schema.untrackRelationships SQLServer table state)
+      ( finally
+          (untrackTable state table)
+          (dropTable table)
+      )

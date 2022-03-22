@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- |
 -- Description: Schema cache types related to computed field
 module Hasura.RQL.Types.ComputedField

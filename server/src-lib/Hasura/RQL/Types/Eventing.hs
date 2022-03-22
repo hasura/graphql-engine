@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | This module contains types which are common to event triggers and scheduled triggers.
 module Hasura.RQL.Types.Eventing
   ( ClientError (..),

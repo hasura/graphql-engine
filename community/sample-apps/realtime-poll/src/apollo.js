@@ -1,5 +1,6 @@
 import { ApolloClient, HttpLink, InMemoryCache, split } from "@apollo/client";
-import { WebSocketLink } from "@apollo/client/link/ws";
+import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { createClient } from "graphql-ws";
 import { getMainDefinition } from "@apollo/client/utilities";
 
 const scheme = (proto) =>
@@ -19,7 +20,7 @@ const options = { reconnect: true };
 const wsURI = `${scheme("ws")}://${GRAPHQL_ENDPOINT}/v1/graphql`;
 const httpurl = `${scheme("https")}://${GRAPHQL_ENDPOINT}/v1/graphql`;
 
-const wsLink = new WebSocketLink({ uri: wsURI, options });
+const wsLink = new GraphQLWsLink(createClient({ url: wsURI, connectionParams: { options } }));
 const httpLink = new HttpLink({ uri: httpurl });
 const link = split(splitter, wsLink, httpLink);
 const client = new ApolloClient({ link, cache });

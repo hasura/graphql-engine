@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Hasura.GraphQL.Transport.HTTP.Protocol
   ( GQLReq (..),
     GQLBatchedReqs (..),

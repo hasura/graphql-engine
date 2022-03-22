@@ -1,4 +1,9 @@
-module Hasura.Backends.MySQL.Meta (getMetadata) where
+{-# LANGUAGE TemplateHaskell #-}
+
+module Hasura.Backends.MySQL.Meta
+  ( getMetadata,
+  )
+where
 
 import Control.Exception (throw)
 import Data.ByteString.Char8 qualified as B8

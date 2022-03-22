@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | A module collecting common HTTP requests to graphql-engine for testing.
 module Hasura.Test.Requests
   ( replaceMetadata,

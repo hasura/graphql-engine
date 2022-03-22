@@ -223,3 +223,36 @@ are not met.
 ## Testing
 
 Please see [testing-guidelines](./testing-guidelines.md) for details on how to add tests.
+
+## Local hoogle instance
+
+[Hoogle](https://github.com/ndmitchell/hoogle) is a Haskell API search engine. The server at
+[hoogle.haskell.org](https://hoogle.haskell.org/) provides a version of Hoogle that enables
+searching through all packanges available in [Stackage](https://www.stackage.org/). Following
+instructions help in setting up a local hoogle server that enables searching through `graphql-engine` server code.
+
+### Step 1: Installing hoogle
+
+Installing `hoogle` is fairly simple with `cabal`.
+```bash
+cabal install hoogle
+```
+
+### Step 2: Generating hoogle database
+
+A Hoogle database is a prebuilt index of a set of packages. The `hoogle.sh` script in the
+top-level `scripts/` directory helps in generating the hoogle database for GraphQL Engine server
+code and store it in `dist-newstyle/` directory.
+
+    $ scripts/hoogle.sh generate
+
+### Step 3: Running hoogle instance
+
+Running the following `hoogle.sh` script command starts a local hoogle server with the database
+generated in `Step 2`.
+
+    $ scripts/hoogle.sh serve
+
+Use `--port` option to specify custom port to start hoogle server.
+
+    $ scripts/hoogle.sh serve --port 8181

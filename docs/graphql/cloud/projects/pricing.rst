@@ -65,7 +65,7 @@ Switch from **Standard** to **Free** tier
 
 Go to ``Projects`` and click on the project you'd like to change. 
 
-Now click on the ``Usage`` tab and then click on the link ``Switch to the free tier`` on the bottom right:
+Under the ``General`` tab, find the ``Pricing tier`` section and click on the edit icon on the right:
 
 .. thumbnail:: /img/graphql/cloud/projects/switch-to-free-plan.png
    :alt: Switch from Standard to Free tier

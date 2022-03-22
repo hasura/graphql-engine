@@ -1,6 +1,50 @@
 # Hasura GraphQL Engine Changelog
 
 ## Next release
+
+### Remote relationships from remote schemas
+
+This release adds three new metadata API commands:
+- `create_remote_schema_remote_relationship`
+- `update_remote_schema_remote_relationship`
+- `delete_remote_schema_remote_relationship`
+
+that allows to create remote relationships between remote schemas on
+the left-hand side and databases or remote schemas on the right-hand
+side. Both use the same syntax as remote relationships from databases:
+
+```yaml
+type: create_remote_schema_remote_relationship
+args:
+  remote_schema: LeftHandSide
+  type_name: LeftHandSideTypeName
+  name: RelationshipName
+  definition:
+    to_remote_schema:
+      remote_schema: RightHandSideSchema
+      lhs_fields: [LHSJoinKeyName]
+      remote_field:
+        rhsFieldName:
+          arguments:
+            ids: $LHSJoinKeyName
+
+type: create_remote_schema_remote_relationship
+args:
+  remote_schema: LeftHandSide
+  type_name: LeftHandSideTypeName
+  name: RelationshipName
+  definition:
+    to_source:
+      source: RightHandSideSource
+      table: {schema: public, name: RHSTable}
+      relationship_type: object
+      field_mapping:
+        LHSJoinKeyName: RHSColumnName
+```
+
+Similarly to DB-to-DB relationships, only `Postgres` is supported on
+the right-hand side for now.
+
 ### Deprecations
 * The `custom_column_names` property of TableConfig used on `<db>_track_table` and `set_table_customization` metadata APIs has been deprecated in favour of the new `column_config` property. `custom_column_names` will still work for now, however, values used in `column_config` will take precedence over values from `custom_column_names` and any overlapped values in `custom_column_names` will be discarded.
 
@@ -98,20 +142,34 @@ function:
 
 ### Bug fixes and improvements
 
-- server: add jsonb to string cast support - postgres
+- server: Fix regression in MSSQL subscriptions when results exceed 2048 characters (#8267)
+- server: refactor OpenAPI spec generation (for REST endpoints) and improve OpenAPI warnings
+- server: add jsonb to string cast support - postgres 
 - server: improve performance of fetching postgres catalog metadata for tables and functions
 - server: Queries present in query collections, such as allow-list, and rest-endpoints are now validated (against the schema)
 - server: Redesigns internal implementation of webhook transforms.
 - server: improve SQL generation for BigQuery backend queries involving `Orderby`.
 - server: fix regression where remote relationships would get exposed over Relay, which is unsupported
 - server: add support for customising the GraphQL schema descriptions of table columns in metadata
-- server: implement column presets for SQL Server (#8221)
+- server: column presets for SQL Server were broken and consequently insert and upsert mutations were failing with constraint violations. This change fixes this behavior (#8221).
 - server: fix caching bug with session variables in remote joins
 - server: fix regression where JWKs are refreshed once per second when both must-revalidate and max-age are specified in the Cache-Control header (#8299)
+- server: respect custom field names in delete, insert and update mutations on SQL Server (#8314)
 - console: fixed an issue where editing both a column's name and its GraphQL field name at the same time caused an error
 - console: enable searching tables within a schema
+- console: fixed the ability to create updated_at and created_at in the modify page (#8239)
+- console: disable search indexing with HTML meta tag
 - cli: fix inherited roles metadata not being updated when dropping all roles (#7872)
 - cli: add support for customization field in sources metadata (#8292)
+- ci: ubuntu and centos flavoured graphql-engine images are now available
+
+## v2.4.0-beta.2
+
+- server: fix regression where remote relationships would get exposed over Relay, which is unsupported
+
+## v2.3.1
+
+- server: fix regression where remote relationships would get exposed over Relay, which is unsupported
 
 ## v2.2.2
 

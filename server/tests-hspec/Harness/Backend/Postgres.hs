@@ -1,5 +1,7 @@
-{-# OPTIONS -Wno-redundant-constraints #-}
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
+
+{-# OPTIONS -Wno-redundant-constraints #-}
 
 -- | PostgreSQL helpers.
 module Harness.Backend.Postgres
@@ -18,7 +20,6 @@ module Harness.Backend.Postgres
 where
 
 import Control.Concurrent
-import Control.Exception
 import Control.Monad.Reader
 import Data.Aeson (Value)
 import Data.Bool (bool)
@@ -29,11 +30,12 @@ import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated)
 import Database.PostgreSQL.Simple qualified as Postgres
-import GHC.Stack
 import Harness.Constants as Constants
+import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.State (State)
+import Harness.Test.Context (BackendType (Postgres), defaultBackendTypeString, defaultSource)
 import Harness.Test.Schema qualified as Schema
 import System.Process.Typed
 import Prelude
@@ -84,9 +86,11 @@ run_ q =
 -- | Metadata source information for the default Postgres instance.
 defaultSourceMetadata :: Value
 defaultSourceMetadata =
-  [yaml|
-name: postgres
-kind: postgres
+  let source = defaultSource Postgres
+      backendType = defaultBackendTypeString Postgres
+   in [yaml|
+name: *source
+kind: *backendType
 tables: []
 configuration: *defaultSourceConfiguration
 |]
@@ -126,7 +130,7 @@ scalarType = \case
 mkColumn :: Schema.Column -> Text
 mkColumn Schema.Column {columnName, columnType, columnNullable, columnDefault} =
   T.unwords
-    [ columnName,
+    [ wrapIdentifier columnName,
       scalarType columnType,
       bool "NOT NULL" "DEFAULT NULL" columnNullable,
       maybe "" ("DEFAULT " <>) columnDefault
@@ -137,7 +141,7 @@ mkPrimaryKey key =
   T.unwords
     [ "PRIMARY KEY",
       "(",
-      commaSeparated key,
+      commaSeparated $ map wrapIdentifier key,
       ")"
     ]
 
@@ -146,12 +150,12 @@ mkReference Schema.Reference {referenceLocalColumn, referenceTargetTable, refere
   T.unwords
     [ "CONSTRAINT FOREIGN KEY",
       "(",
-      referenceLocalColumn,
+      wrapIdentifier referenceLocalColumn,
       ")",
       "REFERENCES",
       referenceTargetTable,
       "(",
-      referenceTargetColumn,
+      wrapIdentifier referenceTargetColumn,
       ")",
       "ON DELETE CASCADE",
       "ON UPDATE CASCADE"
@@ -159,19 +163,28 @@ mkReference Schema.Reference {referenceLocalColumn, referenceTargetTable, refere
 
 -- | Serialize tableData into a PL-SQL insert statement and execute it.
 insertTable :: Schema.Table -> IO ()
-insertTable Schema.Table {tableName, tableColumns, tableData} =
-  run_ $
-    T.unpack $
-      T.unwords
-        [ "INSERT INTO",
-          T.pack Constants.postgresDb <> "." <> tableName,
-          "(",
-          commaSeparated (Schema.columnName <$> tableColumns),
-          ")",
-          "VALUES",
-          commaSeparated $ mkRow <$> tableData,
-          ";"
-        ]
+insertTable Schema.Table {tableName, tableColumns, tableData}
+  | null tableData = pure ()
+  | otherwise = do
+    run_ $
+      T.unpack $
+        T.unwords
+          [ "INSERT INTO",
+            T.pack Constants.postgresDb <> "." <> wrapIdentifier tableName,
+            "(",
+            commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
+            ")",
+            "VALUES",
+            commaSeparated $ mkRow <$> tableData,
+            ";"
+          ]
+
+-- | Identifiers which may be case-sensitive needs to be wrapped in @""@.
+--
+--   More information can be found in the postgres docs:
+--   https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS
+wrapIdentifier :: Text -> Text
+wrapIdentifier identifier = "\"" <> identifier <> "\""
 
 mkRow :: [Schema.ScalarValue] -> Text
 mkRow row =
@@ -180,10 +193,6 @@ mkRow row =
       commaSeparated $ Schema.serialize <$> row,
       ")"
     ]
-
--- | Post an http request to start tracking the table
-trackTable :: State -> Schema.Table -> IO ()
-trackTable state table = Schema.trackTable "postgres" "postgres" (T.pack Constants.postgresDb) table state
 
 -- | Serialize Table into a PL-SQL DROP statement and execute it
 dropTable :: Schema.Table -> IO ()
@@ -196,9 +205,15 @@ dropTable Schema.Table {tableName} = do
           ";"
         ]
 
+-- | Post an http request to start tracking the table
+trackTable :: State -> Schema.Table -> IO ()
+trackTable state table =
+  Schema.trackTable Postgres (defaultSource Postgres) table state
+
 -- | Post an http request to stop tracking the table
 untrackTable :: State -> Schema.Table -> IO ()
-untrackTable state table = Schema.untrackTable "postgres" "postgres" (T.pack Constants.postgresDb) table state
+untrackTable state table =
+  Schema.untrackTable Postgres (defaultSource Postgres) table state
 
 -- | Setup the schema in the most expected way.
 -- NOTE: Certain test modules may warrant having their own local version.
@@ -213,17 +228,17 @@ setup tables (state, _) = do
     trackTable state table
   -- Setup relationships
   for_ tables $ \table -> do
-    Schema.trackObjectRelationships "postgres" (T.pack Constants.postgresDb) table state
-    Schema.trackArrayRelationships "postgres" (T.pack Constants.postgresDb) table state
+    Schema.trackObjectRelationships Postgres table state
+    Schema.trackArrayRelationships Postgres table state
 
 -- | Teardown the schema and tracking in the most expected way.
 -- NOTE: Certain test modules may warrant having their own version.
 teardown :: [Schema.Table] -> (State, ()) -> IO ()
-teardown (reverse -> tables) (state, _) = do
-  -- Teardown relationships first
-  for_ tables $ \table ->
-    Schema.untrackRelationships "postgres" (T.pack Constants.postgresDb) table state
-  -- Then teardown tables
-  for_ tables $ \table -> do
-    untrackTable state table
-    dropTable table
+teardown tables (state, _) = do
+  for_ (reverse tables) $ \table ->
+    finally
+      (Schema.untrackRelationships Postgres table state)
+      ( finally
+          (untrackTable state table)
+          (dropTable table)
+      )

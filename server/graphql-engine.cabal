@@ -67,8 +67,6 @@ common common-all
     DeriveLift
     DeriveTraversable
     DerivingVia
-    EmptyCase
-    ExistentialQuantification
     FlexibleContexts
     FlexibleInstances
     FunctionalDependencies
@@ -82,19 +80,15 @@ common common-all
     NamedFieldPuns
     NoImplicitPrelude
     OverloadedStrings
-    QuantifiedConstraints
-    QuasiQuotes
     RankNTypes
     RecordWildCards
     RoleAnnotations
     ScopedTypeVariables
     StandaloneDeriving
     StrictData
-    TemplateHaskell
     TupleSections
     TypeApplications
     TypeFamilies
-    TypeFamilyDependencies
     TypeOperators
 
 common common-exe
@@ -165,6 +159,9 @@ library
                      , safe-exceptions
                      , scientific
                      , semialign
+                     , servant
+                     , servant-client
+                     , servant-client-core
                      , some
                      , split
                      , template-haskell
@@ -181,6 +178,7 @@ library
                      , vector
                      , vector-instances
                      , wai
+                     , witch
                      , hashable-time
 
                      -- Encoder related
@@ -486,6 +484,7 @@ library
                      , Hasura.Backends.DataWrapper.Adapter.Metadata
                      , Hasura.Backends.DataWrapper.Adapter.Schema
                      , Hasura.Backends.DataWrapper.Adapter.Transport
+                     , Hasura.Backends.DataWrapper.Agent.Schema
                      , Hasura.Backends.DataWrapper.IR.Column
                      , Hasura.Backends.DataWrapper.IR.Expression
                      , Hasura.Backends.DataWrapper.IR.Function
@@ -497,6 +496,15 @@ library
                      , Hasura.Backends.DataWrapper.IR.Table
                      , Hasura.Backends.DataWrapper.Schema.Column
                      , Hasura.Backends.DataWrapper.Schema.Table
+                     , Hasura.Backends.DataWrapper.API
+                     , Hasura.Backends.DataWrapper.API.V0.API
+                     , Hasura.Backends.DataWrapper.API.V0.Column
+                     , Hasura.Backends.DataWrapper.API.V0.Expression
+                     , Hasura.Backends.DataWrapper.API.V0.OrderBy
+                     , Hasura.Backends.DataWrapper.API.V0.Query
+                     , Hasura.Backends.DataWrapper.API.V0.Scalar.Type
+                     , Hasura.Backends.DataWrapper.API.V0.Scalar.Value
+                     , Hasura.Backends.DataWrapper.API.V0.Table
 
                      -- Exposed for benchmark:
                      , Hasura.Cache.Bounded
@@ -588,6 +596,7 @@ library
                      , Hasura.RQL.Types.SchemaCacheTypes
                      , Hasura.RQL.Types.Source
                      , Hasura.RQL.Types.SourceCustomization
+                     , Hasura.RQL.Types.Subscription
                      , Hasura.RQL.Types.Table
                      , Hasura.RQL.Types.Roles
                      , Hasura.RQL.Types.Roles.Internal
@@ -664,11 +673,13 @@ library
                      , Hasura.GraphQL.Execute.Common
                      , Hasura.GraphQL.Execute.Inline
                      , Hasura.GraphQL.Execute.Instances
-                     , Hasura.GraphQL.Execute.LiveQuery.Options
-                     , Hasura.GraphQL.Execute.LiveQuery.Plan
-                     , Hasura.GraphQL.Execute.LiveQuery.Poll
-                     , Hasura.GraphQL.Execute.LiveQuery.State
-                     , Hasura.GraphQL.Execute.LiveQuery.TMap
+                     , Hasura.GraphQL.Execute.Subscription.Options
+                     , Hasura.GraphQL.Execute.Subscription.Plan
+                     , Hasura.GraphQL.Execute.Subscription.Poll
+                     , Hasura.GraphQL.Execute.Subscription.Poll.Common
+                     , Hasura.GraphQL.Execute.Subscription.Poll.LiveQuery
+                     , Hasura.GraphQL.Execute.Subscription.State
+                     , Hasura.GraphQL.Execute.Subscription.TMap
                      , Hasura.GraphQL.Execute.Mutation
                      , Hasura.GraphQL.Execute.Remote
                      , Hasura.GraphQL.Execute.RemoteJoin
@@ -696,6 +707,7 @@ library
                      , Hasura.GraphQL.Parser.Internal.Types
                      , Hasura.GraphQL.Parser.Monad
                      , Hasura.GraphQL.Parser.Schema
+                     , Hasura.GraphQL.Parser.Schema.Convert
                      , Hasura.GraphQL.RemoteServer
                      , Hasura.GraphQL.Schema
                      , Hasura.GraphQL.Schema.Action
@@ -1021,6 +1033,7 @@ test-suite tests-hspec
  -- Harness.Test
     Harness.Test.Context
     Harness.Test.Schema
+    Harness.Test.BackendType
 
  -- Harness.Quoter
     Harness.Quoter.Graphql
@@ -1031,6 +1044,7 @@ test-suite tests-hspec
     Test.ArrayRelationshipsSpec
     Test.BasicFieldsSpec
     Test.ColumnPresetsSpec
+    Test.CustomFieldNamesSpec
     Test.DirectivesSpec
     Test.HelloWorldSpec
     Test.LimitOffsetSpec
@@ -1038,6 +1052,7 @@ test-suite tests-hspec
     Test.ObjectRelationshipsLimitSpec
     Test.ObjectRelationshipsSpec
     Test.OrderingSpec
+    Test.RemoteRelationship.FromRemoteSchemaSpec
     Test.RemoteRelationship.XToDBArrayRelationshipSpec
     Test.RemoteRelationship.XToDBObjectRelationshipSpec
     Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec

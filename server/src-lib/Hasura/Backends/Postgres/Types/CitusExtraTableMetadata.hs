@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | Postgres Types CitusExtraTableMetadata
 --
 -- Additional metadata information for Citus tables.

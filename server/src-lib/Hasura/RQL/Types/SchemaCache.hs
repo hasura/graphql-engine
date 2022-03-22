@@ -1,6 +1,10 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 -- As of GHC 8.6, a use of DefaultSignatures in this module triggers a false positive for this
 -- warning, so don’t treat it as an error even if -Werror is enabled.
+--
+-- TODO: Restructure code so this error can be downgraded to a warning for a
+-- much smaller module footprint.
 {-# OPTIONS_GHC -Wwarn=redundant-constraints #-}
 
 module Hasura.RQL.Types.SchemaCache
@@ -316,6 +320,7 @@ data SchemaCache = SchemaCache
     scActions :: !ActionCache,
     scRemoteSchemas :: !RemoteSchemaMap,
     scAllowlist :: !InlinedAllowlist,
+    scAdminIntrospection :: !G.SchemaIntrospection,
     scGQLContext :: !(HashMap RoleName (RoleContext GQLContext)),
     scUnauthenticatedGQLContext :: !GQLContext,
     scRelayContext :: !(HashMap RoleName (RoleContext GQLContext)),

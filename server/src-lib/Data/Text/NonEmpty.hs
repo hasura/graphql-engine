@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Data.Text.NonEmpty
   ( NonEmptyText,
     mkNonEmptyTextUnsafe,

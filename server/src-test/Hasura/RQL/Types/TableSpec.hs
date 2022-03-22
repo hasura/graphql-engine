@@ -1,3 +1,4 @@
+{-# LANGUAGE QuasiQuotes #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 module Hasura.RQL.Types.TableSpec (spec) where

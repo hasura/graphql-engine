@@ -1,4 +1,5 @@
 {-# LANGUAGE NondecreasingIndentation #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.GraphQL.Transport.WebSocket.Server
   ( AcceptWith (AcceptWith),
@@ -207,13 +208,6 @@ createWSServer logger = do
   connMap <- STMMap.new
   serverStatus <- STM.newTVar (AcceptingConns connMap)
   return $ WSServer logger serverStatus
-
--- -- UNUSED
--- closeAll :: WSServer a -> BL.ByteString -> IO ()
--- closeAll (WSServer (L.Logger writeLog) serverStatus) msg = do
---   writeLog $ L.debugT "closing all connections"
---   conns <- STM.atomically $ flushConnMap serverStatus
---   closeAllWith (flip closeConn) msg conns
 
 closeAllWith ::
   (BL.ByteString -> WSConn a -> IO ()) ->

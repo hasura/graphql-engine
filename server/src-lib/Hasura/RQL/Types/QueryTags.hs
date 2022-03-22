@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Hasura.RQL.Types.QueryTags
   ( QueryTagsConfig (..),
     QueryTagsFormat (..),

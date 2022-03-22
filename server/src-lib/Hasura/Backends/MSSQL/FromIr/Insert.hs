@@ -19,7 +19,6 @@ import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Column qualified as IR
 import Hasura.SQL.Backend
-import Language.GraphQL.Draft.Syntax (unName)
 
 fromInsert :: IR.AnnInsert 'MSSQL Void Expression -> Insert
 fromInsert IR.AnnInsert {..} =
@@ -27,7 +26,7 @@ fromInsert IR.AnnInsert {..} =
       insertRows = normalizeInsertRows _aiDefVals $ map IR.getInsertColumns _aiInsObj
       insertColumnNames = maybe [] (map fst) $ listToMaybe insertRows
       insertValues = map (Values . map snd) insertRows
-      allColumnNames = map (ColumnName . unName . IR.ciName) _aiTableCols
+      allColumnNames = map IR.ciColumn _aiTableCols
       insertOutput = Output Inserted $ map OutputColumn allColumnNames
       tempTable = TempTable tempTableNameInserted allColumnNames
    in Insert _aiTableName insertColumnNames insertOutput tempTable insertValues
@@ -82,7 +81,7 @@ toMerge ::
 toMerge tableName insertRows allColumns IfMatched {..} = do
   let normalizedInsertRows = normalizeInsertRows _imColumnPresets $ map IR.getInsertColumns insertRows
       insertColumnNames = maybe [] (map fst) $ listToMaybe normalizedInsertRows
-      allColumnNames = map (ColumnName . unName . IR.ciName) allColumns
+      allColumnNames = map IR.ciColumn allColumns
 
   matchConditions <-
     flip runReaderT (EntityAlias "target") $ -- the table is aliased as "target" in MERGE sql

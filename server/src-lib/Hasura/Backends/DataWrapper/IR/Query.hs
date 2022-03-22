@@ -3,16 +3,21 @@ module Hasura.Backends.DataWrapper.IR.Query
     Field (..),
     ColumnContents (..),
     RelationshipContents (..),
+    PrimaryKey (..),
+    ForeignKey (..),
   )
 where
 
 --------------------------------------------------------------------------------
 
+import Data.HashMap.Strict qualified as M
+import Hasura.Backends.DataWrapper.API qualified as API
 import Hasura.Backends.DataWrapper.IR.Column qualified as Column (Name)
 import Hasura.Backends.DataWrapper.IR.Expression (Expression)
 import Hasura.Backends.DataWrapper.IR.OrderBy (OrderBy)
 import Hasura.Backends.DataWrapper.IR.Table qualified as Table (Name)
 import Hasura.Prelude
+import Witch
 
 --------------------------------------------------------------------------------
 
@@ -33,6 +38,17 @@ data Query = Query
   }
   deriving stock (Data, Eq, Generic, Ord, Show)
 
+instance From API.Query Query where
+  from API.Query {from = from_, ..} =
+    Query
+      { fields = fmap Witch.from fields,
+        from = Witch.from from_,
+        limit = limit,
+        offset = offset,
+        where_ = fmap Witch.from where_,
+        orderBy = fmap Witch.from orderBy
+      }
+
 --------------------------------------------------------------------------------
 
 -- | The specific fields that are targeted by a 'Query'.
@@ -45,6 +61,15 @@ data Field
   = Column ColumnContents
   | Relationship RelationshipContents
   deriving stock (Data, Eq, Generic, Ord, Show)
+
+instance From API.Field Field where
+  from (API.ColumnField name) = Column $ ColumnContents $ Witch.from name
+  from (API.RelationshipField hm qu) =
+    let joinCondition = M.mapKeys Witch.from $ fmap Witch.from hm
+        query = Witch.from qu
+     in Relationship $ RelationshipContents joinCondition query
+
+--------------------------------------------------------------------------------
 
 newtype ColumnContents = ColumnContents
   { column :: Column.Name
@@ -66,10 +91,20 @@ data RelationshipContents = RelationshipContents
   }
   deriving stock (Data, Eq, Generic, Ord, Show)
 
+--------------------------------------------------------------------------------
+
 newtype PrimaryKey = PrimaryKey Column.Name
   deriving stock (Data, Generic)
   deriving newtype (Eq, Hashable, Ord, Show)
 
+instance From API.PrimaryKey PrimaryKey where
+  from (API.PrimaryKey key) = PrimaryKey (Witch.from key)
+
+--------------------------------------------------------------------------------
+
 newtype ForeignKey = ForeignKey Column.Name
   deriving stock (Data, Generic)
   deriving newtype (Eq, Hashable, Ord, Show)
+
+instance From API.ForeignKey ForeignKey where
+  from (API.ForeignKey key) = ForeignKey (Witch.from key)

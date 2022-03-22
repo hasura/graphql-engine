@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | Migrations for the Hasura catalog.
 --
 -- To add a new migration:

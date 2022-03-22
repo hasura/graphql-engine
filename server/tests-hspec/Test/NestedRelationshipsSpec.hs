@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | Testing nested relationships.
 --
 -- Original inspiration for this module Test.is <https://github.com/hasura/graphql-engine-mono/blob/08caf7df10cad0aea0916327736147a0a8f808d1/server/tests-py/queries/graphql_query/mysql/nested_select_query_deep.yaml>
@@ -20,7 +22,7 @@ spec :: SpecWith State
 spec =
   Context.run
     [ Context.Context
-        { name = Context.MySQL,
+        { name = Context.Backend Context.MySQL,
           mkLocalState = Context.noLocalState,
           setup = mysqlSetup,
           teardown = mysqlTeardown,
