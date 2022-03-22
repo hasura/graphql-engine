@@ -68,15 +68,15 @@ copy-cli-ext: clean-cli-ext
 test: copy-cli-ext
 	echo "--- :: run test"
 	if [ -z "${HASURA_TEST_CLI_HGE_DOCKER_IMAGE}" ]; then echo "Please set HASURA_TEST_CLI_HGE_DOCKER_IMAGE env for populating testutil.HasuraDockerImage and run test"; exit 1; fi
-	go test -ldflags "-X github.com/hasura/graphql-engine/cli/v2/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" `go list ./... | grep -v integration_test | grep -v commands`
+	go test -count=1 -ldflags "-X github.com/hasura/graphql-engine/cli/v2/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" `go list ./... | grep -v integration_test | grep -v commands`
 integration_tests_config_v3: copy-cli-ext
 	echo "--- :: run integration_tests_config_v3"
 	if [ -z "${HASURA_TEST_CLI_HGE_DOCKER_IMAGE}" ]; then echo "Please set HASURA_TEST_CLI_HGE_DOCKER_IMAGE env for populating testutil.HasuraDockerImage and run test"; exit 1; fi
-	go test -ldflags "-X github.com/hasura/graphql-engine/cli/v2/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" -run Commands/config=v3 ./integration_test
+	go test -count=1 -ldflags "-X github.com/hasura/graphql-engine/cli/v2/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" -run Commands/config=v3 ./integration_test
 integration_tests_config_v2: copy-cli-ext
 	echo "--- :: run integration_tests_config_v2"
 	if [ -z "${HASURA_TEST_CLI_HGE_DOCKER_IMAGE}" ]; then echo "Please set HASURA_TEST_CLI_HGE_DOCKER_IMAGE env for populating testutil.HasuraDockerImage and run test"; exit 1; fi
-	go test -ldflags "-X github.com/hasura/graphql-engine/cli/v2/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" -run Commands/config=v2 ./integration_test
+	go test -count=1 -ldflags "-X github.com/hasura/graphql-engine/cli/v2/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" -run Commands/config=v2 ./integration_test
 test-e2e:
 	echo "--- :: run e2e tests"
 ifndef HAS_GINKGO
