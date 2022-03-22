@@ -62,7 +62,7 @@ Dig deeper
    Deployment regions <regions>
    Managing development environments <environments>
    GitHub deployment <github-integration>
-   Heroku database URL Sync <heroku-url-sync>
+   Heroku database integration <heroku-url-sync>
    Vercel Integration <vercel-integration>
    Maintenance mode <maintenance-mode>
    Deleting projects <delete>
