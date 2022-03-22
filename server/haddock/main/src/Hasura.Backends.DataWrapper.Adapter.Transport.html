@@ -14,7 +14,7 @@
 </span><span id="line-14"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-15"></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.Backend.html#BackendTransport"><span class="hs-identifier hs-type">BackendTransport</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataWrapper"><span class="hs-identifier hs-type">DataWrapper</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-17"></span><span>  </span><span id="local-6989586621688419988"><span class="annot"><span class="annottext">runDBQuery :: RequestId
+</span><span id="line-17"></span><span>  </span><span id="local-6989586621688419477"><span class="annot"><span class="annottext">runDBQuery :: RequestId
 -&gt; GQLReqUnparsed
 -&gt; RootFieldAlias
 -&gt; UserInfo
@@ -37,7 +37,7 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;runDBQuery: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-19"></span><span>  </span><span id="local-6989586621688419986"><span class="annot"><span class="annottext">runDBQueryExplain :: DBStepInfo 'DataWrapper -&gt; m EncJSON
+</span><span id="line-19"></span><span>  </span><span id="local-6989586621688419475"><span class="annot"><span class="annottext">runDBQueryExplain :: DBStepInfo 'DataWrapper -&gt; m EncJSON
 </span><a href="Hasura.GraphQL.Transport.Backend.html#runDBQueryExplain"><span class="hs-identifier hs-var hs-var hs-var hs-var">runDBQueryExplain</span></a></span></span><span> </span><span class="annot"><span class="annottext">DBStepInfo 'DataWrapper
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-20"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m EncJSON
@@ -45,7 +45,7 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;runDBQueryExplain: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-21"></span><span>  </span><span id="local-6989586621688419984"><span class="annot"><span class="annottext">runDBMutation :: RequestId
+</span><span id="line-21"></span><span>  </span><span id="local-6989586621688419473"><span class="annot"><span class="annottext">runDBMutation :: RequestId
 -&gt; GQLReqUnparsed
 -&gt; RootFieldAlias
 -&gt; UserInfo
@@ -68,7 +68,7 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;runDBMutation: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-23"></span><span>  </span><span id="local-6989586621688419982"><span class="annot"><span class="annottext">runDBSubscription :: SourceConfig 'DataWrapper
+</span><span id="line-23"></span><span>  </span><span id="local-6989586621688419471"><span class="annot"><span class="annottext">runDBSubscription :: SourceConfig 'DataWrapper
 -&gt; MultiplexedQuery 'DataWrapper
 -&gt; [(CohortId, CohortVariables)]
 -&gt; m (DiffTime, Either QErr [(CohortId, ByteString)])

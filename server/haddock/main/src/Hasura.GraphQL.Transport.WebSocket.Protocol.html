@@ -43,7 +43,7 @@
 </span><span id="line-43"></span><span class="hs-comment">-- NOTE: the `subProtocol` is decided based on the `Sec-WebSocket-Protocol`</span><span>
 </span><span id="line-44"></span><span class="hs-comment">-- header on every request sent to the server.</span><span>
 </span><span id="line-45"></span><span class="hs-keyword">data</span><span> </span><span id="WSSubProtocol"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#WSSubProtocol"><span class="hs-identifier hs-var">WSSubProtocol</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Apollo"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#Apollo"><span class="hs-identifier hs-var">Apollo</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="GraphQLWS"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#GraphQLWS"><span class="hs-identifier hs-var">GraphQLWS</span></a></span></span><span>
-</span><span id="line-46"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688276238"><span id="local-6989586621688276240"><span class="annot"><span class="annottext">WSSubProtocol -&gt; WSSubProtocol -&gt; Bool
+</span><span id="line-46"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688276042"><span id="local-6989586621688276044"><span class="annot"><span class="annottext">WSSubProtocol -&gt; WSSubProtocol -&gt; Bool
 (WSSubProtocol -&gt; WSSubProtocol -&gt; Bool)
 -&gt; (WSSubProtocol -&gt; WSSubProtocol -&gt; Bool) -&gt; Eq WSSubProtocol
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -51,7 +51,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: WSSubProtocol -&gt; WSSubProtocol -&gt; Bool
 == :: WSSubProtocol -&gt; WSSubProtocol -&gt; Bool
 $c== :: WSSubProtocol -&gt; WSSubProtocol -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688276231"><span id="local-6989586621688276233"><span id="local-6989586621688276235"><span class="annot"><span class="annottext">Int -&gt; WSSubProtocol -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688276035"><span id="local-6989586621688276037"><span id="local-6989586621688276039"><span class="annot"><span class="annottext">Int -&gt; WSSubProtocol -&gt; ShowS
 [WSSubProtocol] -&gt; ShowS
 WSSubProtocol -&gt; String
 (Int -&gt; WSSubProtocol -&gt; ShowS)
@@ -72,9 +72,9 @@ $cshowsPrec :: Int -&gt; WSSubProtocol -&gt; ShowS
 </span><span id="line-49"></span><span class="hs-comment">-- on every request that reaches the server. They are unique to each of the protocols.</span><span>
 </span><span id="line-50"></span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#showSubProtocol"><span class="hs-identifier hs-type">showSubProtocol</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#WSSubProtocol"><span class="hs-identifier hs-type">WSSubProtocol</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
 </span><span id="line-51"></span><span id="showSubProtocol"><span class="annot"><span class="annottext">showSubProtocol :: WSSubProtocol -&gt; String
-</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#showSubProtocol"><span class="hs-identifier hs-var hs-var">showSubProtocol</span></a></span></span><span> </span><span id="local-6989586621688276229"><span class="annot"><span class="annottext">WSSubProtocol
-</span><a href="#local-6989586621688276229"><span class="hs-identifier hs-var">subProtocol</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">WSSubProtocol
-</span><a href="#local-6989586621688276229"><span class="hs-identifier hs-var">subProtocol</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#showSubProtocol"><span class="hs-identifier hs-var hs-var">showSubProtocol</span></a></span></span><span> </span><span id="local-6989586621688276033"><span class="annot"><span class="annottext">WSSubProtocol
+</span><a href="#local-6989586621688276033"><span class="hs-identifier hs-var">subProtocol</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">WSSubProtocol
+</span><a href="#local-6989586621688276033"><span class="hs-identifier hs-var">subProtocol</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-52"></span><span>  </span><span class="hs-comment">-- REF: https://github.com/apollographql/subscriptions-transport-ws/blob/master/src/server.ts#L144</span><span>
 </span><span id="line-53"></span><span>  </span><span class="annot"><span class="annottext">WSSubProtocol
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#Apollo"><span class="hs-identifier hs-var">Apollo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String
@@ -86,9 +86,9 @@ $cshowsPrec :: Int -&gt; WSSubProtocol -&gt; ShowS
 </span><span id="line-56"></span><span>
 </span><span id="line-57"></span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#toWSSubProtocol"><span class="hs-identifier hs-type">toWSSubProtocol</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#WSSubProtocol"><span class="hs-identifier hs-type">WSSubProtocol</span></a></span><span>
 </span><span id="line-58"></span><span id="toWSSubProtocol"><span class="annot"><span class="annottext">toWSSubProtocol :: String -&gt; WSSubProtocol
-</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#toWSSubProtocol"><span class="hs-identifier hs-var hs-var">toWSSubProtocol</span></a></span></span><span> </span><span id="local-6989586621688276228"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688276228"><span class="hs-identifier hs-var">str</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688276228"><span class="hs-identifier hs-var">str</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#toWSSubProtocol"><span class="hs-identifier hs-var hs-var">toWSSubProtocol</span></a></span></span><span> </span><span id="local-6989586621688276032"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688276032"><span class="hs-identifier hs-var">str</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688276032"><span class="hs-identifier hs-var">str</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-59"></span><span>  </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;graphql-transport-ws&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">WSSubProtocol
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#GraphQLWS"><span class="hs-identifier hs-var">GraphQLWS</span></a></span><span>
@@ -99,7 +99,7 @@ $cshowsPrec :: Int -&gt; WSSubProtocol -&gt; ShowS
 </span><span id="line-62"></span><span class="hs-comment">-- This is set by the client when it connects to the server</span><span>
 </span><span id="line-63"></span><span class="hs-keyword">newtype</span><span> </span><span id="OperationId"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#OperationId"><span class="hs-identifier hs-var">OperationId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="OperationId"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#OperationId"><span class="hs-identifier hs-var">OperationId</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unOperationId"><span class="annot"><span class="annottext">OperationId -&gt; Text
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#unOperationId"><span class="hs-identifier hs-var hs-var">unOperationId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
-</span><span id="line-64"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688276221"><span id="local-6989586621688276223"><span id="local-6989586621688276225"><span class="annot"><span class="annottext">Int -&gt; OperationId -&gt; ShowS
+</span><span id="line-64"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688276025"><span id="local-6989586621688276027"><span id="local-6989586621688276029"><span class="annot"><span class="annottext">Int -&gt; OperationId -&gt; ShowS
 [OperationId] -&gt; ShowS
 OperationId -&gt; String
 (Int -&gt; OperationId -&gt; ShowS)
@@ -114,7 +114,7 @@ show :: OperationId -&gt; String
 $cshow :: OperationId -&gt; String
 showsPrec :: Int -&gt; OperationId -&gt; ShowS
 $cshowsPrec :: Int -&gt; OperationId -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688276217"><span id="local-6989586621688276219"><span class="annot"><span class="annottext">OperationId -&gt; OperationId -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688276021"><span id="local-6989586621688276023"><span class="annot"><span class="annottext">OperationId -&gt; OperationId -&gt; Bool
 (OperationId -&gt; OperationId -&gt; Bool)
 -&gt; (OperationId -&gt; OperationId -&gt; Bool) -&gt; Eq OperationId
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -122,7 +122,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: OperationId -&gt; OperationId -&gt; Bool
 == :: OperationId -&gt; OperationId -&gt; Bool
 $c== :: OperationId -&gt; OperationId -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688276209"><span id="local-6989586621688276211"><span id="local-6989586621688276213"><span id="local-6989586621688276215"><span class="annot"><span class="annottext">[OperationId] -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688276013"><span id="local-6989586621688276015"><span id="local-6989586621688276017"><span id="local-6989586621688276019"><span class="annot"><span class="annottext">[OperationId] -&gt; Encoding
 [OperationId] -&gt; Value
 OperationId -&gt; Encoding
 OperationId -&gt; Value
@@ -145,7 +145,7 @@ toEncoding :: OperationId -&gt; Encoding
 $ctoEncoding :: OperationId -&gt; Encoding
 toJSON :: OperationId -&gt; Value
 $ctoJSON :: OperationId -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688276204"><span id="local-6989586621688276206"><span class="annot"><span class="annottext">Value -&gt; Parser [OperationId]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688276008"><span id="local-6989586621688276010"><span class="annot"><span class="annottext">Value -&gt; Parser [OperationId]
 Value -&gt; Parser OperationId
 (Value -&gt; Parser OperationId)
 -&gt; (Value -&gt; Parser [OperationId]) -&gt; FromJSON OperationId
@@ -155,12 +155,12 @@ parseJSONList :: Value -&gt; Parser [OperationId]
 $cparseJSONList :: Value -&gt; Parser [OperationId]
 parseJSON :: Value -&gt; Parser OperationId
 $cparseJSON :: Value -&gt; Parser OperationId
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688276201"><span class="annot"><span class="annottext">String -&gt; OperationId
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688276005"><span class="annot"><span class="annottext">String -&gt; OperationId
 (String -&gt; OperationId) -&gt; IsString OperationId
 forall a. (String -&gt; a) -&gt; IsString a
 fromString :: String -&gt; OperationId
 $cfromString :: String -&gt; OperationId
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">IsString</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688276196"><span id="local-6989586621688276198"><span class="annot"><span class="annottext">Int -&gt; OperationId -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">IsString</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688276000"><span id="local-6989586621688276002"><span class="annot"><span class="annottext">Int -&gt; OperationId -&gt; Int
 OperationId -&gt; Int
 (Int -&gt; OperationId -&gt; Int)
 -&gt; (OperationId -&gt; Int) -&gt; Hashable OperationId
@@ -184,7 +184,7 @@ $chashWithSalt :: Int -&gt; OperationId -&gt; Int
 </span><span id="line-76"></span><span>    </span><span id="SMT_GQL_CONNECTION_ACK"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMT_GQL_CONNECTION_ACK"><span class="hs-identifier hs-var">SMT_GQL_CONNECTION_ACK</span></a></span></span><span>
 </span><span id="line-77"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="SMT_GQL_ERROR"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMT_GQL_ERROR"><span class="hs-identifier hs-var">SMT_GQL_ERROR</span></a></span></span><span>
 </span><span id="line-78"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="SMT_GQL_COMPLETE"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMT_GQL_COMPLETE"><span class="hs-identifier hs-var">SMT_GQL_COMPLETE</span></a></span></span><span>
-</span><span id="line-79"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688276182"><span id="local-6989586621688276184"><span class="annot"><span class="annottext">ServerMsgType -&gt; ServerMsgType -&gt; Bool
+</span><span id="line-79"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688275986"><span id="local-6989586621688275988"><span class="annot"><span class="annottext">ServerMsgType -&gt; ServerMsgType -&gt; Bool
 (ServerMsgType -&gt; ServerMsgType -&gt; Bool)
 -&gt; (ServerMsgType -&gt; ServerMsgType -&gt; Bool) -&gt; Eq ServerMsgType
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -194,8 +194,8 @@ $c/= :: ServerMsgType -&gt; ServerMsgType -&gt; Bool
 $c== :: ServerMsgType -&gt; ServerMsgType -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-80"></span><span>
-</span><span id="line-81"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688276177"><span id="local-6989586621688276180"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ServerMsgType"><span class="hs-identifier hs-type">ServerMsgType</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-82"></span><span>  </span><span id="local-6989586621688276176"><span class="annot"><span class="annottext">show :: ServerMsgType -&gt; String
+</span><span id="line-81"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688275981"><span id="local-6989586621688275984"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ServerMsgType"><span class="hs-identifier hs-type">ServerMsgType</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-82"></span><span>  </span><span id="local-6989586621688275980"><span class="annot"><span class="annottext">show :: ServerMsgType -&gt; String
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-83"></span><span>    </span><span class="hs-comment">-- specific to `Apollo` clients</span><span>
 </span><span id="line-84"></span><span>    </span><span class="annot"><span class="annottext">ServerMsgType
@@ -228,8 +228,8 @@ $c== :: ServerMsgType -&gt; ServerMsgType -&gt; Bool
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMT_GQL_COMPLETE"><span class="hs-identifier hs-var">SMT_GQL_COMPLETE</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;complete&quot;</span></span><span>
 </span><span id="line-95"></span><span>
-</span><span id="line-96"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688276168"><span id="local-6989586621688276170"><span id="local-6989586621688276172"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ServerMsgType"><span class="hs-identifier hs-type">ServerMsgType</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-97"></span><span>  </span><span id="local-6989586621688276167"><span class="annot"><span class="annottext">toJSON :: ServerMsgType -&gt; Value
+</span><span id="line-96"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688275972"><span id="local-6989586621688275974"><span id="local-6989586621688275976"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ServerMsgType"><span class="hs-identifier hs-type">ServerMsgType</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-97"></span><span>  </span><span id="local-6989586621688275971"><span class="annot"><span class="annottext">toJSON :: ServerMsgType -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Value)
@@ -242,7 +242,7 @@ forall a. Show a =&gt; a -&gt; String
 </span><span id="line-99"></span><span class="hs-keyword">data</span><span> </span><span id="ConnParams"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ConnParams"><span class="hs-identifier hs-var">ConnParams</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ConnParams"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ConnParams"><span class="hs-identifier hs-var">ConnParams</span></a></span></span><span>
 </span><span id="line-100"></span><span>  </span><span class="hs-special">{</span><span id="_cpHeaders"><span class="annot"><span class="annottext">ConnParams -&gt; Maybe (HashMap Text Text)
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#_cpHeaders"><span class="hs-identifier hs-var hs-var">_cpHeaders</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span class="hs-special">}</span><span>
-</span><span id="line-101"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688276158"><span id="local-6989586621688276160"><span id="local-6989586621688276162"><span class="annot"><span class="annottext">Int -&gt; ConnParams -&gt; ShowS
+</span><span id="line-101"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688275962"><span id="local-6989586621688275964"><span id="local-6989586621688275966"><span class="annot"><span class="annottext">Int -&gt; ConnParams -&gt; ShowS
 [ConnParams] -&gt; ShowS
 ConnParams -&gt; String
 (Int -&gt; ConnParams -&gt; ShowS)
@@ -257,7 +257,7 @@ show :: ConnParams -&gt; String
 $cshow :: ConnParams -&gt; String
 showsPrec :: Int -&gt; ConnParams -&gt; ShowS
 $cshowsPrec :: Int -&gt; ConnParams -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688276154"><span id="local-6989586621688276156"><span class="annot"><span class="annottext">ConnParams -&gt; ConnParams -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688275958"><span id="local-6989586621688275960"><span class="annot"><span class="annottext">ConnParams -&gt; ConnParams -&gt; Bool
 (ConnParams -&gt; ConnParams -&gt; Bool)
 -&gt; (ConnParams -&gt; ConnParams -&gt; Bool) -&gt; Eq ConnParams
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -267,7 +267,7 @@ $c/= :: ConnParams -&gt; ConnParams -&gt; Bool
 $c== :: ConnParams -&gt; ConnParams -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-102"></span><span>
-</span><span id="line-103"></span><span class="hs-special">$(</span><span id="local-6989586621688276142"><span id="local-6989586621688276144"><span id="local-6989586621688276146"><span id="local-6989586621688276148"><span id="local-6989586621688276150"><span id="local-6989586621688276152"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ConnParams</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-103"></span><span class="hs-special">$(</span><span id="local-6989586621688275946"><span id="local-6989586621688275948"><span id="local-6989586621688275950"><span id="local-6989586621688275952"><span id="local-6989586621688275954"><span id="local-6989586621688275956"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ConnParams</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-104"></span><span>
 </span><span id="line-105"></span><span class="hs-keyword">data</span><span> </span><span id="StartMsg"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#StartMsg"><span class="hs-identifier hs-var">StartMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="StartMsg"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#StartMsg"><span class="hs-identifier hs-var">StartMsg</span></a></span></span><span>
 </span><span id="line-106"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_smId"><span class="annot"><span class="annottext">StartMsg -&gt; OperationId
@@ -275,7 +275,7 @@ $c== :: ConnParams -&gt; ConnParams -&gt; Bool
 </span><span id="line-107"></span><span>    </span><span id="_smPayload"><span class="annot"><span class="annottext">StartMsg -&gt; GQLReqUnparsed
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#_smPayload"><span class="hs-identifier hs-var hs-var">_smPayload</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReqUnparsed"><span class="hs-identifier hs-type">GQLReqUnparsed</span></a></span><span>
 </span><span id="line-108"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-109"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688276132"><span id="local-6989586621688276134"><span id="local-6989586621688276136"><span class="annot"><span class="annottext">Int -&gt; StartMsg -&gt; ShowS
+</span><span id="line-109"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688275936"><span id="local-6989586621688275938"><span id="local-6989586621688275940"><span class="annot"><span class="annottext">Int -&gt; StartMsg -&gt; ShowS
 [StartMsg] -&gt; ShowS
 StartMsg -&gt; String
 (Int -&gt; StartMsg -&gt; ShowS)
@@ -288,7 +288,7 @@ show :: StartMsg -&gt; String
 $cshow :: StartMsg -&gt; String
 showsPrec :: Int -&gt; StartMsg -&gt; ShowS
 $cshowsPrec :: Int -&gt; StartMsg -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688276128"><span id="local-6989586621688276130"><span class="annot"><span class="annottext">StartMsg -&gt; StartMsg -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688275932"><span id="local-6989586621688275934"><span class="annot"><span class="annottext">StartMsg -&gt; StartMsg -&gt; Bool
 (StartMsg -&gt; StartMsg -&gt; Bool)
 -&gt; (StartMsg -&gt; StartMsg -&gt; Bool) -&gt; Eq StartMsg
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -298,13 +298,13 @@ $c/= :: StartMsg -&gt; StartMsg -&gt; Bool
 $c== :: StartMsg -&gt; StartMsg -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-110"></span><span>
-</span><span id="line-111"></span><span class="hs-special">$(</span><span id="local-6989586621688276116"><span id="local-6989586621688276118"><span id="local-6989586621688276120"><span id="local-6989586621688276122"><span id="local-6989586621688276124"><span id="local-6989586621688276126"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">StartMsg</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-111"></span><span class="hs-special">$(</span><span id="local-6989586621688275920"><span id="local-6989586621688275922"><span id="local-6989586621688275924"><span id="local-6989586621688275926"><span id="local-6989586621688275928"><span id="local-6989586621688275930"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">StartMsg</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-112"></span><span>
 </span><span id="line-113"></span><span class="hs-keyword">data</span><span> </span><span id="StopMsg"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#StopMsg"><span class="hs-identifier hs-var">StopMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="StopMsg"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#StopMsg"><span class="hs-identifier hs-var">StopMsg</span></a></span></span><span>
 </span><span id="line-114"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_stId"><span class="annot"><span class="annottext">StopMsg -&gt; OperationId
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#_stId"><span class="hs-identifier hs-var hs-var">_stId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#OperationId"><span class="hs-identifier hs-type">OperationId</span></a></span><span>
 </span><span id="line-115"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-116"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688276109"><span id="local-6989586621688276111"><span id="local-6989586621688276113"><span class="annot"><span class="annottext">Int -&gt; StopMsg -&gt; ShowS
+</span><span id="line-116"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688275913"><span id="local-6989586621688275915"><span id="local-6989586621688275917"><span class="annot"><span class="annottext">Int -&gt; StopMsg -&gt; ShowS
 [StopMsg] -&gt; ShowS
 StopMsg -&gt; String
 (Int -&gt; StopMsg -&gt; ShowS)
@@ -317,7 +317,7 @@ show :: StopMsg -&gt; String
 $cshow :: StopMsg -&gt; String
 showsPrec :: Int -&gt; StopMsg -&gt; ShowS
 $cshowsPrec :: Int -&gt; StopMsg -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688276105"><span id="local-6989586621688276107"><span class="annot"><span class="annottext">StopMsg -&gt; StopMsg -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688275909"><span id="local-6989586621688275911"><span class="annot"><span class="annottext">StopMsg -&gt; StopMsg -&gt; Bool
 (StopMsg -&gt; StopMsg -&gt; Bool)
 -&gt; (StopMsg -&gt; StopMsg -&gt; Bool) -&gt; Eq StopMsg
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -327,14 +327,14 @@ $c/= :: StopMsg -&gt; StopMsg -&gt; Bool
 $c== :: StopMsg -&gt; StopMsg -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-117"></span><span>
-</span><span id="line-118"></span><span class="hs-special">$(</span><span id="local-6989586621688276093"><span id="local-6989586621688276095"><span id="local-6989586621688276097"><span id="local-6989586621688276099"><span id="local-6989586621688276101"><span id="local-6989586621688276103"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">StopMsg</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-118"></span><span class="hs-special">$(</span><span id="local-6989586621688275897"><span id="local-6989586621688275899"><span id="local-6989586621688275901"><span id="local-6989586621688275903"><span id="local-6989586621688275905"><span id="local-6989586621688275907"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">StopMsg</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-119"></span><span>
 </span><span id="line-120"></span><span class="hs-comment">-- Specific to graphql-ws</span><span>
 </span><span id="line-121"></span><span class="hs-keyword">data</span><span> </span><span id="PingPongPayload"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#PingPongPayload"><span class="hs-identifier hs-var">PingPongPayload</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PingPongPayload"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#PingPongPayload"><span class="hs-identifier hs-var">PingPongPayload</span></a></span></span><span>
 </span><span id="line-122"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_smMessage"><span class="annot"><span class="annottext">PingPongPayload -&gt; Maybe Text
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#_smMessage"><span class="hs-identifier hs-var hs-var">_smMessage</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- NOTE: this is not within the spec, but is specific to our usecase</span><span>
 </span><span id="line-123"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-124"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688276085"><span id="local-6989586621688276087"><span id="local-6989586621688276089"><span class="annot"><span class="annottext">Int -&gt; PingPongPayload -&gt; ShowS
+</span><span id="line-124"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688275889"><span id="local-6989586621688275891"><span id="local-6989586621688275893"><span class="annot"><span class="annottext">Int -&gt; PingPongPayload -&gt; ShowS
 [PingPongPayload] -&gt; ShowS
 PingPongPayload -&gt; String
 (Int -&gt; PingPongPayload -&gt; ShowS)
@@ -349,7 +349,7 @@ show :: PingPongPayload -&gt; String
 $cshow :: PingPongPayload -&gt; String
 showsPrec :: Int -&gt; PingPongPayload -&gt; ShowS
 $cshowsPrec :: Int -&gt; PingPongPayload -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688276081"><span id="local-6989586621688276083"><span class="annot"><span class="annottext">PingPongPayload -&gt; PingPongPayload -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688275885"><span id="local-6989586621688275887"><span class="annot"><span class="annottext">PingPongPayload -&gt; PingPongPayload -&gt; Bool
 (PingPongPayload -&gt; PingPongPayload -&gt; Bool)
 -&gt; (PingPongPayload -&gt; PingPongPayload -&gt; Bool)
 -&gt; Eq PingPongPayload
@@ -360,7 +360,7 @@ $c/= :: PingPongPayload -&gt; PingPongPayload -&gt; Bool
 $c== :: PingPongPayload -&gt; PingPongPayload -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-125"></span><span>
-</span><span id="line-126"></span><span class="hs-special">$(</span><span id="local-6989586621688276069"><span id="local-6989586621688276071"><span id="local-6989586621688276073"><span id="local-6989586621688276075"><span id="local-6989586621688276077"><span id="local-6989586621688276079"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">PingPongPayload</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-126"></span><span class="hs-special">$(</span><span id="local-6989586621688275873"><span id="local-6989586621688275875"><span id="local-6989586621688275877"><span id="local-6989586621688275879"><span id="local-6989586621688275881"><span id="local-6989586621688275883"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">PingPongPayload</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-127"></span><span>
 </span><span id="line-128"></span><span class="hs-comment">-- Specific to graphql-ws</span><span>
 </span><span id="line-129"></span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#keepAliveMessage"><span class="hs-identifier hs-type">keepAliveMessage</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#PingPongPayload"><span class="hs-identifier hs-type">PingPongPayload</span></a></span><span>
@@ -386,7 +386,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-135"></span><span>    </span><span id="_subPayload"><span class="annot"><span class="annottext">SubscribeMsg -&gt; GQLReqUnparsed
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#_subPayload"><span class="hs-identifier hs-var hs-var">_subPayload</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReqUnparsed"><span class="hs-identifier hs-type">GQLReqUnparsed</span></a></span><span>
 </span><span id="line-136"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-137"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688276060"><span id="local-6989586621688276062"><span id="local-6989586621688276064"><span class="annot"><span class="annottext">Int -&gt; SubscribeMsg -&gt; ShowS
+</span><span id="line-137"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688275864"><span id="local-6989586621688275866"><span id="local-6989586621688275868"><span class="annot"><span class="annottext">Int -&gt; SubscribeMsg -&gt; ShowS
 [SubscribeMsg] -&gt; ShowS
 SubscribeMsg -&gt; String
 (Int -&gt; SubscribeMsg -&gt; ShowS)
@@ -401,7 +401,7 @@ show :: SubscribeMsg -&gt; String
 $cshow :: SubscribeMsg -&gt; String
 showsPrec :: Int -&gt; SubscribeMsg -&gt; ShowS
 $cshowsPrec :: Int -&gt; SubscribeMsg -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688276056"><span id="local-6989586621688276058"><span class="annot"><span class="annottext">SubscribeMsg -&gt; SubscribeMsg -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688275860"><span id="local-6989586621688275862"><span class="annot"><span class="annottext">SubscribeMsg -&gt; SubscribeMsg -&gt; Bool
 (SubscribeMsg -&gt; SubscribeMsg -&gt; Bool)
 -&gt; (SubscribeMsg -&gt; SubscribeMsg -&gt; Bool) -&gt; Eq SubscribeMsg
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -411,7 +411,7 @@ $c/= :: SubscribeMsg -&gt; SubscribeMsg -&gt; Bool
 $c== :: SubscribeMsg -&gt; SubscribeMsg -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-138"></span><span>
-</span><span id="line-139"></span><span class="hs-special">$(</span><span id="local-6989586621688276044"><span id="local-6989586621688276046"><span id="local-6989586621688276048"><span id="local-6989586621688276050"><span id="local-6989586621688276052"><span id="local-6989586621688276054"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">SubscribeMsg</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-139"></span><span class="hs-special">$(</span><span id="local-6989586621688275848"><span id="local-6989586621688275850"><span id="local-6989586621688275852"><span id="local-6989586621688275854"><span id="local-6989586621688275856"><span id="local-6989586621688275858"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">SubscribeMsg</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-140"></span><span>
 </span><span id="line-141"></span><span class="hs-keyword">data</span><span> </span><span id="ClientMsg"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ClientMsg"><span class="hs-identifier hs-var">ClientMsg</span></a></span></span><span>
 </span><span id="line-142"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="CMConnInit"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#CMConnInit"><span class="hs-identifier hs-var">CMConnInit</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ConnParams"><span class="hs-identifier hs-type">ConnParams</span></a></span><span class="hs-special">)</span><span>
@@ -422,7 +422,7 @@ $c== :: SubscribeMsg -&gt; SubscribeMsg -&gt; Bool
 </span><span id="line-147"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- specific to graphql-ws clients</span><span>
 </span><span id="line-148"></span><span>    </span><span id="CMPing"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#CMPing"><span class="hs-identifier hs-var">CMPing</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#PingPongPayload"><span class="hs-identifier hs-type">PingPongPayload</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-149"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CMPong"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#CMPong"><span class="hs-identifier hs-var">CMPong</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#PingPongPayload"><span class="hs-identifier hs-type">PingPongPayload</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-150"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688276038"><span id="local-6989586621688276040"><span id="local-6989586621688276042"><span class="annot"><span class="annottext">Int -&gt; ClientMsg -&gt; ShowS
+</span><span id="line-150"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688275842"><span id="local-6989586621688275844"><span id="local-6989586621688275846"><span class="annot"><span class="annottext">Int -&gt; ClientMsg -&gt; ShowS
 [ClientMsg] -&gt; ShowS
 ClientMsg -&gt; String
 (Int -&gt; ClientMsg -&gt; ShowS)
@@ -437,7 +437,7 @@ show :: ClientMsg -&gt; String
 $cshow :: ClientMsg -&gt; String
 showsPrec :: Int -&gt; ClientMsg -&gt; ShowS
 $cshowsPrec :: Int -&gt; ClientMsg -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688276034"><span id="local-6989586621688276036"><span class="annot"><span class="annottext">ClientMsg -&gt; ClientMsg -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688275838"><span id="local-6989586621688275840"><span class="annot"><span class="annottext">ClientMsg -&gt; ClientMsg -&gt; Bool
 (ClientMsg -&gt; ClientMsg -&gt; Bool)
 -&gt; (ClientMsg -&gt; ClientMsg -&gt; Bool) -&gt; Eq ClientMsg
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -447,24 +447,24 @@ $c/= :: ClientMsg -&gt; ClientMsg -&gt; Bool
 $c== :: ClientMsg -&gt; ClientMsg -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-151"></span><span>
-</span><span id="line-152"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688276031"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ClientMsg"><span class="hs-identifier hs-type">ClientMsg</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-153"></span><span>  </span><span id="local-6989586621688276030"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ClientMsg
-</span><a href="#local-6989586621688276030"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Object -&gt; Parser ClientMsg) -&gt; Value -&gt; Parser ClientMsg
+</span><span id="line-152"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688275835"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ClientMsg"><span class="hs-identifier hs-type">ClientMsg</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-153"></span><span>  </span><span id="local-6989586621688275834"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ClientMsg
+</span><a href="#local-6989586621688275834"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Object -&gt; Parser ClientMsg) -&gt; Value -&gt; Parser ClientMsg
 forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;ClientMessage&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Object -&gt; Parser ClientMsg) -&gt; Value -&gt; Parser ClientMsg)
 -&gt; (Object -&gt; Parser ClientMsg) -&gt; Value -&gt; Parser ClientMsg
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688276028"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688276028"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-154"></span><span>    </span><span id="local-6989586621688276027"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688276027"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688276028"><span class="hs-identifier hs-var">obj</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser String
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688275832"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688275832"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-154"></span><span>    </span><span id="local-6989586621688275831"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688275831"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688275832"><span class="hs-identifier hs-var">obj</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser String
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 </span><span class="hs-operator hs-var">J..:</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;type&quot;</span></span><span>
 </span><span id="line-155"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688276027"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688275831"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-156"></span><span>      </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;connection_init&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe ConnParams -&gt; ClientMsg
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#CMConnInit"><span class="hs-identifier hs-var">CMConnInit</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe ConnParams -&gt; ClientMsg)
@@ -472,24 +472,24 @@ forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Parser (Maybe ConnParams)
 forall a. FromJSON a =&gt; Object -&gt; Parser (Maybe a)
-</span><a href="#local-6989586621688276024"><span class="hs-identifier hs-var">parsePayload</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688276028"><span class="hs-identifier hs-var">obj</span></a></span><span>
+</span><a href="#local-6989586621688275828"><span class="hs-identifier hs-var">parsePayload</span></a></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688275832"><span class="hs-identifier hs-var">obj</span></a></span><span>
 </span><span id="line-157"></span><span>      </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;start&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">StartMsg -&gt; ClientMsg
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#CMStart"><span class="hs-identifier hs-var">CMStart</span></a></span><span> </span><span class="annot"><span class="annottext">(StartMsg -&gt; ClientMsg) -&gt; Parser StartMsg -&gt; Parser ClientMsg
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Parser StartMsg
 forall a. FromJSON a =&gt; Object -&gt; Parser a
-</span><a href="#local-6989586621688276023"><span class="hs-identifier hs-var">parseObj</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688276028"><span class="hs-identifier hs-var">obj</span></a></span><span>
+</span><a href="#local-6989586621688275827"><span class="hs-identifier hs-var">parseObj</span></a></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688275832"><span class="hs-identifier hs-var">obj</span></a></span><span>
 </span><span id="line-158"></span><span>      </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;stop&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">StopMsg -&gt; ClientMsg
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#CMStop"><span class="hs-identifier hs-var">CMStop</span></a></span><span> </span><span class="annot"><span class="annottext">(StopMsg -&gt; ClientMsg) -&gt; Parser StopMsg -&gt; Parser ClientMsg
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Parser StopMsg
 forall a. FromJSON a =&gt; Object -&gt; Parser a
-</span><a href="#local-6989586621688276023"><span class="hs-identifier hs-var">parseObj</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688276028"><span class="hs-identifier hs-var">obj</span></a></span><span>
+</span><a href="#local-6989586621688275827"><span class="hs-identifier hs-var">parseObj</span></a></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688275832"><span class="hs-identifier hs-var">obj</span></a></span><span>
 </span><span id="line-159"></span><span>      </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;connection_terminate&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ClientMsg -&gt; Parser ClientMsg
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -502,16 +502,16 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Parser StopMsg
 forall a. FromJSON a =&gt; Object -&gt; Parser a
-</span><a href="#local-6989586621688276023"><span class="hs-identifier hs-var">parseObj</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688276028"><span class="hs-identifier hs-var">obj</span></a></span><span>
+</span><a href="#local-6989586621688275827"><span class="hs-identifier hs-var">parseObj</span></a></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688275832"><span class="hs-identifier hs-var">obj</span></a></span><span>
 </span><span id="line-162"></span><span>      </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;subscribe&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">StartMsg -&gt; ClientMsg
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#CMStart"><span class="hs-identifier hs-var">CMStart</span></a></span><span> </span><span class="annot"><span class="annottext">(StartMsg -&gt; ClientMsg) -&gt; Parser StartMsg -&gt; Parser ClientMsg
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Parser StartMsg
 forall a. FromJSON a =&gt; Object -&gt; Parser a
-</span><a href="#local-6989586621688276023"><span class="hs-identifier hs-var">parseObj</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688276028"><span class="hs-identifier hs-var">obj</span></a></span><span>
+</span><a href="#local-6989586621688275827"><span class="hs-identifier hs-var">parseObj</span></a></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688275832"><span class="hs-identifier hs-var">obj</span></a></span><span>
 </span><span id="line-163"></span><span>      </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;ping&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe PingPongPayload -&gt; ClientMsg
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#CMPing"><span class="hs-identifier hs-var">CMPing</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe PingPongPayload -&gt; ClientMsg)
@@ -519,8 +519,8 @@ forall a. FromJSON a =&gt; Object -&gt; Parser a
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Parser (Maybe PingPongPayload)
 forall a. FromJSON a =&gt; Object -&gt; Parser (Maybe a)
-</span><a href="#local-6989586621688276024"><span class="hs-identifier hs-var">parsePayload</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688276028"><span class="hs-identifier hs-var">obj</span></a></span><span>
+</span><a href="#local-6989586621688275828"><span class="hs-identifier hs-var">parsePayload</span></a></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688275832"><span class="hs-identifier hs-var">obj</span></a></span><span>
 </span><span id="line-164"></span><span>      </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;pong&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe PingPongPayload -&gt; ClientMsg
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#CMPong"><span class="hs-identifier hs-var">CMPong</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe PingPongPayload -&gt; ClientMsg)
@@ -528,8 +528,8 @@ forall a. FromJSON a =&gt; Object -&gt; Parser (Maybe a)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Parser (Maybe PingPongPayload)
 forall a. FromJSON a =&gt; Object -&gt; Parser (Maybe a)
-</span><a href="#local-6989586621688276024"><span class="hs-identifier hs-var">parsePayload</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688276028"><span class="hs-identifier hs-var">obj</span></a></span><span>
+</span><a href="#local-6989586621688275828"><span class="hs-identifier hs-var">parsePayload</span></a></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688275832"><span class="hs-identifier hs-var">obj</span></a></span><span>
 </span><span id="line-165"></span><span>      </span><span class="annot"><span class="annottext">String
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser ClientMsg
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
@@ -539,20 +539,20 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;unexpected type for ClientMessage: &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688276027"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><a href="#local-6989586621688275831"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-166"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-167"></span><span>      </span><span id="local-6989586621688276023"><span class="annot"><span class="annottext">parseObj :: Object -&gt; Parser a
-</span><a href="#local-6989586621688276023"><span class="hs-identifier hs-var hs-var">parseObj</span></a></span></span><span> </span><span id="local-6989586621688276022"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688276022"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser a
+</span><span id="line-167"></span><span>      </span><span id="local-6989586621688275827"><span class="annot"><span class="annottext">parseObj :: Object -&gt; Parser a
+</span><a href="#local-6989586621688275827"><span class="hs-identifier hs-var hs-var">parseObj</span></a></span></span><span> </span><span id="local-6989586621688275826"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688275826"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser a
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.parseJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Object -&gt; Value
 </span><span class="hs-identifier hs-var">J.Object</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688276022"><span class="hs-identifier hs-var">o</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688275826"><span class="hs-identifier hs-var">o</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-168"></span><span>
-</span><span id="line-169"></span><span>      </span><span id="local-6989586621688276024"><span class="annot"><span class="annottext">parsePayload :: Object -&gt; Parser (Maybe a)
-</span><a href="#local-6989586621688276024"><span class="hs-identifier hs-var hs-var">parsePayload</span></a></span></span><span> </span><span id="local-6989586621688276020"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688276020"><span class="hs-identifier hs-var">py</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688276020"><span class="hs-identifier hs-var">py</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe a)
+</span><span id="line-169"></span><span>      </span><span id="local-6989586621688275828"><span class="annot"><span class="annottext">parsePayload :: Object -&gt; Parser (Maybe a)
+</span><a href="#local-6989586621688275828"><span class="hs-identifier hs-var hs-var">parsePayload</span></a></span></span><span> </span><span id="local-6989586621688275824"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688275824"><span class="hs-identifier hs-var">py</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688275824"><span class="hs-identifier hs-var">py</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe a)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;payload&quot;</span></span><span>
@@ -570,7 +570,7 @@ forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span id="line-178"></span><span>    </span><span id="_emPayload"><span class="annot"><span class="annottext">ErrorMsg -&gt; Value
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#_emPayload"><span class="hs-identifier hs-var hs-var">_emPayload</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
 </span><span id="line-179"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-180"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688276009"><span id="local-6989586621688276011"><span id="local-6989586621688276013"><span class="annot"><span class="annottext">Int -&gt; ErrorMsg -&gt; ShowS
+</span><span id="line-180"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688275813"><span id="local-6989586621688275815"><span id="local-6989586621688275817"><span class="annot"><span class="annottext">Int -&gt; ErrorMsg -&gt; ShowS
 [ErrorMsg] -&gt; ShowS
 ErrorMsg -&gt; String
 (Int -&gt; ErrorMsg -&gt; ShowS)
@@ -583,7 +583,7 @@ show :: ErrorMsg -&gt; String
 $cshow :: ErrorMsg -&gt; String
 showsPrec :: Int -&gt; ErrorMsg -&gt; ShowS
 $cshowsPrec :: Int -&gt; ErrorMsg -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688276005"><span id="local-6989586621688276007"><span class="annot"><span class="annottext">ErrorMsg -&gt; ErrorMsg -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688275809"><span id="local-6989586621688275811"><span class="annot"><span class="annottext">ErrorMsg -&gt; ErrorMsg -&gt; Bool
 (ErrorMsg -&gt; ErrorMsg -&gt; Bool)
 -&gt; (ErrorMsg -&gt; ErrorMsg -&gt; Bool) -&gt; Eq ErrorMsg
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -595,7 +595,7 @@ $c== :: ErrorMsg -&gt; ErrorMsg -&gt; Bool
 </span><span id="line-181"></span><span>
 </span><span id="line-182"></span><span class="hs-keyword">newtype</span><span> </span><span id="CompletionMsg"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#CompletionMsg"><span class="hs-identifier hs-var">CompletionMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CompletionMsg"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#CompletionMsg"><span class="hs-identifier hs-var">CompletionMsg</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unCompletionMsg"><span class="annot"><span class="annottext">CompletionMsg -&gt; OperationId
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#unCompletionMsg"><span class="hs-identifier hs-var hs-var">unCompletionMsg</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#OperationId"><span class="hs-identifier hs-type">OperationId</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-183"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688275998"><span id="local-6989586621688276000"><span id="local-6989586621688276002"><span class="annot"><span class="annottext">Int -&gt; CompletionMsg -&gt; ShowS
+</span><span id="line-183"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688275802"><span id="local-6989586621688275804"><span id="local-6989586621688275806"><span class="annot"><span class="annottext">Int -&gt; CompletionMsg -&gt; ShowS
 [CompletionMsg] -&gt; ShowS
 CompletionMsg -&gt; String
 (Int -&gt; CompletionMsg -&gt; ShowS)
@@ -610,7 +610,7 @@ show :: CompletionMsg -&gt; String
 $cshow :: CompletionMsg -&gt; String
 showsPrec :: Int -&gt; CompletionMsg -&gt; ShowS
 $cshowsPrec :: Int -&gt; CompletionMsg -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688275994"><span id="local-6989586621688275996"><span class="annot"><span class="annottext">CompletionMsg -&gt; CompletionMsg -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688275798"><span id="local-6989586621688275800"><span class="annot"><span class="annottext">CompletionMsg -&gt; CompletionMsg -&gt; Bool
 (CompletionMsg -&gt; CompletionMsg -&gt; Bool)
 -&gt; (CompletionMsg -&gt; CompletionMsg -&gt; Bool) -&gt; Eq CompletionMsg
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -620,9 +620,9 @@ $c/= :: CompletionMsg -&gt; CompletionMsg -&gt; Bool
 $c== :: CompletionMsg -&gt; CompletionMsg -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-184"></span><span>
-</span><span id="line-185"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688275991"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#CompletionMsg"><span class="hs-identifier hs-type">CompletionMsg</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-186"></span><span>  </span><span id="local-6989586621688275990"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser CompletionMsg
-</span><a href="#local-6989586621688275990"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-185"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688275795"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#CompletionMsg"><span class="hs-identifier hs-type">CompletionMsg</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-186"></span><span>  </span><span id="local-6989586621688275794"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser CompletionMsg
+</span><a href="#local-6989586621688275794"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser CompletionMsg)
 -&gt; Value
 -&gt; Parser CompletionMsg
@@ -633,32 +633,32 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser CompletionMsg
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688275989"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688275989"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688275793"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688275793"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-187"></span><span>    </span><span class="annot"><span class="annottext">OperationId -&gt; CompletionMsg
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#CompletionMsg"><span class="hs-identifier hs-var">CompletionMsg</span></a></span><span> </span><span class="annot"><span class="annottext">(OperationId -&gt; CompletionMsg)
 -&gt; Parser OperationId -&gt; Parser CompletionMsg
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688275989"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser OperationId
+</span><a href="#local-6989586621688275793"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser OperationId
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 </span><span class="hs-operator hs-var">J..:</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;id&quot;</span></span><span>
 </span><span id="line-188"></span><span>
-</span><span id="line-189"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688275982"><span id="local-6989586621688275984"><span id="local-6989586621688275986"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#CompletionMsg"><span class="hs-identifier hs-type">CompletionMsg</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-190"></span><span>  </span><span id="local-6989586621688275981"><span class="annot"><span class="annottext">toJSON :: CompletionMsg -&gt; Value
-</span><a href="#local-6989586621688275981"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#CompletionMsg"><span class="hs-identifier hs-type">CompletionMsg</span></a></span><span> </span><span id="local-6989586621688275980"><span class="annot"><span class="annottext">OperationId
-</span><a href="#local-6989586621688275980"><span class="hs-identifier hs-var">opId</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><span id="line-189"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688275786"><span id="local-6989586621688275788"><span id="local-6989586621688275790"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#CompletionMsg"><span class="hs-identifier hs-type">CompletionMsg</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-190"></span><span>  </span><span id="local-6989586621688275785"><span class="annot"><span class="annottext">toJSON :: CompletionMsg -&gt; Value
+</span><a href="#local-6989586621688275785"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#CompletionMsg"><span class="hs-identifier hs-type">CompletionMsg</span></a></span><span> </span><span id="local-6989586621688275784"><span class="annot"><span class="annottext">OperationId
+</span><a href="#local-6989586621688275784"><span class="hs-identifier hs-var">opId</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; Text -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">OperationId -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">OperationId
-</span><a href="#local-6989586621688275980"><span class="hs-identifier hs-var">opId</span></a></span><span>
+</span><a href="#local-6989586621688275784"><span class="hs-identifier hs-var">opId</span></a></span><span>
 </span><span id="line-191"></span><span>
 </span><span id="line-192"></span><span class="hs-keyword">newtype</span><span> </span><span id="ConnErrMsg"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ConnErrMsg"><span class="hs-identifier hs-var">ConnErrMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ConnErrMsg"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ConnErrMsg"><span class="hs-identifier hs-var">ConnErrMsg</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unConnErrMsg"><span class="annot"><span class="annottext">ConnErrMsg -&gt; Text
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#unConnErrMsg"><span class="hs-identifier hs-var hs-var">unConnErrMsg</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
-</span><span id="line-193"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688275972"><span id="local-6989586621688275974"><span id="local-6989586621688275976"><span class="annot"><span class="annottext">Int -&gt; ConnErrMsg -&gt; ShowS
+</span><span id="line-193"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688275776"><span id="local-6989586621688275778"><span id="local-6989586621688275780"><span class="annot"><span class="annottext">Int -&gt; ConnErrMsg -&gt; ShowS
 [ConnErrMsg] -&gt; ShowS
 ConnErrMsg -&gt; String
 (Int -&gt; ConnErrMsg -&gt; ShowS)
@@ -673,7 +673,7 @@ show :: ConnErrMsg -&gt; String
 $cshow :: ConnErrMsg -&gt; String
 showsPrec :: Int -&gt; ConnErrMsg -&gt; ShowS
 $cshowsPrec :: Int -&gt; ConnErrMsg -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688275968"><span id="local-6989586621688275970"><span class="annot"><span class="annottext">ConnErrMsg -&gt; ConnErrMsg -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688275772"><span id="local-6989586621688275774"><span class="annot"><span class="annottext">ConnErrMsg -&gt; ConnErrMsg -&gt; Bool
 (ConnErrMsg -&gt; ConnErrMsg -&gt; Bool)
 -&gt; (ConnErrMsg -&gt; ConnErrMsg -&gt; Bool) -&gt; Eq ConnErrMsg
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -681,7 +681,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: ConnErrMsg -&gt; ConnErrMsg -&gt; Bool
 == :: ConnErrMsg -&gt; ConnErrMsg -&gt; Bool
 $c== :: ConnErrMsg -&gt; ConnErrMsg -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688275960"><span id="local-6989586621688275962"><span id="local-6989586621688275964"><span id="local-6989586621688275966"><span class="annot"><span class="annottext">[ConnErrMsg] -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688275764"><span id="local-6989586621688275766"><span id="local-6989586621688275768"><span id="local-6989586621688275770"><span class="annot"><span class="annottext">[ConnErrMsg] -&gt; Encoding
 [ConnErrMsg] -&gt; Value
 ConnErrMsg -&gt; Encoding
 ConnErrMsg -&gt; Value
@@ -704,7 +704,7 @@ toEncoding :: ConnErrMsg -&gt; Encoding
 $ctoEncoding :: ConnErrMsg -&gt; Encoding
 toJSON :: ConnErrMsg -&gt; Value
 $ctoJSON :: ConnErrMsg -&gt; Value
-</span><a href="#local-6989586621688275960"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688275956"><span id="local-6989586621688275958"><span class="annot"><span class="annottext">Value -&gt; Parser [ConnErrMsg]
+</span><a href="#local-6989586621688275764"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688275760"><span id="local-6989586621688275762"><span class="annot"><span class="annottext">Value -&gt; Parser [ConnErrMsg]
 Value -&gt; Parser ConnErrMsg
 (Value -&gt; Parser ConnErrMsg)
 -&gt; (Value -&gt; Parser [ConnErrMsg]) -&gt; FromJSON ConnErrMsg
@@ -714,7 +714,7 @@ parseJSONList :: Value -&gt; Parser [ConnErrMsg]
 $cparseJSONList :: Value -&gt; Parser [ConnErrMsg]
 parseJSON :: Value -&gt; Parser ConnErrMsg
 $cparseJSON :: Value -&gt; Parser ConnErrMsg
-</span><a href="#local-6989586621688275956"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688275954"><span class="annot"><span class="annottext">String -&gt; ConnErrMsg
+</span><a href="#local-6989586621688275760"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688275758"><span class="annot"><span class="annottext">String -&gt; ConnErrMsg
 (String -&gt; ConnErrMsg) -&gt; IsString ConnErrMsg
 forall a. (String -&gt; a) -&gt; IsString a
 fromString :: String -&gt; ConnErrMsg
@@ -723,7 +723,7 @@ $cfromString :: String -&gt; ConnErrMsg
 </span><span id="line-194"></span><span>
 </span><span id="line-195"></span><span class="hs-keyword">data</span><span> </span><span id="ServerErrorMsg"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ServerErrorMsg"><span class="hs-identifier hs-var">ServerErrorMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ServerErrorMsg"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ServerErrorMsg"><span class="hs-identifier hs-var">ServerErrorMsg</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unServerErrorMsg"><span class="annot"><span class="annottext">ServerErrorMsg -&gt; Text
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#unServerErrorMsg"><span class="hs-identifier hs-var hs-var">unServerErrorMsg</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
-</span><span id="line-196"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688275946"><span id="local-6989586621688275948"><span id="local-6989586621688275950"><span class="annot"><span class="annottext">Int -&gt; ServerErrorMsg -&gt; ShowS
+</span><span id="line-196"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688275750"><span id="local-6989586621688275752"><span id="local-6989586621688275754"><span class="annot"><span class="annottext">Int -&gt; ServerErrorMsg -&gt; ShowS
 [ServerErrorMsg] -&gt; ShowS
 ServerErrorMsg -&gt; String
 (Int -&gt; ServerErrorMsg -&gt; ShowS)
@@ -738,7 +738,7 @@ show :: ServerErrorMsg -&gt; String
 $cshow :: ServerErrorMsg -&gt; String
 showsPrec :: Int -&gt; ServerErrorMsg -&gt; ShowS
 $cshowsPrec :: Int -&gt; ServerErrorMsg -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688275942"><span id="local-6989586621688275944"><span class="annot"><span class="annottext">ServerErrorMsg -&gt; ServerErrorMsg -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688275746"><span id="local-6989586621688275748"><span class="annot"><span class="annottext">ServerErrorMsg -&gt; ServerErrorMsg -&gt; Bool
 (ServerErrorMsg -&gt; ServerErrorMsg -&gt; Bool)
 -&gt; (ServerErrorMsg -&gt; ServerErrorMsg -&gt; Bool) -&gt; Eq ServerErrorMsg
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -748,7 +748,7 @@ $c/= :: ServerErrorMsg -&gt; ServerErrorMsg -&gt; Bool
 $c== :: ServerErrorMsg -&gt; ServerErrorMsg -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-197"></span><span>
-</span><span id="line-198"></span><span class="hs-special">$(</span><span id="local-6989586621688275930"><span id="local-6989586621688275932"><span id="local-6989586621688275934"><span id="local-6989586621688275936"><span id="local-6989586621688275938"><span id="local-6989586621688275940"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ServerErrorMsg</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-198"></span><span class="hs-special">$(</span><span id="local-6989586621688275734"><span id="local-6989586621688275736"><span id="local-6989586621688275738"><span id="local-6989586621688275740"><span id="local-6989586621688275742"><span id="local-6989586621688275744"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ServerErrorMsg</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-199"></span><span>
 </span><span id="line-200"></span><span class="hs-keyword">data</span><span> </span><span id="ServerMsg"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ServerMsg"><span class="hs-identifier hs-var">ServerMsg</span></a></span></span><span>
 </span><span id="line-201"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="SMConnAck"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMConnAck"><span class="hs-identifier hs-var">SMConnAck</span></a></span></span><span>
@@ -772,7 +772,7 @@ $c== :: ServerErrorMsg -&gt; ServerErrorMsg -&gt; Bool
 </span><span id="line-219"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ConnectionInitTimeout4408"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ConnectionInitTimeout4408"><span class="hs-identifier hs-var">ConnectionInitTimeout4408</span></a></span></span><span>
 </span><span id="line-220"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="NonUniqueSubscription4409"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#NonUniqueSubscription4409"><span class="hs-identifier hs-var">NonUniqueSubscription4409</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#OperationId"><span class="hs-identifier hs-type">OperationId</span></a></span><span>
 </span><span id="line-221"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="TooManyRequests4429"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#TooManyRequests4429"><span class="hs-identifier hs-var">TooManyRequests4429</span></a></span></span><span>
-</span><span id="line-222"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688275917"><span id="local-6989586621688275919"><span id="local-6989586621688275921"><span class="annot"><span class="annottext">Int -&gt; ServerErrorCode -&gt; ShowS
+</span><span id="line-222"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688275721"><span id="local-6989586621688275723"><span id="local-6989586621688275725"><span class="annot"><span class="annottext">Int -&gt; ServerErrorCode -&gt; ShowS
 [ServerErrorCode] -&gt; ShowS
 ServerErrorCode -&gt; String
 (Int -&gt; ServerErrorCode -&gt; ShowS)
@@ -791,8 +791,8 @@ $cshowsPrec :: Int -&gt; ServerErrorCode -&gt; ShowS
 </span><span id="line-223"></span><span>
 </span><span id="line-224"></span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#encodeServerErrorMsg"><span class="hs-identifier hs-type">encodeServerErrorMsg</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ServerErrorCode"><span class="hs-identifier hs-type">ServerErrorCode</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span>
 </span><span id="line-225"></span><span id="encodeServerErrorMsg"><span class="annot"><span class="annottext">encodeServerErrorMsg :: ServerErrorCode -&gt; ByteString
-</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#encodeServerErrorMsg"><span class="hs-identifier hs-var hs-var">encodeServerErrorMsg</span></a></span></span><span> </span><span id="local-6989586621688275916"><span class="annot"><span class="annottext">ServerErrorCode
-</span><a href="#local-6989586621688275916"><span class="hs-identifier hs-var">ecode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">EncJSON -&gt; ByteString
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#encodeServerErrorMsg"><span class="hs-identifier hs-var hs-var">encodeServerErrorMsg</span></a></span></span><span> </span><span id="local-6989586621688275720"><span class="annot"><span class="annottext">ServerErrorCode
+</span><a href="#local-6989586621688275720"><span class="hs-identifier hs-var">ecode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">EncJSON -&gt; ByteString
 </span><a href="Hasura.EncJSON.html#encJToLBS"><span class="hs-identifier hs-var">encJToLBS</span></a></span><span> </span><span class="annot"><span class="annottext">(EncJSON -&gt; ByteString)
 -&gt; (ServerErrorMsg -&gt; EncJSON) -&gt; ServerErrorMsg -&gt; ByteString
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -801,35 +801,35 @@ forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">(ServerErrorMsg -&gt; ByteString) -&gt; ServerErrorMsg -&gt; ByteString
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ServerErrorCode
-</span><a href="#local-6989586621688275916"><span class="hs-identifier hs-var">ecode</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688275720"><span class="hs-identifier hs-var">ecode</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-226"></span><span>  </span><span class="annot"><span class="annottext">ServerErrorCode
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ProtocolError1002"><span class="hs-identifier hs-var">ProtocolError1002</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; ServerErrorMsg
-</span><a href="#local-6989586621688275913"><span class="hs-identifier hs-var">packMsg</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688275717"><span class="hs-identifier hs-var">packMsg</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;1002: Protocol Error&quot;</span></span><span>
-</span><span id="line-227"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#GenericError4400"><span class="hs-identifier hs-type">GenericError4400</span></a></span><span> </span><span id="local-6989586621688275912"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688275912"><span class="hs-identifier hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; ServerErrorMsg
-</span><a href="#local-6989586621688275913"><span class="hs-identifier hs-var">packMsg</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; ServerErrorMsg) -&gt; String -&gt; ServerErrorMsg
+</span><span id="line-227"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#GenericError4400"><span class="hs-identifier hs-type">GenericError4400</span></a></span><span> </span><span id="local-6989586621688275716"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688275716"><span class="hs-identifier hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; ServerErrorMsg
+</span><a href="#local-6989586621688275717"><span class="hs-identifier hs-var">packMsg</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; ServerErrorMsg) -&gt; String -&gt; ServerErrorMsg
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;4400: &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688275912"><span class="hs-identifier hs-var">msg</span></a></span><span>
+</span><a href="#local-6989586621688275716"><span class="hs-identifier hs-var">msg</span></a></span><span>
 </span><span id="line-228"></span><span>  </span><span class="annot"><span class="annottext">ServerErrorCode
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#Unauthorized4401"><span class="hs-identifier hs-var">Unauthorized4401</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; ServerErrorMsg
-</span><a href="#local-6989586621688275913"><span class="hs-identifier hs-var">packMsg</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688275717"><span class="hs-identifier hs-var">packMsg</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;4401: Unauthorized&quot;</span></span><span>
 </span><span id="line-229"></span><span>  </span><span class="annot"><span class="annottext">ServerErrorCode
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#Forbidden4403"><span class="hs-identifier hs-var">Forbidden4403</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; ServerErrorMsg
-</span><a href="#local-6989586621688275913"><span class="hs-identifier hs-var">packMsg</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688275717"><span class="hs-identifier hs-var">packMsg</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;4403: Forbidden&quot;</span></span><span>
 </span><span id="line-230"></span><span>  </span><span class="annot"><span class="annottext">ServerErrorCode
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ConnectionInitTimeout4408"><span class="hs-identifier hs-var">ConnectionInitTimeout4408</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; ServerErrorMsg
-</span><a href="#local-6989586621688275913"><span class="hs-identifier hs-var">packMsg</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688275717"><span class="hs-identifier hs-var">packMsg</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;4408: Connection initialisation timeout&quot;</span></span><span>
-</span><span id="line-231"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#NonUniqueSubscription4409"><span class="hs-identifier hs-type">NonUniqueSubscription4409</span></a></span><span> </span><span id="local-6989586621688275911"><span class="annot"><span class="annottext">OperationId
-</span><a href="#local-6989586621688275911"><span class="hs-identifier hs-var">opId</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; ServerErrorMsg
-</span><a href="#local-6989586621688275913"><span class="hs-identifier hs-var">packMsg</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; ServerErrorMsg) -&gt; String -&gt; ServerErrorMsg
+</span><span id="line-231"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#NonUniqueSubscription4409"><span class="hs-identifier hs-type">NonUniqueSubscription4409</span></a></span><span> </span><span id="local-6989586621688275715"><span class="annot"><span class="annottext">OperationId
+</span><a href="#local-6989586621688275715"><span class="hs-identifier hs-var">opId</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; ServerErrorMsg
+</span><a href="#local-6989586621688275717"><span class="hs-identifier hs-var">packMsg</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; ServerErrorMsg) -&gt; String -&gt; ServerErrorMsg
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;4409: Subscriber for &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
@@ -837,17 +837,17 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">OperationId -&gt; String
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">OperationId
-</span><a href="#local-6989586621688275911"><span class="hs-identifier hs-var">opId</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><a href="#local-6989586621688275715"><span class="hs-identifier hs-var">opId</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot; already exists&quot;</span></span><span>
 </span><span id="line-232"></span><span>  </span><span class="annot"><span class="annottext">ServerErrorCode
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#TooManyRequests4429"><span class="hs-identifier hs-var">TooManyRequests4429</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; ServerErrorMsg
-</span><a href="#local-6989586621688275913"><span class="hs-identifier hs-var">packMsg</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688275717"><span class="hs-identifier hs-var">packMsg</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;4429: Too many requests&quot;</span></span><span>
 </span><span id="line-233"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-234"></span><span>    </span><span id="local-6989586621688275913"><span class="annot"><span class="annottext">packMsg :: String -&gt; ServerErrorMsg
-</span><a href="#local-6989586621688275913"><span class="hs-identifier hs-var hs-var">packMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ServerErrorMsg
+</span><span id="line-234"></span><span>    </span><span id="local-6989586621688275717"><span class="annot"><span class="annottext">packMsg :: String -&gt; ServerErrorMsg
+</span><a href="#local-6989586621688275717"><span class="hs-identifier hs-var hs-var">packMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ServerErrorMsg
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ServerErrorMsg"><span class="hs-identifier hs-var">ServerErrorMsg</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ServerErrorMsg)
 -&gt; (String -&gt; Text) -&gt; String -&gt; ServerErrorMsg
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -856,8 +856,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-235"></span><span>
 </span><span id="line-236"></span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#encodeServerMsg"><span class="hs-identifier hs-type">encodeServerMsg</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ServerMsg"><span class="hs-identifier hs-type">ServerMsg</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span>
 </span><span id="line-237"></span><span id="encodeServerMsg"><span class="annot"><span class="annottext">encodeServerMsg :: ServerMsg -&gt; ByteString
-</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#encodeServerMsg"><span class="hs-identifier hs-var hs-var">encodeServerMsg</span></a></span></span><span> </span><span id="local-6989586621688275910"><span class="annot"><span class="annottext">ServerMsg
-</span><a href="#local-6989586621688275910"><span class="hs-identifier hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#encodeServerMsg"><span class="hs-identifier hs-var hs-var">encodeServerMsg</span></a></span></span><span> </span><span id="local-6989586621688275714"><span class="annot"><span class="annottext">ServerMsg
+</span><a href="#local-6989586621688275714"><span class="hs-identifier hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-238"></span><span>  </span><span class="annot"><span class="annottext">EncJSON -&gt; ByteString
 </span><a href="Hasura.EncJSON.html#encJToLBS"><span class="hs-identifier hs-var">encJToLBS</span></a></span><span> </span><span class="annot"><span class="annottext">(EncJSON -&gt; ByteString) -&gt; EncJSON -&gt; ByteString
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -866,71 +866,71 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="Hasura.EncJSON.html#encJFromAssocList"><span class="hs-identifier hs-var">encJFromAssocList</span></a></span><span> </span><span class="annot"><span class="annottext">([(Text, EncJSON)] -&gt; EncJSON) -&gt; [(Text, EncJSON)] -&gt; EncJSON
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ServerMsg
-</span><a href="#local-6989586621688275910"><span class="hs-identifier hs-var">msg</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688275714"><span class="hs-identifier hs-var">msg</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-240"></span><span>      </span><span class="annot"><span class="annottext">ServerMsg
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMConnAck"><span class="hs-identifier hs-var">SMConnAck</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-241"></span><span>        </span><span class="hs-special">[</span><span class="annot"><span class="annottext">ServerMsgType -&gt; (Text, EncJSON)
 forall a a. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
-</span><a href="#local-6989586621688275908"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
+</span><a href="#local-6989586621688275712"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMT_GQL_CONNECTION_ACK"><span class="hs-identifier hs-var">SMT_GQL_CONNECTION_ACK</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-242"></span><span>      </span><span class="annot"><span class="annottext">ServerMsg
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMConnKeepAlive"><span class="hs-identifier hs-var">SMConnKeepAlive</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-243"></span><span>        </span><span class="hs-special">[</span><span class="annot"><span class="annottext">ServerMsgType -&gt; (Text, EncJSON)
 forall a a. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
-</span><a href="#local-6989586621688275908"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
+</span><a href="#local-6989586621688275712"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMT_GQL_CONNECTION_KEEP_ALIVE"><span class="hs-identifier hs-var">SMT_GQL_CONNECTION_KEEP_ALIVE</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-244"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMConnErr"><span class="hs-identifier hs-type">SMConnErr</span></a></span><span> </span><span id="local-6989586621688275907"><span class="annot"><span class="annottext">ConnErrMsg
-</span><a href="#local-6989586621688275907"><span class="hs-identifier hs-var">connErr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-244"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMConnErr"><span class="hs-identifier hs-type">SMConnErr</span></a></span><span> </span><span id="local-6989586621688275711"><span class="annot"><span class="annottext">ConnErrMsg
+</span><a href="#local-6989586621688275711"><span class="hs-identifier hs-var">connErr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-245"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">ServerMsgType -&gt; (Text, EncJSON)
 forall a a. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
-</span><a href="#local-6989586621688275908"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
+</span><a href="#local-6989586621688275712"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMT_GQL_CONNECTION_ERROR"><span class="hs-identifier hs-var">SMT_GQL_CONNECTION_ERROR</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-246"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;payload&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ConnErrMsg -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">ConnErrMsg
-</span><a href="#local-6989586621688275907"><span class="hs-identifier hs-var">connErr</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688275711"><span class="hs-identifier hs-var">connErr</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-247"></span><span>        </span><span class="hs-special">]</span><span>
-</span><span id="line-248"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMData"><span class="hs-identifier hs-type">SMData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#DataMsg"><span class="hs-identifier hs-type">DataMsg</span></a></span><span> </span><span id="local-6989586621688275906"><span class="annot"><span class="annottext">OperationId
-</span><a href="#local-6989586621688275906"><span class="hs-identifier hs-var">opId</span></a></span></span><span> </span><span id="local-6989586621688275905"><span class="annot"><span class="annottext">GQResponse
-</span><a href="#local-6989586621688275905"><span class="hs-identifier hs-var">payload</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-248"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMData"><span class="hs-identifier hs-type">SMData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#DataMsg"><span class="hs-identifier hs-type">DataMsg</span></a></span><span> </span><span id="local-6989586621688275710"><span class="annot"><span class="annottext">OperationId
+</span><a href="#local-6989586621688275710"><span class="hs-identifier hs-var">opId</span></a></span></span><span> </span><span id="local-6989586621688275709"><span class="annot"><span class="annottext">GQResponse
+</span><a href="#local-6989586621688275709"><span class="hs-identifier hs-var">payload</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-249"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">ServerMsgType -&gt; (Text, EncJSON)
 forall a a. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
-</span><a href="#local-6989586621688275908"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
+</span><a href="#local-6989586621688275712"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMT_GQL_DATA"><span class="hs-identifier hs-var">SMT_GQL_DATA</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-250"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;id&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">OperationId -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">OperationId
-</span><a href="#local-6989586621688275906"><span class="hs-identifier hs-var">opId</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688275710"><span class="hs-identifier hs-var">opId</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-251"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;payload&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">GQResponse -&gt; EncJSON
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#encodeGQResp"><span class="hs-identifier hs-var">encodeGQResp</span></a></span><span> </span><span class="annot"><span class="annottext">GQResponse
-</span><a href="#local-6989586621688275905"><span class="hs-identifier hs-var">payload</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688275709"><span class="hs-identifier hs-var">payload</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-252"></span><span>        </span><span class="hs-special">]</span><span>
-</span><span id="line-253"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMErr"><span class="hs-identifier hs-type">SMErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ErrorMsg"><span class="hs-identifier hs-type">ErrorMsg</span></a></span><span> </span><span id="local-6989586621688275903"><span class="annot"><span class="annottext">OperationId
-</span><a href="#local-6989586621688275903"><span class="hs-identifier hs-var">opId</span></a></span></span><span> </span><span id="local-6989586621688275902"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621688275902"><span class="hs-identifier hs-var">payload</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-253"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMErr"><span class="hs-identifier hs-type">SMErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ErrorMsg"><span class="hs-identifier hs-type">ErrorMsg</span></a></span><span> </span><span id="local-6989586621688275707"><span class="annot"><span class="annottext">OperationId
+</span><a href="#local-6989586621688275707"><span class="hs-identifier hs-var">opId</span></a></span></span><span> </span><span id="local-6989586621688275706"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688275706"><span class="hs-identifier hs-var">payload</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-254"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">ServerMsgType -&gt; (Text, EncJSON)
 forall a a. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
-</span><a href="#local-6989586621688275908"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
+</span><a href="#local-6989586621688275712"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMT_GQL_ERROR"><span class="hs-identifier hs-var">SMT_GQL_ERROR</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-255"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;id&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">OperationId -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">OperationId
-</span><a href="#local-6989586621688275903"><span class="hs-identifier hs-var">opId</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688275707"><span class="hs-identifier hs-var">opId</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-256"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;payload&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621688275902"><span class="hs-identifier hs-var">payload</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688275706"><span class="hs-identifier hs-var">payload</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-257"></span><span>        </span><span class="hs-special">]</span><span>
-</span><span id="line-258"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMComplete"><span class="hs-identifier hs-type">SMComplete</span></a></span><span> </span><span id="local-6989586621688275901"><span class="annot"><span class="annottext">CompletionMsg
-</span><a href="#local-6989586621688275901"><span class="hs-identifier hs-var">compMsg</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-258"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMComplete"><span class="hs-identifier hs-type">SMComplete</span></a></span><span> </span><span id="local-6989586621688275705"><span class="annot"><span class="annottext">CompletionMsg
+</span><a href="#local-6989586621688275705"><span class="hs-identifier hs-var">compMsg</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-259"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">ServerMsgType -&gt; (Text, EncJSON)
 forall a a. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
-</span><a href="#local-6989586621688275908"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
+</span><a href="#local-6989586621688275712"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMT_GQL_COMPLETE"><span class="hs-identifier hs-var">SMT_GQL_COMPLETE</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-260"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;id&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">OperationId -&gt; EncJSON
@@ -939,79 +939,79 @@ forall a. ToJSON a =&gt; a -&gt; EncJSON
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">CompletionMsg -&gt; OperationId
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#unCompletionMsg"><span class="hs-identifier hs-var hs-var">unCompletionMsg</span></a></span><span> </span><span class="annot"><span class="annottext">CompletionMsg
-</span><a href="#local-6989586621688275901"><span class="hs-identifier hs-var">compMsg</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688275705"><span class="hs-identifier hs-var">compMsg</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-261"></span><span>        </span><span class="hs-special">]</span><span>
-</span><span id="line-262"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMPing"><span class="hs-identifier hs-type">SMPing</span></a></span><span> </span><span id="local-6989586621688275900"><span class="annot"><span class="annottext">Maybe PingPongPayload
-</span><a href="#local-6989586621688275900"><span class="hs-identifier hs-var">mPayload</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-262"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMPing"><span class="hs-identifier hs-type">SMPing</span></a></span><span> </span><span id="local-6989586621688275704"><span class="annot"><span class="annottext">Maybe PingPongPayload
+</span><a href="#local-6989586621688275704"><span class="hs-identifier hs-var">mPayload</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-263"></span><span>        </span><span class="annot"><span class="annottext">Maybe PingPongPayload -&gt; ServerMsgType -&gt; [(Text, EncJSON)]
 forall a a a.
 (IsString a, ToJSON a, ToJSON a) =&gt;
 Maybe a -&gt; a -&gt; [(a, EncJSON)]
-</span><a href="#local-6989586621688275899"><span class="hs-identifier hs-var">encodePingPongPayload</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PingPongPayload
-</span><a href="#local-6989586621688275900"><span class="hs-identifier hs-var">mPayload</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
+</span><a href="#local-6989586621688275703"><span class="hs-identifier hs-var">encodePingPongPayload</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PingPongPayload
+</span><a href="#local-6989586621688275704"><span class="hs-identifier hs-var">mPayload</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMT_GQL_PING"><span class="hs-identifier hs-var">SMT_GQL_PING</span></a></span><span>
-</span><span id="line-264"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMPong"><span class="hs-identifier hs-type">SMPong</span></a></span><span> </span><span id="local-6989586621688275898"><span class="annot"><span class="annottext">Maybe PingPongPayload
-</span><a href="#local-6989586621688275898"><span class="hs-identifier hs-var">mPayload</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-264"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMPong"><span class="hs-identifier hs-type">SMPong</span></a></span><span> </span><span id="local-6989586621688275702"><span class="annot"><span class="annottext">Maybe PingPongPayload
+</span><a href="#local-6989586621688275702"><span class="hs-identifier hs-var">mPayload</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-265"></span><span>        </span><span class="annot"><span class="annottext">Maybe PingPongPayload -&gt; ServerMsgType -&gt; [(Text, EncJSON)]
 forall a a a.
 (IsString a, ToJSON a, ToJSON a) =&gt;
 Maybe a -&gt; a -&gt; [(a, EncJSON)]
-</span><a href="#local-6989586621688275899"><span class="hs-identifier hs-var">encodePingPongPayload</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PingPongPayload
-</span><a href="#local-6989586621688275898"><span class="hs-identifier hs-var">mPayload</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
+</span><a href="#local-6989586621688275703"><span class="hs-identifier hs-var">encodePingPongPayload</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PingPongPayload
+</span><a href="#local-6989586621688275702"><span class="hs-identifier hs-var">mPayload</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMT_GQL_PONG"><span class="hs-identifier hs-var">SMT_GQL_PONG</span></a></span><span>
-</span><span id="line-266"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMNext"><span class="hs-identifier hs-type">SMNext</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#DataMsg"><span class="hs-identifier hs-type">DataMsg</span></a></span><span> </span><span id="local-6989586621688275897"><span class="annot"><span class="annottext">OperationId
-</span><a href="#local-6989586621688275897"><span class="hs-identifier hs-var">opId</span></a></span></span><span> </span><span id="local-6989586621688275896"><span class="annot"><span class="annottext">GQResponse
-</span><a href="#local-6989586621688275896"><span class="hs-identifier hs-var">payload</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-266"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMNext"><span class="hs-identifier hs-type">SMNext</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#DataMsg"><span class="hs-identifier hs-type">DataMsg</span></a></span><span> </span><span id="local-6989586621688275701"><span class="annot"><span class="annottext">OperationId
+</span><a href="#local-6989586621688275701"><span class="hs-identifier hs-var">opId</span></a></span></span><span> </span><span id="local-6989586621688275700"><span class="annot"><span class="annottext">GQResponse
+</span><a href="#local-6989586621688275700"><span class="hs-identifier hs-var">payload</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-267"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">ServerMsgType -&gt; (Text, EncJSON)
 forall a a. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
-</span><a href="#local-6989586621688275908"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
+</span><a href="#local-6989586621688275712"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMT_GQL_NEXT"><span class="hs-identifier hs-var">SMT_GQL_NEXT</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-268"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;id&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">OperationId -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">OperationId
-</span><a href="#local-6989586621688275897"><span class="hs-identifier hs-var">opId</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688275701"><span class="hs-identifier hs-var">opId</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-269"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;payload&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">GQResponse -&gt; EncJSON
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#encodeGQResp"><span class="hs-identifier hs-var">encodeGQResp</span></a></span><span> </span><span class="annot"><span class="annottext">GQResponse
-</span><a href="#local-6989586621688275896"><span class="hs-identifier hs-var">payload</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688275700"><span class="hs-identifier hs-var">payload</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-270"></span><span>        </span><span class="hs-special">]</span><span>
 </span><span id="line-271"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-272"></span><span>    </span><span id="local-6989586621688275908"><span class="annot"><span class="annottext">encTy :: a -&gt; (a, EncJSON)
-</span><a href="#local-6989586621688275908"><span class="hs-identifier hs-var hs-var">encTy</span></a></span></span><span> </span><span id="local-6989586621688275895"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621688275895"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
+</span><span id="line-272"></span><span>    </span><span id="local-6989586621688275712"><span class="annot"><span class="annottext">encTy :: a -&gt; (a, EncJSON)
+</span><a href="#local-6989586621688275712"><span class="hs-identifier hs-var hs-var">encTy</span></a></span></span><span> </span><span id="local-6989586621688275699"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688275699"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
 </span><span class="hs-string">&quot;type&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621688275895"><span class="hs-identifier hs-var">ty</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688275699"><span class="hs-identifier hs-var">ty</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-273"></span><span>
-</span><span id="line-274"></span><span>    </span><span id="local-6989586621688275899"><span class="annot"><span class="annottext">encodePingPongPayload :: Maybe a -&gt; a -&gt; [(a, EncJSON)]
-</span><a href="#local-6989586621688275899"><span class="hs-identifier hs-var hs-var">encodePingPongPayload</span></a></span></span><span> </span><span id="local-6989586621688275894"><span class="annot"><span class="annottext">Maybe a
-</span><a href="#local-6989586621688275894"><span class="hs-identifier hs-var">mPayload</span></a></span></span><span> </span><span id="local-6989586621688275893"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621688275893"><span class="hs-identifier hs-var">msgType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe a
-</span><a href="#local-6989586621688275894"><span class="hs-identifier hs-var">mPayload</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-275"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688275892"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621688275892"><span class="hs-identifier hs-var">payload</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-274"></span><span>    </span><span id="local-6989586621688275703"><span class="annot"><span class="annottext">encodePingPongPayload :: Maybe a -&gt; a -&gt; [(a, EncJSON)]
+</span><a href="#local-6989586621688275703"><span class="hs-identifier hs-var hs-var">encodePingPongPayload</span></a></span></span><span> </span><span id="local-6989586621688275698"><span class="annot"><span class="annottext">Maybe a
+</span><a href="#local-6989586621688275698"><span class="hs-identifier hs-var">mPayload</span></a></span></span><span> </span><span id="local-6989586621688275697"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688275697"><span class="hs-identifier hs-var">msgType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe a
+</span><a href="#local-6989586621688275698"><span class="hs-identifier hs-var">mPayload</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-275"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688275696"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688275696"><span class="hs-identifier hs-var">payload</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-276"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">a -&gt; (a, EncJSON)
 forall a a. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
-</span><a href="#local-6989586621688275908"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621688275893"><span class="hs-identifier hs-var">msgType</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688275712"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688275697"><span class="hs-identifier hs-var">msgType</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-277"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
 </span><span class="hs-string">&quot;payload&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621688275892"><span class="hs-identifier hs-var">payload</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688275696"><span class="hs-identifier hs-var">payload</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-278"></span><span>        </span><span class="hs-special">]</span><span>
 </span><span id="line-279"></span><span>      </span><span class="annot"><span class="annottext">Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">a -&gt; (a, EncJSON)
 forall a a. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
-</span><a href="#local-6989586621688275908"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621688275893"><span class="hs-identifier hs-var">msgType</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621688275712"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688275697"><span class="hs-identifier hs-var">msgType</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-280"></span><span>
 </span><span id="line-281"></span><span class="hs-comment">-- This &quot;timer&quot; is necessary while initialising the connection</span><span>
 </span><span id="line-282"></span><span class="hs-comment">-- with the server. Also, this is specific to the GraphQL-WS protocol.</span><span>
 </span><span id="line-283"></span><span class="hs-keyword">data</span><span> </span><span id="WSConnInitTimerStatus"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#WSConnInitTimerStatus"><span class="hs-identifier hs-var">WSConnInitTimerStatus</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Running"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#Running"><span class="hs-identifier hs-var">Running</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="Done"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#Done"><span class="hs-identifier hs-var">Done</span></a></span></span><span>
-</span><span id="line-284"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688275885"><span id="local-6989586621688275887"><span id="local-6989586621688275889"><span class="annot"><span class="annottext">Int -&gt; WSConnInitTimerStatus -&gt; ShowS
+</span><span id="line-284"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688275689"><span id="local-6989586621688275691"><span id="local-6989586621688275693"><span class="annot"><span class="annottext">Int -&gt; WSConnInitTimerStatus -&gt; ShowS
 [WSConnInitTimerStatus] -&gt; ShowS
 WSConnInitTimerStatus -&gt; String
 (Int -&gt; WSConnInitTimerStatus -&gt; ShowS)
@@ -1026,7 +1026,7 @@ show :: WSConnInitTimerStatus -&gt; String
 $cshow :: WSConnInitTimerStatus -&gt; String
 showsPrec :: Int -&gt; WSConnInitTimerStatus -&gt; ShowS
 $cshowsPrec :: Int -&gt; WSConnInitTimerStatus -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688275881"><span id="local-6989586621688275883"><span class="annot"><span class="annottext">WSConnInitTimerStatus -&gt; WSConnInitTimerStatus -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688275685"><span id="local-6989586621688275687"><span class="annot"><span class="annottext">WSConnInitTimerStatus -&gt; WSConnInitTimerStatus -&gt; Bool
 (WSConnInitTimerStatus -&gt; WSConnInitTimerStatus -&gt; Bool)
 -&gt; (WSConnInitTimerStatus -&gt; WSConnInitTimerStatus -&gt; Bool)
 -&gt; Eq WSConnInitTimerStatus
@@ -1041,24 +1041,24 @@ $c== :: WSConnInitTimerStatus -&gt; WSConnInitTimerStatus -&gt; Bool
 </span><span id="line-287"></span><span>
 </span><span id="line-288"></span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#getWSTimerState"><span class="hs-identifier hs-type">getWSTimerState</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#WSConnInitTimer"><span class="hs-identifier hs-type">WSConnInitTimer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#WSConnInitTimerStatus"><span class="hs-identifier hs-type">WSConnInitTimerStatus</span></a></span><span>
 </span><span id="line-289"></span><span id="getWSTimerState"><span class="annot"><span class="annottext">getWSTimerState :: WSConnInitTimer -&gt; IO WSConnInitTimerStatus
-</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#getWSTimerState"><span class="hs-identifier hs-var hs-var">getWSTimerState</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688275880"><span class="annot"><span class="annottext">TVar WSConnInitTimerStatus
-</span><a href="#local-6989586621688275880"><span class="hs-identifier hs-var">timerState</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TMVar ()
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#getWSTimerState"><span class="hs-identifier hs-var hs-var">getWSTimerState</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688275684"><span class="annot"><span class="annottext">TVar WSConnInitTimerStatus
+</span><a href="#local-6989586621688275684"><span class="hs-identifier hs-var">timerState</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TMVar ()
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TVar WSConnInitTimerStatus -&gt; IO WSConnInitTimerStatus
 forall a. TVar a -&gt; IO a
 </span><span class="hs-identifier hs-var">readTVarIO</span></span><span> </span><span class="annot"><span class="annottext">TVar WSConnInitTimerStatus
-</span><a href="#local-6989586621688275880"><span class="hs-identifier hs-var">timerState</span></a></span><span>
+</span><a href="#local-6989586621688275684"><span class="hs-identifier hs-var">timerState</span></a></span><span>
 </span><span id="line-290"></span><span>
 </span><span id="line-291"></span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#getNewWSTimer"><span class="hs-identifier hs-type">getNewWSTimer</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Time.Clock.Units.html#Seconds"><span class="hs-identifier hs-type">Seconds</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#WSConnInitTimer"><span class="hs-identifier hs-type">WSConnInitTimer</span></a></span><span>
 </span><span id="line-292"></span><span id="getNewWSTimer"><span class="annot"><span class="annottext">getNewWSTimer :: Seconds -&gt; IO WSConnInitTimer
-</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#getNewWSTimer"><span class="hs-identifier hs-var hs-var">getNewWSTimer</span></a></span></span><span> </span><span id="local-6989586621688275878"><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621688275878"><span class="hs-identifier hs-var">timeout</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-293"></span><span>  </span><span id="local-6989586621688275877"><span class="annot"><span class="annottext">TVar WSConnInitTimerStatus
-</span><a href="#local-6989586621688275877"><span class="hs-identifier hs-var">timerState</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">WSConnInitTimerStatus -&gt; IO (TVar WSConnInitTimerStatus)
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#getNewWSTimer"><span class="hs-identifier hs-var hs-var">getNewWSTimer</span></a></span></span><span> </span><span id="local-6989586621688275682"><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621688275682"><span class="hs-identifier hs-var">timeout</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-293"></span><span>  </span><span id="local-6989586621688275681"><span class="annot"><span class="annottext">TVar WSConnInitTimerStatus
+</span><a href="#local-6989586621688275681"><span class="hs-identifier hs-var">timerState</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">WSConnInitTimerStatus -&gt; IO (TVar WSConnInitTimerStatus)
 forall a. a -&gt; IO (TVar a)
 </span><span class="hs-identifier hs-var">newTVarIO</span></span><span> </span><span class="annot"><span class="annottext">WSConnInitTimerStatus
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#Running"><span class="hs-identifier hs-var">Running</span></a></span><span>
-</span><span id="line-294"></span><span>  </span><span id="local-6989586621688275875"><span class="annot"><span class="annottext">TMVar ()
-</span><a href="#local-6989586621688275875"><span class="hs-identifier hs-var">timer</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (TMVar ())
+</span><span id="line-294"></span><span>  </span><span id="local-6989586621688275679"><span class="annot"><span class="annottext">TMVar ()
+</span><a href="#local-6989586621688275679"><span class="hs-identifier hs-var">timer</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (TMVar ())
 forall a. IO (TMVar a)
 </span><span class="hs-identifier hs-var">newEmptyTMVarIO</span></span><span>
 </span><span id="line-295"></span><span>  </span><span class="annot"><span class="annottext">IO ThreadId -&gt; IO ()
@@ -1073,31 +1073,31 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-297"></span><span>      </span><span class="annot"><span class="annottext">DiffTime -&gt; IO ()
 </span><a href="Control.Concurrent.Extended.html#sleep"><span class="hs-identifier hs-var">sleep</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Seconds -&gt; DiffTime
 </span><a href="Data.Time.Clock.Units.html#seconds"><span class="hs-identifier hs-var hs-var">seconds</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621688275878"><span class="hs-identifier hs-var">timeout</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688275682"><span class="hs-identifier hs-var">timeout</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-298"></span><span>      </span><span class="annot"><span class="annottext">STM () -&gt; IO ()
 forall a. STM a -&gt; IO a
 </span><span class="hs-identifier hs-var">atomically</span></span><span> </span><span class="annot"><span class="annottext">(STM () -&gt; IO ()) -&gt; STM () -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-299"></span><span>        </span><span id="local-6989586621688275869"><span class="annot"><span class="annottext">WSConnInitTimerStatus
-</span><a href="#local-6989586621688275869"><span class="hs-identifier hs-var">runTimerState</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TVar WSConnInitTimerStatus -&gt; STM WSConnInitTimerStatus
+</span><span id="line-299"></span><span>        </span><span id="local-6989586621688275673"><span class="annot"><span class="annottext">WSConnInitTimerStatus
+</span><a href="#local-6989586621688275673"><span class="hs-identifier hs-var">runTimerState</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TVar WSConnInitTimerStatus -&gt; STM WSConnInitTimerStatus
 forall a. TVar a -&gt; STM a
 </span><span class="hs-identifier hs-var">readTVar</span></span><span> </span><span class="annot"><span class="annottext">TVar WSConnInitTimerStatus
-</span><a href="#local-6989586621688275877"><span class="hs-identifier hs-var">timerState</span></a></span><span>
+</span><a href="#local-6989586621688275681"><span class="hs-identifier hs-var">timerState</span></a></span><span>
 </span><span id="line-300"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">WSConnInitTimerStatus
-</span><a href="#local-6989586621688275869"><span class="hs-identifier hs-var">runTimerState</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688275673"><span class="hs-identifier hs-var">runTimerState</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-301"></span><span>          </span><span class="annot"><span class="annottext">WSConnInitTimerStatus
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#Running"><span class="hs-identifier hs-var">Running</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-302"></span><span>            </span><span class="hs-comment">-- time's up, we set status to &quot;Done&quot;</span><span>
 </span><span id="line-303"></span><span>            </span><span class="annot"><span class="annottext">TVar WSConnInitTimerStatus -&gt; WSConnInitTimerStatus -&gt; STM ()
 forall a. TVar a -&gt; a -&gt; STM ()
 </span><span class="hs-identifier hs-var">writeTVar</span></span><span> </span><span class="annot"><span class="annottext">TVar WSConnInitTimerStatus
-</span><a href="#local-6989586621688275877"><span class="hs-identifier hs-var">timerState</span></a></span><span> </span><span class="annot"><span class="annottext">WSConnInitTimerStatus
+</span><a href="#local-6989586621688275681"><span class="hs-identifier hs-var">timerState</span></a></span><span> </span><span class="annot"><span class="annottext">WSConnInitTimerStatus
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#Done"><span class="hs-identifier hs-var">Done</span></a></span><span>
 </span><span id="line-304"></span><span>            </span><span class="annot"><span class="annottext">TMVar () -&gt; () -&gt; STM ()
 forall a. TMVar a -&gt; a -&gt; STM ()
 </span><span class="hs-identifier hs-var">putTMVar</span></span><span> </span><span class="annot"><span class="annottext">TMVar ()
-</span><a href="#local-6989586621688275875"><span class="hs-identifier hs-var">timer</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688275679"><span class="hs-identifier hs-var">timer</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-305"></span><span>          </span><span class="annot"><span class="annottext">WSConnInitTimerStatus
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#Done"><span class="hs-identifier hs-var">Done</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; STM ()
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -1105,6 +1105,6 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span id="line-306"></span><span>  </span><span class="annot"><span class="annottext">WSConnInitTimer -&gt; IO WSConnInitTimer
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TVar WSConnInitTimerStatus
-</span><a href="#local-6989586621688275877"><span class="hs-identifier hs-var">timerState</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TMVar ()
-</span><a href="#local-6989586621688275875"><span class="hs-identifier hs-var">timer</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688275681"><span class="hs-identifier hs-var">timerState</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TMVar ()
+</span><a href="#local-6989586621688275679"><span class="hs-identifier hs-var">timer</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-307"></span></pre></body></html>
