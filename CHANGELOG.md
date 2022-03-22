@@ -143,6 +143,7 @@ function:
 ### Bug fixes and improvements
 
 - server: Fix regression in MSSQL subscriptions when results exceed 2048 characters (#8267)
+- server: refactor OpenAPI spec generation (for REST endpoints) and improve OpenAPI warnings
 - server: add jsonb to string cast support - postgres 
 - server: improve performance of fetching postgres catalog metadata for tables and functions
 - server: Queries present in query collections, such as allow-list, and rest-endpoints are now validated (against the schema)

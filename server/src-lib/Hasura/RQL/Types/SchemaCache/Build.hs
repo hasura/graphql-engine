@@ -55,7 +55,7 @@ import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.QueryCollection
-import Hasura.RQL.Types.RemoteSchema (RemoteSchemaIntrospection, RemoteSchemaName)
+import Hasura.RQL.Types.RemoteSchema (RemoteSchemaName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.Session
 import Hasura.Tracing (TraceT)
@@ -363,14 +363,13 @@ withNewInconsistentObjsCheck action = do
 -- static analysis over the saved queries and reports any inconsistenties
 -- with the current schema.
 getInconsistentQueryCollections ::
-  Maybe RemoteSchemaIntrospection ->
+  G.SchemaIntrospection ->
   QueryCollections ->
   ((CollectionName, ListedQuery) -> MetadataObject) ->
   EndpointTrie GQLQueryWithText ->
   [NormalizedQuery] ->
   [InconsistentMetadata]
-getInconsistentQueryCollections Nothing _ _ _ _ = []
-getInconsistentQueryCollections (Just rs) qcs lqToMetadataObj restEndpoints allowLst = map (\(o, t) -> InconsistentObject t Nothing o) fE
+getInconsistentQueryCollections rs qcs lqToMetadataObj restEndpoints allowLst = map (\(o, t) -> InconsistentObject t Nothing o) fE
   where
     zipLQwithDef :: (CollectionName, CreateCollection) -> [((CollectionName, ListedQuery), G.ExecutableDefinition G.Name)]
     zipLQwithDef (cName, cc) =
@@ -403,7 +402,7 @@ getInconsistentQueryCollections (Just rs) qcs lqToMetadataObj restEndpoints allo
        in msgInit <> lToTxt allErrs <> faultyEndpoints <> isInAllowList
 
 validateQuery ::
-  RemoteSchemaIntrospection ->
+  G.SchemaIntrospection ->
   (a -> MetadataObject) ->
   (a -> [Text] -> Text) ->
   (a, G.ExecutableDefinition G.Name) ->

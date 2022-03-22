@@ -320,6 +320,7 @@ data SchemaCache = SchemaCache
     scActions :: !ActionCache,
     scRemoteSchemas :: !RemoteSchemaMap,
     scAllowlist :: !InlinedAllowlist,
+    scAdminIntrospection :: !G.SchemaIntrospection,
     scGQLContext :: !(HashMap RoleName (RoleContext GQLContext)),
     scUnauthenticatedGQLContext :: !GQLContext,
     scRelayContext :: !(HashMap RoleName (RoleContext GQLContext)),

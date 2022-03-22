@@ -28,6 +28,7 @@ import Hasura.GraphQL.Parser
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Internal.Parser (FieldParser (..))
+import Hasura.GraphQL.Parser.Schema.Convert (convertToSchemaIntrospection)
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Instances ()
@@ -78,7 +79,8 @@ buildGQLContext ::
   ActionCache ->
   AnnotatedCustomTypes ->
   m
-    ( HashMap RoleName (RoleContext GQLContext),
+    ( G.SchemaIntrospection,
+      HashMap RoleName (RoleContext GQLContext),
       GQLContext,
       HashSet InconsistentMetadata
     )
@@ -110,18 +112,24 @@ buildGQLContext ServerConfigCtx {..} queryType sources allRemoteSchemas allActio
                 role
                 _sccRemoteSchemaPermsCtx
             QueryRelay ->
-              (,mempty)
+              (,mempty,G.SchemaIntrospection mempty)
                 <$> buildRelayRoleContext
                   (_sccSQLGenCtx, queryType, _sccFunctionPermsCtx)
                   sources
                   allActionInfos
                   customTypes
                   role
+
+  adminIntrospection <-
+    case Map.lookup adminRoleName roleContexts of
+      Just (_context, _errors, introspection) -> pure introspection
+      Nothing -> throw500 "buildGQLContext failed to build for the admin role"
   (unauthenticated, unauthenticatedRemotesErrors) <- unauthenticatedContext allRemoteSchemas _sccRemoteSchemaPermsCtx
   pure
-    ( fst <$> roleContexts,
+    ( adminIntrospection,
+      view _1 <$> roleContexts,
       unauthenticated,
-      Set.unions $ unauthenticatedRemotesErrors : map snd (Map.elems roleContexts)
+      Set.unions $ unauthenticatedRemotesErrors : map (view _2) (Map.elems roleContexts)
     )
 
 -- | Build the @QueryHasura@ context for a given role.
@@ -135,7 +143,11 @@ buildRoleContext ::
   AnnotatedCustomTypes ->
   RoleName ->
   RemoteSchemaPermsCtx ->
-  m (RoleContext GQLContext, HashSet InconsistentMetadata)
+  m
+    ( RoleContext GQLContext,
+      HashSet InconsistentMetadata,
+      G.SchemaIntrospection
+    )
 buildRoleContext options sources remotes allActionInfos customTypes role remoteSchemaPermsCtx = do
   let ( SQLGenCtx stringifyNum dangerousBooleanCollapse optimizePermissionFilters,
         queryType,
@@ -173,12 +185,23 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
 
     -- In order to catch errors early, we attempt to generate the data
     -- required for introspection, which ends up doing a few correctness
-    -- checks in the GraphQL schema.
-    void $
-      buildIntrospectionSchema
-        (P.parserType queryParserBackend)
-        (P.parserType <$> mutationParserBackend)
-        (P.parserType <$> subscriptionParser)
+    -- checks in the GraphQL schema. Furthermore, we want to persist this
+    -- information in the case of the admin role.
+    introspectionSchema <- do
+      result <-
+        convertToSchemaIntrospection
+          <$> buildIntrospectionSchema
+            (P.parserType queryParserBackend)
+            (P.parserType <$> mutationParserBackend)
+            (P.parserType <$> subscriptionParser)
+      pure $
+        -- TODO(nicuveo): we treat the admin role differently in this function,
+        -- which is a bit inelegant; we might want to refactor this function and
+        -- split it into several steps, so that we can make a separate function for
+        -- the admin role that reuses the common parts and avoid such tests.
+        if role == adminRoleName
+          then result
+          else G.SchemaIntrospection mempty
     void $
       buildIntrospectionSchema
         (P.parserType queryParserFrontend)
@@ -191,7 +214,11 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
         !backendContext =
           GQLContext (finalizeParser queryParserBackend) (finalizeParser <$> mutationParserBackend)
 
-    pure (RoleContext frontendContext $ Just backendContext, remoteSchemaErrors)
+    pure
+      ( RoleContext frontendContext $ Just backendContext,
+        remoteSchemaErrors,
+        introspectionSchema
+      )
   where
     buildSource ::
       forall b.

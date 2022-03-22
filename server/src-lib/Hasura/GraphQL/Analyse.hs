@@ -12,10 +12,6 @@ where
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Hasura.Prelude hiding (get, put)
-import Hasura.RQL.Types.RemoteSchema
-  ( RemoteSchemaInputValueDefinition (RemoteSchemaInputValueDefinition, _rsitdDefinition),
-    RemoteSchemaIntrospection (RemoteSchemaIntrospection),
-  )
 import Language.GraphQL.Draft.Syntax (ExecutableDefinition, Field, GType, Name, TypeDefinition)
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -54,13 +50,13 @@ instance Semigroup (Analysis v) where
       unionFields = foldl' (safeInsertInFieldMap) (_aFields fa1) (OMap.toList (_aFields fa2))
 
 -- | FieldDef is analogous to `GType` from the `Language.GraphQL.Draft.Syntax` module
-data FieldDef = FieldInfo G.Nullability (TypeDefinition [Name] RemoteSchemaInputValueDefinition) | FieldList G.Nullability FieldDef deriving (Show)
+data FieldDef = FieldInfo G.Nullability (TypeDefinition [Name] G.InputValueDefinition) | FieldList G.Nullability FieldDef deriving (Show)
 
 type FieldName = Name
 
 type VarName = Name
 
-analyzeGraphqlQuery :: ExecutableDefinition Name -> RemoteSchemaIntrospection -> Maybe (Analysis Name)
+analyzeGraphqlQuery :: ExecutableDefinition Name -> G.SchemaIntrospection -> Maybe (Analysis Name)
 analyzeGraphqlQuery (G.ExecutableDefinitionOperation (G.OperationDefinitionTyped td)) sc = do
   let t = (G._todType td,) <$> G._todSelectionSet td
       varDefs = G._todVariableDefinitions td
@@ -103,7 +99,7 @@ getFieldName :: Field frag var -> Name
 getFieldName f = fromMaybe (G._fName f) (G._fAlias f)
 
 getFieldsMap ::
-  RemoteSchemaIntrospection ->
+  G.SchemaIntrospection ->
   [(G.OperationType, G.Selection frag var)] ->
   (InsOrdHashMap FieldName (FieldDef, Maybe (FieldAnalysis var)), [Text])
 getFieldsMap rs ss =
@@ -124,7 +120,7 @@ getFieldsTypeM fieldName operationDefinitionSum = do
   pure $ G._fldType fieldDefinition
 
 lookupRoot ::
-  RemoteSchemaIntrospection ->
+  G.SchemaIntrospection ->
   (G.OperationType, G.Field frag var) ->
   Either (FieldDef, Maybe (FieldAnalysis var)) [Text]
 lookupRoot rs (ot, f) = do
@@ -164,7 +160,7 @@ fieldTypeMetaFields nam
   | otherwise = Nothing
 
 lookupDefinition ::
-  RemoteSchemaIntrospection ->
+  G.SchemaIntrospection ->
   GType ->
   G.Field frag var ->
   Either (FieldDef, Maybe (FieldAnalysis var)) [Text]
@@ -192,12 +188,12 @@ asObjectTypeDefinition :: G.TypeDefinition possibleTypes inputType -> Maybe (G.O
 asObjectTypeDefinition (G.TypeDefinitionObject o) = Just o
 asObjectTypeDefinition _ = Nothing
 
-lookupRS :: RemoteSchemaIntrospection -> G.Name -> Maybe (TypeDefinition [Name] RemoteSchemaInputValueDefinition)
-lookupRS (RemoteSchemaIntrospection rsDefs) n = Map.lookup n rsDefs
+lookupRS :: G.SchemaIntrospection -> G.Name -> Maybe (TypeDefinition [Name] G.InputValueDefinition)
+lookupRS (G.SchemaIntrospection rsDefs) n = Map.lookup n rsDefs
 
 typeToSchemaM ::
   GType ->
-  (Name -> Either (TypeDefinition [Name] RemoteSchemaInputValueDefinition, Maybe (FieldAnalysis var)) [Text]) ->
+  (Name -> Either (TypeDefinition [Name] G.InputValueDefinition, Maybe (FieldAnalysis var)) [Text]) ->
   Either (FieldDef, Maybe (FieldAnalysis var)) [Text]
 typeToSchemaM (G.TypeNamed n tName) k = case k tName of
   Right x -> Right x
@@ -207,10 +203,10 @@ typeToSchemaM (G.TypeList n t) k = case typeToSchemaM t k of
   Left (t', x) -> Left (FieldList n t', x)
 
 getDefinition ::
-  RemoteSchemaIntrospection ->
-  TypeDefinition [Name] RemoteSchemaInputValueDefinition ->
+  G.SchemaIntrospection ->
+  TypeDefinition [Name] G.InputValueDefinition ->
   G.SelectionSet frag var ->
-  (TypeDefinition [Name] RemoteSchemaInputValueDefinition, Maybe (FieldAnalysis var))
+  (TypeDefinition [Name] G.InputValueDefinition, Maybe (FieldAnalysis var))
 getDefinition rs td sels =
   (td,) $ case td of
     (G.TypeDefinitionObject otd) -> do
@@ -227,18 +223,18 @@ itrListWith :: GType -> (Name -> p) -> p
 itrListWith (G.TypeNamed _ tName) k = k tName
 itrListWith (G.TypeList _ t) k = itrListWith t k
 
-getFieldVars :: G.FieldDefinition RemoteSchemaInputValueDefinition -> HashMap Name (G.Value var) -> [(VarName, (GType, Maybe (G.Value var)))]
+getFieldVars :: G.FieldDefinition G.InputValueDefinition -> HashMap Name (G.Value var) -> [(VarName, (GType, Maybe (G.Value var)))]
 getFieldVars fDef' agMap =
   map
-    ( \RemoteSchemaInputValueDefinition {..} ->
-        (G._ivdName _rsitdDefinition, (G._ivdType _rsitdDefinition, Map.lookup (G._ivdName _rsitdDefinition) agMap))
+    ( \G.InputValueDefinition {..} ->
+        (_ivdName, (_ivdType, Map.lookup _ivdName agMap))
     )
     (G._fldArgumentsDefinition fDef')
 
 mkFieldAnalysis ::
-  RemoteSchemaIntrospection ->
+  G.SchemaIntrospection ->
   G.Selection frag var ->
-  G.FieldDefinition RemoteSchemaInputValueDefinition ->
+  G.FieldDefinition G.InputValueDefinition ->
   Maybe (FieldAnalysis var)
 -- TODO: Handle `SelectionFragmentSpread` and `SelectionInlineFragment` as well
 mkFieldAnalysis _ (G.SelectionFragmentSpread _) _ = Nothing
@@ -265,7 +261,7 @@ mkFieldAnalysis rs (G.SelectionField f) fd = do
         _fErrs = fErrs
       }
 
-lookupFieldBySelection :: G.Selection frag0 var0 -> G.ObjectTypeDefinition RemoteSchemaInputValueDefinition -> Either [Text] (G.FieldDefinition RemoteSchemaInputValueDefinition)
+lookupFieldBySelection :: G.Selection frag0 var0 -> G.ObjectTypeDefinition G.InputValueDefinition -> Either [Text] (G.FieldDefinition G.InputValueDefinition)
 lookupFieldBySelection (G.SelectionField f) otd = case find (\d -> G._fName f == G._fldName d) lst of
   Nothing -> case isMetaField (G._fName f) False of
     Nothing -> Left ["Couldn't find definition for field " <> G.unName (getFieldName f) <> " in " <> G.unName (G._otdName otd)]
@@ -273,7 +269,7 @@ lookupFieldBySelection (G.SelectionField f) otd = case find (\d -> G._fName f ==
   Just fd -> Right fd
   where
     lst = G._otdFieldsDefinition otd
-    mkFieldDef :: G.Name -> GType -> G.FieldDefinition RemoteSchemaInputValueDefinition
+    mkFieldDef :: G.Name -> GType -> G.FieldDefinition G.InputValueDefinition
     mkFieldDef gName gt =
       G.FieldDefinition
         { _fldDescription = Nothing,
