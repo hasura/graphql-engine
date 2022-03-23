@@ -23,7 +23,7 @@ export interface FeatureFlagDefinition {
 
 export interface FeatureFlagState {
   id: FeatureFlagId;
-  enable: boolean;
+  enabled: boolean;
   enableDate?: Date;
   dismissed: boolean;
   dismissedDate?: Date;
