@@ -206,6 +206,8 @@ To format all files, you can run:
 npm run format
 ```
 
+More tooling is listed [here](./src/docs/dev/tooling.stories.mdx) ([storybook](https://main--614d7904644d03004addd43b.chromatic.com/?path=/story/dev-tooling--page)).
+
 ### Submitting a pull request
 
 - All the development work happens in your own fork of the graphql-engine.
