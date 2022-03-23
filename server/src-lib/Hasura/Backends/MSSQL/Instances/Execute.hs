@@ -150,9 +150,7 @@ msDBLiveQueryExplain (LiveQueryPlan plan sourceConfig variables _) = do
   explainInfo <- liftEitherM $ runExceptT $ (mssqlRunReadOnly mssqlExecCtx) (runShowplan query)
   pure $ LiveQueryPlanExplanation (T.toTxt query) explainInfo variables
 
---------------------------------------------------------------------------------
--- Producing the correct SQL-level list comprehension to multiplex a query
-
+-- | Producing the correct SQL-level list comprehension to multiplex a query
 -- Problem description:
 --
 -- Generate a query that repeats the same query N times but with
@@ -160,7 +158,9 @@ msDBLiveQueryExplain (LiveQueryPlan plan sourceConfig variables _) = do
 --
 -- [ Select x y | (x,y) <- [..] ]
 --
-
+-- Caution: Be aware that this query has a @FOR JSON@ clause at the top-level
+-- and hence its results may be split up across multiple rows. Use
+-- 'Database.MSSQL.Transaction.forJsonQueryE' to handle this.
 multiplexRootReselect ::
   [(CohortId, CohortVariables)] ->
   TSQL.Reselect ->

@@ -4,6 +4,8 @@
 
 ### Bug fixes and improvements
 
+- server: Fix regression in MSSQL subscriptions when results exceed 2048 characters (#8267)
+
 ## v2.4.0-beta.2
 
 - server: fix regression where remote relationships would get exposed over Relay, which is unsupported
