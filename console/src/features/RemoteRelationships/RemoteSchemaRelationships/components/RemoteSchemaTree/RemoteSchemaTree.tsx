@@ -9,7 +9,7 @@ import {
   HasuraColumn,
   RelationshipFields,
   TreeNode,
-} from './types';
+} from '../../types';
 import {
   buildTree,
   findRemoteField,
@@ -43,13 +43,13 @@ export const RemoteSchemaTree = ({
 }: RemoteSchemaTreeProps) => {
   const tree: TreeNode[] = useMemo(
     () =>
-      buildTree(
+      buildTree({
         schema,
         relationshipFields,
         setRelationshipFields,
         columns,
-        rootFields
-      ),
+        rootFields,
+      }),
     [relationshipFields, schema, rootFields, columns]
   );
 
@@ -145,18 +145,20 @@ export const RemoteSchemaTree = ({
   };
 
   return (
-    <AntTree
-      checkable
-      checkStrictly
-      blockNode
-      selectable={false}
-      onCheck={onCheck}
-      onExpand={onExpand}
-      treeData={tree}
-      expandedKeys={expandedKeys}
-      checkedKeys={checkedKeys}
-      // disable animation onExpand to improve performance
-      motion={null}
-    />
+    <div className="py-2 px-1 rounded-md border border-gray-300 bg-white">
+      <AntTree
+        checkable
+        checkStrictly
+        blockNode
+        selectable={false}
+        onCheck={onCheck}
+        onExpand={onExpand}
+        treeData={tree}
+        expandedKeys={expandedKeys}
+        checkedKeys={checkedKeys}
+        // disable animation onExpand to improve performance
+        motion={null}
+      />
+    </div>
   );
 };

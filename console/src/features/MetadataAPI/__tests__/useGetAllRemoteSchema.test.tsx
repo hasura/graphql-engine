@@ -3,7 +3,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { renderHook } from '@testing-library/react-hooks';
 import { wrapper } from '../../../hooks/__tests__/common/decorator';
-import { useGetAllRemoteSchemaRelationships } from '../hooks/useGetAllRemoteSchemaRelationships';
+import { useGetAllRemoteSchemaRelationships } from '../hooks/useMetadataRemoteSchemas';
 
 let export_metadata_response_type = 'legacy_rs_relationships';
 
