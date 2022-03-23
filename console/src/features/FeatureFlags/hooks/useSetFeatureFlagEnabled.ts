@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from 'react-query';
-import { FeatureFlagId, useFeatureFlags } from '@/features/FeatureFlag';
+import { FeatureFlagId, useFeatureFlags } from '@/features/FeatureFlags';
 import { saveFeatureFlagsStateToLocalStorage } from '../utils';
 
-export function useFeatureFlagDismiss() {
+export function useSetFeatureFlagEnabled() {
   const queryClient = useQueryClient();
   const { data, isError, isLoading } = useFeatureFlags();
 
@@ -25,7 +25,7 @@ export function useFeatureFlagDismiss() {
           ...item,
           state: {
             ...item.state,
-            enable: newState,
+            enabled: newState,
             enableDate: new Date(),
           },
         };

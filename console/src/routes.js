@@ -37,6 +37,7 @@ import {
   INSECURE_TLS_ALLOW_LIST,
 } from './helpers/versionUtils';
 import AuthContainer from './components/Services/Auth/AuthContainer';
+import { FeatureFlags } from './features/FeatureFlags';
 
 const routes = store => {
   // load hasuractl migration status
@@ -151,6 +152,7 @@ const routes = store => {
             {checkFeatureSupport(INSECURE_TLS_ALLOW_LIST) && (
               <Route path="insecure-domain" component={InsecureDomains} />
             )}
+            <Route path="feature-flags" component={FeatureFlags} />
           </Route>
           {dataRouter}
           {remoteSchemaRouter}

@@ -71,3 +71,5 @@ export {
 
 export * from './table';
 export { ReactQueryProvider, reactQueryClient } from '../src/lib/reactQuery';
+
+export { FeatureFlags } from '../src/features/FeatureFlags'

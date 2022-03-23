@@ -15,7 +15,7 @@ describe('mergeFlagWithState', () => {
       },
     ];
     const inputState: FeatureFlagState[] = [
-      { id: 'AAA', dismissed: false, enable: true },
+      { id: 'AAA', dismissed: false, enabled: true },
     ];
 
     const result = mergeFlagWithState(inputFlags, inputState);
@@ -30,7 +30,7 @@ describe('mergeFlagWithState', () => {
           "section": "api",
           "state": Object {
             "dismissed": false,
-            "enable": true,
+            "enabled": true,
             "id": "AAA",
           },
           "status": "beta",
@@ -53,7 +53,7 @@ describe('mergeFlagWithState', () => {
       },
     ];
     const inputState: FeatureFlagState[] = [
-      { id: 'CCC', dismissed: false, enable: true },
+      { id: 'CCC', dismissed: false, enabled: true },
     ];
 
     const result = mergeFlagWithState(inputFlags, inputState);
@@ -68,7 +68,7 @@ describe('mergeFlagWithState', () => {
           "section": "api",
           "state": Object {
             "dismissed": false,
-            "enable": false,
+            "enabled": false,
           },
           "status": "beta",
           "title": "Hello world",
@@ -112,7 +112,7 @@ describe('mergeFlagWithState', () => {
           "section": "api",
           "state": Object {
             "dismissed": false,
-            "enable": true,
+            "enabled": true,
           },
           "status": "beta",
           "title": "Hello world",
@@ -125,7 +125,7 @@ describe('mergeFlagWithState', () => {
           "section": "api",
           "state": Object {
             "dismissed": false,
-            "enable": false,
+            "enabled": false,
           },
           "status": "beta",
           "title": "Hello world",

@@ -31,7 +31,8 @@ type SectionDataKey =
   | 'logout'
   | 'about'
   | 'inherited-roles'
-  | 'insecure-domain';
+  | 'insecure-domain'
+  | 'feature-flags';
 
 interface SectionData {
   key: SectionDataKey;
@@ -113,6 +114,13 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
       dataTestVal: 'insecure-domain-link',
       title: 'Insecure TLS Allow List',
     });
+
+  sectionsData.push({
+    key: 'feature-flags',
+    link: '/settings/feature-flags',
+    dataTestVal: 'feature-flags-link',
+    title: 'Feature Flags',
+  });
 
   const currentLocation = location.pathname;
 

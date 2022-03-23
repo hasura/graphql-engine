@@ -33,18 +33,20 @@ export const mergeFlagWithState = (
     return {
       ...flag,
       state: flagState ?? {
-        enable: flag.defaultValue,
+        enabled: flag.defaultValue,
         dismissed: false,
       },
     };
   });
 };
 
-export function useFeatureFlags() {
+export function useFeatureFlags(additionalFlags?: FeatureFlagDefinition[]) {
   return useQuery(['featureFlags', 'all'], () =>
     Promise.all([
       getAvailableFeatureFlags(),
       getFeatureFlagStore(),
-    ]).then(([flags, state]) => mergeFlagWithState(flags, state))
+    ]).then(([flags, state]) =>
+      mergeFlagWithState([...(additionalFlags ?? []), ...flags], state)
+    )
   );
 }
