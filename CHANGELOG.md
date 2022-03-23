@@ -161,7 +161,12 @@ function:
 - console: disable search indexing with HTML meta tag
 - cli: fix inherited roles metadata not being updated when dropping all roles (#7872)
 - cli: add support for customization field in sources metadata (#8292)
+- ci: ubuntu and centos flavoured graphql-engine images are now available
 - console: add feature flags section in settings
+
+## v2.4.0-beta.3
+
+- server: fix regression in MSSQL subscriptions when results exceed 2048 characters (#8267)
 
 ## v2.4.0-beta.2
 
