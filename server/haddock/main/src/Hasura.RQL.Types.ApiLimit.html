@@ -23,7 +23,7 @@
 </span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Utils.html"><span class="hs-identifier">Hasura.Server.Utils</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Utils.html#isSessionVariable"><span class="hs-identifier">isSessionVariable</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Session.html"><span class="hs-identifier">Hasura.Session</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier">RoleName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-25"></span><span>
-</span><span id="line-26"></span><span id="local-6989586621688282846"><span id="local-6989586621688282847"></span></span><span class="hs-keyword">data</span><span> </span><span id="ApiLimit"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#ApiLimit"><span class="hs-identifier hs-var">ApiLimit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ApiLimit"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#ApiLimit"><span class="hs-identifier hs-var">ApiLimit</span></a></span></span><span>
+</span><span id="line-26"></span><span id="local-6989586621688278825"><span id="local-6989586621688278826"></span></span><span class="hs-keyword">data</span><span> </span><span id="ApiLimit"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#ApiLimit"><span class="hs-identifier hs-var">ApiLimit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ApiLimit"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#ApiLimit"><span class="hs-identifier hs-var">ApiLimit</span></a></span></span><span>
 </span><span id="line-27"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_alRateLimit"><span class="annot"><span class="annottext">ApiLimit -&gt; Maybe RateLimit
 </span><a href="Hasura.RQL.Types.ApiLimit.html#_alRateLimit"><span class="hs-identifier hs-var hs-var">_alRateLimit</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#RateLimit"><span class="hs-identifier hs-type">RateLimit</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-28"></span><span>    </span><span id="_alDepthLimit"><span class="annot"><span class="annottext">ApiLimit -&gt; Maybe DepthLimit
@@ -35,7 +35,7 @@
 </span><span id="line-31"></span><span>    </span><span id="_alDisabled"><span class="annot"><span class="annottext">ApiLimit -&gt; Bool
 </span><a href="Hasura.RQL.Types.ApiLimit.html#_alDisabled"><span class="hs-identifier hs-var hs-var">_alDisabled</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-32"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-33"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688282834"><span id="local-6989586621688282836"><span id="local-6989586621688282838"><span class="annot"><span class="annottext">Int -&gt; ApiLimit -&gt; ShowS
+</span><span id="line-33"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688278813"><span id="local-6989586621688278815"><span id="local-6989586621688278817"><span class="annot"><span class="annottext">Int -&gt; ApiLimit -&gt; ShowS
 [ApiLimit] -&gt; ShowS
 ApiLimit -&gt; String
 (Int -&gt; ApiLimit -&gt; ShowS)
@@ -48,7 +48,7 @@ show :: ApiLimit -&gt; String
 $cshow :: ApiLimit -&gt; String
 showsPrec :: Int -&gt; ApiLimit -&gt; ShowS
 $cshowsPrec :: Int -&gt; ApiLimit -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688282829"><span id="local-6989586621688282831"><span class="annot"><span class="annottext">ApiLimit -&gt; ApiLimit -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688278808"><span id="local-6989586621688278810"><span class="annot"><span class="annottext">ApiLimit -&gt; ApiLimit -&gt; Bool
 (ApiLimit -&gt; ApiLimit -&gt; Bool)
 -&gt; (ApiLimit -&gt; ApiLimit -&gt; Bool) -&gt; Eq ApiLimit
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -66,16 +66,16 @@ $cto :: forall x. Rep ApiLimit x -&gt; ApiLimit
 $cfrom :: forall x. ApiLimit -&gt; Rep ApiLimit x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-34"></span><span>
-</span><span id="line-35"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688282822"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#ApiLimit"><span class="hs-identifier hs-type">ApiLimit</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-36"></span><span>  </span><span id="local-6989586621688282820"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ApiLimit
+</span><span id="line-35"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688278801"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#ApiLimit"><span class="hs-identifier hs-type">ApiLimit</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-36"></span><span>  </span><span id="local-6989586621688278799"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ApiLimit
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Object -&gt; Parser ApiLimit) -&gt; Value -&gt; Parser ApiLimit
 forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">withObject</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;ApiLimit&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Object -&gt; Parser ApiLimit) -&gt; Value -&gt; Parser ApiLimit)
 -&gt; (Object -&gt; Parser ApiLimit) -&gt; Value -&gt; Parser ApiLimit
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688282817"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688282817"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688278796"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688278796"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-37"></span><span>    </span><span class="annot"><span class="annottext">Maybe RateLimit
 -&gt; Maybe DepthLimit
 -&gt; Maybe NodeLimit
@@ -95,7 +95,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
       -&gt; Maybe NodeLimit -&gt; Maybe TimeLimit -&gt; Bool -&gt; ApiLimit)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688282817"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe RateLimit)
+</span><a href="#local-6989586621688278796"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe RateLimit)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;rate_limit&quot;</span></span><span>
@@ -106,7 +106,7 @@ forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 -&gt; Parser (Maybe NodeLimit -&gt; Maybe TimeLimit -&gt; Bool -&gt; ApiLimit)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688282817"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe DepthLimit)
+</span><a href="#local-6989586621688278796"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe DepthLimit)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;depth_limit&quot;</span></span><span>
@@ -115,7 +115,7 @@ forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 -&gt; Parser (Maybe TimeLimit -&gt; Bool -&gt; ApiLimit)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688282817"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe NodeLimit)
+</span><a href="#local-6989586621688278796"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe NodeLimit)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;node_limit&quot;</span></span><span>
@@ -123,14 +123,14 @@ forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 -&gt; Parser (Maybe TimeLimit) -&gt; Parser (Bool -&gt; ApiLimit)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688282817"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe TimeLimit)
+</span><a href="#local-6989586621688278796"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe TimeLimit)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;time_limit&quot;</span></span><span>
 </span><span id="line-42"></span><span>      </span><span class="annot"><span class="annottext">Parser (Bool -&gt; ApiLimit) -&gt; Parser Bool -&gt; Parser ApiLimit
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688282817"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe Bool)
+</span><a href="#local-6989586621688278796"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe Bool)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;disabled&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Bool) -&gt; Bool -&gt; Parser Bool
@@ -138,8 +138,8 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
 </span><span id="line-43"></span><span>
-</span><span id="line-44"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688282807"><span id="local-6989586621688282809"><span id="local-6989586621688282811"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#ApiLimit"><span class="hs-identifier hs-type">ApiLimit</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-45"></span><span>  </span><span id="local-6989586621688282805"><span class="annot"><span class="annottext">toJSON :: ApiLimit -&gt; Value
+</span><span id="line-44"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688278786"><span id="local-6989586621688278788"><span id="local-6989586621688278790"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#ApiLimit"><span class="hs-identifier hs-type">ApiLimit</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-45"></span><span>  </span><span id="local-6989586621688278784"><span class="annot"><span class="annottext">toJSON :: ApiLimit -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-46"></span><span>    </span><span class="annot"><span class="annottext">Options -&gt; ApiLimit -&gt; Value
 forall a.
@@ -148,7 +148,7 @@ Options -&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">genericToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ShowS -&gt; Options
 </span><span class="hs-identifier hs-var">Casing.aesonPrefix</span></span><span> </span><span class="annot"><span class="annottext">ShowS
 </span><span class="hs-identifier hs-var">Casing.snakeCase</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">omitNothingFields :: Bool
-</span><a href="#local-6989586621688282800"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688278779"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">}</span><span>
 </span><span id="line-47"></span><span>
 </span><span id="line-48"></span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#emptyApiLimit"><span class="hs-identifier hs-type">emptyApiLimit</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#ApiLimit"><span class="hs-identifier hs-type">ApiLimit</span></a></span><span>
@@ -170,13 +170,13 @@ forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
 </span><span id="line-50"></span><span>
-</span><span id="line-51"></span><span id="local-6989586621688282798"><span id="local-6989586621688282799"></span></span><span class="hs-keyword">data</span><span> </span><span id="Limit"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#Limit"><span class="hs-identifier hs-var">Limit</span></a></span></span><span> </span><span id="local-6989586621688282893"><span class="annot"><a href="#local-6989586621688282893"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Limit"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#Limit"><span class="hs-identifier hs-var">Limit</span></a></span></span><span>
+</span><span id="line-51"></span><span id="local-6989586621688278777"><span id="local-6989586621688278778"></span></span><span class="hs-keyword">data</span><span> </span><span id="Limit"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#Limit"><span class="hs-identifier hs-var">Limit</span></a></span></span><span> </span><span id="local-6989586621688278872"><span class="annot"><a href="#local-6989586621688278872"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Limit"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#Limit"><span class="hs-identifier hs-var">Limit</span></a></span></span><span>
 </span><span id="line-52"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_lGlobal"><span class="annot"><span class="annottext">Limit a -&gt; a
-</span><a href="Hasura.RQL.Types.ApiLimit.html#_lGlobal"><span class="hs-identifier hs-var hs-var">_lGlobal</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621688282893"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.Types.ApiLimit.html#_lGlobal"><span class="hs-identifier hs-var hs-var">_lGlobal</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621688278872"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-53"></span><span>    </span><span id="_lPerRole"><span class="annot"><span class="annottext">Limit a -&gt; InsOrdHashMap RoleName a
-</span><a href="Hasura.RQL.Types.ApiLimit.html#_lPerRole"><span class="hs-identifier hs-var hs-var">_lPerRole</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688282893"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><a href="Hasura.RQL.Types.ApiLimit.html#_lPerRole"><span class="hs-identifier hs-var hs-var">_lPerRole</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688278872"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-54"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-55"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688282789"><span id="local-6989586621688282791"><span id="local-6989586621688282793"><span class="annot"><span class="annottext">Int -&gt; Limit a -&gt; ShowS
+</span><span id="line-55"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688278768"><span id="local-6989586621688278770"><span id="local-6989586621688278772"><span class="annot"><span class="annottext">Int -&gt; Limit a -&gt; ShowS
 [Limit a] -&gt; ShowS
 Limit a -&gt; String
 (Int -&gt; Limit a -&gt; ShowS)
@@ -192,7 +192,7 @@ show :: Limit a -&gt; String
 $cshow :: forall a. Show a =&gt; Limit a -&gt; String
 showsPrec :: Int -&gt; Limit a -&gt; ShowS
 $cshowsPrec :: forall a. Show a =&gt; Int -&gt; Limit a -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688282785"><span id="local-6989586621688282787"><span class="annot"><span class="annottext">Limit a -&gt; Limit a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688278764"><span id="local-6989586621688278766"><span class="annot"><span class="annottext">Limit a -&gt; Limit a -&gt; Bool
 (Limit a -&gt; Limit a -&gt; Bool)
 -&gt; (Limit a -&gt; Limit a -&gt; Bool) -&gt; Eq (Limit a)
 forall a. Eq a =&gt; Limit a -&gt; Limit a -&gt; Bool
@@ -213,30 +213,30 @@ $cto :: forall a x. Rep (Limit a) x -&gt; Limit a
 $cfrom :: forall a x. Limit a -&gt; Rep (Limit a) x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-56"></span><span>
-</span><span id="line-57"></span><span id="local-6989586621688282782"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688282779"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621688282782"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#Limit"><span class="hs-identifier hs-type">Limit</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688282782"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-58"></span><span>  </span><span id="local-6989586621688282778"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (Limit a)
-</span><a href="#local-6989586621688282778"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Object -&gt; Parser (Limit a)) -&gt; Value -&gt; Parser (Limit a)
+</span><span id="line-57"></span><span id="local-6989586621688278761"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688278758"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621688278761"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#Limit"><span class="hs-identifier hs-type">Limit</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688278761"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-58"></span><span>  </span><span id="local-6989586621688278757"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (Limit a)
+</span><a href="#local-6989586621688278757"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Object -&gt; Parser (Limit a)) -&gt; Value -&gt; Parser (Limit a)
 forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">withObject</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Limit&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Object -&gt; Parser (Limit a)) -&gt; Value -&gt; Parser (Limit a))
 -&gt; (Object -&gt; Parser (Limit a)) -&gt; Value -&gt; Parser (Limit a)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688282777"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688282777"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688278756"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688278756"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-59"></span><span>    </span><span class="annot"><span class="annottext">a -&gt; InsOrdHashMap RoleName a -&gt; Limit a
 forall a. a -&gt; InsOrdHashMap RoleName a -&gt; Limit a
 </span><a href="Hasura.RQL.Types.ApiLimit.html#Limit"><span class="hs-identifier hs-var">Limit</span></a></span><span> </span><span class="annot"><span class="annottext">(a -&gt; InsOrdHashMap RoleName a -&gt; Limit a)
 -&gt; Parser a -&gt; Parser (InsOrdHashMap RoleName a -&gt; Limit a)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688282777"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser a
+</span><a href="#local-6989586621688278756"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser a
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;global&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (InsOrdHashMap RoleName a -&gt; Limit a)
 -&gt; Parser (InsOrdHashMap RoleName a) -&gt; Parser (Limit a)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688282777"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe (InsOrdHashMap RoleName a))
+</span><a href="#local-6989586621688278756"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe (InsOrdHashMap RoleName a))
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;per_role&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe (InsOrdHashMap RoleName a))
@@ -246,9 +246,9 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span></span><span>
 </span><span id="line-60"></span><span>
-</span><span id="line-61"></span><span id="local-6989586621688282775"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688282768"><span id="local-6989586621688282770"><span id="local-6989586621688282772"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621688282775"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#Limit"><span class="hs-identifier hs-type">Limit</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688282775"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-62"></span><span>  </span><span id="local-6989586621688282767"><span class="annot"><span class="annottext">toJSON :: Limit a -&gt; Value
-</span><a href="#local-6989586621688282767"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-61"></span><span id="local-6989586621688278754"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688278747"><span id="local-6989586621688278749"><span id="local-6989586621688278751"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621688278754"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#Limit"><span class="hs-identifier hs-type">Limit</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688278754"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-62"></span><span>  </span><span id="local-6989586621688278746"><span class="annot"><span class="annottext">toJSON :: Limit a -&gt; Value
+</span><a href="#local-6989586621688278746"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-63"></span><span>    </span><span class="annot"><span class="annottext">Options -&gt; Limit a -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
@@ -265,13 +265,13 @@ Options -&gt; a -&gt; Value
 </span><span id="line-70"></span><span>
 </span><span id="line-71"></span><span class="hs-keyword">type</span><span> </span><span id="TimeLimit"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#TimeLimit"><span class="hs-identifier hs-var">TimeLimit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#Limit"><span class="hs-identifier hs-type">Limit</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#MaxTime"><span class="hs-identifier hs-type">MaxTime</span></a></span><span>
 </span><span id="line-72"></span><span>
-</span><span id="line-73"></span><span id="local-6989586621688282765"><span id="local-6989586621688282766"></span></span><span class="hs-keyword">data</span><span> </span><span id="RateLimitConfig"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#RateLimitConfig"><span class="hs-identifier hs-var">RateLimitConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RateLimitConfig"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#RateLimitConfig"><span class="hs-identifier hs-var">RateLimitConfig</span></a></span></span><span>
+</span><span id="line-73"></span><span id="local-6989586621688278744"><span id="local-6989586621688278745"></span></span><span class="hs-keyword">data</span><span> </span><span id="RateLimitConfig"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#RateLimitConfig"><span class="hs-identifier hs-var">RateLimitConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RateLimitConfig"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#RateLimitConfig"><span class="hs-identifier hs-var">RateLimitConfig</span></a></span></span><span>
 </span><span id="line-74"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_rlcMaxReqsPerMin"><span class="annot"><span class="annottext">RateLimitConfig -&gt; Int
 </span><a href="Hasura.RQL.Types.ApiLimit.html#_rlcMaxReqsPerMin"><span class="hs-identifier hs-var hs-var">_rlcMaxReqsPerMin</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
 </span><span id="line-75"></span><span>    </span><span id="_rlcUniqueParams"><span class="annot"><span class="annottext">RateLimitConfig -&gt; Maybe UniqueParamConfig
 </span><a href="Hasura.RQL.Types.ApiLimit.html#_rlcUniqueParams"><span class="hs-identifier hs-var hs-var">_rlcUniqueParams</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#UniqueParamConfig"><span class="hs-identifier hs-type">UniqueParamConfig</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-76"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-77"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688282756"><span id="local-6989586621688282758"><span id="local-6989586621688282760"><span class="annot"><span class="annottext">Int -&gt; RateLimitConfig -&gt; ShowS
+</span><span id="line-77"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688278735"><span id="local-6989586621688278737"><span id="local-6989586621688278739"><span class="annot"><span class="annottext">Int -&gt; RateLimitConfig -&gt; ShowS
 [RateLimitConfig] -&gt; ShowS
 RateLimitConfig -&gt; String
 (Int -&gt; RateLimitConfig -&gt; ShowS)
@@ -286,7 +286,7 @@ show :: RateLimitConfig -&gt; String
 $cshow :: RateLimitConfig -&gt; String
 showsPrec :: Int -&gt; RateLimitConfig -&gt; ShowS
 $cshowsPrec :: Int -&gt; RateLimitConfig -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688282752"><span id="local-6989586621688282754"><span class="annot"><span class="annottext">RateLimitConfig -&gt; RateLimitConfig -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688278731"><span id="local-6989586621688278733"><span class="annot"><span class="annottext">RateLimitConfig -&gt; RateLimitConfig -&gt; Bool
 (RateLimitConfig -&gt; RateLimitConfig -&gt; Bool)
 -&gt; (RateLimitConfig -&gt; RateLimitConfig -&gt; Bool)
 -&gt; Eq RateLimitConfig
@@ -306,9 +306,9 @@ $cto :: forall x. Rep RateLimitConfig x -&gt; RateLimitConfig
 $cfrom :: forall x. RateLimitConfig -&gt; Rep RateLimitConfig x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-78"></span><span>
-</span><span id="line-79"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688282747"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#RateLimitConfig"><span class="hs-identifier hs-type">RateLimitConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-80"></span><span>  </span><span id="local-6989586621688282746"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser RateLimitConfig
-</span><a href="#local-6989586621688282746"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-79"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688278726"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#RateLimitConfig"><span class="hs-identifier hs-type">RateLimitConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-80"></span><span>  </span><span id="local-6989586621688278725"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser RateLimitConfig
+</span><a href="#local-6989586621688278725"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-81"></span><span>    </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser RateLimitConfig
 forall a.
 (Generic a, GFromJSON Zero (Rep a)) =&gt;
@@ -317,9 +317,9 @@ Options -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">Casing.aesonPrefix</span></span><span> </span><span class="annot"><span class="annottext">ShowS
 </span><span class="hs-identifier hs-var">Casing.snakeCase</span></span><span class="hs-special">)</span><span>
 </span><span id="line-82"></span><span>
-</span><span id="line-83"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688282738"><span id="local-6989586621688282740"><span id="local-6989586621688282742"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#RateLimitConfig"><span class="hs-identifier hs-type">RateLimitConfig</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-84"></span><span>  </span><span id="local-6989586621688282737"><span class="annot"><span class="annottext">toJSON :: RateLimitConfig -&gt; Value
-</span><a href="#local-6989586621688282737"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-83"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688278717"><span id="local-6989586621688278719"><span id="local-6989586621688278721"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#RateLimitConfig"><span class="hs-identifier hs-type">RateLimitConfig</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-84"></span><span>  </span><span id="local-6989586621688278716"><span class="annot"><span class="annottext">toJSON :: RateLimitConfig -&gt; Value
+</span><a href="#local-6989586621688278716"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-85"></span><span>    </span><span class="annot"><span class="annottext">Options -&gt; RateLimitConfig -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
@@ -329,12 +329,12 @@ Options -&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">Casing.snakeCase</span></span><span class="hs-special">)</span><span>
 </span><span id="line-86"></span><span>
 </span><span id="line-87"></span><span class="hs-comment">-- | The unique key using which an authenticated client can be identified</span><span>
-</span><span id="line-88"></span><span id="local-6989586621688282735"><span id="local-6989586621688282736"></span></span><span class="hs-keyword">data</span><span> </span><span id="UniqueParamConfig"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#UniqueParamConfig"><span class="hs-identifier hs-var">UniqueParamConfig</span></a></span></span><span>
+</span><span id="line-88"></span><span id="local-6989586621688278714"><span id="local-6989586621688278715"></span></span><span class="hs-keyword">data</span><span> </span><span id="UniqueParamConfig"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#UniqueParamConfig"><span class="hs-identifier hs-var">UniqueParamConfig</span></a></span></span><span>
 </span><span id="line-89"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | it can be a list of session variable (like session var in 'UserInfo')</span><span>
 </span><span id="line-90"></span><span>    </span><span id="UPCSessionVar"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#UPCSessionVar"><span class="hs-identifier hs-var">UPCSessionVar</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span><span>
 </span><span id="line-91"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | or it can be an IP address</span><span>
 </span><span id="line-92"></span><span>    </span><span id="UPCIpAddress"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#UPCIpAddress"><span class="hs-identifier hs-var">UPCIpAddress</span></a></span></span><span>
-</span><span id="line-93"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688282727"><span id="local-6989586621688282729"><span id="local-6989586621688282731"><span class="annot"><span class="annottext">Int -&gt; UniqueParamConfig -&gt; ShowS
+</span><span id="line-93"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688278706"><span id="local-6989586621688278708"><span id="local-6989586621688278710"><span class="annot"><span class="annottext">Int -&gt; UniqueParamConfig -&gt; ShowS
 [UniqueParamConfig] -&gt; ShowS
 UniqueParamConfig -&gt; String
 (Int -&gt; UniqueParamConfig -&gt; ShowS)
@@ -349,7 +349,7 @@ show :: UniqueParamConfig -&gt; String
 $cshow :: UniqueParamConfig -&gt; String
 showsPrec :: Int -&gt; UniqueParamConfig -&gt; ShowS
 $cshowsPrec :: Int -&gt; UniqueParamConfig -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688282723"><span id="local-6989586621688282725"><span class="annot"><span class="annottext">UniqueParamConfig -&gt; UniqueParamConfig -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688278702"><span id="local-6989586621688278704"><span class="annot"><span class="annottext">UniqueParamConfig -&gt; UniqueParamConfig -&gt; Bool
 (UniqueParamConfig -&gt; UniqueParamConfig -&gt; Bool)
 -&gt; (UniqueParamConfig -&gt; UniqueParamConfig -&gt; Bool)
 -&gt; Eq UniqueParamConfig
@@ -369,25 +369,25 @@ $cto :: forall x. Rep UniqueParamConfig x -&gt; UniqueParamConfig
 $cfrom :: forall x. UniqueParamConfig -&gt; Rep UniqueParamConfig x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-94"></span><span>
-</span><span id="line-95"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688282714"><span id="local-6989586621688282716"><span id="local-6989586621688282718"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#UniqueParamConfig"><span class="hs-identifier hs-type">UniqueParamConfig</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-96"></span><span>  </span><span id="local-6989586621688282713"><span class="annot"><span class="annottext">toJSON :: UniqueParamConfig -&gt; Value
-</span><a href="#local-6989586621688282713"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-97"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#UPCSessionVar"><span class="hs-identifier hs-type">UPCSessionVar</span></a></span><span> </span><span id="local-6989586621688282712"><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621688282712"><span class="hs-identifier hs-var">xs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Value
+</span><span id="line-95"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688278693"><span id="local-6989586621688278695"><span id="local-6989586621688278697"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#UniqueParamConfig"><span class="hs-identifier hs-type">UniqueParamConfig</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-96"></span><span>  </span><span id="local-6989586621688278692"><span class="annot"><span class="annottext">toJSON :: UniqueParamConfig -&gt; Value
+</span><a href="#local-6989586621688278692"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-97"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#UPCSessionVar"><span class="hs-identifier hs-type">UPCSessionVar</span></a></span><span> </span><span id="local-6989586621688278691"><span class="annot"><span class="annottext">[Text]
+</span><a href="#local-6989586621688278691"><span class="hs-identifier hs-var">xs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621688282712"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><a href="#local-6989586621688278691"><span class="hs-identifier hs-var">xs</span></a></span><span>
 </span><span id="line-98"></span><span>    </span><span class="annot"><span class="annottext">UniqueParamConfig
 </span><a href="Hasura.RQL.Types.ApiLimit.html#UPCIpAddress"><span class="hs-identifier hs-var">UPCIpAddress</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-string">&quot;IP&quot;</span></span><span>
 </span><span id="line-99"></span><span>
-</span><span id="line-100"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688282709"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#UniqueParamConfig"><span class="hs-identifier hs-type">UniqueParamConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-101"></span><span>  </span><span id="local-6989586621688282708"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser UniqueParamConfig
-</span><a href="#local-6989586621688282708"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-102"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span id="local-6989586621688282706"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688282706"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><span id="line-100"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688278688"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#UniqueParamConfig"><span class="hs-identifier hs-type">UniqueParamConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-101"></span><span>  </span><span id="local-6989586621688278687"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser UniqueParamConfig
+</span><a href="#local-6989586621688278687"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-102"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span id="local-6989586621688278685"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688278685"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
 </span><span class="hs-identifier hs-var">T.toLower</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688282706"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688278685"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-103"></span><span>      </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;ip&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">UniqueParamConfig -&gt; Parser UniqueParamConfig
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -397,15 +397,15 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser UniqueParamConfig
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688282704"><span class="hs-identifier hs-var">errMsg</span></a></span><span>
-</span><span id="line-105"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Array</span></span><span> </span><span id="local-6989586621688282702"><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621688282702"><span class="hs-identifier hs-var">xs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Parser Text) -&gt; Array -&gt; Parser (Vector Text)
+</span><a href="#local-6989586621688278683"><span class="hs-identifier hs-var">errMsg</span></a></span><span>
+</span><span id="line-105"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Array</span></span><span> </span><span id="local-6989586621688278681"><span class="annot"><span class="annottext">Array
+</span><a href="#local-6989586621688278681"><span class="hs-identifier hs-var">xs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Parser Text) -&gt; Array -&gt; Parser (Vector Text)
 forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 (a -&gt; f b) -&gt; t a -&gt; f (t b)
 </span><span class="hs-identifier hs-var">traverse</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser Text
-</span><a href="#local-6989586621688282700"><span class="hs-identifier hs-var">parseSessVar</span></a></span><span> </span><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621688282702"><span class="hs-identifier hs-var">xs</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Vector Text)
+</span><a href="#local-6989586621688278679"><span class="hs-identifier hs-var">parseSessVar</span></a></span><span> </span><span class="annot"><span class="annottext">Array
+</span><a href="#local-6989586621688278681"><span class="hs-identifier hs-var">xs</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Vector Text)
 -&gt; (Vector Text -&gt; UniqueParamConfig) -&gt; Parser UniqueParamConfig
 forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
 </span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; UniqueParamConfig
@@ -419,40 +419,40 @@ forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser UniqueParamConfig
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688282704"><span class="hs-identifier hs-var">errMsg</span></a></span><span>
+</span><a href="#local-6989586621688278683"><span class="hs-identifier hs-var">errMsg</span></a></span><span>
 </span><span id="line-107"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-108"></span><span>      </span><span id="local-6989586621688282700"><span class="annot"><span class="annottext">parseSessVar :: Value -&gt; Parser Text
-</span><a href="#local-6989586621688282700"><span class="hs-identifier hs-var hs-var">parseSessVar</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-109"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span id="local-6989586621688282696"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688282696"><span class="hs-identifier hs-var">s</span></a></span></span><span>
+</span><span id="line-108"></span><span>      </span><span id="local-6989586621688278679"><span class="annot"><span class="annottext">parseSessVar :: Value -&gt; Parser Text
+</span><a href="#local-6989586621688278679"><span class="hs-identifier hs-var hs-var">parseSessVar</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-109"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span id="local-6989586621688278675"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688278675"><span class="hs-identifier hs-var">s</span></a></span></span><span>
 </span><span id="line-110"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Bool
 </span><a href="Hasura.Server.Utils.html#isSessionVariable"><span class="hs-identifier hs-var">isSessionVariable</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688282696"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621688278675"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688282696"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
+</span><a href="#local-6989586621688278675"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;x-hasura-role&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Parser Text
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688282696"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><a href="#local-6989586621688278675"><span class="hs-identifier hs-var">s</span></a></span><span>
 </span><span id="line-111"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser Text
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688282704"><span class="hs-identifier hs-var">errMsg</span></a></span><span>
+</span><a href="#local-6989586621688278683"><span class="hs-identifier hs-var">errMsg</span></a></span><span>
 </span><span id="line-112"></span><span>        </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser Text
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688282704"><span class="hs-identifier hs-var">errMsg</span></a></span><span>
-</span><span id="line-113"></span><span>      </span><span id="local-6989586621688282704"><span class="annot"><span class="annottext">errMsg :: String
-</span><a href="#local-6989586621688282704"><span class="hs-identifier hs-var hs-var">errMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688278683"><span class="hs-identifier hs-var">errMsg</span></a></span><span>
+</span><span id="line-113"></span><span>      </span><span id="local-6989586621688278683"><span class="annot"><span class="annottext">errMsg :: String
+</span><a href="#local-6989586621688278683"><span class="hs-identifier hs-var hs-var">errMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Not a valid value. Should be either: 'IP' or a list of Hasura session variables&quot;</span></span><span>
 </span><span id="line-114"></span><span>
-</span><span id="line-115"></span><span id="local-6989586621688282692"><span id="local-6989586621688282693"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="MaxDepth"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#MaxDepth"><span class="hs-identifier hs-var">MaxDepth</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MaxDepth"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#MaxDepth"><span class="hs-identifier hs-var">MaxDepth</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unMaxDepth"><span class="annot"><span class="annottext">MaxDepth -&gt; Int
+</span><span id="line-115"></span><span id="local-6989586621688278671"><span id="local-6989586621688278672"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="MaxDepth"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#MaxDepth"><span class="hs-identifier hs-var">MaxDepth</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MaxDepth"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#MaxDepth"><span class="hs-identifier hs-var">MaxDepth</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unMaxDepth"><span class="annot"><span class="annottext">MaxDepth -&gt; Int
 </span><a href="Hasura.RQL.Types.ApiLimit.html#unMaxDepth"><span class="hs-identifier hs-var hs-var">unMaxDepth</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">}</span><span>
-</span><span id="line-116"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688282684"><span id="local-6989586621688282686"><span id="local-6989586621688282688"><span class="annot"><span class="annottext">Int -&gt; MaxDepth -&gt; ShowS
+</span><span id="line-116"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688278663"><span id="local-6989586621688278665"><span id="local-6989586621688278667"><span class="annot"><span class="annottext">Int -&gt; MaxDepth -&gt; ShowS
 [MaxDepth] -&gt; ShowS
 MaxDepth -&gt; String
 (Int -&gt; MaxDepth -&gt; ShowS)
@@ -465,7 +465,7 @@ show :: MaxDepth -&gt; String
 $cshow :: MaxDepth -&gt; String
 showsPrec :: Int -&gt; MaxDepth -&gt; ShowS
 $cshowsPrec :: Int -&gt; MaxDepth -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688282680"><span id="local-6989586621688282682"><span class="annot"><span class="annottext">MaxDepth -&gt; MaxDepth -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688278659"><span id="local-6989586621688278661"><span class="annot"><span class="annottext">MaxDepth -&gt; MaxDepth -&gt; Bool
 (MaxDepth -&gt; MaxDepth -&gt; Bool)
 -&gt; (MaxDepth -&gt; MaxDepth -&gt; Bool) -&gt; Eq MaxDepth
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -473,7 +473,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: MaxDepth -&gt; MaxDepth -&gt; Bool
 == :: MaxDepth -&gt; MaxDepth -&gt; Bool
 $c== :: MaxDepth -&gt; MaxDepth -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688282665"><span id="local-6989586621688282667"><span id="local-6989586621688282669"><span id="local-6989586621688282671"><span id="local-6989586621688282673"><span id="local-6989586621688282675"><span id="local-6989586621688282677"><span class="annot"><span class="annottext">Eq MaxDepth
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688278644"><span id="local-6989586621688278646"><span id="local-6989586621688278648"><span id="local-6989586621688278650"><span id="local-6989586621688278652"><span id="local-6989586621688278654"><span id="local-6989586621688278656"><span class="annot"><span class="annottext">Eq MaxDepth
 Eq MaxDepth
 -&gt; (MaxDepth -&gt; MaxDepth -&gt; Ordering)
 -&gt; (MaxDepth -&gt; MaxDepth -&gt; Bool)
@@ -520,7 +520,7 @@ forall a.
 $cto :: forall x. Rep MaxDepth x -&gt; MaxDepth
 $cfrom :: forall x. MaxDepth -&gt; Rep MaxDepth x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-117"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688282654"><span id="local-6989586621688282656"><span id="local-6989586621688282658"><span id="local-6989586621688282660"><span class="annot"><span class="annottext">[MaxDepth] -&gt; Encoding
+</span><span id="line-117"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688278633"><span id="local-6989586621688278635"><span id="local-6989586621688278637"><span id="local-6989586621688278639"><span class="annot"><span class="annottext">[MaxDepth] -&gt; Encoding
 [MaxDepth] -&gt; Value
 MaxDepth -&gt; Encoding
 MaxDepth -&gt; Value
@@ -543,7 +543,7 @@ toEncoding :: MaxDepth -&gt; Encoding
 $ctoEncoding :: MaxDepth -&gt; Encoding
 toJSON :: MaxDepth -&gt; Value
 $ctoJSON :: MaxDepth -&gt; Value
-</span><a href="#local-6989586621688282654"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688282650"><span id="local-6989586621688282652"><span class="annot"><span class="annottext">Value -&gt; Parser [MaxDepth]
+</span><a href="#local-6989586621688278633"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688278629"><span id="local-6989586621688278631"><span class="annot"><span class="annottext">Value -&gt; Parser [MaxDepth]
 Value -&gt; Parser MaxDepth
 (Value -&gt; Parser MaxDepth)
 -&gt; (Value -&gt; Parser [MaxDepth]) -&gt; FromJSON MaxDepth
@@ -553,11 +553,11 @@ parseJSONList :: Value -&gt; Parser [MaxDepth]
 $cparseJSONList :: Value -&gt; Parser [MaxDepth]
 parseJSON :: Value -&gt; Parser MaxDepth
 $cparseJSON :: Value -&gt; Parser MaxDepth
-</span><a href="#local-6989586621688282650"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688278629"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-118"></span><span>
-</span><span id="line-119"></span><span id="local-6989586621688282648"><span id="local-6989586621688282649"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="MaxNodes"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#MaxNodes"><span class="hs-identifier hs-var">MaxNodes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MaxNodes"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#MaxNodes"><span class="hs-identifier hs-var">MaxNodes</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unMaxNodes"><span class="annot"><span class="annottext">MaxNodes -&gt; Int
+</span><span id="line-119"></span><span id="local-6989586621688278627"><span id="local-6989586621688278628"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="MaxNodes"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#MaxNodes"><span class="hs-identifier hs-var">MaxNodes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MaxNodes"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#MaxNodes"><span class="hs-identifier hs-var">MaxNodes</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unMaxNodes"><span class="annot"><span class="annottext">MaxNodes -&gt; Int
 </span><a href="Hasura.RQL.Types.ApiLimit.html#unMaxNodes"><span class="hs-identifier hs-var hs-var">unMaxNodes</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">}</span><span>
-</span><span id="line-120"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688282640"><span id="local-6989586621688282642"><span id="local-6989586621688282644"><span class="annot"><span class="annottext">Int -&gt; MaxNodes -&gt; ShowS
+</span><span id="line-120"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688278619"><span id="local-6989586621688278621"><span id="local-6989586621688278623"><span class="annot"><span class="annottext">Int -&gt; MaxNodes -&gt; ShowS
 [MaxNodes] -&gt; ShowS
 MaxNodes -&gt; String
 (Int -&gt; MaxNodes -&gt; ShowS)
@@ -570,7 +570,7 @@ show :: MaxNodes -&gt; String
 $cshow :: MaxNodes -&gt; String
 showsPrec :: Int -&gt; MaxNodes -&gt; ShowS
 $cshowsPrec :: Int -&gt; MaxNodes -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688282636"><span id="local-6989586621688282638"><span class="annot"><span class="annottext">MaxNodes -&gt; MaxNodes -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688278615"><span id="local-6989586621688278617"><span class="annot"><span class="annottext">MaxNodes -&gt; MaxNodes -&gt; Bool
 (MaxNodes -&gt; MaxNodes -&gt; Bool)
 -&gt; (MaxNodes -&gt; MaxNodes -&gt; Bool) -&gt; Eq MaxNodes
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -578,7 +578,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: MaxNodes -&gt; MaxNodes -&gt; Bool
 == :: MaxNodes -&gt; MaxNodes -&gt; Bool
 $c== :: MaxNodes -&gt; MaxNodes -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688282621"><span id="local-6989586621688282623"><span id="local-6989586621688282625"><span id="local-6989586621688282627"><span id="local-6989586621688282629"><span id="local-6989586621688282631"><span id="local-6989586621688282633"><span class="annot"><span class="annottext">Eq MaxNodes
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688278600"><span id="local-6989586621688278602"><span id="local-6989586621688278604"><span id="local-6989586621688278606"><span id="local-6989586621688278608"><span id="local-6989586621688278610"><span id="local-6989586621688278612"><span class="annot"><span class="annottext">Eq MaxNodes
 Eq MaxNodes
 -&gt; (MaxNodes -&gt; MaxNodes -&gt; Ordering)
 -&gt; (MaxNodes -&gt; MaxNodes -&gt; Bool)
@@ -625,7 +625,7 @@ forall a.
 $cto :: forall x. Rep MaxNodes x -&gt; MaxNodes
 $cfrom :: forall x. MaxNodes -&gt; Rep MaxNodes x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-121"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688282611"><span id="local-6989586621688282613"><span id="local-6989586621688282615"><span id="local-6989586621688282617"><span class="annot"><span class="annottext">[MaxNodes] -&gt; Encoding
+</span><span id="line-121"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688278590"><span id="local-6989586621688278592"><span id="local-6989586621688278594"><span id="local-6989586621688278596"><span class="annot"><span class="annottext">[MaxNodes] -&gt; Encoding
 [MaxNodes] -&gt; Value
 MaxNodes -&gt; Encoding
 MaxNodes -&gt; Value
@@ -648,7 +648,7 @@ toEncoding :: MaxNodes -&gt; Encoding
 $ctoEncoding :: MaxNodes -&gt; Encoding
 toJSON :: MaxNodes -&gt; Value
 $ctoJSON :: MaxNodes -&gt; Value
-</span><a href="#local-6989586621688282611"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688282607"><span id="local-6989586621688282609"><span class="annot"><span class="annottext">Value -&gt; Parser [MaxNodes]
+</span><a href="#local-6989586621688278590"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688278586"><span id="local-6989586621688278588"><span class="annot"><span class="annottext">Value -&gt; Parser [MaxNodes]
 Value -&gt; Parser MaxNodes
 (Value -&gt; Parser MaxNodes)
 -&gt; (Value -&gt; Parser [MaxNodes]) -&gt; FromJSON MaxNodes
@@ -658,11 +658,11 @@ parseJSONList :: Value -&gt; Parser [MaxNodes]
 $cparseJSONList :: Value -&gt; Parser [MaxNodes]
 parseJSON :: Value -&gt; Parser MaxNodes
 $cparseJSON :: Value -&gt; Parser MaxNodes
-</span><a href="#local-6989586621688282607"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688278586"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-122"></span><span>
-</span><span id="line-123"></span><span id="local-6989586621688282605"><span id="local-6989586621688282606"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="MaxTime"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#MaxTime"><span class="hs-identifier hs-var">MaxTime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MaxTime"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#MaxTime"><span class="hs-identifier hs-var">MaxTime</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unMaxTime"><span class="annot"><span class="annottext">MaxTime -&gt; Seconds
+</span><span id="line-123"></span><span id="local-6989586621688278584"><span id="local-6989586621688278585"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="MaxTime"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#MaxTime"><span class="hs-identifier hs-var">MaxTime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MaxTime"><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#MaxTime"><span class="hs-identifier hs-var">MaxTime</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unMaxTime"><span class="annot"><span class="annottext">MaxTime -&gt; Seconds
 </span><a href="Hasura.RQL.Types.ApiLimit.html#unMaxTime"><span class="hs-identifier hs-var hs-var">unMaxTime</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Time.Clock.Units.html#Seconds"><span class="hs-identifier hs-type">Seconds</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-124"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688282597"><span id="local-6989586621688282599"><span id="local-6989586621688282601"><span class="annot"><span class="annottext">Int -&gt; MaxTime -&gt; ShowS
+</span><span id="line-124"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688278576"><span id="local-6989586621688278578"><span id="local-6989586621688278580"><span class="annot"><span class="annottext">Int -&gt; MaxTime -&gt; ShowS
 [MaxTime] -&gt; ShowS
 MaxTime -&gt; String
 (Int -&gt; MaxTime -&gt; ShowS)
@@ -675,7 +675,7 @@ show :: MaxTime -&gt; String
 $cshow :: MaxTime -&gt; String
 showsPrec :: Int -&gt; MaxTime -&gt; ShowS
 $cshowsPrec :: Int -&gt; MaxTime -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688282593"><span id="local-6989586621688282595"><span class="annot"><span class="annottext">MaxTime -&gt; MaxTime -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688278572"><span id="local-6989586621688278574"><span class="annot"><span class="annottext">MaxTime -&gt; MaxTime -&gt; Bool
 (MaxTime -&gt; MaxTime -&gt; Bool)
 -&gt; (MaxTime -&gt; MaxTime -&gt; Bool) -&gt; Eq MaxTime
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -683,7 +683,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: MaxTime -&gt; MaxTime -&gt; Bool
 == :: MaxTime -&gt; MaxTime -&gt; Bool
 $c== :: MaxTime -&gt; MaxTime -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688282578"><span id="local-6989586621688282580"><span id="local-6989586621688282582"><span id="local-6989586621688282584"><span id="local-6989586621688282586"><span id="local-6989586621688282588"><span id="local-6989586621688282590"><span class="annot"><span class="annottext">Eq MaxTime
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688278557"><span id="local-6989586621688278559"><span id="local-6989586621688278561"><span id="local-6989586621688278563"><span id="local-6989586621688278565"><span id="local-6989586621688278567"><span id="local-6989586621688278569"><span class="annot"><span class="annottext">Eq MaxTime
 Eq MaxTime
 -&gt; (MaxTime -&gt; MaxTime -&gt; Ordering)
 -&gt; (MaxTime -&gt; MaxTime -&gt; Bool)
@@ -730,7 +730,7 @@ forall a.
 $cto :: forall x. Rep MaxTime x -&gt; MaxTime
 $cfrom :: forall x. MaxTime -&gt; Rep MaxTime x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-125"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688282568"><span id="local-6989586621688282570"><span id="local-6989586621688282572"><span id="local-6989586621688282574"><span class="annot"><span class="annottext">[MaxTime] -&gt; Encoding
+</span><span id="line-125"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688278547"><span id="local-6989586621688278549"><span id="local-6989586621688278551"><span id="local-6989586621688278553"><span class="annot"><span class="annottext">[MaxTime] -&gt; Encoding
 [MaxTime] -&gt; Value
 MaxTime -&gt; Encoding
 MaxTime -&gt; Value
@@ -753,7 +753,7 @@ toEncoding :: MaxTime -&gt; Encoding
 $ctoEncoding :: MaxTime -&gt; Encoding
 toJSON :: MaxTime -&gt; Value
 $ctoJSON :: MaxTime -&gt; Value
-</span><a href="#local-6989586621688282568"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688282564"><span id="local-6989586621688282566"><span class="annot"><span class="annottext">Value -&gt; Parser [MaxTime]
+</span><a href="#local-6989586621688278547"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688278543"><span id="local-6989586621688278545"><span class="annot"><span class="annottext">Value -&gt; Parser [MaxTime]
 Value -&gt; Parser MaxTime
 (Value -&gt; Parser MaxTime)
 -&gt; (Value -&gt; Parser [MaxTime]) -&gt; FromJSON MaxTime
@@ -763,20 +763,20 @@ parseJSONList :: Value -&gt; Parser [MaxTime]
 $cparseJSONList :: Value -&gt; Parser [MaxTime]
 parseJSON :: Value -&gt; Parser MaxTime
 $cparseJSON :: Value -&gt; Parser MaxTime
-</span><a href="#local-6989586621688282564"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688278543"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-126"></span><span>
 </span><span id="line-127"></span><span class="hs-comment">-- | Defers to the (illegal) DiffTime Show instance.</span><span>
 </span><span id="line-128"></span><span class="hs-comment">--</span><span>
 </span><span id="line-129"></span><span class="hs-comment">-- &gt;&gt;&gt; toTxt (MaxTime 2.5)</span><span>
 </span><span id="line-130"></span><span class="hs-comment">-- &quot;2.5s&quot;</span><span>
 </span><span id="line-131"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">ToTxt</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#MaxTime"><span class="hs-identifier hs-type">MaxTime</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-132"></span><span>  </span><span id="local-6989586621688282561"><span class="annot"><span class="annottext">toTxt :: MaxTime -&gt; Text
-</span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTxt</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#MaxTime"><span class="hs-identifier hs-type">MaxTime</span></a></span><span> </span><span id="local-6989586621688282559"><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621688282559"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; Text
+</span><span id="line-132"></span><span>  </span><span id="local-6989586621688278540"><span class="annot"><span class="annottext">toTxt :: MaxTime -&gt; Text
+</span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTxt</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#MaxTime"><span class="hs-identifier hs-type">MaxTime</span></a></span><span> </span><span id="local-6989586621688278538"><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621688278538"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">(DiffTime -&gt; Text) -&gt; DiffTime -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Seconds -&gt; DiffTime
 </span><a href="Data.Time.Clock.Units.html#seconds"><span class="hs-identifier hs-var hs-var">seconds</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621688282559"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><a href="#local-6989586621688278538"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-133"></span></pre></body></html>
