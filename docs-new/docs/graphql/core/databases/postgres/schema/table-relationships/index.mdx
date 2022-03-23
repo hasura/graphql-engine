@@ -24,11 +24,11 @@ Let's say we have the following tables in our database: `authors`,
 The tables/views in any relational database are typically related to
 each other via one of the following types of table relationships:
 
-|Type           | Example                        | Meaning                                                                              |
-|---------------|--------------------------------|--------------------------------------------------------------------------------------|
-|`one-to-one`   | `authors` and `passport_infos` | <ul><li> an `author` can have one `passport_info` </li><li> a `passport_info` can have one `owner` </li></ul>   |
-|`one-to-many`  | `authors` and `articles`       | <ul><li> an `author` can have many `articles` </li><li> an `article` can have one `author` </li></ul>           |	
-|`many-to-many` | `articles` and `tags`          | <ul><li> an `article` can have many `tags` </li><li> a `tag` can have many `articles` </li></ul>               |
+| Type           | Example                      | Meaning                                                                                                      |
+| -------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `one-to-one`   | `owner` and `passport_infos` | <ul><li> an `owner` can have one `passport_info` </li><li> a `passport_info` can have one `owner` </li></ul> |
+| `one-to-many`  | `authors` and `articles`     | <ul><li> an `author` can have many `articles` </li><li> an `article` can have one `author` </li></ul>        |
+| `many-to-many` | `articles` and `tags`        | <ul><li> an `article` can have many `tags` </li><li> a `tag` can have many `articles` </li></ul>             |
 
 ## GraphQL schema relationships {#pg-graphql-relationships}
 
@@ -37,7 +37,7 @@ have two component relationships (one in either direction) in the
 GraphQL schema. These relationships can be one of the following types:
 
 | Type                               | Example                              | Meaning                                                                           |
-|------------------------------------|--------------------------------------|-----------------------------------------------------------------------------------|
+| ---------------------------------- | ------------------------------------ | --------------------------------------------------------------------------------- |
 | `object relationship` (one-to-one) | an `article` can have one `author`   | an `article` object will have a single nested author object called `author`       |
 | `array relationship` (one-to-many) | an `author` can have many `articles` | an `author` object will have an array of nested article objects called `articles` |
 
