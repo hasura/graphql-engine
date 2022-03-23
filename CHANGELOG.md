@@ -4,6 +4,10 @@
 
 ### Bug fixes and improvements
 
+## v2.4.0-beta.3
+
+### Bug fixes and improvements
+
 - server: Fix regression in MSSQL subscriptions when results exceed 2048 characters (#8267)
 
 ## v2.4.0-beta.2
