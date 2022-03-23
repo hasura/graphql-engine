@@ -1,8 +1,13 @@
 import { HasuraMetadataV3 } from '@/metadata/types';
+import { IntrospectionQuery } from 'graphql';
 
 export interface MetadataResponse {
   resource_version: number;
   metadata: HasuraMetadataV3;
+}
+
+export interface SchemaResponse {
+  data: IntrospectionQuery;
 }
 
 export const allowedMetadataTypesArr = [

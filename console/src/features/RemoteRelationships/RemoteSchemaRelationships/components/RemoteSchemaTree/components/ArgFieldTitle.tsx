@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArgValueForm } from './ArgValueForm';
-import { RelationshipFields, ArgValue, HasuraColumn } from '../types';
+import { RelationshipFields, ArgValue, HasuraColumn } from '../../../types';
 
 type ArgFieldTitleProps = {
   title: string;

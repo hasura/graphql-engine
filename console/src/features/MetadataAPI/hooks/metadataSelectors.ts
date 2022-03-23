@@ -36,6 +36,19 @@ export namespace MetadataSelector {
     return m.metadata?.sources.find(source => source.name === dataSource);
   };
 
+  export const listRemoteSchemas = () => (m: MetadataResponse) => {
+    return m?.metadata?.remote_schemas?.map(({ name }) => name);
+  };
+
+  export const getRemoteSchema = (schemaName: string) => (
+    m: MetadataResponse
+  ) => {
+    const schemaMeta = m?.metadata.remote_schemas?.find(
+      s => s.name === schemaName
+    );
+    return schemaMeta;
+  };
+
   export const getAllRemoteSchemaRelationships = () => (
     m: MetadataResponse
   ) => {

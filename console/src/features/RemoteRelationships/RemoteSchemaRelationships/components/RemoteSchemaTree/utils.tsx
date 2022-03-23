@@ -24,7 +24,7 @@ import {
   InputArgumentsType,
   InputArgumentValueType,
   AntdTreeNode,
-} from './types';
+} from '../../types';
 import { SubFieldTitle } from './components/SubFieldTitle';
 import { RootFieldTitle } from './components/RootFieldTitle';
 import { FieldLabel } from './components/FieldLabel';
@@ -162,6 +162,18 @@ const buildArgElement = ({
   };
 };
 
+interface BuildFieldElementArgs {
+  field: GraphQLField<any, any, Record<string, any>>;
+  parentKey: string;
+  relationshipFields: RelationshipFields[];
+  setRelationshipFields: React.Dispatch<
+    React.SetStateAction<RelationshipFields[]>
+  >;
+  depth: number;
+  isSubfield: boolean;
+  columns: HasuraColumn;
+}
+
 const buildFieldElement = ({
   field,
   parentKey,
@@ -170,17 +182,7 @@ const buildFieldElement = ({
   columns,
   depth,
   isSubfield,
-}: {
-  field: GraphQLField<any, any, Record<string, any>>;
-  parentKey: string;
-  relationshipFields: RelationshipFields[];
-  setRelationshipFields: React.Dispatch<
-    React.SetStateAction<RelationshipFields[]>
-  >;
-  columns: HasuraColumn;
-  depth: number;
-  isSubfield: boolean;
-}): TreeNode => {
+}: BuildFieldElementArgs): TreeNode => {
   const { type: fieldType }: { type: GraphQLType } = getUnderlyingType(
     field.type
   );
@@ -196,6 +198,7 @@ const buildFieldElement = ({
   const isActive = isElementActive(relationshipFields, fieldKey);
   if (isActive) {
     children = [];
+
     if (field.args && !!field.args.length) {
       children = [
         {
@@ -262,15 +265,23 @@ const buildFieldElement = ({
   };
 };
 
-export const buildTree = (
-  schema: GraphQLSchema,
-  relationshipFields: RelationshipFields[],
+interface BuildTreeArgs {
+  schema: GraphQLSchema;
+  relationshipFields: RelationshipFields[];
   setRelationshipFields: React.Dispatch<
     React.SetStateAction<RelationshipFields[]>
-  >,
-  columns: HasuraColumn,
-  rootFields: AllowedRootFields
-): TreeNode[] => {
+  >;
+  rootFields: AllowedRootFields;
+  columns: HasuraColumn;
+}
+
+export const buildTree = ({
+  schema,
+  relationshipFields,
+  setRelationshipFields,
+  columns,
+  rootFields,
+}: BuildTreeArgs): TreeNode[] => {
   const treeData: TreeNode[] = [];
   if (rootFields.includes('query')) {
     const queryType = schema.getQueryType();

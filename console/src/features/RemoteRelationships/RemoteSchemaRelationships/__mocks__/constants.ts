@@ -27,7 +27,7 @@ export const remote_rel_definition: RemoteRelationship = {
     hasura_fields: ['name'],
     remote_schema: 'hasura_cloud',
   },
-  name: 'some_relationship',
+  name: 'remoteSchema1',
 };
 
 export const relationship_fields: RelationshipFields[] = [

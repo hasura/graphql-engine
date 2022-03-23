@@ -5,7 +5,7 @@ import {
   ArgValueKind,
   HasuraColumn,
   RelationshipFields,
-} from '../types';
+} from '../../../types';
 import { defaultArgValue } from '../utils';
 
 export interface ArgValueFormProps {
@@ -106,7 +106,7 @@ export const ArgValueForm = ({
   return (
     <div
       onClick={e => e.stopPropagation()}
-      className="rounded bg-white shadow pt-xs pb-sm px-sm mb-sm border-l-2 border-yellow-400 w-full"
+      className="rounded bg-white shadow pt-xs pb-sm px-sm my-sm -ml-8 border-l-2 border-yellow-400 w-full"
     >
       <div className="grid grid-cols-2 gap-2">
         <div>
