@@ -29,7 +29,7 @@ module Hasura.RQL.DDL.Webhook.Transform
   ( -- * Request Transformation
     RequestFields (..),
     RequestTransform (..),
-    RequestTransformFn,
+    RequestTransformFns,
     applyRequestTransform,
 
     -- * Request Transformation Context
@@ -38,6 +38,7 @@ module Hasura.RQL.DDL.Webhook.Transform
 
     -- * Optional Functor
     WithOptional (..),
+    withOptional,
 
     -- * Old Style Response Transforms
     MetadataResponseTransform (..),
@@ -51,21 +52,24 @@ where
 
 -------------------------------------------------------------------------------
 
-import Control.Lens (Lens', lens, set, view)
+import Control.Lens (Lens', lens, set, traverseOf, view)
 import Data.Aeson (FromJSON, ToJSON)
-import Data.Aeson qualified as J
+import Data.Aeson.Extended qualified as J
 import Data.Bifunctor (first)
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
-import Data.Functor.Barbie
+import Data.Coerce (Coercible)
+import Data.Functor.Barbie (AllBF, ApplicativeB, ConstraintsB, FunctorB, TraversableB)
+import Data.Functor.Barbie qualified as B
 import Data.HashMap.Strict qualified as M
 import Data.Text.Encoding qualified as TE
 import Data.Validation qualified as V
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude hiding (first)
-import Hasura.RQL.DDL.Webhook.Transform.Body
+import Hasura.RQL.DDL.Webhook.Transform.Body (Body (..), BodyTransformFn, TransformFn (BodyTransformFn_))
+import Hasura.RQL.DDL.Webhook.Transform.Body qualified as Body
 import Hasura.RQL.DDL.Webhook.Transform.Class
-import Hasura.RQL.DDL.Webhook.Transform.Headers
+import Hasura.RQL.DDL.Webhook.Transform.Headers (Headers (..), HeadersTransformFn (..), TransformFn (HeadersTransformFn_))
 import Hasura.RQL.DDL.Webhook.Transform.Method
 import Hasura.RQL.DDL.Webhook.Transform.QueryParams
 import Hasura.RQL.DDL.Webhook.Transform.Url
@@ -90,26 +94,6 @@ data RequestTransform = RequestTransform
   deriving stock (Show, Eq, Generic)
   deriving anyclass (NFData, Cacheable)
 
-instance ToJSON RequestTransform where
-  toJSON RequestTransform {..} =
-    let RequestFields {..} = requestFields
-        body' = case version of
-          V1 -> case (getOptional body) of
-            Just (BodyTransform (ModifyBody template)) -> Just ("body", J.toJSON template)
-            _ -> Nothing
-          V2 -> "body" .=? getOptional body
-     in J.object $
-          [ "version" J..= version,
-            "template_engine" J..= templateEngine
-          ]
-            <> catMaybes
-              [ "method" .=? getOptional method,
-                "url" .=? getOptional url,
-                "query_params" .=? getOptional queryParams,
-                "request_headers" .=? getOptional requestHeaders,
-                body'
-              ]
-
 instance FromJSON RequestTransform where
   parseJSON = J.withObject "RequestTransform" \o -> do
     version <- o J..:? "version" J..!= V1
@@ -118,20 +102,41 @@ instance FromJSON RequestTransform where
     body <- case version of
       V1 -> do
         template :: Maybe Template <- o J..:? "body"
-        pure $ fmap ModifyBody template
+        pure $ fmap Body.ModifyAsJSON template
       V2 -> o J..:? "body"
     queryParams <- o J..:? "query_params"
     headers <- o J..:? "request_headers"
     let requestFields =
           RequestFields
-            { method = WithOptional $ fmap MethodTransform method,
-              url = WithOptional $ fmap UrlTransform url,
-              body = WithOptional $ fmap BodyTransform body,
-              queryParams = WithOptional $ fmap QueryParamsTransform queryParams,
-              requestHeaders = WithOptional $ fmap HeadersTransform headers
+            { method = withOptional @MethodTransformFn method,
+              url = withOptional @UrlTransformFn url,
+              body = withOptional @BodyTransformFn body,
+              queryParams = withOptional @QueryParamsTransformFn queryParams,
+              requestHeaders = withOptional @HeadersTransformFn headers
             }
     templateEngine <- o J..:? "template_engine" J..!= Kriti
     pure $ RequestTransform {..}
+
+instance ToJSON RequestTransform where
+  toJSON RequestTransform {..} =
+    let RequestFields {..} = requestFields
+        body' = case version of
+          V1 -> case (getOptional body) of
+            Just (BodyTransformFn_ (Body.ModifyAsJSON template)) ->
+              Just ("body", J.toJSON template)
+            _ -> Nothing
+          V2 -> "body" J..=? getOptional body
+     in J.object $
+          [ "version" J..= version,
+            "template_engine" J..= templateEngine
+          ]
+            <> catMaybes
+              [ "method" J..=? getOptional method,
+                "url" J..=? getOptional url,
+                "query_params" J..=? getOptional queryParams,
+                "request_headers" J..=? getOptional requestHeaders,
+                body'
+              ]
 
 -------------------------------------------------------------------------------
 
@@ -140,8 +145,8 @@ instance FromJSON RequestTransform where
 -- We represent a defunctionalized request transformation by parameterizing
 -- our HKD with 'WithOptional'@ @'TransformFn', which marks each of the fields
 -- as optional and supplies the appropriate transformation function to them if
--- if they are provided. 'WithOptional _' is equivalent to 'Compose Maybe _'.
-type RequestTransformFn = RequestFields (WithOptional TransformFn)
+-- if they are provided.
+type RequestTransformFns = RequestFields (WithOptional TransformFn)
 
 -- | Actual Request Data
 --
@@ -160,20 +165,28 @@ data RequestFields f = RequestFields
     requestHeaders :: f Headers
   }
   deriving stock (Generic)
-  deriving anyclass (FunctorB, TraversableB, ApplicativeB, ConstraintsB)
+  deriving anyclass (FunctorB, ApplicativeB, TraversableB, ConstraintsB)
 
-deriving instance AllBF Show f RequestFields => Show (RequestFields f)
+deriving stock instance
+  AllBF Show f RequestFields =>
+  Show (RequestFields f)
 
-deriving instance AllBF Eq f RequestFields => Eq (RequestFields f)
+deriving stock instance
+  AllBF Eq f RequestFields =>
+  Eq (RequestFields f)
 
-deriving instance AllBF NFData f RequestFields => NFData (RequestFields f)
+deriving anyclass instance
+  AllBF NFData f RequestFields =>
+  NFData (RequestFields f)
 
-deriving instance AllBF Cacheable f RequestFields => Cacheable (RequestFields f)
+deriving anyclass instance
+  AllBF Cacheable f RequestFields =>
+  Cacheable (RequestFields f)
 
 -- NOTE: It is likely that we can derive these instances. Possibly if
 -- we move the aeson instances onto the *Transform types.
-instance FromJSON RequestTransformFn where
-  parseJSON = J.withObject "RequestTransformFn" $ \o -> do
+instance FromJSON RequestTransformFns where
+  parseJSON = J.withObject "RequestTransformFns" $ \o -> do
     method <- o J..:? "method"
     url <- o J..:? "url"
     body <- o J..:? "body"
@@ -181,34 +194,36 @@ instance FromJSON RequestTransformFn where
     headers <- o J..:? "request_headers"
     pure $
       RequestFields
-        { method = WithOptional $ fmap MethodTransform method,
-          url = WithOptional $ fmap UrlTransform url,
-          body = WithOptional $ fmap BodyTransform body,
-          queryParams = WithOptional $ fmap QueryParamsTransform queryParams,
-          requestHeaders = WithOptional $ fmap HeadersTransform headers
+        { method = withOptional @MethodTransformFn method,
+          url = withOptional @UrlTransformFn url,
+          body = withOptional @BodyTransformFn body,
+          queryParams = withOptional @QueryParamsTransformFn queryParams,
+          requestHeaders = withOptional @HeadersTransformFn headers
         }
 
-instance ToJSON RequestTransformFn where
+instance ToJSON RequestTransformFns where
   toJSON RequestFields {..} =
     J.object . catMaybes $
-      [ "method" .=? getOptional method,
-        "url" .=? getOptional url,
-        "body" .=? getOptional body,
-        "query_params" .=? getOptional queryParams,
-        "request_headers" .=? getOptional requestHeaders
+      [ "method" J..=? getOptional method,
+        "url" J..=? getOptional url,
+        "body" J..=? getOptional body,
+        "query_params" J..=? getOptional queryParams,
+        "request_headers" J..=? getOptional requestHeaders
       ]
 
 -------------------------------------------------------------------------------
 
 -- TODO(SOLOMON): Add lens law unit tests
 
--- | A lens for mapping from an actual 'HTTP.Request' term to our HKD.
+-- | A 'Lens\'' for viewing a 'HTTP.Request' as our 'RequestData' HKD; it does
+-- so by wrapping each of the matching request fields in a corresponding
+-- 'TransformFn'.
 --
 -- XXX: This function makes internal usage of 'TE.decodeUtf8', which throws an
 -- impure exception when the supplied 'ByteString' cannot be decoded into valid
 -- UTF8 text!
-request :: Lens' HTTP.Request RequestData
-request = lens getter setter
+requestL :: Lens' HTTP.Request RequestData
+requestL = lens getter setter
   where
     getter :: HTTP.Request -> RequestData
     getter req =
@@ -245,47 +260,70 @@ request = lens getter setter
 -- slash on the URL path. This important when performing string
 -- interpolation on the request url.
 applyRequestTransform ::
+  forall m.
   MonadError TransformErrorBundle m =>
   (HTTP.Request -> RequestTransformCtx) ->
-  RequestTransformFn ->
+  RequestTransformFns ->
   HTTP.Request ->
   m HTTP.Request
-applyRequestTransform mkCtx mt reqData =
-  let ctx = mkCtx reqData
-      f ::
-        (MonadError TransformErrorBundle m, Transform a) =>
-        a ->
-        TransformFn a ->
-        m a
-      f a x = transform x ctx a
-   in request (bsequence' . bzipWithC @Transform (\(WithOptional mx) (Identity a) -> maybe (pure a) (f a) mx) mt) reqData
+applyRequestTransform mkCtx transformations request =
+  traverseOf
+    requestL
+    (transformReqData (mkCtx request))
+    request
+  where
+    -- Apply all of the provided request transformation functions to the
+    -- request data extracted from the given 'HTTP.Request'.
+    transformReqData ctx reqData =
+      B.bsequence' $
+        B.bzipWithC @Transform
+          (transformField ctx)
+          transformations
+          reqData
+    -- Apply a transformation to some request data, if it exists; otherwise
+    -- return the original request data.
+    transformField ctx (WithOptional maybeFn) (Identity a) =
+      case maybeFn of
+        Nothing -> pure a
+        Just fn -> transform fn ctx a
 
 -------------------------------------------------------------------------------
 
-infixr 8 .=?
-
-(.=?) :: J.ToJSON v => k -> Maybe v -> Maybe (k, J.Value)
-(.=?) k = fmap ((k,) . J.toJSON)
-
--- | 'Data.Functor.WithOptional' has 'Eq' and 'Show' instances with
--- difficult to satisfy constraints. 'WithOptional' is isomorphic to
--- 'Compose Maybe f'.
+-- | Enrich a 'Functor' @f@ with optionality; this is primarily useful when
+-- one wants to annotate fields as optional when using the Higher-Kinded Data
+-- pattern.
 --
--- TODO(jkachmar): Add better documentation now that we've specialized this
--- type.
-newtype WithOptional fn result = WithOptional
-  { getOptional :: Maybe (fn result)
+-- 'WithOptional'@ f@ is equivalent to @Compose Maybe f@.
+newtype WithOptional f result = WithOptional
+  { getOptional :: Maybe (f result)
   }
   deriving stock (Eq, Functor, Foldable, Generic, Show)
   deriving newtype (FromJSON, ToJSON)
 
 deriving newtype instance
-  (Cacheable (fn result)) =>
-  Cacheable (WithOptional fn result)
+  (Cacheable (f result)) =>
+  Cacheable (WithOptional f result)
 
 deriving newtype instance
-  (NFData (fn result)) =>
-  NFData (WithOptional fn result)
+  (NFData (f result)) =>
+  NFData (WithOptional f result)
+
+-- | 'WithOptional' smart constructor for the special case of optional values
+-- that are representationally equivalent to some "wrapper" type.
+--
+-- For example:
+-- @
+-- withOptional \@HeaderTransformsAction headers == WithOptional $ fmap HeadersTransform headers
+-- @
+--
+-- In other words: this function observes the isomorphism between @'Maybe' a@
+-- and  @'WithOptional' f b@ if an isomorphism exists between @a@ and @f b@.
+withOptional ::
+  forall a b f.
+  Coercible a (f b) =>
+  Maybe a ->
+  WithOptional f b
+withOptional = coerce
 
 -------------------------------------------------------------------------------
 -- TODO(SOLOMON): Rewrite with HKD
@@ -300,34 +338,36 @@ data ResponseTransform = ResponseTransform
 
 data MetadataResponseTransform = MetadataResponseTransform
   { mrtVersion :: Version,
-    mrtBodyTransform :: Maybe BodyTransformAction,
+    mrtBodyTransform :: Maybe BodyTransformFn,
     mrtTemplatingEngine :: TemplatingEngine
   }
   deriving stock (Show, Eq, Generic)
   deriving anyclass (NFData, Cacheable)
 
-instance J.ToJSON MetadataResponseTransform where
-  toJSON MetadataResponseTransform {..} =
-    let body = case mrtVersion of
-          V1 -> case mrtBodyTransform of
-            Just (ModifyBody template) -> Just ("body", J.toJSON template)
-            _ -> Nothing
-          V2 -> "body" .=? mrtBodyTransform
-     in J.object $
-          ["template_engine" J..= mrtTemplatingEngine, "version" J..= mrtVersion]
-            <> catMaybes [body]
-
 instance J.FromJSON MetadataResponseTransform where
-  parseJSON = J.withObject "Object" $ \o -> do
+  parseJSON = J.withObject "MetadataResponseTransform" $ \o -> do
     mrtVersion <- o J..:? "version" J..!= V1
     mrtBodyTransform <- case mrtVersion of
       V1 -> do
         template :: (Maybe Template) <- o J..:? "body"
-        pure $ fmap ModifyBody template
+        pure $ fmap Body.ModifyAsJSON template
       V2 -> o J..:? "body"
     templateEngine <- o J..:? "template_engine"
     let mrtTemplatingEngine = fromMaybe Kriti templateEngine
     pure $ MetadataResponseTransform {..}
+
+instance J.ToJSON MetadataResponseTransform where
+  toJSON MetadataResponseTransform {..} =
+    let body = case mrtVersion of
+          V1 -> case mrtBodyTransform of
+            Just (Body.ModifyAsJSON template) -> Just ("body", J.toJSON template)
+            _ -> Nothing
+          V2 -> "body" J..=? mrtBodyTransform
+     in J.object $
+          [ "template_engine" J..= mrtTemplatingEngine,
+            "version" J..= mrtVersion
+          ]
+            <> catMaybes [body]
 
 -- | A helper function for constructing the 'RespTransformCtx'
 buildRespTransformCtx :: Maybe RequestTransformCtx -> Maybe SessionVariables -> TemplatingEngine -> BL.ByteString -> ResponseTransformCtx
@@ -354,17 +394,23 @@ buildRespTransformCtx reqCtx sessionVars engine respBody =
 -- XXX: This function makes internal usage of 'TE.decodeUtf8', which throws an
 -- impure exception when the supplied 'ByteString' cannot be decoded into valid
 -- UTF8 text!
-mkRespTemplateTransform :: TemplatingEngine -> BodyTransformAction -> ResponseTransformCtx -> Either TransformErrorBundle J.Value
-mkRespTemplateTransform _ RemoveBody _ = pure J.Null
-mkRespTemplateTransform engine (ModifyBody (Template template)) ResponseTransformCtx {..} =
+mkRespTemplateTransform ::
+  TemplatingEngine ->
+  BodyTransformFn ->
+  ResponseTransformCtx ->
+  Either TransformErrorBundle J.Value
+mkRespTemplateTransform _ Body.Remove _ = pure J.Null
+mkRespTemplateTransform engine (Body.ModifyAsJSON (Template template)) ResponseTransformCtx {..} =
   let context = [("$body", responseTransformBody), ("$request", responseTransformReqCtx)]
    in case engine of
         Kriti -> first (TransformErrorBundle . pure . J.toJSON . Kriti.serialize) $ Kriti.runKriti template context
-mkRespTemplateTransform engine (FormUrlEncoded formTemplates) context =
+mkRespTemplateTransform engine (Body.ModifyAsFormURLEncoded formTemplates) context =
   case engine of
     Kriti -> do
-      result <- liftEither . V.toEither $ traverse (runUnescapedResponseTemplateTransform' context) formTemplates
-      pure $ J.String $ TE.decodeUtf8 $ BL.toStrict $ foldFormEncoded result
+      result <-
+        liftEither . V.toEither . for formTemplates $
+          runUnescapedResponseTemplateTransform' context
+      pure . J.String . TE.decodeUtf8 . BL.toStrict $ Body.foldFormEncoded result
 
 mkResponseTransform :: MetadataResponseTransform -> ResponseTransform
 mkResponseTransform MetadataResponseTransform {..} =
@@ -375,7 +421,10 @@ mkResponseTransform MetadataResponseTransform {..} =
 -- Responses. 'http-client' does not export the constructors for
 -- 'Response'. If we want to transform then we will need additional
 -- 'apply' functions.
-applyResponseTransform :: ResponseTransform -> ResponseTransformCtx -> Either TransformErrorBundle BL.ByteString
+applyResponseTransform ::
+  ResponseTransform ->
+  ResponseTransformCtx ->
+  Either TransformErrorBundle BL.ByteString
 applyResponseTransform ResponseTransform {..} ctx@ResponseTransformCtx {..} =
   let bodyFunc :: BL.ByteString -> Either TransformErrorBundle BL.ByteString
       bodyFunc body =

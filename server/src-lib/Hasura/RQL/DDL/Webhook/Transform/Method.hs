@@ -4,9 +4,7 @@ module Hasura.RQL.DDL.Webhook.Transform.Method
   ( -- * Method transformations
     Method (..),
     TransformFn (..),
-
-    -- ** Method Transformation Action
-    MethodTransformAction (..),
+    MethodTransformFn (..),
   )
 where
 
@@ -28,7 +26,10 @@ import Hasura.RQL.DDL.Webhook.Transform.Class
 
 -------------------------------------------------------------------------------
 
--- | The actual request method we are transforming
+-- | The actual request method we are transforming.
+--
+-- This newtype is necessary because otherwise we end up with an
+-- orphan instance.
 newtype Method = Method (CI.CI T.Text)
   deriving stock (Generic)
   deriving newtype (Show, Eq)
@@ -41,27 +42,56 @@ instance J.FromJSON Method where
   parseJSON = J.withText "Method" (pure . coerce . CI.mk)
 
 instance Transform Method where
-  newtype TransformFn Method = MethodTransform MethodTransformAction
+  -- NOTE: GHC does not let us attach Haddock documentation to data family
+  -- instances, so 'MethodTransformFn' is defined separately from this
+  -- wrapper.
+  newtype TransformFn Method = MethodTransformFn_ MethodTransformFn
     deriving stock (Eq, Generic, Show)
-    deriving newtype (FromJSON, ToJSON)
-    deriving anyclass (Cacheable, NFData)
+    deriving newtype (Cacheable, NFData, FromJSON, ToJSON)
 
-  -- In the case of 'Method' we simply replace the 'Method' with the one in the request transform.
-  transform :: MonadError TransformErrorBundle m => TransformFn Method -> RequestTransformCtx -> Method -> m Method
-  transform (MethodTransform (ReplaceMethod method)) _ _ = pure method
+  -- NOTE: GHC does not let us attach Haddock documentation to typeclass
+  -- method implementations, so 'applyMethodTransformFn' is defined
+  -- separately.
+  transform (MethodTransformFn_ fn) = applyMethodTransformFn fn
 
-  -- NOTE: Do we want to validate the method verb?
-  validate ::
-    TemplatingEngine ->
-    TransformFn Method ->
-    Validation TransformErrorBundle ()
-  validate _ _ = pure ()
+  -- NOTE: GHC does not let us attach Haddock documentation to typeclass
+  -- method implementations, so 'validateMethodTransformFn' is defined
+  -- separately.
+  validate engine (MethodTransformFn_ fn) = validateMethodTransformFn engine fn
 
 -- | The defunctionalized transformation on 'Method'.
+newtype MethodTransformFn
+  = -- | Replace the HTTP existing 'Method' with a new one.
+    Replace Method
+  deriving stock (Eq, Generic, Show)
+  deriving newtype (Cacheable, NFData, FromJSON, ToJSON)
+
+-- | Provide an implementation for the transformations defined by
+-- 'MethodTransformFn'.
 --
--- In this case our transformation simply replaces the 'Method' with a
--- new one.
-newtype MethodTransformAction = ReplaceMethod Method
-  deriving stock (Generic)
-  deriving newtype (Eq, Show, FromJSON, ToJSON)
-  deriving anyclass (Cacheable, NFData)
+-- If one views 'MethodTransformFn' as an interface describing HTTP method
+-- transformations, this can be seen as an implementation of these
+-- transformations as normal Haskell functions.
+applyMethodTransformFn ::
+  MonadError TransformErrorBundle m =>
+  MethodTransformFn ->
+  RequestTransformCtx ->
+  Method ->
+  m Method
+applyMethodTransformFn fn _context _oldMethod = case fn of
+  Replace newMethod -> pure newMethod
+
+-- | Validate that the provided 'MethodTransformFn' is correct in the context
+-- of a particular 'TemplatingEngine'.
+--
+-- This is a product of the fact that the correctness of a given transformation
+-- may be dependent on zero, one, or more of the templated transformations
+-- encoded within the given 'MethodTransformFn'.
+--
+-- XXX: Do we want to validate the HTTP method verb?
+validateMethodTransformFn ::
+  TemplatingEngine ->
+  MethodTransformFn ->
+  Validation TransformErrorBundle ()
+validateMethodTransformFn _engine = \case
+  Replace _method -> pure ()

@@ -1,18 +1,16 @@
 {-# LANGUAGE ApplicativeDo #-}
-{-# LANGUAGE DeriveAnyClass #-}
 
 module Hasura.RQL.DDL.Webhook.Transform.QueryParams
   ( -- * Query transformations
     QueryParams (..),
     TransformFn (..),
-
-    -- ** Method Transformation Action
-    QueryParamsTransformAction (..),
+    QueryParamsTransformFn (..),
   )
 where
 
 -------------------------------------------------------------------------------
 
+import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as M
 import Data.Validation (Validation)
@@ -32,48 +30,85 @@ import Network.HTTP.Client.Transformable qualified as HTTP
 
 -------------------------------------------------------------------------------
 
--- | The actual query params we are transforming
+-- | The actual query params we are transforming.
 --
--- Necessary boilerplate because otherwise we end up with an
+-- This newtype is necessary because otherwise we end up with an
 -- orphan instance.
 newtype QueryParams = QueryParams {unQueryParams :: HTTP.Query}
 
 instance Transform QueryParams where
-  newtype TransformFn QueryParams = QueryParamsTransform QueryParamsTransformAction
+  -- NOTE: GHC does not let us attach Haddock documentation to data family
+  -- instances, so 'QueryParamsTransformFn' is defined separately from this
+  -- wrapper.
+  newtype TransformFn QueryParams
+    = QueryParamsTransformFn_ QueryParamsTransformFn
     deriving stock (Show, Eq, Generic)
-    deriving newtype (NFData, Cacheable, J.FromJSON, J.ToJSON)
+    deriving newtype (NFData, Cacheable, FromJSON, ToJSON)
 
-  transform :: MonadError TransformErrorBundle m => TransformFn QueryParams -> RequestTransformCtx -> QueryParams -> m QueryParams
-  transform (QueryParamsTransform transformation) context _ = do
-    case transformation of
-      QueryParamsTransformAction replacements -> do
-        -- NOTE: We use `ApplicativeDo` here to take advantage of
-        -- Validation's applicative sequencing.
-        queryParams <- liftEither . V.toEither $ for replacements \(rawKey, rawValue) -> do
-          key <- runUnescapedRequestTemplateTransform' context rawKey
-          value <- traverse (runUnescapedRequestTemplateTransform' context) rawValue
-          pure (key, value)
-        pure $ QueryParams queryParams
+  -- NOTE: GHC does not let us attach Haddock documentation to typeclass
+  -- method implementations, so 'applyQueryParamsTransformFn' is defined
+  -- separately.
+  transform (QueryParamsTransformFn_ fn) = applyQueryParamsTransformFn fn
 
-  validate ::
-    TemplatingEngine ->
-    TransformFn QueryParams ->
-    Validation TransformErrorBundle ()
-  validate engine (QueryParamsTransform (QueryParamsTransformAction params)) =
-    for_ params \(key, val) -> do
-      -- Note: We are using ApplicativeDo here:
-      validateRequestUnescapedTemplateTransform' engine key
-      traverse_ (validateRequestUnescapedTemplateTransform' engine) val
-      pure ()
+  -- NOTE: GHC does not let us attach Haddock documentation to typeclass
+  -- method implementations, so 'validateQueryParamsTransformFn' is defined
+  -- separately.
+  validate engine (QueryParamsTransformFn_ fn) =
+    validateQueryParamsTransformFn engine fn
 
 -- | The defunctionalized transformation 'QueryParams'
-newtype QueryParamsTransformAction = QueryParamsTransformAction [(UnescapedTemplate, Maybe UnescapedTemplate)]
-  deriving stock (Generic)
-  deriving newtype (Show, Eq)
-  deriving anyclass (NFData, Cacheable)
+newtype QueryParamsTransformFn
+  = AddOrReplace [(UnescapedTemplate, Maybe UnescapedTemplate)]
+  deriving stock (Eq, Generic, Show)
+  deriving newtype (Cacheable, NFData)
 
-instance J.ToJSON QueryParamsTransformAction where
-  toJSON (QueryParamsTransformAction qs) = J.toJSON $ M.fromList qs
+-- | Provide an implementation for the transformations defined by
+-- 'QueryParamsTransformFn'.
+--
+-- If one views 'QueryParamsTransformFn' as an interface describing HTTP method
+-- transformations, this can be seen as an implementation of these
+-- transformations as normal Haskell functions.
+applyQueryParamsTransformFn ::
+  MonadError TransformErrorBundle m =>
+  QueryParamsTransformFn ->
+  RequestTransformCtx ->
+  QueryParams ->
+  m QueryParams
+applyQueryParamsTransformFn fn context _oldQueryParams = case fn of
+  AddOrReplace addOrReplaceParams -> do
+    -- NOTE: We use `ApplicativeDo` here to take advantage of Validation's
+    -- applicative sequencing
+    queryParams <- liftEither . V.toEither $
+      for addOrReplaceParams \(rawKey, rawValue) -> do
+        key <- runUnescapedRequestTemplateTransform' context rawKey
+        value <- traverse (runUnescapedRequestTemplateTransform' context) rawValue
+        pure (key, value)
+    pure $ QueryParams queryParams
 
-instance J.FromJSON QueryParamsTransformAction where
-  parseJSON v = QueryParamsTransformAction . M.toList <$> J.parseJSON v
+-- | Validate that the provided 'QueryParamsTransformFn' is correct in the
+-- context of a particular 'TemplatingEngine'.
+--
+-- This is a product of the fact that the correctness of a given transformation
+-- may be dependent on zero, one, or more of the templated transformations
+-- encoded within the given 'QueryParamsTransformFn'.
+validateQueryParamsTransformFn ::
+  TemplatingEngine ->
+  QueryParamsTransformFn ->
+  Validation TransformErrorBundle ()
+validateQueryParamsTransformFn engine = \case
+  AddOrReplace addOrReplaceParams ->
+    -- NOTE: We use `ApplicativeDo` here to take advantage of
+    -- Validation's applicative sequencing
+    for_ addOrReplaceParams \(key, val) -> do
+      validateRequestUnescapedTemplateTransform' engine key
+      traverse_ (validateRequestUnescapedTemplateTransform' engine) val
+      -- NOTE: There's a bug in `ApplicativeDo` which infers a `Monad`
+      -- constraint on this block if it doens't end with `pure ()`
+      pure ()
+{-# ANN validateQueryParamsTransformFn ("HLint: ignore Redundant pure" :: String) #-}
+
+instance J.ToJSON QueryParamsTransformFn where
+  toJSON (AddOrReplace addOrReplace) = J.toJSON $ M.fromList addOrReplace
+
+instance J.FromJSON QueryParamsTransformFn where
+  parseJSON v = AddOrReplace . M.toList <$> J.parseJSON v
