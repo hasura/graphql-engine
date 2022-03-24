@@ -15,8 +15,7 @@ Event Triggers
 Introduction
 ------------
 
-Hasura can be used to create event triggers on tables in the Postgres database. Event triggers reliably capture
-events on specified tables and invoke webhooks to carry out any custom logic.
+Hasura can be used to create event triggers on tables in the Postgres database. Event triggers reliably capture events on specified tables and invoke webhooks to carry out any custom logic.
 
 .. thumbnail:: /img/graphql/core/event-triggers/data-triggers-arch.png
    :class: no-shadow
@@ -32,8 +31,7 @@ Events can be of the following types:
 
 .. note::
 
-  Event webhook notifications will be delivered at least once, and may arrive out of order with 
-  respect to the underlying event.
+  Event webhook notifications will be delivered at least once, and may arrive out of order with respect to the underlying event.
 
 Learn more
 ----------
@@ -44,7 +42,8 @@ Learn more
 
    create-trigger
    payload
+   rest-connectors
+   Invoke trigger manually <invoke-trigger-manually>
    serverless
    samples
-   Invoke trigger manually <invoke-trigger-manually>
    clean-up

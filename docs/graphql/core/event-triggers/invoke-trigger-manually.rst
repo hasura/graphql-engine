@@ -18,7 +18,7 @@ Invoke event trigger manually
    .. tab:: Console
 
       You can select the ``Via console`` trigger operation while :ref:`creating an event trigger <create_trigger>`
-      to allow invoking the event trigger on rows manually using the Hasura console *(available after version v1.0.0-beta.1)*.
+      to allow invoking the event trigger on rows manually using the Hasura console.
 
       In the ``Data -> [table-name] -> Browse Rows`` tab, clicking the ``invoke trigger`` button next to any row lets
       you invoke "manual event triggers" configured on the table with that row as payload *(the button will be shown
