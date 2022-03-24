@@ -18,8 +18,8 @@
 </span><span id="line-18"></span><span>
 </span><span id="line-19"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-20"></span><span>
-</span><span id="line-21"></span><span id="local-6989586621688306900"><span id="local-6989586621688306901"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="ColumnName"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnName"><span class="hs-identifier hs-var">ColumnName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ColumnName"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnName"><span class="hs-identifier hs-var">ColumnName</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-22"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688306895"><span id="local-6989586621688306897"><span class="annot"><span class="annottext">ColumnName -&gt; ColumnName -&gt; Bool
+</span><span id="line-21"></span><span id="local-6989586621688308667"><span id="local-6989586621688308668"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="ColumnName"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnName"><span class="hs-identifier hs-var">ColumnName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ColumnName"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnName"><span class="hs-identifier hs-var">ColumnName</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688308662"><span id="local-6989586621688308664"><span class="annot"><span class="annottext">ColumnName -&gt; ColumnName -&gt; Bool
 (ColumnName -&gt; ColumnName -&gt; Bool)
 -&gt; (ColumnName -&gt; ColumnName -&gt; Bool) -&gt; Eq ColumnName
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -27,7 +27,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: ColumnName -&gt; ColumnName -&gt; Bool
 == :: ColumnName -&gt; ColumnName -&gt; Bool
 $c== :: ColumnName -&gt; ColumnName -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688306879"><span id="local-6989586621688306881"><span id="local-6989586621688306883"><span id="local-6989586621688306885"><span id="local-6989586621688306887"><span id="local-6989586621688306889"><span id="local-6989586621688306891"><span class="annot"><span class="annottext">Eq ColumnName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688308646"><span id="local-6989586621688308648"><span id="local-6989586621688308650"><span id="local-6989586621688308652"><span id="local-6989586621688308654"><span id="local-6989586621688308656"><span id="local-6989586621688308658"><span class="annot"><span class="annottext">Eq ColumnName
 Eq ColumnName
 -&gt; (ColumnName -&gt; ColumnName -&gt; Ordering)
 -&gt; (ColumnName -&gt; ColumnName -&gt; Bool)
@@ -65,7 +65,7 @@ $c&lt; :: ColumnName -&gt; ColumnName -&gt; Bool
 compare :: ColumnName -&gt; ColumnName -&gt; Ordering
 $ccompare :: ColumnName -&gt; ColumnName -&gt; Ordering
 $cp1Ord :: Eq ColumnName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688306872"><span id="local-6989586621688306874"><span id="local-6989586621688306876"><span class="annot"><span class="annottext">Int -&gt; ColumnName -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688308639"><span id="local-6989586621688308641"><span id="local-6989586621688308643"><span class="annot"><span class="annottext">Int -&gt; ColumnName -&gt; ShowS
 [ColumnName] -&gt; ShowS
 ColumnName -&gt; String
 (Int -&gt; ColumnName -&gt; ShowS)
@@ -88,7 +88,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep ColumnName x -&gt; ColumnName
 $cfrom :: forall x. ColumnName -&gt; Rep ColumnName x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cColumnName"><span id="%24tColumnName"><span id="local-6989586621688306839"><span id="local-6989586621688306841"><span id="local-6989586621688306843"><span id="local-6989586621688306845"><span id="local-6989586621688306847"><span id="local-6989586621688306849"><span id="local-6989586621688306851"><span id="local-6989586621688306853"><span id="local-6989586621688306855"><span id="local-6989586621688306857"><span id="local-6989586621688306859"><span id="local-6989586621688306861"><span id="local-6989586621688306863"><span id="local-6989586621688306865"><span class="annot"><span class="annottext">Typeable ColumnName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cColumnName"><span id="%24tColumnName"><span id="local-6989586621688308606"><span id="local-6989586621688308608"><span id="local-6989586621688308610"><span id="local-6989586621688308612"><span id="local-6989586621688308614"><span id="local-6989586621688308616"><span id="local-6989586621688308618"><span id="local-6989586621688308620"><span id="local-6989586621688308622"><span id="local-6989586621688308624"><span id="local-6989586621688308626"><span id="local-6989586621688308628"><span id="local-6989586621688308630"><span id="local-6989586621688308632"><span class="annot"><span class="annottext">Typeable ColumnName
 DataType
 Constr
 Typeable ColumnName
@@ -247,7 +247,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 -&gt; (forall g. g -&gt; c g) -&gt; ColumnName -&gt; c ColumnName
 $cp1Data :: Typeable ColumnName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688306832"><span id="local-6989586621688306834"><span class="annot"><span class="annottext">Value -&gt; Parser [ColumnName]
+</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688308599"><span id="local-6989586621688308601"><span class="annot"><span class="annottext">Value -&gt; Parser [ColumnName]
 Value -&gt; Parser ColumnName
 (Value -&gt; Parser ColumnName)
 -&gt; (Value -&gt; Parser [ColumnName]) -&gt; FromJSON ColumnName
@@ -257,7 +257,7 @@ parseJSONList :: Value -&gt; Parser [ColumnName]
 $cparseJSONList :: Value -&gt; Parser [ColumnName]
 parseJSON :: Value -&gt; Parser ColumnName
 $cparseJSON :: Value -&gt; Parser ColumnName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688306823"><span id="local-6989586621688306825"><span id="local-6989586621688306827"><span id="local-6989586621688306829"><span class="annot"><span class="annottext">[ColumnName] -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688308590"><span id="local-6989586621688308592"><span id="local-6989586621688308594"><span id="local-6989586621688308596"><span class="annot"><span class="annottext">[ColumnName] -&gt; Encoding
 [ColumnName] -&gt; Value
 ColumnName -&gt; Encoding
 ColumnName -&gt; Value
@@ -281,12 +281,12 @@ $ctoEncoding :: ColumnName -&gt; Encoding
 toJSON :: ColumnName -&gt; Value
 $ctoJSON :: ColumnName -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688306820"><span class="annot"><span class="annottext">ColumnName -&gt; ()
+</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688308587"><span class="annot"><span class="annottext">ColumnName -&gt; ()
 (ColumnName -&gt; ()) -&gt; NFData ColumnName
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: ColumnName -&gt; ()
 $crnf :: ColumnName -&gt; ()
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688306816"><span class="annot"><span class="annottext">Eq ColumnName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688308583"><span class="annot"><span class="annottext">Eq ColumnName
 Eq ColumnName
 -&gt; (Accesses -&gt; ColumnName -&gt; ColumnName -&gt; Bool)
 -&gt; Cacheable ColumnName
@@ -295,7 +295,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; ColumnName -&gt; ColumnName -&gt; Bool
 $cunchanged :: Accesses -&gt; ColumnName -&gt; ColumnName -&gt; Bool
 $cp1Cacheable :: Eq ColumnName
-</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688306811"><span id="local-6989586621688306813"><span class="annot"><span class="annottext">Int -&gt; ColumnName -&gt; Int
+</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688308578"><span id="local-6989586621688308580"><span class="annot"><span class="annottext">Int -&gt; ColumnName -&gt; Int
 ColumnName -&gt; Int
 (Int -&gt; ColumnName -&gt; Int)
 -&gt; (ColumnName -&gt; Int) -&gt; Hashable ColumnName
@@ -308,7 +308,7 @@ $chashWithSalt :: Int -&gt; ColumnName -&gt; Int
 </span><span id="line-25"></span><span>
 </span><span id="line-26"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-27"></span><span>
-</span><span id="line-28"></span><span id="local-6989586621688306808"><span id="local-6989586621688306809"></span></span><span class="hs-keyword">data</span><span> </span><span id="ColumnInfo"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnInfo"><span class="hs-identifier hs-var">ColumnInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ColumnInfo"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnInfo"><span class="hs-identifier hs-var">ColumnInfo</span></a></span></span><span>
+</span><span id="line-28"></span><span id="local-6989586621688308575"><span id="local-6989586621688308576"></span></span><span class="hs-keyword">data</span><span> </span><span id="ColumnInfo"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnInfo"><span class="hs-identifier hs-var">ColumnInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ColumnInfo"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnInfo"><span class="hs-identifier hs-var">ColumnInfo</span></a></span></span><span>
 </span><span id="line-29"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="dciName"><span class="annot"><span class="annottext">ColumnInfo -&gt; ColumnName
 </span><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#dciName"><span class="hs-identifier hs-var hs-var">dciName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnName"><span class="hs-identifier hs-type">ColumnName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-30"></span><span>    </span><span id="dciType"><span class="annot"><span class="annottext">ColumnInfo -&gt; Type
@@ -318,7 +318,7 @@ $chashWithSalt :: Int -&gt; ColumnName -&gt; Int
 </span><span id="line-32"></span><span>    </span><span id="dciDescription"><span class="annot"><span class="annottext">ColumnInfo -&gt; Maybe Text
 </span><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#dciDescription"><span class="hs-identifier hs-var hs-var">dciDescription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-33"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-34"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688306799"><span id="local-6989586621688306801"><span class="annot"><span class="annottext">ColumnInfo -&gt; ColumnInfo -&gt; Bool
+</span><span id="line-34"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688308566"><span id="local-6989586621688308568"><span class="annot"><span class="annottext">ColumnInfo -&gt; ColumnInfo -&gt; Bool
 (ColumnInfo -&gt; ColumnInfo -&gt; Bool)
 -&gt; (ColumnInfo -&gt; ColumnInfo -&gt; Bool) -&gt; Eq ColumnInfo
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -326,7 +326,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: ColumnInfo -&gt; ColumnInfo -&gt; Bool
 == :: ColumnInfo -&gt; ColumnInfo -&gt; Bool
 $c== :: ColumnInfo -&gt; ColumnInfo -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688306784"><span id="local-6989586621688306786"><span id="local-6989586621688306788"><span id="local-6989586621688306790"><span id="local-6989586621688306792"><span id="local-6989586621688306794"><span id="local-6989586621688306796"><span class="annot"><span class="annottext">Eq ColumnInfo
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688308551"><span id="local-6989586621688308553"><span id="local-6989586621688308555"><span id="local-6989586621688308557"><span id="local-6989586621688308559"><span id="local-6989586621688308561"><span id="local-6989586621688308563"><span class="annot"><span class="annottext">Eq ColumnInfo
 Eq ColumnInfo
 -&gt; (ColumnInfo -&gt; ColumnInfo -&gt; Ordering)
 -&gt; (ColumnInfo -&gt; ColumnInfo -&gt; Bool)
@@ -364,7 +364,7 @@ $c&lt; :: ColumnInfo -&gt; ColumnInfo -&gt; Bool
 compare :: ColumnInfo -&gt; ColumnInfo -&gt; Ordering
 $ccompare :: ColumnInfo -&gt; ColumnInfo -&gt; Ordering
 $cp1Ord :: Eq ColumnInfo
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688306778"><span id="local-6989586621688306780"><span id="local-6989586621688306782"><span class="annot"><span class="annottext">Int -&gt; ColumnInfo -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688308545"><span id="local-6989586621688308547"><span id="local-6989586621688308549"><span class="annot"><span class="annottext">Int -&gt; ColumnInfo -&gt; ShowS
 [ColumnInfo] -&gt; ShowS
 ColumnInfo -&gt; String
 (Int -&gt; ColumnInfo -&gt; ShowS)
@@ -387,7 +387,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep ColumnInfo x -&gt; ColumnInfo
 $cfrom :: forall x. ColumnInfo -&gt; Rep ColumnInfo x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cColumnInfo"><span id="%24tColumnInfo"><span id="local-6989586621688306747"><span id="local-6989586621688306749"><span id="local-6989586621688306751"><span id="local-6989586621688306753"><span id="local-6989586621688306755"><span id="local-6989586621688306757"><span id="local-6989586621688306759"><span id="local-6989586621688306761"><span id="local-6989586621688306763"><span id="local-6989586621688306765"><span id="local-6989586621688306767"><span id="local-6989586621688306769"><span id="local-6989586621688306771"><span id="local-6989586621688306773"><span class="annot"><span class="annottext">Typeable ColumnInfo
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cColumnInfo"><span id="%24tColumnInfo"><span id="local-6989586621688308514"><span id="local-6989586621688308516"><span id="local-6989586621688308518"><span id="local-6989586621688308520"><span id="local-6989586621688308522"><span id="local-6989586621688308524"><span id="local-6989586621688308526"><span id="local-6989586621688308528"><span id="local-6989586621688308530"><span id="local-6989586621688308532"><span id="local-6989586621688308534"><span id="local-6989586621688308536"><span id="local-6989586621688308538"><span id="local-6989586621688308540"><span class="annot"><span class="annottext">Typeable ColumnInfo
 DataType
 Constr
 Typeable ColumnInfo
@@ -546,12 +546,12 @@ $cgfoldl :: forall (c :: * -&gt; *).
 -&gt; (forall g. g -&gt; c g) -&gt; ColumnInfo -&gt; c ColumnInfo
 $cp1Data :: Typeable ColumnInfo
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-35"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688306743"><span class="annot"><span class="annottext">ColumnInfo -&gt; ()
+</span><span id="line-35"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688308510"><span class="annot"><span class="annottext">ColumnInfo -&gt; ()
 (ColumnInfo -&gt; ()) -&gt; NFData ColumnInfo
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: ColumnInfo -&gt; ()
 $crnf :: ColumnInfo -&gt; ()
-</span><a href="#local-6989586621688306743"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688306740"><span class="annot"><span class="annottext">Eq ColumnInfo
+</span><a href="#local-6989586621688308510"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688308507"><span class="annot"><span class="annottext">Eq ColumnInfo
 Eq ColumnInfo
 -&gt; (Accesses -&gt; ColumnInfo -&gt; ColumnInfo -&gt; Bool)
 -&gt; Cacheable ColumnInfo
@@ -560,7 +560,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; ColumnInfo -&gt; ColumnInfo -&gt; Bool
 $cunchanged :: Accesses -&gt; ColumnInfo -&gt; ColumnInfo -&gt; Bool
 $cp1Cacheable :: Eq ColumnInfo
-</span><a href="#local-6989586621688306740"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688306736"><span id="local-6989586621688306738"><span class="annot"><span class="annottext">Int -&gt; ColumnInfo -&gt; Int
+</span><a href="#local-6989586621688308507"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688308503"><span id="local-6989586621688308505"><span class="annot"><span class="annottext">Int -&gt; ColumnInfo -&gt; Int
 ColumnInfo -&gt; Int
 (Int -&gt; ColumnInfo -&gt; Int)
 -&gt; (ColumnInfo -&gt; Int) -&gt; Hashable ColumnInfo
@@ -569,10 +569,10 @@ hash :: ColumnInfo -&gt; Int
 $chash :: ColumnInfo -&gt; Int
 hashWithSalt :: Int -&gt; ColumnInfo -&gt; Int
 $chashWithSalt :: Int -&gt; ColumnInfo -&gt; Int
-</span><a href="#local-6989586621688306736"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688308503"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-36"></span><span>
-</span><span id="line-37"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688306729"><span id="local-6989586621688306731"><span id="local-6989586621688306733"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-38"></span><span>  </span><span id="local-6989586621688306728"><span class="annot"><span class="annottext">toJSON :: ColumnInfo -&gt; Value
+</span><span id="line-37"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688308496"><span id="local-6989586621688308498"><span id="local-6989586621688308500"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-38"></span><span>  </span><span id="local-6989586621688308495"><span class="annot"><span class="annottext">toJSON :: ColumnInfo -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-39"></span><span>    </span><span class="annot"><span class="annottext">Options -&gt; ColumnInfo -&gt; Value
 forall a.
@@ -584,7 +584,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-40"></span><span>      </span><span class="annot"><span class="annottext">Options
 </span><span class="hs-identifier hs-var">J.defaultOptions</span></span><span>
 </span><span id="line-41"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">fieldLabelModifier :: ShowS
-</span><a href="#local-6989586621688306724"><span class="hs-identifier hs-var">J.fieldLabelModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><a href="#local-6989586621688308491"><span class="hs-identifier hs-var">J.fieldLabelModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShowS
 </span><span class="hs-identifier hs-var">snakeCase</span></span><span> </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; ShowS
@@ -593,8 +593,8 @@ forall a. Int -&gt; [a] -&gt; [a]
 </span><span class="hs-number">3</span></span><span>
 </span><span id="line-42"></span><span>        </span><span class="hs-special">}</span><span>
 </span><span id="line-43"></span><span>
-</span><span id="line-44"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688306719"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-45"></span><span>  </span><span id="local-6989586621688306718"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ColumnInfo
+</span><span id="line-44"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688308486"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-45"></span><span>  </span><span id="local-6989586621688308485"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ColumnInfo
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-46"></span><span>    </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser ColumnInfo
 forall a.
@@ -607,7 +607,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-47"></span><span>      </span><span class="annot"><span class="annottext">Options
 </span><span class="hs-identifier hs-var">J.defaultOptions</span></span><span>
 </span><span id="line-48"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">fieldLabelModifier :: ShowS
-</span><a href="#local-6989586621688306724"><span class="hs-identifier hs-var">J.fieldLabelModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><a href="#local-6989586621688308491"><span class="hs-identifier hs-var">J.fieldLabelModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShowS
 </span><span class="hs-identifier hs-var">snakeCase</span></span><span> </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; ShowS
