@@ -198,10 +198,13 @@ Following is the behaviour in detail:
    3. third, check if ``Expires`` header is present (if ``Cache-Control`` is not present), and try
       to parse the value as a timestamp.
 
-2. If it is able to parse ``max-age``, ``s-maxage`` or ``Expires`` successfully, then it will use that parsed time to refresh/refetch the JWKs again. 
-  If it is unable to parse, then it will not refresh the JWKs (it assumes that if the above headers are not present, the provider doesn't rotate their JWKs). If the parsed time is less than a second, the JWKs will be fetched once per second regardless.
-  If ``must-revalidate`` and ``max-age`` are present, then it will refresh the JWK again after the time period specified in ``max-age`` has passed. 
-  However, if ``max-age`` is not specified or if ``no-cache`` or ``no-store`` are present, then it will refresh the JWKs once a second. 
+2. If it is able to parse ``max-age``, ``s-maxage`` or ``Expires`` successfully, then it will use that parsed time to refresh/refetch the JWKs again.
+
+   If it is unable to parse, then it will not refresh the JWKs (it assumes that if the above headers are not present, the provider doesn't rotate their JWKs). If the parsed time is less than a second, the JWKs will be fetched once per second regardless.
+
+   If ``must-revalidate`` and ``max-age`` are present, then it will refresh the JWK again after the time period specified in ``max-age`` has passed.
+
+   However, if ``max-age`` is not specified or if ``no-cache`` or ``no-store`` are present, then it will refresh the JWKs once a second.
 
 **While running**:
 
