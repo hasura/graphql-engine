@@ -50,7 +50,12 @@ The following fields can be defined for a remote schema relationship:
   - **From column**: Input injected from table column values.
   - **From static value**: Input injected from a static value of your choice.
 
-For this example, we assume that our schema has a ``users`` table with the fields ``name`` and ``auth0_id``.
+For example, let's assume that our database has a table ``users(name text, auth0_id text)`` and we've added a remote schema ``authh0``
+which is a wrapper around `Auth0 <https://auth0.com/>`__'s REST API (see example `here <https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/auth0-wrapper>`__).
+
+1. We name the relationship ``auth0_profile``.
+2. We select the ``auth0`` schema that we've added.
+3. We set up the config to join the ``auth0_id`` input argument of our remote schema field to the ``auth0_id`` column of this table (in this case, the ``users`` table).
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -72,24 +77,24 @@ For this example, we assume that our schema has a ``users`` table with the field
 
   .. tab:: CLI
 
-    You can add a remote schema relationship by adding it to the ``tables.yaml`` in the ``metadata`` directory:
+    Update the ``databases > [database-name] > tables > [table-name].yaml`` file in the ``metadata`` directory:
 
     .. code-block:: yaml
        :emphasize-lines: 4-13
 
-        - table:
-            schema: public
-            name: users
-          remote_relationships:
-          - definition:
-              remote_field:
-                auth0profile:
-                  arguments:
-                    id: $auth0_id
-              hasura_fields:
-              - auth0_id
-              remote_schema: auth0
-            name: auth0
+       - table:
+           schema: public
+           name: users
+         remote_relationships:
+         - name: auth0_profile
+           definition:
+             hasura_fields:
+               - auth0_id
+             remote_schema: auth0
+             remote_field:
+               auth0:
+                 arguments:
+                   auth0_id: $auth0_id
 
     Apply the metadata by running:
 
@@ -110,8 +115,8 @@ For this example, we assume that our schema has a ``users`` table with the field
       {
         "type": "pg_create_remote_relationship",
         "args": {
-          "source": "<db_name>",
           "name": "auth0_profile",
+          "source": "<db_name>",
           "table": "users",
           "hasura_fields": [
             "auth0_id"
@@ -127,13 +132,6 @@ For this example, we assume that our schema has a ``users`` table with the field
         }
       }
 
-In this example, we've added a remote schema which is a wrapper around `Auth0 <https://auth0.com/>`__'s REST API (see example
-`here <https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/auth0-wrapper>`__).
-
-1. We name the relationship ``auth0_profile``.
-2. We select the ``auth0`` schema that we've added.
-3. We set up the config to join the ``auth0_id`` input argument of our remote schema field to the ``auth0_id`` column of this table (in this case, the ``users`` table).
-
 Step 2: Explore with GraphiQL
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -145,6 +143,7 @@ In the GraphiQL tab, test out your remote schema relationship.
     query {
       users {
         name
+        auth0_id
         auth0_profile {
           nickname
           email
@@ -158,6 +157,7 @@ In the GraphiQL tab, test out your remote schema relationship.
         "users": [
           {
             "name": "Daenerys Targaryen",
+            "auth0_id": "auth0|507f1f77bcf86cd799439020",
             "auth0_profile": {
               "nickname": "Stormborn",
               "email": "mother.of.dragons@unburnt.com",
