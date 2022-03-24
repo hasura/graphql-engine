@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { redirectToMetadataStatus } from '@/components/Common/utils/routesUtils';
 import { connect, ConnectedProps } from 'react-redux';
 import {
   getInheritedRoles,
@@ -25,8 +26,15 @@ export const ActionContext = React.createContext<RoleActionsInterface | null>(
   null
 );
 
+let lastinconsistency: any[];
+
 const InheritedRoles: React.FC<Props> = props => {
-  const { allRoles, inheritedRoles, dispatch } = props;
+  const {
+    allRoles,
+    inheritedRoles,
+    inconsistentInheritedRoles,
+    dispatch,
+  } = props;
   const [inheritedRoleName, setInheritedRoleName] = useState('');
   const [inheritedRole, setInheritedRole] = useState<InheritedRole | null>(
     null
@@ -76,6 +84,20 @@ const InheritedRoles: React.FC<Props> = props => {
     resetState();
   };
 
+  useEffect(() => {
+    if (
+      inconsistentInheritedRoles &&
+      inconsistentInheritedRoles?.length &&
+      lastinconsistency !== inconsistentInheritedRoles
+    ) {
+      lastinconsistency = inconsistentInheritedRoles;
+      // redirection will happen when there is an inconsitency detected for the first time
+      // second time inherited roles page will load as expected
+      // whenever there is an updation/ creation cause the inconsistency, it will redirect to status page once
+      dispatch(redirectToMetadataStatus());
+    }
+  }, [inconsistentInheritedRoles, dispatch]);
+
   return (
     <div
       className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${styles.metadata_wrapper} container-fluid`}
@@ -108,6 +130,7 @@ const mapStateToProps = (state: ReduxState) => {
     inheritedRoles: getInheritedRoles(state),
     allRoles: rolesSelector(state),
     experimentalFeatures: state.main.serverConfig.data.experimental_features,
+    inconsistentInheritedRoles: state.metadata.inconsistentInheritedRoles,
   };
 };
 

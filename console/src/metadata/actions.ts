@@ -1137,7 +1137,7 @@ export const deleteInsecureDomain = (
 export const addInheritedRoleAction = (
   role_name: string,
   role_set: string[],
-  callback?: any
+  callback?: () => void
 ): Thunk<void, MetadataActions> => {
   return (dispatch, getState) => {
     const upQuery = addInheritedRole(role_name, role_set);
@@ -1152,10 +1152,13 @@ export const addInheritedRoleAction = (
         type: 'Metadata/ADD_INHERITED_ROLE',
         data: { role_name, role_set },
       });
-      callback();
+      dispatch(loadInconsistentObjects({ shouldReloadMetadata: false }));
+      if (callback) callback();
     };
 
-    const onError = () => {};
+    const onError = () => {
+      dispatch(loadInconsistentObjects({ shouldReloadMetadata: false }));
+    };
 
     makeMigrationCall(
       dispatch,
@@ -1186,12 +1189,15 @@ export const deleteInheritedRoleAction = (
 
     const onSuccess = () => {
       dispatch({ type: 'Metadata/DELETE_INHERITED_ROLE', data: role_name });
+      dispatch(loadInconsistentObjects({ shouldReloadMetadata: false }));
       if (callback) {
         callback();
       }
     };
 
-    const onError = () => {};
+    const onError = () => {
+      dispatch(loadInconsistentObjects({ shouldReloadMetadata: false }));
+    };
 
     makeMigrationCall(
       dispatch,
@@ -1226,12 +1232,15 @@ export const updateInheritedRoleAction = (
         type: 'Metadata/UPDATE_INHERITED_ROLE',
         data: { role_name, role_set },
       });
+      dispatch(loadInconsistentObjects({ shouldReloadMetadata: false }));
       if (callback) {
         callback();
       }
     };
 
-    const onError = () => {};
+    const onError = () => {
+      dispatch(loadInconsistentObjects({ shouldReloadMetadata: false }));
+    };
 
     makeMigrationCall(
       dispatch,
