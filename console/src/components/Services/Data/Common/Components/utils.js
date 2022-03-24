@@ -110,19 +110,3 @@ export const getKeyDef = (config, constraintName) => {
     </div>
   );
 };
-
-export const getRootFieldLabel = rfType => {
-  const labels = {
-    custom_name: 'Custom Table Name',
-    select: 'Select',
-    select_by_pk: 'Select by PK',
-    select_aggregate: 'Select Aggregate',
-    insert: 'Insert',
-    insert_one: 'Insert One',
-    update: 'Update',
-    update_by_pk: 'Update by PK',
-    delete: 'Delete',
-    delete_by_pk: 'Delete by PK',
-  };
-  return labels[rfType];
-};
