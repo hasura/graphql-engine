@@ -312,6 +312,40 @@ export const setTableCustomRootFieldName = (
   return newName;
 };
 
+export const getTableCustomRootFieldComment = (
+  rootFieldValue: Nullable<string> | CustomRootField
+): string | null => {
+  if (rootFieldValue) {
+    if (
+      typeof rootFieldValue === 'string' ||
+      rootFieldValue.comment === undefined
+    ) {
+      return null;
+    }
+
+    return rootFieldValue.comment;
+  }
+  return null;
+};
+
+export const setTableCustomRootFieldComment = (
+  existingRootFieldValue: Nullable<string> | CustomRootField,
+  newComment: string | null
+): Nullable<string> | CustomRootField => {
+  if (typeof existingRootFieldValue === 'string') {
+    return {
+      name: existingRootFieldValue,
+      comment: newComment,
+    };
+  } else if (typeof existingRootFieldValue === 'object') {
+    return {
+      ...existingRootFieldValue,
+      comment: newComment,
+    };
+  }
+  return { comment: newComment };
+};
+
 export const getTableColumnConfig = (table: NormalizedTable) =>
   table?.configuration?.column_config || {};
 

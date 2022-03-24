@@ -145,15 +145,17 @@ const ColumnEditorList = ({
       const keyPropertiesString = propertiesList.join(', ');
 
       propertiesDisplay.push(
-        <span className="ml-xs mr-2 font-normal" key={'props'}>
+        <span className="ml-xs font-normal" key={'props'}>
           {keyPropertiesString}
         </span>
       );
 
       propertiesDisplay.push(
-        <span key={'comment'} className={styles.text_gray}>
-          {columnProperties.comment && `${columnProperties.comment}`}
-        </span>
+        <div>
+          <span key={'comment'} className="text-gray-600 text-sm">
+            {columnProperties.comment && `${columnProperties.comment}`}
+          </span>
+        </div>
       );
 
       return propertiesDisplay;
@@ -161,15 +163,13 @@ const ColumnEditorList = ({
 
     const collapsedLabel = () => {
       return (
-        <div className="flex items-center" key={colName}>
-          <div>
-            <span className="font-semibold">{colName}</span>
-            <span className="ml-xs font-semibold">
-              {columnProperties.customFieldName &&
-                ` → ${columnProperties.customFieldName}`}
-            </span>
-          </div>{' '}
-          {gqlCompatibilityWarning()} - {keyProperties()}
+        <div key={colName}>
+          <span className="font-semibold">{colName}</span>
+          <span className="mr-xs">
+            {columnProperties.customFieldName &&
+              ` → ${columnProperties.customFieldName}`}
+          </span>
+          - {gqlCompatibilityWarning()} {keyProperties()}
         </div>
       );
     };

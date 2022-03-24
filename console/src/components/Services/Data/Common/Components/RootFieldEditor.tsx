@@ -1,13 +1,13 @@
 import React from 'react';
-import {
-  CustomRootField,
-  CustomRootFields,
-} from '../../../../../dataSources/types';
+import { CustomRootFields } from '../../../../../dataSources/types';
 import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleToggle';
 
-import { getRootFieldLabel } from './utils';
 import { Nullable } from '../../../../../components/Common/utils/tsUtils';
-import { getTableCustomRootFieldName } from '../../../../../dataSources';
+import {
+  getTableCustomRootFieldComment,
+  getTableCustomRootFieldName,
+} from '../../../../../dataSources';
+import { CommentInput } from './CommentInput';
 
 interface RootFieldEditorProps {
   rootFields: CustomRootFields;
@@ -15,7 +15,7 @@ interface RootFieldEditorProps {
   tableName: string;
   tableSchema: string;
   customName?: string;
-  customNameOnChange: ChangeHandler;
+  customNameOnChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   selectOnChange: ChangeHandler;
   selectByPkOnChange: ChangeHandler;
   selectAggOnChange: ChangeHandler;
@@ -27,7 +27,22 @@ interface RootFieldEditorProps {
   deleteByPkOnChange: ChangeHandler;
 }
 
-type ChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => void;
+interface ChangeHandler {
+  onNameChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onCommentChange: (comment: string | null) => void;
+}
+
+export const rootFieldLabels: Record<keyof CustomRootFields, string> = {
+  select: 'Select',
+  select_by_pk: 'Select by PK',
+  select_aggregate: 'Select Aggregate',
+  insert: 'Insert',
+  insert_one: 'Insert One',
+  update: 'Update',
+  update_by_pk: 'Update by PK',
+  delete: 'Delete',
+  delete_by_pk: 'Delete by PK',
+};
 
 const RootFieldEditor: React.FC<RootFieldEditorProps> = ({
   rootFields,
@@ -46,17 +61,19 @@ const RootFieldEditor: React.FC<RootFieldEditorProps> = ({
   customName,
   tableSchema,
 }) => {
-  const {
-    select,
-    select_by_pk: selectByPk,
-    select_aggregate: selectAgg,
-    insert,
-    insert_one: insertOne,
-    update,
-    update_by_pk: updateByPk,
-    delete: _delete,
-    delete_by_pk: deleteByPk,
-  } = rootFields;
+  const qualifiedTableName =
+    tableSchema === '' ? `"${tableName}"` : `"${tableSchema}.${tableName}"`;
+  const rootFieldDefaultComments: Record<keyof CustomRootFields, string> = {
+    select: `fetch data from the table: ${qualifiedTableName}`,
+    select_by_pk: `fetch data from the table: ${qualifiedTableName} using primary key columns`,
+    select_aggregate: `fetch aggregated fields from the table: ${qualifiedTableName}`,
+    insert: `insert data into the table: ${qualifiedTableName}`,
+    insert_one: `insert a single row into the table: ${qualifiedTableName}`,
+    update: `update data of the table: ${qualifiedTableName}`,
+    update_by_pk: `update single row of the table: ${qualifiedTableName}`,
+    delete: `delete data from the table: ${qualifiedTableName}`,
+    delete_by_pk: `delete single row from the table: ${qualifiedTableName}`,
+  };
 
   const getRootField = () => {
     if (customName) {
@@ -85,27 +102,53 @@ const RootFieldEditor: React.FC<RootFieldEditorProps> = ({
     return `${rfType}_${rootField}`;
   };
 
-  const getRow = (
-    rfType: string,
-    value: Nullable<string> | CustomRootField,
-    onChange: ChangeHandler
+  const getCustomNameRow = (
+    value: Nullable<string>,
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   ) => (
-    <div className="flex items-center">
-      <div className="text-gray-600">{getRootFieldLabel(rfType)}</div>
-      <div className="ml-auto w-6/12">
+    <div className="flex items-center space-x-4 ">
+      <div className="text-gray-600 w-2/12">Custom Table Name</div>
+      <div className="w-4/12">
         <input
           type="text"
-          value={getTableCustomRootFieldName(value) || ''}
-          placeholder={`${getDefaultRootField(rfType)} (default)`}
+          value={value || ''}
+          placeholder={`${getDefaultRootField('custom_name')} (default)`}
           className="form-control"
           onChange={onChange}
           disabled={disabled}
         />
       </div>
+      <div className="w-6/12" />
     </div>
   );
 
-  const getSection = (rfType: string) => {
+  const getRootFieldRow = (
+    rfType: keyof CustomRootFields,
+    onChange: ChangeHandler
+  ) => (
+    <div className="flex items-center space-x-4">
+      <div className="text-gray-600 w-2/12">{rootFieldLabels[rfType]}</div>
+      <div className="w-4/12">
+        <input
+          type="text"
+          value={getTableCustomRootFieldName(rootFields[rfType]) || ''}
+          placeholder={`${getDefaultRootField(rfType)} (default)`}
+          className="form-control"
+          onChange={onChange.onNameChange}
+          disabled={disabled}
+        />
+      </div>
+      <div className="w-6/12">
+        <CommentInput
+          value={getTableCustomRootFieldComment(rootFields[rfType])}
+          defaultComment={rootFieldDefaultComments[rfType]}
+          onChange={onChange.onCommentChange}
+        />
+      </div>
+    </div>
+  );
+
+  const getSection = (rfType: 'query' | 'mutation') => {
     return (
       <div>
         <CollapsibleToggle
@@ -113,33 +156,37 @@ const RootFieldEditor: React.FC<RootFieldEditorProps> = ({
           useDefaultTitleStyle
           isOpen
         >
+          <div className="flex items-center space-x-4 pb-2">
+            <div className="text-gray-600 w-2/12" />
+            <div className="text-gray-600 w-4/12">Field Name</div>
+            <div className="text-gray-600 w-6/12">Comment </div>
+          </div>
           {rfType === 'query' && (
             <div className="space-y-md mb-md">
-              {getRow('select', select, selectOnChange)}
-              {getRow('select_by_pk', selectByPk, selectByPkOnChange)}
-              {getRow('select_aggregate', selectAgg, selectAggOnChange)}
+              {getRootFieldRow('select', selectOnChange)}
+              {getRootFieldRow('select_by_pk', selectByPkOnChange)}
+              {getRootFieldRow('select_aggregate', selectAggOnChange)}
             </div>
           )}
           {rfType === 'mutation' && (
             <div className="space-y-md mb-md">
-              {getRow('insert', insert, insertOnChange)}
-              {getRow('insert_one', insertOne, insertOneOnChange)}
-              {getRow('update', update, updateOnChange)}
-              {getRow('update_by_pk', updateByPk, updateByPkOnChange)}
-              {getRow('delete', _delete, deleteOnChange)}
-              {getRow('delete_by_pk', deleteByPk, deleteByPkOnChange)}
+              {getRootFieldRow('insert', insertOnChange)}
+              {getRootFieldRow('insert_one', insertOneOnChange)}
+              {getRootFieldRow('update', updateOnChange)}
+              {getRootFieldRow('update_by_pk', updateByPkOnChange)}
+              {getRootFieldRow('delete', deleteOnChange)}
+              {getRootFieldRow('delete_by_pk', deleteByPkOnChange)}
             </div>
           )}
         </CollapsibleToggle>
       </div>
     );
   };
-
   return (
     <div>
       <div>
         <div className="mb-md">
-          {getRow('custom_name', customName, customNameOnChange)}
+          {getCustomNameRow(customName, customNameOnChange)}
         </div>
         {getSection('query')}
         {getSection('mutation')}

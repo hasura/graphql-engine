@@ -8,9 +8,14 @@ import {
 } from './ModifyActions';
 
 import { Dispatch } from '../../../../types';
-import { CustomRootFields } from '../../../../dataSources/types';
 import {
+  CustomRootField,
+  CustomRootFields,
+} from '../../../../dataSources/types';
+import {
+  getTableCustomRootFieldComment,
   getTableCustomRootFieldName,
+  setTableCustomRootFieldComment,
   setTableCustomRootFieldName,
 } from '../../../../dataSources';
 
@@ -37,56 +42,69 @@ const RootFieldsEditor = ({
     dispatch(modifyRootFields(rf));
   };
 
-  const onChange = (field: keyof CustomRootFields, customField: string) => {
-    const newRootFields = {
-      ...rootFieldsEdit,
-      [field]: setTableCustomRootFieldName(rootFieldsEdit[field], customField),
-    };
-    dispatch(modifyRootFields(newRootFields));
-  };
+  const onRootFieldChange = (field: keyof CustomRootFields) => ({
+    onNameChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newRootFields = {
+        ...rootFieldsEdit,
+        [field]: setTableCustomRootFieldName(
+          rootFieldsEdit[field],
+          e.target.value
+        ),
+      };
+      dispatch(modifyRootFields(newRootFields));
+    },
+
+    onCommentChange: (comment: string | null) => {
+      const newRootFields = {
+        ...rootFieldsEdit,
+        [field]: setTableCustomRootFieldComment(rootFieldsEdit[field], comment),
+      };
+      dispatch(modifyRootFields(newRootFields));
+    },
+  });
 
   const onChangeCustomName = (newName: string) => {
     dispatch(modifyTableCustomName(newName));
   };
 
-  const getRootFieldNames = (
-    rootFields: CustomRootFields
-  ): Record<string, string> => {
-    const rootFieldNames = Object.entries(rootFields).map(([key, value]) =>
-      value ? { [key]: getTableCustomRootFieldName(value) } : {}
+  const renderCustomRootFieldLabel = (
+    rootFieldName: string,
+    rootFieldConfig: string | CustomRootField
+  ) => {
+    const rfCustomName = getTableCustomRootFieldName(rootFieldConfig);
+    const rfComment = getTableCustomRootFieldComment(rootFieldConfig);
+    return (
+      <div className="mb-xs" key={rootFieldName}>
+        <span className="flex items-center">
+          <span className="font-semibold mr-xs">{rootFieldName}</span>
+          {rfCustomName ? (
+            <>
+              <span className="mr-xs">&rarr;</span>
+              <span>{rfCustomName}</span>
+            </>
+          ) : null}
+        </span>
+        <span className="text-gray-600 text-sm">{rfComment}</span>
+      </div>
     );
-
-    return Object.assign({}, ...rootFieldNames);
   };
 
   const collapsedLabel = () => {
-    const customRootFieldLabels: React.ReactNode[] = [];
+    const customNameLabel = existingCustomName
+      ? [renderCustomRootFieldLabel('custom_table_name', existingCustomName)]
+      : [];
 
-    if (existingCustomName) {
-      customRootFieldLabels.push(
-        <span className="flex items-center" key={existingCustomName}>
-          <span className="font-semibold mr-xs">custom_table_name</span>{' '}
-          <span className="mr-xs">&rarr;</span>{' '}
-          <span>{existingCustomName}</span>
-        </span>
-      );
-    }
-
-    Object.entries(getRootFieldNames(existingRootFields)).forEach(
-      ([rootField, customRootField]) => {
-        customRootFieldLabels.push(
-          <>
-            <span className="flex items-center" key={rootField}>
-              <span className="font-semibold mr-xs">{rootField}</span>
-              <span className="mr-xs">&rarr;</span>
-              <span>{customRootField}</span>
-            </span>
-          </>
-        );
-      }
+    const existingRootFieldLabels = Object.entries(
+      existingRootFields
+    ).map(([rootField, customRootField]) =>
+      customRootField === null
+        ? []
+        : [renderCustomRootFieldLabel(rootField, customRootField)]
     );
 
-    return <div>{customRootFieldLabels}</div>;
+    const allLabels = customNameLabel.concat(...existingRootFieldLabels);
+
+    return <div>{allLabels}</div>;
   };
 
   const editorExpanded = () => (
@@ -99,33 +117,15 @@ const RootFieldsEditor = ({
       customNameOnChange={(e: React.ChangeEvent<HTMLInputElement>) => {
         onChangeCustomName(e.target.value);
       }}
-      selectOnChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-        onChange('select', e.target.value);
-      }}
-      selectByPkOnChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-        onChange('select_by_pk', e.target.value);
-      }}
-      selectAggOnChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-        onChange('select_aggregate', e.target.value);
-      }}
-      insertOnChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-        onChange('insert', e.target.value);
-      }}
-      insertOneOnChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-        onChange('insert_one', e.target.value);
-      }}
-      updateOnChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-        onChange('update', e.target.value);
-      }}
-      updateByPkOnChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-        onChange('update_by_pk', e.target.value);
-      }}
-      deleteOnChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-        onChange('delete', e.target.value);
-      }}
-      deleteByPkOnChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-        onChange('delete_by_pk', e.target.value);
-      }}
+      selectOnChange={onRootFieldChange('select')}
+      selectByPkOnChange={onRootFieldChange('select_by_pk')}
+      selectAggOnChange={onRootFieldChange('select_aggregate')}
+      insertOnChange={onRootFieldChange('insert')}
+      insertOneOnChange={onRootFieldChange('insert_one')}
+      updateOnChange={onRootFieldChange('update')}
+      updateByPkOnChange={onRootFieldChange('update_by_pk')}
+      deleteOnChange={onRootFieldChange('delete')}
+      deleteByPkOnChange={onRootFieldChange('delete_by_pk')}
     />
   );
 
