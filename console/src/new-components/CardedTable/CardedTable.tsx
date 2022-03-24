@@ -4,10 +4,13 @@ interface ChildrenProps {
   children?: ReactNode;
 }
 
-const Table = ({ children }: ChildrenProps) => {
+const Table = ({ children, ...rest }: ChildrenProps) => {
   return (
     <div className="overflow-x-auto border border-gray-300 rounded mb-md">
-      <table className="min-w-full divide-y divide-gray-200 text-left">
+      <table
+        className="min-w-full divide-y divide-gray-200 text-left"
+        {...rest}
+      >
         {children}
       </table>
     </div>
@@ -96,13 +99,18 @@ const Body = ({ data, showActionCell = false }: BodyProps) => {
   );
 };
 
-type CardedTableProps = HeaderProps & BodyProps;
+type CardedTableProps = HeaderProps & BodyProps & React.ComponentProps<'table'>;
 
-export const CardedTable = (props: CardedTableProps) => {
+export const CardedTable = ({
+  columns,
+  data,
+  showActionCell,
+  ...rest
+}: CardedTableProps) => {
   return (
-    <Table>
-      <Header columns={props.columns} />
-      <Body data={props.data} showActionCell={props.showActionCell} />
+    <Table {...rest}>
+      <Header columns={columns} />
+      <Body data={data} showActionCell={showActionCell} />
     </Table>
   );
 };

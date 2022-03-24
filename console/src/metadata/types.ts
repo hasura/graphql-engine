@@ -570,6 +570,7 @@ export interface RemoteSchema {
   /** Comment */
   comment?: string;
   permissions?: PermissionsType[];
+  remote_relationships?: (rsToDbRelDef | rsToRsRelDef)[];
 }
 
 /**
@@ -581,6 +582,33 @@ export interface RemoteSchemaDef {
   headers?: ServerHeader[];
   forward_client_headers?: boolean;
   timeout_seconds?: number;
+}
+
+export interface rsToDbRelDef {
+  relationships: {
+    definition: {
+      to_source: {
+        table: string;
+        source: string;
+        relationship_type: string;
+        field_mapping: Record<string, unknown>;
+      };
+    };
+  }[];
+  type_name: string;
+}
+
+export interface rsToRsRelDef {
+  relationships: {
+    definition: {
+      to_remote_schema: {
+        lhs_fields: string[];
+        remote_field: Record<string, unknown>;
+        remote_schema: string;
+      };
+    };
+  }[];
+  type_name: string;
 }
 
 // //////////////////////////////
@@ -615,6 +643,7 @@ export interface RemoteRelationship {
   name: RemoteRelationshipName;
   /** Definition object */
   definition: RemoteRelationshipDef;
+  remote_relationships: RemoteDBRelationship;
 }
 
 export interface RemoteRelationshipDef {

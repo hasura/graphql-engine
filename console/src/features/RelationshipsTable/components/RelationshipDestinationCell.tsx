@@ -16,13 +16,24 @@ const RelationshipDestinationCell = ({
       relationship?.definition?.to_remote_schema?.remote_field ?? {};
     const remoteFieldPath = getRemoteFieldPath(remoteField);
 
-    return <ToRsCell rsName={relationship?.name} leafs={remoteFieldPath} />;
+    return (
+      <ToRsCell
+        rsName={relationship?.definition?.to_remote_schema.remote_schema}
+        leafs={remoteFieldPath}
+      />
+    );
   }
+
   if (sourceType === 'remote_schema_legacy') {
     const remoteField = relationship?.definition?.remote_field ?? {};
     const remoteFieldPath = getRemoteFieldPath(remoteField);
 
-    return <ToRsCell rsName={relationship?.name} leafs={remoteFieldPath} />;
+    return (
+      <ToRsCell
+        rsName={relationship?.definition?.remote_schema}
+        leafs={remoteFieldPath}
+      />
+    );
   }
 
   if (sourceType === 'to_source') {

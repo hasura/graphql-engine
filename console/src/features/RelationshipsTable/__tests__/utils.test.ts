@@ -27,6 +27,7 @@ describe('getRemoteRelationType', () => {
         hasura_fields: [],
         remote_schema: 'countries',
       },
+      source_name: 'default',
       name: 'states',
     });
     expect(res).toMatchSnapshot();
@@ -39,6 +40,7 @@ describe('getRemoteRelationType', () => {
           remote_field: { continents: { arguments: {} } },
         },
       },
+      source_name: 'default',
       name: 'continents',
     });
     expect(res).toMatchSnapshot();
