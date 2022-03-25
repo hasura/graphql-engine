@@ -4,8 +4,8 @@ module SpecHook
 where
 
 import Control.Exception.Safe (bracket)
-import Harness.GraphqlEngine (startServerThread, stopServer)
-import Harness.State (State (..))
+import Harness.GraphqlEngine (startServerThread)
+import Harness.State (State (..), stopServer)
 import System.Environment (lookupEnv)
 import Test.Hspec (Spec, SpecWith, aroundAllWith)
 import Text.Read (readMaybe)

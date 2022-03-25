@@ -42,7 +42,7 @@ instance BackendExecute 'BigQuery where
   mkDBSubscriptionPlan _ _ _ _ _ =
     throw500 "Cannot currently perform subscriptions on BigQuery sources."
   mkDBQueryExplain = bqDBQueryExplain
-  mkLiveQueryExplain _ =
+  mkSubscriptionExplain _ =
     throw500 "Cannot currently retrieve query execution plans on BigQuery sources."
 
   -- NOTE: Currently unimplemented!.

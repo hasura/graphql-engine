@@ -11,6 +11,7 @@ module Database.MSSQL.Transaction
     singleRowQueryE,
     multiRowQuery,
     multiRowQueryE,
+    forJsonQueryE,
     buildGenericQueryTxE,
     withTxET,
   )
@@ -122,6 +123,24 @@ singleRowQueryE ef = rawQueryE ef singleRowResult
     singleRowResult :: MSSQLResult -> Either String a
     singleRowResult (MSSQLResult [row]) = ODBC.fromRow row
     singleRowResult (MSSQLResult _) = Left "expecting single row"
+
+-- | MSSQL splits up results that have a @SELECT .. FOR JSON@ at the top-level
+-- into multiple rows with a single column, see
+-- https://docs.microsoft.com/en-us/sql/relational-databases/json/format-query-results-as-json-with-for-json-sql-server?view=sql-server-ver15#output-of-the-for-json-clause
+--
+-- This function simply concatenates each single-column row into one long 'Text' string.
+forJsonQueryE ::
+  forall m e.
+  MonadIO m =>
+  (MSSQLTxError -> e) ->
+  ODBC.Query ->
+  TxET e m Text
+forJsonQueryE ef = rawQueryE ef concatRowResult
+  where
+    concatRowResult :: MSSQLResult -> Either String Text
+    concatRowResult (MSSQLResult []) = pure mempty
+    concatRowResult (MSSQLResult rows@(r1 : _)) | length r1 == 1 = mconcat <$> mapM ODBC.fromRow rows
+    concatRowResult (MSSQLResult (r1 : _)) = Left $ "forJsonQueryE: Expected single-column results, but got " <> show (length r1) <> " columns"
 
 -- | Useful for building query transactions which return multiple rows.
 --

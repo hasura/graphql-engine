@@ -21,12 +21,8 @@ module Harness.GraphqlEngine
     setSource,
     setSources,
 
-    -- * Misc. Helpers
-    graphqlEndpoint,
-
-    -- * Server Setup & Teardown
+    -- * Server Setup
     startServerThread,
-    stopServer,
 
     -- * Re-exports
     serverUrl,
@@ -36,15 +32,14 @@ where
 
 -------------------------------------------------------------------------------
 
-import Control.Concurrent (forkIO, killThread, threadDelay)
-import Control.Exception.Safe (bracket)
+import Control.Concurrent (forkIO, threadDelay)
 import Control.Monad.Trans.Managed (ManagedT (..), lowerManagedT)
 import Data.Aeson (Value, object, (.=))
 import Data.Environment qualified as Env
 import Data.Text qualified as T
 import Data.Time (getCurrentTime)
-import GHC.Stack (HasCallStack)
 import Harness.Constants qualified as Constants
+import Harness.Exceptions (HasCallStack, bracket, withFrozenCallStack)
 import Harness.Http qualified as Http
 import Harness.Quoter.Yaml (yaml)
 import Harness.State (Server (..), State, getServer, serverUrl)
@@ -69,64 +64,84 @@ import System.Metrics qualified as EKG
 -- failure.
 --
 -- See 'postWithHeaders' to issue a request with 'Http.RequestHeaders'.
+--
+-- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 post :: HasCallStack => State -> String -> Value -> IO Value
-post state path = postWithHeaders state path mempty
+post state path = withFrozenCallStack . postWithHeaders state path mempty
 
 -- | Same as 'post', but ignores the value.
 --
 -- See 'postWithHeaders_' to issue a request with 'Http.RequestHeaders'.
+--
+-- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 post_ :: HasCallStack => State -> String -> Value -> IO ()
-post_ state path = void . postWithHeaders_ state path mempty
+post_ state path = void . withFrozenCallStack . postWithHeaders_ state path mempty
 
 -- | Post some JSON to graphql-engine, getting back more JSON.
 --
 -- Optimistically assumes success; use another function if you want to test for
 -- failure.
+--
+-- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 postWithHeaders ::
   HasCallStack => State -> String -> Http.RequestHeaders -> Value -> IO Value
-postWithHeaders (getServer -> Server {urlPrefix, port}) path =
-  Http.postValue_ (urlPrefix ++ ":" ++ show port ++ path)
+postWithHeaders (getServer -> Server {urlPrefix, port}) path headers =
+  withFrozenCallStack . Http.postValue (urlPrefix ++ ":" ++ show port ++ path) headers
 
 -- | Post some JSON to graphql-engine, getting back more JSON.
 --
 -- Optimistically assumes success; use another function if you want to test for
 -- failure.
+--
+-- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 postWithHeaders_ ::
   HasCallStack => State -> String -> Http.RequestHeaders -> Value -> IO ()
 postWithHeaders_ state path headers =
-  void . postWithHeaders state path headers
+  void . withFrozenCallStack . postWithHeaders state path headers
 
 -- | Same as 'post', but defaults to the graphql end-point.
+--
+-- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 postGraphqlYaml ::
   HasCallStack => State -> Value -> IO Value
-postGraphqlYaml state = postGraphqlYamlWithHeaders state mempty
+postGraphqlYaml state = withFrozenCallStack . postGraphqlYamlWithHeaders state mempty
 
 -- | Same as 'postWithHeaders', but defaults to the graphql end-point.
+--
+-- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 postGraphqlYamlWithHeaders ::
   HasCallStack => State -> Http.RequestHeaders -> Value -> IO Value
 postGraphqlYamlWithHeaders state headers =
-  postWithHeaders state "/v1/graphql" headers
+  withFrozenCallStack $ postWithHeaders state "/v1/graphql" headers
 
 -- | Same as 'postGraphqlYaml', but adds the @{query:..}@ wrapper.
+--
+-- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 postGraphql :: HasCallStack => State -> Value -> IO Value
 postGraphql state value =
-  postGraphqlYaml state (object ["query" .= value])
+  withFrozenCallStack $ postGraphqlYaml state (object ["query" .= value])
 
 -- | Same as 'postGraphqlYamlWithHeaders', but adds the @{query:..}@ wrapper.
+--
+-- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 postGraphqlWithHeaders ::
   HasCallStack => State -> Http.RequestHeaders -> Value -> IO Value
 postGraphqlWithHeaders state headers value =
-  postGraphqlYamlWithHeaders state headers (object ["query" .= value])
+  withFrozenCallStack $ postGraphqlYamlWithHeaders state headers (object ["query" .= value])
 
 -- | Same as 'post_', but defaults to the @"v1/metadata"@ endpoint.
 --
 -- @headers@ are mostly irrelevant for the admin endpoint @v1/metadata@.
+--
+-- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 postMetadata_ :: HasCallStack => State -> Value -> IO ()
-postMetadata_ state = post_ state "/v1/metadata"
+postMetadata_ state = withFrozenCallStack $ post_ state "/v1/metadata"
 
 -- | Resets metadata, removing all sources or remote schemas.
+--
+-- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 clearMetadata :: HasCallStack => State -> IO ()
-clearMetadata s = postMetadata_ s [yaml|{type: clear_metadata, args: {}}|]
+clearMetadata s = withFrozenCallStack $ postMetadata_ s [yaml|{type: clear_metadata, args: {}}|]
 
 -------------------------------------------------------------------------------
 
@@ -147,17 +162,6 @@ args:
   version: 3
   sources: *sourcesMetadata
   |]
-
--------------------------------------------------------------------------------
-
--- | Extracts the full GraphQL endpoint URL from a given 'Server'.
---
--- @
---   > graphqlEndpoint (Server 8080 "http://localhost" someThreadId)
---   "http://localhost:8080/graphql"
--- @
-graphqlEndpoint :: Server -> String
-graphqlEndpoint server = serverUrl server ++ "/graphql"
 
 -------------------------------------------------------------------------------
 
@@ -182,10 +186,6 @@ startServerThread murlPrefixport = do
   let server = Server {port = fromIntegral port, urlPrefix, threadId}
   Http.healthCheck (serverUrl server)
   pure server
-
--- | Forcibly stop a given 'Server'.
-stopServer :: Server -> IO ()
-stopServer Server {threadId} = killThread threadId
 
 -------------------------------------------------------------------------------
 

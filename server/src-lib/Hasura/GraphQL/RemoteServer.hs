@@ -2,7 +2,6 @@
 
 module Hasura.GraphQL.RemoteServer
   ( fetchRemoteSchema,
-    getSchemaIntrospection,
     execRemoteGQ,
   )
 where
@@ -12,30 +11,23 @@ import Control.Exception (try)
 import Control.Lens (set, (^.))
 import Data.Aeson ((.:), (.:?))
 import Data.Aeson qualified as J
-import Data.Aeson.Ordered qualified as JO
-import Data.Aeson.Types qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.Environment qualified as Env
 import Data.FileEmbed (makeRelativeToProject)
 import Data.HashMap.Strict.Extended qualified as Map
-import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
 import Data.List.Extended (duplicates)
 import Data.Text qualified as T
 import Data.Text.Extended (dquoteList, (<<>))
 import Hasura.Base.Error
-import Hasura.GraphQL.Context
 import Hasura.GraphQL.Execute.Types
-import Hasura.GraphQL.Namespace (mkUnNamespacedRootFieldAlias)
 import Hasura.GraphQL.Parser.Monad (ParseT, runSchemaT)
-import Hasura.GraphQL.Parser.Schema (InputValue (..), Variable (..), VariableInfo (..))
 import Hasura.GraphQL.Schema.Common (QueryContext (..))
 import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.HTTP
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers (makeHeadersFromConf)
-import Hasura.RQL.IR (RootField (RFRaw))
 import Hasura.RQL.Types
 import Hasura.Server.Utils
 import Hasura.Session
@@ -137,29 +129,6 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
             qcOptimizePermissionFilters = False
           }
       )
-
--- | Retrieve the "introspected" form of the local GraphQL schema we generated
--- for a given remote schema.  This is accomplished by looking up the "admin"
--- version of the schema, and internally running the same introspection
--- query we used to introspect other schemas against it.
---
--- TODO: document why this function exists. Why do we do that?!
-getSchemaIntrospection :: HashMap RoleName (RoleContext GQLContext) -> Maybe RemoteSchemaIntrospection
-getSchemaIntrospection gqlContext = do
-  RoleContext {..} <- Map.lookup adminRoleName gqlContext
-  fieldMap <- afold $ gqlQueryParser _rctxDefault $ fmap (fmap nameToVariable) $ G._todSelectionSet $ _grQuery introspectionQuery
-  RFRaw v <- OMap.lookup (mkUnNamespacedRootFieldAlias $$(G.litName "__schema")) fieldMap
-  fmap (irDoc . fromIntrospection) $ J.parseMaybe J.parseJSON $ J.object [("data", J.object [("__schema", JO.fromOrdered v)])]
-  where
-    -- Construct a dummy variable from a given variable name?
-    -- Its type is also its name?
-    nameToVariable :: G.Name -> Variable
-    nameToVariable n =
-      Variable
-        { vInfo = VIRequired n,
-          vType = G.TypeNamed (G.Nullability True) n,
-          vValue = JSONValue $ J.String "internal placeholder for `nameToVariable`"
-        }
 
 -- | Sends a GraphQL query to the given server.
 execRemoteGQ ::

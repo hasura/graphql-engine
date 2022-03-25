@@ -51,7 +51,9 @@ mkPGExecCtx isoLevel pool =
     }
 
 defaultTxErrorHandler :: Q.PGTxErr -> QErr
-defaultTxErrorHandler = mkTxErrorHandler (const False)
+defaultTxErrorHandler = mkTxErrorHandler $ \case
+  PGTransactionRollback _ -> True
+  _ -> False
 
 -- | Constructs a transaction error handler given a predicate that determines which errors are
 -- expected and should be reported to the user. All other errors are considered internal errors.
@@ -83,6 +85,10 @@ mkTxErrorHandler isExpectedError txe = fromMaybe unexpectedError expectedError
           PGSyntaxErrorOrAccessRuleViolation code -> (ConstraintError,) $ case code of
             Just (PGErrorSpecific PGInvalidColumnReference) ->
               "there is no unique or exclusion constraint on target column(s)"
+            _ -> message
+          PGTransactionRollback code -> (ConcurrentUpdate,) $ case code of
+            Just (PGErrorSpecific PGSerializationFailure) ->
+              "serialization failure due to concurrent update"
             _ -> message
 
 data PGSourceConfig = PGSourceConfig

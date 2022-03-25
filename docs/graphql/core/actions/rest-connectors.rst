@@ -15,11 +15,10 @@ REST Connectors for actions
 Introduction
 ------------
 
-REST Connectors for actions are used to integrate existing REST APIs as GraphQL APIs
-without changing any upstream code.
+REST Connectors for actions are used to integrate existing REST APIs to the GraphQL API without needing any middleware
+or modifications to the upstream code.
 
-REST Connectors work by changing the default HTTP request made by an action to a
-different HTTP request by adding suitable transforms.
+REST Connectors modify the default HTTP request made by an action to adapt to your webhook's expected format by adding suitable transforms.
 
 .. admonition:: Supported from
 
@@ -27,6 +26,8 @@ different HTTP request by adding suitable transforms.
 
 Configuring REST Connectors
 ---------------------------
+
+REST Connectors can be configured either when creating a new action or editing an existing one. See the transform options :ref:`here <action_transform_types>`:
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -40,17 +41,42 @@ Configuring REST Connectors
 
   .. tab:: CLI
 
-    Will be added soon
+    Update the ``actions.yaml`` file inside the ``metadata`` directory and add
+    a :ref:`request_transform <RequestTransformation>` field to the action:
+
+    .. code-block:: yaml
+       :emphasize-lines: 6-13
+
+       - name: create_user
+         definition:
+           kind: synchronous
+           handler: https://action.my_app.com/create-user
+           timeout: 60
+           request_transform:
+             template_engine: Kriti
+             method: POST
+             content_type: application/json
+             url: '{{$base_url}}/create_user'
+             query_params:
+               id: '{{$session_variables[''x-hasura-user-id'']}}'
+             body: '{"username": {{$body.input.username}}}'
+         comment: Custom action to create user
+
+    Apply the metadata by running:
+
+    .. code-block:: bash
+
+       hasura metadata apply
 
   .. tab:: API
 
-    REST Connectors can be added to actions using the :ref:`create_action metadata API <metadata_create_action>` or
-    :ref:`update_action metadata API <metadata_update_action>` by adding a
+    REST Connectors can be configured for actions using the :ref:`metadata_create_action` or
+    :ref:`metadata_update_action` metadata APIs by adding a
     :ref:`request_transform <RequestTransformation>` field to the args:
 
 
     .. code-block:: http
-       :emphasize-lines: 24-26
+       :emphasize-lines: 24-33
 
        POST /v1/metadata HTTP/1.1
        Content-Type: application/json
@@ -76,21 +102,26 @@ Configuring REST Connectors
                 "handler":"https://action.my_app.com/create-user",
                 "timeout":60,
                 "request_transform": {
-                   "body": "{{$body.input.name}}"
-                },
+                  "template_engine": "Kriti",
+                  "method": "POST",
+                  "url": "{{$base_url}}/create_user",
+                  "query_params": {
+                    "id": "{{$session_variables['x-hasura-user-id']}}"
+                  },
+                  "content_type": "application/json",
+                  "body": "{\"username\": {{$body.input.username}}}"
+                }
              },
             "comment": "Custom action to create user"
           }
        }
 
-Types of transforms
--------------------
-
-REST Connectors allows you to add different types of "transforms" to the default HTTP request.
-You can also use "context variables" in the transforms to achieve dynamic behaviour for each request.
+.. _action_transform_context_variables:
 
 Context Variables
-*****************
+^^^^^^^^^^^^^^^^^
+
+You can use context variables in the transforms to achieve dynamic behavior for each request.
 
 The context variables available in transforms are:
 
@@ -104,81 +135,257 @@ The context variables available in transforms are:
      - Original body of action request
 
    * - $base_url
-     - Original configured URL
+     - Original configured webhook handler URL
 
    * - $session_variables
      - Session variables
 
-Sample Context
-~~~~~~~~~~~~~~
+.. _action_transforms_sample_context:
 
-The console allows you to provide mock ``session variables`` and ``env variables`` to test your transforms.
+Console sample context
+**********************
 
-Configure an ``env var`` in the action webhook handler.
+The console allows you to preview your transforms while configuring them. To avoid exposing sensitive information on the console UI the actual environment variables configured on the server are not
+resolved while displaying the previews. Also any session variables used in the transform will not be available at the time of configuration.
 
-.. thumbnail:: /img/graphql/core/actions/transformation-context-vars-0.png
+Hence, the console allows you to provide mock env variables and session variables to verify your transforms. If you configure your transforms without providing the mock env/session variables
+you might see a UI validation error in the preview sections.
+
+**For example:** If your webhook handler is set as an env var as shown below then pass a mock value for that env var in the sample context:
+
+.. thumbnail:: /img/graphql/core/actions/transform-sample-context-0.png
    :alt: Console action webhook handler
-   :width: 800px
+   :width: 650px
 
-Add the ``env var`` value to the ``Sample Context`` under ``Sample Env Variables``.
+You can enter the mock env/session variables under ``Configure REST Connectors > Sample Context``:
 
-.. thumbnail:: /img/graphql/core/actions/transformation-context-vars-1.png
-   :alt: Console action context env
-   :width: 800px
+.. thumbnail:: /img/graphql/core/actions/transform-sample-context-1.png
+  :alt: Add generic sample context
+  :width: 800px
 
-The value should be reflected in the ``{{$base_url}}`` in ``Change Request Options`` section:
+.. note::
 
-.. thumbnail:: /img/graphql/core/actions/transformation-context-vars-2.png
-   :alt: Console action req options transformation
-   :width: 800px
+   As the sample context is only used for previews, you can still configure the transforms on the console without setting any sample context.
 
-``Session vars`` can also be added to the ``Sample context`` as shown above,
-and used like so: ``{{$session_variables['x-hasura-user-id']}}``.
-The above screen also shows an example of using the session vars from context.
+.. _action_transform_types:
 
-.. admonition:: Context variables validation error
+Types of transforms
+-------------------
 
-  Actual environment variables are not resolved during testing transforms as it could expose sensitive information to the UI.
-  
-  Note that if you don't provide mock ``env/session variables`` and test your transform, you would get a UI validation error.
-  Considering this section is only used for testing, ``Create Action`` button will still be usable.
-  When you click on ``Create Action``, any referenced envs are validated at the server without leaking any sensitive information to the UI.
+REST Connectors allow you to add different transforms to the default HTTP request. You can also use :ref:`context variables <action_transform_context_variables>`
+in the transforms to achieve dynamic behavior for each request.
+
+You can transform your:
+
+.. contents::
+  :backlinks: none
+  :depth: 1
+  :local:
 
 
-Request body
-************
+Request Method
+^^^^^^^^^^^^^^
 
-Generate a request body by configuring a template to transform the default payload to a custom payload.
-The ``body`` field takes a template in the `Kriti templating language <https://github.com/hasura/kriti-lang>`__ to evaluate the transform.
+You can change the request method to adapt to your API's expected format.
 
 .. rst-class:: api_tabs
 .. tabs::
 
   .. tab:: Console
 
-    In the ``Configure REST Connectors`` section, click on ``Add Payload Transform``:
+    In the ``Configure REST Connectors`` section, click on ``Add Request Options Transform``:
 
-    .. thumbnail:: /img/graphql/core/actions/payload-transform.png
-       :alt: Add payload transformation
-       :width: 1100px
+    .. thumbnail:: /img/graphql/core/actions/transform-method.png
+       :alt: Change request method
+       :width: 800px
 
   .. tab:: CLI
 
-    Will be added soon
+    Update the ``actions.yaml`` file inside the ``metadata`` directory and add
+    a :ref:`request_transform <RequestTransformation>` field to the action:
+
+    .. code-block:: yaml
+       :emphasize-lines: 8
+
+         - name: create_user
+           definition:
+             kind: synchronous
+             handler: https://action.my_app.com/create-user
+           timeout: 60
+           request_transform:
+             template_engine: Kriti
+             method: POST
+             content_type: application/json
+             url: '{{$base_url}}/create_user'
+             query_params:
+               id: '{{$session_variables[''x-hasura-user-id'']}}'
+             body: '{"username": {{$body.input.username}}}'
+         comment: Custom action to create user
+
+    Apply the metadata by running:
+
+    .. code-block:: bash
+
+       hasura metadata apply
 
   .. tab:: API
 
-    .. code-block:: json
-      :emphasize-lines: 3
+    REST Connectors can be configured for actions using the :ref:`metadata_create_action` or
+    :ref:`metadata_update_action` metadata APIs by adding a
+    :ref:`request_transform <RequestTransformation>` field to the args:
 
-      {
-        "request_transform": {
-           "body": "{\n  \"users\": {\n    \"name\": {{$body.input.arg1.username}},\n    \"password\": {{$body.input.arg1.password}}\n  }\n}",
-        }
-      }
 
-Content Type
-************
+    .. code-block:: http
+       :emphasize-lines: 26
+
+       POST /v1/metadata HTTP/1.1
+       Content-Type: application/json
+       X-Hasura-Role: admin
+
+       {
+         "type":"create_action",
+         "args":{
+           "name":"create_user",
+           "definition":{
+             "kind":"synchronous",
+             "arguments":[
+               {
+                 "name":"username",
+                 "type":"String!"
+               },
+               {
+                 "name":"email",
+                 "type":"String!"
+               }
+             ],
+             "output_type":"User",
+             "handler":"{{ACTION_BASE_URL}}",
+             "timeout":60,
+             "request_transform": {
+               "template_engine": "Kriti",
+               "method": "POST",
+               "url": "{{$base_url}}/create_user",
+               "query_params": {
+                 "id": "{{$session_variables['x-hasura-user-id']}}"
+               },
+               "content_type": "application/json",
+               "body": "{\"username\": {{$body.input.username}}}"
+             }
+           },
+           "comment": "Custom action to create user"
+         }
+       }
+
+Request URL
+^^^^^^^^^^^
+
+The Request URL template allows you to configure the exact API endpoint to call.
+
+You can use the :ref:`context variables <action_transform_context_variables>` to construct the final URL.
+
+You can also provide query params to add to the URL.
+
+You can use the `Kriti templating language <https://github.com/hasura/kriti-lang>`__ to construct any string values here.
+
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    In the ``Configure REST Connectors`` section, click on ``Add Request Options Transform``:
+
+    .. thumbnail:: /img/graphql/core/actions/transform-url.png
+       :alt: Change request URL
+       :width: 800px
+
+    The value of the final url should be reflected in the ``Preview`` section given all required :ref:`sample context <action_transforms_sample_context>` is set.
+
+    Hit ``Save Action`` to apply your changes.
+
+  .. tab:: CLI
+
+    Update the ``actions.yaml`` file inside the ``metadata`` directory and add
+    a :ref:`request_transform <RequestTransformation>` field to the action:
+
+    .. code-block:: yaml
+       :emphasize-lines: 10-12
+
+         - name: create_user
+           definition:
+             kind: synchronous
+             handler: https://action.my_app.com/create-user
+           timeout: 60
+           request_transform:
+             template_engine: Kriti
+             method: POST
+             content_type: application/json
+             url: '{{$base_url}}/create_user'
+             query_params:
+               id: '{{$session_variables[''x-hasura-user-id'']}}'
+             body: '{"username": {{$body.input.username}}}'
+         comment: Custom action to create user
+
+    Apply the metadata by running:
+
+    .. code-block:: bash
+
+       hasura metadata apply
+
+  .. tab:: API
+
+    REST Connectors can be configured for actions using the :ref:`metadata_create_action` or
+    :ref:`metadata_update_action` metadata APIs by adding a
+    :ref:`request_transform <RequestTransformation>` field to the args:
+
+    .. code-block:: http
+       :emphasize-lines: 27-30
+
+       POST /v1/metadata HTTP/1.1
+       Content-Type: application/json
+       X-Hasura-Role: admin
+
+       {
+         "type":"create_action",
+         "args":{
+           "name":"create_user",
+           "definition":{
+             "kind":"synchronous",
+             "arguments":[
+               {
+                 "name":"username",
+                 "type":"String!"
+               },
+               {
+                 "name":"email",
+                 "type":"String!"
+               }
+             ],
+             "output_type":"User",
+             "handler":"{{ACTION_BASE_URL}}",
+             "timeout":60,
+             "request_transform": {
+               "template_engine": "Kriti",
+               "method": "POST",
+               "url": "{{$base_url}}/create_user",
+               "query_params": {
+                 "id": "{{$session_variables['x-hasura-user-id']}}"
+               },
+               "content_type": "application/json",
+               "body": "{\"username\": {{$body.input.username}}}"
+             }
+           },
+           "comment": "Custom action to create user"
+         }
+       }
+
+.. admonition:: escapeUri
+
+  Note that you must use the ``escapeUri`` function to urlencode templated values.
+  For example, if you have to use session variables in the URL and those may contain non-ASCII values,
+  then you should provide the template URL as ``{{$base_url}}/{{escapeUri $session_variables['x-hasura-user-id']}}``
+
+Request Content-Type
+^^^^^^^^^^^^^^^^^^^^
 
 You can change the ``Content-Type`` of the request to either ``application/json`` or ``x-www-form-urlencoded``. The default is ``application/json``.
 
@@ -191,97 +398,182 @@ You can change the ``Content-Type`` of the request to either ``application/json`
 
   .. tab:: CLI
 
-    Will be added soon
+    Update the ``actions.yaml`` file inside the ``metadata`` directory and add
+    a :ref:`request_transform <RequestTransformation>` field to the action:
+
+    .. code-block:: yaml
+       :emphasize-lines: 9
+
+         - name: create_user
+           definition:
+             kind: synchronous
+             handler: https://action.my_app.com/create-user
+           timeout: 60
+           request_transform:
+             template_engine: Kriti
+             method: POST
+             content_type: application/json
+             url: '{{$base_url}}/create_user'
+             query_params:
+               id: '{{$session_variables[''x-hasura-user-id'']}}'
+             body: '{"username": {{$body.input.username}}}'
+         comment: Custom action to create user
+
+    Apply the metadata by running:
+
+    .. code-block:: bash
+
+       hasura metadata apply
 
   .. tab:: API
 
-    .. code-block:: json
-      :emphasize-lines: 7
+    REST Connectors can be configured for actions using the :ref:`metadata_create_action` or
+    :ref:`metadata_update_action` metadata APIs by adding a
+    :ref:`request_transform <RequestTransformation>` field to the args:
 
-      {
-        "request_transform": {
-           "body": {
-               "name": "{{$body.input.name}}",
-               "email": "{{$body.input.email}}",
+    .. code-block:: http
+       :emphasize-lines: 31
+
+       POST /v1/metadata HTTP/1.1
+       Content-Type: application/json
+       X-Hasura-Role: admin
+
+       {
+         "type":"create_action",
+         "args":{
+           "name":"create_user",
+           "definition":{
+             "kind":"synchronous",
+             "arguments":[
+               {
+                 "name":"username",
+                 "type":"String!"
+               },
+               {
+                 "name":"email",
+                 "type":"String!"
+               }
+             ],
+             "output_type":"User",
+             "handler":"{{ACTION_BASE_URL}}",
+             "timeout":60,
+             "request_transform": {
+               "template_engine": "Kriti",
+               "method": "POST",
+               "url": "{{$base_url}}/create_user",
+               "query_params": {
+                 "id": "{{$session_variables['x-hasura-user-id']}}"
+               },
+               "content_type": "application/json",
+               "body": "{\"username\": {{$body.input.username}}}"
+             }
            },
-           "content_type": "x-www-form-urlencoded"
-        }
-      }
+           "comment": "Custom action to create user"
+         }
+       }
 
 With ``x-www-form-urlencoded``,  the key-value pairs in ``body`` are transformed to ``name={{$body.input.name}}&key2={{$body.input.email}}``.
 
-URL
-***
+Request Body
+^^^^^^^^^^^^
 
-Transform the request URL. This can be used to embed, say user-id, in the url path.
-You can also provide ``query_params`` to add to the URL.
-You can use the `Kriti templating language <https://github.com/hasura/kriti-lang>`__ to construct any string value here.
-
-.. rst-class:: api_tabs
-.. tabs::
-  .. tab:: Console
-
-    In the ``Configure REST Connectors`` section, click on ``Add Request Options Transform``:
-
-    .. thumbnail:: /img/graphql/core/actions/request-options-transform.png
-       :alt: Change request URL
-       :width: 800px
-
-  .. tab:: CLI
-
-    Will be added soon
-
-  .. tab:: API
-
-    .. code-block:: json
-      :emphasize-lines: 3
-
-      {
-        "request_transform": {
-          "url": "{{$base_url}}/{{$session_variables['x-hasura-user-id']}}",
-          "query_params": {
-             "param1": "{{$body.input.value1}}",
-             "param2": "{{$body.input.value2}}"
-          }
-        }
-      }
-
-.. admonition:: escapeUri
-
-  Note that you must use the ``escapeUri`` function to urlencode templated values.
-  For example, if you have to use session variables in the URL and those may contain non-ASCII values,
-  then you should provide the template URL as ``{{$base_url}}/{{escapeUri $session_variables['x-hasura-user-id']}}``
-
-Method
-******
-
-Transform the method. This can be used to change the request method, say from ``POST`` to ``GET``, as shown below.
+You can generate a custom request body by configuring a template to transform the default payload to a custom payload.
+The ``body`` field takes a template in the `Kriti templating language <https://github.com/hasura/kriti-lang>`__ to evaluate the transform.
 
 .. rst-class:: api_tabs
 .. tabs::
 
   .. tab:: Console
 
-    In the ``Configure REST Connectors`` section, click on ``Add Request Options Transform``:
+    In the ``Configure REST Connectors`` section, click on ``Add Payload Transform``:
 
-    .. thumbnail:: /img/graphql/core/actions/request-method-transform.png
-       :alt: Change request method
-       :width: 800px
+    A sample payload input auto-generated based on your schema is shown.
+
+    .. thumbnail:: /img/graphql/core/actions/transform-body.png
+      :alt: Add payload transformation
+      :width: 1100px
+
+    The transformed sample payload should be shown as the ``Transformed Request Body`` given all required :ref:`sample context <action_transforms_sample_context>` is set.
+
+    Hit ``Save Action`` to apply your changes.
 
   .. tab:: CLI
 
-    Will be added soon
+    Update the ``actions.yaml`` file inside the ``metadata`` directory and add
+    a :ref:`request_transform <RequestTransformation>` field to the action:
+
+    .. code-block:: yaml
+       :emphasize-lines: 13
+
+         - name: create_user
+           definition:
+             kind: synchronous
+             handler: https://action.my_app.com/create-user
+           timeout: 60
+           request_transform:
+             template_engine: Kriti
+             method: POST
+             content_type: application/json
+             url: '{{$base_url}}/create_user'
+             query_params:
+               id: '{{$session_variables[''x-hasura-user-id'']}}'
+             body: '{"username": {{$body.input.username}}}'
+         comment: Custom action to create user
+
+    Apply the metadata by running:
+
+    .. code-block:: bash
+
+       hasura metadata apply
 
   .. tab:: API
 
-    .. code-block:: json
-      :emphasize-lines: 3
+    REST Connectors can be configured for actions using the :ref:`metadata_create_action` or
+    :ref:`metadata_update_action` metadata APIs by adding a
+    :ref:`request_transform <RequestTransformation>` field to the args:
 
-      {
-        "request_transform": {
-           "method": "GET"
-        }
-      }
+
+    .. code-block:: http
+       :emphasize-lines: 32
+
+       POST /v1/metadata HTTP/1.1
+       Content-Type: application/json
+       X-Hasura-Role: admin
+
+       {
+         "type":"create_action",
+         "args":{
+           "name":"create_user",
+           "definition":{
+             "kind":"synchronous",
+             "arguments":[
+               {
+                 "name":"username",
+                 "type":"String!"
+               },
+               {
+                 "name":"email",
+                 "type":"String!"
+               }
+             ],
+             "output_type":"User",
+             "handler":"{{ACTION_BASE_URL}}",
+             "timeout":60,
+             "request_transform": {
+               "template_engine": "Kriti",
+               "method": "POST",
+               "url": "{{$base_url}}/create_user",
+               "query_params": {
+                 "id": "{{$session_variables['x-hasura-user-id']}}"
+               },
+               "content_type": "application/json",
+               "body": "{\"username\": {{$body.input.username}}}"
+             }
+           },
+           "comment": "Custom action to create user"
+         }
+       }
+
 
 Example
 -------
@@ -314,7 +606,7 @@ Let's integrate Auth0's management API to update the profile of a user:
 
   .. tab:: CLI
 
-    Will be added soon
+    To be added
 
   .. tab:: API
 

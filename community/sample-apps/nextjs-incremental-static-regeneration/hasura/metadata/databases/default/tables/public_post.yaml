@@ -1,0 +1,21 @@
+table:
+  name: post
+  schema: public
+event_triggers:
+- definition:
+    delete:
+      columns: "*"
+    enable_manual: true
+    insert:
+      columns: "*"
+    update:
+      columns: "*"
+  headers:
+  - name: SECRET
+    value_from_env: SECRET_TOKEN
+  name: update_blog
+  retry_conf:
+    interval_sec: 10
+    num_retries: 0
+    timeout_sec: 60
+  webhook: http://host.docker.internal:3000/api/revalidate

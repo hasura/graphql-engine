@@ -30,7 +30,7 @@ Event triggers can be created using the Hasura console, CLI or metadata APIs.
 
    .. tab:: CLI
 
-      You can add an event triggers in the ``tables.yaml`` file inside the ``metadata`` directory:
+      You can add an event trigger for a table by updating the ``databases > [source-name] > tables > [table-name].yaml`` file inside the ``metadata`` directory:
 
       .. code-block:: yaml
          :emphasize-lines: 4-12

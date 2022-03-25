@@ -217,7 +217,7 @@ class ModifyTable extends React.Component {
                 </>
               )}
 
-              <div className="w-full sm:w-6/12">
+              <div className="w-full sm:w-full">
                 <h3 className="text-sm tracking-widest text-gray-400 uppercase font-semibold mb-sm">
                   Configure Fields
                 </h3>

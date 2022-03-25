@@ -43,7 +43,7 @@ import Data.HashSet qualified as Set
 import Data.Word (Word16)
 import Database.MySQL.Simple qualified as Mysql
 import Database.PG.Query qualified as Q
-import Hasura.GraphQL.Execute.LiveQuery.Options qualified as LQ
+import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types
@@ -234,7 +234,7 @@ serveOptions =
       soStringifyNum = StringifyNumbers,
       soDangerousBooleanCollapse = False,
       soEnabledAPIs = testSuiteEnabledApis,
-      soLiveQueryOpts = LQ.mkLiveQueriesOptions Nothing Nothing,
+      soLiveQueryOpts = ES.mkSubscriptionsOptions Nothing Nothing,
       soEnableAllowlist = False,
       soEnabledLogTypes = Set.fromList L.userAllowedLogTypes,
       soLogLevel = fromMaybe (L.LevelOther "test-suite") engineLogLevel,
@@ -263,7 +263,7 @@ serveOptions =
 -- only used in 'serveOptions'.
 --
 -- This should be adjusted locally for debugging purposes; e.g. change it to
--- @Just L.Debug@ to enable all logs.
+-- @Just L.LevelDebug@ to enable all logs.
 --
 -- See 'L.LogLevel' for an enumeration of available log levels.
 engineLogLevel :: Maybe L.LogLevel

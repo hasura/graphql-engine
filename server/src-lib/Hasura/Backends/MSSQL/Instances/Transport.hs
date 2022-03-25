@@ -12,7 +12,7 @@ import Data.ByteString qualified as B
 import Data.String (fromString)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Text.Extended
-import Database.MSSQL.Transaction (singleRowQueryE)
+import Database.MSSQL.Transaction (forJsonQueryE)
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Instances.Execute
@@ -21,7 +21,7 @@ import Hasura.Backends.MSSQL.ToQuery
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
-import Hasura.GraphQL.Execute.LiveQuery.Plan
+import Hasura.GraphQL.Execute.Subscription.Plan
 import Hasura.GraphQL.Logging
 import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.Transport.Backend
@@ -121,7 +121,10 @@ executeMultiplexedQuery mssqlExecCtx query = do
   let parseResult r = J.eitherDecodeStrict (encodeUtf8 r) `onLeft` \s -> throw400 ParseFailed (fromString s)
       convertFromJSON :: [CohortResult] -> [(CohortId, B.ByteString)]
       convertFromJSON = map \(CohortResult (cid, cresult)) -> (cid, encodeUtf8 cresult)
-  textResult <- run $ mssqlRunReadOnly mssqlExecCtx $ singleRowQueryE defaultMSSQLTxErrorHandler query
+  -- Because the 'query' will have a @FOR JSON@ clause at the toplevel it will
+  -- be split across multiple rows, hence use of 'forJsonQueryE' which takes
+  -- care of concatenating the results.
+  textResult <- run $ mssqlRunReadOnly mssqlExecCtx $ forJsonQueryE defaultMSSQLTxErrorHandler query
   parsedResult <- parseResult textResult
   pure $ convertFromJSON parsedResult
 

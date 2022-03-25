@@ -17,7 +17,7 @@ Array [
 
 exports[`getRemoteRelationType should work with current remote relationship definition 1`] = `
 Array [
-  "states",
+  "default",
   "remote_schema_legacy",
   "Remote Schema",
 ]
@@ -25,7 +25,7 @@ Array [
 
 exports[`getRemoteRelationType should work with new remote schema relationship definition 1`] = `
 Array [
-  "continents",
+  "default",
   "to_remote_schema",
   "Remote Schema",
 ]

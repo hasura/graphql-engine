@@ -10,7 +10,6 @@ interface Props extends InjectedProps {}
 
 const ModifyContainer: React.FC<Props> = props => {
   const { data: cronTriggers, isLoading, error } = useGetCronTriggers();
-  console.log('>>>', useGetCronTriggers());
   if (isLoading) {
     return <span>Loading...</span>;
   }

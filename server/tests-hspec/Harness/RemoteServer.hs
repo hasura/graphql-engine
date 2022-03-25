@@ -3,6 +3,7 @@ module Harness.RemoteServer
   ( run,
     generateInterpreter,
     generateQueryInterpreter,
+    graphqlEndpoint,
   )
 where
 
@@ -161,6 +162,18 @@ generateQueryInterpreter ::
   query (Resolver QUERY () IO) ->
   Interpreter
 generateQueryInterpreter queryResolver = generateInterpreter queryResolver Undefined
+
+-- | Extracts the full GraphQL endpoint URL from a given remote server's 'Server'.
+--
+-- @
+--   > graphqlEndpoint (Server 8080 "http://localhost" someThreadId)
+--   "http://localhost:8080/graphql"
+-- @
+--
+-- NOTE: the resulting endpoint is only relevant for a 'Server' started by this
+-- module's 'run' function; the GraphQL engine doesn't have a /graphql endoint.
+graphqlEndpoint :: Server -> String
+graphqlEndpoint server = serverUrl server ++ "/graphql"
 
 -------------------------------------------------------------------------------
 

@@ -123,7 +123,7 @@ scalarType = \case
 mkColumn :: Schema.Column -> Text
 mkColumn Schema.Column {columnName, columnType, columnNullable, columnDefault} =
   T.unwords
-    [ columnName,
+    [ wrapIdentifier columnName,
       scalarType columnType,
       bool "NOT NULL" "DEFAULT NULL" columnNullable,
       maybe "" ("DEFAULT " <>) columnDefault
@@ -134,7 +134,7 @@ mkPrimaryKey key =
   T.unwords
     [ "PRIMARY KEY",
       "(",
-      commaSeparated key,
+      commaSeparated $ map wrapIdentifier key,
       ")"
     ]
 
@@ -143,12 +143,12 @@ mkReference Schema.Reference {referenceLocalColumn, referenceTargetTable, refere
   T.unwords
     [ "CONSTRAINT FOREIGN KEY",
       "(",
-      referenceLocalColumn,
+      wrapIdentifier referenceLocalColumn,
       ")",
       "REFERENCES",
       referenceTargetTable,
       "(",
-      referenceTargetColumn,
+      wrapIdentifier referenceTargetColumn,
       ")",
       "ON DELETE CASCADE",
       "ON UPDATE CASCADE"
@@ -163,14 +163,18 @@ insertTable Schema.Table {tableName, tableColumns, tableData}
       T.unpack $
         T.unwords
           [ "INSERT INTO",
-            T.pack Constants.citusDb <> "." <> tableName,
+            T.pack Constants.citusDb <> "." <> wrapIdentifier tableName,
             "(",
-            commaSeparated (Schema.columnName <$> tableColumns),
+            commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
             ")",
             "VALUES",
             commaSeparated $ mkRow <$> tableData,
             ";"
           ]
+
+-- | Citus identifiers which may be case-sensitive needs to be wrapped in @""@.
+wrapIdentifier :: Text -> Text
+wrapIdentifier identifier = "\"" <> identifier <> "\""
 
 mkRow :: [Schema.ScalarValue] -> Text
 mkRow row =

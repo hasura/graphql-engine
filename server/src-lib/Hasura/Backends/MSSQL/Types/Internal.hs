@@ -123,7 +123,7 @@ type Value = ODBC.Value
 --------------------------------------------------------------------------------
 
 data UnifiedColumn = UnifiedColumn
-  { name :: Text,
+  { name :: ColumnName,
     type' :: ScalarType
   }
 

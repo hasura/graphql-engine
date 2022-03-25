@@ -45,7 +45,6 @@ import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.DDL.Source (initCatalogForSource)
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Types
-import Hasura.GraphQL.RemoteServer (getSchemaIntrospection)
 import Hasura.GraphQL.Schema (buildGQLContext)
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging
@@ -253,7 +252,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
     resolveDependencies -< (outputs, unresolvedDependencies)
 
   -- Steps 3 and 4: Build the regular and relay GraphQL schemas in parallel
-  [(gqlContext, gqlContextUnauth, inconsistentRemoteSchemas), (relayContext, relayContextUnauth, _)] <-
+  [(adminIntrospection, gqlContext, gqlContextUnauth, inconsistentRemoteSchemas), (_, relayContext, relayContextUnauth, _)] <-
     bindA
       -< do
         cxt <- askServerConfigCtx
@@ -297,10 +296,9 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
       ambiguousF mds = AmbiguousRestEndpoints (commaSeparated $ map _ceUrl mds) (map ambiguousF' mds)
       ambiguousRestEndpoints = map (ambiguousF . S.elems . snd) $ ambiguousPathsGrouped endpoints
 
-      maybeRS = getSchemaIntrospection gqlContext
       queryCollections = _boQueryCollections resolvedOutputs
       allowLists = HS.toList . iaGlobal . _boAllowlist $ resolvedOutputs
-      inconsistentQueryCollections = getInconsistentQueryCollections maybeRS queryCollections listedQueryObjects endpoints allowLists
+      inconsistentQueryCollections = getInconsistentQueryCollections adminIntrospection queryCollections listedQueryObjects endpoints allowLists
 
   returnA
     -<
@@ -312,6 +310,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
           scRemoteSchemas = fmap fst (_boRemoteSchemas resolvedOutputs), -- remoteSchemaMap
           scAllowlist = _boAllowlist resolvedOutputs,
           -- , scCustomTypes = _boCustomTypes resolvedOutputs
+          scAdminIntrospection = adminIntrospection,
           scGQLContext = gqlContext,
           scUnauthenticatedGQLContext = gqlContextUnauth,
           scRelayContext = relayContext,

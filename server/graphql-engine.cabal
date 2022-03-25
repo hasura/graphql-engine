@@ -596,6 +596,7 @@ library
                      , Hasura.RQL.Types.SchemaCacheTypes
                      , Hasura.RQL.Types.Source
                      , Hasura.RQL.Types.SourceCustomization
+                     , Hasura.RQL.Types.Subscription
                      , Hasura.RQL.Types.Table
                      , Hasura.RQL.Types.Roles
                      , Hasura.RQL.Types.Roles.Internal
@@ -672,11 +673,13 @@ library
                      , Hasura.GraphQL.Execute.Common
                      , Hasura.GraphQL.Execute.Inline
                      , Hasura.GraphQL.Execute.Instances
-                     , Hasura.GraphQL.Execute.LiveQuery.Options
-                     , Hasura.GraphQL.Execute.LiveQuery.Plan
-                     , Hasura.GraphQL.Execute.LiveQuery.Poll
-                     , Hasura.GraphQL.Execute.LiveQuery.State
-                     , Hasura.GraphQL.Execute.LiveQuery.TMap
+                     , Hasura.GraphQL.Execute.Subscription.Options
+                     , Hasura.GraphQL.Execute.Subscription.Plan
+                     , Hasura.GraphQL.Execute.Subscription.Poll
+                     , Hasura.GraphQL.Execute.Subscription.Poll.Common
+                     , Hasura.GraphQL.Execute.Subscription.Poll.LiveQuery
+                     , Hasura.GraphQL.Execute.Subscription.State
+                     , Hasura.GraphQL.Execute.Subscription.TMap
                      , Hasura.GraphQL.Execute.Mutation
                      , Hasura.GraphQL.Execute.Remote
                      , Hasura.GraphQL.Execute.RemoteJoin
@@ -704,6 +707,7 @@ library
                      , Hasura.GraphQL.Parser.Internal.Types
                      , Hasura.GraphQL.Parser.Monad
                      , Hasura.GraphQL.Parser.Schema
+                     , Hasura.GraphQL.Parser.Schema.Convert
                      , Hasura.GraphQL.RemoteServer
                      , Hasura.GraphQL.Schema
                      , Hasura.GraphQL.Schema.Action
@@ -1040,6 +1044,7 @@ test-suite tests-hspec
     Test.ArrayRelationshipsSpec
     Test.BasicFieldsSpec
     Test.ColumnPresetsSpec
+    Test.CustomFieldNamesSpec
     Test.DirectivesSpec
     Test.HelloWorldSpec
     Test.LimitOffsetSpec
@@ -1047,6 +1052,7 @@ test-suite tests-hspec
     Test.ObjectRelationshipsLimitSpec
     Test.ObjectRelationshipsSpec
     Test.OrderingSpec
+    Test.RemoteRelationship.FromRemoteSchemaSpec
     Test.RemoteRelationship.XToDBArrayRelationshipSpec
     Test.RemoteRelationship.XToDBObjectRelationshipSpec
     Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec
