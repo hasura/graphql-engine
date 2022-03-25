@@ -108,3 +108,9 @@ export const validateRelTypename = (types, typename, relname) => {
   }
   return null;
 };
+
+export const getScalarOutputType = typeName => ({
+  kind: 'scalar',
+  name: typeName,
+  fields: [],
+});
