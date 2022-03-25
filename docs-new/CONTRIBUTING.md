@@ -49,9 +49,9 @@ We use the [fork-and-branch git workflow](https://blog.scottlowe.org/2015/01/27/
 - Make the required changes.
 - (Optional) Build docs to produce build files and verify:
     ```bash
-    ENV=<development|production> yarn build
+    yarn build
     ```
-    - The generated docs are in `_build/html`. 
+    - The generated docs are in `build`.
     - View the built files by running a webserver:
         ```bash
         yarn serve
@@ -84,8 +84,7 @@ Please follow our [guide on how to write docs pages](https://github.com/hasura/g
 [Page Structure](./wiki/page-structure.mdx)
 
 ### Pre-commit checks
-- Just before committing your changes, delete your local `_build` folder completely and then build docs again. Scan 
-the output and look for any syntax warnings (e.g. title underline too short, could not lex literal block, etc.). 
+- Just before committing your changes, delete your local `build` folder completely and then build docs again. Scan the output and look for any syntax warnings (e.g. title underline too short, could not lex literal block, etc.).
 Ideally there should not be any syntax warnings that are being thrown.
 
 ## Notes
