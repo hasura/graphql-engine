@@ -7,7 +7,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'Hasura GraphQL Docs',
+  title: 'Hasura GraphQL Engine Docs',
   tagline: 'Instant GraphQL on all your data',
   url: 'https://hasura.io',
   baseUrl: '/docs/',
