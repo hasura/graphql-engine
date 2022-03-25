@@ -8,7 +8,7 @@ import {
   parseEndpoints,
   parseQueryVariables,
   VariableData,
-  supportedNumericTypes,
+  getRequestBody,
 } from '../utils';
 import {
   HeaderStateAction,
@@ -17,7 +17,7 @@ import {
   variableStateReducer,
 } from './reducer';
 import Button from '../../../../Common/Button';
-import { defaultLoadingState, HeaderState, VariableState } from './state';
+import { defaultLoadingState, HeaderState } from './state';
 import RequestHeadersContainer from './Headers';
 import RequestVariablesContainer from './Variables';
 import {
@@ -74,34 +74,6 @@ const collectHeaders = (allHeaders: HeaderState[]) =>
       [header.key]: header.value,
     };
   }, {});
-
-const getValueWithType = (variableData: VariableState) => {
-  if (variableData.type === 'Boolean') {
-    if (variableData.value.trim().toLowerCase() === 'false') {
-      return false;
-    }
-    // NOTE: since everything that's not empty is considered as truthy
-    return true;
-  }
-
-  if (supportedNumericTypes.includes(variableData.type)) {
-    return Number(variableData.value);
-  }
-
-  return variableData.value?.trim()?.toString();
-};
-
-const composeRequestBody = (allVariables: VariableState[]) => {
-  const vars = allVariables.reduce(
-    (acc, variableData) => ({
-      ...acc,
-      [variableData.name]: getValueWithType(variableData),
-    }),
-    {}
-  );
-
-  return JSON.stringify(vars);
-};
 
 // in the spirit of DRY
 const updateHeaderTextValues = (
@@ -201,34 +173,30 @@ const LivePreview: React.FC<LivePreviewProps> = ({
   };
 
   const runQuery = useCallback(() => {
-    let requestURL = pageHost;
     const requestHeaders = collectHeaders(headerState);
     const requestMethod = getRequestMethod(endpointState.methods);
-    let body;
 
     const parsedEndpoint = parseEndpoints(endpointState.url);
     if (!parsedEndpoint) {
       // should never happen, because empty endpoints are not allowed
       return;
     }
-
     const urlQueryVariables = parsedEndpoint.filter(
       path => path.type === 'variable'
     );
-    if (urlQueryVariables.length || variableState.length) {
-      // TODO: check this conditional
-      if (requestMethod !== 'GET' && !urlQueryVariables.length) {
-        body = composeRequestBody(variableState);
-      } else {
-        const currentPageHost = getCurrentPageHost();
-        requestURL = `${currentPageHost}/api/rest/${composeEndpoint(
+
+    const body = getRequestBody({
+      urlQueryVariables,
+      variableState,
+    });
+
+    const requestURL = urlQueryVariables.length
+      ? `${getCurrentPageHost()}/api/rest/${composeEndpoint(
           parsedEndpoint,
           variableState,
           endpointState.url
-        )}`;
-        body = undefined;
-      }
-    }
+        )}`
+      : pageHost;
 
     progressDispatch({
       type: 'RequestLoadingState/SET_LOADING_STATE',

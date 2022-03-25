@@ -278,3 +278,41 @@ export const supportedNumericTypes = [
   'tinyint',
   'decimal',
 ];
+
+const getValueWithType = (variableData: VariableState) => {
+  if (variableData.type === 'Boolean') {
+    if (variableData.value.trim().toLowerCase() === 'false') {
+      return false;
+    }
+    // NOTE: since everything that's not empty is considered as truthy
+    return true;
+  }
+
+  if (supportedNumericTypes.includes(variableData.type)) {
+    return Number(variableData.value);
+  }
+
+  return variableData.value?.trim()?.toString();
+};
+
+export const getRequestBody = ({
+  urlQueryVariables,
+  variableState,
+}: {
+  urlQueryVariables: EndpointData[];
+  variableState: VariableState[];
+}) => {
+  const variablesUsedInURL = urlQueryVariables.map(x => x.value);
+  const requestBody = variableState
+    .filter(variable => !variablesUsedInURL.includes(variable.name))
+    .reduce(
+      (acc, variableData) => ({
+        ...acc,
+        [variableData.name]: getValueWithType(variableData),
+      }),
+      {}
+    );
+  return Object.keys(requestBody).length
+    ? JSON.stringify(requestBody)
+    : undefined;
+};
