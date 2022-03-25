@@ -1,5 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
+{-# LANGUAGE CPP #-}
 
 module Hasura.Prelude
   ( module M,
@@ -273,8 +274,10 @@ readJson = J.eitherDecodeStrict . txtToBs . T.pack
 hasuraJSON :: J.Options
 hasuraJSON = J.aesonPrefix J.snakeCase
 
+#if !MIN_VERSION_hashable(1,3,4)
 instance (Hashable a) => Hashable (Seq a) where
   hashWithSalt i = hashWithSalt i . toList
+#endif
 
 -- | Given a structure with elements whose type is a 'Monoid', combine them via
 -- the monoid's @('<>')@ operator.
