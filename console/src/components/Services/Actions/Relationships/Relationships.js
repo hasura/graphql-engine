@@ -33,6 +33,11 @@ const Relationships = ({
         title={`Relationships - ${currentAction.name} - Actions | Hasura`}
       />
       {existingRelationships}
+      {objectType.kind === 'scalar' ? (
+        <div className="mb-sm text-gray-600 test-sm">
+          Action relationships with scalar output types are not possible{' '}
+        </div>
+      ) : null}
       <TypeRelationship
         dispatch={dispatch}
         objectType={objectType}

@@ -497,7 +497,7 @@ const RelEditor = props => {
       removeFunc={removeFunc}
       expandButtonText={expandButtonText}
       collapseButtonText={collapseButtonText}
-      readOnlyMode={readOnlyMode}
+      readOnlyMode={readOnlyMode || objectType.kind === 'scalar'}
     />
   );
 };
