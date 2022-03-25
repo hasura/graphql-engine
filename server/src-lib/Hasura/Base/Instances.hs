@@ -54,6 +54,7 @@ instance NFData C.CronSchedule
 --------------------------------------------------------------------------------
 -- Template Haskell
 
+#if !MIN_VERSION_unordered_containers(0,2,17)
 instance (TH.Lift k, TH.Lift v) => TH.Lift (M.HashMap k v) where
   lift m = [|M.fromList $(TH.lift $ M.toList m)|]
   liftTyped = TH.unsafeTExpCoerce . TH.lift
@@ -61,6 +62,7 @@ instance (TH.Lift k, TH.Lift v) => TH.Lift (M.HashMap k v) where
 instance TH.Lift a => TH.Lift (S.HashSet a) where
   lift s = [|S.fromList $(TH.lift $ S.toList s)|]
   liftTyped = TH.unsafeTExpCoerce . TH.lift
+#endif
 
 deriving instance TH.Lift TDFA.CompOption
 
