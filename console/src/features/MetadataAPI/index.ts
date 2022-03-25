@@ -1,4 +1,5 @@
 export { MetadataSelector } from './hooks/metadataSelectors';
+export { useSources } from './hooks/useSources';
 export { useRoles } from './hooks/useRoles';
 export {
   useMetadataTables,

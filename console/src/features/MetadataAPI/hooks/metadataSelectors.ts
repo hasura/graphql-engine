@@ -13,6 +13,10 @@ import type {
 import { MetadataResponse } from '..';
 
 export namespace MetadataSelector {
+  export const getAllSources = () => (m: MetadataResponse) => {
+    return m.metadata?.sources;
+  };
+
   export const getTablesFromAllSources = (
     m: MetadataResponse
   ): (TableEntry & { source: string })[] => {
