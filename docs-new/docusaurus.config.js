@@ -18,6 +18,7 @@ const config = {
   organizationName: 'hasura',
   projectName: 'graphql-engine',
   noIndex: true,
+  staticDirectories:["static", "public"],
 
   presets: [
     [

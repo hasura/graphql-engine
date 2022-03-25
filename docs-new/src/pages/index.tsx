@@ -3,9 +3,9 @@ import clsx from 'clsx';
 import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+import hasuras from '@site/static/img/hasuras.png';
+import VersionedLink from '@site/src/components/VersionedLink';
 import styles from './index.module.scss';
-import hasuras from '../../static/img/hasuras.png';
-import VersionedLink from '../components/VersionedLink';
 
 function HomepageHeader() {
   const {siteConfig} = useDocusaurusContext();
