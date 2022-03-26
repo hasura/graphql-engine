@@ -81,6 +81,12 @@ const config = {
         // trackPageDelay: 50,
       }
     ],
+    [
+      path.resolve(__dirname, './src/plugins/docusaurus-plugin-google-gtm'),
+      {
+        trackingID: "GTM-PF5MQ2Z",
+      }
+    ],
   //   [
   //     'ideal-image',
   //     {
