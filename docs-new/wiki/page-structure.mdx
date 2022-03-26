@@ -258,6 +258,44 @@ response={`{
 
 You dont have to worry about indentation when adding components for better spacing in string literals
 
+## Markdown Variables
+
+Add the markdown variables at very end of file for easier refernce and maintainability. These varaibles are mostly for links.
+To avoid repetetion of adding full path for each link, we could take advantage of [reference-style-links](https://daringfireball.net/projects/markdown/syntax#link) syntax in markdown.
+
+For Example:
+
+```markdown
+## Section one
+
+.....
+
+REST ... [create_action][metadata-create-action] or
+[update_action][metadata-update-action] metadata APIs ...
+[request_transform][RequestTransformation] field ...:
+
+....
+
+## Section two
+
+.....
+
+REST ... [create_action][metadata-create-action] or
+[update_action][metadata-update-action] metadata APIs ...
+[request_transform][RequestTransformation] field ...:
+
+....
+
+
+<!-- Shared Link Variables -->
+
+[metadata-create-action]: /graphql/core/api-reference/metadata-api/actions.mdx#metadata-create-action
+[metadata-update-action]: /graphql/core/api-reference/metadata-api/actions.mdx#metadata-update-action
+[RequestTransformation]: /graphql/core/api-reference/syntax-defs.mdx#requesttransformation
+
+```
+
+
 ## Run docs build
 
 Run the docs build in the end again with `yarn build` and make sure there are no errors/warnings because of any inconsitencies etc.
