@@ -1,6 +1,6 @@
 ---
 sidebar_label: Invoke trigger manually
-sidebar_position: 5
+sidebar_position: 4
 description: Invoke event triggers manually on the Hasura console or over the API
 keywords:
   - hasura
@@ -19,10 +19,8 @@ import Thumbnail from "@site/src/components/Thumbnail";
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-You can select the `Via console` trigger operation while
-[creating an event trigger](/graphql/core/event-triggers/create-trigger.mdx) to allow invoking the event
-trigger on rows manually using the Hasura console _(available after
-version v1.0.0-beta.1)_.
+You can select the `Via console` trigger operation while [creating an event trigger](/graphql/core/event-triggers/create-trigger.mdx)
+to allow invoking the event trigger on rows manually using the Hasura console.
 
 In the `Data -> [table-name] -> Browse Rows` tab, clicking the
 `invoke trigger` button next to any row lets you invoke "manual event
