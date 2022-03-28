@@ -1,0 +1,669 @@
+---
+sidebar_label: Mutation
+sidebar_position: 2
+description: Hasura GraphQL API mutations API reference
+keywords:
+  - hasura
+  - docs
+  - GraphQL API
+  - API reference
+  - mutation
+---
+
+# API Reference - Mutation
+
+
+## **insert** (upsert) syntax {#insert-upsert-syntax}
+
+```none
+mutation [<mutation-name>] {
+  <mutation-field-name> (
+    [<input-object>!]
+    [conflict-clause]
+  )
+  [mutation-response!]
+}
+```
+
+| Key                 | Required | Schema                                | Description                                                     |
+|---------------------|----------|---------------------------------------|-----------------------------------------------------------------|
+| mutation-name       | false    | Value                                 | Name of mutation for observability                              |
+| mutation-field-name | true     | Value                                 | Name of the auto-generated mutation field, e.g. *insert_author* |
+| input-object        | true     | [InputObjects](#inputobjects)         | Name of the auto-generated mutation field                       |
+| mutation-response   | true     | [MutationResponse](#mutationresponse) | Object to be returned after mutation succeeds                   |
+| on-conflict         | false    | [ConflictClause](#conflictclause)     | Converts *insert* to *upsert* by handling conflict              |
+
+**Example: Insert**
+
+```graphql
+mutation insert_article {
+  insert_article(
+    objects: [
+      {
+        title: "Software is gluttonous",
+        content: "Something happened in HP",
+        author_id: 3
+      }
+    ]
+  ) {
+    returning {
+      id
+      title
+    }
+  }
+}
+```
+
+**Example: Upsert**
+
+```graphql
+mutation upsert_author {
+  insert_author (
+    objects: [
+      {
+        name: "John",
+        id:12
+      }
+    ],
+    on_conflict: {
+      constraint: author_name_key,
+      update_columns: [name, id]
+    }
+  ) {
+    affected_rows
+  }
+}
+```
+
+## **insert_one** syntax {#insert-upsert-one-syntax}
+
+```none
+mutation [<mutation-name>] {
+  <mutation-field-name> (
+    [<input-object>!]
+    [conflict-clause]
+  )
+  [mutation-response!]
+}
+```
+
+| Key                 | Required | Schema                                                                                 | Description                                                         |
+|---------------------|----------|----------------------------------------------------------------------------------------|---------------------------------------------------------------------|
+| mutation-name       | false    | Value                                                                                  | Name of mutation for observability                                  |
+| mutation-field-name | true     | Value                                                                                  | Name of the auto-generated mutation field, e.g. *insert_author_one* |
+| input-object        | true     | [InputObject](#inputobject)                                                            | Name of the auto-generated mutation field                           |
+| mutation-response   | true     | [SimpleObject](/graphql/core/api-reference/graphql-api/query.mdx#simpleobject)         | Object to be returned after mutation succeeds                       |
+| on-conflict         | false    | [ConflictClause](#conflictclause)                                                      | Converts *insert* to *upsert* by handling conflict                  |
+
+**Example: Insert One**
+
+```graphql
+mutation insert_article_one {
+  insert_article_one(
+    object: {
+      title: "Software is gluttonous",
+      content: "Something happened in HP",
+      author_id: 3
+    }
+  ) {
+    id
+    title
+  }
+}
+```
+
+## **update_by_pk** syntax {#update-by-pk-syntax}
+
+```none
+mutation [<mutation-name>] {
+  <mutation-field-name> (
+    [pk-columns-argument!],
+    [set-argument!]
+  )
+  <object-fields>
+}
+```
+
+| Key                     | Required | Schema                                    | Description                                                                                              |
+|-------------------------|----------|-------------------------------------------|----------------------------------------------------------------------------------------------------------|
+| mutation-name           | false    | Value                                     | Name of mutation for observability                                                                       |
+| mutation-field-name     | true     | Value                                     | Name of the auto-generated update mutation field, e.g. *update_author_by_pk*                             |
+| pk-columns-argument     | true     | [pkColumnsArgExp](#pkcolumnsargexp)       | Primary key(s) for row(s) to be updated                                                                  |
+| set-argument            | false    | [setArgExp](#setargexp)                   | Data to be updated in the table                                                                          |
+| inc-argument            | false    | [incArgExp](#incargexp)                   | Integer value to be incremented to Int columns in the table (Negative integers can be used to decrement) |
+| append-argument         | false    | [appendArgExp](#appendargexp)             | JSON value to be appended to JSONB columns in the table                                                  |
+| prepend-argument        | false    | [prependArgExp](#prependargexp)           | JSON value to be prepended to JSONB columns in the table                                                 |
+| delete-key-argument     | false    | [deleteKeyArgExp](#deletekeyargexp)       | Key to be deleted in the value of JSONB columns in the table                                             |
+| delete-elem-argument    | false    | [deleteElemArgExp](#deleteelemargexp)     | Array element to be deleted in the value of JSONB columns in the table                                   |
+| delete-at-path-argument | false    | [deleteAtPathArgExp](#deleteatpathargexp) | Element at path to be deleted in the value of JSONB columns in the table                                 |
+
+**Example: Update by PK**
+
+```graphql
+mutation update_articles {
+  update_article_by_pk (
+    pk_columns: {
+      id: 1
+    }
+    _set: { is_published: true }
+  ) {
+    id
+    title
+  }
+}
+```
+
+## **update** syntax {#update-syntax}
+
+```none
+mutation [<mutation-name>] {
+  <mutation-field-name> (
+    [where-argument!],
+    [set-argument!]
+  )
+  [mutation-response!]
+}
+```
+
+| Key                     | Required | Schema                                    | Description                                                              |
+|-------------------------|----------|-------------------------------------------|--------------------------------------------------------------------------|
+| mutation-name           | false    | Value                                     | Name of mutation for observability                                       |
+| mutation-field-name     | true     | Value                                     | Name of the auto-generated update mutation field, e.g. *update_author*   |
+| where-argument          | true     | [whereArgExp](#whereargexp)               | Selection criteria for rows to be updated                                |
+| set-argument            | false    | [setArgExp](#setargexp)                   | Data to be updated in the table                                          |
+| inc-argument            | false    | [incArgExp](#incargexp)                   | Integer value to be incremented to Int columns in the table              |
+| append-argument         | false    | [appendArgExp](#appendargexp)             | JSON value to be appended to JSONB columns in the table                  |
+| prepend-argument        | false    | [prependArgExp](#prependargexp)           | JSON value to be prepended to JSONB columns in the table                 |
+| delete-key-argument     | false    | [deleteKeyArgExp](#deletekeyargexp)       | Key to be deleted in the value of JSONB columns in the table             |
+| delete-elem-argument    | false    | [deleteElemArgExp](#deleteelemargexp)     | Array element to be deleted in the value of JSONB columns in the table   |
+| delete-at-path-argument | false    | [deleteAtPathArgExp](#deleteatpathargexp) | Element at path to be deleted in the value of JSONB columns in the table |
+| mutation-response       | true     | [MutationResponse](#mutationresponse)     | Object to be returned after mutation succeeds                            |
+
+**Example: Update**
+
+```graphql
+mutation update_author{
+  update_author(
+    where: {id: {_eq: 3}},
+    _set: {name: "Jane"}
+  ) {
+    affected_rows
+  }
+}
+```
+
+## **delete_by_pk** syntax {#delete-by-pk-syntax}
+
+```none
+mutation [<mutation-name>] {
+  <mutation-field-name> (
+    column1: value1
+    column2: value2
+  )
+  <object-fields>
+}
+```
+
+| Key                 | Required | Schema | Description                                                                  |
+|---------------------|----------|--------|------------------------------------------------------------------------------|
+| mutation-name       | false    | Value  | Name of mutation for observability                                           |
+| mutation-field-name | true     | Value  | Name of the auto-generated delete mutation field, e.g. *delete_author_by_pk* |
+
+**Example: Delete by PK**
+
+```graphql
+mutation delete_articles {
+  delete_article_by_pk (
+    id: 1
+  ) {
+    id
+    title
+  }
+}
+```
+
+## **delete** syntax {#delete-syntax}
+
+```none
+mutation [<mutation-name>] {
+  <mutation-field-name> (
+    [where-argument!]
+  )
+  [mutation-response!]
+}
+```
+
+| Key                 | Required | Schema                                | Description                                                            |
+|---------------------|----------|---------------------------------------|------------------------------------------------------------------------|
+| mutation-name       | false    | Value                                 | Name of mutation for observability                                     |
+| mutation-field-name | true     | Value                                 | Name of the auto-generated delete mutation field, e.g. *delete_author* |
+| where-argument      | true     | [whereArgExp](#whereargexp)           | Selection criteria for rows to delete                                  |
+| mutation-response   | true     | [MutationResponse](#mutationresponse) | Object to be returned after mutation succeeds                          |
+
+**Example: Delete**
+
+```graphql
+mutation delete_articles {
+  delete_article(
+    where: {author: {id: {_eq: 7}}}
+  ) {
+    affected_rows
+    returning {
+      id
+    }
+  }
+}
+```
+
+:::info Note
+
+For more examples and details of usage, please see [this](/graphql/core/databases/postgres/mutations/index.mdx).
+
+:::
+
+## Syntax definitions
+
+### Mutation response {#mutationresponse}
+
+```none
+{
+  affected_rows
+  returning {
+    response-field1
+    response-field2
+    ..
+  }
+}
+```
+
+**Example**
+
+```graphql
+{
+  affected_rows
+  returning {
+    id
+    author_id
+  }
+}
+```
+
+### **objects** argument {#inputobjects}
+
+```none
+objects: [
+  {
+    field1: value,
+    field2: value,
+    <object-rel-name>: {
+      data: <Input-Object>!,
+      on_conflict: <Conflict-Clause>
+    },
+    <array-rel-name>: {
+      data: [<Input-Object>!]!,
+      on_conflict: <Conflict-Clause>
+    }
+    ..
+  },
+  ..
+]
+# no nested objects
+```
+
+**Example**
+
+```graphql
+objects: [
+  {
+    title: "Software is eating the world",
+    content: "This week, Hewlett-Packard...",
+    author: {
+      data: {
+        id: 1,
+        name: "Sydney"
+      }
+    }
+  }
+]
+```
+
+### **object** argument {#inputobject}
+
+```none
+object: {
+  field1: value,
+  field2: value,
+  <object-rel-name>: {
+    data: <Input-Object>!,
+    on_conflict: <Conflict-Clause>
+  },
+  <array-rel-name>: {
+    data: [<Input-Object>!]!,
+    on_conflict: <Conflict-Clause>
+  }
+  ..
+}
+```
+
+**Example**
+
+```graphql
+object: {
+  title: "Software is eating the world",
+  content: "This week, Hewlett-Packard...",
+  author: {
+    data: {
+      id: 1,
+      name: "Sydney"
+    }
+  }
+}
+```
+
+### **on_conflict** argument {#conflictclause}
+
+The conflict clause is used to convert an *insert* mutation to an
+*upsert* mutation. *Upsert* respects the table's *update* permissions
+before editing an existing row in case of a conflict. Hence the conflict
+clause is permitted only if a table has *update* permissions defined.
+
+```none
+on_conflict: {
+  constraint: table_constraint!
+  update_columns: [table_update_column!]!
+  where: table_bool_exp
+}
+```
+
+**Example**
+
+```graphql
+on_conflict: {
+  constraint: author_name_key
+  update_columns: [name]
+  where: {id: {_lt: 1}}
+}
+```
+
+### **pk_columns** argument {#pkcolumnsargexp}
+
+The `pk_columns` argument is used to identify an object by its primary
+key columns in *update* mutations.
+
+```none
+pk_columns: {
+  column-1: value-1
+  column-2: value-2
+}
+```
+
+**Example**
+
+```graphql
+pk_columns: {
+  id: 1
+  name: "Harry"
+}
+```
+
+### **where** argument {#whereargexp}
+
+<div className="parsed-literal">
+
+<pre>
+<code>
+{`where: `}<a href="#boolexp">BoolExp</a>
+</code>
+</pre>
+
+</div>
+
+**Example**
+
+```graphql
+where: {
+  rating: {_eq: 5}
+}
+```
+
+#### BoolExp {#boolexp}
+
+<div className="parsed-literal">
+
+<pre>
+<code>
+<a href="#andexp">AndExp</a>{` | `}
+<a href="#orexp">OrExp</a>{` | `}
+<a href="#notexp">NotExp</a>{` | `}
+<a href="#trueexp">TrueExp</a>{` | `}
+<a href="#columnexp">ColumnExp</a>
+</code>
+</pre>
+
+</div>
+
+##### AndExp {#andexp}
+
+<div className="parsed-literal">
+
+<pre>
+<code>
+{`{
+  _and: [`}<a href="#boolexp">BoolExp</a>{`]
+}`}
+</code>
+</pre>
+
+</div>
+
+**Example**
+
+```graphql
+_and: [
+  {rating: {_gt: 5}}, 
+  {updated_at: {_gt: "2019-01-01"}}
+]
+```
+
+##### OrExp {#orexp}
+
+<div className="parsed-literal">
+
+<pre>
+<code>
+{`{
+  _or: [`}<a href="#boolexp">BoolExp</a>{`]
+}`}
+</code>
+</pre>
+
+</div>
+
+**Example**
+
+```graphql
+_or: [
+  {rating: {_is_null: true}}, 
+  {rating: {_lt: 4}}
+]
+```
+
+##### NotExp {#notexp}
+
+<div className="parsed-literal">
+
+<pre>
+<code>
+{`{
+  _not: `}<a href="#boolexp">BoolExp</a>{`
+}`}
+</code>
+</pre>
+
+</div>
+
+**Example**
+
+```graphql
+_not: {
+  title: {_eq: ""}
+}
+```
+
+##### TrueExp {#trueexp}
+
+<pre>
+<code>
+{`{}`}
+</code>
+</pre>
+
+**Example**
+
+```graphql
+author(where: {articles: {}})
+```
+
+:::info Note
+
+`{}` evaluates to true whenever an object exists (even if it's `null`).
+
+:::
+
+##### ColumnExp {#columnexp}
+
+<div className="parsed-literal">
+
+<pre>
+<code>
+{`{
+  field-name: { `}<a href="#operator">Operator</a>{`: Value }
+}`}
+</code>
+</pre>
+
+</div>
+
+**Example**
+
+```graphql
+{rating: {_eq: 5}}
+```
+
+##### Operator {#operator}
+
+**Generic operators (all column types except json, jsonb):**
+
+- `_eq`
+- `_ne`
+- `_in`
+- `_nin`
+- `_gt`
+- `_lt`
+- `_gte`
+- `_lte`
+
+**Text related operators:**
+
+- `_like`
+- `_nlike`
+- `_ilike`
+- `_nilike`
+- `_similar`
+- `_nsimilar`
+- `_iregex`
+- `_niregex`
+- `_regex`
+- `_nregex`
+
+**Checking for NULL values:**
+
+- `_is_null` (takes true/false as values)
+
+### **\_set** argument {#setargexp}
+
+```none
+_set: {
+  field-name-1 : value,
+  field-name-2 : value,
+  ..
+}
+```
+
+### **\_inc** argument {#incargexp}
+
+```none
+_inc: {
+  field-name-1 : int-value,
+  field-name-2 : int-value,
+  ..
+}
+```
+
+### **\_append** argument {#appendargexp}
+
+```none
+_append: {
+  field-name-1 : $json-variable-1,
+  field-name-2 : $json-variable-1,
+  ..
+}
+```
+
+**Example**
+
+```json
+{
+  "json-variable-1": "value",
+  "json-variable-2": "value"
+}
+```
+
+### **\_prepend** argument {#prependargexp}
+
+```none
+_prepend: {
+  field-name-1 : $json-variable-1,
+  field-name-2 : $json-variable-1,
+  ..
+}
+```
+
+**Example**
+
+```json
+{
+  "json-variable-1": "value",
+  "json-variable-2": "value"
+}
+```
+
+### **\_delete_key** argument {#deletekeyargexp}
+
+```none
+_delete_key: {
+  field-name-1 : "key",
+  field-name-2 : "key",
+  ..
+}
+```
+
+### **\_delete_elem** argument {#deleteelemargexp}
+
+```none
+_delete_elem: {
+  field-name-1 : int-index,
+  field-name-2 : int-index,
+  ..
+}
+```
+
+### **\_delete_at_path** argument {#deleteatpathargexp}
+
+```none
+_delete_at_path: {
+  field-name-1 : ["path-array"],
+  field-name-2 : ["path-array"],
+  ..
+}
+```

@@ -1,0 +1,81 @@
+---
+description: One-Click Deploy for Hasura GraphQL Engine on Nhost
+keywords:
+  - hasura
+  - docs
+  - guide
+  - deployment
+  - nhost
+  - postgresql
+  - storage
+  - auth
+sidebar_position: 10
+sidebar_label: Using Nhost (one-click)
+---
+
+import Thumbnail from "@site/src/components/Thumbnail";
+
+# Deploying Hasura GraphQL engine on Nhost
+
+## Introduction
+
+This guide shows how to deploy the Hasura GraphQL engine on
+[Nhost](https://nhost.io).
+
+## One-click deploy on Nhost
+
+:::info Note
+
+Make sure to [create an Nhost account](https://nhost.io/register) first.
+Nhost offers a 30-day trial with its starter plan.
+
+:::
+
+Once you're logged into your Nhost account, click the `create project`
+button below to configure your project.
+
+<Thumbnail
+  src="/img/graphql/core/deployment/create-project-nhost.png"
+  alt="Create a project"
+/>
+
+On the following page you can choose a plan and a location for your
+project:
+
+<Thumbnail
+  src="/img/graphql/core/deployment/choose-plan-nhost.png"
+  alt="Choose a plan and location for your project"
+/>
+
+The creation and provisioning of your backend should be ready in roughly
+30 seconds. Your project has now a GraphQL API, a PostgreSQL database,
+user management, and storage for your files!
+
+## Access your Hasura console
+
+Once your Nhost project is up and running, the `Overview` page will give
+information about the endpoints.
+
+
+<Thumbnail
+  src="/img/graphql/core/deployment/nhost-dashboard.png"
+  alt="Dashboard"
+/>
+
+Click on the `Hasura` tab in the navigation to open the dashboard. Then
+click on the `Open Hasura Console` button to open the Hasura console.
+
+
+<Thumbnail
+  src="/img/graphql/core/deployment/nhost-hasura-console.png"
+  alt="Nhost Hasura console"
+/>
+
+To test it, you can either create tables directly using the console, or
+add new users to your project clicking on `Auth` on the navigation menu.
+
+There is also a `GraphQL API` option for you to test the API.
+
+## References
+
+-   [Nhost Docs](https://docs.nhost.io/)

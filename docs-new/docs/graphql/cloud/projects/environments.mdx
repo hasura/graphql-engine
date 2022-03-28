@@ -1,0 +1,136 @@
+---
+description: Guide for managing development environments for Hasura Cloud
+keywords:
+  - hasura
+  - docs
+  - cloud
+  - guide
+  - local dev
+  - staging
+  - production
+  - environment
+sidebar_label: Managing development environments
+sidebar_position: 10
+---
+
+# Managing development environments with Hasura Cloud
+
+## Introduction
+
+This guide will show how to configure your Hasura project for easy switching between development environments.
+
+## Moving from Hasura Cloud to local development
+
+### Step 1: Setup local development of Hasura with Docker
+
+Follow the guide [here](/graphql/core/getting-started/docker-simple.mdx) to get up and running with Hasura GraphQL engine and Postgres as Docker containers in your local system. Make sure that the ENV variable for database connection in your local setup is same as that in your Cloud project. Also add any other ENV variables that you might have set on the Cloud project.
+
+### Step 2: Install Hasura CLI
+
+Follow the instructions in [install_hasura_cli](/graphql/core/hasura-cli/install-hasura-cli.mdx)
+
+### Step 3: Initialize a Hasura CLI project locally
+
+```bash
+hasura init <project-name>
+```
+
+### Step 4: Initialize the migration files
+
+This will get your database schema from the cloud project to your local setup
+
+```bash
+hasura migrate create init --from-server --endpoint <hasura-cloud-project-url> --admin-secret <admin-secret> --database-name <database-name>
+
+# note down the version
+
+# mark the migration as applied on the cloud project
+
+hasura migrate apply --endpoint <hasura-cloud-project-url> --admin-secret <admin-secret> --version <version-number> --skip-execution
+```
+
+It is important to mark the migration as applied on the Cloud project to ensure that the schema that is already created on Hasura Cloud project is not attempted to be recreated again, which would end in an error state.
+
+### Step 5: Export metadata
+
+```bash
+hasura metadata export --endpoint <hasura-project-url> --admin-secret <admin-secret>
+```
+
+We have successfully synced our state from Cloud to the Hasura CLI local dev environment.
+
+Next, we apply all these changes to our local Hasura with Docker setup.
+
+### Step 6: Apply metadata and migrations to your local Hasura instance
+
+```bash
+hasura metadata apply
+hasura migrate apply --all-databases
+hasura metadata reload
+```
+
+By default the metadata and migrations are applied to `http://localhost:8080` which is the endpoint specified in the `config.yaml` file of your CLI project. If you want to apply the metadata and migrations to any other endpoint, you could go ahead and change the endpoint in the `config.yaml` file or use the `--endpoint` flag along with the commands above.
+
+And you're all set now! Go ahead and setup version control for your project for further ease of integration.
+
+## Moving from local development to Hasura Cloud
+
+If you have been using the OSS version of Hasura GraphQL engine locally using Docker and want to move to a Hasura Cloud project, start by creating a project at <https://cloud.hasura.io/signup>
+
+Once the project is created, launch console and connect your database. Make sure that the name of the database is same as that in your local setup. Do refer this [Getting Started guide](/graphql/cloud/getting-started/index.mdx) for a step-by-step guide.
+
+Also ensure the database is connected using the same ENV var in your local setup and the Cloud project. You might have drop and create a new ENV var containing the database URL on your Cloud project if required.
+
+Also add any other ENV vars that you might have set on your local project.
+
+### Setting up a Git repo for your Hasura project
+
+In order to easily apply your local changes to your new Cloud project, we'll use the Hasura [GitHub deployment](/graphql/cloud/projects/github-integration.mdx) feature. But before we do that, we need to setup metadata & migrations of your local setup that you can apply to your Cloud project. For a lowdown on Hasura metadata & migrations refer the guide [here](/graphql/core/migrations/index.mdx)
+
+### Step 1: Install Hasura CLI
+
+Follow the instructions in [install_hasura_cli](/graphql/core/hasura-cli/install-hasura-cli.mdx)
+
+### Step 2: Setup a project directory
+
+```bash
+hasura init <project-name> --endpoint <local-project-endpoint>
+```
+
+Your local project endpoint might be `http://localhost:8080` (based on how it was setup initially). This creates a project directory with `migrations` and `metadata` directories and a `config.yaml` file.
+
+### Step 3: Initialize the migration files
+
+This will get your database schema from your local setup into the project folder.
+
+```bash
+hasura migrate create init --from-server --admin-secret <admin-secret> --database-name <database-name>
+
+# note down the version
+
+# mark the migration as already applied on the local server
+
+hasura migrate apply --admin-secret <admin-secret> --version <version-number> --skip-execution
+```
+
+### Step 4: Initialize Hasura metadata
+
+```bash
+hasura metadata export
+```
+
+This command will export the current Hasura metadata as a bunch of YAML files in the `metadata` directory.
+
+### Step 5: Setup version control & Git Deploy
+
+```bash
+# in the project directory
+
+git init
+git add .
+git commit -m "initialize metadata and migrations"
+```
+
+Push these changes to GitHub repo of your choice.
+
+Now we're all set to see the magic of our GitHub integration to deploy the metadata and migrations to your Cloud project by following the steps [here](/graphql/cloud/projects/github-integration.mdx)!

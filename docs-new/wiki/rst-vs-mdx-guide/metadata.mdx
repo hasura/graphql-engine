@@ -1,0 +1,45 @@
+---
+sidebar_position: 3
+---
+
+# Metadata & Frontmatter
+
+:::info
+
+Please refer [Markdown Frontmatter](https://docusaurus.io/docs/api/plugins/@docusaurus/plugin-content-docs#markdown-front-matter) for allowed properties in frontmatter.
+
+Please refer [Metadata](https://docusaurus.io/docs/markdown-features/head-metadata) if it needs to be added as custom meta outside frontmatter.
+
+:::
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs>
+  <TabItem value="sphinx" label="Sphinx - RST" default>
+
+```rest
+  .. meta::
+    :description: Hasura GraphQL engine documentation
+    :keywords: hasura, docs, manual, graphql engine
+
+  .. title:: Hasura GraphQL Engine Documentation
+```
+
+  </TabItem>
+  <TabItem value="docusaurus" label="Docusaurus - MDX">
+
+```markdown
+  ---
+  title: Hasura GraphQL Engine Documentation
+  description: Hasura GraphQL Engine Documentation
+  keywords:
+    - hasura
+    - docs
+    - manual
+    - graphql engine
+  ---
+```
+
+  </TabItem>
+</Tabs>

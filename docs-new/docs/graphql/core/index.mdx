@@ -1,0 +1,95 @@
+---
+title: Hasura GraphQL Engine Documentation
+description: Hasura GraphQL engine documentation
+keywords:
+  - hasura
+  - docs
+  - manual
+  - graphql engine
+slug: index
+sidebar_label: Index
+sidebar_position: 0
+---
+
+import Link from "@docusaurus/Link";
+import VersionedLink from "@site/src/components/VersionedLink";
+
+import {
+  CustomTOCList,
+  CustomTOCListSection,
+  CustomTOCListHead,
+  CustomTOCListContent,
+} from "@site/src/components/CustomTOCList";
+
+# Hasura GraphQL Engine Documentation
+
+The Hasura GraphQL engine makes your data instantly accessible over a
+real-time GraphQL API, so you can build and ship modern apps and APIs
+faster. Hasura connects to your databases, REST servers, GraphQL
+servers, and third party APIs to provide a unified real-time GraphQL API
+across all your data sources.
+
+
+<CustomTOCList>
+  <CustomTOCListSection>
+    <CustomTOCListHead>BASICS</CustomTOCListHead>
+    <CustomTOCListContent>
+      <VersionedLink to="/graphql/core/getting-started/index">Getting Started</VersionedLink>
+      <VersionedLink to="/graphql/core/databases/postgres/schema/index">Postgres: Schema</VersionedLink>
+      <VersionedLink to="/graphql/core/databases/postgres/queries/index">Postgres: Queries</VersionedLink>
+      <VersionedLink to="/graphql/core/databases/postgres/mutations/index">Postgres: Mutations</VersionedLink>
+      <VersionedLink to="/graphql/core/databases/postgres/subscriptions/index">Postgres: Subscriptions</VersionedLink>
+    </CustomTOCListContent>
+  </CustomTOCListSection>
+  <CustomTOCListSection>
+    <CustomTOCListHead>BUSINESS LOGIC</CustomTOCListHead>
+    <CustomTOCListContent>
+      <VersionedLink to="/graphql/core/actions/index">Actions</VersionedLink>
+      <VersionedLink to="/graphql/core/remote-schemas/index">Remote Schemas</VersionedLink>
+      <VersionedLink to="/graphql/core/event-triggers/index">Event Triggers</VersionedLink>
+      <VersionedLink to="/graphql/core/scheduled-triggers/index">Scheduled Triggers</VersionedLink>
+    </CustomTOCListContent>
+  </CustomTOCListSection>
+  <CustomTOCListSection>
+    <CustomTOCListHead>AUTH</CustomTOCListHead>
+    <CustomTOCListContent>
+      <VersionedLink to="/graphql/core/auth/authentication/index">Authentication</VersionedLink>
+      <VersionedLink to="/graphql/core/auth/authentication/webhook">Auth Using Webhooks</VersionedLink>
+      <VersionedLink to="/graphql/core/auth/authentication/jwt">Auth Using JWT</VersionedLink>
+      <VersionedLink to="/graphql/core/auth/authentication/unauthenticated-access">Unauthenticated / Public Access</VersionedLink>
+      <VersionedLink to="/graphql/core/auth/authorization/index">Authorization / Access Control</VersionedLink>
+    </CustomTOCListContent>
+  </CustomTOCListSection>
+  <CustomTOCListSection>
+    <CustomTOCListHead>CI/CD & DEPLOYMENTS</CustomTOCListHead>
+    <CustomTOCListContent>
+      <VersionedLink to="/graphql/core/migrations/index">Migrations basics</VersionedLink>
+      <VersionedLink to="/graphql/core/migrations/migrations-setup">Setting Up Migrations</VersionedLink>
+      <VersionedLink to="/graphql/core/migrations/manage-metadata">Managing Metadata</VersionedLink>
+      <VersionedLink to="/graphql/core/deployment/graphql-engine-flags/index">Server configuration</VersionedLink>
+      <VersionedLink to="/graphql/cloud/index">Deploy Using Hasura Cloud</VersionedLink>
+      <VersionedLink to="/graphql/core/deployment/deployment-guides/docker">Deploy Using Docker</VersionedLink>
+      <VersionedLink to="/graphql/core/deployment/deployment-guides/kubernetes">Deploy Using Kubernetes</VersionedLink>
+    </CustomTOCListContent>
+  </CustomTOCListSection>
+  <CustomTOCListSection>
+    <CustomTOCListHead>REFERENCE</CustomTOCListHead>
+    <CustomTOCListContent>
+      <VersionedLink to="/graphql/core/hasura-cli/index">Hasura CLI</VersionedLink>
+      <VersionedLink to="/graphql/core/api-reference/index">API Reference</VersionedLink>
+      <VersionedLink to="/graphql/core/how-it-works/index">How It Works</VersionedLink>
+      <VersionedLink to="/graphql/core/troubleshooting/index">Troubleshooting</VersionedLink>
+      <VersionedLink to="/graphql/core/faq/index">FAQs</VersionedLink>
+      <VersionedLink to="/graphql/core/security-disclosure/index">Security Vulnerability Protocol</VersionedLink>
+    </CustomTOCListContent>
+  </CustomTOCListSection>
+  <CustomTOCListSection>
+    <CustomTOCListHead>LEARN</CustomTOCListHead>
+    <CustomTOCListContent>
+      <Link to="https://hasura.io/learn/graphql/hasura/introduction/" target="_blank">30-Minute Hasura Basics Course</Link>
+      <Link to="https://hasura.io/learn/" target="_blank">GraphQL & Hasura Courses</Link>
+      <VersionedLink to="/graphql/core/guides/index">Guides & Resources</VersionedLink>
+      <VersionedLink to="/graphql/core/guides/upgrade-hasura-v2">Updating to Hasura v2</VersionedLink>
+    </CustomTOCListContent>
+  </CustomTOCListSection>
+</CustomTOCList>

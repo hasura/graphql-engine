@@ -1,0 +1,33 @@
+.helpful-wrapper {
+  margin: 40px 0;
+  text-align: center;
+
+  h4 {
+    color: var(--ifm-color-content-secondary);
+  }
+}
+
+.helpful-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+
+  .helpful-icon {
+    margin: 0 12px;
+    display: flex;
+    svg {
+      path, circle {
+        stroke: var(--ifm-color-content-secondary);
+      }
+    }
+    &.active svg {
+      path, circle {
+        stroke: var(--ifm-link-color);
+      }
+    }
+    &.no_response {
+      cursor: pointer;
+    }
+  }
+}

@@ -1,0 +1,109 @@
+---
+sidebar_label: Cleaning up event data
+sidebar_position: 7
+description: Clean up event data of event triggers in Hasura
+keywords:
+  - hasura
+  - docs
+  - event trigger
+  - event data
+  - clean up
+---
+
+# Cleaning up event data
+
+## Introduction
+
+Hasura stores event data associated with Event Triggers in **the "hdb_catalog" schema of the database containing the source table**.
+
+If there are lots of events, the metadata tables can get huge and you may want to prune them.
+You can use any of the following options to prune your event data depending on your need.
+
+## Tables involved
+
+Event Triggers have 2 tables managed by Hasura:
+
+1.  `hdb_catalog.event_log`: This is the table that stores all captured
+    events.
+2.  `hdb_catalog.event_invocation_logs`: This is that table that stores
+    all HTTP requests and responses.
+
+## Option 1: Clear only HTTP logs
+
+```sql
+DELETE FROM hdb_catalog.event_invocation_logs;
+```
+
+## Option 2: Clear only processed events
+
+```sql
+DELETE FROM hdb_catalog.event_log
+WHERE delivered = true OR error = true;
+```
+
+## Option 3: Clear all processed events and HTTP logs
+
+This is the combination of Option 1 and Option 2.
+
+```sql
+DELETE FROM hdb_catalog.event_invocation_logs;
+
+DELETE FROM hdb_catalog.event_log
+WHERE delivered = true OR error = true;
+```
+
+## Option 4: Clear all event data for a particular event trigger only
+
+```sql
+DELETE FROM
+hdb_catalog.event_invocation_logs
+WHERE event_id IN (
+    SELECT id FROM hdb_catalog.event_log
+    WHERE trigger_name = '<event_trigger_name>' );
+
+DELETE FROM
+hdb_catalog.event_log
+WHERE trigger_name = '<event_trigger_name>'
+AND (delivered = true OR error = true);
+```
+
+
+## Option 5: Clear everything
+
+:::caution Warning
+
+This will clear all events including yet to be delivered events.
+
+:::
+
+```sql
+DELETE FROM hdb_catalog.event_invocation_logs;
+
+DELETE FROM hdb_catalog.event_log;
+```
+
+## Clearing data before a particular time period
+
+If you wish to keep recent data and only clear data before a particular
+time period you can add the following time clause to your query's where
+clause:
+
+```sql
+-- units can be 'minutes', 'hours', 'days', 'months', 'years'
+created_at < now() - interval '<x> <units>'
+```
+
+For example: to delete all processed events and HTTP logs older than 3
+months:
+
+```sql
+DELETE FROM hdb_catalog.event_invocation_logs
+WHERE created_at < now() - interval '3 months';
+
+DELETE FROM hdb_catalog.event_log
+WHERE (delivered = true OR error = true)
+ AND created_at < now() - interval '3 months';
+```
+
+See the [Postgres date/time functions](https://www.postgresql.org/docs/current/functions-datetime.html)
+for more details.

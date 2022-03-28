@@ -1,0 +1,444 @@
+---
+description: Hasura inherited roles
+keywords:
+  - hasura
+  - docs
+  - authorization
+  - multiple roles
+  - inherited roles
+sidebar_position: 4
+---
+
+import Tabs from "@theme/Tabs"
+import TabItem from "@theme/TabItem"
+import Thumbnail from "@site/src/components/Thumbnail";
+import GraphiQLIDE from "@site/src/components/GraphiQLIDE"
+
+# Inherited roles
+
+## Introduction
+
+An inherited role is a way to create a new role which inherits
+permissions from two or more roles.
+
+Once an inherited role is created, it can be treated as any other role
+i.e. can be given in `X-Hasura-Role` session variable.
+
+Inherited roles are useful when you need to define multiple permission
+rules (may be overlapping) on schema objects and also for greater
+modularity in role management.
+
+By default, inherited roles will try to inherit the permissions from its
+parent roles. If you'd rather like to have a different permission than
+the inherited one for a particular entity and role pair, then it can be
+done by creating a permission for the entity and role pair. After
+creating this permission, it will override the inherited permission, if
+any.
+
+:::tip Supported from
+
+Inherited roles are supported for versions `v2.0.0-alpha.4` and above.
+The inherited roles feature is an experimental feature from verions
+`v2.0.0-alpha.4` till `v2.1.0-beta.1`, i.e it must be explicitly toggled
+in order to be enabled. This can be done either by setting the env var
+`HASURA_GRAPHQL_EXPERIMENTAL_FEATURES` or the server flag
+`--experimental-features` to `inherited_roles`.
+
+For versions `v2.1.0-beta.1` and above, inherited roles are enabled by
+default.
+
+:::
+
+## Creating inherited roles
+
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
+
+Go to the `Settings` tab (⚙) on the console and click on
+`Inherited Roles`.
+
+<Thumbnail
+  src="/img/graphql/core/auth/console-inherited-role.png"
+  alt="Console create inherited role"
+  width="1200px"
+/>
+
+</TabItem>
+<TabItem value="cli" label="CLI">
+
+To add a new inherited role, edit the `metadata/inherited_roles.yaml`
+file adding the inherited role definition like this:
+
+```yaml
+- role_name: sample_inherited_role
+  role_set:
+    - user
+    - editor
+```
+
+Apply the metadata by running:
+
+```bash
+hasura metadata apply
+```
+
+</TabItem>
+<TabItem value="api" label="API">
+
+You can add a inherited role using the
+[add_inherited_role metadata API](/graphql/core/api-reference/metadata-api/inherited-roles.mdx#metadata-add-inherited-role):
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "add_inherited_role",
+  "args": {
+     "role_name":"sample_inherited_role",
+     "role_set":[
+        "user",
+        "editor"
+     ]
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+:::info Note
+
+Inherited roles cannot form cycles.
+
+**For example:**
+
+Suppose there are two inherited roles: `inherited_role1`,
+`inherited_role2` and two non-inherited roles: `role1`, `role2` and:
+
+`inherited_role1` inherits from `role1` and `inherited_role2`
+`inherited_role2` inherits from `role2` and `inherited_role1`
+
+The above configuration won't work because `inherited_role1` and
+`inherited_role2` form a cycle.
+
+:::
+
+## How is the permission of the inherited role inherited?
+
+### 1. Select permissions
+
+A select permission is comprised of the following things:
+
+1. Columns accessible to the role
+2. Row selection filter
+3. Limit
+4. Allow aggregation
+5. Scalar computed fields accessible to the role
+
+Suppose there are two roles, `role1` gives access to column `C1` with
+row filter `P1` and `role2` gives access to columns `C1` and `C2` with
+row filter `P2`. Consider the following GraphQL query executed with an
+inherited role comprised of `role1` and `role2`:
+
+```graphql
+query {
+  T {
+    C1
+    C2
+  }
+}
+```
+
+The above GraphQL query will be translated to the following SQL query.
+
+```sql
+select (case when (P1 or P2) then C1 else null end) as C1,
+       (case when P2 then C2 else null end) as C2
+from T
+where (P1 or P2)
+```
+
+The other parameters of the select permission will be combined in the
+following manner:
+
+1. Limit - Maximum of the limits will be the limit of the inherited
+   role
+2. Allow aggregations - If any of the role allows aggregation, then the
+   inherited role will allow aggregation
+3. Scalar computed fields - same as table column fields, as in the
+   above example
+
+#### Accessibility of a field for an inherited role
+
+Accessibility of a field for an inherited role is defined as follows:
+
+1. When all the roles give access to a column `C`, then `C` will always
+   be accessible.
+2. When not all, but some of the roles give access to the column `C`
+   then the value of the column `C` will be outputed when the OR of
+   `P1,P2....P(n)` is `true` and when it evaluates to `false`, the
+   value of the column `C` will be `null`, where `P` is the row filter
+   of the select permissions in which column `C` is given access to.
+3. When none of the roles give access to column `C`, it won't be
+   accessible to the inherited role.
+
+#### Examples
+
+Let's take the example of an `users` table with the following columns:
+
+1. `id` - Int - Primary key
+2. `name` - Text
+3. `email` - Text
+
+There are two roles defined namely `employee` and `manager`.
+
+1. User role - The user role will be able to access all columns of
+   their row when the session variable `X-Hasura-User-Id` is equal to
+   the `id`.
+2. Anonymous role - The anonymous role will be able to access only the
+   `id` and `name` columns of all the users.
+
+Let's create a new inherited role called `user_anonymous_inherited_role`
+which inherits from the `user` and the `anonymous` roles.
+
+1.  Executing the query as `user` role
+
+```http
+POST /v1/graphql HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: user
+X-Hasura-User-Id: 1
+```
+
+<GraphiQLIDE
+  query={`query {
+  users {
+    id
+    name
+    email
+  }
+ }`}
+  response={`{
+  "data": {
+    "users": [
+      {
+        "id": 1,
+        "name": "alice",
+        "email": "alice@xyz.com"
+      }
+    ]
+    }
+ }`}
+/>
+
+2.  Executing the query as `anonymous` role
+
+```http
+POST /v1/graphql HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: anonymous
+```
+
+<GraphiQLIDE
+  query={`query {
+  users {
+    id
+    name
+  }
+ }`}
+  response={`{
+  "data": {
+    "users": [
+    {
+      "id": 1,
+      "name": "Alice"
+    },
+    {
+      "id": 2,
+      "name": "Bob"
+    },
+    {
+      "id": 3,
+      "name": "Sam"
+    }
+    ]
+  }
+ }`}
+/>
+
+3.  Executing the query as `user_anonymous_inherited_role` role
+
+```http
+POST /v1/graphql HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: user_anonymous_inherited_role
+X-Hasura-User-Id: 1
+```
+
+<GraphiQLIDE
+  query={`query {
+  users {
+    id
+    name
+    email
+  }
+ }`}
+  response={`{
+  "data": {
+    "users": [
+    {
+      "id": 1,
+      "name": "Alice",
+      "email": "alice@xyz.com"
+    },
+    {
+      "id": 2,
+      "name": "Bob",
+      "email": null
+    },
+    {
+      "id": 3,
+      "name": "Sam",
+      "email": null
+    }
+    ]
+  }
+ }`}
+/>
+
+In the response of the query being executed with the
+`user_anonymous_inherited_role` role, there are 3 rows returned and
+if we compare that to the queries executed as the `user` and
+`anonymous` roles, the results are unioned in the inherited role.
+But some of the fields have `null` values despite the value in the
+database not being `null`. This can only happen with inherited roles
+when a column doesn't have permission in the particular row. In the
+above example, we see that the `email` of "Bob" and "Sam" is `null`
+but a non null value for "Alice", this is because the "Alice" row is
+executed as the `user` role and the other rows are executed as the
+`anonymous` role which is why the value is `null`.
+
+4. Suppose we have two tables `users` and `authors` and similarly two
+   roles `user` and `author` are defined. The `user` role doesn't have
+   permission to query the `authors` table and the `author` role
+   doesn't have permission to query the `users` table. With only the
+   `user` and the `author` role, we won't be able to construct a query
+   which fetches data from both the tables. This can be solved by
+   creating an inherited role out of `user` and `author` which can
+   query both the tables in a single query.
+
+```http
+POST /v1/graphql HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: user_authors_inherited_role
+X-Hasura-User-Id: 1
+```
+
+<GraphiQLIDE
+  query={`query {
+  users {
+    id
+    name
+    email
+  }
+  authors {
+    id
+    name
+    followers
+  }
+ }`}
+  response={`{
+  "data": {
+    "users": [
+    {
+      "id": 1,
+      "name": "Alice",
+      "email": "alice@xyz.com"
+    }
+    ],
+    "authors": [
+    {
+      "id": 1,
+      "name": "Paulo Coelho",
+      "followers": 10382193
+    }
+    ]
+  }
+ }`}
+/>
+
+### 2. Mutation and Remote Schema permissions
+
+A mutation (insert, update and delete) or remote schema permission is
+inherited in the following manner:
+
+Suppose there's an inherited role `(R)` which inherits permissions from
+`n` parent roles namely `pr1`, `pr2`, `pr3` ... `prn`. The permission
+for the role `R` on some entity can only be inherited when the
+permission on the entity is the same for all its parent roles.
+
+For example, if two insert permissions are configured in the following
+way:
+
+1. insert permission of role `pr1`
+
+   ```json
+   {
+     "type": "pg_create_insert_permission",
+     "args": {
+       "table": "article",
+       "source": "default",
+       "role": "pr1",
+       "permission": {
+         "check": {
+           "author_id": "X-HASURA-AUTHOR-ID"
+         }
+       }
+     }
+   }
+   ```
+
+2. insert permission of the role `pr2`
+
+   ```json
+   {
+     "type": "pg_create_insert_permission",
+     "args": {
+       "table": "article",
+       "source": "default",
+       "role": "pr2",
+       "permission": {
+         "check": {
+           "author_id": "X-HASURA-USER-ID"
+         }
+       }
+     }
+   }
+   ```
+
+The `check` constraint is different in both the permissions and there's
+no way to resolve this conflict.
+
+Whenever a conflict occurs while a role inherits from its parents, then
+the metadata for that entity and role combination will be marked as
+inconsistent. These can be seen by calling the
+[get_inconsistent_metadata](/graphql/core/api-reference/metadata-api/manage-metadata.mdx#metadata-get-inconsistent-metadata) API.
+Following the above example, the role `R` which is trying to inherit
+permissions from the role `pr1` and `pr2` will be marked as inconsistent
+for the table permission of the table `article`.
+
+This inconsistency is informational and can be ignored if the
+conflicting role entity pair is not going to be used. If this
+inconsistency needs to be resolved, then it can be done by adding a
+permission explicitly for the conflicting role entity pair.
+
+### 3. Actions and Custom Functions permissions
+
+Inheritance of permissions of actions and custom functions work in the
+following manner:
+
+If any of the parent roles have permission configured for a given action
+or custom function, then the inherited role will also be able to access
+the given action or custom function.

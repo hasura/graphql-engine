@@ -1,0 +1,632 @@
+---
+sidebar_label: Extend with SQL functions
+sidebar_position: 5
+description: Customise the Hasura GraphQL schema with Postgres SQL functions
+keywords:
+  - hasura
+  - docs
+  - postgres
+  - schema
+  - sql functions
+  - stored procedures
+---
+
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+import Thumbnail from "@site/src/components/Thumbnail";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Postgres: Extend schema with SQL functions
+
+## What are custom SQL functions?
+
+Custom SQL functions are [user-defined SQL functions](https://www.postgresql.org/docs/current/sql-createfunction.html)
+that can be used to either encapsulate some custom business logic or
+extend the built-in SQL functions and operators. SQL functions are also
+referred to as **stored procedures**.
+
+Hasura GraphQL engine lets you expose certain types of custom functions
+as top level fields in the GraphQL API to allow querying them with
+either `queries` or `subscriptions`, or for `VOLATILE` functions as
+`mutations`.
+
+:::info Note
+
+Custom SQL functions can also be queried as
+[computed fields](/graphql/core/databases/postgres/schema/computed-fields.mdx) of tables.
+
+:::
+
+### Supported SQL functions {#pg-supported-sql-functions}
+
+Currently, only functions which satisfy the following constraints can be
+exposed as top level fields in the GraphQL API (*terminology from*
+[Postgres docs](https://www.postgresql.org/docs/current/sql-createfunction.html)):
+
+-   **Function behaviour**: `STABLE` or `IMMUTABLE` functions may *only*
+    be exposed as queries. `VOLATILE` functions may be exposed as
+    mutations or queries.
+-   **Return type**: MUST be `SETOF <table-name>` OR `<table-name>`
+    where `<table-name>` is already tracked
+-   **Argument modes**: ONLY `IN`
+
+## Creating SQL functions {#pg-create-sql-functions}
+
+SQL functions can be created using SQL statements which can be executed
+as follows:
+
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
+
+-   Head to the `Data -> SQL` section of the Hasura console
+-   Enter your [create function SQL statement](https://www.postgresql.org/docs/current/sql-createfunction.html)
+-   Hit the `Run` button
+
+</TabItem>
+<TabItem value="cli" label="CLI">
+
+1.  [Create a migration manually](/graphql/core/migrations/advanced/writing-migrations-manually.mdx) and add your
+    [create function SQL statement](https://www.postgresql.org/docs/current/sql-createfunction.html)
+    to the `up.sql` file. Also, add an SQL statement that reverts the
+    previous statement to the `down.sql` file in case you need to
+    [roll back](/graphql/core/migrations/advanced/rolling-back-migrations.mdx) the migrations.
+
+2.  Apply the migration by running:
+
+    ```bash
+    hasura migrate apply
+    ```
+
+</TabItem>
+<TabItem value="api" label="API">
+
+You can add a function by making an API call to the [run_sql](/graphql/core/api-reference/schema-api/run-sql.mdx#schema-run-sql)
+schema API:
+
+```http
+POST /v2/query HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "run_sql",
+  "args": {
+    "source": "<db_name>",
+    "sql": "<create function statement>"
+  }
+}
+```
+</TabItem>
+</Tabs>
+
+## Track SQL functions {#pg-track-custom-sql-functions}
+
+Functions can be present in the underlying Postgres database without
+being exposed over the GraphQL API. In order to expose a function over
+the GraphQL API, it needs to be **tracked**.
+
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
+
+While creating functions from the `Data -> SQL` page, selecting the
+`Track this` checkbox will expose the new function over the GraphQL API
+right after creation if it is supported.
+
+You can track any existing supported functions in your database from the
+`Data -> Schema` page:
+
+<Thumbnail
+  src="/img/graphql/core/schema/schema-track-functions.png"
+  alt="Track functions"
+/>
+
+</TabItem>
+<TabItem value="cli" label="CLI">
+
+1.  To track the function and expose it over the GraphQL API, edit the
+    `functions.yaml` file in the `metadata` directory as follows:
+
+    ```yaml {1-3}
+    - function:
+        schema: public
+        name: <function name>
+    ```
+
+2.  Apply the metadata by running:
+
+    ```bash
+    hasura metadata apply
+    ```
+
+</TabItem>
+<TabItem value="api" label="API">
+
+To track the function and expose it over the GraphQL API, make the
+following API call to the [pg_track_function](/graphql/core/api-reference/metadata-api/custom-functions.mdx#metadata-pg-track-function) metadata API:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_track_function",
+  "args": {
+    "source": "<db_name>",
+    "schema": "public",
+    "name": "<name of function>"
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+:::info Note
+
+If the `SETOF` table doesn't already exist or your function needs to
+return a custom type i.e. row set, create and track an empty table with
+the required schema to support the function before executing the above
+steps.
+
+:::
+
+## Use cases
+
+Custom functions are ideal solutions for retrieving some derived data
+based on some custom business logic that requires user input to be
+calculated. If your custom logic does not require any user input, you
+can use [views](/graphql/core/databases/postgres/schema/views.mdx) instead.
+
+Let's see a few example use cases for custom functions:
+
+### Example: Text-search functions
+
+Let's take a look at an example where the `SETOF` table is already part
+of the existing schema:
+
+```plsql
+articles(id integer, title text, content text)
+```
+
+Let's say we've created and tracked a custom function,
+`search_articles`, with the following definition:
+
+```plsql
+CREATE FUNCTION search_articles(search text)
+RETURNS SETOF articles AS $$
+    SELECT *
+    FROM articles
+    WHERE
+      title ilike ('%' || search || '%')
+      OR content ilike ('%' || search || '%')
+$$ LANGUAGE sql STABLE;
+```
+
+This function filters rows from the `articles` table based on the input
+text argument, `search` i.e. it returns `SETOF articles`. Assuming the
+`articles` table is being tracked, you can use the custom function as
+follows:
+
+<GraphiQLIDE
+  query={`query {
+  search_articles(
+    args: {search: "hasura"}
+  ){
+    id
+    title
+    content
+  }
+}`}
+response={`{
+  "data": {
+    "search_articles": [
+      {
+        "id": 1,
+        "title": "first post by hasura",
+        "content": "some content for post"
+      },
+      {
+        "id": 2,
+        "title": "second post by hasura",
+        "content": "some other content for post"
+      }
+    ]
+  }
+}`}
+/>
+
+### Example: Fuzzy match search functions
+
+Let's look at an example of a street address text search with support
+for misspelled queries.
+
+First install the [pg_trgm](https://www.postgresql.org/docs/current/pgtrgm.html)
+PostgreSQL extension:
+
+```sql
+CREATE EXTENSION pg_trgm;
+```
+
+Next create a GIN (or GIST) index in your database for the columns
+you'll be querying:
+
+```sql
+CREATE INDEX address_gin_idx ON properties
+USING GIN ((unit || ' ' || num || ' ' || street || ' ' || city || ' ' || region || ' ' || postcode) gin_trgm_ops);
+```
+
+And finally create the custom SQL function in the Hasura console:
+
+```plsql
+CREATE FUNCTION search_properties(search text)
+RETURNS SETOF properties AS $$
+    SELECT *
+    FROM properties
+    WHERE
+      search <% (unit || ' ' || num || ' ' || street || ' ' || city || ' ' || region || ' ' || postcode)
+    ORDER BY
+      similarity(search, (unit || ' ' || num || ' ' || street || ' ' || city || ' ' || region || ' ' || postcode)) DESC
+    LIMIT 5;
+$$ LANGUAGE sql STABLE;
+```
+
+Assuming the `properties` table is being tracked, you can use the custom
+function as follows:
+
+<GraphiQLIDE
+  query={`query {
+  search_properties(
+    args: {search: "Unit 2, 25 Foobar St, Sydney NSW 2000"}
+  ){
+    id
+    unit
+    num
+    street
+    city
+    region
+    postcode
+  }
+}`}
+response={`{
+  "data": {
+    "search_properties": [
+      {
+        "id": 1,
+        "unit": "UNIT 2",
+        "num": "25",
+        "street": "FOOBAR ST",
+        "city": "SYDNEY",
+        "region": "NSW",
+        "postcode": "2000"
+      },
+      {
+        "id": 2,
+        "unit": "UNIT 12",
+        "num": "25",
+        "street": "FOOBAR ST",
+        "city": "SYDNEY",
+        "region": "NSW",
+        "postcode": "2000"
+      }
+    ]
+  }
+}`}
+/>
+
+### Example: PostGIS functions {#pg-custom-functions-postgis}
+
+Let's take a look at an example where the `SETOF` table is not part of
+the existing schema.
+
+Say you have 2 tables, for user and landmark location data, with the
+following definitions (*this example uses the popular spatial database
+extension,* [PostGIS](https://postgis.net/)):
+
+```sql
+-- User location data
+CREATE TABLE user_location (
+  user_id INTEGER PRIMARY KEY,
+  location GEOGRAPHY(Point)
+);
+
+-- Landmark location data
+CREATE TABLE landmark (
+  id SERIAL PRIMARY KEY,
+  name TEXT,
+  type TEXT,
+  location GEOGRAPHY(Point)
+);
+```
+
+In this example, we want to fetch a list of landmarks that are near a
+given user, along with the user's details in the same query. PostGIS'
+built-in function `ST_Distance` can be used to implement this use case.
+
+Since our use case requires an output that isn't a "subset" of any of
+the existing tables i.e. the `SETOF` table doesn't exist, let's first
+create this table and then create our location search function.
+
+-   create and track the following table:
+
+    ```sql
+    -- SETOF table
+    CREATE TABLE user_landmarks (
+      user_id INTEGER,
+      location GEOGRAPHY(Point),
+      nearby_landmarks JSON
+    );
+    ```
+
+-   create and track the following function:
+
+    ```plsql
+    -- function returns a list of landmarks near a user based on the
+    -- input arguments distance_kms and userid
+    CREATE FUNCTION search_landmarks_near_user(userid integer, distance_kms integer)
+    RETURNS SETOF user_landmarks AS $$
+      SELECT  A.user_id, A.location,
+      (SELECT json_agg(row_to_json(B)) FROM landmark B
+       WHERE (
+         ST_Distance(
+           ST_Transform(B.location::Geometry, 3857),
+           ST_Transform(A.location::Geometry, 3857)
+         ) /1000) < distance_kms
+       ) AS nearby_landmarks
+      FROM user_location A where A.user_id = userid
+    $$ LANGUAGE sql STABLE;
+    ```
+
+This function fetches user information (*for the given input* `userid`)
+and a list of landmarks which are less than `distance_kms` kilometers
+away from the user's location as a JSON field. We can now refer to this
+function in our GraphQL API as follows:
+
+<GraphiQLIDE
+  query={`query {
+  search_landmarks_near_user(
+    args: {userid: 3, distance_kms: 20}
+  ){
+    user_id
+    location
+    nearby_landmarks
+  }
+}`}
+response={`{
+  "data": {
+    "search_landmarks_near_user": [
+      {
+        "user_id": 3,
+        "location": {
+          "type": "Point",
+          "crs": {
+            "type": "name",
+            "properties": {
+              "name": "urn:ogc:def:crs:EPSG::4326"
+            }
+          },
+          "coordinates": [
+            12.9406589,
+            77.6185572
+          ]
+        },
+        "nearby_landmarks": [
+          {
+            "id": 3,
+            "name": "blue tokai",
+            "type": "coffee shop",
+            "location": "0101000020E61000004E74A785DCF22940BE44060399665340"
+          },
+          {
+            "id": 4,
+            "name": "Bangalore",
+            "type": "city",
+            "location": "0101000020E61000005396218E75F12940E78C28ED0D665340"
+          }
+        ]
+      }
+    ]
+  }
+}`}
+/>
+
+## Querying custom functions using GraphQL queries
+
+### Aggregations on custom functions
+
+You can query aggregations on a function result using the
+`<function-name>_aggregate` field.
+
+**For example**, count the number of articles returned by the function
+defined in the text-search example above:
+
+```graphql
+query {
+  search_articles_aggregate(
+    args: {search: "hasura"}
+  ){
+    aggregate {
+      count
+    }
+  }
+}
+```
+
+### Using arguments with custom functions
+
+As with tables, arguments like `where`, `limit`, `order_by`, `offset`,
+etc. are also available for use with function-based queries.
+
+**For example**, limit the number of articles returned by the function
+defined in the text-search example above:
+
+```graphql
+query {
+  search_articles(
+    args: {search: "hasura"},
+    limit: 5
+  ){
+    id
+    title
+    content
+  }
+}
+```
+
+### Using argument default values for custom functions
+
+If you omit an argument in the `args` input field then the GraphQL
+engine executes the SQL function without the argument. Hence, the
+function will use the default value of that argument set in its
+definition.
+
+**For example:** In the above
+[PostGIS functions example](#pg-custom-functions-postgis), the function
+definition can be updated as follows:
+
+```plsql
+-- input arguments distance_kms (default: 2) and userid
+CREATE FUNCTION search_landmarks_near_user(userid integer, distance_kms integer default 2)
+```
+
+Search nearby landmarks with `distance_kms` default value which is 2 kms:
+
+<GraphiQLIDE
+  query={`query {
+  search_landmarks_near_user(
+    args: {userid: 3}
+  ){
+    user_id
+    location
+    nearby_landmarks
+  }
+}`}
+response={`{
+  "data": {
+    "search_landmarks_near_user": [
+      {
+        "user_id": 3,
+        "location": {
+          "type": "Point",
+          "crs": {
+            "type": "name",
+            "properties": {
+              "name": "urn:ogc:def:crs:EPSG::4326"
+            }
+          },
+          "coordinates": [
+            12.9406589,
+            77.6185572
+          ]
+        },
+        "nearby_landmarks": [
+          {
+            "id": 3,
+            "name": "blue tokai",
+            "type": "coffee shop",
+            "location": "0101000020E61000004E74A785DCF22940BE44060399665340"
+          }
+        ]
+      }
+    ]
+  }
+}`}
+/>
+
+### Accessing Hasura session variables in custom functions
+
+Create a function with an argument for session variables and track it
+with the [pg_track_function](/graphql/core/api-reference/metadata-api/custom-functions.mdx#metadata-pg-track-function) metadata API with the
+`session_argument` config set. The session argument will be a JSON
+object where keys are session variable names (in lower case) and values
+are strings. Use the `->>` JSON operator to fetch the value of a session
+variable as shown in the following example.
+
+```plsql
+-- single text column table
+CREATE TABLE text_result(
+  result text
+);
+
+-- simple function which returns the hasura role
+-- where 'hasura_session' will be session argument
+CREATE FUNCTION get_session_role(hasura_session json)
+RETURNS SETOF text_result AS $$
+    SELECT q.* FROM (VALUES (hasura_session ->> 'x-hasura-role')) q
+$$ LANGUAGE sql STABLE;
+```
+
+<GraphiQLIDE
+  query={`query {
+  get_session_role {
+    result
+  }
+}`}
+response={`{
+ "data": {
+   "get_session_role": [
+     {
+       "result": "admin"
+     }
+   ]
+ }
+}`}
+/>
+
+:::info Note
+
+The specified session argument will not be included in the
+`<function-name>_args` input object in the GraphQL schema.
+
+:::
+
+### Tracking functions with side effects
+
+You can also use the [pg_track_function](/graphql/core/api-reference/metadata-api/custom-functions.mdx#metadata-pg-track-function) metadata API to track
+[VOLATILE functions](https://www.postgresql.org/docs/current/xfunc-volatility.html)
+as mutations.
+
+Aside from showing up under the `mutation` root (and presumably having
+side-effects), these tracked functions behave the same as described
+above for `queries`.
+
+We also permit tracking `VOLATILE` functions under the `query` root, in
+which case the user needs to guarantee that the field is idempotent and
+side-effect free, in the context of the resulting GraphQL API. One such
+use case might be a function that wraps a simple query and performs some
+logging visible only to administrators.
+
+:::info Note
+
+It's easy to accidentally give an SQL function the wrong volatility (or
+for a function to end up with `VOLATILE` mistakenly, since it's the
+default).
+
+:::
+
+## Permissions for custom functions
+
+A custom function `f` is only accessible to a role `r` if there is a
+function permission (see
+[Create function permission](/graphql/core/api-reference/metadata-api/custom-functions.mdx#metadata-pg-create-function-permission))
+defined on the function `f` for the role `r`. Additionally, role `r`
+must have SELECT permissions on the returning table of the function `f`.
+
+[Access control permissions](/graphql/core/auth/authorization/permission-rules.mdx) configured for the
+`SETOF` table of a function are also applicable to the function itself.
+
+**For example**, in our text-search example above, if the role `user`
+has access only to certain columns of the table `article`, a validation
+error will be thrown if the `search_articles` query is run selecting a
+column to which the `user` role doesn't have access to.
+
+:::info Note
+
+In case of **functions exposed as queries**, if the Hasura GraphQL
+engine is started with inferring of function permissions set to `true`
+(by default: `true`) then a function exposed as a query will be
+accessible to a role even if the role doesn't have a function permission
+for the function - provided the role has select permission defined on
+the returning table of the function.
+
+:::

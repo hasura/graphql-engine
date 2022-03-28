@@ -1,0 +1,51 @@
+---
+title: Getting started
+description: Get started with Hasura
+keywords:
+  - hasura
+  - docs
+  - start
+slug: index
+---
+
+# Getting Started
+
+## Introduction
+
+To use the Hasura GraphQL engine, you need to:
+
+- Deploy the Hasura GraphQL engine, with access to a Postgres database
+  to store its metadata.
+- Connect new/existing database(s) and set up and test your GraphQL
+  API using the Hasura console UI _(also possible via CLI or API)_.
+- Consume the generated GraphQL API from your client apps.
+
+## Quickstart guides
+
+- [Using Hasura Cloud](/graphql/cloud/getting-started/index.mdx) - Create a new Hasura
+  Cloud project with just a few clicks.
+  - Recommended as it's **the fastest way** to try Hasura GraphQL engine out.
+  - Comes with **extra features for reliability and security** and a managed metadata database.
+
+Hasura is open-source and can also be downloaded locally.
+[Set up Hasura GraphQL engine using Docker Compose](/graphql/core/getting-started/docker-simple.mdx).
+This is recommended if you want to **run Hasura locally** or if your
+database cannot be exposed to Hasura Cloud.
+
+<!-- TODO: add link to detailed deployment guides post 2.0 content update -->
+
+## Supported databases
+
+Hasura GraphQL engine supports:
+
+- [Postgres](/graphql/core/databases/postgres/index.mdx)
+- [MS SQL Server](/graphql/core/databases/ms-sql-server/index.mdx)
+- [Citus / Hyperscale](/graphql/core/databases/citus-hyperscale-postgres/index.mdx)
+- [BigQuery](/graphql/core/databases/bigquery/index.mdx)
+- **MySQL** (in preview) - See the [preview guide](/graphql/core/guides/mysql-preview.mdx)
+
+:::info Additional Resources
+
+Get Started with Hasura today - [Watch video guide](https://hasura.io/events/webinar/get-started-with-hasura/?pg=docs&plcmt=body&cta=getting-started&tech=).
+
+:::

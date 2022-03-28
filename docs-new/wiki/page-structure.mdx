@@ -1,0 +1,301 @@
+---
+sidebar_label: Page Structure
+---
+
+# Docs page structure
+
+## Meta information
+
+The following meta information should be added at the beginning of each docs page: `description` and `keywords`.
+
+An example:
+
+```markdown
+---
+description: Data validations in Hasura
+keywords:
+  - hasura
+  - docs
+  - schema
+  - data validation
+---
+```
+
+## React component imports
+
+Please add any React component imports right below the frontmatter and beore starting the main doc content.
+
+```jsx
+import Thumbnail from "@site/src/components/Thumbnail";
+```
+
+Note: When importing components from `src/` directory, please do not use relative paths. Docusaurus provides a global variable `@site` which is resolved to root of app - absolute import.
+So, doing `@site/src/components/Thumbnail` is same as `../../../src/components/Thumbnail`.
+
+## Page title
+
+Add the main title for each docs page.
+
+An example:
+
+```
+# Data validations
+```
+
+You can also add `title` frontmatter.
+
+```markdown
+---
+title: Data validations
+---
+```
+
+By default the title will be the label for sidebar item. So, to use a shorten/different label for sidebar use the `sidebar_label` frontmatter to override.
+
+
+## Table of contents
+
+This is auto generated on the right sidebar.
+And the depth can be controlled via `toc_max_heading_level`, `toc_min_heading_level` frontmatter.
+
+Please refer [Table of Contents](/rst-vs-mdx-guide/table-of-contents.mdx) section to understand more about hwo to render this manually in between content and filtering items etc.,
+
+
+## Introduction
+
+Add an `Introduction` section:
+
+```
+## Introduction
+```
+
+In the section, give a short overview of what the page is about.
+
+## General guidelines
+
+### Content
+- Add appropriate cross-links in content to assist users. i.e. if you refer to some functionality that is documented in some other docs page, add a link to that page. e.g. if you have a statement like "create a relationship between tables
+X and Y ...", make "create a relationship" a link to the `Create relationships` page.
+- Try to make each section within a page self-sufficient. i.e. avoid structuring all pages as step-by-step guides
+unless it really is the intent. This ensures that we can refer to sections externally (from other docs pages, console, 
+etc.) and expect that the user will be able to follow the section without being lost on the context that was set in earlier sections of the page. Adding statements such as "As we have described in the above section ..." might help to set up the needed context.
+
+### Header section
+
+- Page titles should be self-sufficient. Users might not have the context of the hierarchy of the page in the docs tree. A user can land on a page via search as well. e.g. Say you are adding a new deployment guide for AWS under 
+`Guides -> Deployment -> AWS`. The title of this page should not be just `AWS` but instead `AWS deployment guide for 
+Hasura GraphQL engine`. It's ok to alias it to just `AWS` in the sidebar (`sidebar_label: AWS`) as there the user has the context of the page hierarchy.
+- Ensure heading underlines are the same length as the headings. Short underlines will throw warnings during builds.
+- Use bold in headings in place of string literals for aesthetics (i.e. ** in place of \`).
+- The nesting of headings is as follows:
+
+```
+# Main page title
+
+## First heading
+
+### Second heading
+
+#### Third heading
+
+##### Fourth heading
+
+###### Fifth heading
+```
+
+### References / links
+
+#### Internal links
+
+When linking to other docs pages, use *root relative file paths* (`/graphql/core/data-validation.mdx`) rather than *relative links* (`../../path/to/file.mdx`) in order to avoid broken links.
+Why? when files are moved around, we just need to replace old path with new path - no relative `../../../` resolution required.
+
+Please read the [Links](/rst-vs-mdx-guide/links.mdx) section for more details on how to work with Links.
+
+An example:
+
+```
+[data validation](/graphql/core/data-validation.mdx)
+```
+
+In this example, `data validation` is the link text, and `/graphql/core/data-validation.mdx` is the file path which will be resolved as link by docusaurus.
+
+
+#### External links
+
+External links are no different in syntax, replace the file paths with external links and that's it.
+
+An example:
+
+`[Google](https://www.google.com/)`
+[Google](https://www.google.com/)
+
+*Note*: If you link to an external resource, make sure to link to the most current version of the same, e.g. `https://www.postgresql.org/docs/current/intro-whatis.html` rather than `https://www.postgresql.org/docs/9.6/intro-whatis.html`.
+
+### Images
+
+Add images using the `Thumbnail` component to allow click-to-zoom.
+
+An example:
+
+```jsx
+import Thumbnail from "@site/src/components/Thumbnail";
+
+<Thumbnail
+  src="/img/graphql/manual/schema/validation-add-check-constraint.png"
+  alt="Add check constraint"
+  width="700px"
+/>
+```
+
+- Add an `alt` prop for all images
+- To adjust the image size, use the `width` prop
+
+#### Style elements for emphasizing
+
+If you have screenshots in your docs page and you want to emphasize something, please use this colour code: `#ec1c74`.
+
+Generally, if you want to show selecting something, use borders. If you want to show clicking on a button, use arrows. 
+
+### Notes / Admonitions
+
+A note can be added in order to draw attention to something like limitations or to link to external reference documentation. It has the title "Notes".
+
+An example:
+
+```
+
+:::info Note
+
+Please checkout the [Postgres documentation](https://www.postgresql.org/docs/current/functions-comparison.html) for more information.
+
+:::
+
+```
+
+An admonition is the same as a note, but its title can be defined. 
+
+Add an admonition as follows:
+
+```
+:::info Other Title
+
+Scheduled triggers are supported by `v.1.3.0` and above.
+
+:::
+
+:::tip Supported by
+
+Scheduled triggers are supported by `v.1.3.0` and above.
+
+:::
+
+:::caution Deprecation
+
+Scheduled triggers are supported by `v.1.3.0` and above.
+
+:::
+
+:::danger Security Vulnerability
+
+Scheduled triggers are supported by `v.1.3.0` and above.
+
+:::
+
+```
+
+*Note*: Make sure to leave an intentional empty line before and after each `:::` in admonitions - beginning and end both.
+
+```diff {1,3,5,7}
++
+:::info Note
++
+Make sure to place the note/admonition in a place where the user will see it at the appropriate time.
++
+:::
++
+```
+
+*Note*: Make sure to place the note/admonition in a place where the user will see it at the appropriate time.
+
+### Code blocks
+
+While adding code blocks ensure the right language type is set. Sometimes adding placeholders breaks the language's
+syntax in which case you'll have to set the language type to `none` to avoid warnings during builds.
+
+### GraphQL request examples
+
+Our docs have a GraphiQL extension that allows displaying GraphQL requests in the GraphiQL UI.
+
+- Use a tab-width of 2 for nesting the requests and responses for optimal use 
+of the space and maintaining consistency.
+- Nest query arguments for logical readability. Unfortunately, GraphiQL prettify does not do a good job of doing this 
+by default.
+- Ensure that the order of fields in the responses is the same as in the requests for better readability.
+
+Use it as follows:
+
+```jsx
+import GraphiQLIDE from "@site/src/components/GraphiQLIDE";
+
+<GraphiQLIDE
+query={`query {
+  author_by_pk(id: 1) {
+    id
+    name
+  }
+}`}
+response={`{
+  "data": {
+    "author_by_pk": {
+      "id": 1,
+      "name": "Justin"
+    }
+  }
+}`}
+/>
+```
+
+You dont have to worry about indentation when adding components for better spacing in string literals
+
+## Markdown Variables
+
+Add the markdown variables at very end of file for easier refernce and maintainability. These varaibles are mostly for links.
+To avoid repetetion of adding full path for each link, we could take advantage of [reference-style-links](https://daringfireball.net/projects/markdown/syntax#link) syntax in markdown.
+
+For Example:
+
+```markdown
+## Section one
+
+.....
+
+REST ... [create_action][metadata-create-action] or
+[update_action][metadata-update-action] metadata APIs ...
+[request_transform][RequestTransformation] field ...:
+
+....
+
+## Section two
+
+.....
+
+REST ... [create_action][metadata-create-action] or
+[update_action][metadata-update-action] metadata APIs ...
+[request_transform][RequestTransformation] field ...:
+
+....
+
+
+<!-- Shared Link Variables -->
+
+[metadata-create-action]: /graphql/core/api-reference/metadata-api/actions.mdx#metadata-create-action
+[metadata-update-action]: /graphql/core/api-reference/metadata-api/actions.mdx#metadata-update-action
+[RequestTransformation]: /graphql/core/api-reference/syntax-defs.mdx#requesttransformation
+
+```
+
+
+## Run docs build
+
+Run the docs build in the end again with `yarn build` and make sure there are no errors/warnings because of any inconsitencies etc.

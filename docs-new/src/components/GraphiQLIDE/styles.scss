@@ -1,0 +1,138 @@
+
+/*** GraphiQL overrides ***/
+
+.graphiql {
+  margin-bottom: 20px;
+
+  .query, .response, .variables {
+    display: none;
+  }
+
+  .graphiql-container {
+    min-height: 325px;
+    border: 1px solid var(--ifm-border-color);
+    -webkit-box-shadow: -1px 2px 10px 2px rgba(217, 217, 217, 1);
+    -moz-box-shadow: -1px 2px 10px 2px rgba(217, 217, 217, 1);
+    box-shadow: -1px 2px 10px 2px rgba(217, 217, 217, 1);
+  }
+
+  &.with-vars .graphiql-container {
+    min-height: 375px;
+  }
+
+  .topBarWrap {
+    height: 0;
+  }
+
+  .execute-button-wrap {
+    z-index: 3;
+    top: -2px;
+    left: calc(50% - 50px);
+    margin: 0 !important;
+    height: 28px !important;
+  }
+
+  .execute-button {
+    height: 28px !important;
+    width: 28px !important;
+
+    svg {
+      position: relative;
+      top: -3px;
+      left: -3px;
+    }
+  }
+
+  .CodeMirror {
+    font-family: var(--ifm-font-family-monospace);
+    font-size: var(--ifm-code-font-size);
+  }
+
+  .CodeMirror pre {
+    padding: 0 15px;
+  }
+
+  .CodeMirror-lines {
+    padding: 15px 0 !important;
+  }
+
+  .CodeMirror-gutter-wrapper, .CodeMirror-gutters {
+    display: none;
+  }
+
+  .title, .docExplorerShow, .toolbar, &:not(.with-vars) .variable-editor {
+    display: none !important;
+  }
+
+  .variable-editor .variable-editor-title {
+    line-height: 18px;
+    font-size: 16px;
+    padding: 2px 10px;
+    div:not(:first-child) {
+      display: none !important;
+    }
+  }
+
+  &.view-only .execute-button {
+    display: none !important;
+  }
+}
+/*** GraphiQL overrides END ***/
+
+
+html[data-theme='dark'] {
+  .graphiql .graphiql-container {
+    border: 1px solid var(--ifm-border-color);
+    -webkit-box-shadow: -1px 2px 10px 2px rgba(24, 26, 28, 1);
+    -moz-box-shadow: -1px 2px 10px 2px rgba(24, 26, 28, 1);
+    box-shadow: -1px 2px 10px 2px rgba(24, 26, 28, 1);
+    .secondary-editor-title {
+      background-color: var(--color-gray-78);
+      color: var(--color-gray-4);
+      div {
+        color: inherit !important;
+      }
+    }
+    .secondary-editor-title, .resultWrap {
+      border-color: var(--color-gray-78);
+    }
+  }
+
+  /*
+      Name:       dracula
+      Author:     Michael Kaminsky (http://github.com/mkaminsky11)
+      Original dracula color scheme by Zeno Rocha (https://github.com/zenorocha/dracula-theme)
+  */
+
+  .cm-s-dracula.CodeMirror, .cm-s-dracula .CodeMirror-gutters {
+    background-color: var(--color-gray-86) !important;
+    color: #f8f8f2 !important;
+    border: none;
+  }
+  .cm-s-dracula .CodeMirror-gutters { color: #282a36; }
+  .cm-s-dracula .CodeMirror-cursor { border-left: solid thin #f8f8f0; }
+  .cm-s-dracula .CodeMirror-linenumber { color: #6D8A88; }
+  .cm-s-dracula .CodeMirror-selected { background: rgba(255, 255, 255, 0.10); }
+  .cm-s-dracula .CodeMirror-line::selection, .cm-s-dracula .CodeMirror-line > span::selection, .cm-s-dracula .CodeMirror-line > span > span::selection { background: rgba(255, 255, 255, 0.10); }
+  .cm-s-dracula .CodeMirror-line::-moz-selection, .cm-s-dracula .CodeMirror-line > span::-moz-selection, .cm-s-dracula .CodeMirror-line > span > span::-moz-selection { background: rgba(255, 255, 255, 0.10); }
+  .cm-s-dracula span.cm-comment { color: #6272a4; }
+  .cm-s-dracula span.cm-string, .cm-s-dracula span.cm-string-2 { color: #f1fa8c; }
+  .cm-s-dracula span.cm-number { color: #bd93f9; }
+  .cm-s-dracula span.cm-variable { color: #50fa7b; }
+  .cm-s-dracula span.cm-variable-2 { color: white; }
+  .cm-s-dracula span.cm-def { color: #50fa7b; }
+  .cm-s-dracula span.cm-operator { color: #ff79c6; }
+  .cm-s-dracula span.cm-keyword { color: #ff79c6; }
+  .cm-s-dracula span.cm-punctuation { color: var(--color-gray-12); }
+  .cm-s-dracula span.cm-atom { color: #bd93f9; }
+  .cm-s-dracula span.cm-meta { color: #f8f8f2; }
+  .cm-s-dracula span.cm-tag { color: #ff79c6; }
+  .cm-s-dracula span.cm-attribute { color: #50fa7b; }
+  .cm-s-dracula span.cm-qualifier { color: #50fa7b; }
+  .cm-s-dracula span.cm-property { color: #66d9ef; }
+  .cm-s-dracula span.cm-builtin { color: #50fa7b; }
+  .cm-s-dracula span.cm-variable-3, .cm-s-dracula span.cm-type { color: #ffb86c; }
+
+  .cm-s-dracula .CodeMirror-activeline-background { background: rgba(255,255,255,0.1); }
+  .cm-s-dracula .CodeMirror-matchingbracket { text-decoration: underline; color: white !important; }
+}
