@@ -1,0 +1,80 @@
+---
+description: Deploy Hasura GraphQL engine on Koyeb Serverless Platform with Docker
+keywords:
+  - hasura
+  - docs
+  - deployment
+  - koyeb
+  - postgresql
+  - firecracker
+sidebar_position: 11
+sidebar_label: Using Koyeb Serverless Platform
+---
+
+import Thumbnail from "@site/src/components/Thumbnail";
+
+# Deploying Hasura GraphQL engine on Koyeb
+
+## Introduction
+
+This guide explains how to deploy the Hasura GraphQL engine on the [Koyeb Serverless Platform](https://koyeb.com).
+
+## Prerequisites
+
+To successfully follow and complete this guide, you need:
+
+- A PostgreSQL database to use as the Hasura GraphQL engine backend.
+- A [Koyeb account](https://app.koyeb.com) to deploy and run the Hasura GraphQL engine.
+
+## Deploy Hasura GraphQL engine on Koyeb
+
+To deploy the Hasura GraphQL engine on Koyeb, we use the `hasura/graphql-engine` Docker image.
+
+On the Koyeb control panel, click the **Create App** button.
+You land on the Koyeb App creation form.
+
+<Thumbnail
+   src="/img/graphql/core/deployment/koyeb-hasura-app-creation.png"
+   alt="Koyeb control panel"
+/>
+
+1. Fill the `Docker image` field with `hasura/graphql-engine`.
+
+2. In the *Ports* section, change the export port from `80` to `8080`, which is the port the `hasura/graphql-engine` Docker image app is
+   listening on. This setting is required to let Koyeb know which port your application is listening to and properly route incoming HTTP requests.
+   If you want the Hasura GraphQL engine to be available on a specific path, you can change the default one (`/`) to the path of your choice.
+
+3. In the *Environment variables* section, configure the environment variables required to properly run the Hasura GraphQL engine.
+
+   - HASURA_GRAPHQL_DATABASE_URL: The environment variable containing the PostgreSQL URL, i.e. `postgres://<user>:<password>@<host>:<port>/<database>`.
+     To store this value which contains sensitive information, we strongly recommend configuring the environment variable using Koyeb secrets instead of
+     storing it as a plaintext value. Secrets are encrypted at rest. They are ideal to store sensitive data like API keys, OAuth tokens, etc.
+   - HASURA_GRAPHQL_ENABLE_CONSOLE: Set to `true`. This will expose and allow you to access the Hasura console.
+   - HASURA_GRAPHQL_ADMIN_SECRET: The secret to access the Hasura Graphql admin. As for the `HASURA_GRAPHQL_DATABASE_URL`, we strongly recommend using
+     a secret to store this value.
+
+4. Give your App a name, i.e `hasura-demo`, and click **Create App**.
+
+The deployment should be up and running in a few seconds.
+
+
+## Access the Hasura console
+
+Once your Koyeb App is deployed, you can click the App link in the Koyeb control panel to access the Hasura console.
+
+<Thumbnail
+   src="/img/graphql/core/deployment/koyeb-hasura-service.png"
+   alt="Koyeb control panel"
+/>
+
+```bash
+https://<your-app-name>-<your-org-name>.koyeb.app/
+```
+
+At any time, you can track your Hasura service status in the Koyeb control panel and visualize the Hasura GraphQL engine web service logs in the
+**Logs** tab of your service.
+
+## References
+
+- [Koyeb Docs](https://koyeb.com/docs>)
+- [Koyeb Hasura tutorial](https://www.koyeb.com/tutorials/deploy-the-hasura-graphql-engine-to-expose-and-create-apis-from-your-databases-on-koyeb)

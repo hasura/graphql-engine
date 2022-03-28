@@ -1,0 +1,209 @@
+---
+sidebar_label: Customise auto-generated fields
+sidebar_position: 9
+description: Use custom field names for Postgres in Hasura
+keywords:
+  - hasura
+  - docs
+  - postgres
+  - schema
+  - custom field name
+  - rename
+---
+
+import Thumbnail from "@site/src/components/Thumbnail";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Postgres: Customise auto-generated field names
+
+## Introduction
+
+Hasura auto-generates GraphQL field names based on your database table
+and column names. If you'd like to change the defaults, it is possible
+to override and rename the auto-generated table and column field names
+exposed over the GraphQL API.
+
+:::tip Supported from
+
+This feature is supported in versions `v1.0.0-beta.8` and later.
+
+:::
+
+## Expose columns with a different name in the GraphQL API
+
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
+
+Head to the `Data -> [table-name] -> Modify`. On the relevant field,
+click `Edit` and change the GraphQL field name to a name of your choice.
+
+<Thumbnail
+  src="/img/graphql/core/schema/custom-field-name-column.png"
+  alt="Customise GraphQL field name"
+/>
+
+</TabItem>
+<TabItem value="cli" label="CLI">
+
+You can customize auto-generated field names in the `tables.yaml` file
+inside the `metadata` directory:
+
+```yaml {4-6}
+- table:
+    schema: public
+    name: author
+  configuration:
+    column_config:
+      addr:
+        custom_name: address
+```
+
+Apply the metadata by running:
+
+```bash
+hasura metadata apply
+```
+
+</TabItem>
+<TabItem value="api" label="API">
+
+A custom field name can be set for a column via the following 2 methods:
+
+1.  passing a [Table Config](/graphql/core/api-reference/syntax-defs.mdx#table-config) with the [ColumnConfig](/graphql/core/api-reference/syntax-defs.mdx#columnconfig) to the
+    [pg_track_table](/graphql/core/api-reference/metadata-api/table-view.mdx#metadata-pg-track-table) API while tracking a table:
+
+    ```http
+    POST /v1/metadata HTTP/1.1
+    Content-Type: application/json
+    X-Hasura-Role: admin
+
+    {
+      "type": "pg_track_table",
+      "args": {
+        "source": "<db_name>",
+        "table": "author",
+        "configuration": {
+          "column_config": {
+            "addr": {
+              "custom_name": "address"
+            }
+          }
+        }
+      }
+    }
+    ```
+
+2.  using the [pg_set_table_customization](/graphql/core/api-reference/metadata-api/table-view.mdx#metadata-pg-set-table-customization) API to set the
+    [ColumnConfig](/graphql/core/api-reference/syntax-defs.mdx#columnconfig):
+
+    ```http
+    POST /v1/metadata HTTP/1.1
+    Content-Type: application/json
+    X-Hasura-Role: admin
+
+    {
+      "type": "pg_set_table_customization",
+      "args": {
+        "source": "<db_name>",
+        "table": "author",
+        "column_config": {
+          "addr": {
+            "custom_name": "address"
+          }
+        }
+      }
+    }
+    ```
+
+</TabItem>
+</Tabs>
+
+## Expose table root fields with a different name in the GraphQL API
+
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
+
+Head to the `Data -> [table-name] -> Modify`. Click the `Edit` button in
+the `Custom GraphQL Root Fields` section and define names over which
+you'd like to expose the table root fields.
+
+<Thumbnail
+  src="/img/graphql/core/schema/custom-field-name-root-fields.png"
+  alt="Customise GraphQL root field"
+/>
+
+</TabItem>
+<TabItem value="cli" label="CLI">
+
+You can expose table root fields with a different name in the GraphQL
+API in the `tables.yaml` file inside the `metadata` directory:
+
+```yaml {4-7}
+- table:
+    schema: public
+    name: author
+  configuration:
+    custom_root_fields:
+      select_by_pk: author
+      select: authors
+```
+
+After that, apply the metadata by running:
+
+```bash
+hasura metadata apply
+```
+
+</TabItem>
+<TabItem value="api" label="API">
+
+A custom field name can be set for a table root field via the following
+2 methods:
+
+1.  passing a [Table Config](/graphql/core/api-reference/syntax-defs.mdx#table-config) with the [Custom Root Fields](/graphql/core/api-reference/syntax-defs.mdx#custom-root-fields) names to the
+    [pg_track_table](/graphql/core/api-reference/metadata-api/table-view.mdx#metadata-pg-track-table) API while tracking a table:
+
+    ```http
+    POST /v1/metadata HTTP/1.1
+    Content-Type: application/json
+    X-Hasura-Role: admin
+
+    {
+      "type": "pg_track_table",
+      "args": {
+        "source": "<db_name>",
+        "table": "author",
+        "configuration": {
+          "custom_root_fields": {
+            "select": "authors",
+            "select_by_pk": "author"
+          }
+        }
+      }
+    }
+    ```
+
+2.  using the [pg_set_table_customization](/graphql/core/api-reference/metadata-api/table-view.mdx#metadata-pg-set-table-customization) metadata API to set
+    the [Custom Root Fields](/graphql/core/api-reference/syntax-defs.mdx#custom-root-fields) names
+
+    ```http
+    POST /v1/metadata HTTP/1.1
+    Content-Type: application/json
+    X-Hasura-Role: admin
+
+    {
+      "type": "pg_set_table_customization",
+      "args": {
+        "source": "<db_name>",
+        "table": "author",
+        "custom_root_fields": {
+            "select": "authors",
+            "select_by_pk": "author"
+        }
+      }
+    }
+    ```
+
+</TabItem>
+</Tabs>

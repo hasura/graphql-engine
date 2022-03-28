@@ -1,0 +1,68 @@
+---
+description: Moving project to v2
+keywords:
+  - hasura
+  - docs
+  - project
+  - upgrade
+  - move
+  - v2
+sidebar_position: 18
+---
+
+# Manually moving Hasura Cloud v1.3 projects to Hasura v2.0
+
+## Introduction
+
+Hasura Cloud now creates new projects with Hasura `v2.0` by default. Due
+to some underlying architectural changes in `v2.0`, existing projects
+have not yet been upgraded to `v2.0`.
+
+In the meanwhile it is possible to manually "move" your project to use
+Hasura `v2.0`. You will lose any scheduled events and the history of
+your processed events and async actions in the process though.
+
+Do check the
+[changelog](https://github.com/hasura/graphql-engine/releases) first to
+see what changes and features have been introduced.
+
+## Move existing v1.3 project to a v2.0 project
+
+As it is not possible to actually upgrade your `v1.3` project to `v2.0`,
+you will have to essentially create a new Hasura project with `v2.0` and
+connect it with your database with the same Hasura metadata as in the
+previous project.
+
+### Step 1: Export metadata from existing project
+
+See [exporting metadata](/graphql/core/migrations/manage-metadata.mdx) to get a copy of the
+current Hasura metadata on your project.
+
+Do ensure no further changes are made to the Hasura metadata post this.
+
+### Step 2: Create a v2.0 Cloud project
+
+See `Step 1` of [creating projects](/graphql/cloud/projects/create.mdx) to create a new
+Hasura Cloud `v2.0` project.
+
+### Step 3: Connect your database with the name **default** to the new project
+
+See `Step 2` of [creating projects](/graphql/cloud/projects/create.mdx) to connect your
+existing database to the new project. Please ensure you set the database
+name as `default`.
+
+:::info Note
+
+After connecting a database to a `v2.0` project it will not be usable
+with a `v1.3` project. Hence it is recommended to stop your `v1.3`
+project before doing this.
+
+:::
+
+### Step 4: Apply the exported metadata to the new project
+
+See [applying metadata](/graphql/core/migrations/manage-metadata.mdx) to apply the earlier
+exported metadata to the new project.
+
+Your GraphQL API should now be regenerated as in the earlier `v1.3`
+project.

@@ -1,0 +1,137 @@
+# Working with Docusaurus
+
+Whats better place than the [Docusaurus docs](https://docusaurus.io/docs) site itself?
+
+:::info Guides
+
+Also checkout the [Guides](https://docusaurus.io/docs/category/guides) they are pretty detailed.
+
+Please check the [Advanced Guides](https://docusaurus.io/docs/advanced) to learn in depth about Architecture, Plugins, Routing etc.,
+
+:::
+
+## docusaurus.config.js
+
+All the magic happens here.
+[SEO](https://docusaurus.io/docs/seo),
+[Theme](https://docusaurus.io/docs/api/themes),
+[Plugins](https://docusaurus.io/docs/api/plugins),
+[Navbar](https://docusaurus.io/docs/api/themes/configuration#navbar),
+[Footer](https://docusaurus.io/docs/api/themes/configuration#footer-1),
+[Search Config](https://docusaurus.io/docs/search#using-algolia-docsearch),
+and [what not..](https://docusaurus.io/docs/category/guides)
+
+Please check the [API for all possible config options here](https://docusaurus.io/docs/api/docusaurus-config)
+
+## Cleint API - Components, Hooks etc.,
+
+Please check the [clent API docs](https://docusaurus.io/docs/docusaurus-core) for available React components, hooks & modules.
+
+## Sidebar
+
+### Label & Position
+
+**For Individual Files**
+
+Use of `sidebar_label` and `sidebar_position` frontmatter
+
+```markdown title=graphql/core/actions/create.mdx
+---
+sidebar_label: Creating actions
+sidebar_position: 1
+---
+```
+
+**For Directories (Categories)**
+
+By default, index.mdx doc's - `sidebar_label` & `sidebar_position` will be applied for directories.
+
+To override, please add a `_category_.json` and add the `label` and `position` properties.
+
+```json title=graphql/core/actions/_category_.json
+{
+  "label": "Actions",
+  "position": 3
+}
+```
+
+:::info More about Sidebar
+
+You can also create a custom sidebar and add everthing manually.
+
+Checkout Docusaurus Docs for Sidebar - https://docusaurus.io/docs/sidebar
+
+:::
+
+### index.mdx file only directories
+
+This is known and default behavior from docusaurus. `index` is considered direct link to directory index and won't be visible unless there is one more file.
+
+If you only have an index.mdx file, prefer `directory.mdx` over `directory/index.mdx`.
+
+
+## URL Slug
+
+This only applies for index.mdx files.
+
+index file routes are resolved to `directory/` and not `directory/index`
+
+Use `slug` metadata to manually set the slug to `index`. Please check [this PR on docusaurus](https://github.com/facebook/docusaurus/pull/5830) for more information.
+
+```markdown title="graphql/core/actions/index.mdx"
+---
+slug: index
+---
+```
+
+## Styling
+
+Majority of styles is controlled through css variables - there is a heavy list available (use browser inspect element to see the complete list).
+
+These variables can be overridden and new custom styles to be added in `src/css/custom.scss` and `src/css/_custom-dark.scss` for light and dark themes respectively.
+
+## React Components
+
+Add any new React Components to `src/components/ComponentName` directory. Add `index.tsx` file and use `styles.module.scss` for styling to not let this collide with global styles.
+
+Then this component can be imported with `@site` global directive.
+
+`import ComponentName from '@site/src/components/ComponentName';`
+
+:::tip
+
+Check existing components for a better idea.
+
+:::
+
+
+## Static Assets
+
+All the static assets lives in `static` directory.
+
+| Asset    | Directory      |
+|----------|----------------|
+| Images   | `static/img`   |
+| Fonts    | `static/fonts` |
+| Icons    | `static/icons` |
+
+## Updating to latest Docusaurus Version
+
+Checkout the change log for latest releases and changes involved - https://docusaurus.io/changelog/
+
+Please ensure to check breaking changes and re-swizzle any swizzled components given they are part of breaking changes.
+
+Any [swizzled](https://docusaurus.io/docs/swizzling) component will be cloned to `src/theme`.
+
+**An Example:**
+The `TOCInline` and `TOCItems` components are [swizzled](https://docusaurus.io/docs/swizzling) and custom logic is added.
+
+The custom added logic (`src/theme/TOCInline`, `src/theme/TOCItems`) is indicated by comments - `// Customization START` and `// Customization END`. If reswizzled in future only these blocks need an update.
+
+[`toc` is a flat array](https://docusaurus.io/docs/markdown-features/inline-toc#custom-table-of-contents) and has no concept of nested tree children structure. This behavior is changed in `2.0.0-beta.16`.
+Please check the [Breaking changes that forced us to swizzle](https://docusaurus.io/changelog/2.0.0-beta.16#-breaking-change)
+
+
+## Docusaurus Support
+
+[Join their Discord](https://discordapp.com/invite/docusaurus) and ask in `#help-and-questions`

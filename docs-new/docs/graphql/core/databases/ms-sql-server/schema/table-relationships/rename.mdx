@@ -1,0 +1,86 @@
+---
+sidebar_label: Renaming relationships
+sidebar_position: 2
+description: Rename MS SQL Server relationships in Hasura
+keywords:
+  - hasura
+  - docs
+  - ms sql server
+  - schema
+  - relationship
+  - rename
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+# MS SQL Server: Renaming relationships
+
+An existing relationship can be renamed as follows:
+
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
+
+- Head to `Data -> [table-name] -> Relationships` in the console
+- Drop the existing relationship
+- Recreate the relationship with the new name
+
+</TabItem>
+<TabItem value="cli" label="CLI">
+
+You can rename a relationship by changing the relationship name in the
+`tables.yaml` file inside the `metadata` directory:
+
+```yaml {5}
+- table:
+    schema: public
+    name: articles
+  object_relationships:
+    - name: author
+      using:
+        foreign_key_constraint_on: author_id
+- table:
+    schema: public
+    name: authors
+```
+
+Apply the metadata by running:
+
+```bash
+hasura metadata apply
+```
+
+</TabItem>
+<TabItem value="api" label="API">
+
+You can rename a relationship by using the
+[mssql_rename_relationship metadata API](/graphql/core/api-reference/metadata-api/relationship.mdx#mssql-rename-relationship):
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "mssql_rename_relationship",
+  "args": {
+    "source": "<db_name>",
+    "table": "articles",
+    "name": "article_details",
+    "new_name": "article_detail"
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+:::info Note
+
+You might not be allowed to drop a relationship if it has been
+referenced elsewhere (e.g. in a permissions rule).
+
+In this case you will have to delete the references first, rename the
+relationship, and then re-add the references.
+
+:::

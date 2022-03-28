@@ -1,0 +1,77 @@
+---
+sidebar_label: Config v2
+description: Manage Hasura migrations and metadata
+keywords:
+  - hasura
+  - docs
+  - migration
+  - metadata
+slug: index
+---
+
+# Migrations & Metadata (config v2)
+
+## Introduction
+
+It is a typical requirement to export an existing Hasura "setup" so that
+you can apply it on another instance to reproduce the same setup. For
+example, to achieve a dev -> staging -> production environment promotion
+scenario.
+
+:::info Note
+
+This documentation is for Hasura migrations `config v2`.
+For `config v3`, see [Migrations & Metadata (CI/CD)](/graphql/core/migrations/index.mdx).
+
+:::
+
+## How is Hasura state managed?
+
+Hasura needs 2 pieces of information to recreate your GraphQL API, the
+underlying PG database schema and the Hasura metadata which is used to
+describe the exposed GraphQL API.
+
+The [Hasura CLI](/graphql/core/hasura-cli/index.mdx) lets you manage these pieces of
+information as you build your project via:
+
+### Database migration files
+
+The state of your PG database is managed via incremental SQL migration
+files. These migration files can be applied one after the other to
+achieve the final DB schema.
+
+DB migration files can be generated incrementally and can by applied in
+parts to reach particular checkpoints. They can be used to roll-back the
+DB schema as well.
+
+:::info Note
+
+You can choose to manage database migrations using external tools like
+knex, TypeORM, Django/Rails migrations, etc. as well.
+
+:::
+
+### Hasura metadata files
+
+The state of Hasura metadata is managed via snapshots of the metadata.
+These snapshots can be applied as a whole to configure Hasura to a state
+represented in the snapshot.
+
+Hasura metadata can be exported and imported as a whole.
+
+## Setting up migrations
+
+See [Setting up Hasura migrations (config v2)](/graphql/core/migrations/config-v2/migrations-setup.mdx).
+
+## Advanced use cases
+
+- [Auto-apply migrations/metadata when the server starts (config v2)](/graphql/core/migrations/config-v2/advanced/auto-apply-migrations.mdx)
+- [Writing migrations manually (config v2)](/graphql/core/migrations/config-v2/advanced/writing-migrations-manually.mdx)
+- [Rolling back applied migrations (config v2)](/graphql/core/migrations/config-v2/advanced/rolling-back-migrations.mdx)
+- [Creating a seed data migration (config v2)](/graphql/core/migrations/config-v2/advanced/seed-data-migration.mdx)
+
+## Reference documentation
+
+- [How Hasura migrations work (config v2)](/graphql/core/migrations/config-v2/reference/how-it-works.mdx)
+- [Migration file format](/graphql/core/migrations/config-v2/reference/migration-file-format.mdx)
+- [Metadata format](/graphql/core/migrations/config-v2/reference/metadata-format.mdx)

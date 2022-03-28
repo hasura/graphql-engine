@@ -1,0 +1,34 @@
+---
+slug: index
+description: Set default field values for Postgres in Hasura
+keywords:
+  - hasura
+  - docs
+  - postgres
+  - schema
+  - default value
+---
+
+# Postgres: Setting default values for fields
+
+Let's say you want certain fields to have their values set automatically
+when not explicitly passed. You can do this in the following ways:
+
+
+- [Postgres defaults](/graphql/core/databases/postgres/schema/default-values/postgres-defaults.mdx): configure default
+  values, using fixed values or simple SQL functions, for columns in
+  the table definition. E.g. an auto-incrementing `id`, a `created_at`
+  timestamp, etc.
+- [Custom SQL functions](/graphql/core/databases/postgres/schema/default-values/sql-functions.mdx): set up
+  Postgres triggers which run custom SQL functions/stored procedures
+  to set the values of certain columns on inserts/updates on the
+  table. This is useful to set values of fields which depend on other
+  fields passed in the input. e.g. set `submission_time` of an online
+  quiz as 1 hour from the `start_time`.
+- [Role based column presets](/graphql/core/databases/postgres/schema/default-values/column-presets.mdx): set up presets,
+  using session variables or fixed values, that are applied when a row
+  is created/updated with a particular [user role](/graphql/core/auth/authorization/roles-variables.mdx).
+  E.g. set a `user_id` field automatically from a session
+  variable/authorization header.
+- [Created_at / updated_at timestamps](/graphql/core/databases/postgres/schema/default-values/created-updated-timestamps.mdx):
+  set up `created_at` and `updated_at` timestamp values.

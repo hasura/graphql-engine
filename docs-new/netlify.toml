@@ -1,0 +1,4 @@
+[[redirects]]
+  from = "/*"
+  to = "/docs/:splat"
+  status = 301

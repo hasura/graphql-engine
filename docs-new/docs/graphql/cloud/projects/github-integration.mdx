@@ -1,0 +1,310 @@
+---
+description: GitHub Integration
+keywords:
+  - hasura
+  - docs
+  - project
+  - github
+  - deployment
+  - git
+sidebar_label: GitHub deployment
+sidebar_position: 11
+---
+
+import Thumbnail from "@site/src/components/Thumbnail";
+
+# GitHub Deployment
+
+## Introduction
+
+GitHub integration is intended to improve the CI/CD experience on Hasura
+Cloud. With GitHub integration, you can link a GitHub repository and a
+branch to a Hasura Cloud project and automatically deploy metadata and
+migrations in a given directory to the linked project.
+
+Check out our [Starter
+Kit](https://github.com/hasura/github-integration-starter) to see a few
+example workflows.
+
+:::info Under preview
+
+This feature is currently available for preview. Enhancements to it will
+continue to be made over the coming days. To try it out you can ask for
+early access to the feature from the Hasura Cloud dashboard.
+
+Please do share any feedback you may have regarding any improvements or
+extra capabilities that you would like to see in this feature by raising
+an issue/discussion on our [GitHub repo](https://github.com/hasura/graphql-engine).
+
+:::
+
+## Deployment modes
+
+### Automatic Deployment Mode
+
+With the `Automatic deployment mode`, Hasura Cloud automatically
+triggers a deployment for every commit pushed to the GitHub repository
+from the given branch and directory.
+
+<Thumbnail
+  src="/img/graphql/cloud/projects/automatic-commit-deployment.png"
+  alt="Automatic GitHub deployment"
+  width="900px"
+/>
+
+The Automatic deployment mode also has the `Deploy Now` button which
+allows the user to retry deploying the latest commit.
+
+### Manual Deployment Mode
+
+With `Manual deployment mode`, Hasura Cloud does not automatically
+deploy the commits pushed to the configured branch. The deployment of
+the latest commit in that branch can be triggered manually by clicking
+the `Deploy Now` button.
+
+<Thumbnail
+  src="/img/graphql/cloud/projects/manual-commit-deployment.png"
+  alt="Manual GitHub deployment"
+  width="900px"
+/>
+
+## Initial setup
+
+### Link GitHub account to a Hasura Cloud project
+
+To link a GitHub account, click on the `Sign in with GitHub` button in
+the Git Deployment section of the project details.
+
+<Thumbnail
+  src="/img/graphql/cloud/projects/github-link-account.png"
+  alt="Link GitHub Account"
+  width="900px"
+/>
+
+When you link a new GitHub account, Hasura Cloud installs the Hasura
+Cloud GitHub App on your GitHub account. While authenticating, you can
+choose to grant access to all repositories or to specific repositories
+only.
+
+<Thumbnail
+  src="/img/graphql/cloud/projects/github-grant-access.png"
+  alt="GitHub grant access"
+  width="500px"
+/>
+
+The permissions requested by Hasura Cloud can be viewed in the GitHub
+app settings once you install the app.
+
+Once linked, the GitHub account with the granted scope becomes available
+to all the admins on the project as the session is used to manage the
+GitHub integration from the UI.
+
+### Integrate GitHub repo with a Hasura Cloud project
+
+Specify the GitHub repository, branch and the hasura-project directory
+in the form as shown below.
+
+<Thumbnail
+  src="/img/graphql/cloud/projects/setup-github-integration.png"
+  alt="Setup GitHub Integration"
+  width="900px"
+/>
+
+If the repository that you're looking for doesn't show up in the
+repository list, click `Configure Hasura Cloud on GitHub` to grant
+access to the required repository.
+
+Clicking on the `Setup Git Deployment` button integrates the specified
+GitHub repository, branch and directory with the Hasura Cloud project.
+The details for the integration can be viewed in the `Git Deployment`
+section of project details.
+
+<Thumbnail
+  src="/img/graphql/cloud/projects/github-integration-details.png"
+  alt="Setup GitHub Integration"
+  width="900px"
+/>
+
+## Edit GitHub Integration
+
+Click on the `Edit Deployment` button in the GitHub Deployment section
+to edit the GitHub repository/branch/directory/deployment mode for the
+GitHub integration.
+
+<Thumbnail
+  src="/img/graphql/cloud/projects/edit-github-integration.png"
+  alt="Setup GitHub Integration"
+  width="900px"
+/>
+
+## Deployment Log
+
+User can view the deployed commits and their deployment status in the
+`Deployment Log` section of Git Deployment.
+
+<Thumbnail
+  src="/img/graphql/cloud/projects/deployment-log.png"
+  alt="GitHub deployment log"
+  width="900px"
+/>
+
+## Deployment Process
+
+Once a commit deployment is triggered, the progress for a commit can be
+tracked by clicking on the `View Logs` button in the Deployment Log
+section.
+
+Refer to the following task wise breakdown of the deployment job to
+understand what the job will be doing.
+
+Check the troubleshooting section below and do reach out to support if
+you observe any issues with the deployment process or run into any other
+problems post the deployment.
+
+### Deployment sub-tasks
+
+The following is a task wise breakdown of the commit deployment job.
+
+<Thumbnail
+  src="/img/graphql/cloud/projects/github-deployment-status.png"
+  alt="GitHub deployment Progress"
+  width="500px"
+/>
+
+Each task in the deployment has realtime logs and can be viewed by
+clicking on the `Logs` option for each successful/failed step.
+
+#### Step 1: Fetching Metadata / Migrations
+
+The metadata and migrations are fetched from the GitHub repository and
+validated.
+
+#### Step 2: Applying Metadata
+
+The metadata in the GitHub repository is applied to the server.
+
+#### Step 3: Applying Migrations
+
+The migrations in the GitHub repository are applied to your data
+sources.
+
+#### Step 4: Finalizing Update
+
+The metadata on the server is reloaded and project health is verified
+before finalizing the update.
+
+## Things to check before running your first deployment {#github-integration-pre-checks}
+
+You need to ensure the your Cloud project has been appropriately set up
+to execute the deployment.
+
+-  Ensure all the required Hasura config related and any other custom
+    ENV vars that might be used in the metadata are added to your Cloud
+    project as well.
+-  Ensure that you have connected the required database(s) with the
+    right name and connection params as you have in the metadata to the
+    Cloud project.
+
+## Troubleshooting Failures {#github-integration-troubleshooting}
+
+If a deployment fails, depending on the kind of error, you can fix it by
+retrying the deployment by either updating your metadata and migrations
+with a fix and pushing a commit to deploy again or by just redeploying
+the failed commit after making any required fixes to your project.
+
+The following are some troubleshooting steps to fix some possible errors
+in the deployment sub-tasks:
+
+### Error parsing metadata
+
+-  Nothing has been modified on your project yet so there will be no
+    service impact.
+-  Typically happens due to some issue with the metadata directory
+    structure or the format of the metadata files.
+-  Check the reported error message and fix the issues in the metadata.
+    See [metadata format](/graphql/core/migrations/reference/metadata-format.mdx).
+-  Push the fix to GitHub to redeploy.
+
+### Error parsing migrations
+
+-  Nothing has been modified on your project yet so there will be no
+    service impact.
+-  Typically happens due to some issue with the migration directory
+    structure or the format of the migration files.
+-  Check the reported error message and fix the issues in the
+    migrations. See [migrations format](/graphql/core/migrations/reference/migration-file-format.mdx).
+-  Push the fix to GitHub to redeploy.
+
+### Error applying metadata
+
+-  Nothing has been modified on your project yet so there will be no
+    service impact.
+-  Typically happens due to some invalid metadata (e.g. due to type
+    mismatches, missing required keys, etc.) trying to be applied.
+-  Check the reported error message and fix the issues in the metadata.
+    See [metadata format](/graphql/core/migrations/reference/metadata-format.mdx).
+-  Push the fix to GitHub to redeploy.
+
+### Error applying migrations
+
+-  As your metadata has already been applied but applying your
+    migrations have failed, your project might be in an unhealthy state.
+    If your migrations and metadata had only incremental changes, i.e.
+    no existing objects were modified, you likely won’t have any service
+    impact because existing parts of your metadata are likely to be
+    still valid and your existing functionality will be working as it
+    were.
+-  Look at the underlying database error. Make the appropriate fix
+    depending on the error and redeploy.
+-  Some common errors:
+    -  <em>source with name “default” is inconsistent</em>
+
+        In this situation, most likely either the target project doesn't
+        have the required database connected or the ENV VARS or the
+        database name used to connect the database is not matching in
+        your source and target projects.
+
+        To fix this, use the same ENV VARS and connect the database with
+        the same name in both your projects.
+
+    -  `“relation '<some-object>' already exists”`
+
+        In such situations when you get errors of tables or other
+        objects already existing, this might be because the migration
+        might have been already applied on the database and the project
+        was not yet aware of it.
+
+        To fix this, use the Hasura CLI command
+        `hasura migrate apply --skip-execution --version <migration_version> --endpoint "<cloud_project_endpoint>"`
+        to mark the migration as already applied on the project. Then
+        redeploy the failed commit to continue with further steps.
+
+### Inconsistent metadata after finalizing update
+
+-  It is possible your project might be in an unhealthy state depending
+    on which metadata objects are inconsistent and what migrations were
+    applied. If your metadata and migrations had only incremental
+    changes, i.e. no existing objects were modified, you likely won’t
+    have any service impact because existing parts of your metadata are
+    likely to be still valid and your existing functionality will be
+    working as it were.
+-  Check the logs under `Applying Migrations` and `Finalizing Update`.
+-  In the situation that the applied metadata applied was indeed
+    incorrect, fix the metadata and push a new commit to redeploy.
+-  If objects depending on upstream services are inconsistent, e.g.
+    remote schemas, the upstream service might be unavailable or
+    inconsistent. In this case please fix them and redeploy the commit.
+-  If database objects are inconsistent with errors such as <em>Inconsistent object: no such table/view exists in
+    source: `<table-name>`</em>, it could be because:
+    -  a migration might have been skipped as the project believes its
+        already been applied though its not the case. To fix it, mark
+        the migration as unapplied using the following Hasura CLI
+        command
+        `hasura migrate delete --version <migration_version> --server --database-name <database-name> --endpoint <cloud_project_endpoint>`
+        and redeploy the commit.
+    -  a migration to create the database objects might be missing
+        completely. To fix this create a new migration for creation of
+        the missing objects and push a new commit to redeploy.
+-  A rollback can be done to the previous functioning state of metadata
+    by reverting your metadata changes on your branch and then pushing
+    to redeploy.

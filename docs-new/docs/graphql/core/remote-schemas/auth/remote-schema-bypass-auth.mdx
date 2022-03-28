@@ -1,0 +1,58 @@
+---
+description: Bypassing auth in your remote schema with Hasura
+keywords:
+  - hasura
+  - docs
+  - remote schema
+  - authorization
+  - bypass
+sidebar_position: 4
+---
+
+# Bypassing Hasura's auth for remote schemas
+
+## Introduction
+
+It might be necessary sometimes to bypass Hasura's authentication system (calling the configured webhook, or validating the JWT), for requests that are for a remote GraphQL server.
+
+**For example**, you have a remote GraphQL server which does authentication, i.e. signup and login, and you have added it as a remote schema. In this case, you would not want to perform Hasura's authorization when the user is making a login/signup request.
+
+There is no first-class option to currently do this via any configuration in Hasura. However a similar solution can be achieved by the following workarounds:
+
+## Bypassing webhook authentication
+
+If you have a [webhook authorization setup](/graphql/core/auth/authentication/webhook.mdx), in the normal scenario, your authorization webhook would return `200` on success and `401` if it is either unable to authorize the current request or if the authorization information is absent (like cookie, authorization header etc.)
+
+To bypass the webhook auth:
+
+- the webhook should respond with `200` and `x-hasura-role: anonymous` instead of a `401` when the authorization information is absent or if it fails to resolve the authorization information.
+- when adding the remote schema, check the `Forward all headers from client` option so that the remote server will get the relevant cookie/header (from the client) and the role `anonymous`.
+
+## Bypassing JWT authentication
+
+If you have a [JWT authorization setup](/graphql/core/auth/authentication/jwt.mdx), to bypass the JWT auth:
+
+- your authentication server should generate a static JWT token for `anonymous` i.e. unauthenticated users.
+- when adding the remote schema, check the `Forward all headers from client` option so that the remote server will get the JWT (from the client).
+
+For example, the generated JWT can be:
+
+```json
+{
+  "sub": "0000000000",
+  "iat": 1516239022,
+  "role": "anonymous",
+  "https://hasura.io/jwt/claims": {
+    "x-hasura-allowed-roles": ["anonymous"],
+    "x-hasura-default-role": "anonymous"
+  }
+}
+```
+
+Hasura will get this JWT and successfully validate it. When your remote server receives this JWT, it should specifically validate the JWT and, for example, check for the `role` key in the JWT. If it is set to `anonymous`, then it should consider the request as unauthenticated.
+
+:::info Additional Resources
+
+Data Federation with Hasura - [Watch Webinar](https://hasura.io/events/webinar/data-federation-hasura-graphql/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
+
+:::

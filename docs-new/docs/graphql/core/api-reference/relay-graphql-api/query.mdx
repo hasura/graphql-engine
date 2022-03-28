@@ -1,0 +1,267 @@
+---
+sidebar_label: Query / Subscription
+sidebar_position: 1
+description: Hasura Relay GraphQL API queries and subscriptions API reference
+keywords:
+  - hasura
+  - docs
+  - GraphQL API
+  - API reference
+  - query
+  - subscription
+  - relay
+---
+
+# Relay API Reference - Query / Subscription
+
+## **query** / **subscription** syntax
+
+```none
+query|subscription [<op-name>] {
+  connection-object [([argument])]{
+    connection-object-fields
+  }
+}
+```
+
+| Key               | Required | Schema                                | Description                                                               |
+|-------------------|----------|---------------------------------------|---------------------------------------------------------------------------|
+| op-name           | false    | Value                                 | Name query/subscription for observability                                 |
+| connection-object | true     | [ConnectionObject](#connectionobject) | Name of the table connection                                              |
+| argument          | false    | [Argument](#argument)                 | One or more filter criteria, instructions for sorting order or pagination |
+
+**Example: Relay Query**
+
+```graphql
+query {
+  author_connection(first: 2){
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    edges {
+      cursor
+      node {
+        id
+        name
+        username
+      }
+    }
+  }
+}
+```
+
+**Example: Relay Subscription**
+
+```graphql
+subscription {
+  author_connection(first: 2){
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    edges {
+      cursor
+      node {
+        id
+        name
+        username
+      }
+    }
+  }
+}q
+```
+
+:::info Note
+
+For details of usage, please see [this page](/graphql/core/databases/postgres/schema/relay-schema.mdx).
+
+:::
+
+## Syntax definitions
+
+### ConnectionObject {#connectionobject}
+
+```none
+connection-object {
+  pageInfo: {
+    hasNextPage
+    hasPreviousPage
+    startCursor
+    endCursor
+  }
+  edges: {
+    cursor
+    node: {
+      id
+      field1
+      field2
+      json_field[(path: String)]
+      ..
+      nested object1
+      nested object2
+      aggregate nested object1
+      ..
+    }
+  }
+}
+```
+
+| Field    | Type                   |
+|----------|------------------------|
+| pageInfo | [PageInfo](#pageinfo)! |
+| edges    | \[[Edge](#edge)!\]!    |
+
+:::info Note
+
+For more details on the Relay `connection` object type, refer to the
+[Relay docs](https://relay.dev/graphql/connections.htm#sec-Connection-Types).
+
+:::
+
+### PageInfo {#pageinfo}
+
+Information useful for pagination.
+
+```graphql
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String!
+  endCursor: String!
+}
+```
+
+:::info Note
+
+For more details on the Relay `PageInfo` object type, refer to the
+[Relay docs](https://relay.dev/graphql/connections.htm#sec-undefined.PageInfo).
+
+:::
+
+### Edge {#edge}
+
+Edge is an object type that consists of a [cursor](#cursor) and `node`
+fields. `node` is a table object type which implements the Relay `Node`
+interface.
+
+```graphql
+type tableEdge {
+  cursor: String!
+  node: table!
+}
+```
+
+### Cursor {#cursor}
+
+The cursor field returns a unique non-null String value which is useful
+for [pagination](#paginationexp).
+
+:::info Note
+
+For more details on the Relay `cursor`, refer to the [Relay docs](https://relay.dev/graphql/connections.htm#sec-Cursor).
+
+:::
+
+### Argument
+
+<div className="parsed-literal">
+
+<pre>
+<code>
+<a href="#relaydistinctonexp">DistinctOnExp</a>{` | `}
+<a href="#relaywhereexp">WhereExp</a>{` | `}
+<a href="#relayorderbyexp">OrderByExp</a>{` | `}
+<a href="#relaypaginationexp">PaginationExp</a>
+</code>
+</pre>
+
+</div>
+
+#### DistinctOnExp {#relaydistinctonexp}
+
+Same as the generic [DistinctOnExp](/graphql/core/api-reference/graphql-api/query.mdx#distinctonexp)
+
+#### WhereExp {#relaywhereexp}
+
+Same as the generic [WhereExp](/graphql/core/api-reference/graphql-api/query.mdx#whereexp)
+
+#### OrderByExp {#relayorderbyexp}
+
+Same as the generic [OrderByExp](/graphql/core/api-reference/graphql-api/query.mdx#orderbyexp)
+
+#### PaginationExp {#relaypaginationexp}
+
+**Forward Pagination:**
+
+<div className="parsed-literal">
+
+<pre>
+<code>
+{`first: Integer
+[after: `}<a href="#cursor">Cursor</a>{`]`}
+</code>
+</pre>
+
+</div>
+
+```graphql
+query {
+  article_connection(
+    first: 2
+    after: "eyJpZCIgOiAzfQ=="
+  ){
+    pageInfo {
+      startCursor
+      endCursor
+      hasPreviousPage
+      hasNextPage
+    }
+    edges {
+      cursor
+      node {
+        title
+        content
+        author_id
+      }
+    }
+  }
+}
+```
+
+**Backward Pagination:**
+
+<div className="parsed-literal">
+
+<pre>
+<code>
+{`[last: Integer]
+[before: `}<a href="#cursor">Cursor</a>{`]`}
+</code>
+</pre>
+
+</div>
+
+```graphql
+query {
+  article_connection(
+    last: 2
+    before: "eyJpZCIgOiA0fQ=="
+  ){
+    pageInfo {
+      startCursor
+      endCursor
+      hasPreviousPage
+      hasNextPage
+    }
+    edges {
+      cursor
+      node{
+        title
+        content
+        author_id
+      }
+    }
+  }
+}
+```

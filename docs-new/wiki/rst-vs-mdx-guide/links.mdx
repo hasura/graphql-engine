@@ -1,0 +1,175 @@
+---
+sidebar_position: 4
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Links
+
+Please refer [this](https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html?highlight=links#hyperlinks) to get familiar with links in Sphinx
+
+## External Links
+
+These are straightforward syntax swap as given below.
+
+<Tabs>
+  <TabItem value="sphinx" label="Sphinx - RST" default>
+
+    `Hasura Cloud <https://cloud.hasura.io/signup/>`_
+
+  </TabItem>
+  <TabItem value="docusaurus" label="Docusaurus - MDX">
+
+    [Hasura Cloud](https://cloud.hasura.io/signup/)
+
+  </TabItem>
+</Tabs>
+
+## Internal Links
+
+Sphinx uses `:ref:` to simplify cross-referencing documents. You can read more about how it works in [sphinx docs](https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html#ref-role)
+
+Since MDX doesn't yet support this direct referencing, we have to rely on relative/root relative path resolution for [referencing other documents](https://docusaurus.io/docs/docs-markdown-features#referencing-other-documents).
+
+<Tabs>
+  <TabItem value="sphinx" label="Sphinx - RST" default>
+
+```rest
+// highlight-next-line
+:ref:`cloud_getting_started`
+
+where `cloud_getting_started` is id of the document given at top of RST file.
+
+Link label will by default be title of page. For custom link labels, the syntax might look like below.
+
+// highlight-next-line
+:ref:`Remote schemas <remote_schemas>`
+```
+
+  </TabItem>
+  <TabItem value="docusaurus" label="Docusaurus - MDX">
+
+```markdown
+[Getting Started With Hasura Cloud](../relative/path/to/getting-started-document.mdx)
+
+[Remote Schemas](../relative/path/to/remote-schemas-document.mdx)
+```
+
+  </TabItem>
+</Tabs>
+
+### Root Relative Links
+
+While relative paths works absolutely fine, this can easily lead to an absolute mess when files are moved around. Thus requiring manual effort to fix the paths.
+
+To avoid this scenario, we can use root relative paths. The path will still break when moved around, but it is lot easier to find and replace. Find with old path and replace with new path.
+
+```
+Find `/folder1/subfolder2/doc3.mdx` and replace with `/folder1/newsubfolder4/doc5.mdx`
+```
+
+Since MDX doesn't yet support direct document referencing with `id/ref` unlike sphinx, we need to settle with root relative path linking for now. The root relative link should start at `graphql` directory level.
+
+```
+[MDX Root Relative Link](/rst-vs-mdx-guide/index.mdx#contents-covered)
+```
+
+> [MDX Root Relative Link](/rst-vs-mdx-guide/index.mdx#contents-covered)
+
+:::tip Don't forget the extension!
+
+Make sure to include file extension as MDX links are parsed as a file path and will be resolved correctly.
+
+:::
+
+:::info A quick note on id's in reStructuredText
+
+Similar to how a top level id will resolve to file/document, a sub-section can also have id's and they resolve to a section within the document.
+
+This is similar to using hash in the url (`#sub-section`) to directly link to a section in the page.
+
+While the top level can just be a direct file path. The sub-section (h2's, h3's and stuff) can have id's with special mdx syntax `{#id-for-sub-section}`
+
+![Referencing sub-section in rst vs markdown](/img/rst-vs-mdx-guide/link-sub-section-ids.png)
+
+:::
+
+:::danger be cautious with URL slug
+
+If we add an `id` metadata for the document, the url slug for this page will be overridden to `id` as opposed to default filename. Thus requiring us to set a slug if we intend to leave it default.
+
+So, we can skip the top level id in metadata as it is by default the filename without extension.
+
+Read more about it from [Docusaurus Document Id Section](https://docusaurus.io/docs/docs-introduction#document-id)
+
+:::
+
+To avoid repetetion of adding dull path for each link, we could take advantage of [reference-style-links](https://daringfireball.net/projects/markdown/syntax#link) syntax in markdown.
+
+:::tip Managing repeated Links in same doc
+
+If a same doc is linked in multiple sections, prever keeping it in a variable and reuse for better maintainability.
+
+Add these variables at the end of file for easier reference, and Add a HTML comment `<!-- Shared Link Variables -->` to represent its a variable section.
+
+Please refer [this](https://daringfireball.net/projects/markdown/syntax#link) for better understaning of reference-style-links in markdown.
+
+For Example:
+
+```markdown
+## Section one
+
+.....
+
+REST ... [create_action][metadata-create-action] or
+[update_action][metadata-update-action] metadata APIs ...
+[request_transform][RequestTransformation] field ...:
+
+....
+
+## Section two
+
+.....
+
+REST ... [create_action][metadata-create-action] or
+[update_action][metadata-update-action] metadata APIs ...
+[request_transform][RequestTransformation] field ...:
+
+....
+
+
+<!-- Shared Link Variables -->
+
+[metadata-create-action]: /graphql/core/api-reference/metadata-api/actions.mdx#metadata-create-action
+[metadata-update-action]: /graphql/core/api-reference/metadata-api/actions.mdx#metadata-update-action
+[RequestTransformation]: /graphql/core/api-reference/syntax-defs.mdx#requesttransformation
+
+```
+:::
+
+
+
+## Links in React
+
+Use Docusaurus [Links](https://docusaurus.io/docs/docusaurus-core#link) for linking in React. Works for both internal and external links.
+
+```jsx
+import Link from '@docusaurus/Link';
+
+// Internal Link
+<Link to="/rst-vs-mdx-guide/links#root-relative-links">Root Relative Links</Link>
+
+// External Link
+<Link to="https://hasura.io">Hasura</Link>
+```
+
+<hr />
+
+:::info
+
+React Link's `to` attribute will always accept a URL path and not file path.
+
+Docusaurus catches [broken markdown links](https://docusaurus.io/docs/api/docusaurus-config#onbrokenmarkdownlinks) if enabled
+
+:::

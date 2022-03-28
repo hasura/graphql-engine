@@ -1,0 +1,198 @@
+---
+sidebar_label: Actions
+sidebar_position: 16
+description: Manage actions with the Hasura metadata API
+keywords:
+   - hasura
+   - docs
+   - metadata API
+   - API reference
+   - actions
+---
+
+# Metadata API Reference: Actions
+
+## Introduction
+
+**actions** are user defined mutations with custom business logic.
+
+:::tip Supported from
+
+The metadata API is supported for versions `v2.0.0` and above and
+replaces the older [schema/metadata API](/graphql/core/api-reference/schema-metadata-api/index.mdx).
+
+:::
+
+## create_action {#metadata-create-action}
+
+`create_action` is used to define an action. There shouldn't be an
+existing action with the same name.
+
+Create a synchronous action with name `create_user`:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+   "type":"create_action",
+   "args":{
+      "name":"create_user",
+      "definition":{
+         "kind":"synchronous",
+         "arguments":[
+            {
+               "name":"username",
+               "type":"String!"
+            },
+            {
+               "name":"email",
+               "type":"String!"
+            }
+         ],
+         "output_type":"User",
+         "handler":"https://action.my_app.com/create-user",
+         "timeout":60
+      },
+      "comment": "Custom action to create user"
+   }
+}
+```
+
+### Args syntax {#metadata-create-action-syntax}
+
+| Key        | Required | Schema                                                                                  | Description              |
+|------------|----------|-----------------------------------------------------------------------------------------|--------------------------|
+| name       | true     | [ActionName](/graphql/core/api-reference/syntax-defs.mdx#actionname)                    | Name of the action       |
+| definition | true     | [ActionDefinition](/graphql/core/api-reference/syntax-defs.mdx#actiondefinition)        | Definition of the action |
+| comment    | false    | text                                                                                    | comment                  |
+
+:::info Note
+
+The `GraphQL Types` used in creating an action must be defined before
+via [Custom Types](/graphql/core/api-reference/metadata-api/custom-types.mdx)
+
+:::
+
+## drop_action {#metadata-drop-action}
+
+`drop_action` is used to remove an action. Permissions defined on the
+actions are also dropped automatically.
+
+Drop an action `create_user`:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+   "type":"drop_action",
+   "args":{
+      "name":"create_user",
+      "clear_data": true
+   }
+}
+```
+
+### Args syntax {#metadata-drop-action-syntax}
+
+| Key        | Required | Schema                                                               | Description                                                                                                 |
+|------------|----------|----------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| name       | true     | [ActionName](/graphql/core/api-reference/syntax-defs.mdx#actionname) | Name of the action                                                                                          |
+| clear_data | false    | boolean                                                              | If set to `true` and action kind is `asynchronous`, related data is deleted from catalog. (default: `true`) |
+
+## update_action {#metadata-update-action}
+
+`update_action` is used to update the definition of the action.
+Definition thus provided is replaced with existing one.
+
+Update an action `create_user` by making it's kind to `asynchronous`:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+   "type":"update_action",
+   "args":{
+      "name":"create_user",
+      "definition":{
+         "kind":"asynchronous",
+         "arguments":[
+            {
+               "name":"username",
+               "type":"String!"
+            },
+            {
+               "name":"email",
+               "type":"String!"
+            }
+         ],
+         "output_type":"User",
+         "handler":"https://action.my_app.com/create-user"
+      }
+   }
+}
+```
+
+### Args syntax {#metadata-update-action-syntax}
+
+| Key        | Required | Schema                                                                                  | Description                             |
+|------------|----------|-----------------------------------------------------------------------------------------|-----------------------------------------|
+| name       | true     | [ActionName](/graphql/core/api-reference/syntax-defs.mdx#actionname)                    | Name of the action                      |
+| definition | true     | [ActionDefinition](/graphql/core/api-reference/syntax-defs.mdx#actiondefinition)        | Definition of the action to be replaced |
+
+## create_action_permission {#metadata-create-action-permission}
+
+`create_action_permission` is used to define a permission to make action
+visible for a role.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "create_action_permission",
+  "args": {
+    "action": "create_user",
+    "role": "user"
+  }
+}
+```
+
+### Args syntax {#metadata-create-action-permission-syntax}
+
+| Key     | Required | Schema                                                               | Description        |
+|---------|----------|----------------------------------------------------------------------|--------------------|
+| action  | true     | [ActionName](/graphql/core/api-reference/syntax-defs.mdx#actionname) | Name of the action |
+| role    | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)    | Name of the role   |
+| comment | false    | text                                                                 | comment            |
+
+## drop_action_permission {#metadata-drop-action-permission}
+
+`drop_action_permission` is used to drop a permission defined on an action.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "drop_action_permission",
+  "args": {
+    "action": "create_user",
+    "role": "user"
+  }
+}
+```
+
+### Args syntax {#metadata-drop-action-permission-syntax}
+
+| Key  | Required | Schema                                                                | Description        |
+|------|----------|-----------------------------------------------------------------------|--------------------|
+| name | true     | [ActionName](/graphql/core/api-reference/syntax-defs.mdx#actionname)  | Name of the action |
+| role | true     | [RoleName](/graphql/core/api-reference/syntax-defs.mdx#rolename)     | Name of the role   |

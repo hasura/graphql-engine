@@ -1,0 +1,76 @@
+---
+description: Manage queries on Postgres with Hasura
+keywords:
+  - hasura
+  - docs
+  - postgres
+  - query
+slug: index
+---
+
+# Postgres: Queries
+
+## Introduction
+
+GraphQL queries are used to fetch data from the server.
+
+Hasura GraphQL engine auto-generates queries as part of the GraphQL
+schema from your Postgres schema model. It generates a range of possible
+queries and operators that also work with relationships defined in your
+SQL schema.
+
+All tables of the database tracked by the GraphQL engine can be queried
+over the GraphQL endpoint. If you have a tracked table in your database,
+its query field is added as a nested field under the `query_root` root
+level type.
+
+## Auto-generated query field schema
+
+**For example**, the auto-generated schema for the query field for a
+table `author` looks like the following:
+
+```graphql
+author (
+  distinct_on: [author_select_column]
+  where: author_bool_exp
+  limit: Int
+  offset: Int
+  order_by:  [author_order_by!]
+): [author]
+
+# single object select
+author_by_pk (
+  # all primary key columns args
+  id: Int!
+): author
+```
+
+See the [Query API reference](/graphql/core/api-reference/graphql-api/query.mdx) for the full specifications.
+
+:::info Note
+
+If a table is not in the `public` Postgres schema, the query field will
+be of the format `<schema_name>_<table_name>`.
+
+:::
+
+## Exploring queries
+
+You can explore the entire schema and the available queries using the
+`GraphiQL` interface in the Hasura console.
+
+Let’s take a look at the different queries you can run using the Hasura
+GraphQL engine. We’ll use examples based on a typical author/article
+schema for reference.
+
+- [Simple object queries](/graphql/core/databases/postgres/queries/simple-object-queries.mdx)
+- [Nested object queries](/graphql/core/databases/postgres/queries/nested-object-queries.mdx)
+- [Aggregation queries](/graphql/core/databases/postgres/queries/aggregation-queries.mdx)
+- [Filter query results / search queries](/graphql/core/databases/postgres/queries/query-filters.mdx)
+- [Sort query results](/graphql/core/databases/postgres/queries/sorting.mdx)
+- [Distinct query results](/graphql/core/databases/postgres/queries/distinct-queries.mdx)
+- [Paginate query results](/graphql/core/databases/postgres/queries/pagination.mdx)
+- [Using multiple arguments](/graphql/core/databases/postgres/queries/multiple-arguments.mdx)
+- [Multiple queries in a request](/graphql/core/databases/postgres/queries/multiple-queries.mdx)
+- [Using variables / aliases / fragments / directives](/graphql/core/databases/postgres/queries/variables-aliases-fragments-directives.mdx)
+- [Query performance](/graphql/core/databases/postgres/queries/performance.mdx)

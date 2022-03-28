@@ -1,0 +1,21 @@
+---
+description: Set default field values for MS SQL Server in Hasura
+keywords:
+  - hasura
+  - docs
+  - ms sql server
+  - schema
+  - default value
+slug: index
+---
+
+# MS SQL Server: Setting default values for fields
+
+Let's say you want certain fields to have their values set automatically
+when not explicitly passed. You can do this in the following ways:
+
+- [MS SQL Server defaults](/graphql/core/databases/ms-sql-server/schema/default-values/mssql-defaults.mdx): configure default values,
+  using fixed values or simple SQL functions, for columns in the table definition. E.g. an auto-incrementing `id`, a `created_at` timestamp, etc.
+- [Role based column presets](/graphql/core/databases/ms-sql-server/schema/default-values/mssql-column-presets.mdx): set up presets,
+  using session variables or fixed values, that are applied when a row is created/updated with a particular [user role](/graphql/core/auth/authorization/roles-variables.mdx).
+  E.g. set a `user_id` field automatically from a session variable/authorization header.

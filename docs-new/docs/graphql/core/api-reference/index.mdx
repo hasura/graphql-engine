@@ -1,0 +1,111 @@
+---
+description: Hasura API reference
+keywords:
+  - hasura
+  - docs
+  - API
+  - API reference
+slug: index
+---
+
+# API Reference
+
+## Available APIs
+
+| API                            | Endpoint                                         | Access           |
+|--------------------------------|--------------------------------------------------|------------------|
+| GraphQL                        | [/v1/graphql](#graphql-api)                      | Permission rules |
+| Relay                          | [/v1beta1/relay](#relay-api)                     | Permission rules |
+| Legacy GraphQL                 | [/v1alpha1/graphql](#graphql-api)                | Permission rules |
+| Schema *(> v2.0)*              | [/v2/query](#schema-api)                         | Admin only       |
+| Metadata *(> v2.0)*            | [/v1/metadata](#metadata-api)                    | Admin only       |
+| Schema/Metadata *(deprecated)* | [/v1/query](#schema-metadata-api)     | Admin only       |
+| Restified GQL                  | [/api/rest](#restified-graphql-api)              | GQL REST Routes  |
+| Version                        | [/v1/version](#version-api)                      | Public           |
+| Health                         | [/healthz](#health-check-api)                    | Public           |
+| PG Dump                        | [/v1alpha1/pg_dump](#pg-dump-api)                | Admin only       |
+| Config                         | [/v1alpha1/config](#config-api)                  | Admin only       |
+| Explain                        | [/v1/graphql/explain](#explain-api)              | Admin only       |
+
+### GraphQL API {#graphql-api}
+
+All GraphQL requests for queries, subscriptions and mutations are made to the GraphQL API.
+
+See details at [GraphQL API Reference](/graphql/core/api-reference/graphql-api/index.mdx).
+
+### Relay API {#relay-api}
+
+Hasura exposes a Relay schema for GraphQL requests for queries, subscriptions and mutations.
+
+See docs at [Postgres: Relay schema](/graphql/core/databases/postgres/schema/relay-schema.mdx).
+
+See details at [Relay GraphQL API Reference](/graphql/core/api-reference/relay-graphql-api/index.mdx).
+
+### Schema API {#schema-api}
+
+Hasura exposes a schema API for directly executing SQL on the underlying Postgres.
+
+This is primarily intended to be used as an `admin` API to manage the Hasura schema.
+
+See details at [Schema API Reference](/graphql/core/api-reference/schema-api/index.mdx).
+
+### Metadata API {#metadata-api}
+
+Hasura exposes a metadata API for managing metadata.
+
+This is primarily intended to be used as an `admin` API to manage the Hasura metadata.
+
+See details at [Metadata API Reference](/graphql/core/api-reference/metadata-api/index.mdx).
+
+### Schema / metadata API (Deprecated) {#schema-metadata-api}
+
+Hasura exposes a schema / metadata API for managing metadata for
+permissions/relationships or for directly executing SQL on the underlying Postgres.
+
+This is primarily intended to be used as an `admin` API to manage the
+Hasura schema and metadata.
+
+See details at [Schema / Metadata API Reference (Deprecated)](/graphql/core/api-reference/schema-metadata-api/index.mdx).
+
+### RESTified GraphQL API {#restified-graphql-api}
+
+Hasura allows saved GraphQL queries and mutations to be accesed through a REST interface.
+
+See details at [RESTified GraphQL Endpoints API Reference](/graphql/core/api-reference/restified.mdx).
+
+### Version API {#version-api}
+
+The `/v1/version` is a public endpoint that responds with the current
+server version in JSON format.
+
+See details at [Version API Reference](/graphql/core/api-reference/version.mdx).
+
+### Health check API {#health-check-api}
+
+The `/healthz` is a public endpoint that returns the server health
+status. There's also `/hasura/healthz` available as an alternative,
+which mirrors `/healthz` completely.
+
+See details at [Health check API Reference](/graphql/core/api-reference/health.mdx).
+
+### pg_dump API {#pg-dump-api}
+
+The `/v1alpha1/pg_dump` is an admin-only endpoint that can be used to
+execute `pg_dump` on the Postgres instance connected to Hasura. The
+`pg_dump` CLI tool's argument can be passed as a POST request body to
+the API and the response is sent back to the client.
+
+See details at [PG Dump API Reference](/graphql/core/api-reference/pgdump.mdx).
+
+### Config API {#config-api}
+
+`v1alpha1/config` is an admin-only endpoint to get the current server configuration.
+
+See details at [Config API Reference](/graphql/core/api-reference/config.mdx).
+
+### Explain API {#explain-api}
+
+`v1/graphql/explain` returns the Postgres plan for a query or
+subscription based on the defined permissions.
+
+See details at [Explain API Reference](/graphql/core/api-reference/explain.mdx).

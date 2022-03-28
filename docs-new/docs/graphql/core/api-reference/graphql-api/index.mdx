@@ -1,0 +1,87 @@
+---
+description: Hasura GraphQL API reference
+keywords:
+  - hasura
+  - docs
+  - GraphQL API
+  - reference
+slug: index
+---
+
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+
+# GraphQL API Reference
+
+## Introduction
+
+All GraphQL requests for queries, subscriptions and mutations are made
+to the GraphQL API.
+
+## Endpoint
+
+All requests are `POST` requests to the `/v1/graphql` (or
+`/v1alpha1/graphql`) endpoint.
+
+:::info Note
+
+The `/v1/graphql` endpoint returns HTTP 200 status codes for all
+responses. This is a **breaking** change from the `/v1alpha1/graphql`
+behaviour, where request errors and internal errors were responded with
+4xx and 5xx status codes.
+
+:::
+
+## Request types
+
+The following types of requests can be made using the GraphQL API:
+
+- [Query / Subscription](/graphql/core/api-reference/graphql-api/query.mdx ) 
+- [Mutation](/graphql/core/api-reference/graphql-api/mutation.mdx)
+
+
+## Batching requests
+
+The GraphQL API provides support for batched requests (which can be a
+combination of queries and mutations). The endpoint will accept an array
+of operations in place of a single operation, and return an array of
+corresponding responses.
+
+**Example:** using a client which supports batching (such as Apollo
+Client), we can send two query operations in one request:
+
+<GraphiQLIDE
+  query={`query first {
+  author(where: {id: {_eq: 1}}) {
+    id
+    name
+  }
+}
+query second {
+  author(where: {id: {_eq: 2}}) {
+    id
+    name
+  }
+}`}
+response={`[
+  {
+    "data": {
+      "author": [
+        {
+          "id": 1,
+          "name": "Justin"
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "author": [
+        {
+          "id": 2,
+          "name": "Beltran"
+        }
+      ]
+    }
+  }
+]`}
+/>

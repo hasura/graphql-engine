@@ -1,0 +1,251 @@
+---
+sidebar_label: Upsert
+sidebar_position: 2
+description: Use upsert mutations on MS SQL Server with Hasura
+keywords:
+  - hasura
+  - docs
+  - ms sql server
+  - mutation
+  - upsert
+---
+
+import GraphiQLIDE from "@site/src/components/GraphiQLIDE";
+
+# MS SQL Server: Upsert mutation
+
+## Introduction
+
+An upsert query ensures the given set of rows are present in the
+database, inserting new rows or updating existing rows as necessary,
+subject to certain criteria.
+
+## Convert insert mutation to upsert
+
+:::info Note
+
+Only tables with **update** permissions are **upsertable**. i.e. a
+table's update permissions are respected before updating an existing row
+in case of a match.
+
+:::
+
+To convert an [insert mutation](/graphql/core/databases/ms-sql-server/mutations/insert.mdx) into an upsert,
+you need to use the `if_matched` argument to specify:
+
+- the **columns to be matched** for each row using the `match_columns`
+  field.
+- the **columns to be updated** in the case of a match using the
+  `update_columns` field.
+- a **condition** for updating the column using the `where` field, and
+
+The value of the `update_columns` field determines the behaviour of the
+upsert request as shown via the use cases below.
+
+## Upsert is not a substitute for update
+
+The upsert functionality is sometimes confused with the update
+functionality. However, they work slightly differently. An upsert
+mutation is used in the case when it's not clear if the respective row
+is already present in the database. If it's known that the row is
+present in the database, `update` is the functionality to use.
+
+For an upsert, **all columns that are necessary for an insert are
+required**.
+
+**How it works**
+
+1.  MS SQL Server tries to insert a row (hence all the required columns
+    need to be present)
+2.  If this fails because of some match, it updates the specified
+    columns
+
+If not all required columns are present, an error like
+`NULL value unexpected for <not-specified-column>` can occur.
+
+## Update selected columns on match
+
+The `update_columns` field can be used to specify which columns to
+update in case a match occurs.
+
+**Example**: Insert a new object in the `article` table or, if the value
+of the `title` column matches a a `title` value in an existing row,
+update the `content` column of the existing article:
+
+<GraphiQLIDE
+  query={`mutation upsert_article {
+  insert_article (
+    objects: [
+      {
+        title: "Article 1",
+        content: "Updated article 1 content",
+        published_on: "2018-10-12"
+      }
+    ],
+    if_matched: {
+      match_columns: title,
+      update_columns: content
+    }
+  ) {
+    returning {
+      id
+      title
+      content
+      published_on
+    }
+  }
+}`}
+  response={`{
+  "data": {
+    "insert_article": {
+      "returning": [
+        {
+          "id": 1,
+          "title": "Article 1",
+          "content": "Updated article 1 content",
+          "published_on": "2018-06-15"
+        }
+      ]
+    }
+  }
+}`}
+/>
+
+Note that the `published_on` column is left unchanged as it wasn't
+present in `update_columns`.
+
+:::info Note
+
+If `match_columns` is an **empty array** there is no basis for comparing
+new rows to existing rows. Thus the mutation will always **insert** the
+values and will never update any rows.
+
+**Example**: Insert a new object into the article table, will not match
+on columns because none are specified.
+
+<GraphiQLIDE
+  query={`mutation upsert_article {
+  insert_article (
+    objects: [
+      {
+        title: "Article 1",
+        content: "Article 1 content",
+        published_on: "2018-10-12"
+      }
+    ],
+    if_matched: {
+      match_columns: [],
+      update_columns: content
+    }
+  ) {
+    returning {
+      id
+      title
+      content
+      published_on
+    }
+  }
+}`}
+  response={`{
+  "data": {
+    "insert_article": {
+      "returning": [
+        {
+          "id": 3,
+          "title": "Article 1",
+          "content": "Article 1 content",
+          "published_on": "2018-06-15"
+        }
+      ]
+    }
+  }
+}`}
+/>
+
+This query is equivalent to a simple insert without an `if_matched`
+clause.
+
+:::
+
+## Update selected columns on match subject to a filter
+
+A `where` condition can be added to the `if_matched` clause to check a
+condition before making the update in case a match occurs.
+
+**Example**: Insert a new object in the `article` table, or if the value
+of the `title` column matches a a `title` value in an existing row,
+update the `published_on` column specified in `update_columns` only if
+the previous `published_on` value is lesser than the new value:
+
+<GraphiQLIDE
+  query={`mutation upsert_article {
+  insert_article (
+    objects: [
+      {
+        title: "Article 2",
+        published_on: "2018-10-12"
+      }
+    ],
+    if_matched: {
+      match_columns: title,
+      update_columns: published_on,
+      where: {
+        published_on: {_lt: "2018-10-12"}
+      }
+    }
+  ) {
+    returning {
+      id
+      title
+      published_on
+    }
+  }
+}`}
+  response={`{
+  "data": {
+    "insert_article": {
+      "returning": [
+        {
+          "id": 2,
+          "title": "Article 2",
+          "published_on": "2018-10-12"
+        }
+      ]
+    }
+  }
+}`}
+/>
+
+## Ignore request on match
+
+If `update_columns` is an **empty array** then on match the changes are
+ignored.
+
+**Example**: Insert a new author object into the author table, unless
+there already exists an author with the same name.
+
+<GraphiQLIDE
+  query={`mutation upsert_author {
+  insert_author(
+    objects: [
+      { name: "John" }
+    ],
+    if_matched: {
+      match_columns: name,
+      update_columns: []
+    }
+  ) {
+    affected_rows
+  }
+}`}
+  response={`
+  "data": {
+    "insert_author": {
+      "affected_rows": 0
+    }
+  }
+}`}
+/>
+
+In this case, the insert mutation is ignored because there is a match
+and `update_columns` is empty.
