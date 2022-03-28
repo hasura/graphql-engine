@@ -3,9 +3,9 @@ import clsx from 'clsx';
 import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+import hasuras from '@site/static/img/hasuras.png';
+import VersionedLink from '@site/src/components/VersionedLink';
 import styles from './index.module.scss';
-import hasuras from '../../static/img/hasuras.png';
-import VersionedLink from '../components/VersionedLink';
 
 function HomepageHeader() {
   const {siteConfig} = useDocusaurusContext();
@@ -29,13 +29,8 @@ function HomepageHeader() {
         <div className={styles.links}>
           <Link
             className="button button--secondary button--lg"
-            to="/wiki/page-structure">
-            Docs Page Structure
-          </Link>
-          <Link
-            className="button button--warning button--lg"
-            to="/wiki/category/rst-vs-mdx-guide/">
-            RST vs MDX Guide
+            to="/wiki/">
+            Docs Wiki
           </Link>
         </div>
         <img src={hasuras} alt="Hasuras Image" />

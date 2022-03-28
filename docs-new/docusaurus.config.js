@@ -17,6 +17,7 @@ const config = {
   favicon: '/docs/img/favicon.png',
   organizationName: 'hasura',
   projectName: 'graphql-engine',
+  staticDirectories:["static", "public"],
 
   presets: [
     [
@@ -68,8 +69,7 @@ const config = {
     [
       path.resolve(__dirname, './src/plugins/docusaurus-plugin-segment-analytics'),
       {
-        // prodKey: 'RQXoHRpNcmBKllUDihjDjupGv4AHn5TB',
-        prodKey: 'FRKElp5cyMax6GAdM8OVyNMIFVppgEgp', // use devKey only until goes live
+        prodKey: 'RQXoHRpNcmBKllUDihjDjupGv4AHn5TB',
         devKey: 'FRKElp5cyMax6GAdM8OVyNMIFVppgEgp',
         // boolean (defaults to false) on whether you want
         // to include analytics.page() automatically
@@ -77,6 +77,12 @@ const config = {
         // number (defaults to 50); time to wait after a route update before it should
         // track the page change, to implement this, make sure your `trackPage` property is set to `true`
         // trackPageDelay: 50,
+      }
+    ],
+    [
+      path.resolve(__dirname, './src/plugins/docusaurus-plugin-google-gtm'),
+      {
+        trackingID: "GTM-PF5MQ2Z",
       }
     ],
   //   [
