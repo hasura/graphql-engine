@@ -1,4 +1,4 @@
 [[redirects]]
   from = "/*"
-  to = "/docs-testing/:splat"
+  to = "/docs/:splat"
   status = 301
