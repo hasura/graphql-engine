@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import 'antd/dist/antd.css';
+import 'antd/lib/tree/style/index.css';
 import { Tree as AntTree } from 'antd';
 import { GraphQLSchema } from 'graphql';
 import { EventDataNode } from 'antd/lib/tree';
