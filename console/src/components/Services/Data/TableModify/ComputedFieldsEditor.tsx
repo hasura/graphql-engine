@@ -2,14 +2,11 @@ import React from 'react';
 import AceEditor from 'react-ace';
 import { OptionTypeBase } from 'react-select';
 
-import {
-  emptyStringToNull,
-  getConfirmation,
-} from '../../../Common/utils/jsUtils';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import RawSqlButton from '../Common/Components/RawSqlButton';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
-import { dataSource } from '../../../../dataSources';
+import { dataSource, getComputedFieldComment } from '../../../../dataSources';
 import { deleteComputedField, saveComputedField } from './ModifyActions';
 import { fetchFunctionInit } from '../DataActions';
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
@@ -17,6 +14,7 @@ import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import { Dispatch } from '../../../../types';
 import { Schema, ComputedField, Table } from '../../../../dataSources/types';
 import { PGFunction } from '../../../../dataSources/services/postgresql/types';
+import { CommentInput } from '../Common/Components/CommentInput';
 
 interface ComputedFieldsEditorProps {
   table: Table;
@@ -36,6 +34,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
   source,
 }) => {
   const computedFields = table.computed_fields;
+  const defaultSchemaForCurrentDataSource = dataSource.defaultRedirectSchema;
 
   const emptyComputedField: ComputedField = {
     computed_field_name: '',
@@ -79,7 +78,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
 
       origComputedFieldName = origComputedField.computed_field_name;
       origComputedFieldFunctionName = origComputedFieldFunctionDef.name;
-      origComputedFieldComment = origComputedField.comment;
+      origComputedFieldComment = getComputedFieldComment(origComputedField);
     }
 
     const computedFieldFunctionDef = computedField.definition.function;
@@ -90,7 +89,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
     const computedFieldTableRowArg = computedField.definition.table_argument;
     const computedFieldTableSessionArg =
       computedField.definition.session_argument;
-    const computedFieldComment = computedField.comment;
+    const computedFieldComment = getComputedFieldComment(computedField);
 
     let computedFieldFunction = null;
     let computedFieldFunctionDefinition = '';
@@ -272,12 +271,12 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
         setComputedFieldsState(newState);
       };
 
-      const handleCommentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const handleCommentChange = (comment: string | null) => {
         const newState = [...stateComputedFields];
 
         newState[i] = {
           ...newState[i],
-          comment: emptyStringToNull(e.target.value),
+          comment,
         };
 
         setComputedFieldsState(newState);
@@ -312,6 +311,12 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
 
         setComputedFieldsState(newState);
       };
+
+      const qualifiedFunctionName =
+        computedFieldFunctionSchema === defaultSchemaForCurrentDataSource ||
+        !computedFieldFunctionSchema
+          ? `"${computedFieldFunctionName}"`
+          : `"${computedFieldFunctionSchema}.${computedFieldFunctionName}"`;
 
       return (
         <div>
@@ -430,12 +435,11 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
             <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
               Comments:{' '}
             </h4>
-            <input
-              type="text"
-              value={computedFieldComment ?? ''}
+            <CommentInput
+              value={computedFieldComment}
               onChange={handleCommentChange}
-              className="form-control"
-              data-test="computed-field-comment-input"
+              defaultComment={`A computed field, executes function ${qualifiedFunctionName}`}
+              dataTest="computed-field-comment-input"
             />
           </div>
         </div>

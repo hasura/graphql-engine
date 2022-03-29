@@ -16,6 +16,7 @@ export type SelectInputSplitFieldProps = {
   selectDisabled?: boolean;
   inputValue: string;
   selectValue: string;
+  dataTest?: string;
   inputOnChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   selectOnChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
 };
@@ -31,6 +32,7 @@ export const SelectInputSplitField = ({
   selectValue,
   inputOnChange,
   selectOnChange,
+  dataTest,
 }: SelectInputSplitFieldProps) => {
   return (
     <div
@@ -69,6 +71,7 @@ export const SelectInputSplitField = ({
           borderTopLeftRadius: 0,
           borderBottomLeftRadius: 0,
         }}
+        data-test={dataTest}
         placeholder={placeholder}
         value={inputValue}
         disabled={inputDisabled}

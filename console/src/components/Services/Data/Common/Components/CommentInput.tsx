@@ -4,6 +4,7 @@ import React, { ChangeEvent, useCallback } from 'react';
 export type CommentProps = {
   value: string | null;
   defaultComment: string;
+  dataTest?: string;
   onChange: (comment: string | null) => void;
 };
 
@@ -16,6 +17,7 @@ export const CommentInput = ({
   value,
   defaultComment,
   onChange,
+  dataTest = '',
 }: CommentProps) => {
   const inputValue = value ?? '';
   const selectValue = value === '' ? 'Disabled' : 'Value';
@@ -44,6 +46,7 @@ export const CommentInput = ({
 
   return (
     <SelectInputSplitField
+      dataTest={dataTest}
       inputValue={inputValue}
       inputOnChange={inputOnChange}
       inputDisabled={selectValue === 'Disabled'}

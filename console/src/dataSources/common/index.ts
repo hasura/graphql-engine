@@ -11,6 +11,7 @@ import {
   Relationship,
   Table,
   NormalizedTable,
+  ComputedField,
 } from '../types';
 
 export type Operations = 'insert' | 'select' | 'update' | 'delete';
@@ -383,6 +384,10 @@ export const getTableCustomColumnNames = (table: Table) => {
 
 export const getTableCustomColumnName = (table: Table, columnName: string) =>
   table?.configuration?.column_config?.[columnName]?.custom_name;
+
+export const getComputedFieldComment = (
+  computedField: ComputedField
+): string | null => computedField.comment ?? null;
 
 export const findFKConstraint = (curTable: Table, column: string[]) => {
   const fkConstraints = curTable.foreign_key_constraints;

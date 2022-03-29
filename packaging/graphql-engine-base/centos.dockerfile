@@ -1,6 +1,6 @@
-# DATE VERSION: 2022-03-10
+# DATE VERSION: 2022-03-29
 # Modify the above date version (YYYY-MM-DD) if you want to rebuild the image for security updates
-FROM quay.io/centos/centos:stream8
+FROM quay.io/centos/centos@sha256:fc45f3e1294861d7851a87be152b1ab2350d755744077d5ee12b725fdca87919
 
 # TARGETPLATFORM is automatically set up by docker buildx based on the platform we are targetting for
 ARG TARGETPLATFORM
@@ -10,9 +10,11 @@ RUN groupadd -g 1001 hasura && useradd -m -u 1001 -g hasura hasura
 # Dependencies taken from: https://github.com/0x777/hge-arm-dockerfiles/blob/master/hge.df
 # Below are the CentOS libraries matching these apt/Debian ones:
 # libpq5 libkrb5-3 libnuma1 ca-certificates (ca-certificates are preinstalled)
-RUN yum update -y \
+#
+# yum/dnf update/upgrade uses --nobest option to tackle https://github.com/hasura/graphql-engine-mono/issues/4096
+RUN yum update -y --nobest \
   && yum install -y dnf \
-  && dnf upgrade \
+  && dnf upgrade -y --nobest \
   && dnf -qy module disable postgresql \
   && dnf install -y \
   krb5-libs \

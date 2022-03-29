@@ -2,8 +2,9 @@ ARG BASE_IMAGE
 
 FROM ${BASE_IMAGE}
 
+# yum update uses --nobest option to tackle https://github.com/hasura/graphql-engine-mono/issues/4096
 RUN { apt-get update && apt-get install -y netcat; } \
-  || { yum update -y && yum install -y nc; }
+  || { yum update -y --nobest && yum install -y nc; }
 
 # When a non-root user without home directory is trying to use the cli-migrations image
 # then hasura cli will try to create .hasura folder at the root but would fail due to permissions

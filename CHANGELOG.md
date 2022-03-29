@@ -144,7 +144,7 @@ function:
 
 - server: Fix regression in MSSQL subscriptions when results exceed 2048 characters (#8267)
 - server: refactor OpenAPI spec generation (for REST endpoints) and improve OpenAPI warnings
-- server: add jsonb to string cast support - postgres 
+- server: add jsonb to string cast support - postgres
 - server: improve performance of fetching postgres catalog metadata for tables and functions
 - server: Queries present in query collections, such as allow-list, and rest-endpoints are now validated (against the schema)
 - server: Redesigns internal implementation of webhook transforms.
@@ -163,6 +163,7 @@ function:
 - console: fix redirect to metadata status page on conflicting inherited role
 - console: add feature flags section in settings
 - console: fix malformed request with REST live preview section
+- console: improved support for setting comments on computed fields
 - cli: fix inherited roles metadata not being updated when dropping all roles (#7872)
 - cli: add support for customization field in sources metadata (#8292)
 - ci: ubuntu and centos flavoured graphql-engine images are now available

@@ -136,7 +136,7 @@ export type ComputedField = {
     table_argument: string | null;
     session_argument: string | null;
   };
-  comment: string | null;
+  comment?: string | null;
 };
 
 export type IndexType = 'btree' | 'hash' | 'gin' | 'gist' | 'spgist' | 'brin';

@@ -447,7 +447,7 @@ export const mergeLoadSchemaDataPostgres = (
       );
 
       computed_fields = (metadataTable?.computed_fields || []).map(field => ({
-        comment: field.comment || '',
+        comment: field.comment,
         computed_field_name: field.name,
         name: field.name,
         table_name: tableName,
@@ -748,7 +748,7 @@ export const mergeDataCitus = (
       );
 
       computed_fields = (metadataTable?.computed_fields ?? []).map(field => ({
-        comment: field.comment || '',
+        comment: field.comment,
         computed_field_name: field.name,
         name: field.name,
         table_name: tableName,
