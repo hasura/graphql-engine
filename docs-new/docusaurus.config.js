@@ -59,6 +59,7 @@ const config = {
         routeBasePath: "wiki",
         editUrl: ({ docPath }) => `https://github.com/hasura/graphql-engine/edit/master/docs-new/docs/${docPath}`,
         editCurrentVersion: true,
+        docItemComponent: require.resolve('./src/components/CustomDocItem/CustomDocItemWiki.tsx'),
         // disableVersioning: true,
         breadcrumbs: false,
         sidebarPath: require.resolve('./sidebarsWiki.js'),
@@ -107,6 +108,7 @@ const config = {
         disableSwitch: false,
         respectPrefersColorScheme: true,
       },
+      image: 'https://graphql-engine-cdn.hasura.io/assets/hge-docs/og-image.png',
       prism: {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
