@@ -80,7 +80,9 @@ runSQL_ f (BigQueryRunSQL query source) = do
       (_scConnection sourceConfig)
       Execute.BigQuery {query = LT.fromStrict query, parameters = mempty}
   case result of
-    Left queryError -> throw400 BigQueryError (tshow queryError) -- TODO: Pretty print the error type.
+    Left executeProblem -> do
+      let errorMessage = Execute.executeProblemMessage executeProblem
+      throwError (err400 BigQueryError errorMessage) {qeInternal = Just $ ExtraInternal $ J.toJSON executeProblem}
     Right recordSet ->
       pure
         ( encJFromJValue

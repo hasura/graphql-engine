@@ -57,9 +57,14 @@ data TokenProblem
   | BearerTokenSignsaferProblem Cry.Error
   | TokenFetchProblem JSONException
   | TokenRequestNonOK Status
-  deriving (Show)
+  deriving (Show, Generic)
 
-instance Exception TokenProblem
+tokenProblemMessage :: TokenProblem -> Text
+tokenProblemMessage = \case
+  BearerTokenDecodeProblem _ -> "Cannot decode bearer token"
+  BearerTokenSignsaferProblem _ -> "Cannot sign bearer token"
+  TokenFetchProblem _ -> "JSON exception occurred while fetching token"
+  TokenRequestNonOK status -> "HTTP request to fetch token failed with status " <> tshow status
 
 data ServiceAccountProblem
   = ServiceAccountFileDecodeProblem String
@@ -194,7 +199,11 @@ getUsableToken BigQueryConnection {_bqServiceAccount, _bqAccessTokenMVar} =
 
 data BigQueryProblem
   = TokenProblem TokenProblem
-  deriving (Show)
+  deriving (Show, Generic)
+
+instance J.ToJSON BigQueryProblem where
+  toJSON (TokenProblem tokenProblem) =
+    J.object ["token_problem" J..= tokenProblemMessage tokenProblem]
 
 runBigQuery ::
   (MonadIO m) =>

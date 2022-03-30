@@ -10,6 +10,7 @@ import Data.Text qualified as T
 import Data.Text.Lazy qualified as LT
 import Data.Text.Lazy.Builder qualified as LT
 import Data.Vector qualified as V
+import Hasura.Backends.BigQuery.Execute (executeProblemMessage)
 import Hasura.Backends.BigQuery.Execute qualified as DataLoader
 import Hasura.Backends.BigQuery.FromIr qualified as BigQuery
 import Hasura.Backends.BigQuery.Plan
@@ -72,7 +73,7 @@ bqDBQueryPlan userInfo sourceName sourceConfig qrf = do
             sourceConfig
             (DataLoader.executeSelect select)
         case result of
-          Left err -> throw500WithDetail "dataLoader error" $ Aeson.toJSON $ show err
+          Left err -> throw500WithDetail (executeProblemMessage err) $ Aeson.toJSON err
           Right recordSet -> pure $! recordSetToEncJSON (BigQuery.selectCardinality select) recordSet
   pure $ DBStepInfo @'BigQuery sourceName sourceConfig (Just (selectSQLTextForExplain select)) action
 

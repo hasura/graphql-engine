@@ -99,7 +99,7 @@ the right-hand side for now.
     </tr>
   </tbody>
   </table>
-  
+
   This change is a result of fixing some inconsistencies and edge cases in writing array elements.
   `hasura metadata export` will write YAML files in this format going forward. Also, note that this is a backwards compatible change.
 
@@ -146,6 +146,7 @@ the right-hand side for now.
 
 ### Bug fixes and improvements
 
+- server: improve error messages in BigQuery upstream API exceptions
 - server: Fix regression in MSSQL subscriptions when results exceed 2048 characters (#8267)
 - server: refactor OpenAPI spec generation (for REST endpoints) and improve OpenAPI warnings
 - server: add jsonb to string cast support - postgres (#7818)
@@ -161,9 +162,9 @@ the right-hand side for now.
 - console: enable searching tables within a schema in the sidebar
 - console: add support for setting comments on the custom root fields of tables/views
 - console: add feature flags section in settings
-- console: improved support for setting comments on computed fields 
+- console: improved support for setting comments on computed fields
 - console: fix the ability to create updated_at and created_at in the modify page (#8239)
-- console: fix an issue where editing both a column's name and its GraphQL field name at the same time caused an error 
+- console: fix an issue where editing both a column's name and its GraphQL field name at the same time caused an error
 - console: fix redirect to metadata status page on inconsistent inherited role (#8343)
 - console: fix malformed request with REST live preview section (#8316)
 - cli: add support for customization field in sources metadata (#8292)

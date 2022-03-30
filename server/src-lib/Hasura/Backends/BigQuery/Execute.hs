@@ -8,10 +8,12 @@ module Hasura.Backends.BigQuery.Execute
     runExecute,
     streamBigQuery,
     executeBigQuery,
+    executeProblemMessage,
     BigQuery (..),
     OutputValue (..),
     RecordSet (..),
     Execute,
+    ExecuteProblem (..),
     Value (..),
     FieldNameText (..),
   )
@@ -19,13 +21,12 @@ where
 
 import Control.Applicative
 import Control.Concurrent
-import Control.Exception.Safe
 import Control.Monad.Except
 import Control.Monad.Reader
 import Data.Aeson ((.!=), (.:), (.:?), (.=))
 import Data.Aeson qualified as Aeson
 import Data.Aeson.Types qualified as Aeson
-import Data.ByteString.Lazy qualified as L
+import Data.ByteString.Lazy qualified as BL
 import Data.Foldable
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Maybe
@@ -111,12 +112,24 @@ data ExecuteReader = ExecuteReader
 data ExecuteProblem
   = GetJobDecodeProblem String
   | CreateQueryJobDecodeProblem String
-  | ErrorResponseFromServer Status L.ByteString
-  | GetJobResultsProblem SomeException
-  | RESTRequestNonOK Status Text
-  | CreateQueryJobProblem SomeException
   | ExecuteRunBigQueryProblem BigQueryProblem
-  deriving (Show)
+  | RESTRequestNonOK Status Aeson.Value
+  deriving (Generic)
+
+instance Aeson.ToJSON ExecuteProblem where
+  toJSON =
+    Aeson.object . \case
+      GetJobDecodeProblem err -> ["get_job_decode_problem" Aeson..= err]
+      CreateQueryJobDecodeProblem err -> ["create_query_job_decode_problem" Aeson..= err]
+      ExecuteRunBigQueryProblem problem -> ["execute_run_bigquery_problem" Aeson..= problem]
+      RESTRequestNonOK _ resp -> ["rest_request_non_ok" Aeson..= resp]
+
+executeProblemMessage :: ExecuteProblem -> Text
+executeProblemMessage = \case
+  GetJobDecodeProblem err -> "Fetching bigquery job status, cannot decode  HTTP response; " <> tshow err
+  CreateQueryJobDecodeProblem err -> "Creating bigquery job, cannot decode HTTP response: " <> tshow err
+  ExecuteRunBigQueryProblem _ -> "Cannot execute bigquery request"
+  RESTRequestNonOK status _ -> "Bigquery HTTP request failed with status code " <> tshow (statusCode status) <> " and status message " <> tshow (statusMessage status)
 
 -- | Execute monad; as queries are performed, the record sets are
 -- stored in the map.
@@ -458,7 +471,7 @@ getJobResults ::
   Fetch ->
   m (Either ExecuteProblem JobResultsResponse)
 getJobResults conn Job {jobId, location} Fetch {pageToken} =
-  liftIO (catchAny run (pure . Left . GetJobResultsProblem))
+  liftIO run
   where
     -- https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/get#query-parameters
     url =
@@ -484,7 +497,7 @@ getJobResults conn Job {jobId, location} Fetch {pageToken} =
               Left e -> pure (Left (GetJobDecodeProblem e))
               Right results -> pure (Right results)
             _ -> do
-              pure $ Left $ RESTRequestNonOK (getResponseStatus resp) $ lbsToTxt $ getResponseBody resp
+              pure $ Left $ RESTRequestNonOK (getResponseStatus resp) $ parseAsJsonOrText $ getResponseBody resp
     extraParameters = pageTokenParam
       where
         pageTokenParam =
@@ -526,11 +539,7 @@ instance Aeson.FromJSON Job where
 -- | Create a job asynchronously.
 createQueryJob :: MonadIO m => BigQueryConnection -> BigQuery -> m (Either ExecuteProblem Job)
 createQueryJob conn BigQuery {..} =
-  liftIO
-    ( do
-        -- putStrLn (LT.unpack query)
-        catchAny run (pure . Left . CreateQueryJobProblem)
-    )
+  liftIO run
   where
     run = do
       let url =
@@ -551,7 +560,7 @@ createQueryJob conn BigQuery {..} =
                 Left e -> pure (Left (CreateQueryJobDecodeProblem e))
                 Right job -> pure (Right job)
             _ -> do
-              pure $ Left $ RESTRequestNonOK (getResponseStatus resp) $ lbsToTxt $ getResponseBody resp
+              pure $ Left $ RESTRequestNonOK (getResponseStatus resp) $ parseAsJsonOrText $ getResponseBody resp
     body =
       Aeson.encode
         ( Aeson.object
@@ -577,6 +586,11 @@ createQueryJob conn BigQuery {..} =
                   ]
             ]
         )
+
+-- | Parse given @'ByteString' as JSON value. If not a valid JSON, encode to plain text.
+parseAsJsonOrText :: BL.ByteString -> Aeson.Value
+parseAsJsonOrText bytestring =
+  fromMaybe (Aeson.String $ lbsToTxt bytestring) $ Aeson.decode bytestring
 
 --------------------------------------------------------------------------------
 -- Consuming recordset from big query
