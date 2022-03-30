@@ -19,12 +19,12 @@
 </span><span id="line-19"></span><span class="hs-comment">--</span><span>
 </span><span id="line-20"></span><span class="hs-comment">-- NOTE: This type shouldn't _need_ ser/de instances, but they're imposed by</span><span>
 </span><span id="line-21"></span><span class="hs-comment">-- the 'Backend' class.</span><span>
-</span><span id="line-22"></span><span id="local-6989586621688310350"><span id="local-6989586621688310351"></span></span><span class="hs-keyword">data</span><span> </span><span id="Value"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Scalar.Value.html#Value"><span class="hs-identifier hs-var">Value</span></a></span></span><span>
+</span><span id="line-22"></span><span id="local-6989586621688311600"><span id="local-6989586621688311601"></span></span><span class="hs-keyword">data</span><span> </span><span id="Value"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Scalar.Value.html#Value"><span class="hs-identifier hs-var">Value</span></a></span></span><span>
 </span><span id="line-23"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="String"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Scalar.Value.html#String"><span class="hs-identifier hs-var">String</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-24"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Number"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Scalar.Value.html#Number"><span class="hs-identifier hs-var">Number</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span>
 </span><span id="line-25"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Boolean"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Scalar.Value.html#Boolean"><span class="hs-identifier hs-var">Boolean</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-26"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Null"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Scalar.Value.html#Null"><span class="hs-identifier hs-var">Null</span></a></span></span><span>
-</span><span id="line-27"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cNull"><span id="%24cBoolean"><span id="%24cNumber"><span id="%24cString"><span id="%24tValue"><span id="local-6989586621688310317"><span id="local-6989586621688310319"><span id="local-6989586621688310321"><span id="local-6989586621688310323"><span id="local-6989586621688310325"><span id="local-6989586621688310327"><span id="local-6989586621688310329"><span id="local-6989586621688310331"><span id="local-6989586621688310333"><span id="local-6989586621688310335"><span id="local-6989586621688310337"><span id="local-6989586621688310339"><span id="local-6989586621688310341"><span id="local-6989586621688310343"><span class="annot"><span class="annottext">Typeable Value
+</span><span id="line-27"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cNull"><span id="%24cBoolean"><span id="%24cNumber"><span id="%24cString"><span id="%24tValue"><span id="local-6989586621688311567"><span id="local-6989586621688311569"><span id="local-6989586621688311571"><span id="local-6989586621688311573"><span id="local-6989586621688311575"><span id="local-6989586621688311577"><span id="local-6989586621688311579"><span id="local-6989586621688311581"><span id="local-6989586621688311583"><span id="local-6989586621688311585"><span id="local-6989586621688311587"><span id="local-6989586621688311589"><span id="local-6989586621688311591"><span id="local-6989586621688311593"><span class="annot"><span class="annottext">Typeable Value
 DataType
 Constr
 Typeable Value
@@ -175,7 +175,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; Value -&gt; c Value
 $cp1Data :: Typeable Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688310307"><span id="local-6989586621688310309"><span class="annot"><span class="annottext">Value -&gt; Value -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688311557"><span id="local-6989586621688311559"><span class="annot"><span class="annottext">Value -&gt; Value -&gt; Bool
 (Value -&gt; Value -&gt; Bool) -&gt; (Value -&gt; Value -&gt; Bool) -&gt; Eq Value
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: Value -&gt; Value -&gt; Bool
@@ -190,7 +190,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Value x -&gt; Value
 $cfrom :: forall x. Value -&gt; Rep Value x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688310288"><span id="local-6989586621688310290"><span id="local-6989586621688310292"><span id="local-6989586621688310294"><span id="local-6989586621688310296"><span id="local-6989586621688310298"><span id="local-6989586621688310300"><span class="annot"><span class="annottext">Eq Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688311538"><span id="local-6989586621688311540"><span id="local-6989586621688311542"><span id="local-6989586621688311544"><span id="local-6989586621688311546"><span id="local-6989586621688311548"><span id="local-6989586621688311550"><span class="annot"><span class="annottext">Eq Value
 Eq Value
 -&gt; (Value -&gt; Value -&gt; Ordering)
 -&gt; (Value -&gt; Value -&gt; Bool)
@@ -228,7 +228,7 @@ $c&lt; :: Value -&gt; Value -&gt; Bool
 compare :: Value -&gt; Value -&gt; Ordering
 $ccompare :: Value -&gt; Value -&gt; Ordering
 $cp1Ord :: Eq Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688310281"><span id="local-6989586621688310283"><span id="local-6989586621688310285"><span class="annot"><span class="annottext">Int -&gt; Value -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688311531"><span id="local-6989586621688311533"><span id="local-6989586621688311535"><span class="annot"><span class="annottext">Int -&gt; Value -&gt; ShowS
 [Value] -&gt; ShowS
 Value -&gt; String
 (Int -&gt; Value -&gt; ShowS)
@@ -242,14 +242,14 @@ $cshow :: Value -&gt; String
 showsPrec :: Int -&gt; Value -&gt; ShowS
 $cshowsPrec :: Int -&gt; Value -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-28"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688310277"><span class="annot"><span class="annottext">Eq Value
+</span><span id="line-28"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688311527"><span class="annot"><span class="annottext">Eq Value
 Eq Value -&gt; (Accesses -&gt; Value -&gt; Value -&gt; Bool) -&gt; Cacheable Value
 Accesses -&gt; Value -&gt; Value -&gt; Bool
 forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; Value -&gt; Value -&gt; Bool
 $cunchanged :: Accesses -&gt; Value -&gt; Value -&gt; Bool
 $cp1Cacheable :: Eq Value
-</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688310272"><span id="local-6989586621688310274"><span class="annot"><span class="annottext">Value -&gt; Parser [Value]
+</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688311522"><span id="local-6989586621688311524"><span class="annot"><span class="annottext">Value -&gt; Parser [Value]
 Value -&gt; Parser Value
 (Value -&gt; Parser Value)
 -&gt; (Value -&gt; Parser [Value]) -&gt; FromJSON Value
@@ -259,7 +259,7 @@ parseJSONList :: Value -&gt; Parser [Value]
 $cparseJSONList :: Value -&gt; Parser [Value]
 parseJSON :: Value -&gt; Parser Value
 $cparseJSON :: Value -&gt; Parser Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688310267"><span id="local-6989586621688310269"><span class="annot"><span class="annottext">Int -&gt; Value -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688311517"><span id="local-6989586621688311519"><span class="annot"><span class="annottext">Int -&gt; Value -&gt; Int
 Value -&gt; Int
 (Int -&gt; Value -&gt; Int) -&gt; (Value -&gt; Int) -&gt; Hashable Value
 forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -267,12 +267,12 @@ hash :: Value -&gt; Int
 $chash :: Value -&gt; Int
 hashWithSalt :: Int -&gt; Value -&gt; Int
 $chashWithSalt :: Int -&gt; Value -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688310264"><span class="annot"><span class="annottext">Value -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688311514"><span class="annot"><span class="annottext">Value -&gt; ()
 (Value -&gt; ()) -&gt; NFData Value
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: Value -&gt; ()
 $crnf :: Value -&gt; ()
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688310255"><span id="local-6989586621688310257"><span id="local-6989586621688310259"><span id="local-6989586621688310261"><span class="annot"><span class="annottext">[Value] -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688311505"><span id="local-6989586621688311507"><span id="local-6989586621688311509"><span id="local-6989586621688311511"><span class="annot"><span class="annottext">[Value] -&gt; Encoding
 [Value] -&gt; Value
 Value -&gt; Encoding
 Value -&gt; Value
@@ -298,20 +298,20 @@ $ctoJSON :: Value -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-29"></span><span>
 </span><span id="line-30"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Scalar.Value.html#Value"><span class="hs-identifier hs-type">API.Value</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Scalar.Value.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-31"></span><span>  </span><span id="local-6989586621688310251"><span class="annot"><span class="annottext">from :: Value -&gt; Value
+</span><span id="line-31"></span><span>  </span><span id="local-6989586621688311501"><span class="annot"><span class="annottext">from :: Value -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-32"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Scalar.Value.html#String"><span class="hs-identifier hs-type">API.String</span></a></span><span> </span><span id="local-6989586621688310248"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688310248"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><span id="line-32"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Scalar.Value.html#String"><span class="hs-identifier hs-type">API.String</span></a></span><span> </span><span id="local-6989586621688311498"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688311498"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><a href="Hasura.Backends.DataWrapper.IR.Scalar.Value.html#String"><span class="hs-identifier hs-var">String</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688310248"><span class="hs-identifier hs-var">txt</span></a></span><span>
-</span><span id="line-33"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Scalar.Value.html#Number"><span class="hs-identifier hs-type">API.Number</span></a></span><span> </span><span id="local-6989586621688310246"><span class="annot"><span class="annottext">Double
-</span><a href="#local-6989586621688310246"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Double -&gt; Value
+</span><a href="#local-6989586621688311498"><span class="hs-identifier hs-var">txt</span></a></span><span>
+</span><span id="line-33"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Scalar.Value.html#Number"><span class="hs-identifier hs-type">API.Number</span></a></span><span> </span><span id="local-6989586621688311496"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621688311496"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Double -&gt; Value
 </span><a href="Hasura.Backends.DataWrapper.IR.Scalar.Value.html#Number"><span class="hs-identifier hs-var">Number</span></a></span><span> </span><span class="annot"><span class="annottext">Double
-</span><a href="#local-6989586621688310246"><span class="hs-identifier hs-var">x</span></a></span><span>
-</span><span id="line-34"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Scalar.Value.html#Boolean"><span class="hs-identifier hs-type">API.Boolean</span></a></span><span> </span><span id="local-6989586621688310244"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688310244"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
+</span><a href="#local-6989586621688311496"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-34"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Scalar.Value.html#Boolean"><span class="hs-identifier hs-type">API.Boolean</span></a></span><span> </span><span id="local-6989586621688311494"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688311494"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
 </span><a href="Hasura.Backends.DataWrapper.IR.Scalar.Value.html#Boolean"><span class="hs-identifier hs-var">Boolean</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688310244"><span class="hs-identifier hs-var">p</span></a></span><span>
+</span><a href="#local-6989586621688311494"><span class="hs-identifier hs-var">p</span></a></span><span>
 </span><span id="line-35"></span><span>    </span><span class="annot"><span class="annottext">Value
 </span><a href="Hasura.Backends.DataWrapper.API.V0.Scalar.Value.html#Null"><span class="hs-identifier hs-var">API.Null</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="Hasura.Backends.DataWrapper.IR.Scalar.Value.html#Null"><span class="hs-identifier hs-var">Null</span></a></span><span>

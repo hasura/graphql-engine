@@ -15,12 +15,12 @@
 </span><span id="line-15"></span><span class="hs-comment">-- | query-tags format as defined in the Spec &lt;https://google.github.io/sqlcommenter/spec/#sql-commenter&gt;</span><span>
 </span><span id="line-16"></span><span class="annot"><a href="Data.SqlCommenter.html#sqlCommenterGoogle"><span class="hs-identifier hs-type">sqlCommenterGoogle</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#QueryTagsAttributes"><span class="hs-identifier hs-type">QueryTagsAttributes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#QueryTagsComment"><span class="hs-identifier hs-type">QueryTagsComment</span></a></span><span>
 </span><span id="line-17"></span><span id="sqlCommenterGoogle"><span class="annot"><span class="annottext">sqlCommenterGoogle :: QueryTagsAttributes -&gt; QueryTagsComment
-</span><a href="Data.SqlCommenter.html#sqlCommenterGoogle"><span class="hs-identifier hs-var hs-var">sqlCommenterGoogle</span></a></span></span><span> </span><span id="local-6989586621688342383"><span class="annot"><span class="annottext">QueryTagsAttributes
-</span><a href="#local-6989586621688342383"><span class="hs-identifier hs-var">qtAttributes</span></a></span></span><span>
+</span><a href="Data.SqlCommenter.html#sqlCommenterGoogle"><span class="hs-identifier hs-var hs-var">sqlCommenterGoogle</span></a></span></span><span> </span><span id="local-6989586621688343654"><span class="annot"><span class="annottext">QueryTagsAttributes
+</span><a href="#local-6989586621688343654"><span class="hs-identifier hs-var">qtAttributes</span></a></span></span><span>
 </span><span id="line-18"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">[Attribute] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">[Attribute]
-</span><a href="#local-6989586621688342381"><span class="hs-identifier hs-var">attributes</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">QueryTagsComment
+</span><a href="#local-6989586621688343652"><span class="hs-identifier hs-var">attributes</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">QueryTagsComment
 </span><a href="Hasura.QueryTags.html#emptyQueryTagsComment"><span class="hs-identifier hs-var">emptyQueryTagsComment</span></a></span><span>
 </span><span id="line-19"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; QueryTagsComment
@@ -28,28 +28,28 @@ forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
 forall a. (Semigroup a, IsString a) =&gt; a -&gt; a
-</span><a href="#local-6989586621688342378"><span class="hs-identifier hs-var">createSQLComment</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688343649"><span class="hs-identifier hs-var">createSQLComment</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; Text -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty Attribute -&gt; Text
 </span><a href="Data.SqlCommenter.html#generateCommentTags"><span class="hs-identifier hs-var">generateCommentTags</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Attribute] -&gt; NonEmpty Attribute
 forall a. [a] -&gt; NonEmpty a
 </span><span class="hs-identifier hs-var">NE.fromList</span></span><span> </span><span class="annot"><span class="annottext">[Attribute]
-</span><a href="#local-6989586621688342381"><span class="hs-identifier hs-var">attributes</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688343652"><span class="hs-identifier hs-var">attributes</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-20"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-21"></span><span>    </span><span id="local-6989586621688342378"><span class="annot"><span class="annottext">createSQLComment :: a -&gt; a
-</span><a href="#local-6989586621688342378"><span class="hs-identifier hs-var hs-var">createSQLComment</span></a></span></span><span> </span><span id="local-6989586621688342375"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621688342375"><span class="hs-identifier hs-var">comment</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
+</span><span id="line-21"></span><span>    </span><span id="local-6989586621688343649"><span class="annot"><span class="annottext">createSQLComment :: a -&gt; a
+</span><a href="#local-6989586621688343649"><span class="hs-identifier hs-var hs-var">createSQLComment</span></a></span></span><span> </span><span id="local-6989586621688343646"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688343646"><span class="hs-identifier hs-var">comment</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
 </span><span class="hs-string">&quot; /* &quot;</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621688342375"><span class="hs-identifier hs-var">comment</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
+</span><a href="#local-6989586621688343646"><span class="hs-identifier hs-var">comment</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">a
 </span><span class="hs-string">&quot; */&quot;</span></span><span>
-</span><span id="line-22"></span><span>    </span><span id="local-6989586621688342381"><span class="annot"><span class="annottext">attributes :: [Attribute]
-</span><a href="#local-6989586621688342381"><span class="hs-identifier hs-var hs-var">attributes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">QueryTagsAttributes -&gt; [Attribute]
+</span><span id="line-22"></span><span>    </span><span id="local-6989586621688343652"><span class="annot"><span class="annottext">attributes :: [Attribute]
+</span><a href="#local-6989586621688343652"><span class="hs-identifier hs-var hs-var">attributes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">QueryTagsAttributes -&gt; [Attribute]
 </span><a href="Hasura.QueryTags.html#_unQueryTagsAttributes"><span class="hs-identifier hs-var hs-var">_unQueryTagsAttributes</span></a></span><span> </span><span class="annot"><span class="annottext">QueryTagsAttributes
-</span><a href="#local-6989586621688342383"><span class="hs-identifier hs-var">qtAttributes</span></a></span><span>
+</span><a href="#local-6989586621688343654"><span class="hs-identifier hs-var">qtAttributes</span></a></span><span>
 </span><span id="line-23"></span><span>
 </span><span id="line-24"></span><span class="hs-comment">-- | Default 'Query Tags' format in the Hasura GraphQL Engine</span><span>
 </span><span id="line-25"></span><span class="hs-comment">-- Creates simple 'key=value' pairs of query tags. No sorting, No URL encoding.</span><span>
@@ -57,12 +57,12 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-27"></span><span class="hs-comment">-- are formatted using hte below format</span><span>
 </span><span id="line-28"></span><span class="annot"><a href="Data.SqlCommenter.html#sqlCommenterStandard"><span class="hs-identifier hs-type">sqlCommenterStandard</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#QueryTagsAttributes"><span class="hs-identifier hs-type">QueryTagsAttributes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#QueryTagsComment"><span class="hs-identifier hs-type">QueryTagsComment</span></a></span><span>
 </span><span id="line-29"></span><span id="sqlCommenterStandard"><span class="annot"><span class="annottext">sqlCommenterStandard :: QueryTagsAttributes -&gt; QueryTagsComment
-</span><a href="Data.SqlCommenter.html#sqlCommenterStandard"><span class="hs-identifier hs-var hs-var">sqlCommenterStandard</span></a></span></span><span> </span><span id="local-6989586621688342373"><span class="annot"><span class="annottext">QueryTagsAttributes
-</span><a href="#local-6989586621688342373"><span class="hs-identifier hs-var">qtAttributes</span></a></span></span><span>
+</span><a href="Data.SqlCommenter.html#sqlCommenterStandard"><span class="hs-identifier hs-var hs-var">sqlCommenterStandard</span></a></span></span><span> </span><span id="local-6989586621688343644"><span class="annot"><span class="annottext">QueryTagsAttributes
+</span><a href="#local-6989586621688343644"><span class="hs-identifier hs-var">qtAttributes</span></a></span></span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">[Attribute] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">[Attribute]
-</span><a href="#local-6989586621688342372"><span class="hs-identifier hs-var">attributes</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">QueryTagsComment
+</span><a href="#local-6989586621688343643"><span class="hs-identifier hs-var">attributes</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">QueryTagsComment
 </span><a href="Hasura.QueryTags.html#emptyQueryTagsComment"><span class="hs-identifier hs-var">emptyQueryTagsComment</span></a></span><span>
 </span><span id="line-31"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; QueryTagsComment
@@ -70,48 +70,48 @@ forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
 forall a. (Semigroup a, IsString a) =&gt; a -&gt; a
-</span><a href="#local-6989586621688342371"><span class="hs-identifier hs-var">createSQLComment</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688343642"><span class="hs-identifier hs-var">createSQLComment</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; Text -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty Attribute -&gt; Text
 forall t.
 (ToTxt t, Semigroup t, IsString t) =&gt;
 NonEmpty (t, t) -&gt; Text
-</span><a href="#local-6989586621688342370"><span class="hs-identifier hs-var">generateComment</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Attribute] -&gt; NonEmpty Attribute
+</span><a href="#local-6989586621688343641"><span class="hs-identifier hs-var">generateComment</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Attribute] -&gt; NonEmpty Attribute
 forall a. [a] -&gt; NonEmpty a
 </span><span class="hs-identifier hs-var">NE.fromList</span></span><span> </span><span class="annot"><span class="annottext">[Attribute]
-</span><a href="#local-6989586621688342372"><span class="hs-identifier hs-var">attributes</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688343643"><span class="hs-identifier hs-var">attributes</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-32"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-33"></span><span>    </span><span id="local-6989586621688342370"><span class="annot"><span class="annottext">generateComment :: NonEmpty (t, t) -&gt; Text
-</span><a href="#local-6989586621688342370"><span class="hs-identifier hs-var hs-var">generateComment</span></a></span></span><span> </span><span id="local-6989586621688342369"><span class="annot"><span class="annottext">NonEmpty (t, t)
-</span><a href="#local-6989586621688342369"><span class="hs-identifier hs-var">attr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[t] -&gt; Text
+</span><span id="line-33"></span><span>    </span><span id="local-6989586621688343641"><span class="annot"><span class="annottext">generateComment :: NonEmpty (t, t) -&gt; Text
+</span><a href="#local-6989586621688343641"><span class="hs-identifier hs-var hs-var">generateComment</span></a></span></span><span> </span><span id="local-6989586621688343640"><span class="annot"><span class="annottext">NonEmpty (t, t)
+</span><a href="#local-6989586621688343640"><span class="hs-identifier hs-var">attr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[t] -&gt; Text
 forall t (f :: * -&gt; *). (ToTxt t, Foldable f) =&gt; f t -&gt; Text
 </span><a href="Data.Text.Extended.html#commaSeparated"><span class="hs-identifier hs-var">commaSeparated</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">t
-</span><a href="#local-6989586621688342368"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">t -&gt; t -&gt; t
+</span><a href="#local-6989586621688343639"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">t -&gt; t -&gt; t
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">t
 </span><span class="hs-string">&quot;=&quot;</span></span><span> </span><span class="annot"><span class="annottext">t -&gt; t -&gt; t
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">t
-</span><a href="#local-6989586621688342367"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688342368"><span class="annot"><span class="annottext">t
-</span><a href="#local-6989586621688342368"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688342367"><span class="annot"><span class="annottext">t
-</span><a href="#local-6989586621688342367"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">NonEmpty (t, t) -&gt; [(t, t)]
+</span><a href="#local-6989586621688343638"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688343639"><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621688343639"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688343638"><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621688343638"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">NonEmpty (t, t) -&gt; [(t, t)]
 forall a. NonEmpty a -&gt; [a]
 </span><span class="hs-identifier hs-var">NE.toList</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty (t, t)
-</span><a href="#local-6989586621688342369"><span class="hs-identifier hs-var">attr</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-34"></span><span>    </span><span id="local-6989586621688342371"><span class="annot"><span class="annottext">createSQLComment :: a -&gt; a
-</span><a href="#local-6989586621688342371"><span class="hs-identifier hs-var hs-var">createSQLComment</span></a></span></span><span> </span><span id="local-6989586621688342365"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621688342365"><span class="hs-identifier hs-var">comment</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688343640"><span class="hs-identifier hs-var">attr</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-34"></span><span>    </span><span id="local-6989586621688343642"><span class="annot"><span class="annottext">createSQLComment :: a -&gt; a
+</span><a href="#local-6989586621688343642"><span class="hs-identifier hs-var hs-var">createSQLComment</span></a></span></span><span> </span><span id="local-6989586621688343636"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688343636"><span class="hs-identifier hs-var">comment</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
 </span><span class="hs-string">&quot; /* &quot;</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621688342365"><span class="hs-identifier hs-var">comment</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
+</span><a href="#local-6989586621688343636"><span class="hs-identifier hs-var">comment</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">a
 </span><span class="hs-string">&quot; */&quot;</span></span><span>
-</span><span id="line-35"></span><span>    </span><span id="local-6989586621688342372"><span class="annot"><span class="annottext">attributes :: [Attribute]
-</span><a href="#local-6989586621688342372"><span class="hs-identifier hs-var hs-var">attributes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">QueryTagsAttributes -&gt; [Attribute]
+</span><span id="line-35"></span><span>    </span><span id="local-6989586621688343643"><span class="annot"><span class="annottext">attributes :: [Attribute]
+</span><a href="#local-6989586621688343643"><span class="hs-identifier hs-var hs-var">attributes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">QueryTagsAttributes -&gt; [Attribute]
 </span><a href="Hasura.QueryTags.html#_unQueryTagsAttributes"><span class="hs-identifier hs-var hs-var">_unQueryTagsAttributes</span></a></span><span> </span><span class="annot"><span class="annottext">QueryTagsAttributes
-</span><a href="#local-6989586621688342373"><span class="hs-identifier hs-var">qtAttributes</span></a></span><span>
+</span><a href="#local-6989586621688343644"><span class="hs-identifier hs-var">qtAttributes</span></a></span><span>
 </span><span id="line-36"></span><span>
 </span><span id="line-37"></span><span class="hs-comment">-- | Top-level algorithm to generate the string comment from list of</span><span>
 </span><span id="line-38"></span><span class="hs-comment">-- 'Attribute's</span><span>
@@ -119,66 +119,66 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-40"></span><span class="hs-comment">-- See Note [Ambiguous SQLCommenterGoogle Specification]</span><span>
 </span><span id="line-41"></span><span class="annot"><a href="Data.SqlCommenter.html#generateCommentTags"><span class="hs-identifier hs-type">generateCommentTags</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NE.NonEmpty</span></span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#Attribute"><span class="hs-identifier hs-type">Attribute</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-42"></span><span id="generateCommentTags"><span class="annot"><span class="annottext">generateCommentTags :: NonEmpty Attribute -&gt; Text
-</span><a href="Data.SqlCommenter.html#generateCommentTags"><span class="hs-identifier hs-var hs-var">generateCommentTags</span></a></span></span><span> </span><span id="local-6989586621688342364"><span class="annot"><span class="annottext">NonEmpty Attribute
-</span><a href="#local-6989586621688342364"><span class="hs-identifier hs-var">attributes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Data.SqlCommenter.html#generateCommentTags"><span class="hs-identifier hs-var hs-var">generateCommentTags</span></a></span></span><span> </span><span id="local-6989586621688343635"><span class="annot"><span class="annottext">NonEmpty Attribute
+</span><a href="#local-6989586621688343635"><span class="hs-identifier hs-var">attributes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-43"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="hs-comment">-- 1. URL encode the key,value pairs. What the spec calls serialization.</span><span>
 </span><span id="line-44"></span><span>      </span><span class="hs-comment">-- https://google.github.io/sqlcommenter/spec/#key-serialization-algorithm</span><span>
 </span><span id="line-45"></span><span>      </span><span class="hs-comment">-- https://google.github.io/sqlcommenter/spec/#value-serialization-algorithm</span><span>
-</span><span id="line-46"></span><span>      </span><span id="local-6989586621688342363"><span class="annot"><span class="annottext">encoded :: NonEmpty Attribute
-</span><a href="#local-6989586621688342363"><span class="hs-identifier hs-var hs-var">encoded</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Attribute -&gt; Attribute)
+</span><span id="line-46"></span><span>      </span><span id="local-6989586621688343634"><span class="annot"><span class="annottext">encoded :: NonEmpty Attribute
+</span><a href="#local-6989586621688343634"><span class="hs-identifier hs-var hs-var">encoded</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Attribute -&gt; Attribute)
 -&gt; NonEmpty Attribute -&gt; NonEmpty Attribute
 forall a b. (a -&gt; b) -&gt; NonEmpty a -&gt; NonEmpty b
 </span><span class="hs-identifier hs-var">NE.map</span></span><span> </span><span class="annot"><span class="annottext">Attribute -&gt; Attribute
-</span><a href="#local-6989586621688342361"><span class="hs-identifier hs-var">urlEncodePair</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty Attribute
-</span><a href="#local-6989586621688342364"><span class="hs-identifier hs-var">attributes</span></a></span><span>
+</span><a href="#local-6989586621688343632"><span class="hs-identifier hs-var">urlEncodePair</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty Attribute
+</span><a href="#local-6989586621688343635"><span class="hs-identifier hs-var">attributes</span></a></span><span>
 </span><span id="line-47"></span><span>      </span><span class="hs-comment">-- 2. Sort the pairs. Spec: https://google.github.io/sqlcommenter/spec/#sorting</span><span>
 </span><span id="line-48"></span><span>      </span><span class="hs-comment">-- Note the 'sort' from 'Data.List' works by sorting the first element in</span><span>
 </span><span id="line-49"></span><span>      </span><span class="hs-comment">-- the pair. And sorting on 'Text' is lexicographic.</span><span>
-</span><span id="line-50"></span><span>      </span><span id="local-6989586621688342360"><span class="annot"><span class="annottext">sorted :: NonEmpty Attribute
-</span><a href="#local-6989586621688342360"><span class="hs-identifier hs-var hs-var">sorted</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmpty Attribute -&gt; NonEmpty Attribute
+</span><span id="line-50"></span><span>      </span><span id="local-6989586621688343631"><span class="annot"><span class="annottext">sorted :: NonEmpty Attribute
+</span><a href="#local-6989586621688343631"><span class="hs-identifier hs-var hs-var">sorted</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmpty Attribute -&gt; NonEmpty Attribute
 forall a. Ord a =&gt; NonEmpty a -&gt; NonEmpty a
 </span><span class="hs-identifier hs-var">NE.sort</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty Attribute
-</span><a href="#local-6989586621688342363"><span class="hs-identifier hs-var">encoded</span></a></span><span>
+</span><a href="#local-6989586621688343634"><span class="hs-identifier hs-var">encoded</span></a></span><span>
 </span><span id="line-51"></span><span>      </span><span class="hs-comment">-- 3. Finally, serialize the pairs into a CSV. What the spec calls concatenation</span><span>
 </span><span id="line-52"></span><span>      </span><span class="hs-comment">-- https://google.github.io/sqlcommenter/spec/#concatenation</span><span>
-</span><span id="line-53"></span><span>      </span><span id="local-6989586621688342358"><span class="annot"><span class="annottext">serialized :: Text
-</span><a href="#local-6989586621688342358"><span class="hs-identifier hs-var hs-var">serialized</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmpty Attribute -&gt; Text
+</span><span id="line-53"></span><span>      </span><span id="local-6989586621688343629"><span class="annot"><span class="annottext">serialized :: Text
+</span><a href="#local-6989586621688343629"><span class="hs-identifier hs-var hs-var">serialized</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmpty Attribute -&gt; Text
 forall t.
 (ToTxt t, Semigroup t, IsString t) =&gt;
 NonEmpty (t, t) -&gt; Text
-</span><a href="#local-6989586621688342357"><span class="hs-identifier hs-var">serializePairs</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty Attribute
-</span><a href="#local-6989586621688342360"><span class="hs-identifier hs-var">sorted</span></a></span><span>
+</span><a href="#local-6989586621688343628"><span class="hs-identifier hs-var">serializePairs</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty Attribute
+</span><a href="#local-6989586621688343631"><span class="hs-identifier hs-var">sorted</span></a></span><span>
 </span><span id="line-54"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688342358"><span class="hs-identifier hs-var">serialized</span></a></span><span>
+</span><a href="#local-6989586621688343629"><span class="hs-identifier hs-var">serialized</span></a></span><span>
 </span><span id="line-55"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-56"></span><span>    </span><span id="local-6989586621688342361"><span class="annot"><span class="annottext">urlEncodePair :: Attribute -&gt; Attribute
-</span><a href="#local-6989586621688342361"><span class="hs-identifier hs-var hs-var">urlEncodePair</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688342356"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688342356"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688342355"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688342355"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><span id="line-56"></span><span>    </span><span id="local-6989586621688343632"><span class="annot"><span class="annottext">urlEncodePair :: Attribute -&gt; Attribute
+</span><a href="#local-6989586621688343632"><span class="hs-identifier hs-var hs-var">urlEncodePair</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688343627"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688343627"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688343626"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688343626"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Text
 </span><span class="hs-identifier hs-var">URI.encodeText</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688342356"><span class="hs-identifier hs-var">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="#local-6989586621688343627"><span class="hs-identifier hs-var">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
 </span><span class="hs-identifier hs-var">URI.encodeText</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688342355"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-57"></span><span>    </span><span id="local-6989586621688342357"><span class="annot"><span class="annottext">serializePairs :: NonEmpty (t, t) -&gt; Text
-</span><a href="#local-6989586621688342357"><span class="hs-identifier hs-var hs-var">serializePairs</span></a></span></span><span> </span><span id="local-6989586621688342353"><span class="annot"><span class="annottext">NonEmpty (t, t)
-</span><a href="#local-6989586621688342353"><span class="hs-identifier hs-var">pairs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[t] -&gt; Text
+</span><a href="#local-6989586621688343626"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span>    </span><span id="local-6989586621688343628"><span class="annot"><span class="annottext">serializePairs :: NonEmpty (t, t) -&gt; Text
+</span><a href="#local-6989586621688343628"><span class="hs-identifier hs-var hs-var">serializePairs</span></a></span></span><span> </span><span id="local-6989586621688343624"><span class="annot"><span class="annottext">NonEmpty (t, t)
+</span><a href="#local-6989586621688343624"><span class="hs-identifier hs-var">pairs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[t] -&gt; Text
 forall t (f :: * -&gt; *). (ToTxt t, Foldable f) =&gt; f t -&gt; Text
 </span><a href="Data.Text.Extended.html#commaSeparated"><span class="hs-identifier hs-var">commaSeparated</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">t
-</span><a href="#local-6989586621688342352"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">t -&gt; t -&gt; t
+</span><a href="#local-6989586621688343623"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">t -&gt; t -&gt; t
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">t
 </span><span class="hs-string">&quot;='&quot;</span></span><span> </span><span class="annot"><span class="annottext">t -&gt; t -&gt; t
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">t
-</span><a href="#local-6989586621688342351"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">t -&gt; t -&gt; t
+</span><a href="#local-6989586621688343622"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">t -&gt; t -&gt; t
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">t
-</span><span class="hs-string">&quot;'&quot;</span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688342352"><span class="annot"><span class="annottext">t
-</span><a href="#local-6989586621688342352"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688342351"><span class="annot"><span class="annottext">t
-</span><a href="#local-6989586621688342351"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">NonEmpty (t, t) -&gt; [(t, t)]
+</span><span class="hs-string">&quot;'&quot;</span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688343623"><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621688343623"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688343622"><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621688343622"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">NonEmpty (t, t) -&gt; [(t, t)]
 forall a. NonEmpty a -&gt; [a]
 </span><span class="hs-identifier hs-var">NE.toList</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty (t, t)
-</span><a href="#local-6989586621688342353"><span class="hs-identifier hs-var">pairs</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621688343624"><span class="hs-identifier hs-var">pairs</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-58"></span><span>
 </span><span id="line-59"></span><span class="hs-comment">-- | NOTE: [Ambiguous SQLCommenterGoogle Specification]</span><span>
 </span><span id="line-60"></span><span class="hs-comment">-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span><span>
