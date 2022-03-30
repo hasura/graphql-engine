@@ -18,8 +18,8 @@
 </span><span id="line-18"></span><span>
 </span><span id="line-19"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-20"></span><span>
-</span><span id="line-21"></span><span id="local-6989586621688308962"><span id="local-6989586621688308963"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="TableName"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#TableName"><span class="hs-identifier hs-var">TableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TableName"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#TableName"><span class="hs-identifier hs-var">TableName</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-22"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688308957"><span id="local-6989586621688308959"><span class="annot"><span class="annottext">TableName -&gt; TableName -&gt; Bool
+</span><span id="line-21"></span><span id="local-6989586621688309122"><span id="local-6989586621688309123"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="TableName"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#TableName"><span class="hs-identifier hs-var">TableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TableName"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#TableName"><span class="hs-identifier hs-var">TableName</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688309117"><span id="local-6989586621688309119"><span class="annot"><span class="annottext">TableName -&gt; TableName -&gt; Bool
 (TableName -&gt; TableName -&gt; Bool)
 -&gt; (TableName -&gt; TableName -&gt; Bool) -&gt; Eq TableName
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -27,7 +27,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: TableName -&gt; TableName -&gt; Bool
 == :: TableName -&gt; TableName -&gt; Bool
 $c== :: TableName -&gt; TableName -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688308941"><span id="local-6989586621688308943"><span id="local-6989586621688308945"><span id="local-6989586621688308947"><span id="local-6989586621688308949"><span id="local-6989586621688308951"><span id="local-6989586621688308953"><span class="annot"><span class="annottext">Eq TableName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688309101"><span id="local-6989586621688309103"><span id="local-6989586621688309105"><span id="local-6989586621688309107"><span id="local-6989586621688309109"><span id="local-6989586621688309111"><span id="local-6989586621688309113"><span class="annot"><span class="annottext">Eq TableName
 Eq TableName
 -&gt; (TableName -&gt; TableName -&gt; Ordering)
 -&gt; (TableName -&gt; TableName -&gt; Bool)
@@ -65,7 +65,7 @@ $c&lt; :: TableName -&gt; TableName -&gt; Bool
 compare :: TableName -&gt; TableName -&gt; Ordering
 $ccompare :: TableName -&gt; TableName -&gt; Ordering
 $cp1Ord :: Eq TableName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688308934"><span id="local-6989586621688308936"><span id="local-6989586621688308938"><span class="annot"><span class="annottext">Int -&gt; TableName -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688309094"><span id="local-6989586621688309096"><span id="local-6989586621688309098"><span class="annot"><span class="annottext">Int -&gt; TableName -&gt; ShowS
 [TableName] -&gt; ShowS
 TableName -&gt; String
 (Int -&gt; TableName -&gt; ShowS)
@@ -88,7 +88,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep TableName x -&gt; TableName
 $cfrom :: forall x. TableName -&gt; Rep TableName x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cTableName"><span id="%24tTableName"><span id="local-6989586621688308901"><span id="local-6989586621688308903"><span id="local-6989586621688308905"><span id="local-6989586621688308907"><span id="local-6989586621688308909"><span id="local-6989586621688308911"><span id="local-6989586621688308913"><span id="local-6989586621688308915"><span id="local-6989586621688308917"><span id="local-6989586621688308919"><span id="local-6989586621688308921"><span id="local-6989586621688308923"><span id="local-6989586621688308925"><span id="local-6989586621688308927"><span class="annot"><span class="annottext">Typeable TableName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cTableName"><span id="%24tTableName"><span id="local-6989586621688309061"><span id="local-6989586621688309063"><span id="local-6989586621688309065"><span id="local-6989586621688309067"><span id="local-6989586621688309069"><span id="local-6989586621688309071"><span id="local-6989586621688309073"><span id="local-6989586621688309075"><span id="local-6989586621688309077"><span id="local-6989586621688309079"><span id="local-6989586621688309081"><span id="local-6989586621688309083"><span id="local-6989586621688309085"><span id="local-6989586621688309087"><span class="annot"><span class="annottext">Typeable TableName
 DataType
 Constr
 Typeable TableName
@@ -246,7 +246,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 -&gt; (forall g. g -&gt; c g) -&gt; TableName -&gt; c TableName
 $cp1Data :: Typeable TableName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688308894"><span id="local-6989586621688308896"><span class="annot"><span class="annottext">Value -&gt; Parser [TableName]
+</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688309054"><span id="local-6989586621688309056"><span class="annot"><span class="annottext">Value -&gt; Parser [TableName]
 Value -&gt; Parser TableName
 (Value -&gt; Parser TableName)
 -&gt; (Value -&gt; Parser [TableName]) -&gt; FromJSON TableName
@@ -256,7 +256,7 @@ parseJSONList :: Value -&gt; Parser [TableName]
 $cparseJSONList :: Value -&gt; Parser [TableName]
 parseJSON :: Value -&gt; Parser TableName
 $cparseJSON :: Value -&gt; Parser TableName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688308885"><span id="local-6989586621688308887"><span id="local-6989586621688308889"><span id="local-6989586621688308891"><span class="annot"><span class="annottext">[TableName] -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688309045"><span id="local-6989586621688309047"><span id="local-6989586621688309049"><span id="local-6989586621688309051"><span class="annot"><span class="annottext">[TableName] -&gt; Encoding
 [TableName] -&gt; Value
 TableName -&gt; Encoding
 TableName -&gt; Value
@@ -280,12 +280,12 @@ $ctoEncoding :: TableName -&gt; Encoding
 toJSON :: TableName -&gt; Value
 $ctoJSON :: TableName -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688308882"><span class="annot"><span class="annottext">TableName -&gt; ()
+</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688309042"><span class="annot"><span class="annottext">TableName -&gt; ()
 (TableName -&gt; ()) -&gt; NFData TableName
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: TableName -&gt; ()
 $crnf :: TableName -&gt; ()
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688308878"><span class="annot"><span class="annottext">Eq TableName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688309038"><span class="annot"><span class="annottext">Eq TableName
 Eq TableName
 -&gt; (Accesses -&gt; TableName -&gt; TableName -&gt; Bool)
 -&gt; Cacheable TableName
@@ -294,7 +294,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; TableName -&gt; TableName -&gt; Bool
 $cunchanged :: Accesses -&gt; TableName -&gt; TableName -&gt; Bool
 $cp1Cacheable :: Eq TableName
-</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688308873"><span id="local-6989586621688308875"><span class="annot"><span class="annottext">Int -&gt; TableName -&gt; Int
+</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688309033"><span id="local-6989586621688309035"><span class="annot"><span class="annottext">Int -&gt; TableName -&gt; Int
 TableName -&gt; Int
 (Int -&gt; TableName -&gt; Int)
 -&gt; (TableName -&gt; Int) -&gt; Hashable TableName
@@ -308,7 +308,7 @@ $chashWithSalt :: Int -&gt; TableName -&gt; Int
 </span><span id="line-26"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-27"></span><span>
 </span><span id="line-28"></span><span class="hs-comment">-- | Table schema data from the 'SchemaResponse'.</span><span>
-</span><span id="line-29"></span><span id="local-6989586621688308870"><span id="local-6989586621688308871"></span></span><span class="hs-keyword">data</span><span> </span><span id="TableInfo"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#TableInfo"><span class="hs-identifier hs-var">TableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TableInfo"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#TableInfo"><span class="hs-identifier hs-var">TableInfo</span></a></span></span><span>
+</span><span id="line-29"></span><span id="local-6989586621688309030"><span id="local-6989586621688309031"></span></span><span class="hs-keyword">data</span><span> </span><span id="TableInfo"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#TableInfo"><span class="hs-identifier hs-var">TableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TableInfo"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#TableInfo"><span class="hs-identifier hs-var">TableInfo</span></a></span></span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="dtiName"><span class="annot"><span class="annottext">TableInfo -&gt; TableName
 </span><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#dtiName"><span class="hs-identifier hs-var hs-var">dtiName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-31"></span><span>    </span><span id="dtiColumns"><span class="annot"><span class="annottext">TableInfo -&gt; [ColumnInfo]
@@ -318,7 +318,7 @@ $chashWithSalt :: Int -&gt; TableName -&gt; Int
 </span><span id="line-33"></span><span>    </span><span id="dtiDescription"><span class="annot"><span class="annottext">TableInfo -&gt; Maybe Text
 </span><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#dtiDescription"><span class="hs-identifier hs-var hs-var">dtiDescription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-34"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-35"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688308861"><span id="local-6989586621688308863"><span class="annot"><span class="annottext">TableInfo -&gt; TableInfo -&gt; Bool
+</span><span id="line-35"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688309021"><span id="local-6989586621688309023"><span class="annot"><span class="annottext">TableInfo -&gt; TableInfo -&gt; Bool
 (TableInfo -&gt; TableInfo -&gt; Bool)
 -&gt; (TableInfo -&gt; TableInfo -&gt; Bool) -&gt; Eq TableInfo
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -326,7 +326,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: TableInfo -&gt; TableInfo -&gt; Bool
 == :: TableInfo -&gt; TableInfo -&gt; Bool
 $c== :: TableInfo -&gt; TableInfo -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688308846"><span id="local-6989586621688308848"><span id="local-6989586621688308850"><span id="local-6989586621688308852"><span id="local-6989586621688308854"><span id="local-6989586621688308856"><span id="local-6989586621688308858"><span class="annot"><span class="annottext">Eq TableInfo
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688309006"><span id="local-6989586621688309008"><span id="local-6989586621688309010"><span id="local-6989586621688309012"><span id="local-6989586621688309014"><span id="local-6989586621688309016"><span id="local-6989586621688309018"><span class="annot"><span class="annottext">Eq TableInfo
 Eq TableInfo
 -&gt; (TableInfo -&gt; TableInfo -&gt; Ordering)
 -&gt; (TableInfo -&gt; TableInfo -&gt; Bool)
@@ -364,7 +364,7 @@ $c&lt; :: TableInfo -&gt; TableInfo -&gt; Bool
 compare :: TableInfo -&gt; TableInfo -&gt; Ordering
 $ccompare :: TableInfo -&gt; TableInfo -&gt; Ordering
 $cp1Ord :: Eq TableInfo
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688308840"><span id="local-6989586621688308842"><span id="local-6989586621688308844"><span class="annot"><span class="annottext">Int -&gt; TableInfo -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688309000"><span id="local-6989586621688309002"><span id="local-6989586621688309004"><span class="annot"><span class="annottext">Int -&gt; TableInfo -&gt; ShowS
 [TableInfo] -&gt; ShowS
 TableInfo -&gt; String
 (Int -&gt; TableInfo -&gt; ShowS)
@@ -387,7 +387,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep TableInfo x -&gt; TableInfo
 $cfrom :: forall x. TableInfo -&gt; Rep TableInfo x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cTableInfo"><span id="%24tTableInfo"><span id="local-6989586621688308809"><span id="local-6989586621688308811"><span id="local-6989586621688308813"><span id="local-6989586621688308815"><span id="local-6989586621688308817"><span id="local-6989586621688308819"><span id="local-6989586621688308821"><span id="local-6989586621688308823"><span id="local-6989586621688308825"><span id="local-6989586621688308827"><span id="local-6989586621688308829"><span id="local-6989586621688308831"><span id="local-6989586621688308833"><span id="local-6989586621688308835"><span class="annot"><span class="annottext">Typeable TableInfo
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cTableInfo"><span id="%24tTableInfo"><span id="local-6989586621688308969"><span id="local-6989586621688308971"><span id="local-6989586621688308973"><span id="local-6989586621688308975"><span id="local-6989586621688308977"><span id="local-6989586621688308979"><span id="local-6989586621688308981"><span id="local-6989586621688308983"><span id="local-6989586621688308985"><span id="local-6989586621688308987"><span id="local-6989586621688308989"><span id="local-6989586621688308991"><span id="local-6989586621688308993"><span id="local-6989586621688308995"><span class="annot"><span class="annottext">Typeable TableInfo
 DataType
 Constr
 Typeable TableInfo
@@ -545,12 +545,12 @@ $cgfoldl :: forall (c :: * -&gt; *).
 -&gt; (forall g. g -&gt; c g) -&gt; TableInfo -&gt; c TableInfo
 $cp1Data :: Typeable TableInfo
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-36"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688308805"><span class="annot"><span class="annottext">TableInfo -&gt; ()
+</span><span id="line-36"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688308965"><span class="annot"><span class="annottext">TableInfo -&gt; ()
 (TableInfo -&gt; ()) -&gt; NFData TableInfo
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: TableInfo -&gt; ()
 $crnf :: TableInfo -&gt; ()
-</span><a href="#local-6989586621688308805"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688308802"><span class="annot"><span class="annottext">Eq TableInfo
+</span><a href="#local-6989586621688308965"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688308962"><span class="annot"><span class="annottext">Eq TableInfo
 Eq TableInfo
 -&gt; (Accesses -&gt; TableInfo -&gt; TableInfo -&gt; Bool)
 -&gt; Cacheable TableInfo
@@ -559,7 +559,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; TableInfo -&gt; TableInfo -&gt; Bool
 $cunchanged :: Accesses -&gt; TableInfo -&gt; TableInfo -&gt; Bool
 $cp1Cacheable :: Eq TableInfo
-</span><a href="#local-6989586621688308802"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688308798"><span id="local-6989586621688308800"><span class="annot"><span class="annottext">Int -&gt; TableInfo -&gt; Int
+</span><a href="#local-6989586621688308962"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688308958"><span id="local-6989586621688308960"><span class="annot"><span class="annottext">Int -&gt; TableInfo -&gt; Int
 TableInfo -&gt; Int
 (Int -&gt; TableInfo -&gt; Int)
 -&gt; (TableInfo -&gt; Int) -&gt; Hashable TableInfo
@@ -568,10 +568,10 @@ hash :: TableInfo -&gt; Int
 $chash :: TableInfo -&gt; Int
 hashWithSalt :: Int -&gt; TableInfo -&gt; Int
 $chashWithSalt :: Int -&gt; TableInfo -&gt; Int
-</span><a href="#local-6989586621688308798"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688308958"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-37"></span><span>
-</span><span id="line-38"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688308791"><span id="local-6989586621688308793"><span id="local-6989586621688308795"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-39"></span><span>  </span><span id="local-6989586621688308790"><span class="annot"><span class="annottext">toJSON :: TableInfo -&gt; Value
+</span><span id="line-38"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688308951"><span id="local-6989586621688308953"><span id="local-6989586621688308955"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-39"></span><span>  </span><span id="local-6989586621688308950"><span class="annot"><span class="annottext">toJSON :: TableInfo -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-40"></span><span>    </span><span class="annot"><span class="annottext">Options -&gt; TableInfo -&gt; Value
 forall a.
@@ -583,7 +583,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-41"></span><span>      </span><span class="annot"><span class="annottext">Options
 </span><span class="hs-identifier hs-var">J.defaultOptions</span></span><span>
 </span><span id="line-42"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">fieldLabelModifier :: ShowS
-</span><a href="#local-6989586621688308786"><span class="hs-identifier hs-var">J.fieldLabelModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><a href="#local-6989586621688308946"><span class="hs-identifier hs-var">J.fieldLabelModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShowS
 </span><span class="hs-identifier hs-var">snakeCase</span></span><span> </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; ShowS
@@ -592,8 +592,8 @@ forall a. Int -&gt; [a] -&gt; [a]
 </span><span class="hs-number">3</span></span><span>
 </span><span id="line-43"></span><span>        </span><span class="hs-special">}</span><span>
 </span><span id="line-44"></span><span>
-</span><span id="line-45"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688308781"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-46"></span><span>  </span><span id="local-6989586621688308780"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser TableInfo
+</span><span id="line-45"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688308941"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-46"></span><span>  </span><span id="local-6989586621688308940"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser TableInfo
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-47"></span><span>    </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser TableInfo
 forall a.
@@ -606,7 +606,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-48"></span><span>      </span><span class="annot"><span class="annottext">Options
 </span><span class="hs-identifier hs-var">J.defaultOptions</span></span><span>
 </span><span id="line-49"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">fieldLabelModifier :: ShowS
-</span><a href="#local-6989586621688308786"><span class="hs-identifier hs-var">J.fieldLabelModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><a href="#local-6989586621688308946"><span class="hs-identifier hs-var">J.fieldLabelModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShowS
 </span><span class="hs-identifier hs-var">snakeCase</span></span><span> </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; ShowS

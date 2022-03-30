@@ -23,11 +23,11 @@
 </span><span id="line-23"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-24"></span><span class="hs-comment">-- Servant Routes</span><span>
 </span><span id="line-25"></span><span>
-</span><span id="line-26"></span><span id="local-6989586621688312614"><span id="local-6989586621688312615"></span></span><span class="hs-keyword">data</span><span> </span><span id="Routes"><span class="annot"><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#Routes"><span class="hs-identifier hs-var">Routes</span></a></span></span><span> </span><span id="local-6989586621688312613"><span class="annot"><a href="#local-6989586621688312613"><span class="hs-identifier hs-type">mode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Routes"><span class="annot"><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#Routes"><span class="hs-identifier hs-var">Routes</span></a></span></span><span>
+</span><span id="line-26"></span><span id="local-6989586621688312774"><span id="local-6989586621688312775"></span></span><span class="hs-keyword">data</span><span> </span><span id="Routes"><span class="annot"><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#Routes"><span class="hs-identifier hs-var">Routes</span></a></span></span><span> </span><span id="local-6989586621688312773"><span class="annot"><a href="#local-6989586621688312773"><span class="hs-identifier hs-type">mode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Routes"><span class="annot"><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#Routes"><span class="hs-identifier hs-var">Routes</span></a></span></span><span>
 </span><span id="line-27"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | 'GET /schema'</span><span>
 </span><span id="line-28"></span><span>    </span><span id="_schema"><span class="annot"><span class="annottext">Routes mode -&gt; mode :- (&quot;schema&quot; :&gt; Get '[JSON] SchemaResponse)
 </span><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#_schema"><span class="hs-identifier hs-var hs-var">_schema</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-29"></span><span>      </span><span class="annot"><a href="#local-6989586621688312613"><span class="hs-identifier hs-type">mode</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">:-</span></span><span> </span><span class="annot"><span class="hs-string">&quot;schema&quot;</span></span><span>
+</span><span id="line-29"></span><span>      </span><span class="annot"><a href="#local-6989586621688312773"><span class="hs-identifier hs-type">mode</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">:-</span></span><span> </span><span class="annot"><span class="hs-string">&quot;schema&quot;</span></span><span>
 </span><span id="line-30"></span><span>        </span><span class="annot"><span class="hs-operator hs-type">:&gt;</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Get</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">JSON</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#SchemaResponse"><span class="hs-identifier hs-type">SchemaResponse</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-31"></span><span>    </span><span class="hs-comment">-- | 'POST /query'</span><span>
 </span><span id="line-32"></span><span>    </span><span id="_query"><span class="annot"><span class="annottext">Routes mode
@@ -35,7 +35,7 @@
    :- (&quot;query&quot;
        :&gt; (ReqBody '[JSON] Query :&gt; Post '[JSON] QueryResponse))
 </span><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#_query"><span class="hs-identifier hs-var hs-var">_query</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-33"></span><span>      </span><span class="annot"><a href="#local-6989586621688312613"><span class="hs-identifier hs-type">mode</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">:-</span></span><span> </span><span class="annot"><span class="hs-string">&quot;query&quot;</span></span><span>
+</span><span id="line-33"></span><span>      </span><span class="annot"><a href="#local-6989586621688312773"><span class="hs-identifier hs-type">mode</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">:-</span></span><span> </span><span class="annot"><span class="hs-string">&quot;query&quot;</span></span><span>
 </span><span id="line-34"></span><span>        </span><span class="annot"><span class="hs-operator hs-type">:&gt;</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ReqBody</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">JSON</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Query.html#Query"><span class="hs-identifier hs-type">API.Query</span></a></span><span>
 </span><span id="line-35"></span><span>        </span><span class="annot"><span class="hs-operator hs-type">:&gt;</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Post</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">JSON</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#QueryResponse"><span class="hs-identifier hs-type">QueryResponse</span></a></span><span>
 </span><span id="line-36"></span><span>  </span><span class="hs-special">}</span><span>
@@ -57,13 +57,13 @@ $cfrom :: forall mode x. Routes mode -&gt; Rep (Routes mode) x
 </span><span id="line-41"></span><span>
 </span><span id="line-42"></span><span class="hs-comment">-- | The Schema Response provides the schemas for tracked tables and</span><span>
 </span><span id="line-43"></span><span class="hs-comment">-- 'Capabilities' supported by the service.</span><span>
-</span><span id="line-44"></span><span id="local-6989586621688312605"><span id="local-6989586621688312606"></span></span><span class="hs-keyword">data</span><span> </span><span id="SchemaResponse"><span class="annot"><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#SchemaResponse"><span class="hs-identifier hs-var">SchemaResponse</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SchemaResponse"><span class="annot"><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#SchemaResponse"><span class="hs-identifier hs-var">SchemaResponse</span></a></span></span><span>
+</span><span id="line-44"></span><span id="local-6989586621688312765"><span id="local-6989586621688312766"></span></span><span class="hs-keyword">data</span><span> </span><span id="SchemaResponse"><span class="annot"><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#SchemaResponse"><span class="hs-identifier hs-var">SchemaResponse</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SchemaResponse"><span class="annot"><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#SchemaResponse"><span class="hs-identifier hs-var">SchemaResponse</span></a></span></span><span>
 </span><span id="line-45"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="srCapabilities"><span class="annot"><span class="annottext">SchemaResponse -&gt; Capabilities
 </span><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#srCapabilities"><span class="hs-identifier hs-var hs-var">srCapabilities</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#Capabilities"><span class="hs-identifier hs-type">Capabilities</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-46"></span><span>    </span><span id="srTables"><span class="annot"><span class="annottext">SchemaResponse -&gt; [TableInfo]
 </span><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#srTables"><span class="hs-identifier hs-var hs-var">srTables</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#TableInfo"><span class="hs-identifier hs-type">API.TableInfo</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-47"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-48"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688312598"><span id="local-6989586621688312600"><span class="annot"><span class="annottext">SchemaResponse -&gt; SchemaResponse -&gt; Bool
+</span><span id="line-48"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688312758"><span id="local-6989586621688312760"><span class="annot"><span class="annottext">SchemaResponse -&gt; SchemaResponse -&gt; Bool
 (SchemaResponse -&gt; SchemaResponse -&gt; Bool)
 -&gt; (SchemaResponse -&gt; SchemaResponse -&gt; Bool) -&gt; Eq SchemaResponse
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -71,7 +71,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: SchemaResponse -&gt; SchemaResponse -&gt; Bool
 == :: SchemaResponse -&gt; SchemaResponse -&gt; Bool
 $c== :: SchemaResponse -&gt; SchemaResponse -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312582"><span id="local-6989586621688312584"><span id="local-6989586621688312586"><span id="local-6989586621688312588"><span id="local-6989586621688312590"><span id="local-6989586621688312592"><span id="local-6989586621688312594"><span class="annot"><span class="annottext">Eq SchemaResponse
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312742"><span id="local-6989586621688312744"><span id="local-6989586621688312746"><span id="local-6989586621688312748"><span id="local-6989586621688312750"><span id="local-6989586621688312752"><span id="local-6989586621688312754"><span class="annot"><span class="annottext">Eq SchemaResponse
 Eq SchemaResponse
 -&gt; (SchemaResponse -&gt; SchemaResponse -&gt; Ordering)
 -&gt; (SchemaResponse -&gt; SchemaResponse -&gt; Bool)
@@ -109,7 +109,7 @@ $c&lt; :: SchemaResponse -&gt; SchemaResponse -&gt; Bool
 compare :: SchemaResponse -&gt; SchemaResponse -&gt; Ordering
 $ccompare :: SchemaResponse -&gt; SchemaResponse -&gt; Ordering
 $cp1Ord :: Eq SchemaResponse
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312575"><span id="local-6989586621688312577"><span id="local-6989586621688312579"><span class="annot"><span class="annottext">Int -&gt; SchemaResponse -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312735"><span id="local-6989586621688312737"><span id="local-6989586621688312739"><span class="annot"><span class="annottext">Int -&gt; SchemaResponse -&gt; ShowS
 [SchemaResponse] -&gt; ShowS
 SchemaResponse -&gt; String
 (Int -&gt; SchemaResponse -&gt; ShowS)
@@ -133,7 +133,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep SchemaResponse x -&gt; SchemaResponse
 $cfrom :: forall x. SchemaResponse -&gt; Rep SchemaResponse x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cSchemaResponse"><span id="%24tSchemaResponse"><span id="local-6989586621688312543"><span id="local-6989586621688312545"><span id="local-6989586621688312547"><span id="local-6989586621688312549"><span id="local-6989586621688312551"><span id="local-6989586621688312553"><span id="local-6989586621688312555"><span id="local-6989586621688312557"><span id="local-6989586621688312559"><span id="local-6989586621688312561"><span id="local-6989586621688312563"><span id="local-6989586621688312565"><span id="local-6989586621688312567"><span id="local-6989586621688312569"><span class="annot"><span class="annottext">Typeable SchemaResponse
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cSchemaResponse"><span id="%24tSchemaResponse"><span id="local-6989586621688312703"><span id="local-6989586621688312705"><span id="local-6989586621688312707"><span id="local-6989586621688312709"><span id="local-6989586621688312711"><span id="local-6989586621688312713"><span id="local-6989586621688312715"><span id="local-6989586621688312717"><span id="local-6989586621688312719"><span id="local-6989586621688312721"><span id="local-6989586621688312723"><span id="local-6989586621688312725"><span id="local-6989586621688312727"><span id="local-6989586621688312729"><span class="annot"><span class="annottext">Typeable SchemaResponse
 DataType
 Constr
 Typeable SchemaResponse
@@ -310,12 +310,12 @@ $cgfoldl :: forall (c :: * -&gt; *).
 -&gt; (forall g. g -&gt; c g) -&gt; SchemaResponse -&gt; c SchemaResponse
 $cp1Data :: Typeable SchemaResponse
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-49"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688312538"><span class="annot"><span class="annottext">SchemaResponse -&gt; ()
+</span><span id="line-49"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688312698"><span class="annot"><span class="annottext">SchemaResponse -&gt; ()
 (SchemaResponse -&gt; ()) -&gt; NFData SchemaResponse
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: SchemaResponse -&gt; ()
 $crnf :: SchemaResponse -&gt; ()
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312534"><span class="annot"><span class="annottext">Eq SchemaResponse
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312694"><span class="annot"><span class="annottext">Eq SchemaResponse
 Eq SchemaResponse
 -&gt; (Accesses -&gt; SchemaResponse -&gt; SchemaResponse -&gt; Bool)
 -&gt; Cacheable SchemaResponse
@@ -324,7 +324,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; SchemaResponse -&gt; SchemaResponse -&gt; Bool
 $cunchanged :: Accesses -&gt; SchemaResponse -&gt; SchemaResponse -&gt; Bool
 $cp1Cacheable :: Eq SchemaResponse
-</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312529"><span id="local-6989586621688312531"><span class="annot"><span class="annottext">Int -&gt; SchemaResponse -&gt; Int
+</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312689"><span id="local-6989586621688312691"><span class="annot"><span class="annottext">Int -&gt; SchemaResponse -&gt; Int
 SchemaResponse -&gt; Int
 (Int -&gt; SchemaResponse -&gt; Int)
 -&gt; (SchemaResponse -&gt; Int) -&gt; Hashable SchemaResponse
@@ -335,8 +335,8 @@ hashWithSalt :: Int -&gt; SchemaResponse -&gt; Int
 $chashWithSalt :: Int -&gt; SchemaResponse -&gt; Int
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-50"></span><span>
-</span><span id="line-51"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688312521"><span id="local-6989586621688312523"><span id="local-6989586621688312525"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#SchemaResponse"><span class="hs-identifier hs-type">SchemaResponse</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-52"></span><span>  </span><span id="local-6989586621688312519"><span class="annot"><span class="annottext">toJSON :: SchemaResponse -&gt; Value
+</span><span id="line-51"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688312681"><span id="local-6989586621688312683"><span id="local-6989586621688312685"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#SchemaResponse"><span class="hs-identifier hs-type">SchemaResponse</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-52"></span><span>  </span><span id="local-6989586621688312679"><span class="annot"><span class="annottext">toJSON :: SchemaResponse -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-53"></span><span>    </span><span class="annot"><span class="annottext">Options -&gt; SchemaResponse -&gt; Value
 forall a.
@@ -358,8 +358,8 @@ forall a. Int -&gt; [a] -&gt; [a]
 </span><span class="hs-number">2</span></span><span>
 </span><span id="line-56"></span><span>        </span><span class="hs-special">}</span><span>
 </span><span id="line-57"></span><span>
-</span><span id="line-58"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688312510"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#SchemaResponse"><span class="hs-identifier hs-type">SchemaResponse</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-59"></span><span>  </span><span id="local-6989586621688312508"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser SchemaResponse
+</span><span id="line-58"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688312670"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#SchemaResponse"><span class="hs-identifier hs-type">SchemaResponse</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-59"></span><span>  </span><span id="local-6989586621688312668"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser SchemaResponse
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-60"></span><span>    </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser SchemaResponse
 forall a.
@@ -384,11 +384,11 @@ forall a. Int -&gt; [a] -&gt; [a]
 </span><span id="line-65"></span><span class="hs-comment">-- | The 'Capabilities' describes the _capabilities_ of the</span><span>
 </span><span id="line-66"></span><span class="hs-comment">-- service. Specifically, the service is capable of serving queries</span><span>
 </span><span id="line-67"></span><span class="hs-comment">-- which involve relationships.</span><span>
-</span><span id="line-68"></span><span id="local-6989586621688312504"><span id="local-6989586621688312505"></span></span><span class="hs-keyword">data</span><span> </span><span id="Capabilities"><span class="annot"><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#Capabilities"><span class="hs-identifier hs-var">Capabilities</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Capabilities"><span class="annot"><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#Capabilities"><span class="hs-identifier hs-var">Capabilities</span></a></span></span><span>
+</span><span id="line-68"></span><span id="local-6989586621688312664"><span id="local-6989586621688312665"></span></span><span class="hs-keyword">data</span><span> </span><span id="Capabilities"><span class="annot"><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#Capabilities"><span class="hs-identifier hs-var">Capabilities</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Capabilities"><span class="annot"><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#Capabilities"><span class="hs-identifier hs-var">Capabilities</span></a></span></span><span>
 </span><span id="line-69"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="dcRelationships"><span class="annot"><span class="annottext">Capabilities -&gt; Bool
 </span><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#dcRelationships"><span class="hs-identifier hs-var hs-var">dcRelationships</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-70"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-71"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688312498"><span id="local-6989586621688312500"><span class="annot"><span class="annottext">Capabilities -&gt; Capabilities -&gt; Bool
+</span><span id="line-71"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688312658"><span id="local-6989586621688312660"><span class="annot"><span class="annottext">Capabilities -&gt; Capabilities -&gt; Bool
 (Capabilities -&gt; Capabilities -&gt; Bool)
 -&gt; (Capabilities -&gt; Capabilities -&gt; Bool) -&gt; Eq Capabilities
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -396,7 +396,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: Capabilities -&gt; Capabilities -&gt; Bool
 == :: Capabilities -&gt; Capabilities -&gt; Bool
 $c== :: Capabilities -&gt; Capabilities -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312483"><span id="local-6989586621688312485"><span id="local-6989586621688312487"><span id="local-6989586621688312489"><span id="local-6989586621688312491"><span id="local-6989586621688312493"><span id="local-6989586621688312495"><span class="annot"><span class="annottext">Eq Capabilities
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312643"><span id="local-6989586621688312645"><span id="local-6989586621688312647"><span id="local-6989586621688312649"><span id="local-6989586621688312651"><span id="local-6989586621688312653"><span id="local-6989586621688312655"><span class="annot"><span class="annottext">Eq Capabilities
 Eq Capabilities
 -&gt; (Capabilities -&gt; Capabilities -&gt; Ordering)
 -&gt; (Capabilities -&gt; Capabilities -&gt; Bool)
@@ -434,7 +434,7 @@ $c&lt; :: Capabilities -&gt; Capabilities -&gt; Bool
 compare :: Capabilities -&gt; Capabilities -&gt; Ordering
 $ccompare :: Capabilities -&gt; Capabilities -&gt; Ordering
 $cp1Ord :: Eq Capabilities
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312477"><span id="local-6989586621688312479"><span id="local-6989586621688312481"><span class="annot"><span class="annottext">Int -&gt; Capabilities -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312637"><span id="local-6989586621688312639"><span id="local-6989586621688312641"><span class="annot"><span class="annottext">Int -&gt; Capabilities -&gt; ShowS
 [Capabilities] -&gt; ShowS
 Capabilities -&gt; String
 (Int -&gt; Capabilities -&gt; ShowS)
@@ -458,7 +458,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Capabilities x -&gt; Capabilities
 $cfrom :: forall x. Capabilities -&gt; Rep Capabilities x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cCapabilities"><span id="%24tCapabilities"><span id="local-6989586621688312446"><span id="local-6989586621688312448"><span id="local-6989586621688312450"><span id="local-6989586621688312452"><span id="local-6989586621688312454"><span id="local-6989586621688312456"><span id="local-6989586621688312458"><span id="local-6989586621688312460"><span id="local-6989586621688312462"><span id="local-6989586621688312464"><span id="local-6989586621688312466"><span id="local-6989586621688312468"><span id="local-6989586621688312470"><span id="local-6989586621688312472"><span class="annot"><span class="annottext">Typeable Capabilities
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cCapabilities"><span id="%24tCapabilities"><span id="local-6989586621688312606"><span id="local-6989586621688312608"><span id="local-6989586621688312610"><span id="local-6989586621688312612"><span id="local-6989586621688312614"><span id="local-6989586621688312616"><span id="local-6989586621688312618"><span id="local-6989586621688312620"><span id="local-6989586621688312622"><span id="local-6989586621688312624"><span id="local-6989586621688312626"><span id="local-6989586621688312628"><span id="local-6989586621688312630"><span id="local-6989586621688312632"><span class="annot"><span class="annottext">Typeable Capabilities
 DataType
 Constr
 Typeable Capabilities
@@ -620,12 +620,12 @@ $cgfoldl :: forall (c :: * -&gt; *).
 -&gt; (forall g. g -&gt; c g) -&gt; Capabilities -&gt; c Capabilities
 $cp1Data :: Typeable Capabilities
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-72"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688312442"><span class="annot"><span class="annottext">Capabilities -&gt; ()
+</span><span id="line-72"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688312602"><span class="annot"><span class="annottext">Capabilities -&gt; ()
 (Capabilities -&gt; ()) -&gt; NFData Capabilities
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: Capabilities -&gt; ()
 $crnf :: Capabilities -&gt; ()
-</span><a href="#local-6989586621688312442"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312439"><span class="annot"><span class="annottext">Eq Capabilities
+</span><a href="#local-6989586621688312602"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312599"><span class="annot"><span class="annottext">Eq Capabilities
 Eq Capabilities
 -&gt; (Accesses -&gt; Capabilities -&gt; Capabilities -&gt; Bool)
 -&gt; Cacheable Capabilities
@@ -634,7 +634,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; Capabilities -&gt; Capabilities -&gt; Bool
 $cunchanged :: Accesses -&gt; Capabilities -&gt; Capabilities -&gt; Bool
 $cp1Cacheable :: Eq Capabilities
-</span><a href="#local-6989586621688312439"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312435"><span id="local-6989586621688312437"><span class="annot"><span class="annottext">Int -&gt; Capabilities -&gt; Int
+</span><a href="#local-6989586621688312599"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312595"><span id="local-6989586621688312597"><span class="annot"><span class="annottext">Int -&gt; Capabilities -&gt; Int
 Capabilities -&gt; Int
 (Int -&gt; Capabilities -&gt; Int)
 -&gt; (Capabilities -&gt; Int) -&gt; Hashable Capabilities
@@ -643,11 +643,11 @@ hash :: Capabilities -&gt; Int
 $chash :: Capabilities -&gt; Int
 hashWithSalt :: Int -&gt; Capabilities -&gt; Int
 $chashWithSalt :: Int -&gt; Capabilities -&gt; Int
-</span><a href="#local-6989586621688312435"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688312595"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-73"></span><span>
-</span><span id="line-74"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688312428"><span id="local-6989586621688312430"><span id="local-6989586621688312432"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#Capabilities"><span class="hs-identifier hs-type">Capabilities</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-75"></span><span>  </span><span id="local-6989586621688312427"><span class="annot"><span class="annottext">toJSON :: Capabilities -&gt; Value
-</span><a href="#local-6989586621688312427"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-74"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688312588"><span id="local-6989586621688312590"><span id="local-6989586621688312592"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#Capabilities"><span class="hs-identifier hs-type">Capabilities</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-75"></span><span>  </span><span id="local-6989586621688312587"><span class="annot"><span class="annottext">toJSON :: Capabilities -&gt; Value
+</span><a href="#local-6989586621688312587"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-76"></span><span>    </span><span class="annot"><span class="annottext">Options -&gt; Capabilities -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
@@ -668,9 +668,9 @@ forall a. Int -&gt; [a] -&gt; [a]
 </span><span class="hs-number">2</span></span><span>
 </span><span id="line-79"></span><span>        </span><span class="hs-special">}</span><span>
 </span><span id="line-80"></span><span>
-</span><span id="line-81"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688312424"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#Capabilities"><span class="hs-identifier hs-type">Capabilities</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-82"></span><span>  </span><span id="local-6989586621688312423"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser Capabilities
-</span><a href="#local-6989586621688312423"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-81"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688312584"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#Capabilities"><span class="hs-identifier hs-type">Capabilities</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-82"></span><span>  </span><span id="local-6989586621688312583"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser Capabilities
+</span><a href="#local-6989586621688312583"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-83"></span><span>    </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser Capabilities
 forall a.
 (Generic a, GFromJSON Zero (Rep a)) =&gt;
@@ -698,7 +698,7 @@ forall a. Int -&gt; [a] -&gt; [a]
 </span><span id="line-92"></span><span class="hs-comment">-- endpoint encoded as 'J.Value'.</span><span>
 </span><span id="line-93"></span><span class="hs-keyword">newtype</span><span> </span><span id="QueryResponse"><span class="annot"><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#QueryResponse"><span class="hs-identifier hs-var">QueryResponse</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="QueryResponse"><span class="annot"><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#QueryResponse"><span class="hs-identifier hs-var">QueryResponse</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getQueryResponse"><span class="annot"><span class="annottext">QueryResponse -&gt; [Value]
 </span><a href="Hasura.Backends.DataWrapper.Agent.Schema.html#getQueryResponse"><span class="hs-identifier hs-var hs-var">getQueryResponse</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span class="hs-special">]</span><span class="hs-special">}</span><span>
-</span><span id="line-94"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688312417"><span id="local-6989586621688312419"><span class="annot"><span class="annottext">QueryResponse -&gt; QueryResponse -&gt; Bool
+</span><span id="line-94"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688312577"><span id="local-6989586621688312579"><span class="annot"><span class="annottext">QueryResponse -&gt; QueryResponse -&gt; Bool
 (QueryResponse -&gt; QueryResponse -&gt; Bool)
 -&gt; (QueryResponse -&gt; QueryResponse -&gt; Bool) -&gt; Eq QueryResponse
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -706,7 +706,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: QueryResponse -&gt; QueryResponse -&gt; Bool
 == :: QueryResponse -&gt; QueryResponse -&gt; Bool
 $c== :: QueryResponse -&gt; QueryResponse -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312402"><span id="local-6989586621688312404"><span id="local-6989586621688312406"><span id="local-6989586621688312408"><span id="local-6989586621688312410"><span id="local-6989586621688312412"><span id="local-6989586621688312414"><span class="annot"><span class="annottext">Eq QueryResponse
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312562"><span id="local-6989586621688312564"><span id="local-6989586621688312566"><span id="local-6989586621688312568"><span id="local-6989586621688312570"><span id="local-6989586621688312572"><span id="local-6989586621688312574"><span class="annot"><span class="annottext">Eq QueryResponse
 Eq QueryResponse
 -&gt; (QueryResponse -&gt; QueryResponse -&gt; Ordering)
 -&gt; (QueryResponse -&gt; QueryResponse -&gt; Bool)
@@ -744,7 +744,7 @@ $c&lt; :: QueryResponse -&gt; QueryResponse -&gt; Bool
 compare :: QueryResponse -&gt; QueryResponse -&gt; Ordering
 $ccompare :: QueryResponse -&gt; QueryResponse -&gt; Ordering
 $cp1Ord :: Eq QueryResponse
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312396"><span id="local-6989586621688312398"><span id="local-6989586621688312400"><span class="annot"><span class="annottext">Int -&gt; QueryResponse -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312556"><span id="local-6989586621688312558"><span id="local-6989586621688312560"><span class="annot"><span class="annottext">Int -&gt; QueryResponse -&gt; ShowS
 [QueryResponse] -&gt; ShowS
 QueryResponse -&gt; String
 (Int -&gt; QueryResponse -&gt; ShowS)
@@ -759,12 +759,12 @@ show :: QueryResponse -&gt; String
 $cshow :: QueryResponse -&gt; String
 showsPrec :: Int -&gt; QueryResponse -&gt; ShowS
 $cshowsPrec :: Int -&gt; QueryResponse -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312394"><span class="annot"><span class="annottext">QueryResponse -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312554"><span class="annot"><span class="annottext">QueryResponse -&gt; ()
 (QueryResponse -&gt; ()) -&gt; NFData QueryResponse
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: QueryResponse -&gt; ()
 $crnf :: QueryResponse -&gt; ()
-</span><a href="#local-6989586621688312394"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312386"><span id="local-6989586621688312388"><span id="local-6989586621688312390"><span id="local-6989586621688312392"><span class="annot"><span class="annottext">[QueryResponse] -&gt; Encoding
+</span><a href="#local-6989586621688312554"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312546"><span id="local-6989586621688312548"><span id="local-6989586621688312550"><span id="local-6989586621688312552"><span class="annot"><span class="annottext">[QueryResponse] -&gt; Encoding
 [QueryResponse] -&gt; Value
 QueryResponse -&gt; Encoding
 QueryResponse -&gt; Value
@@ -787,7 +787,7 @@ toEncoding :: QueryResponse -&gt; Encoding
 $ctoEncoding :: QueryResponse -&gt; Encoding
 toJSON :: QueryResponse -&gt; Value
 $ctoJSON :: QueryResponse -&gt; Value
-</span><a href="#local-6989586621688312386"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312382"><span id="local-6989586621688312384"><span class="annot"><span class="annottext">Value -&gt; Parser [QueryResponse]
+</span><a href="#local-6989586621688312546"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688312542"><span id="local-6989586621688312544"><span class="annot"><span class="annottext">Value -&gt; Parser [QueryResponse]
 Value -&gt; Parser QueryResponse
 (Value -&gt; Parser QueryResponse)
 -&gt; (Value -&gt; Parser [QueryResponse]) -&gt; FromJSON QueryResponse
@@ -797,5 +797,5 @@ parseJSONList :: Value -&gt; Parser [QueryResponse]
 $cparseJSONList :: Value -&gt; Parser [QueryResponse]
 parseJSON :: Value -&gt; Parser QueryResponse
 $cparseJSON :: Value -&gt; Parser QueryResponse
-</span><a href="#local-6989586621688312382"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688312542"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-95"></span></pre></body></html>

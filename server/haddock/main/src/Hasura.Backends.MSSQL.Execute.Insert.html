@@ -34,26 +34,26 @@
 </span><span id="line-34"></span><span>
 </span><span id="line-35"></span><span class="hs-comment">-- | Execute and insert/upsert mutation against MS SQL Server.</span><span>
 </span><span id="line-36"></span><span class="hs-comment">--   See the documentation for 'buildInsertTx' to see how it's done.</span><span>
-</span><span id="line-37"></span><span id="local-6989586621688405539"><span class="annot"><a href="Hasura.Backends.MSSQL.Execute.Insert.html#executeInsert"><span class="hs-identifier hs-type">executeInsert</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-38"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688405539"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-37"></span><span id="local-6989586621688405699"><span class="annot"><a href="Hasura.Backends.MSSQL.Execute.Insert.html#executeInsert"><span class="hs-identifier hs-type">executeInsert</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-38"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688405699"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-39"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-40"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#StringifyNumbers"><span class="hs-identifier hs-type">StringifyNumbers</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-41"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-42"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnInsert"><span class="hs-identifier hs-type">AnnInsert</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-43"></span><span>  </span><span class="annot"><a href="#local-6989586621688405539"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-43"></span><span>  </span><span class="annot"><a href="#local-6989586621688405699"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-44"></span><span id="executeInsert"><span class="annot"><span class="annottext">executeInsert :: UserInfo
 -&gt; StringifyNumbers
 -&gt; SourceConfig 'MSSQL
 -&gt; AnnInsert 'MSSQL Void (UnpreparedValue 'MSSQL)
 -&gt; m (ExceptT QErr IO EncJSON)
-</span><a href="Hasura.Backends.MSSQL.Execute.Insert.html#executeInsert"><span class="hs-identifier hs-var hs-var">executeInsert</span></a></span></span><span> </span><span id="local-6989586621688405538"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621688405538"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621688405537"><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="#local-6989586621688405537"><span class="hs-identifier hs-var">stringifyNum</span></a></span></span><span> </span><span id="local-6989586621688405536"><span class="annot"><span class="annottext">SourceConfig 'MSSQL
-</span><a href="#local-6989586621688405536"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span id="local-6989586621688405535"><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void (UnpreparedValue 'MSSQL)
-</span><a href="#local-6989586621688405535"><span class="hs-identifier hs-var">annInsert</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="Hasura.Backends.MSSQL.Execute.Insert.html#executeInsert"><span class="hs-identifier hs-var hs-var">executeInsert</span></a></span></span><span> </span><span id="local-6989586621688405698"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621688405698"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621688405697"><span class="annot"><span class="annottext">StringifyNumbers
+</span><a href="#local-6989586621688405697"><span class="hs-identifier hs-var">stringifyNum</span></a></span></span><span> </span><span id="local-6989586621688405696"><span class="annot"><span class="annottext">SourceConfig 'MSSQL
+</span><a href="#local-6989586621688405696"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span id="local-6989586621688405695"><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void (UnpreparedValue 'MSSQL)
+</span><a href="#local-6989586621688405695"><span class="hs-identifier hs-var">annInsert</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-45"></span><span>  </span><span class="hs-comment">-- Convert the leaf values from @'UnpreparedValue' to sql @'Expression'</span><span>
-</span><span id="line-46"></span><span>  </span><span id="local-6989586621688405534"><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression
-</span><a href="#local-6989586621688405534"><span class="hs-identifier hs-var">insert</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(UnpreparedValue 'MSSQL -&gt; m Expression)
+</span><span id="line-46"></span><span>  </span><span id="local-6989586621688405694"><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression
+</span><a href="#local-6989586621688405694"><span class="hs-identifier hs-var">insert</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(UnpreparedValue 'MSSQL -&gt; m Expression)
 -&gt; AnnInsert 'MSSQL Void (UnpreparedValue 'MSSQL)
 -&gt; m (AnnInsert 'MSSQL Void Expression)
 forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
@@ -64,20 +64,20 @@ forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 SessionVariables -&gt; UnpreparedValue 'MSSQL -&gt; m Expression
 </span><a href="Hasura.Backends.MSSQL.Plan.html#prepareValueQuery"><span class="hs-identifier hs-var">prepareValueQuery</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables
-</span><a href="#local-6989586621688405531"><span class="hs-identifier hs-var">sessionVariables</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void (UnpreparedValue 'MSSQL)
-</span><a href="#local-6989586621688405535"><span class="hs-identifier hs-var">annInsert</span></a></span><span>
-</span><span id="line-47"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688405530"><span class="annot"><span class="annottext">insertTx :: TxET QErr IO EncJSON
-</span><a href="#local-6989586621688405530"><span class="hs-identifier hs-var hs-var">insertTx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621688405691"><span class="hs-identifier hs-var">sessionVariables</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void (UnpreparedValue 'MSSQL)
+</span><a href="#local-6989586621688405695"><span class="hs-identifier hs-var">annInsert</span></a></span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688405690"><span class="annot"><span class="annottext">insertTx :: TxET QErr IO EncJSON
+</span><a href="#local-6989586621688405690"><span class="hs-identifier hs-var hs-var">insertTx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableName
 -&gt; Text
 -&gt; StringifyNumbers
 -&gt; AnnInsert 'MSSQL Void Expression
 -&gt; TxET QErr IO EncJSON
 </span><a href="Hasura.Backends.MSSQL.Execute.Insert.html#buildInsertTx"><span class="hs-identifier hs-var">buildInsertTx</span></a></span><span> </span><span class="annot"><span class="annottext">TableName 'MSSQL
 TableName
-</span><a href="#local-6989586621688405528"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688405527"><span class="hs-identifier hs-var">withAlias</span></a></span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="#local-6989586621688405537"><span class="hs-identifier hs-var">stringifyNum</span></a></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression
-</span><a href="#local-6989586621688405534"><span class="hs-identifier hs-var">insert</span></a></span><span>
+</span><a href="#local-6989586621688405688"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688405687"><span class="hs-identifier hs-var">withAlias</span></a></span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
+</span><a href="#local-6989586621688405697"><span class="hs-identifier hs-var">stringifyNum</span></a></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression
+</span><a href="#local-6989586621688405694"><span class="hs-identifier hs-var">insert</span></a></span><span>
 </span><span id="line-48"></span><span>  </span><span class="annot"><span class="annottext">ExceptT QErr IO EncJSON -&gt; m (ExceptT QErr IO EncJSON)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(ExceptT QErr IO EncJSON -&gt; m (ExceptT QErr IO EncJSON))
@@ -91,15 +91,15 @@ MSSQLExecCtx
 </span><a href="Hasura.Backends.MSSQL.Connection.html#mssqlRunReadWrite"><span class="hs-identifier hs-var hs-var">mssqlRunReadWrite</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MSSQLSourceConfig -&gt; MSSQLExecCtx
 </span><a href="Hasura.Backends.MSSQL.Connection.html#_mscExecCtx"><span class="hs-identifier hs-var hs-var">_mscExecCtx</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
 MSSQLSourceConfig
-</span><a href="#local-6989586621688405536"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TxET QErr IO EncJSON
-</span><a href="#local-6989586621688405530"><span class="hs-identifier hs-var">insertTx</span></a></span><span>
+</span><a href="#local-6989586621688405696"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TxET QErr IO EncJSON
+</span><a href="#local-6989586621688405690"><span class="hs-identifier hs-var">insertTx</span></a></span><span>
 </span><span id="line-49"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-50"></span><span>    </span><span id="local-6989586621688405531"><span class="annot"><span class="annottext">sessionVariables :: SessionVariables
-</span><a href="#local-6989586621688405531"><span class="hs-identifier hs-var hs-var">sessionVariables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UserInfo -&gt; SessionVariables
+</span><span id="line-50"></span><span>    </span><span id="local-6989586621688405691"><span class="annot"><span class="annottext">sessionVariables :: SessionVariables
+</span><a href="#local-6989586621688405691"><span class="hs-identifier hs-var hs-var">sessionVariables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UserInfo -&gt; SessionVariables
 </span><a href="Hasura.Session.html#_uiSession"><span class="hs-identifier hs-var hs-var">_uiSession</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621688405538"><span class="hs-identifier hs-var">userInfo</span></a></span><span>
-</span><span id="line-51"></span><span>    </span><span id="local-6989586621688405528"><span class="annot"><span class="annottext">tableName :: TableName 'MSSQL
-</span><a href="#local-6989586621688405528"><span class="hs-identifier hs-var hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AnnIns 'MSSQL [] (UnpreparedValue 'MSSQL) -&gt; TableName 'MSSQL
+</span><a href="#local-6989586621688405698"><span class="hs-identifier hs-var">userInfo</span></a></span><span>
+</span><span id="line-51"></span><span>    </span><span id="local-6989586621688405688"><span class="annot"><span class="annottext">tableName :: TableName 'MSSQL
+</span><a href="#local-6989586621688405688"><span class="hs-identifier hs-var hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AnnIns 'MSSQL [] (UnpreparedValue 'MSSQL) -&gt; TableName 'MSSQL
 forall (b :: BackendType) (f :: * -&gt; *) v.
 AnnIns b f v -&gt; TableName b
 </span><a href="Hasura.RQL.IR.Insert.html#_aiTableName"><span class="hs-identifier hs-var hs-var">_aiTableName</span></a></span><span> </span><span class="annot"><span class="annottext">(AnnIns 'MSSQL [] (UnpreparedValue 'MSSQL) -&gt; TableName 'MSSQL)
@@ -109,9 +109,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; AnnIns 'MSSQL [] (UnpreparedValue 'MSSQL)
 forall (b :: BackendType) r v. AnnInsert b r v -&gt; MultiObjIns b v
 </span><a href="Hasura.RQL.IR.Insert.html#_aiData"><span class="hs-identifier hs-var hs-var">_aiData</span></a></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void (UnpreparedValue 'MSSQL)
-</span><a href="#local-6989586621688405535"><span class="hs-identifier hs-var">annInsert</span></a></span><span>
-</span><span id="line-52"></span><span>    </span><span id="local-6989586621688405527"><span class="annot"><span class="annottext">withAlias :: Text
-</span><a href="#local-6989586621688405527"><span class="hs-identifier hs-var hs-var">withAlias</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688405695"><span class="hs-identifier hs-var">annInsert</span></a></span><span>
+</span><span id="line-52"></span><span>    </span><span id="local-6989586621688405687"><span class="annot"><span class="annottext">withAlias :: Text
+</span><a href="#local-6989586621688405687"><span class="hs-identifier hs-var hs-var">withAlias</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;with_alias&quot;</span></span><span>
 </span><span id="line-53"></span><span>
 </span><span id="line-54"></span><span class="hs-comment">-- | Translates an IR Insert/upsert mutation description to SQL and</span><span>
@@ -201,13 +201,13 @@ forall (b :: BackendType) r v. AnnInsert b r v -&gt; MultiObjIns b v
 -&gt; StringifyNumbers
 -&gt; AnnInsert 'MSSQL Void Expression
 -&gt; TxET QErr IO EncJSON
-</span><a href="Hasura.Backends.MSSQL.Execute.Insert.html#buildInsertTx"><span class="hs-identifier hs-var hs-var">buildInsertTx</span></a></span></span><span> </span><span id="local-6989586621688405521"><span class="annot"><span class="annottext">TableName
-</span><a href="#local-6989586621688405521"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span id="local-6989586621688405520"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688405520"><span class="hs-identifier hs-var">withAlias</span></a></span></span><span> </span><span id="local-6989586621688405519"><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="#local-6989586621688405519"><span class="hs-identifier hs-var">stringifyNum</span></a></span></span><span> </span><span id="local-6989586621688405518"><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression
-</span><a href="#local-6989586621688405518"><span class="hs-identifier hs-var">insert</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-137"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688405517"><span class="annot"><span class="annottext">tableColumns :: [ColumnInfo 'MSSQL]
-</span><a href="#local-6989586621688405517"><span class="hs-identifier hs-var hs-var">tableColumns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AnnIns 'MSSQL [] Expression -&gt; [ColumnInfo 'MSSQL]
+</span><a href="Hasura.Backends.MSSQL.Execute.Insert.html#buildInsertTx"><span class="hs-identifier hs-var hs-var">buildInsertTx</span></a></span></span><span> </span><span id="local-6989586621688405681"><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621688405681"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span id="local-6989586621688405680"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688405680"><span class="hs-identifier hs-var">withAlias</span></a></span></span><span> </span><span id="local-6989586621688405679"><span class="annot"><span class="annottext">StringifyNumbers
+</span><a href="#local-6989586621688405679"><span class="hs-identifier hs-var">stringifyNum</span></a></span></span><span> </span><span id="local-6989586621688405678"><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression
+</span><a href="#local-6989586621688405678"><span class="hs-identifier hs-var">insert</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-137"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688405677"><span class="annot"><span class="annottext">tableColumns :: [ColumnInfo 'MSSQL]
+</span><a href="#local-6989586621688405677"><span class="hs-identifier hs-var hs-var">tableColumns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AnnIns 'MSSQL [] Expression -&gt; [ColumnInfo 'MSSQL]
 forall (b :: BackendType) (f :: * -&gt; *) v.
 AnnIns b f v -&gt; [ColumnInfo b]
 </span><a href="Hasura.RQL.IR.Insert.html#_aiTableCols"><span class="hs-identifier hs-var hs-var">_aiTableCols</span></a></span><span> </span><span class="annot"><span class="annottext">(AnnIns 'MSSQL [] Expression -&gt; [ColumnInfo 'MSSQL])
@@ -216,9 +216,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression -&gt; AnnIns 'MSSQL [] Expression
 forall (b :: BackendType) r v. AnnInsert b r v -&gt; MultiObjIns b v
 </span><a href="Hasura.RQL.IR.Insert.html#_aiData"><span class="hs-identifier hs-var hs-var">_aiData</span></a></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression
-</span><a href="#local-6989586621688405518"><span class="hs-identifier hs-var">insert</span></a></span><span>
-</span><span id="line-138"></span><span>      </span><span id="local-6989586621688405515"><span class="annot"><span class="annottext">ifMatchedField :: Maybe (IfMatched Expression)
-</span><a href="#local-6989586621688405515"><span class="hs-identifier hs-var hs-var">ifMatchedField</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BackendInsert Expression -&gt; Maybe (IfMatched Expression)
+</span><a href="#local-6989586621688405678"><span class="hs-identifier hs-var">insert</span></a></span><span>
+</span><span id="line-138"></span><span>      </span><span id="local-6989586621688405675"><span class="annot"><span class="annottext">ifMatchedField :: Maybe (IfMatched Expression)
+</span><a href="#local-6989586621688405675"><span class="hs-identifier hs-var hs-var">ifMatchedField</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BackendInsert Expression -&gt; Maybe (IfMatched Expression)
 forall v. BackendInsert v -&gt; Maybe (IfMatched v)
 </span><a href="Hasura.Backends.MSSQL.Types.Insert.html#_biIfMatched"><span class="hs-identifier hs-var hs-var">_biIfMatched</span></a></span><span> </span><span class="annot"><span class="annottext">(BackendInsert Expression -&gt; Maybe (IfMatched Expression))
 -&gt; (AnnInsert 'MSSQL Void Expression -&gt; BackendInsert Expression)
@@ -240,11 +240,11 @@ forall (b :: BackendType) r v. AnnInsert b r v -&gt; MultiObjIns b v
 -&gt; AnnInsert 'MSSQL Void Expression -&gt; Maybe (IfMatched Expression)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression
-</span><a href="#local-6989586621688405518"><span class="hs-identifier hs-var">insert</span></a></span><span>
+</span><a href="#local-6989586621688405678"><span class="hs-identifier hs-var">insert</span></a></span><span>
 </span><span id="line-139"></span><span>
 </span><span id="line-140"></span><span>  </span><span class="hs-comment">-- Create #inserted temporary table</span><span>
-</span><span id="line-141"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688405511"><span class="annot"><span class="annottext">createInsertedTempTableQuery :: Query
-</span><a href="#local-6989586621688405511"><span class="hs-identifier hs-var hs-var">createInsertedTempTableQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-141"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688405671"><span class="annot"><span class="annottext">createInsertedTempTableQuery :: Query
+</span><a href="#local-6989586621688405671"><span class="hs-identifier hs-var hs-var">createInsertedTempTableQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-142"></span><span>        </span><span class="annot"><span class="annottext">Printer -&gt; Query
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#toQueryFlat"><span class="hs-identifier hs-var">toQueryFlat</span></a></span><span> </span><span class="annot"><span class="annottext">(Printer -&gt; Query) -&gt; Printer -&gt; Query
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -260,8 +260,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; SelectIntoTempTable
 </span><a href="Hasura.Backends.MSSQL.FromIr.SelectIntoTempTable.html#toSelectIntoTempTable"><span class="hs-identifier hs-var">TSQL.toSelectIntoTempTable</span></a></span><span> </span><span class="annot"><span class="annottext">TempTableName
 </span><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#tempTableNameInserted"><span class="hs-identifier hs-var">tempTableNameInserted</span></a></span><span> </span><span class="annot"><span class="annottext">TableName
-</span><a href="#local-6989586621688405521"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">[ColumnInfo 'MSSQL]
-</span><a href="#local-6989586621688405517"><span class="hs-identifier hs-var">tableColumns</span></a></span><span> </span><span class="annot"><span class="annottext">SITTConstraints
+</span><a href="#local-6989586621688405681"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">[ColumnInfo 'MSSQL]
+</span><a href="#local-6989586621688405677"><span class="hs-identifier hs-var">tableColumns</span></a></span><span> </span><span class="annot"><span class="annottext">SITTConstraints
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#RemoveConstraints"><span class="hs-identifier hs-var">RemoveConstraints</span></a></span><span>
 </span><span id="line-145"></span><span>
 </span><span id="line-146"></span><span>  </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; QErr) -&gt; Query -&gt; TxET QErr IO ()
@@ -270,19 +270,19 @@ MonadIO m =&gt;
 (MSSQLTxError -&gt; e) -&gt; Query -&gt; TxET e m ()
 </span><a href="Database.MSSQL.Transaction.html#unitQueryE"><span class="hs-identifier hs-var">Tx.unitQueryE</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; QErr
 </span><a href="Hasura.Backends.MSSQL.SQL.Error.html#defaultMSSQLTxErrorHandler"><span class="hs-identifier hs-var">defaultMSSQLTxErrorHandler</span></a></span><span> </span><span class="annot"><span class="annottext">Query
-</span><a href="#local-6989586621688405511"><span class="hs-identifier hs-var">createInsertedTempTableQuery</span></a></span><span>
+</span><a href="#local-6989586621688405671"><span class="hs-identifier hs-var">createInsertedTempTableQuery</span></a></span><span>
 </span><span id="line-147"></span><span>
 </span><span id="line-148"></span><span>  </span><span class="hs-comment">-- Choose between running a regular @INSERT INTO@ statement or a @MERGE@ statement</span><span>
 </span><span id="line-149"></span><span>  </span><span class="hs-comment">-- depending on the @if_matched@ field.</span><span>
 </span><span id="line-150"></span><span>  </span><span class="hs-comment">--</span><span>
 </span><span id="line-151"></span><span>  </span><span class="hs-comment">-- Affected rows will be inserted into the #inserted temporary table regardless.</span><span>
 </span><span id="line-152"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (IfMatched Expression)
-</span><a href="#local-6989586621688405515"><span class="hs-identifier hs-var">ifMatchedField</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688405675"><span class="hs-identifier hs-var">ifMatchedField</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-153"></span><span>    </span><span class="annot"><span class="annottext">Maybe (IfMatched Expression)
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-154"></span><span>      </span><span class="hs-comment">-- Insert values into the table using INSERT query</span><span>
-</span><span id="line-155"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688405504"><span class="annot"><span class="annottext">insertQuery :: Query
-</span><a href="#local-6989586621688405504"><span class="hs-identifier hs-var hs-var">insertQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Printer -&gt; Query
+</span><span id="line-155"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688405664"><span class="annot"><span class="annottext">insertQuery :: Query
+</span><a href="#local-6989586621688405664"><span class="hs-identifier hs-var hs-var">insertQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Printer -&gt; Query
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#toQueryFlat"><span class="hs-identifier hs-var">toQueryFlat</span></a></span><span> </span><span class="annot"><span class="annottext">(Printer -&gt; Query) -&gt; Printer -&gt; Query
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Insert -&gt; Printer
@@ -290,35 +290,35 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression -&gt; Insert
 </span><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#fromInsert"><span class="hs-identifier hs-var">TSQL.fromInsert</span></a></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression
-</span><a href="#local-6989586621688405518"><span class="hs-identifier hs-var">insert</span></a></span><span>
+</span><a href="#local-6989586621688405678"><span class="hs-identifier hs-var">insert</span></a></span><span>
 </span><span id="line-156"></span><span>      </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; QErr) -&gt; Query -&gt; TxET QErr IO ()
 forall (m :: * -&gt; *) e.
 MonadIO m =&gt;
 (MSSQLTxError -&gt; e) -&gt; Query -&gt; TxET e m ()
 </span><a href="Database.MSSQL.Transaction.html#unitQueryE"><span class="hs-identifier hs-var">Tx.unitQueryE</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; QErr
 </span><a href="Hasura.Backends.MSSQL.SQL.Error.html#mutationMSSQLTxErrorHandler"><span class="hs-identifier hs-var">mutationMSSQLTxErrorHandler</span></a></span><span> </span><span class="annot"><span class="annottext">Query
-</span><a href="#local-6989586621688405504"><span class="hs-identifier hs-var">insertQuery</span></a></span><span>
-</span><span id="line-157"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688405500"><span class="annot"><span class="annottext">IfMatched Expression
-</span><a href="#local-6989586621688405500"><span class="hs-identifier hs-var">ifMatched</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621688405664"><span class="hs-identifier hs-var">insertQuery</span></a></span><span>
+</span><span id="line-157"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688405660"><span class="annot"><span class="annottext">IfMatched Expression
+</span><a href="#local-6989586621688405660"><span class="hs-identifier hs-var">ifMatched</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TableName
 -&gt; AnnInsert 'MSSQL Void Expression
 -&gt; IfMatched Expression
 -&gt; TxET QErr IO ()
 </span><a href="Hasura.Backends.MSSQL.Execute.Insert.html#buildUpsertTx"><span class="hs-identifier hs-var">buildUpsertTx</span></a></span><span> </span><span class="annot"><span class="annottext">TableName
-</span><a href="#local-6989586621688405521"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression
-</span><a href="#local-6989586621688405518"><span class="hs-identifier hs-var">insert</span></a></span><span> </span><span class="annot"><span class="annottext">IfMatched Expression
-</span><a href="#local-6989586621688405500"><span class="hs-identifier hs-var">ifMatched</span></a></span><span>
+</span><a href="#local-6989586621688405681"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression
+</span><a href="#local-6989586621688405678"><span class="hs-identifier hs-var">insert</span></a></span><span> </span><span class="annot"><span class="annottext">IfMatched Expression
+</span><a href="#local-6989586621688405660"><span class="hs-identifier hs-var">ifMatched</span></a></span><span>
 </span><span id="line-158"></span><span>
 </span><span id="line-159"></span><span>  </span><span class="hs-comment">-- Build a response to the user using the values in the temporary table named #inserted</span><span>
-</span><span id="line-160"></span><span>  </span><span class="hs-special">(</span><span id="local-6989586621688405498"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688405498"><span class="hs-identifier hs-var">responseText</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688405497"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621688405497"><span class="hs-identifier hs-var">checkConditionInt</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
+</span><span id="line-160"></span><span>  </span><span class="hs-special">(</span><span id="local-6989586621688405658"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688405658"><span class="hs-identifier hs-var">responseText</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688405657"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621688405657"><span class="hs-identifier hs-var">checkConditionInt</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
 -&gt; Text
 -&gt; AnnInsert 'MSSQL Void Expression
 -&gt; TxET QErr IO (Text, Int)
 </span><a href="Hasura.Backends.MSSQL.Execute.Insert.html#buildInsertResponseTx"><span class="hs-identifier hs-var">buildInsertResponseTx</span></a></span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="#local-6989586621688405519"><span class="hs-identifier hs-var">stringifyNum</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688405520"><span class="hs-identifier hs-var">withAlias</span></a></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression
-</span><a href="#local-6989586621688405518"><span class="hs-identifier hs-var">insert</span></a></span><span>
+</span><a href="#local-6989586621688405679"><span class="hs-identifier hs-var">stringifyNum</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688405680"><span class="hs-identifier hs-var">withAlias</span></a></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression
+</span><a href="#local-6989586621688405678"><span class="hs-identifier hs-var">insert</span></a></span><span>
 </span><span id="line-161"></span><span>
 </span><span id="line-162"></span><span>  </span><span class="hs-comment">-- Drop the #inserted temp table</span><span>
 </span><span id="line-163"></span><span>  </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; QErr) -&gt; Query -&gt; TxET QErr IO ()
@@ -339,7 +339,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-166"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; TxET QErr IO () -&gt; TxET QErr IO ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621688405497"><span class="hs-identifier hs-var">checkConditionInt</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+</span><a href="#local-6989586621688405657"><span class="hs-identifier hs-var">checkConditionInt</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(TxET QErr IO () -&gt; TxET QErr IO ())
@@ -359,7 +359,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromText"><span class="hs-identifier hs-var">encJFromText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688405498"><span class="hs-identifier hs-var">responseText</span></a></span><span>
+</span><a href="#local-6989586621688405658"><span class="hs-identifier hs-var">responseText</span></a></span><span>
 </span><span id="line-170"></span><span>
 </span><span id="line-171"></span><span class="hs-comment">-- | Translates an IR IfMatched clause to SQL and</span><span>
 </span><span id="line-172"></span><span class="hs-comment">--   builds a corresponding transaction to run against MS SQL Server.</span><span>
@@ -378,12 +378,12 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; AnnInsert 'MSSQL Void Expression
 -&gt; IfMatched Expression
 -&gt; TxET QErr IO ()
-</span><a href="Hasura.Backends.MSSQL.Execute.Insert.html#buildUpsertTx"><span class="hs-identifier hs-var hs-var">buildUpsertTx</span></a></span></span><span> </span><span id="local-6989586621688405490"><span class="annot"><span class="annottext">TableName
-</span><a href="#local-6989586621688405490"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span id="local-6989586621688405489"><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression
-</span><a href="#local-6989586621688405489"><span class="hs-identifier hs-var">insert</span></a></span></span><span> </span><span id="local-6989586621688405488"><span class="annot"><span class="annottext">IfMatched Expression
-</span><a href="#local-6989586621688405488"><span class="hs-identifier hs-var">ifMatched</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-185"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688405487"><span class="annot"><span class="annottext">presets :: PreSetColsG 'MSSQL Expression
-</span><a href="#local-6989586621688405487"><span class="hs-identifier hs-var hs-var">presets</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AnnIns 'MSSQL [] Expression -&gt; PreSetColsG 'MSSQL Expression
+</span><a href="Hasura.Backends.MSSQL.Execute.Insert.html#buildUpsertTx"><span class="hs-identifier hs-var hs-var">buildUpsertTx</span></a></span></span><span> </span><span id="local-6989586621688405650"><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621688405650"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span id="local-6989586621688405649"><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression
+</span><a href="#local-6989586621688405649"><span class="hs-identifier hs-var">insert</span></a></span></span><span> </span><span id="local-6989586621688405648"><span class="annot"><span class="annottext">IfMatched Expression
+</span><a href="#local-6989586621688405648"><span class="hs-identifier hs-var">ifMatched</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-185"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688405647"><span class="annot"><span class="annottext">presets :: PreSetColsG 'MSSQL Expression
+</span><a href="#local-6989586621688405647"><span class="hs-identifier hs-var hs-var">presets</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AnnIns 'MSSQL [] Expression -&gt; PreSetColsG 'MSSQL Expression
 forall (b :: BackendType) (f :: * -&gt; *) v.
 AnnIns b f v -&gt; PreSetColsG b v
 </span><a href="Hasura.RQL.IR.Insert.html#_aiDefVals"><span class="hs-identifier hs-var hs-var">_aiDefVals</span></a></span><span> </span><span class="annot"><span class="annottext">(AnnIns 'MSSQL [] Expression -&gt; PreSetColsG 'MSSQL Expression)
@@ -392,9 +392,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression -&gt; AnnIns 'MSSQL [] Expression
 forall (b :: BackendType) r v. AnnInsert b r v -&gt; MultiObjIns b v
 </span><a href="Hasura.RQL.IR.Insert.html#_aiData"><span class="hs-identifier hs-var hs-var">_aiData</span></a></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression
-</span><a href="#local-6989586621688405489"><span class="hs-identifier hs-var">insert</span></a></span><span>
-</span><span id="line-186"></span><span>      </span><span id="local-6989586621688405485"><span class="annot"><span class="annottext">insertColumnNames :: [ColumnName]
-</span><a href="#local-6989586621688405485"><span class="hs-identifier hs-var hs-var">insertColumnNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621688405649"><span class="hs-identifier hs-var">insert</span></a></span><span>
+</span><span id="line-186"></span><span>      </span><span id="local-6989586621688405645"><span class="annot"><span class="annottext">insertColumnNames :: [ColumnName]
+</span><a href="#local-6989586621688405645"><span class="hs-identifier hs-var hs-var">insertColumnNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-187"></span><span>        </span><span class="annot"><span class="annottext">(AnnotatedInsertRow 'MSSQL Expression -&gt; [ColumnName])
 -&gt; [AnnotatedInsertRow 'MSSQL Expression] -&gt; [ColumnName]
 forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
@@ -424,15 +424,15 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression -&gt; AnnIns 'MSSQL [] Expression
 forall (b :: BackendType) r v. AnnInsert b r v -&gt; MultiObjIns b v
 </span><a href="Hasura.RQL.IR.Insert.html#_aiData"><span class="hs-identifier hs-var hs-var">_aiData</span></a></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression
-</span><a href="#local-6989586621688405489"><span class="hs-identifier hs-var">insert</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[ColumnName] -&gt; [ColumnName] -&gt; [ColumnName]
+</span><a href="#local-6989586621688405649"><span class="hs-identifier hs-var">insert</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[ColumnName] -&gt; [ColumnName] -&gt; [ColumnName]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">HashMap ColumnName Expression -&gt; [ColumnName]
 forall k v. HashMap k v -&gt; [k]
 </span><span class="hs-identifier hs-var">HM.keys</span></span><span> </span><span class="annot"><span class="annottext">PreSetColsG 'MSSQL Expression
 HashMap ColumnName Expression
-</span><a href="#local-6989586621688405487"><span class="hs-identifier hs-var">presets</span></a></span><span>
-</span><span id="line-188"></span><span>      </span><span id="local-6989586621688405480"><span class="annot"><span class="annottext">allTableColumns :: [ColumnInfo 'MSSQL]
-</span><a href="#local-6989586621688405480"><span class="hs-identifier hs-var hs-var">allTableColumns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AnnIns 'MSSQL [] Expression -&gt; [ColumnInfo 'MSSQL]
+</span><a href="#local-6989586621688405647"><span class="hs-identifier hs-var">presets</span></a></span><span>
+</span><span id="line-188"></span><span>      </span><span id="local-6989586621688405640"><span class="annot"><span class="annottext">allTableColumns :: [ColumnInfo 'MSSQL]
+</span><a href="#local-6989586621688405640"><span class="hs-identifier hs-var hs-var">allTableColumns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AnnIns 'MSSQL [] Expression -&gt; [ColumnInfo 'MSSQL]
 forall (b :: BackendType) (f :: * -&gt; *) v.
 AnnIns b f v -&gt; [ColumnInfo b]
 </span><a href="Hasura.RQL.IR.Insert.html#_aiTableCols"><span class="hs-identifier hs-var hs-var">_aiTableCols</span></a></span><span> </span><span class="annot"><span class="annottext">(AnnIns 'MSSQL [] Expression -&gt; [ColumnInfo 'MSSQL])
@@ -441,22 +441,22 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression -&gt; AnnIns 'MSSQL [] Expression
 forall (b :: BackendType) r v. AnnInsert b r v -&gt; MultiObjIns b v
 </span><a href="Hasura.RQL.IR.Insert.html#_aiData"><span class="hs-identifier hs-var hs-var">_aiData</span></a></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression
-</span><a href="#local-6989586621688405489"><span class="hs-identifier hs-var">insert</span></a></span><span>
-</span><span id="line-189"></span><span>      </span><span id="local-6989586621688405479"><span class="annot"><span class="annottext">insertColumns :: [ColumnInfo 'MSSQL]
-</span><a href="#local-6989586621688405479"><span class="hs-identifier hs-var hs-var">insertColumns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ColumnInfo 'MSSQL -&gt; Bool)
+</span><a href="#local-6989586621688405649"><span class="hs-identifier hs-var">insert</span></a></span><span>
+</span><span id="line-189"></span><span>      </span><span id="local-6989586621688405639"><span class="annot"><span class="annottext">insertColumns :: [ColumnInfo 'MSSQL]
+</span><a href="#local-6989586621688405639"><span class="hs-identifier hs-var hs-var">insertColumns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ColumnInfo 'MSSQL -&gt; Bool)
 -&gt; [ColumnInfo 'MSSQL] -&gt; [ColumnInfo 'MSSQL]
 forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
-</span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621688405478"><span class="annot"><span class="annottext">ColumnInfo 'MSSQL
-</span><a href="#local-6989586621688405478"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL -&gt; Column 'MSSQL
+</span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621688405638"><span class="annot"><span class="annottext">ColumnInfo 'MSSQL
+</span><a href="#local-6989586621688405638"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL -&gt; Column 'MSSQL
 forall (b :: BackendType). ColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var hs-var">ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL
-</span><a href="#local-6989586621688405478"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnName -&gt; [ColumnName] -&gt; Bool
+</span><a href="#local-6989586621688405638"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnName -&gt; [ColumnName] -&gt; Bool
 forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><span class="hs-operator hs-var">`elem`</span></span><span> </span><span class="annot"><span class="annottext">[ColumnName]
-</span><a href="#local-6989586621688405485"><span class="hs-identifier hs-var">insertColumnNames</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[ColumnInfo 'MSSQL]
-</span><a href="#local-6989586621688405480"><span class="hs-identifier hs-var">allTableColumns</span></a></span><span>
-</span><span id="line-190"></span><span>      </span><span id="local-6989586621688405475"><span class="annot"><span class="annottext">createValuesTempTableQuery :: Query
-</span><a href="#local-6989586621688405475"><span class="hs-identifier hs-var hs-var">createValuesTempTableQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621688405645"><span class="hs-identifier hs-var">insertColumnNames</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[ColumnInfo 'MSSQL]
+</span><a href="#local-6989586621688405640"><span class="hs-identifier hs-var">allTableColumns</span></a></span><span>
+</span><span id="line-190"></span><span>      </span><span id="local-6989586621688405635"><span class="annot"><span class="annottext">createValuesTempTableQuery :: Query
+</span><a href="#local-6989586621688405635"><span class="hs-identifier hs-var hs-var">createValuesTempTableQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-191"></span><span>        </span><span class="annot"><span class="annottext">Printer -&gt; Query
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#toQueryFlat"><span class="hs-identifier hs-var">toQueryFlat</span></a></span><span> </span><span class="annot"><span class="annottext">(Printer -&gt; Query) -&gt; Printer -&gt; Query
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -473,8 +473,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; SelectIntoTempTable
 </span><a href="Hasura.Backends.MSSQL.FromIr.SelectIntoTempTable.html#toSelectIntoTempTable"><span class="hs-identifier hs-var">TSQL.toSelectIntoTempTable</span></a></span><span> </span><span class="annot"><span class="annottext">TempTableName
 </span><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#tempTableNameValues"><span class="hs-identifier hs-var">tempTableNameValues</span></a></span><span> </span><span class="annot"><span class="annottext">TableName
-</span><a href="#local-6989586621688405490"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">[ColumnInfo 'MSSQL]
-</span><a href="#local-6989586621688405479"><span class="hs-identifier hs-var">insertColumns</span></a></span><span> </span><span class="annot"><span class="annottext">SITTConstraints
+</span><a href="#local-6989586621688405650"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">[ColumnInfo 'MSSQL]
+</span><a href="#local-6989586621688405639"><span class="hs-identifier hs-var">insertColumns</span></a></span><span> </span><span class="annot"><span class="annottext">SITTConstraints
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#KeepConstraints"><span class="hs-identifier hs-var">KeepConstraints</span></a></span><span>
 </span><span id="line-195"></span><span>  </span><span class="hs-comment">-- Create #values temporary table</span><span>
 </span><span id="line-196"></span><span>  </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; QErr) -&gt; Query -&gt; TxET QErr IO ()
@@ -483,11 +483,11 @@ MonadIO m =&gt;
 (MSSQLTxError -&gt; e) -&gt; Query -&gt; TxET e m ()
 </span><a href="Database.MSSQL.Transaction.html#unitQueryE"><span class="hs-identifier hs-var">Tx.unitQueryE</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; QErr
 </span><a href="Hasura.Backends.MSSQL.SQL.Error.html#defaultMSSQLTxErrorHandler"><span class="hs-identifier hs-var">defaultMSSQLTxErrorHandler</span></a></span><span> </span><span class="annot"><span class="annottext">Query
-</span><a href="#local-6989586621688405475"><span class="hs-identifier hs-var">createValuesTempTableQuery</span></a></span><span>
+</span><a href="#local-6989586621688405635"><span class="hs-identifier hs-var">createValuesTempTableQuery</span></a></span><span>
 </span><span id="line-197"></span><span>
 </span><span id="line-198"></span><span>  </span><span class="hs-comment">-- Store values in #values temporary table</span><span>
-</span><span id="line-199"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688405473"><span class="annot"><span class="annottext">insertValuesIntoTempTableQuery :: Query
-</span><a href="#local-6989586621688405473"><span class="hs-identifier hs-var hs-var">insertValuesIntoTempTableQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-199"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688405633"><span class="annot"><span class="annottext">insertValuesIntoTempTableQuery :: Query
+</span><a href="#local-6989586621688405633"><span class="hs-identifier hs-var hs-var">insertValuesIntoTempTableQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-200"></span><span>        </span><span class="annot"><span class="annottext">Printer -&gt; Query
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#toQueryFlat"><span class="hs-identifier hs-var">toQueryFlat</span></a></span><span> </span><span class="annot"><span class="annottext">(Printer -&gt; Query) -&gt; Printer -&gt; Query
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -501,18 +501,18 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; AnnInsert 'MSSQL Void Expression -&gt; InsertValuesIntoTempTable
 </span><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#toInsertValuesIntoTempTable"><span class="hs-identifier hs-var">TSQL.toInsertValuesIntoTempTable</span></a></span><span> </span><span class="annot"><span class="annottext">TempTableName
 </span><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#tempTableNameValues"><span class="hs-identifier hs-var">tempTableNameValues</span></a></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression
-</span><a href="#local-6989586621688405489"><span class="hs-identifier hs-var">insert</span></a></span><span>
+</span><a href="#local-6989586621688405649"><span class="hs-identifier hs-var">insert</span></a></span><span>
 </span><span id="line-203"></span><span>  </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; QErr) -&gt; Query -&gt; TxET QErr IO ()
 forall (m :: * -&gt; *) e.
 MonadIO m =&gt;
 (MSSQLTxError -&gt; e) -&gt; Query -&gt; TxET e m ()
 </span><a href="Database.MSSQL.Transaction.html#unitQueryE"><span class="hs-identifier hs-var">Tx.unitQueryE</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; QErr
 </span><a href="Hasura.Backends.MSSQL.SQL.Error.html#mutationMSSQLTxErrorHandler"><span class="hs-identifier hs-var">mutationMSSQLTxErrorHandler</span></a></span><span> </span><span class="annot"><span class="annottext">Query
-</span><a href="#local-6989586621688405473"><span class="hs-identifier hs-var">insertValuesIntoTempTableQuery</span></a></span><span>
+</span><a href="#local-6989586621688405633"><span class="hs-identifier hs-var">insertValuesIntoTempTableQuery</span></a></span><span>
 </span><span id="line-204"></span><span>
 </span><span id="line-205"></span><span>  </span><span class="hs-comment">-- Run the MERGE query and store the mutated rows in #inserted temporary table</span><span>
-</span><span id="line-206"></span><span>  </span><span id="local-6989586621688405470"><span class="annot"><span class="annottext">Merge
-</span><a href="#local-6989586621688405470"><span class="hs-identifier hs-var">merge</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">FromIr Merge -&gt; TxET QErr IO Merge
+</span><span id="line-206"></span><span>  </span><span id="local-6989586621688405630"><span class="annot"><span class="annottext">Merge
+</span><a href="#local-6989586621688405630"><span class="hs-identifier hs-var">merge</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">FromIr Merge -&gt; TxET QErr IO Merge
 forall (m :: * -&gt; *) a. MonadError QErr m =&gt; FromIr a -&gt; m a
 </span><a href="Hasura.Backends.MSSQL.FromIr.html#runFromIr"><span class="hs-identifier hs-var">runFromIr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TableName
 -&gt; [AnnotatedInsertRow 'MSSQL Expression]
@@ -520,7 +520,7 @@ forall (m :: * -&gt; *) a. MonadError QErr m =&gt; FromIr a -&gt; m a
 -&gt; IfMatched Expression
 -&gt; FromIr Merge
 </span><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#toMerge"><span class="hs-identifier hs-var">toMerge</span></a></span><span> </span><span class="annot"><span class="annottext">TableName
-</span><a href="#local-6989586621688405490"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnIns 'MSSQL [] Expression
+</span><a href="#local-6989586621688405650"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnIns 'MSSQL [] Expression
 -&gt; [AnnotatedInsertRow 'MSSQL Expression]
 forall (b :: BackendType) (f :: * -&gt; *) v.
 AnnIns b f v -&gt; f (AnnotatedInsertRow b v)
@@ -532,23 +532,23 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression -&gt; AnnIns 'MSSQL [] Expression
 forall (b :: BackendType) r v. AnnInsert b r v -&gt; MultiObjIns b v
 </span><a href="Hasura.RQL.IR.Insert.html#_aiData"><span class="hs-identifier hs-var hs-var">_aiData</span></a></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression
-</span><a href="#local-6989586621688405489"><span class="hs-identifier hs-var">insert</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[ColumnInfo 'MSSQL]
-</span><a href="#local-6989586621688405480"><span class="hs-identifier hs-var">allTableColumns</span></a></span><span> </span><span class="annot"><span class="annottext">IfMatched Expression
-</span><a href="#local-6989586621688405488"><span class="hs-identifier hs-var">ifMatched</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-207"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688405468"><span class="annot"><span class="annottext">mergeQuery :: Query
-</span><a href="#local-6989586621688405468"><span class="hs-identifier hs-var hs-var">mergeQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Printer -&gt; Query
+</span><a href="#local-6989586621688405649"><span class="hs-identifier hs-var">insert</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[ColumnInfo 'MSSQL]
+</span><a href="#local-6989586621688405640"><span class="hs-identifier hs-var">allTableColumns</span></a></span><span> </span><span class="annot"><span class="annottext">IfMatched Expression
+</span><a href="#local-6989586621688405648"><span class="hs-identifier hs-var">ifMatched</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-207"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688405628"><span class="annot"><span class="annottext">mergeQuery :: Query
+</span><a href="#local-6989586621688405628"><span class="hs-identifier hs-var hs-var">mergeQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Printer -&gt; Query
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#toQueryFlat"><span class="hs-identifier hs-var">toQueryFlat</span></a></span><span> </span><span class="annot"><span class="annottext">(Printer -&gt; Query) -&gt; Printer -&gt; Query
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Merge -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#fromMerge"><span class="hs-identifier hs-var">TQ.fromMerge</span></a></span><span> </span><span class="annot"><span class="annottext">Merge
-</span><a href="#local-6989586621688405470"><span class="hs-identifier hs-var">merge</span></a></span><span>
+</span><a href="#local-6989586621688405630"><span class="hs-identifier hs-var">merge</span></a></span><span>
 </span><span id="line-208"></span><span>  </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; QErr) -&gt; Query -&gt; TxET QErr IO ()
 forall (m :: * -&gt; *) e.
 MonadIO m =&gt;
 (MSSQLTxError -&gt; e) -&gt; Query -&gt; TxET e m ()
 </span><a href="Database.MSSQL.Transaction.html#unitQueryE"><span class="hs-identifier hs-var">Tx.unitQueryE</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; QErr
 </span><a href="Hasura.Backends.MSSQL.SQL.Error.html#mutationMSSQLTxErrorHandler"><span class="hs-identifier hs-var">mutationMSSQLTxErrorHandler</span></a></span><span> </span><span class="annot"><span class="annottext">Query
-</span><a href="#local-6989586621688405468"><span class="hs-identifier hs-var">mergeQuery</span></a></span><span>
+</span><a href="#local-6989586621688405628"><span class="hs-identifier hs-var">mergeQuery</span></a></span><span>
 </span><span id="line-209"></span><span>
 </span><span id="line-210"></span><span>  </span><span class="hs-comment">-- After @MERGE@ we no longer need this temporary table</span><span>
 </span><span id="line-211"></span><span>  </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; QErr) -&gt; Query -&gt; TxET QErr IO ()
@@ -571,13 +571,13 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; Text
 -&gt; AnnInsert 'MSSQL Void Expression
 -&gt; TxET QErr IO (Text, Int)
-</span><a href="Hasura.Backends.MSSQL.Execute.Insert.html#buildInsertResponseTx"><span class="hs-identifier hs-var hs-var">buildInsertResponseTx</span></a></span></span><span> </span><span id="local-6989586621688405466"><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="#local-6989586621688405466"><span class="hs-identifier hs-var">stringifyNum</span></a></span></span><span> </span><span id="local-6989586621688405465"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688405465"><span class="hs-identifier hs-var">withAlias</span></a></span></span><span> </span><span id="local-6989586621688405464"><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression
-</span><a href="#local-6989586621688405464"><span class="hs-identifier hs-var">insert</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="Hasura.Backends.MSSQL.Execute.Insert.html#buildInsertResponseTx"><span class="hs-identifier hs-var hs-var">buildInsertResponseTx</span></a></span></span><span> </span><span id="local-6989586621688405626"><span class="annot"><span class="annottext">StringifyNumbers
+</span><a href="#local-6989586621688405626"><span class="hs-identifier hs-var">stringifyNum</span></a></span></span><span> </span><span id="local-6989586621688405625"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688405625"><span class="hs-identifier hs-var">withAlias</span></a></span></span><span> </span><span id="local-6989586621688405624"><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression
+</span><a href="#local-6989586621688405624"><span class="hs-identifier hs-var">insert</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-216"></span><span>  </span><span class="hs-comment">-- Generate a SQL SELECT statement which outputs the mutation response using the #inserted</span><span>
-</span><span id="line-217"></span><span>  </span><span id="local-6989586621688405463"><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621688405463"><span class="hs-identifier hs-var">mutationOutputSelect</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">FromIr Select -&gt; TxET QErr IO Select
+</span><span id="line-217"></span><span>  </span><span id="local-6989586621688405623"><span class="annot"><span class="annottext">Select
+</span><a href="#local-6989586621688405623"><span class="hs-identifier hs-var">mutationOutputSelect</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">FromIr Select -&gt; TxET QErr IO Select
 forall (m :: * -&gt; *) a. MonadError QErr m =&gt; FromIr a -&gt; m a
 </span><a href="Hasura.Backends.MSSQL.FromIr.html#runFromIr"><span class="hs-identifier hs-var">runFromIr</span></a></span><span> </span><span class="annot"><span class="annottext">(FromIr Select -&gt; TxET QErr IO Select)
 -&gt; FromIr Select -&gt; TxET QErr IO Select
@@ -585,8 +585,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
 -&gt; Text -&gt; MutationOutputG 'MSSQL Void Expression -&gt; FromIr Select
 </span><a href="Hasura.Backends.MSSQL.FromIr.MutationResponse.html#mkMutationOutputSelect"><span class="hs-identifier hs-var">mkMutationOutputSelect</span></a></span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="#local-6989586621688405466"><span class="hs-identifier hs-var">stringifyNum</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688405465"><span class="hs-identifier hs-var">withAlias</span></a></span><span> </span><span class="annot"><span class="annottext">(MutationOutputG 'MSSQL Void Expression -&gt; FromIr Select)
+</span><a href="#local-6989586621688405626"><span class="hs-identifier hs-var">stringifyNum</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688405625"><span class="hs-identifier hs-var">withAlias</span></a></span><span> </span><span class="annot"><span class="annottext">(MutationOutputG 'MSSQL Void Expression -&gt; FromIr Select)
 -&gt; MutationOutputG 'MSSQL Void Expression -&gt; FromIr Select
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression
@@ -594,11 +594,11 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (b :: BackendType) r v.
 AnnInsert b r v -&gt; MutationOutputG b r v
 </span><a href="Hasura.RQL.IR.Insert.html#_aiOutput"><span class="hs-identifier hs-var hs-var">_aiOutput</span></a></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression
-</span><a href="#local-6989586621688405464"><span class="hs-identifier hs-var">insert</span></a></span><span>
+</span><a href="#local-6989586621688405624"><span class="hs-identifier hs-var">insert</span></a></span><span>
 </span><span id="line-218"></span><span>
 </span><span id="line-219"></span><span>  </span><span class="hs-comment">-- The check constraint is translated to boolean expression</span><span>
-</span><span id="line-220"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688405460"><span class="annot"><span class="annottext">checkCondition :: AnnBoolExp 'MSSQL Expression
-</span><a href="#local-6989586621688405460"><span class="hs-identifier hs-var hs-var">checkCondition</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(AnnBoolExp 'MSSQL Expression,
+</span><span id="line-220"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688405620"><span class="annot"><span class="annottext">checkCondition :: AnnBoolExp 'MSSQL Expression
+</span><a href="#local-6989586621688405620"><span class="hs-identifier hs-var hs-var">checkCondition</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(AnnBoolExp 'MSSQL Expression,
  Maybe (AnnBoolExp 'MSSQL Expression))
 -&gt; AnnBoolExp 'MSSQL Expression
 forall a b. (a, b) -&gt; a
@@ -624,9 +624,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression -&gt; AnnIns 'MSSQL [] Expression
 forall (b :: BackendType) r v. AnnInsert b r v -&gt; MultiObjIns b v
 </span><a href="Hasura.RQL.IR.Insert.html#_aiData"><span class="hs-identifier hs-var hs-var">_aiData</span></a></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void Expression
-</span><a href="#local-6989586621688405464"><span class="hs-identifier hs-var">insert</span></a></span><span>
-</span><span id="line-221"></span><span>  </span><span id="local-6989586621688405458"><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621688405458"><span class="hs-identifier hs-var">checkBoolExp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">FromIr Expression -&gt; TxET QErr IO Expression
+</span><a href="#local-6989586621688405624"><span class="hs-identifier hs-var">insert</span></a></span><span>
+</span><span id="line-221"></span><span>  </span><span id="local-6989586621688405618"><span class="annot"><span class="annottext">Expression
+</span><a href="#local-6989586621688405618"><span class="hs-identifier hs-var">checkBoolExp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">FromIr Expression -&gt; TxET QErr IO Expression
 forall (m :: * -&gt; *) a. MonadError QErr m =&gt; FromIr a -&gt; m a
 </span><a href="Hasura.Backends.MSSQL.FromIr.html#runFromIr"><span class="hs-identifier hs-var">runFromIr</span></a></span><span> </span><span class="annot"><span class="annottext">(FromIr Expression -&gt; TxET QErr IO Expression)
 -&gt; FromIr Expression -&gt; TxET QErr IO Expression
@@ -637,12 +637,12 @@ forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
 </span><span class="hs-identifier hs-var hs-var">runReaderT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnBoolExp 'MSSQL Expression
 -&gt; ReaderT EntityAlias FromIr Expression
 </span><a href="Hasura.Backends.MSSQL.FromIr.Expression.html#fromGBoolExp"><span class="hs-identifier hs-var">fromGBoolExp</span></a></span><span> </span><span class="annot"><span class="annottext">AnnBoolExp 'MSSQL Expression
-</span><a href="#local-6989586621688405460"><span class="hs-identifier hs-var">checkCondition</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; EntityAlias
+</span><a href="#local-6989586621688405620"><span class="hs-identifier hs-var">checkCondition</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; EntityAlias
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#EntityAlias"><span class="hs-identifier hs-var">EntityAlias</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688405465"><span class="hs-identifier hs-var">withAlias</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688405625"><span class="hs-identifier hs-var">withAlias</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-222"></span><span>
-</span><span id="line-223"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688405454"><span class="annot"><span class="annottext">withSelect :: Select
-</span><a href="#local-6989586621688405454"><span class="hs-identifier hs-var hs-var">withSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-223"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688405614"><span class="annot"><span class="annottext">withSelect :: Select
+</span><a href="#local-6989586621688405614"><span class="hs-identifier hs-var hs-var">withSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-224"></span><span>        </span><span class="annot"><span class="annottext">Select
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#emptySelect"><span class="hs-identifier hs-var">emptySelect</span></a></span><span>
 </span><span id="line-225"></span><span>          </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:selectProjections:Select :: [Projection]
@@ -663,17 +663,17 @@ forall a. a -&gt; Text -&gt; Aliased a
 </span><span class="hs-string">&quot;inserted_alias&quot;</span></span><span>
 </span><span id="line-227"></span><span>          </span><span class="hs-special">}</span><span>
 </span><span id="line-228"></span><span>      </span><span class="hs-comment">-- SELECT (&lt;mutation_output_select&gt;) AS [mutation_response], (&lt;check_constraint_select&gt;) AS [check_constraint_select]</span><span>
-</span><span id="line-229"></span><span>      </span><span id="local-6989586621688405447"><span class="annot"><span class="annottext">mutationOutputCheckConstraintSelect :: Select
-</span><a href="#local-6989586621688405447"><span class="hs-identifier hs-var hs-var">mutationOutputCheckConstraintSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Select -&gt; Expression -&gt; Select
+</span><span id="line-229"></span><span>      </span><span id="local-6989586621688405607"><span class="annot"><span class="annottext">mutationOutputCheckConstraintSelect :: Select
+</span><a href="#local-6989586621688405607"><span class="hs-identifier hs-var hs-var">mutationOutputCheckConstraintSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Select -&gt; Expression -&gt; Select
 </span><a href="Hasura.Backends.MSSQL.FromIr.MutationResponse.html#selectMutationOutputAndCheckCondition"><span class="hs-identifier hs-var">selectMutationOutputAndCheckCondition</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688405465"><span class="hs-identifier hs-var">withAlias</span></a></span><span> </span><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621688405463"><span class="hs-identifier hs-var">mutationOutputSelect</span></a></span><span> </span><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621688405458"><span class="hs-identifier hs-var">checkBoolExp</span></a></span><span>
+</span><a href="#local-6989586621688405625"><span class="hs-identifier hs-var">withAlias</span></a></span><span> </span><span class="annot"><span class="annottext">Select
+</span><a href="#local-6989586621688405623"><span class="hs-identifier hs-var">mutationOutputSelect</span></a></span><span> </span><span class="annot"><span class="annottext">Expression
+</span><a href="#local-6989586621688405618"><span class="hs-identifier hs-var">checkBoolExp</span></a></span><span>
 </span><span id="line-230"></span><span>      </span><span class="hs-comment">-- WITH &quot;with_alias&quot; AS (&lt;table_select&gt;)</span><span>
 </span><span id="line-231"></span><span>      </span><span class="hs-comment">-- SELECT (&lt;mutation_output_select&gt;) AS [mutation_response], (&lt;check_constraint_select&gt;) AS [check_constraint_select]</span><span>
-</span><span id="line-232"></span><span>      </span><span id="local-6989586621688405445"><span class="annot"><span class="annottext">finalSelect :: Select
-</span><a href="#local-6989586621688405445"><span class="hs-identifier hs-var hs-var">finalSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621688405447"><span class="hs-identifier hs-var">mutationOutputCheckConstraintSelect</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">$sel:selectWith:Select :: Maybe With
+</span><span id="line-232"></span><span>      </span><span id="local-6989586621688405605"><span class="annot"><span class="annottext">finalSelect :: Select
+</span><a href="#local-6989586621688405605"><span class="hs-identifier hs-var hs-var">finalSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Select
+</span><a href="#local-6989586621688405607"><span class="hs-identifier hs-var">mutationOutputCheckConstraintSelect</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">$sel:selectWith:Select :: Maybe With
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AselectWith%3ASelect"><span class="hs-identifier hs-var">selectWith</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">With -&gt; Maybe With
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(With -&gt; Maybe With) -&gt; With -&gt; Maybe With
@@ -690,8 +690,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Select -&gt; Text -&gt; Aliased Select
 forall a. a -&gt; Text -&gt; Aliased a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-var">Aliased</span></a></span><span> </span><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621688405454"><span class="hs-identifier hs-var">withSelect</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688405465"><span class="hs-identifier hs-var">withAlias</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621688405614"><span class="hs-identifier hs-var">withSelect</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688405625"><span class="hs-identifier hs-var">withAlias</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-233"></span><span>
 </span><span id="line-234"></span><span>  </span><span class="hs-comment">-- Execute SELECT query to fetch mutation response and check constraint result</span><span>
 </span><span id="line-235"></span><span>  </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; QErr) -&gt; Query -&gt; TxET QErr IO (Text, Int)
@@ -704,5 +704,5 @@ forall (m :: * -&gt; *) a e.
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Select -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#fromSelect"><span class="hs-identifier hs-var">TQ.fromSelect</span></a></span><span> </span><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621688405445"><span class="hs-identifier hs-var">finalSelect</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688405605"><span class="hs-identifier hs-var">finalSelect</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-236"></span></pre></body></html>
