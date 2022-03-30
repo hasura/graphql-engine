@@ -2,6 +2,10 @@
 
 ## Next release
 
+### Bug fixes and improvements
+
+## v2.5.0-beta.1
+
 ### Remote relationships from remote schemas
 
 This release adds three new metadata API commands:
