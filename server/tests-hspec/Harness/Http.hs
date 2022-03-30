@@ -2,6 +2,7 @@
 module Harness.Http
   ( get_,
     postValue,
+    postValueWithStatus,
     healthCheck,
     Http.RequestHeaders,
   )
@@ -33,7 +34,12 @@ get_ url = do
 -- | Post the JSON to the given URL, and produces a very descriptive
 -- exception on failure.
 postValue :: HasCallStack => String -> Http.RequestHeaders -> Value -> IO Value
-postValue url headers value = do
+postValue = postValueWithStatus 200
+
+-- | Post the JSON to the given URL and expected HTTP response code.
+-- Produces a very descriptive exception or failure.
+postValueWithStatus :: HasCallStack => Int -> String -> Http.RequestHeaders -> Value -> IO Value
+postValueWithStatus statusCode url headers value = do
   let request =
         Http.setRequestHeaders headers $
           Http.setRequestMethod Http.methodPost $
@@ -41,7 +47,8 @@ postValue url headers value = do
   response <- Http.httpLbs request
   let requestBodyString = L8.unpack $ encode value
       responseBodyString = L8.unpack $ Http.getResponseBody response
-  if Http.getResponseStatusCode response == 200
+      responseStatusCode = Http.getResponseStatusCode response
+  if responseStatusCode == statusCode
     then
       eitherDecode (Http.getResponseBody response)
         `onLeft` \err ->
@@ -56,7 +63,11 @@ postValue url headers value = do
             ]
     else
       reportError
-        [ "Non-200 response code from HTTP request: ",
+        [ "Expecting reponse code ",
+          show statusCode,
+          " but got ",
+          show responseStatusCode,
+          " from HTTP request: ",
           url,
           "With body:",
           requestBodyString,

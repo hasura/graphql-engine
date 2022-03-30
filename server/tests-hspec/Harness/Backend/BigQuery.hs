@@ -27,15 +27,15 @@ import Data.Text.Extended (commaSeparated)
 import GHC.Stack
 import Harness.Constants as Constants
 import Harness.Env
-import Harness.Exceptions (SomeException, handle)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.State (State)
 import Harness.Test.Context (BackendType (BigQuery), defaultBackendTypeString, defaultSource)
 import Harness.Test.Schema qualified as Schema
 import Hasura.Backends.BigQuery.Connection (initConnection)
-import Hasura.Backends.BigQuery.Execute qualified as Execute (BigQuery (..), executeBigQuery)
+import Hasura.Backends.BigQuery.Execute qualified as Execute
 import Hasura.Backends.BigQuery.Source (ServiceAccount)
+import Hasura.Prelude (onLeft)
 import Prelude
 
 getServiceAccount :: HasCallStack => IO ServiceAccount
@@ -47,20 +47,17 @@ getProjectId = getEnvString Constants.bigqueryProjectIdVar
 -- | Run a plain Standard SQL string against the server, ignore the
 -- result. Just checks for errors.
 run_ :: (HasCallStack) => ServiceAccount -> Text -> String -> IO ()
-run_ serviceAccount projectId query =
-  handle (\(e :: SomeException) -> bigQueryError e query) $ do
-    conn <- initConnection serviceAccount projectId Nothing
-    res <- Execute.executeBigQuery conn Execute.BigQuery {Execute.query = fromString query, Execute.parameters = mempty}
-    case res of
-      Left err -> bigQueryError err query
-      Right () -> pure ()
+run_ serviceAccount projectId query = do
+  conn <- initConnection serviceAccount projectId Nothing
+  res <- Execute.executeBigQuery conn Execute.BigQuery {Execute.query = fromString query, Execute.parameters = mempty}
+  res `onLeft` (`bigQueryError` query)
 
-bigQueryError :: (Show e, HasCallStack) => e -> String -> IO ()
+bigQueryError :: HasCallStack => Execute.ExecuteProblem -> String -> IO ()
 bigQueryError e query =
   error
     ( unlines
         [ "BigQuery query error:",
-          show e,
+          T.unpack (Execute.executeProblemMessage e),
           "SQL was:",
           query
         ]
