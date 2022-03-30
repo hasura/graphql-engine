@@ -60,7 +60,8 @@ copy-cli-ext: clean-cli-ext
 	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-node12-linux-x64 ./internal/cliext/static-bin/linux/amd64/cli-ext
 	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-node12-linux-arm64 ./internal/cliext/static-bin/linux/arm64/cli-ext
 	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-node12-macos-x64 ./internal/cliext/static-bin/darwin/amd64/cli-ext
-	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-node16-macos-arm64 ./internal/cliext/static-bin/darwin/arm64/cli-ext
+	wget https://graphql-engine-cdn.hasura.io/cli-ext/releases/versioned/v2.0.0/cli-ext-darwin-arm64
+	mv cli-ext-darwin-arm64 ./internal/cliext/static-bin/darwin/arm64/cli-ext
 	cp $(CLI_EXT_BIN_DIR)/cli-ext-hasura-node12-win-x64.exe ./internal/cliext/static-bin/windows/amd64/cli-ext.exe
 
 # run tests
