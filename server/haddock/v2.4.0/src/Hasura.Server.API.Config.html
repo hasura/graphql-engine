@@ -1,0 +1,252 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | API related to server configuration</span><span>
+</span><span id="line-2"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Server.API.Config</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- required by pro</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Server.API.Config.html#ServerConfig"><span class="hs-identifier">ServerConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.Server.API.Config.html#runGetConfig"><span class="hs-identifier">runGetConfig</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.TH</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.LiveQuery.Options.html"><span class="hs-identifier">Hasura.GraphQL.Execute.LiveQuery.Options</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">LQ</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.html"><span class="hs-identifier">Hasura.RQL.Types</span></a></span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionPermissionsCtx"><span class="hs-identifier">FunctionPermissionsCtx</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaPermsCtx"><span class="hs-identifier">RemoteSchemaPermsCtx</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html"><span class="hs-identifier">Hasura.Server.Auth</span></a></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html"><span class="hs-identifier">Hasura.Server.Auth.JWT</span></a></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html"><span class="hs-identifier">Hasura.Server.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Types.html#ExperimentalFeature"><span class="hs-identifier">ExperimentalFeature</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Version.html"><span class="hs-identifier">Hasura.Server.Version</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Version.html#Version"><span class="hs-identifier">Version</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.Version.html#currentVersion"><span class="hs-identifier">currentVersion</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">data</span><span> </span><span id="JWTInfo"><span class="annot"><a href="Hasura.Server.API.Config.html#JWTInfo"><span class="hs-identifier hs-var">JWTInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="JWTInfo"><span class="annot"><a href="Hasura.Server.API.Config.html#JWTInfo"><span class="hs-identifier hs-var">JWTInfo</span></a></span></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="jwtiClaimsNamespace"><span class="annot"><span class="annottext">JWTInfo -&gt; JWTNamespace
+</span><a href="Hasura.Server.API.Config.html#jwtiClaimsNamespace"><span class="hs-identifier hs-var hs-var">jwtiClaimsNamespace</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JWTNamespace"><span class="hs-identifier hs-type">JWTNamespace</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>    </span><span id="jwtiClaimsFormat"><span class="annot"><span class="annottext">JWTInfo -&gt; JWTClaimsFormat
+</span><a href="Hasura.Server.API.Config.html#jwtiClaimsFormat"><span class="hs-identifier hs-var hs-var">jwtiClaimsFormat</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JWTClaimsFormat"><span class="hs-identifier hs-type">JWTClaimsFormat</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>    </span><span id="jwtiClaimsMap"><span class="annot"><span class="annottext">JWTInfo -&gt; Maybe JWTCustomClaimsMap
+</span><a href="Hasura.Server.API.Config.html#jwtiClaimsMap"><span class="hs-identifier hs-var hs-var">jwtiClaimsMap</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JWTCustomClaimsMap"><span class="hs-identifier hs-type">JWTCustomClaimsMap</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688237153"><span id="local-6989586621688237155"><span id="local-6989586621688237157"><span class="annot"><span class="annottext">Int -&gt; JWTInfo -&gt; ShowS
+[JWTInfo] -&gt; ShowS
+JWTInfo -&gt; String
+(Int -&gt; JWTInfo -&gt; ShowS)
+-&gt; (JWTInfo -&gt; String) -&gt; ([JWTInfo] -&gt; ShowS) -&gt; Show JWTInfo
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [JWTInfo] -&gt; ShowS
+$cshowList :: [JWTInfo] -&gt; ShowS
+show :: JWTInfo -&gt; String
+$cshow :: JWTInfo -&gt; String
+showsPrec :: Int -&gt; JWTInfo -&gt; ShowS
+$cshowsPrec :: Int -&gt; JWTInfo -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688237148"><span id="local-6989586621688237150"><span class="annot"><span class="annottext">JWTInfo -&gt; JWTInfo -&gt; Bool
+(JWTInfo -&gt; JWTInfo -&gt; Bool)
+-&gt; (JWTInfo -&gt; JWTInfo -&gt; Bool) -&gt; Eq JWTInfo
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: JWTInfo -&gt; JWTInfo -&gt; Bool
+$c/= :: JWTInfo -&gt; JWTInfo -&gt; Bool
+== :: JWTInfo -&gt; JWTInfo -&gt; Bool
+$c== :: JWTInfo -&gt; JWTInfo -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span class="hs-special">$(</span><span id="local-6989586621688237139"><span id="local-6989586621688237141"><span id="local-6989586621688237143"><span id="local-6989586621688237145"><span class="hs-identifier">deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">JWTInfo</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">data</span><span> </span><span id="ServerConfig"><span class="annot"><a href="Hasura.Server.API.Config.html#ServerConfig"><span class="hs-identifier hs-var">ServerConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ServerConfig"><span class="annot"><a href="Hasura.Server.API.Config.html#ServerConfig"><span class="hs-identifier hs-var">ServerConfig</span></a></span></span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="scfgVersion"><span class="annot"><span class="annottext">ServerConfig -&gt; Version
+</span><a href="Hasura.Server.API.Config.html#scfgVersion"><span class="hs-identifier hs-var hs-var">scfgVersion</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Server.Version.html#Version"><span class="hs-identifier hs-type">Version</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>    </span><span id="scfgIsFunctionPermissionsInferred"><span class="annot"><span class="annottext">ServerConfig -&gt; FunctionPermissionsCtx
+</span><a href="Hasura.Server.API.Config.html#scfgIsFunctionPermissionsInferred"><span class="hs-identifier hs-var hs-var">scfgIsFunctionPermissionsInferred</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionPermissionsCtx"><span class="hs-identifier hs-type">FunctionPermissionsCtx</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>    </span><span id="scfgIsRemoteSchemaPermissionsEnabled"><span class="annot"><span class="annottext">ServerConfig -&gt; RemoteSchemaPermsCtx
+</span><a href="Hasura.Server.API.Config.html#scfgIsRemoteSchemaPermissionsEnabled"><span class="hs-identifier hs-var hs-var">scfgIsRemoteSchemaPermissionsEnabled</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaPermsCtx"><span class="hs-identifier hs-type">RemoteSchemaPermsCtx</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>    </span><span id="scfgIsAdminSecretSet"><span class="annot"><span class="annottext">ServerConfig -&gt; Bool
+</span><a href="Hasura.Server.API.Config.html#scfgIsAdminSecretSet"><span class="hs-identifier hs-var hs-var">scfgIsAdminSecretSet</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>    </span><span id="scfgIsAuthHookSet"><span class="annot"><span class="annottext">ServerConfig -&gt; Bool
+</span><a href="Hasura.Server.API.Config.html#scfgIsAuthHookSet"><span class="hs-identifier hs-var hs-var">scfgIsAuthHookSet</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>    </span><span id="scfgIsJwtSet"><span class="annot"><span class="annottext">ServerConfig -&gt; Bool
+</span><a href="Hasura.Server.API.Config.html#scfgIsJwtSet"><span class="hs-identifier hs-var hs-var">scfgIsJwtSet</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>    </span><span id="scfgJwt"><span class="annot"><span class="annottext">ServerConfig -&gt; [JWTInfo]
+</span><a href="Hasura.Server.API.Config.html#scfgJwt"><span class="hs-identifier hs-var hs-var">scfgJwt</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Config.html#JWTInfo"><span class="hs-identifier hs-type">JWTInfo</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span>    </span><span id="scfgIsAllowListEnabled"><span class="annot"><span class="annottext">ServerConfig -&gt; Bool
+</span><a href="Hasura.Server.API.Config.html#scfgIsAllowListEnabled"><span class="hs-identifier hs-var hs-var">scfgIsAllowListEnabled</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>    </span><span id="scfgLiveQueries"><span class="annot"><span class="annottext">ServerConfig -&gt; LiveQueriesOptions
+</span><a href="Hasura.Server.API.Config.html#scfgLiveQueries"><span class="hs-identifier hs-var hs-var">scfgLiveQueries</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Execute.LiveQuery.Options.html#LiveQueriesOptions"><span class="hs-identifier hs-type">LQ.LiveQueriesOptions</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>    </span><span id="scfgConsoleAssetsDir"><span class="annot"><span class="annottext">ServerConfig -&gt; Maybe Text
+</span><a href="Hasura.Server.API.Config.html#scfgConsoleAssetsDir"><span class="hs-identifier hs-var hs-var">scfgConsoleAssetsDir</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>    </span><span id="scfgExperimentalFeatures"><span class="annot"><span class="annottext">ServerConfig -&gt; HashSet ExperimentalFeature
+</span><a href="Hasura.Server.API.Config.html#scfgExperimentalFeatures"><span class="hs-identifier hs-var hs-var">scfgExperimentalFeatures</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Set.HashSet</span></span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#ExperimentalFeature"><span class="hs-identifier hs-type">ExperimentalFeature</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688237118"><span id="local-6989586621688237120"><span id="local-6989586621688237122"><span class="annot"><span class="annottext">Int -&gt; ServerConfig -&gt; ShowS
+[ServerConfig] -&gt; ShowS
+ServerConfig -&gt; String
+(Int -&gt; ServerConfig -&gt; ShowS)
+-&gt; (ServerConfig -&gt; String)
+-&gt; ([ServerConfig] -&gt; ShowS)
+-&gt; Show ServerConfig
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ServerConfig] -&gt; ShowS
+$cshowList :: [ServerConfig] -&gt; ShowS
+show :: ServerConfig -&gt; String
+$cshow :: ServerConfig -&gt; String
+showsPrec :: Int -&gt; ServerConfig -&gt; ShowS
+$cshowsPrec :: Int -&gt; ServerConfig -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688237114"><span id="local-6989586621688237116"><span class="annot"><span class="annottext">ServerConfig -&gt; ServerConfig -&gt; Bool
+(ServerConfig -&gt; ServerConfig -&gt; Bool)
+-&gt; (ServerConfig -&gt; ServerConfig -&gt; Bool) -&gt; Eq ServerConfig
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ServerConfig -&gt; ServerConfig -&gt; Bool
+$c/= :: ServerConfig -&gt; ServerConfig -&gt; Bool
+== :: ServerConfig -&gt; ServerConfig -&gt; Bool
+$c== :: ServerConfig -&gt; ServerConfig -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span class="hs-special">$(</span><span id="local-6989586621688237106"><span id="local-6989586621688237108"><span id="local-6989586621688237110"><span id="local-6989586621688237112"><span class="hs-identifier">deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ServerConfig</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span class="annot"><a href="Hasura.Server.API.Config.html#runGetConfig"><span class="hs-identifier hs-type">runGetConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-49"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionPermissionsCtx"><span class="hs-identifier hs-type">FunctionPermissionsCtx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-50"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaPermsCtx"><span class="hs-identifier hs-type">RemoteSchemaPermsCtx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-51"></span><span>  </span><span class="annot"><a href="Hasura.Server.Auth.html#AuthMode"><span class="hs-identifier hs-type">AuthMode</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-52"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-53"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.LiveQuery.Options.html#LiveQueriesOptions"><span class="hs-identifier hs-type">LQ.LiveQueriesOptions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-54"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-55"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Set.HashSet</span></span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#ExperimentalFeature"><span class="hs-identifier hs-type">ExperimentalFeature</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-56"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.Config.html#ServerConfig"><span class="hs-identifier hs-type">ServerConfig</span></a></span><span>
+</span><span id="line-57"></span><span id="runGetConfig"><span class="annot"><span class="annottext">runGetConfig :: FunctionPermissionsCtx
+-&gt; RemoteSchemaPermsCtx
+-&gt; AuthMode
+-&gt; Bool
+-&gt; LiveQueriesOptions
+-&gt; Maybe Text
+-&gt; HashSet ExperimentalFeature
+-&gt; ServerConfig
+</span><a href="Hasura.Server.API.Config.html#runGetConfig"><span class="hs-identifier hs-var hs-var">runGetConfig</span></a></span></span><span>
+</span><span id="line-58"></span><span>  </span><span id="local-6989586621688237105"><span class="annot"><span class="annottext">FunctionPermissionsCtx
+</span><a href="#local-6989586621688237105"><span class="hs-identifier hs-var">functionPermsCtx</span></a></span></span><span>
+</span><span id="line-59"></span><span>  </span><span id="local-6989586621688237104"><span class="annot"><span class="annottext">RemoteSchemaPermsCtx
+</span><a href="#local-6989586621688237104"><span class="hs-identifier hs-var">remoteSchemaPermsCtx</span></a></span></span><span>
+</span><span id="line-60"></span><span>  </span><span id="local-6989586621688237103"><span class="annot"><span class="annottext">AuthMode
+</span><a href="#local-6989586621688237103"><span class="hs-identifier hs-var">am</span></a></span></span><span>
+</span><span id="line-61"></span><span>  </span><span id="local-6989586621688237102"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688237102"><span class="hs-identifier hs-var">isAllowListEnabled</span></a></span></span><span>
+</span><span id="line-62"></span><span>  </span><span id="local-6989586621688237101"><span class="annot"><span class="annottext">LiveQueriesOptions
+</span><a href="#local-6989586621688237101"><span class="hs-identifier hs-var">liveQueryOpts</span></a></span></span><span>
+</span><span id="line-63"></span><span>  </span><span id="local-6989586621688237100"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621688237100"><span class="hs-identifier hs-var">consoleAssetsDir</span></a></span></span><span>
+</span><span id="line-64"></span><span>  </span><span id="local-6989586621688237099"><span class="annot"><span class="annottext">HashSet ExperimentalFeature
+</span><a href="#local-6989586621688237099"><span class="hs-identifier hs-var">experimentalFeatures</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-65"></span><span>    </span><span class="annot"><span class="annottext">Version
+-&gt; FunctionPermissionsCtx
+-&gt; RemoteSchemaPermsCtx
+-&gt; Bool
+-&gt; Bool
+-&gt; Bool
+-&gt; [JWTInfo]
+-&gt; Bool
+-&gt; LiveQueriesOptions
+-&gt; Maybe Text
+-&gt; HashSet ExperimentalFeature
+-&gt; ServerConfig
+</span><a href="Hasura.Server.API.Config.html#ServerConfig"><span class="hs-identifier hs-var">ServerConfig</span></a></span><span>
+</span><span id="line-66"></span><span>      </span><span class="annot"><span class="annottext">Version
+</span><a href="Hasura.Server.Version.html#currentVersion"><span class="hs-identifier hs-var">currentVersion</span></a></span><span>
+</span><span id="line-67"></span><span>      </span><span class="annot"><span class="annottext">FunctionPermissionsCtx
+</span><a href="#local-6989586621688237105"><span class="hs-identifier hs-var">functionPermsCtx</span></a></span><span>
+</span><span id="line-68"></span><span>      </span><span class="annot"><span class="annottext">RemoteSchemaPermsCtx
+</span><a href="#local-6989586621688237104"><span class="hs-identifier hs-var">remoteSchemaPermsCtx</span></a></span><span>
+</span><span id="line-69"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AuthMode -&gt; Bool
+</span><a href="Hasura.Server.API.Config.html#isAdminSecretSet"><span class="hs-identifier hs-var">isAdminSecretSet</span></a></span><span> </span><span class="annot"><span class="annottext">AuthMode
+</span><a href="#local-6989586621688237103"><span class="hs-identifier hs-var">am</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-70"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AuthMode -&gt; Bool
+</span><a href="Hasura.Server.API.Config.html#isAuthHookSet"><span class="hs-identifier hs-var">isAuthHookSet</span></a></span><span> </span><span class="annot"><span class="annottext">AuthMode
+</span><a href="#local-6989586621688237103"><span class="hs-identifier hs-var">am</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AuthMode -&gt; Bool
+</span><a href="Hasura.Server.API.Config.html#isJWTSet"><span class="hs-identifier hs-var">isJWTSet</span></a></span><span> </span><span class="annot"><span class="annottext">AuthMode
+</span><a href="#local-6989586621688237103"><span class="hs-identifier hs-var">am</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-72"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AuthMode -&gt; [JWTInfo]
+</span><a href="Hasura.Server.API.Config.html#getJWTInfo"><span class="hs-identifier hs-var">getJWTInfo</span></a></span><span> </span><span class="annot"><span class="annottext">AuthMode
+</span><a href="#local-6989586621688237103"><span class="hs-identifier hs-var">am</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span>      </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688237102"><span class="hs-identifier hs-var">isAllowListEnabled</span></a></span><span>
+</span><span id="line-74"></span><span>      </span><span class="annot"><span class="annottext">LiveQueriesOptions
+</span><a href="#local-6989586621688237101"><span class="hs-identifier hs-var">liveQueryOpts</span></a></span><span>
+</span><span id="line-75"></span><span>      </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621688237100"><span class="hs-identifier hs-var">consoleAssetsDir</span></a></span><span>
+</span><span id="line-76"></span><span>      </span><span class="annot"><span class="annottext">HashSet ExperimentalFeature
+</span><a href="#local-6989586621688237099"><span class="hs-identifier hs-var">experimentalFeatures</span></a></span><span>
+</span><span id="line-77"></span><span>
+</span><span id="line-78"></span><span class="annot"><a href="Hasura.Server.API.Config.html#isAdminSecretSet"><span class="hs-identifier hs-type">isAdminSecretSet</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html#AuthMode"><span class="hs-identifier hs-type">AuthMode</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-79"></span><span id="isAdminSecretSet"><span class="annot"><span class="annottext">isAdminSecretSet :: AuthMode -&gt; Bool
+</span><a href="Hasura.Server.API.Config.html#isAdminSecretSet"><span class="hs-identifier hs-var hs-var">isAdminSecretSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-80"></span><span>  </span><span class="annot"><span class="annottext">AuthMode
+</span><a href="Hasura.Server.Auth.html#AMNoAuth"><span class="hs-identifier hs-var">AMNoAuth</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-81"></span><span>  </span><span class="annot"><span class="annottext">AuthMode
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-82"></span><span>
+</span><span id="line-83"></span><span class="annot"><a href="Hasura.Server.API.Config.html#isAuthHookSet"><span class="hs-identifier hs-type">isAuthHookSet</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html#AuthMode"><span class="hs-identifier hs-type">AuthMode</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-84"></span><span id="isAuthHookSet"><span class="annot"><span class="annottext">isAuthHookSet :: AuthMode -&gt; Bool
+</span><a href="Hasura.Server.API.Config.html#isAuthHookSet"><span class="hs-identifier hs-var hs-var">isAuthHookSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-85"></span><span>  </span><span class="annot"><a href="Hasura.Server.Auth.html#AMAdminSecretAndHook"><span class="hs-identifier hs-type">AMAdminSecretAndHook</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet AdminSecretHash
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">AuthHook
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-86"></span><span>  </span><span class="annot"><span class="annottext">AuthMode
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-87"></span><span>
+</span><span id="line-88"></span><span class="annot"><a href="Hasura.Server.API.Config.html#isJWTSet"><span class="hs-identifier hs-type">isJWTSet</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html#AuthMode"><span class="hs-identifier hs-type">AuthMode</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-89"></span><span id="isJWTSet"><span class="annot"><span class="annottext">isJWTSet :: AuthMode -&gt; Bool
+</span><a href="Hasura.Server.API.Config.html#isJWTSet"><span class="hs-identifier hs-var hs-var">isJWTSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-90"></span><span>  </span><span class="annot"><a href="Hasura.Server.Auth.html#AMAdminSecretAndJWT"><span class="hs-identifier hs-type">AMAdminSecretAndJWT</span></a></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-91"></span><span>  </span><span class="annot"><span class="annottext">AuthMode
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-92"></span><span>
+</span><span id="line-93"></span><span class="annot"><a href="Hasura.Server.API.Config.html#getJWTInfo"><span class="hs-identifier hs-type">getJWTInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html#AuthMode"><span class="hs-identifier hs-type">AuthMode</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Config.html#JWTInfo"><span class="hs-identifier hs-type">JWTInfo</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-94"></span><span id="getJWTInfo"><span class="annot"><span class="annottext">getJWTInfo :: AuthMode -&gt; [JWTInfo]
+</span><a href="Hasura.Server.API.Config.html#getJWTInfo"><span class="hs-identifier hs-var hs-var">getJWTInfo</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Auth.html#AMAdminSecretAndJWT"><span class="hs-identifier hs-type">AMAdminSecretAndJWT</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet AdminSecretHash
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688237091"><span class="annot"><span class="annottext">[JWTCtx]
+</span><a href="#local-6989586621688237091"><span class="hs-identifier hs-var">jwtCtxs</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe RoleName
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-95"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688237090"><span class="annot"><span class="annottext">f :: JWTCtx -&gt; JWTInfo
+</span><a href="#local-6989586621688237090"><span class="hs-identifier hs-var hs-var">f</span></a></span></span><span> </span><span id="local-6989586621688237089"><span class="annot"><span class="annottext">JWTCtx
+</span><a href="#local-6989586621688237089"><span class="hs-identifier hs-var">jwtCtx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">JWTCtx -&gt; JWTClaims
+</span><a href="Hasura.Server.Auth.JWT.html#jcxClaims"><span class="hs-identifier hs-var hs-var">jcxClaims</span></a></span><span> </span><span class="annot"><span class="annottext">JWTCtx
+</span><a href="#local-6989586621688237089"><span class="hs-identifier hs-var">jwtCtx</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-96"></span><span>        </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JCNamespace"><span class="hs-identifier hs-type">JCNamespace</span></a></span><span> </span><span id="local-6989586621688237086"><span class="annot"><span class="annottext">JWTNamespace
+</span><a href="#local-6989586621688237086"><span class="hs-identifier hs-var">namespace</span></a></span></span><span> </span><span id="local-6989586621688237085"><span class="annot"><span class="annottext">JWTClaimsFormat
+</span><a href="#local-6989586621688237085"><span class="hs-identifier hs-var">claimsFormat</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-97"></span><span>          </span><span class="annot"><span class="annottext">JWTNamespace
+-&gt; JWTClaimsFormat -&gt; Maybe JWTCustomClaimsMap -&gt; JWTInfo
+</span><a href="Hasura.Server.API.Config.html#JWTInfo"><span class="hs-identifier hs-var">JWTInfo</span></a></span><span> </span><span class="annot"><span class="annottext">JWTNamespace
+</span><a href="#local-6989586621688237086"><span class="hs-identifier hs-var">namespace</span></a></span><span> </span><span class="annot"><span class="annottext">JWTClaimsFormat
+</span><a href="#local-6989586621688237085"><span class="hs-identifier hs-var">claimsFormat</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe JWTCustomClaimsMap
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-98"></span><span>        </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JCMap"><span class="hs-identifier hs-type">JCMap</span></a></span><span> </span><span id="local-6989586621688237083"><span class="annot"><span class="annottext">JWTCustomClaimsMap
+</span><a href="#local-6989586621688237083"><span class="hs-identifier hs-var">claimsMap</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-99"></span><span>          </span><span class="annot"><span class="annottext">JWTNamespace
+-&gt; JWTClaimsFormat -&gt; Maybe JWTCustomClaimsMap -&gt; JWTInfo
+</span><a href="Hasura.Server.API.Config.html#JWTInfo"><span class="hs-identifier hs-var">JWTInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; JWTNamespace
+</span><a href="Hasura.Server.Auth.JWT.html#ClaimNs"><span class="hs-identifier hs-var">ClaimNs</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="Hasura.Server.Auth.JWT.html#defaultClaimsNamespace"><span class="hs-identifier hs-var">defaultClaimsNamespace</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">JWTClaimsFormat
+</span><a href="Hasura.Server.Auth.JWT.html#defaultClaimsFormat"><span class="hs-identifier hs-var">defaultClaimsFormat</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe JWTCustomClaimsMap -&gt; JWTInfo)
+-&gt; Maybe JWTCustomClaimsMap -&gt; JWTInfo
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">JWTCustomClaimsMap -&gt; Maybe JWTCustomClaimsMap
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">JWTCustomClaimsMap
+</span><a href="#local-6989586621688237083"><span class="hs-identifier hs-var">claimsMap</span></a></span><span>
+</span><span id="line-100"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">(JWTCtx -&gt; JWTInfo) -&gt; [JWTCtx] -&gt; [JWTInfo]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">JWTCtx -&gt; JWTInfo
+</span><a href="#local-6989586621688237090"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">[JWTCtx]
+</span><a href="#local-6989586621688237091"><span class="hs-identifier hs-var">jwtCtxs</span></a></span><span>
+</span><span id="line-101"></span><span class="annot"><a href="Hasura.Server.API.Config.html#getJWTInfo"><span class="hs-identifier hs-var">getJWTInfo</span></a></span><span> </span><span class="annot"><span class="annottext">AuthMode
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[JWTInfo]
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span>
+</span><span id="line-102"></span></pre></body></html>

@@ -1,0 +1,2196 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | Representation for queries going to remote schemas. Due to the existence of</span><span>
+</span><span id="line-2"></span><span class="hs-comment">-- remote relationships from remote schemas, we can't simply reuse the GraphQL</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- document AST we define in graphql-parser-hs, and instead redefine a custom</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- structure to represent such queries.</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.IR.RemoteSchema</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="hs-comment">-- AST</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#SelectionSet"><span class="hs-identifier">SelectionSet</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#DeduplicatedSelectionSet"><span class="hs-identifier">DeduplicatedSelectionSet</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#ObjectSelectionSet"><span class="hs-identifier">ObjectSelectionSet</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#mkInterfaceSelectionSet"><span class="hs-identifier">mkInterfaceSelectionSet</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#mkUnionSelectionSet"><span class="hs-identifier">mkUnionSelectionSet</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#Field"><span class="hs-identifier">Field</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#_FieldGraphQL"><span class="hs-identifier">_FieldGraphQL</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#_FieldRemote"><span class="hs-identifier">_FieldRemote</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#GraphQLField"><span class="hs-identifier">GraphQLField</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#mkGraphQLField"><span class="hs-identifier">mkGraphQLField</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span class="hs-comment">-- entry points</span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#RemoteSchemaRootField"><span class="hs-identifier">RemoteSchemaRootField</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#SchemaRemoteRelationshipSelect"><span class="hs-identifier">SchemaRemoteRelationshipSelect</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#RemoteFieldArgument"><span class="hs-identifier">RemoteFieldArgument</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#RemoteSchemaSelect"><span class="hs-identifier">RemoteSchemaSelect</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>    </span><span class="hs-comment">-- AST conversion</span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#convertSelectionSet"><span class="hs-identifier">convertSelectionSet</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#convertGraphQLField"><span class="hs-identifier">convertGraphQLField</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens.TH</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">makePrisms</span></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.HashMap.Strict.InsOrd.Extended.html"><span class="hs-identifier">Data.HashMap.Strict.InsOrd.Extended</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OMap</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.List.Extended.html"><span class="hs-identifier">Data.List.Extended</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.List.Extended.html#longestCommonPrefix"><span class="hs-identifier">longestCommonPrefix</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html"><span class="hs-identifier">Hasura.GraphQL.Parser.Schema</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InputValue"><span class="hs-identifier">InputValue</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier">FieldName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html"><span class="hs-identifier">Hasura.RQL.Types.Relationships.ToSchema</span></a></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html"><span class="hs-identifier">Hasura.RQL.Types.RemoteSchema</span></a></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html"><span class="hs-identifier">Hasura.RQL.Types.RemoteSchema</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">RQL</span></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html"><span class="hs-identifier">Hasura.RQL.Types.ResultCustomization</span></a></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html"><span class="hs-identifier">Hasura.RQL.Types.ResultCustomization</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">RQL</span></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-42"></span><span>
+</span><span id="line-43"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-44"></span><span class="hs-comment">-- Custom AST</span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span class="hs-comment">-- | Custom representation of a selection set.</span><span>
+</span><span id="line-47"></span><span class="hs-comment">--</span><span>
+</span><span id="line-48"></span><span class="hs-comment">-- Similarly to other parts of the IR, the @r@ argument is used for remote</span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- relationships.</span><span>
+</span><span id="line-50"></span><span class="hs-keyword">data</span><span> </span><span id="SelectionSet"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#SelectionSet"><span class="hs-identifier hs-var">SelectionSet</span></a></span></span><span> </span><span id="local-6989586621688148937"><span class="annot"><a href="#local-6989586621688148937"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621688148936"><span class="annot"><a href="#local-6989586621688148936"><span class="hs-identifier hs-type">var</span></a></span></span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="SelectionSetObject"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#SelectionSetObject"><span class="hs-identifier hs-var">SelectionSetObject</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#ObjectSelectionSet"><span class="hs-identifier hs-type">ObjectSelectionSet</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688148937"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688148936"><span class="hs-identifier hs-type">var</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="SelectionSetUnion"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#SelectionSetUnion"><span class="hs-identifier hs-var">SelectionSetUnion</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#DeduplicatedSelectionSet"><span class="hs-identifier hs-type">DeduplicatedSelectionSet</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688148937"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688148936"><span class="hs-identifier hs-type">var</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="SelectionSetInterface"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#SelectionSetInterface"><span class="hs-identifier hs-var">SelectionSetInterface</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#DeduplicatedSelectionSet"><span class="hs-identifier hs-type">DeduplicatedSelectionSet</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688148937"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688148936"><span class="hs-identifier hs-type">var</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="SelectionSetNone"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#SelectionSetNone"><span class="hs-identifier hs-var">SelectionSetNone</span></a></span></span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688148926"><span id="local-6989586621688148928"><span id="local-6989586621688148930"><span class="annot"><span class="annottext">Int -&gt; SelectionSet r var -&gt; ShowS
+[SelectionSet r var] -&gt; ShowS
+SelectionSet r var -&gt; String
+(Int -&gt; SelectionSet r var -&gt; ShowS)
+-&gt; (SelectionSet r var -&gt; String)
+-&gt; ([SelectionSet r var] -&gt; ShowS)
+-&gt; Show (SelectionSet r var)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+forall r var.
+(Show var, Show r) =&gt;
+Int -&gt; SelectionSet r var -&gt; ShowS
+forall r var. (Show var, Show r) =&gt; [SelectionSet r var] -&gt; ShowS
+forall r var. (Show var, Show r) =&gt; SelectionSet r var -&gt; String
+showList :: [SelectionSet r var] -&gt; ShowS
+$cshowList :: forall r var. (Show var, Show r) =&gt; [SelectionSet r var] -&gt; ShowS
+show :: SelectionSet r var -&gt; String
+$cshow :: forall r var. (Show var, Show r) =&gt; SelectionSet r var -&gt; String
+showsPrec :: Int -&gt; SelectionSet r var -&gt; ShowS
+$cshowsPrec :: forall r var.
+(Show var, Show r) =&gt;
+Int -&gt; SelectionSet r var -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688148921"><span id="local-6989586621688148923"><span class="annot"><span class="annottext">SelectionSet r var -&gt; SelectionSet r var -&gt; Bool
+(SelectionSet r var -&gt; SelectionSet r var -&gt; Bool)
+-&gt; (SelectionSet r var -&gt; SelectionSet r var -&gt; Bool)
+-&gt; Eq (SelectionSet r var)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+forall r var.
+(Eq var, Eq r) =&gt;
+SelectionSet r var -&gt; SelectionSet r var -&gt; Bool
+/= :: SelectionSet r var -&gt; SelectionSet r var -&gt; Bool
+$c/= :: forall r var.
+(Eq var, Eq r) =&gt;
+SelectionSet r var -&gt; SelectionSet r var -&gt; Bool
+== :: SelectionSet r var -&gt; SelectionSet r var -&gt; Bool
+$c== :: forall r var.
+(Eq var, Eq r) =&gt;
+SelectionSet r var -&gt; SelectionSet r var -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688148916"><span id="local-6989586621688148918"><span class="annot"><span class="annottext">a -&gt; SelectionSet r b -&gt; SelectionSet r a
+(a -&gt; b) -&gt; SelectionSet r a -&gt; SelectionSet r b
+(forall a b. (a -&gt; b) -&gt; SelectionSet r a -&gt; SelectionSet r b)
+-&gt; (forall a b. a -&gt; SelectionSet r b -&gt; SelectionSet r a)
+-&gt; Functor (SelectionSet r)
+forall a b. a -&gt; SelectionSet r b -&gt; SelectionSet r a
+forall a b. (a -&gt; b) -&gt; SelectionSet r a -&gt; SelectionSet r b
+forall r a b. a -&gt; SelectionSet r b -&gt; SelectionSet r a
+forall r a b. (a -&gt; b) -&gt; SelectionSet r a -&gt; SelectionSet r b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a -&gt; SelectionSet r b -&gt; SelectionSet r a
+$c&lt;$ :: forall r a b. a -&gt; SelectionSet r b -&gt; SelectionSet r a
+fmap :: (a -&gt; b) -&gt; SelectionSet r a -&gt; SelectionSet r b
+$cfmap :: forall r a b. (a -&gt; b) -&gt; SelectionSet r a -&gt; SelectionSet r b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688148881"><span id="local-6989586621688148883"><span id="local-6989586621688148885"><span id="local-6989586621688148887"><span id="local-6989586621688148889"><span id="local-6989586621688148891"><span id="local-6989586621688148893"><span id="local-6989586621688148895"><span id="local-6989586621688148897"><span id="local-6989586621688148899"><span id="local-6989586621688148901"><span id="local-6989586621688148903"><span id="local-6989586621688148905"><span id="local-6989586621688148907"><span id="local-6989586621688148909"><span id="local-6989586621688148911"><span id="local-6989586621688148913"><span class="annot"><span class="annottext">SelectionSet r a -&gt; Bool
+(a -&gt; m) -&gt; SelectionSet r a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; SelectionSet r a -&gt; b
+(forall m. Monoid m =&gt; SelectionSet r m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; SelectionSet r a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; SelectionSet r a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; SelectionSet r a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; SelectionSet r a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; SelectionSet r a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; SelectionSet r a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; SelectionSet r a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; SelectionSet r a -&gt; a)
+-&gt; (forall a. SelectionSet r a -&gt; [a])
+-&gt; (forall a. SelectionSet r a -&gt; Bool)
+-&gt; (forall a. SelectionSet r a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; SelectionSet r a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; SelectionSet r a -&gt; a)
+-&gt; (forall a. Ord a =&gt; SelectionSet r a -&gt; a)
+-&gt; (forall a. Num a =&gt; SelectionSet r a -&gt; a)
+-&gt; (forall a. Num a =&gt; SelectionSet r a -&gt; a)
+-&gt; Foldable (SelectionSet r)
+forall a. Eq a =&gt; a -&gt; SelectionSet r a -&gt; Bool
+forall a. Num a =&gt; SelectionSet r a -&gt; a
+forall a. Ord a =&gt; SelectionSet r a -&gt; a
+forall m. Monoid m =&gt; SelectionSet r m -&gt; m
+forall a. SelectionSet r a -&gt; Bool
+forall a. SelectionSet r a -&gt; Int
+forall a. SelectionSet r a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; SelectionSet r a -&gt; a
+forall r a. Eq a =&gt; a -&gt; SelectionSet r a -&gt; Bool
+forall r a. Num a =&gt; SelectionSet r a -&gt; a
+forall r a. Ord a =&gt; SelectionSet r a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; SelectionSet r a -&gt; m
+forall r m. Monoid m =&gt; SelectionSet r m -&gt; m
+forall r a. SelectionSet r a -&gt; Bool
+forall r a. SelectionSet r a -&gt; Int
+forall r a. SelectionSet r a -&gt; [a]
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; SelectionSet r a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; SelectionSet r a -&gt; b
+forall r a. (a -&gt; a -&gt; a) -&gt; SelectionSet r a -&gt; a
+forall r m a. Monoid m =&gt; (a -&gt; m) -&gt; SelectionSet r a -&gt; m
+forall r b a. (b -&gt; a -&gt; b) -&gt; b -&gt; SelectionSet r a -&gt; b
+forall r a b. (a -&gt; b -&gt; b) -&gt; b -&gt; SelectionSet r a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+product :: SelectionSet r a -&gt; a
+$cproduct :: forall r a. Num a =&gt; SelectionSet r a -&gt; a
+sum :: SelectionSet r a -&gt; a
+$csum :: forall r a. Num a =&gt; SelectionSet r a -&gt; a
+minimum :: SelectionSet r a -&gt; a
+$cminimum :: forall r a. Ord a =&gt; SelectionSet r a -&gt; a
+maximum :: SelectionSet r a -&gt; a
+$cmaximum :: forall r a. Ord a =&gt; SelectionSet r a -&gt; a
+elem :: a -&gt; SelectionSet r a -&gt; Bool
+$celem :: forall r a. Eq a =&gt; a -&gt; SelectionSet r a -&gt; Bool
+length :: SelectionSet r a -&gt; Int
+$clength :: forall r a. SelectionSet r a -&gt; Int
+null :: SelectionSet r a -&gt; Bool
+$cnull :: forall r a. SelectionSet r a -&gt; Bool
+toList :: SelectionSet r a -&gt; [a]
+$ctoList :: forall r a. SelectionSet r a -&gt; [a]
+foldl1 :: (a -&gt; a -&gt; a) -&gt; SelectionSet r a -&gt; a
+$cfoldl1 :: forall r a. (a -&gt; a -&gt; a) -&gt; SelectionSet r a -&gt; a
+foldr1 :: (a -&gt; a -&gt; a) -&gt; SelectionSet r a -&gt; a
+$cfoldr1 :: forall r a. (a -&gt; a -&gt; a) -&gt; SelectionSet r a -&gt; a
+foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; SelectionSet r a -&gt; b
+$cfoldl' :: forall r b a. (b -&gt; a -&gt; b) -&gt; b -&gt; SelectionSet r a -&gt; b
+foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; SelectionSet r a -&gt; b
+$cfoldl :: forall r b a. (b -&gt; a -&gt; b) -&gt; b -&gt; SelectionSet r a -&gt; b
+foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; SelectionSet r a -&gt; b
+$cfoldr' :: forall r a b. (a -&gt; b -&gt; b) -&gt; b -&gt; SelectionSet r a -&gt; b
+foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; SelectionSet r a -&gt; b
+$cfoldr :: forall r a b. (a -&gt; b -&gt; b) -&gt; b -&gt; SelectionSet r a -&gt; b
+foldMap' :: (a -&gt; m) -&gt; SelectionSet r a -&gt; m
+$cfoldMap' :: forall r m a. Monoid m =&gt; (a -&gt; m) -&gt; SelectionSet r a -&gt; m
+foldMap :: (a -&gt; m) -&gt; SelectionSet r a -&gt; m
+$cfoldMap :: forall r m a. Monoid m =&gt; (a -&gt; m) -&gt; SelectionSet r a -&gt; m
+fold :: SelectionSet r m -&gt; m
+$cfold :: forall r m. Monoid m =&gt; SelectionSet r m -&gt; m
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688148870"><span id="local-6989586621688148872"><span id="local-6989586621688148874"><span id="local-6989586621688148876"><span class="annot"><span class="annottext">Functor (SelectionSet r)
+Foldable (SelectionSet r)
+Functor (SelectionSet r)
+-&gt; Foldable (SelectionSet r)
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; SelectionSet r a -&gt; f (SelectionSet r b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    SelectionSet r (f a) -&gt; f (SelectionSet r a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; SelectionSet r a -&gt; m (SelectionSet r b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    SelectionSet r (m a) -&gt; m (SelectionSet r a))
+-&gt; Traversable (SelectionSet r)
+(a -&gt; f b) -&gt; SelectionSet r a -&gt; f (SelectionSet r b)
+forall r. Functor (SelectionSet r)
+forall r. Foldable (SelectionSet r)
+forall r (m :: * -&gt; *) a.
+Monad m =&gt;
+SelectionSet r (m a) -&gt; m (SelectionSet r a)
+forall r (f :: * -&gt; *) a.
+Applicative f =&gt;
+SelectionSet r (f a) -&gt; f (SelectionSet r a)
+forall r (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; SelectionSet r a -&gt; m (SelectionSet r b)
+forall r (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; SelectionSet r a -&gt; f (SelectionSet r b)
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+SelectionSet r (m a) -&gt; m (SelectionSet r a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+SelectionSet r (f a) -&gt; f (SelectionSet r a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; SelectionSet r a -&gt; m (SelectionSet r b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; SelectionSet r a -&gt; f (SelectionSet r b)
+sequence :: SelectionSet r (m a) -&gt; m (SelectionSet r a)
+$csequence :: forall r (m :: * -&gt; *) a.
+Monad m =&gt;
+SelectionSet r (m a) -&gt; m (SelectionSet r a)
+mapM :: (a -&gt; m b) -&gt; SelectionSet r a -&gt; m (SelectionSet r b)
+$cmapM :: forall r (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; SelectionSet r a -&gt; m (SelectionSet r b)
+sequenceA :: SelectionSet r (f a) -&gt; f (SelectionSet r a)
+$csequenceA :: forall r (f :: * -&gt; *) a.
+Applicative f =&gt;
+SelectionSet r (f a) -&gt; f (SelectionSet r a)
+traverse :: (a -&gt; f b) -&gt; SelectionSet r a -&gt; f (SelectionSet r b)
+$ctraverse :: forall r (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; SelectionSet r a -&gt; f (SelectionSet r b)
+$cp2Traversable :: forall r. Foldable (SelectionSet r)
+$cp1Traversable :: forall r. Functor (SelectionSet r)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span class="hs-comment">-- | Representation of the normalized selection set of an interface/union type.</span><span>
+</span><span id="line-58"></span><span class="hs-comment">--</span><span>
+</span><span id="line-59"></span><span class="hs-comment">-- This representation is used to attempt to minimize the size of the GraphQL</span><span>
+</span><span id="line-60"></span><span class="hs-comment">-- query that eventually gets sent to the GraphQL server by defining as many</span><span>
+</span><span id="line-61"></span><span class="hs-comment">-- fields as possible on the abstract type.</span><span>
+</span><span id="line-62"></span><span id="local-6989586621688148867"><span id="local-6989586621688148868"></span></span><span class="hs-keyword">data</span><span> </span><span id="DeduplicatedSelectionSet"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#DeduplicatedSelectionSet"><span class="hs-identifier hs-var">DeduplicatedSelectionSet</span></a></span></span><span> </span><span id="local-6989586621688149222"><span class="annot"><a href="#local-6989586621688149222"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621688149221"><span class="annot"><a href="#local-6989586621688149221"><span class="hs-identifier hs-type">var</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DeduplicatedSelectionSet"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#DeduplicatedSelectionSet"><span class="hs-identifier hs-var">DeduplicatedSelectionSet</span></a></span></span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | Fields that aren't explicitly defined for member types</span><span>
+</span><span id="line-64"></span><span>    </span><span id="_atssCommonFields"><span class="annot"><span class="annottext">DeduplicatedSelectionSet r var -&gt; HashSet Name
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#_atssCommonFields"><span class="hs-identifier hs-var hs-var">_atssCommonFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Set.HashSet</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-65"></span><span>    </span><span class="hs-comment">-- | SelectionSets of individual member types</span><span>
+</span><span id="line-66"></span><span>    </span><span id="_atssMemberSelectionSets"><span class="annot"><span class="annottext">DeduplicatedSelectionSet r var
+-&gt; HashMap Name (ObjectSelectionSet r var)
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#_atssMemberSelectionSets"><span class="hs-identifier hs-var hs-var">_atssMemberSelectionSets</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Map.HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#ObjectSelectionSet"><span class="hs-identifier hs-type">ObjectSelectionSet</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688149222"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688149221"><span class="hs-identifier hs-type">var</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-67"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688148858"><span id="local-6989586621688148860"><span id="local-6989586621688148862"><span class="annot"><span class="annottext">Int -&gt; DeduplicatedSelectionSet r var -&gt; ShowS
+[DeduplicatedSelectionSet r var] -&gt; ShowS
+DeduplicatedSelectionSet r var -&gt; String
+(Int -&gt; DeduplicatedSelectionSet r var -&gt; ShowS)
+-&gt; (DeduplicatedSelectionSet r var -&gt; String)
+-&gt; ([DeduplicatedSelectionSet r var] -&gt; ShowS)
+-&gt; Show (DeduplicatedSelectionSet r var)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+forall r var.
+(Show var, Show r) =&gt;
+Int -&gt; DeduplicatedSelectionSet r var -&gt; ShowS
+forall r var.
+(Show var, Show r) =&gt;
+[DeduplicatedSelectionSet r var] -&gt; ShowS
+forall r var.
+(Show var, Show r) =&gt;
+DeduplicatedSelectionSet r var -&gt; String
+showList :: [DeduplicatedSelectionSet r var] -&gt; ShowS
+$cshowList :: forall r var.
+(Show var, Show r) =&gt;
+[DeduplicatedSelectionSet r var] -&gt; ShowS
+show :: DeduplicatedSelectionSet r var -&gt; String
+$cshow :: forall r var.
+(Show var, Show r) =&gt;
+DeduplicatedSelectionSet r var -&gt; String
+showsPrec :: Int -&gt; DeduplicatedSelectionSet r var -&gt; ShowS
+$cshowsPrec :: forall r var.
+(Show var, Show r) =&gt;
+Int -&gt; DeduplicatedSelectionSet r var -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688148854"><span id="local-6989586621688148856"><span class="annot"><span class="annottext">DeduplicatedSelectionSet r var
+-&gt; DeduplicatedSelectionSet r var -&gt; Bool
+(DeduplicatedSelectionSet r var
+ -&gt; DeduplicatedSelectionSet r var -&gt; Bool)
+-&gt; (DeduplicatedSelectionSet r var
+    -&gt; DeduplicatedSelectionSet r var -&gt; Bool)
+-&gt; Eq (DeduplicatedSelectionSet r var)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+forall r var.
+(Eq var, Eq r) =&gt;
+DeduplicatedSelectionSet r var
+-&gt; DeduplicatedSelectionSet r var -&gt; Bool
+/= :: DeduplicatedSelectionSet r var
+-&gt; DeduplicatedSelectionSet r var -&gt; Bool
+$c/= :: forall r var.
+(Eq var, Eq r) =&gt;
+DeduplicatedSelectionSet r var
+-&gt; DeduplicatedSelectionSet r var -&gt; Bool
+== :: DeduplicatedSelectionSet r var
+-&gt; DeduplicatedSelectionSet r var -&gt; Bool
+$c== :: forall r var.
+(Eq var, Eq r) =&gt;
+DeduplicatedSelectionSet r var
+-&gt; DeduplicatedSelectionSet r var -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688148850"><span id="local-6989586621688148852"><span class="annot"><span class="annottext">a -&gt; DeduplicatedSelectionSet r b -&gt; DeduplicatedSelectionSet r a
+(a -&gt; b)
+-&gt; DeduplicatedSelectionSet r a -&gt; DeduplicatedSelectionSet r b
+(forall a b.
+ (a -&gt; b)
+ -&gt; DeduplicatedSelectionSet r a -&gt; DeduplicatedSelectionSet r b)
+-&gt; (forall a b.
+    a -&gt; DeduplicatedSelectionSet r b -&gt; DeduplicatedSelectionSet r a)
+-&gt; Functor (DeduplicatedSelectionSet r)
+forall a b.
+a -&gt; DeduplicatedSelectionSet r b -&gt; DeduplicatedSelectionSet r a
+forall a b.
+(a -&gt; b)
+-&gt; DeduplicatedSelectionSet r a -&gt; DeduplicatedSelectionSet r b
+forall r a b.
+a -&gt; DeduplicatedSelectionSet r b -&gt; DeduplicatedSelectionSet r a
+forall r a b.
+(a -&gt; b)
+-&gt; DeduplicatedSelectionSet r a -&gt; DeduplicatedSelectionSet r b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a -&gt; DeduplicatedSelectionSet r b -&gt; DeduplicatedSelectionSet r a
+$c&lt;$ :: forall r a b.
+a -&gt; DeduplicatedSelectionSet r b -&gt; DeduplicatedSelectionSet r a
+fmap :: (a -&gt; b)
+-&gt; DeduplicatedSelectionSet r a -&gt; DeduplicatedSelectionSet r b
+$cfmap :: forall r a b.
+(a -&gt; b)
+-&gt; DeduplicatedSelectionSet r a -&gt; DeduplicatedSelectionSet r b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688148816"><span id="local-6989586621688148818"><span id="local-6989586621688148820"><span id="local-6989586621688148822"><span id="local-6989586621688148824"><span id="local-6989586621688148826"><span id="local-6989586621688148828"><span id="local-6989586621688148830"><span id="local-6989586621688148832"><span id="local-6989586621688148834"><span id="local-6989586621688148836"><span id="local-6989586621688148838"><span id="local-6989586621688148840"><span id="local-6989586621688148842"><span id="local-6989586621688148844"><span id="local-6989586621688148846"><span id="local-6989586621688148848"><span class="annot"><span class="annottext">DeduplicatedSelectionSet r a -&gt; Bool
+(a -&gt; m) -&gt; DeduplicatedSelectionSet r a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; DeduplicatedSelectionSet r a -&gt; b
+(forall m. Monoid m =&gt; DeduplicatedSelectionSet r m -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; DeduplicatedSelectionSet r a -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; DeduplicatedSelectionSet r a -&gt; m)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; DeduplicatedSelectionSet r a -&gt; b)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; DeduplicatedSelectionSet r a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; DeduplicatedSelectionSet r a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; DeduplicatedSelectionSet r a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; DeduplicatedSelectionSet r a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; DeduplicatedSelectionSet r a -&gt; a)
+-&gt; (forall a. DeduplicatedSelectionSet r a -&gt; [a])
+-&gt; (forall a. DeduplicatedSelectionSet r a -&gt; Bool)
+-&gt; (forall a. DeduplicatedSelectionSet r a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; DeduplicatedSelectionSet r a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; DeduplicatedSelectionSet r a -&gt; a)
+-&gt; (forall a. Ord a =&gt; DeduplicatedSelectionSet r a -&gt; a)
+-&gt; (forall a. Num a =&gt; DeduplicatedSelectionSet r a -&gt; a)
+-&gt; (forall a. Num a =&gt; DeduplicatedSelectionSet r a -&gt; a)
+-&gt; Foldable (DeduplicatedSelectionSet r)
+forall a. Eq a =&gt; a -&gt; DeduplicatedSelectionSet r a -&gt; Bool
+forall a. Num a =&gt; DeduplicatedSelectionSet r a -&gt; a
+forall a. Ord a =&gt; DeduplicatedSelectionSet r a -&gt; a
+forall m. Monoid m =&gt; DeduplicatedSelectionSet r m -&gt; m
+forall a. DeduplicatedSelectionSet r a -&gt; Bool
+forall a. DeduplicatedSelectionSet r a -&gt; Int
+forall a. DeduplicatedSelectionSet r a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; DeduplicatedSelectionSet r a -&gt; a
+forall r a. Eq a =&gt; a -&gt; DeduplicatedSelectionSet r a -&gt; Bool
+forall r a. Num a =&gt; DeduplicatedSelectionSet r a -&gt; a
+forall r a. Ord a =&gt; DeduplicatedSelectionSet r a -&gt; a
+forall m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; DeduplicatedSelectionSet r a -&gt; m
+forall r m. Monoid m =&gt; DeduplicatedSelectionSet r m -&gt; m
+forall r a. DeduplicatedSelectionSet r a -&gt; Bool
+forall r a. DeduplicatedSelectionSet r a -&gt; Int
+forall r a. DeduplicatedSelectionSet r a -&gt; [a]
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; DeduplicatedSelectionSet r a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; DeduplicatedSelectionSet r a -&gt; b
+forall r a. (a -&gt; a -&gt; a) -&gt; DeduplicatedSelectionSet r a -&gt; a
+forall r m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; DeduplicatedSelectionSet r a -&gt; m
+forall r b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; DeduplicatedSelectionSet r a -&gt; b
+forall r a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; DeduplicatedSelectionSet r a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+product :: DeduplicatedSelectionSet r a -&gt; a
+$cproduct :: forall r a. Num a =&gt; DeduplicatedSelectionSet r a -&gt; a
+sum :: DeduplicatedSelectionSet r a -&gt; a
+$csum :: forall r a. Num a =&gt; DeduplicatedSelectionSet r a -&gt; a
+minimum :: DeduplicatedSelectionSet r a -&gt; a
+$cminimum :: forall r a. Ord a =&gt; DeduplicatedSelectionSet r a -&gt; a
+maximum :: DeduplicatedSelectionSet r a -&gt; a
+$cmaximum :: forall r a. Ord a =&gt; DeduplicatedSelectionSet r a -&gt; a
+elem :: a -&gt; DeduplicatedSelectionSet r a -&gt; Bool
+$celem :: forall r a. Eq a =&gt; a -&gt; DeduplicatedSelectionSet r a -&gt; Bool
+length :: DeduplicatedSelectionSet r a -&gt; Int
+$clength :: forall r a. DeduplicatedSelectionSet r a -&gt; Int
+null :: DeduplicatedSelectionSet r a -&gt; Bool
+$cnull :: forall r a. DeduplicatedSelectionSet r a -&gt; Bool
+toList :: DeduplicatedSelectionSet r a -&gt; [a]
+$ctoList :: forall r a. DeduplicatedSelectionSet r a -&gt; [a]
+foldl1 :: (a -&gt; a -&gt; a) -&gt; DeduplicatedSelectionSet r a -&gt; a
+$cfoldl1 :: forall r a. (a -&gt; a -&gt; a) -&gt; DeduplicatedSelectionSet r a -&gt; a
+foldr1 :: (a -&gt; a -&gt; a) -&gt; DeduplicatedSelectionSet r a -&gt; a
+$cfoldr1 :: forall r a. (a -&gt; a -&gt; a) -&gt; DeduplicatedSelectionSet r a -&gt; a
+foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; DeduplicatedSelectionSet r a -&gt; b
+$cfoldl' :: forall r b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; DeduplicatedSelectionSet r a -&gt; b
+foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; DeduplicatedSelectionSet r a -&gt; b
+$cfoldl :: forall r b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; DeduplicatedSelectionSet r a -&gt; b
+foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; DeduplicatedSelectionSet r a -&gt; b
+$cfoldr' :: forall r a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; DeduplicatedSelectionSet r a -&gt; b
+foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; DeduplicatedSelectionSet r a -&gt; b
+$cfoldr :: forall r a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; DeduplicatedSelectionSet r a -&gt; b
+foldMap' :: (a -&gt; m) -&gt; DeduplicatedSelectionSet r a -&gt; m
+$cfoldMap' :: forall r m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; DeduplicatedSelectionSet r a -&gt; m
+foldMap :: (a -&gt; m) -&gt; DeduplicatedSelectionSet r a -&gt; m
+$cfoldMap :: forall r m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; DeduplicatedSelectionSet r a -&gt; m
+fold :: DeduplicatedSelectionSet r m -&gt; m
+$cfold :: forall r m. Monoid m =&gt; DeduplicatedSelectionSet r m -&gt; m
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688148806"><span id="local-6989586621688148808"><span id="local-6989586621688148810"><span id="local-6989586621688148812"><span class="annot"><span class="annottext">Functor (DeduplicatedSelectionSet r)
+Foldable (DeduplicatedSelectionSet r)
+Functor (DeduplicatedSelectionSet r)
+-&gt; Foldable (DeduplicatedSelectionSet r)
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b)
+    -&gt; DeduplicatedSelectionSet r a
+    -&gt; f (DeduplicatedSelectionSet r b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    DeduplicatedSelectionSet r (f a)
+    -&gt; f (DeduplicatedSelectionSet r a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b)
+    -&gt; DeduplicatedSelectionSet r a
+    -&gt; m (DeduplicatedSelectionSet r b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    DeduplicatedSelectionSet r (m a)
+    -&gt; m (DeduplicatedSelectionSet r a))
+-&gt; Traversable (DeduplicatedSelectionSet r)
+(a -&gt; f b)
+-&gt; DeduplicatedSelectionSet r a -&gt; f (DeduplicatedSelectionSet r b)
+forall r. Functor (DeduplicatedSelectionSet r)
+forall r. Foldable (DeduplicatedSelectionSet r)
+forall r (m :: * -&gt; *) a.
+Monad m =&gt;
+DeduplicatedSelectionSet r (m a)
+-&gt; m (DeduplicatedSelectionSet r a)
+forall r (f :: * -&gt; *) a.
+Applicative f =&gt;
+DeduplicatedSelectionSet r (f a)
+-&gt; f (DeduplicatedSelectionSet r a)
+forall r (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; DeduplicatedSelectionSet r a -&gt; m (DeduplicatedSelectionSet r b)
+forall r (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; DeduplicatedSelectionSet r a -&gt; f (DeduplicatedSelectionSet r b)
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+DeduplicatedSelectionSet r (m a)
+-&gt; m (DeduplicatedSelectionSet r a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+DeduplicatedSelectionSet r (f a)
+-&gt; f (DeduplicatedSelectionSet r a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; DeduplicatedSelectionSet r a -&gt; m (DeduplicatedSelectionSet r b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; DeduplicatedSelectionSet r a -&gt; f (DeduplicatedSelectionSet r b)
+sequence :: DeduplicatedSelectionSet r (m a)
+-&gt; m (DeduplicatedSelectionSet r a)
+$csequence :: forall r (m :: * -&gt; *) a.
+Monad m =&gt;
+DeduplicatedSelectionSet r (m a)
+-&gt; m (DeduplicatedSelectionSet r a)
+mapM :: (a -&gt; m b)
+-&gt; DeduplicatedSelectionSet r a -&gt; m (DeduplicatedSelectionSet r b)
+$cmapM :: forall r (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; DeduplicatedSelectionSet r a -&gt; m (DeduplicatedSelectionSet r b)
+sequenceA :: DeduplicatedSelectionSet r (f a)
+-&gt; f (DeduplicatedSelectionSet r a)
+$csequenceA :: forall r (f :: * -&gt; *) a.
+Applicative f =&gt;
+DeduplicatedSelectionSet r (f a)
+-&gt; f (DeduplicatedSelectionSet r a)
+traverse :: (a -&gt; f b)
+-&gt; DeduplicatedSelectionSet r a -&gt; f (DeduplicatedSelectionSet r b)
+$ctraverse :: forall r (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; DeduplicatedSelectionSet r a -&gt; f (DeduplicatedSelectionSet r b)
+$cp2Traversable :: forall r. Foldable (DeduplicatedSelectionSet r)
+$cp1Traversable :: forall r. Functor (DeduplicatedSelectionSet r)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x.
+ DeduplicatedSelectionSet r var
+ -&gt; Rep (DeduplicatedSelectionSet r var) x)
+-&gt; (forall x.
+    Rep (DeduplicatedSelectionSet r var) x
+    -&gt; DeduplicatedSelectionSet r var)
+-&gt; Generic (DeduplicatedSelectionSet r var)
+forall x.
+Rep (DeduplicatedSelectionSet r var) x
+-&gt; DeduplicatedSelectionSet r var
+forall x.
+DeduplicatedSelectionSet r var
+-&gt; Rep (DeduplicatedSelectionSet r var) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall r var x.
+Rep (DeduplicatedSelectionSet r var) x
+-&gt; DeduplicatedSelectionSet r var
+forall r var x.
+DeduplicatedSelectionSet r var
+-&gt; Rep (DeduplicatedSelectionSet r var) x
+$cto :: forall r var x.
+Rep (DeduplicatedSelectionSet r var) x
+-&gt; DeduplicatedSelectionSet r var
+$cfrom :: forall r var x.
+DeduplicatedSelectionSet r var
+-&gt; Rep (DeduplicatedSelectionSet r var) x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-69"></span><span>
+</span><span id="line-70"></span><span class="hs-keyword">type</span><span> </span><span id="ObjectSelectionSet"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#ObjectSelectionSet"><span class="hs-identifier hs-var">ObjectSelectionSet</span></a></span></span><span> </span><span id="local-6989586621688148802"><span class="annot"><a href="#local-6989586621688148802"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621688148801"><span class="annot"><a href="#local-6989586621688148801"><span class="hs-identifier hs-type">var</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OMap.InsOrdHashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#Field"><span class="hs-identifier hs-type">Field</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688148802"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688148801"><span class="hs-identifier hs-type">var</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span>
+</span><span id="line-72"></span><span class="hs-comment">-- | Constructs an 'InterfaceSelectionSet' from a set of interface fields and an</span><span>
+</span><span id="line-73"></span><span class="hs-comment">-- association list of the fields. This function ensures that @__typename@ is</span><span>
+</span><span id="line-74"></span><span class="hs-comment">-- present in the set of interface fields.</span><span>
+</span><span id="line-75"></span><span id="local-6989586621688148799"><span id="local-6989586621688148800"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#mkInterfaceSelectionSet"><span class="hs-identifier hs-type">mkInterfaceSelectionSet</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-76"></span><span>  </span><span class="hs-comment">-- | Member fields of the interface</span><span>
+</span><span id="line-77"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Set.HashSet</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-78"></span><span>  </span><span class="hs-comment">-- | Selection sets for all the member types</span><span>
+</span><span id="line-79"></span><span>  </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#ObjectSelectionSet"><span class="hs-identifier hs-type">ObjectSelectionSet</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688148800"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688148799"><span class="hs-identifier hs-type">var</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-80"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#DeduplicatedSelectionSet"><span class="hs-identifier hs-type">DeduplicatedSelectionSet</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688148800"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688148799"><span class="hs-identifier hs-type">var</span></a></span></span></span><span>
+</span><span id="line-81"></span><span id="mkInterfaceSelectionSet"><span class="annot"><span class="annottext">mkInterfaceSelectionSet :: HashSet Name
+-&gt; [(Name, ObjectSelectionSet r var)]
+-&gt; DeduplicatedSelectionSet r var
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#mkInterfaceSelectionSet"><span class="hs-identifier hs-var hs-var">mkInterfaceSelectionSet</span></a></span></span><span> </span><span id="local-6989586621688148798"><span class="annot"><span class="annottext">HashSet Name
+</span><a href="#local-6989586621688148798"><span class="hs-identifier hs-var">interfaceFields</span></a></span></span><span> </span><span id="local-6989586621688148797"><span class="annot"><span class="annottext">[(Name, ObjectSelectionSet r var)]
+</span><a href="#local-6989586621688148797"><span class="hs-identifier hs-var">selectionSets</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-82"></span><span>  </span><span class="annot"><span class="annottext">HashSet Name
+-&gt; HashMap Name (ObjectSelectionSet r var)
+-&gt; DeduplicatedSelectionSet r var
+forall r var.
+HashSet Name
+-&gt; HashMap Name (ObjectSelectionSet r var)
+-&gt; DeduplicatedSelectionSet r var
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#DeduplicatedSelectionSet"><span class="hs-identifier hs-var">DeduplicatedSelectionSet</span></a></span><span>
+</span><span id="line-83"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; HashSet Name -&gt; HashSet Name
+forall a. (Eq a, Hashable a) =&gt; a -&gt; HashSet a -&gt; HashSet a
+</span><span class="hs-identifier hs-var">Set.insert</span></span><span> </span><span class="hs-special">$$(</span><span class="annot"><span class="hs-identifier hs-type">G.litName</span></span><span> </span><span class="annot"><span class="hs-string">&quot;__typename&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashSet Name
+</span><a href="#local-6989586621688148798"><span class="hs-identifier hs-var">interfaceFields</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-84"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[(Name, ObjectSelectionSet r var)]
+-&gt; HashMap Name (ObjectSelectionSet r var)
+forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">Map.fromList</span></span><span> </span><span class="annot"><span class="annottext">[(Name, ObjectSelectionSet r var)]
+</span><a href="#local-6989586621688148797"><span class="hs-identifier hs-var">selectionSets</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span class="hs-comment">-- | Constructs an 'UnionSelectionSet' from a list of the fields, using a</span><span>
+</span><span id="line-87"></span><span class="hs-comment">-- singleton set of @__typename@ for the set of common fields.</span><span>
+</span><span id="line-88"></span><span id="local-6989586621688148790"><span id="local-6989586621688148791"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#mkUnionSelectionSet"><span class="hs-identifier hs-type">mkUnionSelectionSet</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-89"></span><span>  </span><span class="hs-comment">-- | Selection sets for all the member types</span><span>
+</span><span id="line-90"></span><span>  </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#ObjectSelectionSet"><span class="hs-identifier hs-type">ObjectSelectionSet</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688148791"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688148790"><span class="hs-identifier hs-type">var</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-91"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#DeduplicatedSelectionSet"><span class="hs-identifier hs-type">DeduplicatedSelectionSet</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688148791"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688148790"><span class="hs-identifier hs-type">var</span></a></span></span></span><span>
+</span><span id="line-92"></span><span id="mkUnionSelectionSet"><span class="annot"><span class="annottext">mkUnionSelectionSet :: [(Name, ObjectSelectionSet r var)]
+-&gt; DeduplicatedSelectionSet r var
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#mkUnionSelectionSet"><span class="hs-identifier hs-var hs-var">mkUnionSelectionSet</span></a></span></span><span> </span><span id="local-6989586621688148789"><span class="annot"><span class="annottext">[(Name, ObjectSelectionSet r var)]
+</span><a href="#local-6989586621688148789"><span class="hs-identifier hs-var">selectionSets</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-93"></span><span>  </span><span class="annot"><span class="annottext">HashSet Name
+-&gt; HashMap Name (ObjectSelectionSet r var)
+-&gt; DeduplicatedSelectionSet r var
+forall r var.
+HashSet Name
+-&gt; HashMap Name (ObjectSelectionSet r var)
+-&gt; DeduplicatedSelectionSet r var
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#DeduplicatedSelectionSet"><span class="hs-identifier hs-var">DeduplicatedSelectionSet</span></a></span><span>
+</span><span id="line-94"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; HashSet Name
+forall a. Hashable a =&gt; a -&gt; HashSet a
+</span><span class="hs-identifier hs-var">Set.singleton</span></span><span> </span><span class="hs-special">$$(</span><span class="annot"><span class="hs-identifier hs-type">G.litName</span></span><span> </span><span class="annot"><span class="hs-string">&quot;__typename&quot;</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-95"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[(Name, ObjectSelectionSet r var)]
+-&gt; HashMap Name (ObjectSelectionSet r var)
+forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">Map.fromList</span></span><span> </span><span class="annot"><span class="annottext">[(Name, ObjectSelectionSet r var)]
+</span><a href="#local-6989586621688148789"><span class="hs-identifier hs-var">selectionSets</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-96"></span><span>
+</span><span id="line-97"></span><span class="hs-comment">-- | Representation of one individual field.</span><span>
+</span><span id="line-98"></span><span class="hs-comment">--</span><span>
+</span><span id="line-99"></span><span class="hs-comment">-- This particular type is the reason why we need a different representation</span><span>
+</span><span id="line-100"></span><span class="hs-comment">-- from the one in 'graphql-parser-hs': we differentiate between selection</span><span>
+</span><span id="line-101"></span><span class="hs-comment">-- fields that target the actual remote schema, and fields that, instead, are</span><span>
+</span><span id="line-102"></span><span class="hs-comment">-- remote from it and need to be treated differently.</span><span>
+</span><span id="line-103"></span><span class="hs-keyword">data</span><span> </span><span id="Field"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#Field"><span class="hs-identifier hs-var">Field</span></a></span></span><span> </span><span id="local-6989586621688148787"><span class="annot"><a href="#local-6989586621688148787"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621688148786"><span class="annot"><a href="#local-6989586621688148786"><span class="hs-identifier hs-type">var</span></a></span></span><span>
+</span><span id="line-104"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="FieldGraphQL"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#FieldGraphQL"><span class="hs-identifier hs-var">FieldGraphQL</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#GraphQLField"><span class="hs-identifier hs-type">GraphQLField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688148787"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688148786"><span class="hs-identifier hs-type">var</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-105"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="FieldRemote"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#FieldRemote"><span class="hs-identifier hs-var">FieldRemote</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#SchemaRemoteRelationshipSelect"><span class="hs-identifier hs-type">SchemaRemoteRelationshipSelect</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688148787"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-106"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688148778"><span id="local-6989586621688148780"><span id="local-6989586621688148782"><span class="annot"><span class="annottext">Int -&gt; Field r var -&gt; ShowS
+[Field r var] -&gt; ShowS
+Field r var -&gt; String
+(Int -&gt; Field r var -&gt; ShowS)
+-&gt; (Field r var -&gt; String)
+-&gt; ([Field r var] -&gt; ShowS)
+-&gt; Show (Field r var)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+forall r var. (Show var, Show r) =&gt; Int -&gt; Field r var -&gt; ShowS
+forall r var. (Show var, Show r) =&gt; [Field r var] -&gt; ShowS
+forall r var. (Show var, Show r) =&gt; Field r var -&gt; String
+showList :: [Field r var] -&gt; ShowS
+$cshowList :: forall r var. (Show var, Show r) =&gt; [Field r var] -&gt; ShowS
+show :: Field r var -&gt; String
+$cshow :: forall r var. (Show var, Show r) =&gt; Field r var -&gt; String
+showsPrec :: Int -&gt; Field r var -&gt; ShowS
+$cshowsPrec :: forall r var. (Show var, Show r) =&gt; Int -&gt; Field r var -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688148774"><span id="local-6989586621688148776"><span class="annot"><span class="annottext">Field r var -&gt; Field r var -&gt; Bool
+(Field r var -&gt; Field r var -&gt; Bool)
+-&gt; (Field r var -&gt; Field r var -&gt; Bool) -&gt; Eq (Field r var)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+forall r var. (Eq var, Eq r) =&gt; Field r var -&gt; Field r var -&gt; Bool
+/= :: Field r var -&gt; Field r var -&gt; Bool
+$c/= :: forall r var. (Eq var, Eq r) =&gt; Field r var -&gt; Field r var -&gt; Bool
+== :: Field r var -&gt; Field r var -&gt; Bool
+$c== :: forall r var. (Eq var, Eq r) =&gt; Field r var -&gt; Field r var -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688148770"><span id="local-6989586621688148772"><span class="annot"><span class="annottext">a -&gt; Field r b -&gt; Field r a
+(a -&gt; b) -&gt; Field r a -&gt; Field r b
+(forall a b. (a -&gt; b) -&gt; Field r a -&gt; Field r b)
+-&gt; (forall a b. a -&gt; Field r b -&gt; Field r a) -&gt; Functor (Field r)
+forall a b. a -&gt; Field r b -&gt; Field r a
+forall a b. (a -&gt; b) -&gt; Field r a -&gt; Field r b
+forall r a b. a -&gt; Field r b -&gt; Field r a
+forall r a b. (a -&gt; b) -&gt; Field r a -&gt; Field r b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a -&gt; Field r b -&gt; Field r a
+$c&lt;$ :: forall r a b. a -&gt; Field r b -&gt; Field r a
+fmap :: (a -&gt; b) -&gt; Field r a -&gt; Field r b
+$cfmap :: forall r a b. (a -&gt; b) -&gt; Field r a -&gt; Field r b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688148736"><span id="local-6989586621688148738"><span id="local-6989586621688148740"><span id="local-6989586621688148742"><span id="local-6989586621688148744"><span id="local-6989586621688148746"><span id="local-6989586621688148748"><span id="local-6989586621688148750"><span id="local-6989586621688148752"><span id="local-6989586621688148754"><span id="local-6989586621688148756"><span id="local-6989586621688148758"><span id="local-6989586621688148760"><span id="local-6989586621688148762"><span id="local-6989586621688148764"><span id="local-6989586621688148766"><span id="local-6989586621688148768"><span class="annot"><span class="annottext">Field r a -&gt; Bool
+(a -&gt; m) -&gt; Field r a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; Field r a -&gt; b
+(forall m. Monoid m =&gt; Field r m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; Field r a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; Field r a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; Field r a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; Field r a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; Field r a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; Field r a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; Field r a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; Field r a -&gt; a)
+-&gt; (forall a. Field r a -&gt; [a])
+-&gt; (forall a. Field r a -&gt; Bool)
+-&gt; (forall a. Field r a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; Field r a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; Field r a -&gt; a)
+-&gt; (forall a. Ord a =&gt; Field r a -&gt; a)
+-&gt; (forall a. Num a =&gt; Field r a -&gt; a)
+-&gt; (forall a. Num a =&gt; Field r a -&gt; a)
+-&gt; Foldable (Field r)
+forall a. Eq a =&gt; a -&gt; Field r a -&gt; Bool
+forall a. Num a =&gt; Field r a -&gt; a
+forall a. Ord a =&gt; Field r a -&gt; a
+forall m. Monoid m =&gt; Field r m -&gt; m
+forall a. Field r a -&gt; Bool
+forall a. Field r a -&gt; Int
+forall a. Field r a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; Field r a -&gt; a
+forall r a. Eq a =&gt; a -&gt; Field r a -&gt; Bool
+forall r a. Num a =&gt; Field r a -&gt; a
+forall r a. Ord a =&gt; Field r a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; Field r a -&gt; m
+forall r m. Monoid m =&gt; Field r m -&gt; m
+forall r a. Field r a -&gt; Bool
+forall r a. Field r a -&gt; Int
+forall r a. Field r a -&gt; [a]
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; Field r a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; Field r a -&gt; b
+forall r a. (a -&gt; a -&gt; a) -&gt; Field r a -&gt; a
+forall r m a. Monoid m =&gt; (a -&gt; m) -&gt; Field r a -&gt; m
+forall r b a. (b -&gt; a -&gt; b) -&gt; b -&gt; Field r a -&gt; b
+forall r a b. (a -&gt; b -&gt; b) -&gt; b -&gt; Field r a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+product :: Field r a -&gt; a
+$cproduct :: forall r a. Num a =&gt; Field r a -&gt; a
+sum :: Field r a -&gt; a
+$csum :: forall r a. Num a =&gt; Field r a -&gt; a
+minimum :: Field r a -&gt; a
+$cminimum :: forall r a. Ord a =&gt; Field r a -&gt; a
+maximum :: Field r a -&gt; a
+$cmaximum :: forall r a. Ord a =&gt; Field r a -&gt; a
+elem :: a -&gt; Field r a -&gt; Bool
+$celem :: forall r a. Eq a =&gt; a -&gt; Field r a -&gt; Bool
+length :: Field r a -&gt; Int
+$clength :: forall r a. Field r a -&gt; Int
+null :: Field r a -&gt; Bool
+$cnull :: forall r a. Field r a -&gt; Bool
+toList :: Field r a -&gt; [a]
+$ctoList :: forall r a. Field r a -&gt; [a]
+foldl1 :: (a -&gt; a -&gt; a) -&gt; Field r a -&gt; a
+$cfoldl1 :: forall r a. (a -&gt; a -&gt; a) -&gt; Field r a -&gt; a
+foldr1 :: (a -&gt; a -&gt; a) -&gt; Field r a -&gt; a
+$cfoldr1 :: forall r a. (a -&gt; a -&gt; a) -&gt; Field r a -&gt; a
+foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; Field r a -&gt; b
+$cfoldl' :: forall r b a. (b -&gt; a -&gt; b) -&gt; b -&gt; Field r a -&gt; b
+foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; Field r a -&gt; b
+$cfoldl :: forall r b a. (b -&gt; a -&gt; b) -&gt; b -&gt; Field r a -&gt; b
+foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; Field r a -&gt; b
+$cfoldr' :: forall r a b. (a -&gt; b -&gt; b) -&gt; b -&gt; Field r a -&gt; b
+foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; Field r a -&gt; b
+$cfoldr :: forall r a b. (a -&gt; b -&gt; b) -&gt; b -&gt; Field r a -&gt; b
+foldMap' :: (a -&gt; m) -&gt; Field r a -&gt; m
+$cfoldMap' :: forall r m a. Monoid m =&gt; (a -&gt; m) -&gt; Field r a -&gt; m
+foldMap :: (a -&gt; m) -&gt; Field r a -&gt; m
+$cfoldMap :: forall r m a. Monoid m =&gt; (a -&gt; m) -&gt; Field r a -&gt; m
+fold :: Field r m -&gt; m
+$cfold :: forall r m. Monoid m =&gt; Field r m -&gt; m
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688148726"><span id="local-6989586621688148728"><span id="local-6989586621688148730"><span id="local-6989586621688148732"><span class="annot"><span class="annottext">Functor (Field r)
+Foldable (Field r)
+Functor (Field r)
+-&gt; Foldable (Field r)
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; Field r a -&gt; f (Field r b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    Field r (f a) -&gt; f (Field r a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; Field r a -&gt; m (Field r b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    Field r (m a) -&gt; m (Field r a))
+-&gt; Traversable (Field r)
+(a -&gt; f b) -&gt; Field r a -&gt; f (Field r b)
+forall r. Functor (Field r)
+forall r. Foldable (Field r)
+forall r (m :: * -&gt; *) a. Monad m =&gt; Field r (m a) -&gt; m (Field r a)
+forall r (f :: * -&gt; *) a.
+Applicative f =&gt;
+Field r (f a) -&gt; f (Field r a)
+forall r (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; Field r a -&gt; m (Field r b)
+forall r (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; Field r a -&gt; f (Field r b)
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a. Monad m =&gt; Field r (m a) -&gt; m (Field r a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+Field r (f a) -&gt; f (Field r a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; Field r a -&gt; m (Field r b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; Field r a -&gt; f (Field r b)
+sequence :: Field r (m a) -&gt; m (Field r a)
+$csequence :: forall r (m :: * -&gt; *) a. Monad m =&gt; Field r (m a) -&gt; m (Field r a)
+mapM :: (a -&gt; m b) -&gt; Field r a -&gt; m (Field r b)
+$cmapM :: forall r (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; Field r a -&gt; m (Field r b)
+sequenceA :: Field r (f a) -&gt; f (Field r a)
+$csequenceA :: forall r (f :: * -&gt; *) a.
+Applicative f =&gt;
+Field r (f a) -&gt; f (Field r a)
+traverse :: (a -&gt; f b) -&gt; Field r a -&gt; f (Field r b)
+$ctraverse :: forall r (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; Field r a -&gt; f (Field r b)
+$cp2Traversable :: forall r. Foldable (Field r)
+$cp1Traversable :: forall r. Functor (Field r)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-107"></span><span>
+</span><span id="line-108"></span><span class="hs-comment">-- | Normalized representation of a GraphQL field.</span><span>
+</span><span id="line-109"></span><span class="hs-comment">--</span><span>
+</span><span id="line-110"></span><span class="hs-comment">-- This type is almost identical to 'G.Field', except for the fact that the</span><span>
+</span><span id="line-111"></span><span class="hs-comment">-- selection set is our annotated 'SelectionSet', instead of the original</span><span>
+</span><span id="line-112"></span><span class="hs-comment">-- 'G.SelectionSet'. We use this type to represent the fields of a selection</span><span>
+</span><span id="line-113"></span><span class="hs-comment">-- that do target the remote schema.</span><span>
+</span><span id="line-114"></span><span class="hs-keyword">data</span><span> </span><span id="GraphQLField"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#GraphQLField"><span class="hs-identifier hs-var">GraphQLField</span></a></span></span><span> </span><span id="local-6989586621688149107"><span class="annot"><a href="#local-6989586621688149107"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621688149108"><span class="annot"><a href="#local-6989586621688149108"><span class="hs-identifier hs-type">var</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="GraphQLField"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#GraphQLField"><span class="hs-identifier hs-var">GraphQLField</span></a></span></span><span>
+</span><span id="line-115"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_fAlias"><span class="annot"><span class="annottext">GraphQLField r var -&gt; Name
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#_fAlias"><span class="hs-identifier hs-var hs-var">_fAlias</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">,</span><span>
+</span><span id="line-116"></span><span>    </span><span id="_fName"><span class="annot"><span class="annottext">GraphQLField r var -&gt; Name
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#_fName"><span class="hs-identifier hs-var hs-var">_fName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">,</span><span>
+</span><span id="line-117"></span><span>    </span><span id="_fArguments"><span class="annot"><span class="annottext">GraphQLField r var -&gt; HashMap Name (Value var)
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#_fArguments"><span class="hs-identifier hs-var hs-var">_fArguments</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.Value</span></span><span> </span><span class="annot"><a href="#local-6989586621688149108"><span class="hs-identifier hs-type">var</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-118"></span><span>    </span><span id="_fDirectives"><span class="annot"><span class="annottext">GraphQLField r var -&gt; [Directive var]
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#_fDirectives"><span class="hs-identifier hs-var hs-var">_fDirectives</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">G.Directive</span></span><span> </span><span class="annot"><a href="#local-6989586621688149108"><span class="hs-identifier hs-type">var</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-119"></span><span>    </span><span id="_fSelectionSet"><span class="annot"><span class="annottext">GraphQLField r var -&gt; SelectionSet r var
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#_fSelectionSet"><span class="hs-identifier hs-var hs-var">_fSelectionSet</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#SelectionSet"><span class="hs-identifier hs-type">SelectionSet</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688149107"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688149108"><span class="hs-identifier hs-type">var</span></a></span><span>
+</span><span id="line-120"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-121"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688148714"><span id="local-6989586621688148716"><span id="local-6989586621688148718"><span class="annot"><span class="annottext">Int -&gt; GraphQLField r var -&gt; ShowS
+[GraphQLField r var] -&gt; ShowS
+GraphQLField r var -&gt; String
+(Int -&gt; GraphQLField r var -&gt; ShowS)
+-&gt; (GraphQLField r var -&gt; String)
+-&gt; ([GraphQLField r var] -&gt; ShowS)
+-&gt; Show (GraphQLField r var)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+forall r var.
+(Show var, Show r) =&gt;
+Int -&gt; GraphQLField r var -&gt; ShowS
+forall r var. (Show var, Show r) =&gt; [GraphQLField r var] -&gt; ShowS
+forall r var. (Show var, Show r) =&gt; GraphQLField r var -&gt; String
+showList :: [GraphQLField r var] -&gt; ShowS
+$cshowList :: forall r var. (Show var, Show r) =&gt; [GraphQLField r var] -&gt; ShowS
+show :: GraphQLField r var -&gt; String
+$cshow :: forall r var. (Show var, Show r) =&gt; GraphQLField r var -&gt; String
+showsPrec :: Int -&gt; GraphQLField r var -&gt; ShowS
+$cshowsPrec :: forall r var.
+(Show var, Show r) =&gt;
+Int -&gt; GraphQLField r var -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688148710"><span id="local-6989586621688148712"><span class="annot"><span class="annottext">GraphQLField r var -&gt; GraphQLField r var -&gt; Bool
+(GraphQLField r var -&gt; GraphQLField r var -&gt; Bool)
+-&gt; (GraphQLField r var -&gt; GraphQLField r var -&gt; Bool)
+-&gt; Eq (GraphQLField r var)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+forall r var.
+(Eq var, Eq r) =&gt;
+GraphQLField r var -&gt; GraphQLField r var -&gt; Bool
+/= :: GraphQLField r var -&gt; GraphQLField r var -&gt; Bool
+$c/= :: forall r var.
+(Eq var, Eq r) =&gt;
+GraphQLField r var -&gt; GraphQLField r var -&gt; Bool
+== :: GraphQLField r var -&gt; GraphQLField r var -&gt; Bool
+$c== :: forall r var.
+(Eq var, Eq r) =&gt;
+GraphQLField r var -&gt; GraphQLField r var -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688148706"><span id="local-6989586621688148708"><span class="annot"><span class="annottext">a -&gt; GraphQLField r b -&gt; GraphQLField r a
+(a -&gt; b) -&gt; GraphQLField r a -&gt; GraphQLField r b
+(forall a b. (a -&gt; b) -&gt; GraphQLField r a -&gt; GraphQLField r b)
+-&gt; (forall a b. a -&gt; GraphQLField r b -&gt; GraphQLField r a)
+-&gt; Functor (GraphQLField r)
+forall a b. a -&gt; GraphQLField r b -&gt; GraphQLField r a
+forall a b. (a -&gt; b) -&gt; GraphQLField r a -&gt; GraphQLField r b
+forall r a b. a -&gt; GraphQLField r b -&gt; GraphQLField r a
+forall r a b. (a -&gt; b) -&gt; GraphQLField r a -&gt; GraphQLField r b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a -&gt; GraphQLField r b -&gt; GraphQLField r a
+$c&lt;$ :: forall r a b. a -&gt; GraphQLField r b -&gt; GraphQLField r a
+fmap :: (a -&gt; b) -&gt; GraphQLField r a -&gt; GraphQLField r b
+$cfmap :: forall r a b. (a -&gt; b) -&gt; GraphQLField r a -&gt; GraphQLField r b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688148672"><span id="local-6989586621688148674"><span id="local-6989586621688148676"><span id="local-6989586621688148678"><span id="local-6989586621688148680"><span id="local-6989586621688148682"><span id="local-6989586621688148684"><span id="local-6989586621688148686"><span id="local-6989586621688148688"><span id="local-6989586621688148690"><span id="local-6989586621688148692"><span id="local-6989586621688148694"><span id="local-6989586621688148696"><span id="local-6989586621688148698"><span id="local-6989586621688148700"><span id="local-6989586621688148702"><span id="local-6989586621688148704"><span class="annot"><span class="annottext">GraphQLField r a -&gt; Bool
+(a -&gt; m) -&gt; GraphQLField r a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; GraphQLField r a -&gt; b
+(forall m. Monoid m =&gt; GraphQLField r m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; GraphQLField r a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; GraphQLField r a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; GraphQLField r a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; GraphQLField r a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; GraphQLField r a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; GraphQLField r a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; GraphQLField r a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; GraphQLField r a -&gt; a)
+-&gt; (forall a. GraphQLField r a -&gt; [a])
+-&gt; (forall a. GraphQLField r a -&gt; Bool)
+-&gt; (forall a. GraphQLField r a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; GraphQLField r a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; GraphQLField r a -&gt; a)
+-&gt; (forall a. Ord a =&gt; GraphQLField r a -&gt; a)
+-&gt; (forall a. Num a =&gt; GraphQLField r a -&gt; a)
+-&gt; (forall a. Num a =&gt; GraphQLField r a -&gt; a)
+-&gt; Foldable (GraphQLField r)
+forall a. Eq a =&gt; a -&gt; GraphQLField r a -&gt; Bool
+forall a. Num a =&gt; GraphQLField r a -&gt; a
+forall a. Ord a =&gt; GraphQLField r a -&gt; a
+forall m. Monoid m =&gt; GraphQLField r m -&gt; m
+forall a. GraphQLField r a -&gt; Bool
+forall a. GraphQLField r a -&gt; Int
+forall a. GraphQLField r a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; GraphQLField r a -&gt; a
+forall r a. Eq a =&gt; a -&gt; GraphQLField r a -&gt; Bool
+forall r a. Num a =&gt; GraphQLField r a -&gt; a
+forall r a. Ord a =&gt; GraphQLField r a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; GraphQLField r a -&gt; m
+forall r m. Monoid m =&gt; GraphQLField r m -&gt; m
+forall r a. GraphQLField r a -&gt; Bool
+forall r a. GraphQLField r a -&gt; Int
+forall r a. GraphQLField r a -&gt; [a]
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; GraphQLField r a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; GraphQLField r a -&gt; b
+forall r a. (a -&gt; a -&gt; a) -&gt; GraphQLField r a -&gt; a
+forall r m a. Monoid m =&gt; (a -&gt; m) -&gt; GraphQLField r a -&gt; m
+forall r b a. (b -&gt; a -&gt; b) -&gt; b -&gt; GraphQLField r a -&gt; b
+forall r a b. (a -&gt; b -&gt; b) -&gt; b -&gt; GraphQLField r a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+product :: GraphQLField r a -&gt; a
+$cproduct :: forall r a. Num a =&gt; GraphQLField r a -&gt; a
+sum :: GraphQLField r a -&gt; a
+$csum :: forall r a. Num a =&gt; GraphQLField r a -&gt; a
+minimum :: GraphQLField r a -&gt; a
+$cminimum :: forall r a. Ord a =&gt; GraphQLField r a -&gt; a
+maximum :: GraphQLField r a -&gt; a
+$cmaximum :: forall r a. Ord a =&gt; GraphQLField r a -&gt; a
+elem :: a -&gt; GraphQLField r a -&gt; Bool
+$celem :: forall r a. Eq a =&gt; a -&gt; GraphQLField r a -&gt; Bool
+length :: GraphQLField r a -&gt; Int
+$clength :: forall r a. GraphQLField r a -&gt; Int
+null :: GraphQLField r a -&gt; Bool
+$cnull :: forall r a. GraphQLField r a -&gt; Bool
+toList :: GraphQLField r a -&gt; [a]
+$ctoList :: forall r a. GraphQLField r a -&gt; [a]
+foldl1 :: (a -&gt; a -&gt; a) -&gt; GraphQLField r a -&gt; a
+$cfoldl1 :: forall r a. (a -&gt; a -&gt; a) -&gt; GraphQLField r a -&gt; a
+foldr1 :: (a -&gt; a -&gt; a) -&gt; GraphQLField r a -&gt; a
+$cfoldr1 :: forall r a. (a -&gt; a -&gt; a) -&gt; GraphQLField r a -&gt; a
+foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; GraphQLField r a -&gt; b
+$cfoldl' :: forall r b a. (b -&gt; a -&gt; b) -&gt; b -&gt; GraphQLField r a -&gt; b
+foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; GraphQLField r a -&gt; b
+$cfoldl :: forall r b a. (b -&gt; a -&gt; b) -&gt; b -&gt; GraphQLField r a -&gt; b
+foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; GraphQLField r a -&gt; b
+$cfoldr' :: forall r a b. (a -&gt; b -&gt; b) -&gt; b -&gt; GraphQLField r a -&gt; b
+foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; GraphQLField r a -&gt; b
+$cfoldr :: forall r a b. (a -&gt; b -&gt; b) -&gt; b -&gt; GraphQLField r a -&gt; b
+foldMap' :: (a -&gt; m) -&gt; GraphQLField r a -&gt; m
+$cfoldMap' :: forall r m a. Monoid m =&gt; (a -&gt; m) -&gt; GraphQLField r a -&gt; m
+foldMap :: (a -&gt; m) -&gt; GraphQLField r a -&gt; m
+$cfoldMap :: forall r m a. Monoid m =&gt; (a -&gt; m) -&gt; GraphQLField r a -&gt; m
+fold :: GraphQLField r m -&gt; m
+$cfold :: forall r m. Monoid m =&gt; GraphQLField r m -&gt; m
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688148662"><span id="local-6989586621688148664"><span id="local-6989586621688148666"><span id="local-6989586621688148668"><span class="annot"><span class="annottext">Functor (GraphQLField r)
+Foldable (GraphQLField r)
+Functor (GraphQLField r)
+-&gt; Foldable (GraphQLField r)
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; GraphQLField r a -&gt; f (GraphQLField r b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    GraphQLField r (f a) -&gt; f (GraphQLField r a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; GraphQLField r a -&gt; m (GraphQLField r b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    GraphQLField r (m a) -&gt; m (GraphQLField r a))
+-&gt; Traversable (GraphQLField r)
+(a -&gt; f b) -&gt; GraphQLField r a -&gt; f (GraphQLField r b)
+forall r. Functor (GraphQLField r)
+forall r. Foldable (GraphQLField r)
+forall r (m :: * -&gt; *) a.
+Monad m =&gt;
+GraphQLField r (m a) -&gt; m (GraphQLField r a)
+forall r (f :: * -&gt; *) a.
+Applicative f =&gt;
+GraphQLField r (f a) -&gt; f (GraphQLField r a)
+forall r (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; GraphQLField r a -&gt; m (GraphQLField r b)
+forall r (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; GraphQLField r a -&gt; f (GraphQLField r b)
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+GraphQLField r (m a) -&gt; m (GraphQLField r a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+GraphQLField r (f a) -&gt; f (GraphQLField r a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; GraphQLField r a -&gt; m (GraphQLField r b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; GraphQLField r a -&gt; f (GraphQLField r b)
+sequence :: GraphQLField r (m a) -&gt; m (GraphQLField r a)
+$csequence :: forall r (m :: * -&gt; *) a.
+Monad m =&gt;
+GraphQLField r (m a) -&gt; m (GraphQLField r a)
+mapM :: (a -&gt; m b) -&gt; GraphQLField r a -&gt; m (GraphQLField r b)
+$cmapM :: forall r (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; GraphQLField r a -&gt; m (GraphQLField r b)
+sequenceA :: GraphQLField r (f a) -&gt; f (GraphQLField r a)
+$csequenceA :: forall r (f :: * -&gt; *) a.
+Applicative f =&gt;
+GraphQLField r (f a) -&gt; f (GraphQLField r a)
+traverse :: (a -&gt; f b) -&gt; GraphQLField r a -&gt; f (GraphQLField r b)
+$ctraverse :: forall r (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; GraphQLField r a -&gt; f (GraphQLField r b)
+$cp2Traversable :: forall r. Foldable (GraphQLField r)
+$cp1Traversable :: forall r. Functor (GraphQLField r)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-122"></span><span>
+</span><span id="line-123"></span><span id="local-6989586621688148660"><span id="local-6989586621688148661"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#mkGraphQLField"><span class="hs-identifier hs-type">mkGraphQLField</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-124"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-125"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-126"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.Value</span></span><span> </span><span class="annot"><a href="#local-6989586621688148661"><span class="hs-identifier hs-type">var</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-127"></span><span>  </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">G.Directive</span></span><span> </span><span class="annot"><a href="#local-6989586621688148661"><span class="hs-identifier hs-type">var</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-128"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#SelectionSet"><span class="hs-identifier hs-type">SelectionSet</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688148660"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688148661"><span class="hs-identifier hs-type">var</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-129"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#GraphQLField"><span class="hs-identifier hs-type">GraphQLField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688148660"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688148661"><span class="hs-identifier hs-type">var</span></a></span></span></span><span>
+</span><span id="line-130"></span><span id="mkGraphQLField"><span class="annot"><span class="annottext">mkGraphQLField :: Maybe Name
+-&gt; Name
+-&gt; HashMap Name (Value var)
+-&gt; [Directive var]
+-&gt; SelectionSet r var
+-&gt; GraphQLField r var
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#mkGraphQLField"><span class="hs-identifier hs-var hs-var">mkGraphQLField</span></a></span></span><span> </span><span id="local-6989586621688148659"><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621688148659"><span class="hs-identifier hs-var">alias</span></a></span></span><span> </span><span id="local-6989586621688148658"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688148658"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-131"></span><span>  </span><span class="annot"><span class="annottext">Name
+-&gt; Name
+-&gt; HashMap Name (Value var)
+-&gt; [Directive var]
+-&gt; SelectionSet r var
+-&gt; GraphQLField r var
+forall r var.
+Name
+-&gt; Name
+-&gt; HashMap Name (Value var)
+-&gt; [Directive var]
+-&gt; SelectionSet r var
+-&gt; GraphQLField r var
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#GraphQLField"><span class="hs-identifier hs-var">GraphQLField</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Maybe Name -&gt; Name
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688148658"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621688148659"><span class="hs-identifier hs-var">alias</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688148658"><span class="hs-identifier hs-var">name</span></a></span><span>
+</span><span id="line-132"></span><span>
+</span><span id="line-133"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-134"></span><span class="hs-comment">-- Remote schema entry points</span><span>
+</span><span id="line-135"></span><span>
+</span><span id="line-136"></span><span class="hs-comment">-- | Root entry point for a remote schema.</span><span>
+</span><span id="line-137"></span><span class="hs-keyword">data</span><span> </span><span id="RemoteSchemaRootField"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#RemoteSchemaRootField"><span class="hs-identifier hs-var">RemoteSchemaRootField</span></a></span></span><span> </span><span id="local-6989586621688148656"><span class="annot"><a href="#local-6989586621688148656"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621688148655"><span class="annot"><a href="#local-6989586621688148655"><span class="hs-identifier hs-type">var</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteSchemaRootField"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#RemoteSchemaRootField"><span class="hs-identifier hs-var">RemoteSchemaRootField</span></a></span></span><span>
+</span><span id="line-138"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_rfRemoteSchemaInfo"><span class="annot"><span class="annottext">RemoteSchemaRootField r var -&gt; RemoteSchemaInfo
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#_rfRemoteSchemaInfo"><span class="hs-identifier hs-var hs-var">_rfRemoteSchemaInfo</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaInfo"><span class="hs-identifier hs-type">RQL.RemoteSchemaInfo</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-139"></span><span>    </span><span id="_rfResultCustomizer"><span class="annot"><span class="annottext">RemoteSchemaRootField r var -&gt; ResultCustomizer
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#_rfResultCustomizer"><span class="hs-identifier hs-var hs-var">_rfResultCustomizer</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#ResultCustomizer"><span class="hs-identifier hs-type">RQL.ResultCustomizer</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-140"></span><span>    </span><span id="_rfField"><span class="annot"><span class="annottext">RemoteSchemaRootField r var -&gt; GraphQLField r var
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#_rfField"><span class="hs-identifier hs-var hs-var">_rfField</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#GraphQLField"><span class="hs-identifier hs-type">GraphQLField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688148656"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688148655"><span class="hs-identifier hs-type">var</span></a></span><span>
+</span><span id="line-141"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-142"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688148647"><span id="local-6989586621688148649"><span class="annot"><span class="annottext">a -&gt; RemoteSchemaRootField r b -&gt; RemoteSchemaRootField r a
+(a -&gt; b) -&gt; RemoteSchemaRootField r a -&gt; RemoteSchemaRootField r b
+(forall a b.
+ (a -&gt; b) -&gt; RemoteSchemaRootField r a -&gt; RemoteSchemaRootField r b)
+-&gt; (forall a b.
+    a -&gt; RemoteSchemaRootField r b -&gt; RemoteSchemaRootField r a)
+-&gt; Functor (RemoteSchemaRootField r)
+forall a b.
+a -&gt; RemoteSchemaRootField r b -&gt; RemoteSchemaRootField r a
+forall a b.
+(a -&gt; b) -&gt; RemoteSchemaRootField r a -&gt; RemoteSchemaRootField r b
+forall r a b.
+a -&gt; RemoteSchemaRootField r b -&gt; RemoteSchemaRootField r a
+forall r a b.
+(a -&gt; b) -&gt; RemoteSchemaRootField r a -&gt; RemoteSchemaRootField r b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a -&gt; RemoteSchemaRootField r b -&gt; RemoteSchemaRootField r a
+$c&lt;$ :: forall r a b.
+a -&gt; RemoteSchemaRootField r b -&gt; RemoteSchemaRootField r a
+fmap :: (a -&gt; b) -&gt; RemoteSchemaRootField r a -&gt; RemoteSchemaRootField r b
+$cfmap :: forall r a b.
+(a -&gt; b) -&gt; RemoteSchemaRootField r a -&gt; RemoteSchemaRootField r b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688148613"><span id="local-6989586621688148615"><span id="local-6989586621688148617"><span id="local-6989586621688148619"><span id="local-6989586621688148621"><span id="local-6989586621688148623"><span id="local-6989586621688148625"><span id="local-6989586621688148627"><span id="local-6989586621688148629"><span id="local-6989586621688148631"><span id="local-6989586621688148633"><span id="local-6989586621688148635"><span id="local-6989586621688148637"><span id="local-6989586621688148639"><span id="local-6989586621688148641"><span id="local-6989586621688148643"><span id="local-6989586621688148645"><span class="annot"><span class="annottext">RemoteSchemaRootField r a -&gt; Bool
+(a -&gt; m) -&gt; RemoteSchemaRootField r a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; RemoteSchemaRootField r a -&gt; b
+(forall m. Monoid m =&gt; RemoteSchemaRootField r m -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; RemoteSchemaRootField r a -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; RemoteSchemaRootField r a -&gt; m)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; RemoteSchemaRootField r a -&gt; b)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; RemoteSchemaRootField r a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; RemoteSchemaRootField r a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; RemoteSchemaRootField r a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; RemoteSchemaRootField r a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; RemoteSchemaRootField r a -&gt; a)
+-&gt; (forall a. RemoteSchemaRootField r a -&gt; [a])
+-&gt; (forall a. RemoteSchemaRootField r a -&gt; Bool)
+-&gt; (forall a. RemoteSchemaRootField r a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; RemoteSchemaRootField r a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; RemoteSchemaRootField r a -&gt; a)
+-&gt; (forall a. Ord a =&gt; RemoteSchemaRootField r a -&gt; a)
+-&gt; (forall a. Num a =&gt; RemoteSchemaRootField r a -&gt; a)
+-&gt; (forall a. Num a =&gt; RemoteSchemaRootField r a -&gt; a)
+-&gt; Foldable (RemoteSchemaRootField r)
+forall a. Eq a =&gt; a -&gt; RemoteSchemaRootField r a -&gt; Bool
+forall a. Num a =&gt; RemoteSchemaRootField r a -&gt; a
+forall a. Ord a =&gt; RemoteSchemaRootField r a -&gt; a
+forall m. Monoid m =&gt; RemoteSchemaRootField r m -&gt; m
+forall a. RemoteSchemaRootField r a -&gt; Bool
+forall a. RemoteSchemaRootField r a -&gt; Int
+forall a. RemoteSchemaRootField r a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; RemoteSchemaRootField r a -&gt; a
+forall r a. Eq a =&gt; a -&gt; RemoteSchemaRootField r a -&gt; Bool
+forall r a. Num a =&gt; RemoteSchemaRootField r a -&gt; a
+forall r a. Ord a =&gt; RemoteSchemaRootField r a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; RemoteSchemaRootField r a -&gt; m
+forall r m. Monoid m =&gt; RemoteSchemaRootField r m -&gt; m
+forall r a. RemoteSchemaRootField r a -&gt; Bool
+forall r a. RemoteSchemaRootField r a -&gt; Int
+forall r a. RemoteSchemaRootField r a -&gt; [a]
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; RemoteSchemaRootField r a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; RemoteSchemaRootField r a -&gt; b
+forall r a. (a -&gt; a -&gt; a) -&gt; RemoteSchemaRootField r a -&gt; a
+forall r m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; RemoteSchemaRootField r a -&gt; m
+forall r b a. (b -&gt; a -&gt; b) -&gt; b -&gt; RemoteSchemaRootField r a -&gt; b
+forall r a b. (a -&gt; b -&gt; b) -&gt; b -&gt; RemoteSchemaRootField r a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+product :: RemoteSchemaRootField r a -&gt; a
+$cproduct :: forall r a. Num a =&gt; RemoteSchemaRootField r a -&gt; a
+sum :: RemoteSchemaRootField r a -&gt; a
+$csum :: forall r a. Num a =&gt; RemoteSchemaRootField r a -&gt; a
+minimum :: RemoteSchemaRootField r a -&gt; a
+$cminimum :: forall r a. Ord a =&gt; RemoteSchemaRootField r a -&gt; a
+maximum :: RemoteSchemaRootField r a -&gt; a
+$cmaximum :: forall r a. Ord a =&gt; RemoteSchemaRootField r a -&gt; a
+elem :: a -&gt; RemoteSchemaRootField r a -&gt; Bool
+$celem :: forall r a. Eq a =&gt; a -&gt; RemoteSchemaRootField r a -&gt; Bool
+length :: RemoteSchemaRootField r a -&gt; Int
+$clength :: forall r a. RemoteSchemaRootField r a -&gt; Int
+null :: RemoteSchemaRootField r a -&gt; Bool
+$cnull :: forall r a. RemoteSchemaRootField r a -&gt; Bool
+toList :: RemoteSchemaRootField r a -&gt; [a]
+$ctoList :: forall r a. RemoteSchemaRootField r a -&gt; [a]
+foldl1 :: (a -&gt; a -&gt; a) -&gt; RemoteSchemaRootField r a -&gt; a
+$cfoldl1 :: forall r a. (a -&gt; a -&gt; a) -&gt; RemoteSchemaRootField r a -&gt; a
+foldr1 :: (a -&gt; a -&gt; a) -&gt; RemoteSchemaRootField r a -&gt; a
+$cfoldr1 :: forall r a. (a -&gt; a -&gt; a) -&gt; RemoteSchemaRootField r a -&gt; a
+foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; RemoteSchemaRootField r a -&gt; b
+$cfoldl' :: forall r b a. (b -&gt; a -&gt; b) -&gt; b -&gt; RemoteSchemaRootField r a -&gt; b
+foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; RemoteSchemaRootField r a -&gt; b
+$cfoldl :: forall r b a. (b -&gt; a -&gt; b) -&gt; b -&gt; RemoteSchemaRootField r a -&gt; b
+foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; RemoteSchemaRootField r a -&gt; b
+$cfoldr' :: forall r a b. (a -&gt; b -&gt; b) -&gt; b -&gt; RemoteSchemaRootField r a -&gt; b
+foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; RemoteSchemaRootField r a -&gt; b
+$cfoldr :: forall r a b. (a -&gt; b -&gt; b) -&gt; b -&gt; RemoteSchemaRootField r a -&gt; b
+foldMap' :: (a -&gt; m) -&gt; RemoteSchemaRootField r a -&gt; m
+$cfoldMap' :: forall r m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; RemoteSchemaRootField r a -&gt; m
+foldMap :: (a -&gt; m) -&gt; RemoteSchemaRootField r a -&gt; m
+$cfoldMap :: forall r m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; RemoteSchemaRootField r a -&gt; m
+fold :: RemoteSchemaRootField r m -&gt; m
+$cfold :: forall r m. Monoid m =&gt; RemoteSchemaRootField r m -&gt; m
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688148603"><span id="local-6989586621688148605"><span id="local-6989586621688148607"><span id="local-6989586621688148609"><span class="annot"><span class="annottext">Functor (RemoteSchemaRootField r)
+Foldable (RemoteSchemaRootField r)
+Functor (RemoteSchemaRootField r)
+-&gt; Foldable (RemoteSchemaRootField r)
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b)
+    -&gt; RemoteSchemaRootField r a -&gt; f (RemoteSchemaRootField r b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    RemoteSchemaRootField r (f a) -&gt; f (RemoteSchemaRootField r a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b)
+    -&gt; RemoteSchemaRootField r a -&gt; m (RemoteSchemaRootField r b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    RemoteSchemaRootField r (m a) -&gt; m (RemoteSchemaRootField r a))
+-&gt; Traversable (RemoteSchemaRootField r)
+(a -&gt; f b)
+-&gt; RemoteSchemaRootField r a -&gt; f (RemoteSchemaRootField r b)
+forall r. Functor (RemoteSchemaRootField r)
+forall r. Foldable (RemoteSchemaRootField r)
+forall r (m :: * -&gt; *) a.
+Monad m =&gt;
+RemoteSchemaRootField r (m a) -&gt; m (RemoteSchemaRootField r a)
+forall r (f :: * -&gt; *) a.
+Applicative f =&gt;
+RemoteSchemaRootField r (f a) -&gt; f (RemoteSchemaRootField r a)
+forall r (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; RemoteSchemaRootField r a -&gt; m (RemoteSchemaRootField r b)
+forall r (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; RemoteSchemaRootField r a -&gt; f (RemoteSchemaRootField r b)
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+RemoteSchemaRootField r (m a) -&gt; m (RemoteSchemaRootField r a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+RemoteSchemaRootField r (f a) -&gt; f (RemoteSchemaRootField r a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; RemoteSchemaRootField r a -&gt; m (RemoteSchemaRootField r b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; RemoteSchemaRootField r a -&gt; f (RemoteSchemaRootField r b)
+sequence :: RemoteSchemaRootField r (m a) -&gt; m (RemoteSchemaRootField r a)
+$csequence :: forall r (m :: * -&gt; *) a.
+Monad m =&gt;
+RemoteSchemaRootField r (m a) -&gt; m (RemoteSchemaRootField r a)
+mapM :: (a -&gt; m b)
+-&gt; RemoteSchemaRootField r a -&gt; m (RemoteSchemaRootField r b)
+$cmapM :: forall r (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; RemoteSchemaRootField r a -&gt; m (RemoteSchemaRootField r b)
+sequenceA :: RemoteSchemaRootField r (f a) -&gt; f (RemoteSchemaRootField r a)
+$csequenceA :: forall r (f :: * -&gt; *) a.
+Applicative f =&gt;
+RemoteSchemaRootField r (f a) -&gt; f (RemoteSchemaRootField r a)
+traverse :: (a -&gt; f b)
+-&gt; RemoteSchemaRootField r a -&gt; f (RemoteSchemaRootField r b)
+$ctraverse :: forall r (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; RemoteSchemaRootField r a -&gt; f (RemoteSchemaRootField r b)
+$cp2Traversable :: forall r. Foldable (RemoteSchemaRootField r)
+$cp1Traversable :: forall r. Functor (RemoteSchemaRootField r)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-143"></span><span>
+</span><span id="line-144"></span><span class="hs-comment">-- | A remote relationship's selection and fields required for its join condition.</span><span>
+</span><span id="line-145"></span><span class="hs-keyword">data</span><span> </span><span id="SchemaRemoteRelationshipSelect"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#SchemaRemoteRelationshipSelect"><span class="hs-identifier hs-var">SchemaRemoteRelationshipSelect</span></a></span></span><span> </span><span id="local-6989586621688148602"><span class="annot"><a href="#local-6989586621688148602"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SchemaRemoteRelationshipSelect"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#SchemaRemoteRelationshipSelect"><span class="hs-identifier hs-var">SchemaRemoteRelationshipSelect</span></a></span></span><span>
+</span><span id="line-146"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | The fields on the table that are required for the join condition</span><span>
+</span><span id="line-147"></span><span>    </span><span class="hs-comment">-- of the remote relationship</span><span>
+</span><span id="line-148"></span><span>    </span><span id="_srrsLHSJoinFields"><span class="annot"><span class="annottext">SchemaRemoteRelationshipSelect r -&gt; HashMap FieldName Name
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#_srrsLHSJoinFields"><span class="hs-identifier hs-var hs-var">_srrsLHSJoinFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">,</span><span>
+</span><span id="line-149"></span><span>    </span><span class="hs-comment">-- | The field that captures the relationship</span><span>
+</span><span id="line-150"></span><span>    </span><span class="hs-comment">-- r ~ (RemoteRelationshipField UnpreparedValue) when the AST is emitted by the parser.</span><span>
+</span><span id="line-151"></span><span>    </span><span class="hs-comment">-- r ~ Void when an execution tree is constructed so that a backend is</span><span>
+</span><span id="line-152"></span><span>    </span><span class="hs-comment">-- absolved of dealing with remote relationships.</span><span>
+</span><span id="line-153"></span><span>    </span><span id="_srrsRelationship"><span class="annot"><span class="annottext">SchemaRemoteRelationshipSelect r -&gt; r
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#_srrsRelationship"><span class="hs-identifier hs-var hs-var">_srrsRelationship</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621688148602"><span class="hs-identifier hs-type">r</span></a></span><span>
+</span><span id="line-154"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-155"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688148595"><span id="local-6989586621688148597"><span class="annot"><span class="annottext">SchemaRemoteRelationshipSelect r
+-&gt; SchemaRemoteRelationshipSelect r -&gt; Bool
+(SchemaRemoteRelationshipSelect r
+ -&gt; SchemaRemoteRelationshipSelect r -&gt; Bool)
+-&gt; (SchemaRemoteRelationshipSelect r
+    -&gt; SchemaRemoteRelationshipSelect r -&gt; Bool)
+-&gt; Eq (SchemaRemoteRelationshipSelect r)
+forall r.
+Eq r =&gt;
+SchemaRemoteRelationshipSelect r
+-&gt; SchemaRemoteRelationshipSelect r -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: SchemaRemoteRelationshipSelect r
+-&gt; SchemaRemoteRelationshipSelect r -&gt; Bool
+$c/= :: forall r.
+Eq r =&gt;
+SchemaRemoteRelationshipSelect r
+-&gt; SchemaRemoteRelationshipSelect r -&gt; Bool
+== :: SchemaRemoteRelationshipSelect r
+-&gt; SchemaRemoteRelationshipSelect r -&gt; Bool
+$c== :: forall r.
+Eq r =&gt;
+SchemaRemoteRelationshipSelect r
+-&gt; SchemaRemoteRelationshipSelect r -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688148589"><span id="local-6989586621688148591"><span id="local-6989586621688148593"><span class="annot"><span class="annottext">Int -&gt; SchemaRemoteRelationshipSelect r -&gt; ShowS
+[SchemaRemoteRelationshipSelect r] -&gt; ShowS
+SchemaRemoteRelationshipSelect r -&gt; String
+(Int -&gt; SchemaRemoteRelationshipSelect r -&gt; ShowS)
+-&gt; (SchemaRemoteRelationshipSelect r -&gt; String)
+-&gt; ([SchemaRemoteRelationshipSelect r] -&gt; ShowS)
+-&gt; Show (SchemaRemoteRelationshipSelect r)
+forall r.
+Show r =&gt;
+Int -&gt; SchemaRemoteRelationshipSelect r -&gt; ShowS
+forall r. Show r =&gt; [SchemaRemoteRelationshipSelect r] -&gt; ShowS
+forall r. Show r =&gt; SchemaRemoteRelationshipSelect r -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [SchemaRemoteRelationshipSelect r] -&gt; ShowS
+$cshowList :: forall r. Show r =&gt; [SchemaRemoteRelationshipSelect r] -&gt; ShowS
+show :: SchemaRemoteRelationshipSelect r -&gt; String
+$cshow :: forall r. Show r =&gt; SchemaRemoteRelationshipSelect r -&gt; String
+showsPrec :: Int -&gt; SchemaRemoteRelationshipSelect r -&gt; ShowS
+$cshowsPrec :: forall r.
+Show r =&gt;
+Int -&gt; SchemaRemoteRelationshipSelect r -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688148585"><span id="local-6989586621688148587"><span class="annot"><span class="annottext">a
+-&gt; SchemaRemoteRelationshipSelect b
+-&gt; SchemaRemoteRelationshipSelect a
+(a -&gt; b)
+-&gt; SchemaRemoteRelationshipSelect a
+-&gt; SchemaRemoteRelationshipSelect b
+(forall a b.
+ (a -&gt; b)
+ -&gt; SchemaRemoteRelationshipSelect a
+ -&gt; SchemaRemoteRelationshipSelect b)
+-&gt; (forall a b.
+    a
+    -&gt; SchemaRemoteRelationshipSelect b
+    -&gt; SchemaRemoteRelationshipSelect a)
+-&gt; Functor SchemaRemoteRelationshipSelect
+forall a b.
+a
+-&gt; SchemaRemoteRelationshipSelect b
+-&gt; SchemaRemoteRelationshipSelect a
+forall a b.
+(a -&gt; b)
+-&gt; SchemaRemoteRelationshipSelect a
+-&gt; SchemaRemoteRelationshipSelect b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a
+-&gt; SchemaRemoteRelationshipSelect b
+-&gt; SchemaRemoteRelationshipSelect a
+$c&lt;$ :: forall a b.
+a
+-&gt; SchemaRemoteRelationshipSelect b
+-&gt; SchemaRemoteRelationshipSelect a
+fmap :: (a -&gt; b)
+-&gt; SchemaRemoteRelationshipSelect a
+-&gt; SchemaRemoteRelationshipSelect b
+$cfmap :: forall a b.
+(a -&gt; b)
+-&gt; SchemaRemoteRelationshipSelect a
+-&gt; SchemaRemoteRelationshipSelect b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688148551"><span id="local-6989586621688148553"><span id="local-6989586621688148555"><span id="local-6989586621688148557"><span id="local-6989586621688148559"><span id="local-6989586621688148561"><span id="local-6989586621688148563"><span id="local-6989586621688148565"><span id="local-6989586621688148567"><span id="local-6989586621688148569"><span id="local-6989586621688148571"><span id="local-6989586621688148573"><span id="local-6989586621688148575"><span id="local-6989586621688148577"><span id="local-6989586621688148579"><span id="local-6989586621688148581"><span id="local-6989586621688148583"><span class="annot"><span class="annottext">SchemaRemoteRelationshipSelect a -&gt; Bool
+(a -&gt; m) -&gt; SchemaRemoteRelationshipSelect a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; SchemaRemoteRelationshipSelect a -&gt; b
+(forall m. Monoid m =&gt; SchemaRemoteRelationshipSelect m -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; SchemaRemoteRelationshipSelect a -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; SchemaRemoteRelationshipSelect a -&gt; m)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; SchemaRemoteRelationshipSelect a -&gt; b)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; SchemaRemoteRelationshipSelect a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; SchemaRemoteRelationshipSelect a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; SchemaRemoteRelationshipSelect a -&gt; b)
+-&gt; (forall a.
+    (a -&gt; a -&gt; a) -&gt; SchemaRemoteRelationshipSelect a -&gt; a)
+-&gt; (forall a.
+    (a -&gt; a -&gt; a) -&gt; SchemaRemoteRelationshipSelect a -&gt; a)
+-&gt; (forall a. SchemaRemoteRelationshipSelect a -&gt; [a])
+-&gt; (forall a. SchemaRemoteRelationshipSelect a -&gt; Bool)
+-&gt; (forall a. SchemaRemoteRelationshipSelect a -&gt; Int)
+-&gt; (forall a.
+    Eq a =&gt;
+    a -&gt; SchemaRemoteRelationshipSelect a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; SchemaRemoteRelationshipSelect a -&gt; a)
+-&gt; (forall a. Ord a =&gt; SchemaRemoteRelationshipSelect a -&gt; a)
+-&gt; (forall a. Num a =&gt; SchemaRemoteRelationshipSelect a -&gt; a)
+-&gt; (forall a. Num a =&gt; SchemaRemoteRelationshipSelect a -&gt; a)
+-&gt; Foldable SchemaRemoteRelationshipSelect
+forall a. Eq a =&gt; a -&gt; SchemaRemoteRelationshipSelect a -&gt; Bool
+forall a. Num a =&gt; SchemaRemoteRelationshipSelect a -&gt; a
+forall a. Ord a =&gt; SchemaRemoteRelationshipSelect a -&gt; a
+forall m. Monoid m =&gt; SchemaRemoteRelationshipSelect m -&gt; m
+forall a. SchemaRemoteRelationshipSelect a -&gt; Bool
+forall a. SchemaRemoteRelationshipSelect a -&gt; Int
+forall a. SchemaRemoteRelationshipSelect a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; SchemaRemoteRelationshipSelect a -&gt; a
+forall m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; SchemaRemoteRelationshipSelect a -&gt; m
+forall b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; SchemaRemoteRelationshipSelect a -&gt; b
+forall a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; SchemaRemoteRelationshipSelect a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+product :: SchemaRemoteRelationshipSelect a -&gt; a
+$cproduct :: forall a. Num a =&gt; SchemaRemoteRelationshipSelect a -&gt; a
+sum :: SchemaRemoteRelationshipSelect a -&gt; a
+$csum :: forall a. Num a =&gt; SchemaRemoteRelationshipSelect a -&gt; a
+minimum :: SchemaRemoteRelationshipSelect a -&gt; a
+$cminimum :: forall a. Ord a =&gt; SchemaRemoteRelationshipSelect a -&gt; a
+maximum :: SchemaRemoteRelationshipSelect a -&gt; a
+$cmaximum :: forall a. Ord a =&gt; SchemaRemoteRelationshipSelect a -&gt; a
+elem :: a -&gt; SchemaRemoteRelationshipSelect a -&gt; Bool
+$celem :: forall a. Eq a =&gt; a -&gt; SchemaRemoteRelationshipSelect a -&gt; Bool
+length :: SchemaRemoteRelationshipSelect a -&gt; Int
+$clength :: forall a. SchemaRemoteRelationshipSelect a -&gt; Int
+null :: SchemaRemoteRelationshipSelect a -&gt; Bool
+$cnull :: forall a. SchemaRemoteRelationshipSelect a -&gt; Bool
+toList :: SchemaRemoteRelationshipSelect a -&gt; [a]
+$ctoList :: forall a. SchemaRemoteRelationshipSelect a -&gt; [a]
+foldl1 :: (a -&gt; a -&gt; a) -&gt; SchemaRemoteRelationshipSelect a -&gt; a
+$cfoldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; SchemaRemoteRelationshipSelect a -&gt; a
+foldr1 :: (a -&gt; a -&gt; a) -&gt; SchemaRemoteRelationshipSelect a -&gt; a
+$cfoldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; SchemaRemoteRelationshipSelect a -&gt; a
+foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; SchemaRemoteRelationshipSelect a -&gt; b
+$cfoldl' :: forall b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; SchemaRemoteRelationshipSelect a -&gt; b
+foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; SchemaRemoteRelationshipSelect a -&gt; b
+$cfoldl :: forall b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; SchemaRemoteRelationshipSelect a -&gt; b
+foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; SchemaRemoteRelationshipSelect a -&gt; b
+$cfoldr' :: forall a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; SchemaRemoteRelationshipSelect a -&gt; b
+foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; SchemaRemoteRelationshipSelect a -&gt; b
+$cfoldr :: forall a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; SchemaRemoteRelationshipSelect a -&gt; b
+foldMap' :: (a -&gt; m) -&gt; SchemaRemoteRelationshipSelect a -&gt; m
+$cfoldMap' :: forall m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; SchemaRemoteRelationshipSelect a -&gt; m
+foldMap :: (a -&gt; m) -&gt; SchemaRemoteRelationshipSelect a -&gt; m
+$cfoldMap :: forall m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; SchemaRemoteRelationshipSelect a -&gt; m
+fold :: SchemaRemoteRelationshipSelect m -&gt; m
+$cfold :: forall m. Monoid m =&gt; SchemaRemoteRelationshipSelect m -&gt; m
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688148541"><span id="local-6989586621688148543"><span id="local-6989586621688148545"><span id="local-6989586621688148547"><span class="annot"><span class="annottext">Functor SchemaRemoteRelationshipSelect
+Foldable SchemaRemoteRelationshipSelect
+Functor SchemaRemoteRelationshipSelect
+-&gt; Foldable SchemaRemoteRelationshipSelect
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b)
+    -&gt; SchemaRemoteRelationshipSelect a
+    -&gt; f (SchemaRemoteRelationshipSelect b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    SchemaRemoteRelationshipSelect (f a)
+    -&gt; f (SchemaRemoteRelationshipSelect a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b)
+    -&gt; SchemaRemoteRelationshipSelect a
+    -&gt; m (SchemaRemoteRelationshipSelect b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    SchemaRemoteRelationshipSelect (m a)
+    -&gt; m (SchemaRemoteRelationshipSelect a))
+-&gt; Traversable SchemaRemoteRelationshipSelect
+(a -&gt; f b)
+-&gt; SchemaRemoteRelationshipSelect a
+-&gt; f (SchemaRemoteRelationshipSelect b)
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+SchemaRemoteRelationshipSelect (m a)
+-&gt; m (SchemaRemoteRelationshipSelect a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+SchemaRemoteRelationshipSelect (f a)
+-&gt; f (SchemaRemoteRelationshipSelect a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; SchemaRemoteRelationshipSelect a
+-&gt; m (SchemaRemoteRelationshipSelect b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; SchemaRemoteRelationshipSelect a
+-&gt; f (SchemaRemoteRelationshipSelect b)
+sequence :: SchemaRemoteRelationshipSelect (m a)
+-&gt; m (SchemaRemoteRelationshipSelect a)
+$csequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+SchemaRemoteRelationshipSelect (m a)
+-&gt; m (SchemaRemoteRelationshipSelect a)
+mapM :: (a -&gt; m b)
+-&gt; SchemaRemoteRelationshipSelect a
+-&gt; m (SchemaRemoteRelationshipSelect b)
+$cmapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; SchemaRemoteRelationshipSelect a
+-&gt; m (SchemaRemoteRelationshipSelect b)
+sequenceA :: SchemaRemoteRelationshipSelect (f a)
+-&gt; f (SchemaRemoteRelationshipSelect a)
+$csequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+SchemaRemoteRelationshipSelect (f a)
+-&gt; f (SchemaRemoteRelationshipSelect a)
+traverse :: (a -&gt; f b)
+-&gt; SchemaRemoteRelationshipSelect a
+-&gt; f (SchemaRemoteRelationshipSelect b)
+$ctraverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; SchemaRemoteRelationshipSelect a
+-&gt; f (SchemaRemoteRelationshipSelect b)
+$cp2Traversable :: Foldable SchemaRemoteRelationshipSelect
+$cp1Traversable :: Functor SchemaRemoteRelationshipSelect
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-156"></span><span>
+</span><span id="line-157"></span><span class="hs-keyword">data</span><span> </span><span id="RemoteFieldArgument"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#RemoteFieldArgument"><span class="hs-identifier hs-var">RemoteFieldArgument</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteFieldArgument"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#RemoteFieldArgument"><span class="hs-identifier hs-var">RemoteFieldArgument</span></a></span></span><span>
+</span><span id="line-158"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_rfaArgument"><span class="annot"><span class="annottext">RemoteFieldArgument -&gt; Name
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#_rfaArgument"><span class="hs-identifier hs-var hs-var">_rfaArgument</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">,</span><span>
+</span><span id="line-159"></span><span>    </span><span id="_rfaValue"><span class="annot"><span class="annottext">RemoteFieldArgument -&gt; InputValue RemoteSchemaVariable
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#_rfaValue"><span class="hs-identifier hs-var hs-var">_rfaValue</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InputValue"><span class="hs-identifier hs-type">InputValue</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaVariable"><span class="hs-identifier hs-type">RemoteSchemaVariable</span></a></span><span>
+</span><span id="line-160"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-161"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688148534"><span id="local-6989586621688148536"><span class="annot"><span class="annottext">RemoteFieldArgument -&gt; RemoteFieldArgument -&gt; Bool
+(RemoteFieldArgument -&gt; RemoteFieldArgument -&gt; Bool)
+-&gt; (RemoteFieldArgument -&gt; RemoteFieldArgument -&gt; Bool)
+-&gt; Eq RemoteFieldArgument
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: RemoteFieldArgument -&gt; RemoteFieldArgument -&gt; Bool
+$c/= :: RemoteFieldArgument -&gt; RemoteFieldArgument -&gt; Bool
+== :: RemoteFieldArgument -&gt; RemoteFieldArgument -&gt; Bool
+$c== :: RemoteFieldArgument -&gt; RemoteFieldArgument -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688148528"><span id="local-6989586621688148530"><span id="local-6989586621688148532"><span class="annot"><span class="annottext">Int -&gt; RemoteFieldArgument -&gt; ShowS
+[RemoteFieldArgument] -&gt; ShowS
+RemoteFieldArgument -&gt; String
+(Int -&gt; RemoteFieldArgument -&gt; ShowS)
+-&gt; (RemoteFieldArgument -&gt; String)
+-&gt; ([RemoteFieldArgument] -&gt; ShowS)
+-&gt; Show RemoteFieldArgument
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [RemoteFieldArgument] -&gt; ShowS
+$cshowList :: [RemoteFieldArgument] -&gt; ShowS
+show :: RemoteFieldArgument -&gt; String
+$cshow :: RemoteFieldArgument -&gt; String
+showsPrec :: Int -&gt; RemoteFieldArgument -&gt; ShowS
+$cshowsPrec :: Int -&gt; RemoteFieldArgument -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-162"></span><span>
+</span><span id="line-163"></span><span class="hs-keyword">data</span><span> </span><span id="RemoteSchemaSelect"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#RemoteSchemaSelect"><span class="hs-identifier hs-var">RemoteSchemaSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteSchemaSelect"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#RemoteSchemaSelect"><span class="hs-identifier hs-var">RemoteSchemaSelect</span></a></span></span><span>
+</span><span id="line-164"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_rselArgs"><span class="annot"><span class="annottext">RemoteSchemaSelect -&gt; [RemoteFieldArgument]
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#_rselArgs"><span class="hs-identifier hs-var hs-var">_rselArgs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#RemoteFieldArgument"><span class="hs-identifier hs-type">RemoteFieldArgument</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-165"></span><span>    </span><span id="_rselResultCustomizer"><span class="annot"><span class="annottext">RemoteSchemaSelect -&gt; ResultCustomizer
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#_rselResultCustomizer"><span class="hs-identifier hs-var hs-var">_rselResultCustomizer</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResultCustomization.html#ResultCustomizer"><span class="hs-identifier hs-type">ResultCustomizer</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-166"></span><span>    </span><span id="_rselSelection"><span class="annot"><span class="annottext">RemoteSchemaSelect -&gt; SelectionSet Void RemoteSchemaVariable
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#_rselSelection"><span class="hs-identifier hs-var hs-var">_rselSelection</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#SelectionSet"><span class="hs-identifier hs-type">SelectionSet</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaVariable"><span class="hs-identifier hs-type">RemoteSchemaVariable</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-167"></span><span>    </span><span id="_rselFieldCall"><span class="annot"><span class="annottext">RemoteSchemaSelect -&gt; NonEmpty FieldCall
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#_rselFieldCall"><span class="hs-identifier hs-var hs-var">_rselFieldCall</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.ToSchema.html#FieldCall"><span class="hs-identifier hs-type">FieldCall</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-168"></span><span>    </span><span id="_rselRemoteSchema"><span class="annot"><span class="annottext">RemoteSchemaSelect -&gt; RemoteSchemaInfo
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#_rselRemoteSchema"><span class="hs-identifier hs-var hs-var">_rselRemoteSchema</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaInfo"><span class="hs-identifier hs-type">RemoteSchemaInfo</span></a></span><span>
+</span><span id="line-169"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-170"></span><span>
+</span><span id="line-171"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-172"></span><span class="hs-comment">-- Conversion back to a GraphQL document</span><span>
+</span><span id="line-173"></span><span>
+</span><span id="line-174"></span><span class="hs-comment">-- | Converts a normalized selection set back into a selection set as defined in</span><span>
+</span><span id="line-175"></span><span class="hs-comment">-- GraphQL spec, in order to send it to a remote server.</span><span>
+</span><span id="line-176"></span><span class="hs-comment">--</span><span>
+</span><span id="line-177"></span><span class="hs-comment">-- This function expects a 'SelectionSet' for which @r@ is 'Void', which</span><span>
+</span><span id="line-178"></span><span class="hs-comment">-- guarantees that there is no longer any remote join field in the selection</span><span>
+</span><span id="line-179"></span><span class="hs-comment">-- set.</span><span>
+</span><span id="line-180"></span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#convertSelectionSet"><span class="hs-identifier hs-type">convertSelectionSet</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-181"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688148973"><span class="annot"><a href="#local-6989586621688148973"><span class="hs-identifier hs-type">var</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-182"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621688148973"><span class="hs-identifier hs-type">var</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-183"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#SelectionSet"><span class="hs-identifier hs-type">SelectionSet</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="annot"><a href="#local-6989586621688148973"><span class="hs-identifier hs-type">var</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-184"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.SelectionSet</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.NoFragments</span></span><span> </span><span class="annot"><a href="#local-6989586621688148973"><span class="hs-identifier hs-type">var</span></a></span><span>
+</span><span id="line-185"></span><span id="convertSelectionSet"><span class="annot"><span class="annottext">convertSelectionSet :: SelectionSet Void var -&gt; SelectionSet NoFragments var
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#convertSelectionSet"><span class="hs-identifier hs-var hs-var">convertSelectionSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-186"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#SelectionSetObject"><span class="hs-identifier hs-type">SelectionSetObject</span></a></span><span> </span><span id="local-6989586621688148521"><span class="annot"><span class="annottext">ObjectSelectionSet Void var
+</span><a href="#local-6989586621688148521"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ObjectSelectionSet Void var -&gt; SelectionSet NoFragments var
+</span><a href="#local-6989586621688148520"><span class="hs-identifier hs-var">convertObjectSelectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">ObjectSelectionSet Void var
+</span><a href="#local-6989586621688148521"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-187"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#SelectionSetUnion"><span class="hs-identifier hs-type">SelectionSetUnion</span></a></span><span> </span><span id="local-6989586621688148519"><span class="annot"><span class="annottext">DeduplicatedSelectionSet Void var
+</span><a href="#local-6989586621688148519"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DeduplicatedSelectionSet Void var -&gt; SelectionSet NoFragments var
+</span><a href="#local-6989586621688148518"><span class="hs-identifier hs-var">convertAbstractTypeSelectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">DeduplicatedSelectionSet Void var
+</span><a href="#local-6989586621688148519"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-188"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#SelectionSetInterface"><span class="hs-identifier hs-type">SelectionSetInterface</span></a></span><span> </span><span id="local-6989586621688148517"><span class="annot"><span class="annottext">DeduplicatedSelectionSet Void var
+</span><a href="#local-6989586621688148517"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DeduplicatedSelectionSet Void var -&gt; SelectionSet NoFragments var
+</span><a href="#local-6989586621688148518"><span class="hs-identifier hs-var">convertAbstractTypeSelectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">DeduplicatedSelectionSet Void var
+</span><a href="#local-6989586621688148517"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-189"></span><span>  </span><span class="annot"><span class="annottext">SelectionSet Void var
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#SelectionSetNone"><span class="hs-identifier hs-var">SelectionSetNone</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments var
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span>
+</span><span id="line-190"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-191"></span><span>    </span><span class="annot"><a href="#local-6989586621688148516"><span class="hs-identifier hs-type">convertField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#Field"><span class="hs-identifier hs-type">Field</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="annot"><a href="#local-6989586621688148973"><span class="hs-identifier hs-type">var</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Field</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.NoFragments</span></span><span> </span><span class="annot"><a href="#local-6989586621688148973"><span class="hs-identifier hs-type">var</span></a></span><span>
+</span><span id="line-192"></span><span>    </span><span id="local-6989586621688148516"><span class="annot"><span class="annottext">convertField :: Field Void var -&gt; Field NoFragments var
+</span><a href="#local-6989586621688148516"><span class="hs-identifier hs-var hs-var">convertField</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-193"></span><span>      </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#FieldGraphQL"><span class="hs-identifier hs-type">FieldGraphQL</span></a></span><span> </span><span id="local-6989586621688148515"><span class="annot"><span class="annottext">GraphQLField Void var
+</span><a href="#local-6989586621688148515"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">GraphQLField Void var -&gt; Field NoFragments var
+forall var.
+Eq var =&gt;
+GraphQLField Void var -&gt; Field NoFragments var
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#convertGraphQLField"><span class="hs-identifier hs-var">convertGraphQLField</span></a></span><span> </span><span class="annot"><span class="annottext">GraphQLField Void var
+</span><a href="#local-6989586621688148515"><span class="hs-identifier hs-var">f</span></a></span><span>
+</span><span id="line-194"></span><span>
+</span><span id="line-195"></span><span>    </span><span id="local-6989586621688148520"><span class="annot"><span class="annottext">convertObjectSelectionSet :: ObjectSelectionSet Void var -&gt; SelectionSet NoFragments var
+</span><a href="#local-6989586621688148520"><span class="hs-identifier hs-var hs-var">convertObjectSelectionSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-196"></span><span>      </span><span class="annot"><span class="annottext">((Name, Field Void var) -&gt; Selection NoFragments var)
+-&gt; [(Name, Field Void var)] -&gt; SelectionSet NoFragments var
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field NoFragments var -&gt; Selection NoFragments var
+forall (frag :: * -&gt; *) var. Field frag var -&gt; Selection frag var
+</span><span class="hs-identifier hs-var">G.SelectionField</span></span><span> </span><span class="annot"><span class="annottext">(Field NoFragments var -&gt; Selection NoFragments var)
+-&gt; ((Name, Field Void var) -&gt; Field NoFragments var)
+-&gt; (Name, Field Void var)
+-&gt; Selection NoFragments var
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Field Void var -&gt; Field NoFragments var
+</span><a href="#local-6989586621688148516"><span class="hs-identifier hs-var">convertField</span></a></span><span> </span><span class="annot"><span class="annottext">(Field Void var -&gt; Field NoFragments var)
+-&gt; ((Name, Field Void var) -&gt; Field Void var)
+-&gt; (Name, Field Void var)
+-&gt; Field NoFragments var
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(Name, Field Void var) -&gt; Field Void var
+forall a b. (a, b) -&gt; b
+</span><span class="hs-identifier hs-var">snd</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([(Name, Field Void var)] -&gt; SelectionSet NoFragments var)
+-&gt; (ObjectSelectionSet Void var -&gt; [(Name, Field Void var)])
+-&gt; ObjectSelectionSet Void var
+-&gt; SelectionSet NoFragments var
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ObjectSelectionSet Void var -&gt; [(Name, Field Void var)]
+forall k v. InsOrdHashMap k v -&gt; [(k, v)]
+</span><span class="hs-identifier hs-var">OMap.toList</span></span><span>
+</span><span id="line-197"></span><span>
+</span><span id="line-198"></span><span>    </span><span id="local-6989586621688148518"><span class="annot"><span class="annottext">convertAbstractTypeSelectionSet :: DeduplicatedSelectionSet Void var -&gt; SelectionSet NoFragments var
+</span><a href="#local-6989586621688148518"><span class="hs-identifier hs-var hs-var">convertAbstractTypeSelectionSet</span></a></span></span><span> </span><span id="local-6989586621688148511"><span class="annot"><span class="annottext">DeduplicatedSelectionSet Void var
+</span><a href="#local-6989586621688148511"><span class="hs-identifier hs-var">abstractSelectionSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-199"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688148510"><span class="annot"><span class="annottext">ObjectSelectionSet Void var
+</span><a href="#local-6989586621688148510"><span class="hs-identifier hs-var">base</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688148509"><span class="annot"><span class="annottext">HashMap Name (ObjectSelectionSet Void var)
+</span><a href="#local-6989586621688148509"><span class="hs-identifier hs-var">members</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DeduplicatedSelectionSet Void var
+-&gt; (ObjectSelectionSet Void var,
+    HashMap Name (ObjectSelectionSet Void var))
+forall var.
+Eq var =&gt;
+DeduplicatedSelectionSet Void var
+-&gt; (ObjectSelectionSet Void var,
+    HashMap Name (ObjectSelectionSet Void var))
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#reduceAbstractTypeSelectionSet"><span class="hs-identifier hs-var">reduceAbstractTypeSelectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">DeduplicatedSelectionSet Void var
+</span><a href="#local-6989586621688148511"><span class="hs-identifier hs-var">abstractSelectionSet</span></a></span><span>
+</span><span id="line-200"></span><span>          </span><span id="local-6989586621688148507"><span class="annot"><span class="annottext">commonFields :: SelectionSet NoFragments var
+</span><a href="#local-6989586621688148507"><span class="hs-identifier hs-var hs-var">commonFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ObjectSelectionSet Void var -&gt; SelectionSet NoFragments var
+</span><a href="#local-6989586621688148520"><span class="hs-identifier hs-var">convertObjectSelectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">ObjectSelectionSet Void var
+</span><a href="#local-6989586621688148510"><span class="hs-identifier hs-var">base</span></a></span><span>
+</span><span id="line-201"></span><span>          </span><span id="local-6989586621688148506"><span class="annot"><span class="annottext">concreteTypeSelectionSets :: [InlineFragment NoFragments var]
+</span><a href="#local-6989586621688148506"><span class="hs-identifier hs-var hs-var">concreteTypeSelectionSets</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-202"></span><span>            </span><span class="annot"><span class="annottext">HashMap Name (ObjectSelectionSet Void var)
+-&gt; [(Name, ObjectSelectionSet Void var)]
+forall k v. HashMap k v -&gt; [(k, v)]
+</span><span class="hs-identifier hs-var">Map.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name (ObjectSelectionSet Void var)
+</span><a href="#local-6989586621688148509"><span class="hs-identifier hs-var">members</span></a></span><span> </span><span class="annot"><span class="annottext">[(Name, ObjectSelectionSet Void var)]
+-&gt; ((Name, ObjectSelectionSet Void var)
+    -&gt; InlineFragment NoFragments var)
+-&gt; [InlineFragment NoFragments var]
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
+</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621688148503"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688148503"><span class="hs-identifier hs-var">concreteType</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688148502"><span class="annot"><span class="annottext">ObjectSelectionSet Void var
+</span><a href="#local-6989586621688148502"><span class="hs-identifier hs-var">selectionSet</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-203"></span><span>              </span><span class="annot"><span class="annottext">InlineFragment :: forall (frag :: * -&gt; *) var.
+Maybe Name
+-&gt; [Directive var]
+-&gt; SelectionSet frag var
+-&gt; InlineFragment frag var
+</span><span class="hs-identifier hs-type">G.InlineFragment</span></span><span>
+</span><span id="line-204"></span><span>                </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_ifTypeCondition :: Maybe Name
+</span><span class="hs-identifier hs-var">G._ifTypeCondition</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Maybe Name
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688148503"><span class="hs-identifier hs-var">concreteType</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-205"></span><span>                  </span><span class="annot"><span class="annottext">_ifDirectives :: [Directive var]
+</span><span class="hs-identifier hs-var">G._ifDirectives</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Directive var]
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span class="hs-special">,</span><span>
+</span><span id="line-206"></span><span>                  </span><span class="annot"><span class="annottext">_ifSelectionSet :: SelectionSet NoFragments var
+</span><span class="hs-identifier hs-var">G._ifSelectionSet</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ObjectSelectionSet Void var -&gt; SelectionSet NoFragments var
+</span><a href="#local-6989586621688148520"><span class="hs-identifier hs-var">convertObjectSelectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">ObjectSelectionSet Void var
+</span><a href="#local-6989586621688148502"><span class="hs-identifier hs-var">selectionSet</span></a></span><span>
+</span><span id="line-207"></span><span>                </span><span class="hs-special">}</span><span>
+</span><span id="line-208"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="hs-comment">-- The base selection set first and then the more specific member</span><span>
+</span><span id="line-209"></span><span>          </span><span class="hs-comment">-- selection sets. Note that the rendering strategy here should be</span><span>
+</span><span id="line-210"></span><span>          </span><span class="hs-comment">-- inline with the strategy used in `mkAbstractTypeSelectionSet`</span><span>
+</span><span id="line-211"></span><span>          </span><span class="annot"><span class="annottext">SelectionSet NoFragments var
+</span><a href="#local-6989586621688148507"><span class="hs-identifier hs-var">commonFields</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments var
+-&gt; SelectionSet NoFragments var -&gt; SelectionSet NoFragments var
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">(InlineFragment NoFragments var -&gt; Selection NoFragments var)
+-&gt; [InlineFragment NoFragments var] -&gt; SelectionSet NoFragments var
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">InlineFragment NoFragments var -&gt; Selection NoFragments var
+forall (frag :: * -&gt; *) var.
+InlineFragment frag var -&gt; Selection frag var
+</span><span class="hs-identifier hs-var">G.SelectionInlineFragment</span></span><span> </span><span class="annot"><span class="annottext">[InlineFragment NoFragments var]
+</span><a href="#local-6989586621688148506"><span class="hs-identifier hs-var">concreteTypeSelectionSets</span></a></span><span>
+</span><span id="line-212"></span><span>
+</span><span id="line-213"></span><span id="local-6989586621688149001"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#convertGraphQLField"><span class="hs-identifier hs-type">convertGraphQLField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621688149001"><span class="hs-identifier hs-type">var</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#GraphQLField"><span class="hs-identifier hs-type">GraphQLField</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="annot"><a href="#local-6989586621688149001"><span class="hs-identifier hs-type">var</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Field</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.NoFragments</span></span><span> </span><span class="annot"><a href="#local-6989586621688149001"><span class="hs-identifier hs-type">var</span></a></span></span><span>
+</span><span id="line-214"></span><span id="convertGraphQLField"><span class="annot"><span class="annottext">convertGraphQLField :: GraphQLField Void var -&gt; Field NoFragments var
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#convertGraphQLField"><span class="hs-identifier hs-var hs-var">convertGraphQLField</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#GraphQLField"><span class="hs-identifier hs-type">GraphQLField</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688148492"><span id="local-6989586621688148493"><span id="local-6989586621688148494"><span id="local-6989586621688148495"><span id="local-6989586621688148496"><span class="annot"><span class="annottext">[Directive var]
+HashMap Name (Value var)
+Name
+SelectionSet Void var
+_fSelectionSet :: SelectionSet Void var
+_fDirectives :: [Directive var]
+_fArguments :: HashMap Name (Value var)
+_fName :: Name
+_fAlias :: Name
+_fSelectionSet :: forall r var. GraphQLField r var -&gt; SelectionSet r var
+_fDirectives :: forall r var. GraphQLField r var -&gt; [Directive var]
+_fArguments :: forall r var. GraphQLField r var -&gt; HashMap Name (Value var)
+_fName :: forall r var. GraphQLField r var -&gt; Name
+_fAlias :: forall r var. GraphQLField r var -&gt; Name
+</span><a href="#local-6989586621688148492"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-215"></span><span>  </span><span class="annot"><span class="annottext">Field :: forall (frag :: * -&gt; *) var.
+Maybe Name
+-&gt; Name
+-&gt; HashMap Name (Value var)
+-&gt; [Directive var]
+-&gt; SelectionSet frag var
+-&gt; Field frag var
+</span><span class="hs-identifier hs-type">G.Field</span></span><span>
+</span><span id="line-216"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- add the alias only if it is different from the field name. This</span><span>
+</span><span id="line-217"></span><span>      </span><span class="hs-comment">-- keeps the outbound request more readable</span><span>
+</span><span id="line-218"></span><span>      </span><span class="annot"><span class="annottext">_fAlias :: Maybe Name
+</span><span class="hs-identifier hs-var">G._fAlias</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688148496"><span class="hs-identifier hs-var">_fAlias</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688148495"><span class="hs-identifier hs-var">_fName</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Maybe Name
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688148496"><span class="hs-identifier hs-var">_fAlias</span></a></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">Maybe Name
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span>
+</span><span id="line-219"></span><span>      </span><span class="annot"><span class="annottext">_fName :: Name
+</span><span class="hs-identifier hs-var">G._fName</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688148495"><span class="hs-identifier hs-var">_fName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-220"></span><span>      </span><span class="annot"><span class="annottext">_fArguments :: HashMap Name (Value var)
+</span><span class="hs-identifier hs-var">G._fArguments</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value var)
+</span><a href="#local-6989586621688148494"><span class="hs-identifier hs-var">_fArguments</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-221"></span><span>      </span><span class="annot"><span class="annottext">_fDirectives :: [Directive var]
+</span><span class="hs-identifier hs-var">G._fDirectives</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Directive var]
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span class="hs-special">,</span><span>
+</span><span id="line-222"></span><span>      </span><span class="annot"><span class="annottext">_fSelectionSet :: SelectionSet NoFragments var
+</span><span class="hs-identifier hs-var">G._fSelectionSet</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SelectionSet Void var -&gt; SelectionSet NoFragments var
+forall var.
+Eq var =&gt;
+SelectionSet Void var -&gt; SelectionSet NoFragments var
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#convertSelectionSet"><span class="hs-identifier hs-var">convertSelectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet Void var
+</span><a href="#local-6989586621688148492"><span class="hs-identifier hs-var">_fSelectionSet</span></a></span><span>
+</span><span id="line-223"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-224"></span><span>
+</span><span id="line-225"></span><span class="hs-comment">-- | Builds the selection set for an abstract type.</span><span>
+</span><span id="line-226"></span><span class="hs-comment">--</span><span>
+</span><span id="line-227"></span><span class="hs-comment">-- Let's consider this query on starwars API:</span><span>
+</span><span id="line-228"></span><span class="hs-comment">-- The type `Node` an interface is implemented by `Film`, `Species`, `Planet`,</span><span>
+</span><span id="line-229"></span><span class="hs-comment">-- `Person`, `Starship`, `Vehicle`</span><span>
+</span><span id="line-230"></span><span class="hs-comment">--</span><span>
+</span><span id="line-231"></span><span class="hs-comment">-- query f {</span><span>
+</span><span id="line-232"></span><span class="hs-comment">--   node(id: &quot;ZmlsbXM6MQ==&quot;) {</span><span>
+</span><span id="line-233"></span><span class="hs-comment">--     __typename</span><span>
+</span><span id="line-234"></span><span class="hs-comment">--     id</span><span>
+</span><span id="line-235"></span><span class="hs-comment">--     ... on Film {</span><span>
+</span><span id="line-236"></span><span class="hs-comment">--       title</span><span>
+</span><span id="line-237"></span><span class="hs-comment">--     }</span><span>
+</span><span id="line-238"></span><span class="hs-comment">--     ... on Species {</span><span>
+</span><span id="line-239"></span><span class="hs-comment">--       name</span><span>
+</span><span id="line-240"></span><span class="hs-comment">--     }</span><span>
+</span><span id="line-241"></span><span class="hs-comment">--   }</span><span>
+</span><span id="line-242"></span><span class="hs-comment">-- }</span><span>
+</span><span id="line-243"></span><span class="hs-comment">--</span><span>
+</span><span id="line-244"></span><span class="hs-comment">-- When we parse this, it gets normalized into this query:</span><span>
+</span><span id="line-245"></span><span class="hs-comment">--</span><span>
+</span><span id="line-246"></span><span class="hs-comment">-- query f {</span><span>
+</span><span id="line-247"></span><span class="hs-comment">--   node(id: &quot;ZmlsbXM6MQ==&quot;) {</span><span>
+</span><span id="line-248"></span><span class="hs-comment">--     ... on Film {</span><span>
+</span><span id="line-249"></span><span class="hs-comment">--       __typename: __typename</span><span>
+</span><span id="line-250"></span><span class="hs-comment">--       id</span><span>
+</span><span id="line-251"></span><span class="hs-comment">--       title</span><span>
+</span><span id="line-252"></span><span class="hs-comment">--     }</span><span>
+</span><span id="line-253"></span><span class="hs-comment">--     ... on Species {</span><span>
+</span><span id="line-254"></span><span class="hs-comment">--       __typename: __typename</span><span>
+</span><span id="line-255"></span><span class="hs-comment">--       id</span><span>
+</span><span id="line-256"></span><span class="hs-comment">--       name</span><span>
+</span><span id="line-257"></span><span class="hs-comment">--     }</span><span>
+</span><span id="line-258"></span><span class="hs-comment">--     ... on Planet {</span><span>
+</span><span id="line-259"></span><span class="hs-comment">--       __typename: __typename</span><span>
+</span><span id="line-260"></span><span class="hs-comment">--       id</span><span>
+</span><span id="line-261"></span><span class="hs-comment">--     }</span><span>
+</span><span id="line-262"></span><span class="hs-comment">--     ... on Person {</span><span>
+</span><span id="line-263"></span><span class="hs-comment">--       __typename: __typename</span><span>
+</span><span id="line-264"></span><span class="hs-comment">--       id</span><span>
+</span><span id="line-265"></span><span class="hs-comment">--     }</span><span>
+</span><span id="line-266"></span><span class="hs-comment">--     ... on Starship {</span><span>
+</span><span id="line-267"></span><span class="hs-comment">--       __typename: __typename</span><span>
+</span><span id="line-268"></span><span class="hs-comment">--       id</span><span>
+</span><span id="line-269"></span><span class="hs-comment">--     }</span><span>
+</span><span id="line-270"></span><span class="hs-comment">--     ... on Vehicle {</span><span>
+</span><span id="line-271"></span><span class="hs-comment">--       __typename: __typename</span><span>
+</span><span id="line-272"></span><span class="hs-comment">--       id</span><span>
+</span><span id="line-273"></span><span class="hs-comment">--     }</span><span>
+</span><span id="line-274"></span><span class="hs-comment">--   }</span><span>
+</span><span id="line-275"></span><span class="hs-comment">-- }</span><span>
+</span><span id="line-276"></span><span class="hs-comment">--</span><span>
+</span><span id="line-277"></span><span class="hs-comment">-- `__typename` and `id` get pushed to each of the member types. From the above</span><span>
+</span><span id="line-278"></span><span class="hs-comment">-- normalized selection set, we want to costruct a query as close to the</span><span>
+</span><span id="line-279"></span><span class="hs-comment">-- original as possible. We do this as follows:</span><span>
+</span><span id="line-280"></span><span class="hs-comment">--</span><span>
+</span><span id="line-281"></span><span class="hs-comment">-- 1. find the longest common set of fields that each selection set starts with</span><span>
+</span><span id="line-282"></span><span class="hs-comment">--    (in the above case, they are `__typename` and `id`)</span><span>
+</span><span id="line-283"></span><span class="hs-comment">-- 2. from the above list of fields, find the first field that cannot be</span><span>
+</span><span id="line-284"></span><span class="hs-comment">--    defined on the abstract type. The fields that can be defined on the</span><span>
+</span><span id="line-285"></span><span class="hs-comment">--    abstract type are all the fields that occur before the first non abstract</span><span>
+</span><span id="line-286"></span><span class="hs-comment">--    type field (in the above case, both` __typename` and `id` can be defined</span><span>
+</span><span id="line-287"></span><span class="hs-comment">--    on the `Node` type)</span><span>
+</span><span id="line-288"></span><span class="hs-comment">-- 3. Strip the base selection set fields from all the member selection sets and</span><span>
+</span><span id="line-289"></span><span class="hs-comment">--    filter out the member type selection sets that are subsumed by the base</span><span>
+</span><span id="line-290"></span><span class="hs-comment">--    selection set</span><span>
+</span><span id="line-291"></span><span class="hs-comment">--</span><span>
+</span><span id="line-292"></span><span class="hs-comment">-- The above query now translates to this:</span><span>
+</span><span id="line-293"></span><span class="hs-comment">--</span><span>
+</span><span id="line-294"></span><span class="hs-comment">-- query f {</span><span>
+</span><span id="line-295"></span><span class="hs-comment">--   node(id: &quot;ZmlsbXM6MQ==&quot;) {</span><span>
+</span><span id="line-296"></span><span class="hs-comment">--     __typename: __typename</span><span>
+</span><span id="line-297"></span><span class="hs-comment">--     id</span><span>
+</span><span id="line-298"></span><span class="hs-comment">--     ... on Film {</span><span>
+</span><span id="line-299"></span><span class="hs-comment">--       title</span><span>
+</span><span id="line-300"></span><span class="hs-comment">--     }</span><span>
+</span><span id="line-301"></span><span class="hs-comment">--     ... on Species {</span><span>
+</span><span id="line-302"></span><span class="hs-comment">--       name</span><span>
+</span><span id="line-303"></span><span class="hs-comment">--     }</span><span>
+</span><span id="line-304"></span><span class="hs-comment">--   }</span><span>
+</span><span id="line-305"></span><span class="hs-comment">-- }</span><span>
+</span><span id="line-306"></span><span class="hs-comment">--</span><span>
+</span><span id="line-307"></span><span class="hs-comment">-- Note that it is not always possible to get the same shape as the original</span><span>
+</span><span id="line-308"></span><span class="hs-comment">-- query and there is more than one approach to this. For example, we could</span><span>
+</span><span id="line-309"></span><span class="hs-comment">-- have picked the selection set (that can be defined on the abstract type)</span><span>
+</span><span id="line-310"></span><span class="hs-comment">-- that is common across all the member selection sets and used that as the</span><span>
+</span><span id="line-311"></span><span class="hs-comment">-- base selection.</span><span>
+</span><span id="line-312"></span><span id="local-6989586621688148987"><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#reduceAbstractTypeSelectionSet"><span class="hs-identifier hs-type">reduceAbstractTypeSelectionSet</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-313"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621688148987"><span class="hs-identifier hs-type">var</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-314"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#DeduplicatedSelectionSet"><span class="hs-identifier hs-type">DeduplicatedSelectionSet</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="annot"><a href="#local-6989586621688148987"><span class="hs-identifier hs-type">var</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-315"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#ObjectSelectionSet"><span class="hs-identifier hs-type">ObjectSelectionSet</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="annot"><a href="#local-6989586621688148987"><span class="hs-identifier hs-type">var</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Map.HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#ObjectSelectionSet"><span class="hs-identifier hs-type">ObjectSelectionSet</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="annot"><a href="#local-6989586621688148987"><span class="hs-identifier hs-type">var</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-316"></span><span id="reduceAbstractTypeSelectionSet"><span class="annot"><span class="annottext">reduceAbstractTypeSelectionSet :: DeduplicatedSelectionSet Void var
+-&gt; (ObjectSelectionSet Void var,
+    HashMap Name (ObjectSelectionSet Void var))
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#reduceAbstractTypeSelectionSet"><span class="hs-identifier hs-var hs-var">reduceAbstractTypeSelectionSet</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#DeduplicatedSelectionSet"><span class="hs-identifier hs-type">DeduplicatedSelectionSet</span></a></span><span> </span><span id="local-6989586621688148484"><span class="annot"><span class="annottext">HashSet Name
+</span><a href="#local-6989586621688148484"><span class="hs-identifier hs-var">baseMemberFields</span></a></span></span><span> </span><span id="local-6989586621688148483"><span class="annot"><span class="annottext">HashMap Name (ObjectSelectionSet Void var)
+</span><a href="#local-6989586621688148483"><span class="hs-identifier hs-var">selectionSets</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-317"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ObjectSelectionSet Void var
+</span><a href="#local-6989586621688148482"><span class="hs-identifier hs-var">baseSelectionSet</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[(Name, ObjectSelectionSet Void var)]
+-&gt; HashMap Name (ObjectSelectionSet Void var)
+forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">Map.fromList</span></span><span> </span><span class="annot"><span class="annottext">[(Name, ObjectSelectionSet Void var)]
+</span><a href="#local-6989586621688148481"><span class="hs-identifier hs-var">memberSelectionSets</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-318"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-319"></span><span>    </span><span id="local-6989586621688148480"><span class="annot"><span class="annottext">sharedSelectionSetPrefix :: [(Name, Field Void var)]
+</span><a href="#local-6989586621688148480"><span class="hs-identifier hs-var hs-var">sharedSelectionSetPrefix</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[[(Name, Field Void var)]] -&gt; [(Name, Field Void var)]
+forall a. Eq a =&gt; [[a]] -&gt; [a]
+</span><a href="Data.List.Extended.html#longestCommonPrefix"><span class="hs-identifier hs-var">longestCommonPrefix</span></a></span><span> </span><span class="annot"><span class="annottext">([[(Name, Field Void var)]] -&gt; [(Name, Field Void var)])
+-&gt; [[(Name, Field Void var)]] -&gt; [(Name, Field Void var)]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">((Name, ObjectSelectionSet Void var) -&gt; [(Name, Field Void var)])
+-&gt; [(Name, ObjectSelectionSet Void var)]
+-&gt; [[(Name, Field Void var)]]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ObjectSelectionSet Void var -&gt; [(Name, Field Void var)]
+forall k v. InsOrdHashMap k v -&gt; [(k, v)]
+</span><span class="hs-identifier hs-var">OMap.toList</span></span><span> </span><span class="annot"><span class="annottext">(ObjectSelectionSet Void var -&gt; [(Name, Field Void var)])
+-&gt; ((Name, ObjectSelectionSet Void var)
+    -&gt; ObjectSelectionSet Void var)
+-&gt; (Name, ObjectSelectionSet Void var)
+-&gt; [(Name, Field Void var)]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(Name, ObjectSelectionSet Void var) -&gt; ObjectSelectionSet Void var
+forall a b. (a, b) -&gt; b
+</span><span class="hs-identifier hs-var">snd</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([(Name, ObjectSelectionSet Void var)]
+ -&gt; [[(Name, Field Void var)]])
+-&gt; [(Name, ObjectSelectionSet Void var)]
+-&gt; [[(Name, Field Void var)]]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name (ObjectSelectionSet Void var)
+-&gt; [(Name, ObjectSelectionSet Void var)]
+forall k v. HashMap k v -&gt; [(k, v)]
+</span><span class="hs-identifier hs-var">Map.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name (ObjectSelectionSet Void var)
+</span><a href="#local-6989586621688148483"><span class="hs-identifier hs-var">selectionSets</span></a></span><span>
+</span><span id="line-320"></span><span>
+</span><span id="line-321"></span><span>    </span><span id="local-6989586621688148482"><span class="annot"><span class="annottext">baseSelectionSet :: ObjectSelectionSet Void var
+</span><a href="#local-6989586621688148482"><span class="hs-identifier hs-var hs-var">baseSelectionSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Name, Field Void var)] -&gt; ObjectSelectionSet Void var
+forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; InsOrdHashMap k v
+</span><span class="hs-identifier hs-var">OMap.fromList</span></span><span> </span><span class="annot"><span class="annottext">([(Name, Field Void var)] -&gt; ObjectSelectionSet Void var)
+-&gt; [(Name, Field Void var)] -&gt; ObjectSelectionSet Void var
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">((Name, Field Void var) -&gt; Bool)
+-&gt; [(Name, Field Void var)] -&gt; [(Name, Field Void var)]
+forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">takeWhile</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field Void var -&gt; Bool
+</span><a href="#local-6989586621688148477"><span class="hs-identifier hs-var">shouldAddToBase</span></a></span><span> </span><span class="annot"><span class="annottext">(Field Void var -&gt; Bool)
+-&gt; ((Name, Field Void var) -&gt; Field Void var)
+-&gt; (Name, Field Void var)
+-&gt; Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(Name, Field Void var) -&gt; Field Void var
+forall a b. (a, b) -&gt; b
+</span><span class="hs-identifier hs-var">snd</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[(Name, Field Void var)]
+</span><a href="#local-6989586621688148480"><span class="hs-identifier hs-var">sharedSelectionSetPrefix</span></a></span><span>
+</span><span id="line-322"></span><span>
+</span><span id="line-323"></span><span>    </span><span id="local-6989586621688148477"><span class="annot"><span class="annottext">shouldAddToBase :: Field Void var -&gt; Bool
+</span><a href="#local-6989586621688148477"><span class="hs-identifier hs-var hs-var">shouldAddToBase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-324"></span><span>      </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#FieldGraphQL"><span class="hs-identifier hs-type">FieldGraphQL</span></a></span><span> </span><span id="local-6989586621688148476"><span class="annot"><span class="annottext">GraphQLField Void var
+</span><a href="#local-6989586621688148476"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name -&gt; HashSet Name -&gt; Bool
+forall a. (Eq a, Hashable a) =&gt; a -&gt; HashSet a -&gt; Bool
+</span><span class="hs-identifier hs-var">Set.member</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">GraphQLField Void var -&gt; Name
+forall r var. GraphQLField r var -&gt; Name
+</span><a href="Hasura.RQL.IR.RemoteSchema.html#_fName"><span class="hs-identifier hs-var hs-var">_fName</span></a></span><span> </span><span class="annot"><span class="annottext">GraphQLField Void var
+</span><a href="#local-6989586621688148476"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashSet Name
+</span><a href="#local-6989586621688148484"><span class="hs-identifier hs-var">baseMemberFields</span></a></span><span>
+</span><span id="line-325"></span><span>
+</span><span id="line-326"></span><span>    </span><span id="local-6989586621688148481"><span class="annot"><span class="annottext">memberSelectionSets :: [(Name, ObjectSelectionSet Void var)]
+</span><a href="#local-6989586621688148481"><span class="hs-identifier hs-var hs-var">memberSelectionSets</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-327"></span><span>      </span><span class="hs-comment">-- remove member selection sets that are subsumed by base selection set</span><span>
+</span><span id="line-328"></span><span>      </span><span class="annot"><span class="annottext">((Name, ObjectSelectionSet Void var) -&gt; Bool)
+-&gt; [(Name, ObjectSelectionSet Void var)]
+-&gt; [(Name, ObjectSelectionSet Void var)]
+forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Bool)
+-&gt; ((Name, ObjectSelectionSet Void var) -&gt; Bool)
+-&gt; (Name, ObjectSelectionSet Void var)
+-&gt; Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ObjectSelectionSet Void var -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">(ObjectSelectionSet Void var -&gt; Bool)
+-&gt; ((Name, ObjectSelectionSet Void var)
+    -&gt; ObjectSelectionSet Void var)
+-&gt; (Name, ObjectSelectionSet Void var)
+-&gt; Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(Name, ObjectSelectionSet Void var) -&gt; ObjectSelectionSet Void var
+forall a b. (a, b) -&gt; b
+</span><span class="hs-identifier hs-var">snd</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([(Name, ObjectSelectionSet Void var)]
+ -&gt; [(Name, ObjectSelectionSet Void var)])
+-&gt; [(Name, ObjectSelectionSet Void var)]
+-&gt; [(Name, ObjectSelectionSet Void var)]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-329"></span><span>        </span><span class="hs-comment">-- remove the common prefix from member selection sets</span><span>
+</span><span id="line-330"></span><span>        </span><span class="annot"><span class="annottext">((Name, ObjectSelectionSet Void var)
+ -&gt; (Name, ObjectSelectionSet Void var))
+-&gt; [(Name, ObjectSelectionSet Void var)]
+-&gt; [(Name, ObjectSelectionSet Void var)]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(ObjectSelectionSet Void var -&gt; ObjectSelectionSet Void var)
+-&gt; (Name, ObjectSelectionSet Void var)
+-&gt; (Name, ObjectSelectionSet Void var)
+forall (a :: * -&gt; * -&gt; *) b c d.
+Arrow a =&gt;
+a b c -&gt; a (d, b) (d, c)
+</span><span class="hs-identifier hs-var">second</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[(Name, Field Void var)] -&gt; ObjectSelectionSet Void var
+forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; InsOrdHashMap k v
+</span><span class="hs-identifier hs-var">OMap.fromList</span></span><span> </span><span class="annot"><span class="annottext">([(Name, Field Void var)] -&gt; ObjectSelectionSet Void var)
+-&gt; (ObjectSelectionSet Void var -&gt; [(Name, Field Void var)])
+-&gt; ObjectSelectionSet Void var
+-&gt; ObjectSelectionSet Void var
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; [(Name, Field Void var)] -&gt; [(Name, Field Void var)]
+forall a. Int -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">drop</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ObjectSelectionSet Void var -&gt; Int
+forall k v. InsOrdHashMap k v -&gt; Int
+</span><span class="hs-identifier hs-var">OMap.size</span></span><span> </span><span class="annot"><span class="annottext">ObjectSelectionSet Void var
+</span><a href="#local-6989586621688148482"><span class="hs-identifier hs-var">baseSelectionSet</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([(Name, Field Void var)] -&gt; [(Name, Field Void var)])
+-&gt; (ObjectSelectionSet Void var -&gt; [(Name, Field Void var)])
+-&gt; ObjectSelectionSet Void var
+-&gt; [(Name, Field Void var)]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ObjectSelectionSet Void var -&gt; [(Name, Field Void var)]
+forall k v. InsOrdHashMap k v -&gt; [(k, v)]
+</span><span class="hs-identifier hs-var">OMap.toList</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([(Name, ObjectSelectionSet Void var)]
+ -&gt; [(Name, ObjectSelectionSet Void var)])
+-&gt; [(Name, ObjectSelectionSet Void var)]
+-&gt; [(Name, ObjectSelectionSet Void var)]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name (ObjectSelectionSet Void var)
+-&gt; [(Name, ObjectSelectionSet Void var)]
+forall k v. HashMap k v -&gt; [(k, v)]
+</span><span class="hs-identifier hs-var">Map.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name (ObjectSelectionSet Void var)
+</span><a href="#local-6989586621688148483"><span class="hs-identifier hs-var">selectionSets</span></a></span><span>
+</span><span id="line-331"></span><span>
+</span><span id="line-332"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-333"></span><span class="hs-comment">-- Remote schema entry points</span><span>
+</span><span id="line-334"></span><span>
+</span><span id="line-335"></span><span class="hs-special">$(</span><span id="local-6989586621688148469"><span id="local-6989586621688148786"><span id="local-6989586621688148787"><span id="_FieldRemote"><span id="_FieldGraphQL"><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Field</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-336"></span></pre></body></html>

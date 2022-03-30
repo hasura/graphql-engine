@@ -1,0 +1,174 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Data.HashMap.Strict.InsOrd.Extended</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="hs-keyword">module</span><span> </span><span class="annot"><span class="hs-identifier">OMap</span></span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Data.HashMap.Strict.InsOrd.Extended.html#groupTuples"><span class="hs-identifier">groupTuples</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Data.HashMap.Strict.InsOrd.Extended.html#groupListWith"><span class="hs-identifier">groupListWith</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Data.HashMap.Strict.InsOrd.Extended.html#partition"><span class="hs-identifier">partition</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Data.HashMap.Strict.InsOrd.Extended.html#alterF"><span class="hs-identifier">alterF</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OMap</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Hashable</span></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Sequence.NonEmpty.html"><span class="hs-identifier">Data.Sequence.NonEmpty</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NE</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>
+</span><span id="line-15"></span><span>
+</span><span id="line-16"></span><span id="local-6989586621688083275"><span id="local-6989586621688083276"><span id="local-6989586621688083277"><span class="annot"><a href="Data.HashMap.Strict.InsOrd.Extended.html#groupTuples"><span class="hs-identifier hs-type">groupTuples</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621688083277"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621688083277"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Foldable</span></span><span> </span><span class="annot"><a href="#local-6989586621688083276"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-18"></span><span>  </span><span class="annot"><a href="#local-6989586621688083276"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688083277"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621688083275"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-19"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">OMap.InsOrdHashMap</span></span><span> </span><span class="annot"><a href="#local-6989586621688083277"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Sequence.NonEmpty.html#NESeq"><span class="hs-identifier hs-type">NE.NESeq</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688083275"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-20"></span><span id="groupTuples"><span class="annot"><span class="annottext">groupTuples :: t (k, v) -&gt; InsOrdHashMap k (NESeq v)
+</span><a href="Data.HashMap.Strict.InsOrd.Extended.html#groupTuples"><span class="hs-identifier hs-var hs-var">groupTuples</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-21"></span><span>  </span><span class="annot"><span class="annottext">(InsOrdHashMap k (NESeq v) -&gt; (k, v) -&gt; InsOrdHashMap k (NESeq v))
+-&gt; InsOrdHashMap k (NESeq v)
+-&gt; t (k, v)
+-&gt; InsOrdHashMap k (NESeq v)
+forall (t :: * -&gt; *) b a.
+Foldable t =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b
+</span><span class="hs-identifier hs-var">L.foldl'</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap k (NESeq v) -&gt; (k, v) -&gt; InsOrdHashMap k (NESeq v)
+forall k a.
+(Eq k, Hashable k) =&gt;
+InsOrdHashMap k (NESeq a) -&gt; (k, a) -&gt; InsOrdHashMap k (NESeq a)
+</span><a href="#local-6989586621688083245"><span class="hs-identifier hs-var">groupFlds</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap k (NESeq v)
+forall k v. InsOrdHashMap k v
+</span><span class="hs-identifier hs-var">OMap.empty</span></span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-23"></span><span>    </span><span id="local-6989586621688083245"><span class="annot"><span class="annottext">groupFlds :: InsOrdHashMap k (NESeq a) -&gt; (k, a) -&gt; InsOrdHashMap k (NESeq a)
+</span><a href="#local-6989586621688083245"><span class="hs-identifier hs-var hs-var">groupFlds</span></a></span></span><span> </span><span id="local-6989586621688083243"><span class="annot"><span class="annottext">InsOrdHashMap k (NESeq a)
+</span><a href="#local-6989586621688083243"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688083242"><span class="annot"><span class="annottext">k
+</span><a href="#local-6989586621688083242"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688083241"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688083241"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-24"></span><span>      </span><span class="annot"><span class="annottext">(NESeq a -&gt; NESeq a -&gt; NESeq a)
+-&gt; k
+-&gt; NESeq a
+-&gt; InsOrdHashMap k (NESeq a)
+-&gt; InsOrdHashMap k (NESeq a)
+forall k v.
+(Eq k, Hashable k) =&gt;
+(v -&gt; v -&gt; v) -&gt; k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
+</span><span class="hs-identifier hs-var">OMap.insertWith</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(NESeq a -&gt; NESeq a -&gt; NESeq a) -&gt; NESeq a -&gt; NESeq a -&gt; NESeq a
+forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">NESeq a -&gt; NESeq a -&gt; NESeq a
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(&lt;&gt;)</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">k
+</span><a href="#local-6989586621688083242"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; NESeq a
+forall a. a -&gt; NESeq a
+</span><a href="Data.Sequence.NonEmpty.html#singleton"><span class="hs-identifier hs-var">NE.singleton</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688083241"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap k (NESeq a)
+</span><a href="#local-6989586621688083243"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span id="local-6989586621688083235"><span id="local-6989586621688083236"><span id="local-6989586621688083237"><span class="annot"><a href="Data.HashMap.Strict.InsOrd.Extended.html#groupListWith"><span class="hs-identifier hs-type">groupListWith</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621688083237"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621688083237"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Foldable</span></span><span> </span><span class="annot"><a href="#local-6989586621688083236"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Functor</span></span><span> </span><span class="annot"><a href="#local-6989586621688083236"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688083235"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688083237"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-29"></span><span>  </span><span class="annot"><a href="#local-6989586621688083236"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688083235"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-30"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">OMap.InsOrdHashMap</span></span><span> </span><span class="annot"><a href="#local-6989586621688083237"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Sequence.NonEmpty.html#NESeq"><span class="hs-identifier hs-type">NE.NESeq</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688083235"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-31"></span><span id="groupListWith"><span class="annot"><span class="annottext">groupListWith :: (v -&gt; k) -&gt; t v -&gt; InsOrdHashMap k (NESeq v)
+</span><a href="Data.HashMap.Strict.InsOrd.Extended.html#groupListWith"><span class="hs-identifier hs-var hs-var">groupListWith</span></a></span></span><span> </span><span id="local-6989586621688083234"><span class="annot"><span class="annottext">v -&gt; k
+</span><a href="#local-6989586621688083234"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621688083233"><span class="annot"><span class="annottext">t v
+</span><a href="#local-6989586621688083233"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-32"></span><span>  </span><span class="annot"><span class="annottext">t (k, v) -&gt; InsOrdHashMap k (NESeq v)
+forall k (t :: * -&gt; *) v.
+(Eq k, Hashable k, Foldable t) =&gt;
+t (k, v) -&gt; InsOrdHashMap k (NESeq v)
+</span><a href="Data.HashMap.Strict.InsOrd.Extended.html#groupTuples"><span class="hs-identifier hs-var">groupTuples</span></a></span><span> </span><span class="annot"><span class="annottext">(t (k, v) -&gt; InsOrdHashMap k (NESeq v))
+-&gt; t (k, v) -&gt; InsOrdHashMap k (NESeq v)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; (k, v)) -&gt; t v -&gt; t (k, v)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621688083232"><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621688083232"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">v -&gt; k
+</span><a href="#local-6989586621688083234"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621688083232"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621688083232"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">t v
+</span><a href="#local-6989586621688083233"><span class="hs-identifier hs-var">l</span></a></span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span id="local-6989586621688083230"><span id="local-6989586621688083231"><span class="annot"><a href="Data.HashMap.Strict.InsOrd.Extended.html#partition"><span class="hs-identifier hs-type">partition</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621688083231"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621688083231"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688083230"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OMap.InsOrdHashMap</span></span><span> </span><span class="annot"><a href="#local-6989586621688083231"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688083230"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">OMap.InsOrdHashMap</span></span><span> </span><span class="annot"><a href="#local-6989586621688083231"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688083230"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OMap.InsOrdHashMap</span></span><span> </span><span class="annot"><a href="#local-6989586621688083231"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688083230"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-35"></span><span id="partition"><span class="annot"><span class="annottext">partition :: (v -&gt; Bool)
+-&gt; InsOrdHashMap k v -&gt; (InsOrdHashMap k v, InsOrdHashMap k v)
+</span><a href="Data.HashMap.Strict.InsOrd.Extended.html#partition"><span class="hs-identifier hs-var hs-var">partition</span></a></span></span><span> </span><span id="local-6989586621688083229"><span class="annot"><span class="annottext">v -&gt; Bool
+</span><a href="#local-6989586621688083229"><span class="hs-identifier hs-var">predicate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-36"></span><span>  </span><span class="annot"><span class="annottext">((InsOrdHashMap k v, InsOrdHashMap k v)
+ -&gt; k -&gt; v -&gt; (InsOrdHashMap k v, InsOrdHashMap k v))
+-&gt; (InsOrdHashMap k v, InsOrdHashMap k v)
+-&gt; InsOrdHashMap k v
+-&gt; (InsOrdHashMap k v, InsOrdHashMap k v)
+forall a k v. (a -&gt; k -&gt; v -&gt; a) -&gt; a -&gt; InsOrdHashMap k v -&gt; a
+</span><span class="hs-identifier hs-var">OMap.foldlWithKey'</span></span><span>
+</span><span id="line-37"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621688083227"><span class="annot"><span class="annottext">InsOrdHashMap k v
+</span><a href="#local-6989586621688083227"><span class="hs-identifier hs-var">left</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688083226"><span class="annot"><span class="annottext">InsOrdHashMap k v
+</span><a href="#local-6989586621688083226"><span class="hs-identifier hs-var">right</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688083225"><span class="annot"><span class="annottext">k
+</span><a href="#local-6989586621688083225"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span id="local-6989586621688083224"><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621688083224"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-38"></span><span>        </span><span class="hs-keyword">if</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">v -&gt; Bool
+</span><a href="#local-6989586621688083229"><span class="hs-identifier hs-var">predicate</span></a></span><span> </span><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621688083224"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span>          </span><span class="hs-keyword">then</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
+forall k v.
+(Eq k, Hashable k) =&gt;
+k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
+</span><span class="hs-identifier hs-var">OMap.insert</span></span><span> </span><span class="annot"><span class="annottext">k
+</span><a href="#local-6989586621688083225"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621688083224"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap k v
+</span><a href="#local-6989586621688083227"><span class="hs-identifier hs-var">left</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap k v
+</span><a href="#local-6989586621688083226"><span class="hs-identifier hs-var">right</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span>          </span><span class="hs-keyword">else</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InsOrdHashMap k v
+</span><a href="#local-6989586621688083227"><span class="hs-identifier hs-var">left</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
+forall k v.
+(Eq k, Hashable k) =&gt;
+k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
+</span><span class="hs-identifier hs-var">OMap.insert</span></span><span> </span><span class="annot"><span class="annottext">k
+</span><a href="#local-6989586621688083225"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621688083224"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap k v
+</span><a href="#local-6989586621688083226"><span class="hs-identifier hs-var">right</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InsOrdHashMap k v
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap k v
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span class="hs-comment">-- | Alter a hashmap using a function that can fail, in which case the entire operation fails.</span><span>
+</span><span id="line-45"></span><span class="hs-comment">-- (Maybe a version with the key also being passed to the function could be useful.)</span><span>
+</span><span id="line-46"></span><span id="local-6989586621688083220"><span id="local-6989586621688083221"><span id="local-6989586621688083222"><span class="annot"><a href="Data.HashMap.Strict.InsOrd.Extended.html#alterF"><span class="hs-identifier hs-type">alterF</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Functor</span></span><span> </span><span class="annot"><a href="#local-6989586621688083222"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621688083221"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621688083221"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621688083220"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688083222"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621688083220"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-49"></span><span>  </span><span class="annot"><a href="#local-6989586621688083221"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-50"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><a href="#local-6989586621688083221"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688083220"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-51"></span><span>  </span><span class="annot"><a href="#local-6989586621688083222"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><a href="#local-6989586621688083221"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688083220"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-52"></span><span id="alterF"><span class="annot"><span class="annottext">alterF :: (Maybe v -&gt; f (Maybe v))
+-&gt; k -&gt; InsOrdHashMap k v -&gt; f (InsOrdHashMap k v)
+</span><a href="Data.HashMap.Strict.InsOrd.Extended.html#alterF"><span class="hs-identifier hs-var hs-var">alterF</span></a></span></span><span> </span><span id="local-6989586621688083219"><span class="annot"><span class="annottext">Maybe v -&gt; f (Maybe v)
+</span><a href="#local-6989586621688083219"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621688083218"><span class="annot"><span class="annottext">k
+</span><a href="#local-6989586621688083218"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span id="local-6989586621688083217"><span class="annot"><span class="annottext">InsOrdHashMap k v
+</span><a href="#local-6989586621688083217"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe v -&gt; InsOrdHashMap k v
+</span><a href="#local-6989586621688083216"><span class="hs-identifier hs-var">alter'</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe v -&gt; InsOrdHashMap k v)
+-&gt; f (Maybe v) -&gt; f (InsOrdHashMap k v)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe v -&gt; f (Maybe v)
+</span><a href="#local-6989586621688083219"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">k -&gt; InsOrdHashMap k v -&gt; Maybe v
+forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
+</span><span class="hs-identifier hs-var">OMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">k
+</span><a href="#local-6989586621688083218"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap k v
+</span><a href="#local-6989586621688083217"><span class="hs-identifier hs-var">m</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-54"></span><span>    </span><span id="local-6989586621688083216"><span class="annot"><span class="annottext">alter' :: Maybe v -&gt; InsOrdHashMap k v
+</span><a href="#local-6989586621688083216"><span class="hs-identifier hs-var hs-var">alter'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-55"></span><span>      </span><span class="annot"><span class="annottext">Maybe v
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">k -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
+forall k v.
+(Eq k, Hashable k) =&gt;
+k -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
+</span><span class="hs-identifier hs-var">OMap.delete</span></span><span> </span><span class="annot"><span class="annottext">k
+</span><a href="#local-6989586621688083218"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap k v
+</span><a href="#local-6989586621688083217"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><span id="line-56"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688083212"><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621688083212"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
+forall k v.
+(Eq k, Hashable k) =&gt;
+k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
+</span><span class="hs-identifier hs-var">OMap.insert</span></span><span> </span><span class="annot"><span class="annottext">k
+</span><a href="#local-6989586621688083218"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621688083212"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap k v
+</span><a href="#local-6989586621688083217"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><span id="line-57"></span></pre></body></html>
