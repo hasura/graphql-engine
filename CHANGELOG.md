@@ -2,6 +2,10 @@
 
 ## Next release
 
+### Bug fixes and improvements
+
+## v2.5.0-beta.1
+
 ### Remote relationships from remote schemas
 
 This release adds three new metadata API commands:
@@ -165,6 +169,26 @@ the right-hand side for now.
 - cli: add support for customization field in sources metadata (#8292)
 - cli: fix inherited roles metadata not being updated when dropping all roles (#7872)
 - ci: ubuntu and centos flavoured graphql-engine images are now available
+
+## v2.4.0
+
+### Bug fixes and improvements
+
+- server: add custom function for case insensitive lookup in session variable in request transformation
+- server: add metadata inconsistency information in reload_metadata API call
+- server: Webhook Transforms can now delete request/response bodies explicitly.
+- server: Fix truncation of session variables with variable length column types in MSSQL (#8158)
+- server: improve performance of `replace_metadata` for large schemas
+- server: improve baseline memory consumption for typical workloads
+- server: fix parsing timestamp values in BigQuery backends (fix #8076)
+- server: add support for customising the GraphQL schema descriptions of table root fields
+- server: add a `request_headers` field to the `test_webhook_transform` API.
+- console: include cron trigger with include in metadata as false on cron trigger manage page
+- console: show an error notification if Hasura CLI migrations fail
+- console: fixed an issue where cron triggers were not removed from the list after deletion
+- console: only show tables from current schema in clone permissions section
+- console: provide checkbox to remove body in rest connectors
+- cli: fix metadata version being set to 3 when doing `hasura init --version 2` (#8148)
 
 ## v2.4.0-beta.3
 
