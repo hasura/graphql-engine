@@ -8,6 +8,7 @@ For motivation, rationale, and more, see the [test suite rfc](../../rfcs/hspec-t
 
 - [tests-hspec](#tests-hspec)
   - [Running the test suite](#running-the-test-suite)
+  - [Enabling logging](#enabling-logging)
   - [Test suite structure](#test-suite-structure)
     - [Harness](#harness)
     - [Test](#test)
@@ -79,6 +80,14 @@ For motivation, rationale, and more, see the [test suite rfc](../../rfcs/hspec-t
    ```sh
    docker-compose down --volumes
    ```
+
+## Enabling logging
+
+In order to enable logging, you have to manually edit the `engineLogLevel` term
+in [Harness/Constants.hs](Harness/Constants.hs).
+
+This pairs well with running a single test via the `-m` flag (see the section
+above).
 
 ## Test suite structure
 
