@@ -9,19 +9,11 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 	"github.com/sirupsen/logrus"
+	"github.com/vektah/gqlparser"
+	"github.com/vektah/gqlparser/ast"
+	"github.com/vektah/gqlparser/formatter"
 	"gopkg.in/yaml.v3"
 )
-
-type RemoteSchema struct {
-	Name       string      `yaml:"name"`
-	Definition interface{} `yaml:"definition"`
-	Comment    interface{} `yaml:"comment"`
-	Permission interface{} `yaml:"permissions"`
-}
-
-func (r RemoteSchema) BaseDirectory() string {
-	panic("implement me")
-}
 
 type SchemaDefinition struct {
 	Schema string `yaml:"schema"`
@@ -75,8 +67,66 @@ func (r *RemoteSchemaConfig) Build() (map[string]interface{}, metadataobject.Err
 	return map[string]interface{}{r.Key(): obj}, nil
 }
 
+type remoteSchema struct {
+	Name        yaml.Node    `yaml:"name,omitempty"`
+	Defintion   yaml.Node    `yaml:"definition,omitempty"`
+	Comment     yaml.Node    `yaml:"comment,omitempty"`
+	Permissions []permission `yaml:"permissions,omitempty"`
+}
+
+type permission struct {
+	Role       yaml.Node  `yaml:"role,omitempty"`
+	Definition definition `yaml:"definition,omitempty"`
+}
+
+type definition struct {
+	Schema string `yaml:"schema,omitempty"`
+}
+
 func (r *RemoteSchemaConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
-	return metadataobject.DefaultExport(r, metadata, r.error, metadataobject.DefaultObjectTypeSequence)
+	var value interface{}
+	if v, ok := metadata[r.Key()]; !ok {
+		value = []yaml.Node{}
+	} else {
+		remoteSchemas := []remoteSchema{}
+		bs, err := yaml.Marshal(v)
+		if err != nil {
+			return nil, r.error(err)
+		}
+		if err := yaml.Unmarshal(bs, &remoteSchemas); err != nil {
+			return nil, r.error(err)
+		}
+
+		for rsIdx := range remoteSchemas {
+			for pIdx := range remoteSchemas[rsIdx].Permissions {
+				buf := new(bytes.Buffer)
+				gqlFormatter := formatter.NewFormatter(buf)
+				schema, err := gqlparser.LoadSchema(&ast.Source{
+					Input: remoteSchemas[rsIdx].Permissions[pIdx].Definition.Schema,
+				})
+				if err != nil {
+					r.logger.Infof("formatting permission for role %v in remote schema %v failed", remoteSchemas[rsIdx].Permissions[pIdx].Role, remoteSchemas[rsIdx].Name)
+					r.logger.Debugf("loading schema failed for role: %v remote schema: %v error: %v", remoteSchemas[rsIdx].Permissions[pIdx].Role, remoteSchemas[rsIdx].Name, err)
+					continue
+				}
+				gqlFormatter.FormatSchema(schema)
+				if buf.Len() > 0 {
+					remoteSchemas[rsIdx].Permissions[pIdx].Definition.Schema = buf.String()
+				}
+			}
+		}
+
+		value = remoteSchemas
+	}
+
+	var buf bytes.Buffer
+	err := metadataobject.GetEncoder(&buf).Encode(value)
+	if err != nil {
+		return nil, r.error(err)
+	}
+	return map[string][]byte{
+		filepath.ToSlash(filepath.Join(r.BaseDirectory(), r.Filename())): buf.Bytes(),
+	}, nil
 }
 
 func (r *RemoteSchemaConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {

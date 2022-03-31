@@ -49,6 +49,7 @@ require (
 	github.com/spf13/viper v1.10.0
 	github.com/stretchr/testify v1.7.0
 	github.com/subosito/gotenv v1.2.0
+	github.com/vektah/gqlparser v1.3.1
 	golang.org/x/term v0.0.0-20210916214954-140adaaadfaf
 	gopkg.in/op/go-logging.v1 v1.0.0-20160211212156-b2cb9fa56473
 	gopkg.in/src-d/go-git.v4 v4.13.1

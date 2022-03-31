@@ -4,6 +4,8 @@
 
 ### Bug fixes and improvements
 
+- cli: fix remote schema metadata formatting issues (#7608)
+
 ## v2.5.0-beta.1
 
 ### Remote relationships from remote schemas
