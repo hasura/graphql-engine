@@ -114,7 +114,6 @@ func TestQueryCollectionConfig_Export(t *testing.T) {
 			},
 			false,
 		},
-
 		{
 			"t2",
 			"can export metadata when query collections is not present in metadata",
@@ -169,6 +168,33 @@ func TestQueryCollectionConfig_Export(t *testing.T) {
 			},
 			false,
 		},
+		{
+			"t4",
+			"can export and format metadata correctly on multiline queries",
+			fields{
+				MetadataDir: "metadata",
+				logger:      logrus.New(),
+			},
+			args{
+				metadata: func() map[string]yaml.Node {
+					bs, err := ioutil.ReadFile("testdata/export_test/t4/metadata.json")
+					assert.NoError(t, err)
+					yamlbs, err := metadatautil.JSONToYAML(bs)
+					assert.NoError(t, err)
+					var v map[string]yaml.Node
+					assert.NoError(t, yaml.Unmarshal(yamlbs, &v))
+					return v
+				}(),
+			},
+			map[string][]byte{
+				"metadata/query_collections.yaml": func() []byte {
+					bs, err := ioutil.ReadFile("testdata/export_test/t4/want.query_collections.yaml")
+					assert.NoError(t, err)
+					return bs
+				}(),
+			},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -180,10 +206,11 @@ func TestQueryCollectionConfig_Export(t *testing.T) {
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
+				assert.NoError(t, err)
 				for k, v := range got {
 					assert.Contains(t, tt.want, k)
 					// uncomment to update golden files
-					//assert.NoError(t, ioutil.WriteFile(fmt.Sprintf("testdata/export_test/%v/want.%v", tt.id, filepath.Base(k)), v, os.ModePerm))
+					// assert.NoError(t, ioutil.WriteFile(fmt.Sprintf("testdata/export_test/%v/want.%v", tt.id, filepath.Base(k)), v, os.ModePerm))
 
 					assert.Equalf(t, string(tt.want[k]), string(v), "%v", k)
 				}

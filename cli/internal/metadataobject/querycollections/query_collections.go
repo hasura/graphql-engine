@@ -11,6 +11,10 @@ import (
 
 	"github.com/hasura/graphql-engine/cli/v2"
 	"gopkg.in/yaml.v3"
+
+	"github.com/vektah/gqlparser/ast"
+	"github.com/vektah/gqlparser/formatter"
+	"github.com/vektah/gqlparser/parser"
 )
 
 type QueryCollectionConfig struct {
@@ -57,8 +61,59 @@ func (q *QueryCollectionConfig) Build() (map[string]interface{}, metadataobject.
 	return map[string]interface{}{q.Key(): obj}, nil
 }
 
+type querycollection struct {
+	Name       yaml.Node  `yaml:"name,omitempty"`
+	Definition definition `yaml:"definition,omitempty"`
+}
+
+type definition struct {
+	Queries []query `yaml:"queries,omitempty"`
+}
+type query struct {
+	Name  yaml.Node `yaml:"name,omitempty"`
+	Query string    `yaml:"query,omitempty"`
+}
+
 func (q *QueryCollectionConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
-	return metadataobject.DefaultExport(q, metadata, q.error, metadataobject.DefaultObjectTypeSequence)
+	var value interface{}
+	if v, ok := metadata[q.Key()]; !ok {
+		value = []yaml.Node{}
+	} else {
+		var collections []querycollection
+		bs, err := yaml.Marshal(v)
+		if err != nil {
+			return nil, q.error(err)
+		}
+		if err := yaml.Unmarshal(bs, &collections); err != nil {
+			return nil, q.error(err)
+		}
+		for collectionIdx := range collections {
+			for queryIdx := range collections[collectionIdx].Definition.Queries {
+				buf := new(bytes.Buffer)
+				queryDoc, err := parser.ParseQuery(&ast.Source{
+					Input: collections[collectionIdx].Definition.Queries[queryIdx].Query,
+				})
+				if err != nil {
+					return nil, q.error(err)
+				}
+				gqlFormatter := formatter.NewFormatter(buf)
+				gqlFormatter.FormatQueryDocument(queryDoc)
+				if buf.Len() > 0 {
+					collections[collectionIdx].Definition.Queries[queryIdx].Query = buf.String()
+				}
+			}
+		}
+		value = collections
+	}
+
+	var buf bytes.Buffer
+	err := metadataobject.GetEncoder(&buf).Encode(value)
+	if err != nil {
+		return nil, q.error(err)
+	}
+	return map[string][]byte{
+		filepath.ToSlash(filepath.Join(q.BaseDirectory(), q.Filename())): buf.Bytes(),
+	}, nil
 }
 
 func (q *QueryCollectionConfig) Key() string {
