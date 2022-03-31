@@ -120,6 +120,8 @@ library
                      , aeson-casing
                      , attoparsec
                      , attoparsec-iso8601 >= 1.0
+                     , autodocodec
+                     , autodocodec-openapi3
                      , barbies
                      , base
                      , bytestring
@@ -162,6 +164,7 @@ library
                      , servant
                      , servant-client
                      , servant-client-core
+                     , servant-openapi3
                      , some
                      , split
                      , template-haskell
@@ -319,7 +322,8 @@ library
     -- ghc-heap-view can't be built with profiling
     build-depends:     ghc-heap-view
 
-  exposed-modules:     Control.Arrow.Extended
+  exposed-modules:     Autodocodec.Extended
+                     , Control.Arrow.Extended
                      , Control.Arrow.Interpret
                      , Control.Arrow.Trans
                      , Control.Concurrent.Extended
@@ -862,6 +866,7 @@ test-suite graphql-engine-tests
     , mtl
     , natural-transformation >=0.4 && <0.5
     , network-uri
+    , openapi3
     , optparse-applicative
     , pg-client
     , process
@@ -895,6 +900,15 @@ test-suite graphql-engine-tests
     Data.TimeSpec
     Data.TrieSpec
     Database.MSSQL.TransactionSpec
+    Hasura.Backends.DataWrapper.Agent.SchemaSpec
+    Hasura.Backends.DataWrapper.API.V0Spec
+    Hasura.Backends.DataWrapper.API.V0.ColumnSpec
+    Hasura.Backends.DataWrapper.API.V0.ExpressionSpec
+    Hasura.Backends.DataWrapper.API.V0.OrderBySpec
+    Hasura.Backends.DataWrapper.API.V0.QuerySpec
+    Hasura.Backends.DataWrapper.API.V0.Scalar.TypeSpec
+    Hasura.Backends.DataWrapper.API.V0.Scalar.ValueSpec
+    Hasura.Backends.DataWrapper.API.V0.TableSpec
     Hasura.Backends.MSSQL.ErrorSpec
     Hasura.Backends.MySQL.DataLoader.ExecuteTests
     Hasura.EventingSpec
@@ -922,6 +936,8 @@ test-suite graphql-engine-tests
     Hasura.SessionSpec
     Hasura.SQL.WKTSpec
     Network.HTTP.Client.TransformableSpec
+    Test.Aeson.Utils
+    Test.Autodocodec.Extended
     Test.QuickCheck.Extended
 
 test-suite tests-hspec

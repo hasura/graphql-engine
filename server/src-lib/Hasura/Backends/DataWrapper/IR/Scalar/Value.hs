@@ -8,6 +8,7 @@ where
 --------------------------------------------------------------------------------
 
 import Data.Aeson (FromJSON, ToJSON)
+import Data.Scientific
 import Hasura.Backends.DataWrapper.API qualified as API
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
@@ -21,7 +22,7 @@ import Witch
 -- the 'Backend' class.
 data Value
   = String Text
-  | Number Double
+  | Number Scientific
   | Boolean Bool
   | Null
   deriving stock (Data, Eq, Generic, Ord, Show)
