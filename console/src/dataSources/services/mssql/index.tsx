@@ -179,7 +179,7 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     },
     permissions: {
       enabled: true,
-      aggregation: false,
+      aggregation: true,
     },
     track: {
       enabled: false,

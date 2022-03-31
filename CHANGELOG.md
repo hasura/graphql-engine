@@ -4,6 +4,7 @@
 
 ### Bug fixes and improvements
 
+- console: add support for setting aggregation query permissions for ms sql server
 - cli: fix remote schema metadata formatting issues (#7608)
 
 ## v2.5.0-beta.1
