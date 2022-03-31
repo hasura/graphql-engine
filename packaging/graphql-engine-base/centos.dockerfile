@@ -1,4 +1,4 @@
-# DATE VERSION: 2022-03-29
+# DATE VERSION: 2022-03-31
 # Modify the above date version (YYYY-MM-DD) if you want to rebuild the image for security updates
 FROM quay.io/centos/centos@sha256:fc45f3e1294861d7851a87be152b1ab2350d755744077d5ee12b725fdca87919
 
@@ -27,12 +27,7 @@ RUN yum update -y --nobest \
     ;; \
   "linux/arm64") \
     dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-aarch64/pgdg-redhat-repo-latest.noarch.rpm \
-    # TODO: remove --nogpgcheck after resolving https://www.postgresql.org/message-id/flat/CAA77xwWaf_ZhaTe6qS0O5vrJjx5pJs07GYipn7ZCbMrXfeVqTA%40mail.gmail.com
-    && dnf install -y --nogpgcheck postgresql13-devel \
-    # TODO: remove following command after removing --nogpgcheck above
-    # The following file seem to cause installation issue with packages in the next steps
-    # Hence this file is removed here
-    && rm -rf /etc/yum.repos.d/pgdg-redhat-all.repo \
+    && dnf install -y postgresql13-devel \
     ;; \
   esac
 
