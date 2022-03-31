@@ -1,35 +1,424 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="%24con2tag_I8SQ7dV3DcxFPMQk0F7gqm"><span id="%24con2tag_6wmKObHnJoL7NI0HHH7GtW"></span></span><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
-</span><span id="line-2"></span><span>
-</span><span id="line-3"></span><span class="hs-comment">--</span><span>
-</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.DataWrapper.API.V0.Expression</span><span>
-</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier">Expression</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Operator"><span class="hs-identifier">Operator</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
-</span><span id="line-8"></span><span class="hs-keyword">where</span><span>
-</span><span id="line-9"></span><span>
-</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">)</span><span>
-</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html"><span class="hs-identifier">Hasura.Backends.DataWrapper.API.V0.Column</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">API.V0</span></span><span>
-</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Scalar.Value.html"><span class="hs-identifier">Hasura.Backends.DataWrapper.API.V0.Scalar.Value</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">API.V0.Scalar</span></span><span>
-</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.html"><span class="hs-identifier">Hasura.Incremental</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier">Cacheable</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
-</span><span id="line-15"></span><span>
-</span><span id="line-16"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
-</span><span id="line-17"></span><span>
-</span><span id="line-18"></span><span class="hs-comment">-- | A serializable representation of query expressions.</span><span>
-</span><span id="line-19"></span><span id="local-6989586621688310973"><span id="local-6989586621688310974"></span></span><span class="hs-keyword">data</span><span> </span><span id="Expression"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-var">Expression</span></a></span></span><span>
-</span><span id="line-20"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | A constant 'Scalar.Value'.</span><span>
-</span><span id="line-21"></span><span>    </span><span id="Literal"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Literal"><span class="hs-identifier hs-var">Literal</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Scalar.Value.html#Value"><span class="hs-identifier hs-type">API.V0.Scalar.Value</span></a></span><span>
-</span><span id="line-22"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="In"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#In"><span class="hs-identifier hs-var">In</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashSet</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Scalar.Value.html#Value"><span class="hs-identifier hs-type">API.V0.Scalar.Value</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-23"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="And"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#And"><span class="hs-identifier hs-var">And</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-24"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Or"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Or"><span class="hs-identifier hs-var">Or</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-25"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Not"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Not"><span class="hs-identifier hs-var">Not</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span>
-</span><span id="line-26"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="IsNull"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#IsNull"><span class="hs-identifier hs-var">IsNull</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span>
-</span><span id="line-27"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="IsNotNull"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#IsNotNull"><span class="hs-identifier hs-var">IsNotNull</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span>
-</span><span id="line-28"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Column"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Column"><span class="hs-identifier hs-var">Column</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnName"><span class="hs-identifier hs-type">API.V0.ColumnName</span></a></span><span>
-</span><span id="line-29"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Equal"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Equal"><span class="hs-identifier hs-var">Equal</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span>
-</span><span id="line-30"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="NotEqual"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#NotEqual"><span class="hs-identifier hs-var">NotEqual</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span>
-</span><span id="line-31"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ApplyOperator"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#ApplyOperator"><span class="hs-identifier hs-var">ApplyOperator</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Operator"><span class="hs-identifier hs-type">Operator</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span>
-</span><span id="line-32"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cApplyOperator"><span id="%24cNotEqual"><span id="%24cEqual"><span id="%24cColumn"><span id="%24cIsNotNull"><span id="%24cIsNull"><span id="%24cNot"><span id="%24cOr"><span id="%24cAnd"><span id="%24cIn"><span id="%24cLiteral"><span id="%24tExpression"><span id="local-6989586621688310930"><span id="local-6989586621688310932"><span id="local-6989586621688310934"><span id="local-6989586621688310936"><span id="local-6989586621688310938"><span id="local-6989586621688310940"><span id="local-6989586621688310942"><span id="local-6989586621688310944"><span id="local-6989586621688310946"><span id="local-6989586621688310948"><span id="local-6989586621688310950"><span id="local-6989586621688310952"><span id="local-6989586621688310954"><span id="local-6989586621688310956"><span class="annot"><span class="annottext">Typeable Expression
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="%24maxtag_I8SQ7dV3DcxFPMQk0F7gqm"><span id="%24tag2con_I8SQ7dV3DcxFPMQk0F7gqm"><span id="%24con2tag_I8SQ7dV3DcxFPMQk0F7gqm"><span id="%24con2tag_6wmKObHnJoL7NI0HHH7GtW"></span></span></span></span><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE OverloadedLists #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE StandaloneDeriving #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-5"></span><span>
+</span><span id="line-6"></span><span class="hs-comment">--</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.DataWrapper.API.V0.Expression</span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier">Expression</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Operator"><span class="hs-identifier">Operator</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Autodocodec.Extended.html"><span class="hs-identifier">Autodocodec.Extended</span></a></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec.OpenAPI</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens.TH</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">makePrisms</span></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.OpenApi</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ToSchema</span></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html"><span class="hs-identifier">Hasura.Backends.DataWrapper.API.V0.Column</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">API.V0</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Scalar.Value.html"><span class="hs-identifier">Hasura.Backends.DataWrapper.API.V0.Scalar.Value</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">API.V0.Scalar</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.html"><span class="hs-identifier">Hasura.Incremental</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier">Cacheable</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span class="hs-comment">-- | A serializable representation of query operators.</span><span>
+</span><span id="line-26"></span><span id="local-6989586621688371357"><span id="local-6989586621688371358"></span></span><span class="hs-keyword">data</span><span> </span><span id="Operator"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Operator"><span class="hs-identifier hs-var">Operator</span></a></span></span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="LessThan"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#LessThan"><span class="hs-identifier hs-var">LessThan</span></a></span></span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="LessThanOrEqual"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#LessThanOrEqual"><span class="hs-identifier hs-var">LessThanOrEqual</span></a></span></span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="GreaterThan"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#GreaterThan"><span class="hs-identifier hs-var">GreaterThan</span></a></span></span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="GreaterThanOrEqual"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#GreaterThanOrEqual"><span class="hs-identifier hs-var">GreaterThanOrEqual</span></a></span></span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cGreaterThanOrEqual"><span id="%24cGreaterThan"><span id="%24cLessThanOrEqual"><span id="%24cLessThan"><span id="%24tOperator"><span id="local-6989586621688371324"><span id="local-6989586621688371326"><span id="local-6989586621688371328"><span id="local-6989586621688371330"><span id="local-6989586621688371332"><span id="local-6989586621688371334"><span id="local-6989586621688371336"><span id="local-6989586621688371338"><span id="local-6989586621688371340"><span id="local-6989586621688371342"><span id="local-6989586621688371344"><span id="local-6989586621688371346"><span id="local-6989586621688371348"><span id="local-6989586621688371350"><span class="annot"><span class="annottext">Typeable Operator
+DataType
+Constr
+Typeable Operator
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; Operator -&gt; c Operator)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Operator)
+-&gt; (Operator -&gt; Constr)
+-&gt; (Operator -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Operator))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c Operator))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; Operator -&gt; Operator)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Operator -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Operator -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; Operator -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Operator -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator)
+-&gt; Data Operator
+Operator -&gt; DataType
+Operator -&gt; Constr
+(forall b. Data b =&gt; b -&gt; b) -&gt; Operator -&gt; Operator
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; Operator -&gt; c Operator
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Operator
+forall a.
+Typeable a
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; a -&gt; c a)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c a)
+-&gt; (a -&gt; Constr)
+-&gt; (a -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c a))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c a))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; a -&gt; a)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; Data a
+forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Operator -&gt; u
+forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; Operator -&gt; [u]
+forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Operator -&gt; r
+forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Operator -&gt; r
+forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator
+forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator
+forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Operator
+forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; Operator -&gt; c Operator
+forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Operator)
+forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c Operator)
+$cGreaterThanOrEqual :: Constr
+$cGreaterThan :: Constr
+$cLessThanOrEqual :: Constr
+$cLessThan :: Constr
+$tOperator :: DataType
+gmapMo :: (forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator
+$cgmapMo :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator
+gmapMp :: (forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator
+$cgmapMp :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator
+gmapM :: (forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator
+$cgmapM :: forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator
+gmapQi :: Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Operator -&gt; u
+$cgmapQi :: forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Operator -&gt; u
+gmapQ :: (forall d. Data d =&gt; d -&gt; u) -&gt; Operator -&gt; [u]
+$cgmapQ :: forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; Operator -&gt; [u]
+gmapQr :: (r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Operator -&gt; r
+$cgmapQr :: forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Operator -&gt; r
+gmapQl :: (r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Operator -&gt; r
+$cgmapQl :: forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Operator -&gt; r
+gmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; Operator -&gt; Operator
+$cgmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; Operator -&gt; Operator
+dataCast2 :: (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c Operator)
+$cdataCast2 :: forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c Operator)
+dataCast1 :: (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Operator)
+$cdataCast1 :: forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Operator)
+dataTypeOf :: Operator -&gt; DataType
+$cdataTypeOf :: Operator -&gt; DataType
+toConstr :: Operator -&gt; Constr
+$ctoConstr :: Operator -&gt; Constr
+gunfold :: (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Operator
+$cgunfold :: forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Operator
+gfoldl :: (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; Operator -&gt; c Operator
+$cgfoldl :: forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; Operator -&gt; c Operator
+$cp1Data :: Typeable Operator
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688371314"><span id="local-6989586621688371316"><span class="annot"><span class="annottext">Operator -&gt; Operator -&gt; Bool
+(Operator -&gt; Operator -&gt; Bool)
+-&gt; (Operator -&gt; Operator -&gt; Bool) -&gt; Eq Operator
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: Operator -&gt; Operator -&gt; Bool
+$c/= :: Operator -&gt; Operator -&gt; Bool
+== :: Operator -&gt; Operator -&gt; Bool
+$c== :: Operator -&gt; Operator -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. Operator -&gt; Rep Operator x)
+-&gt; (forall x. Rep Operator x -&gt; Operator) -&gt; Generic Operator
+forall x. Rep Operator x -&gt; Operator
+forall x. Operator -&gt; Rep Operator x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep Operator x -&gt; Operator
+$cfrom :: forall x. Operator -&gt; Rep Operator x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688371295"><span id="local-6989586621688371297"><span id="local-6989586621688371299"><span id="local-6989586621688371301"><span id="local-6989586621688371303"><span id="local-6989586621688371305"><span id="local-6989586621688371307"><span class="annot"><span class="annottext">Eq Operator
+Eq Operator
+-&gt; (Operator -&gt; Operator -&gt; Ordering)
+-&gt; (Operator -&gt; Operator -&gt; Bool)
+-&gt; (Operator -&gt; Operator -&gt; Bool)
+-&gt; (Operator -&gt; Operator -&gt; Bool)
+-&gt; (Operator -&gt; Operator -&gt; Bool)
+-&gt; (Operator -&gt; Operator -&gt; Operator)
+-&gt; (Operator -&gt; Operator -&gt; Operator)
+-&gt; Ord Operator
+Operator -&gt; Operator -&gt; Bool
+Operator -&gt; Operator -&gt; Ordering
+Operator -&gt; Operator -&gt; Operator
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: Operator -&gt; Operator -&gt; Operator
+$cmin :: Operator -&gt; Operator -&gt; Operator
+max :: Operator -&gt; Operator -&gt; Operator
+$cmax :: Operator -&gt; Operator -&gt; Operator
+&gt;= :: Operator -&gt; Operator -&gt; Bool
+$c&gt;= :: Operator -&gt; Operator -&gt; Bool
+&gt; :: Operator -&gt; Operator -&gt; Bool
+$c&gt; :: Operator -&gt; Operator -&gt; Bool
+&lt;= :: Operator -&gt; Operator -&gt; Bool
+$c&lt;= :: Operator -&gt; Operator -&gt; Bool
+&lt; :: Operator -&gt; Operator -&gt; Bool
+$c&lt; :: Operator -&gt; Operator -&gt; Bool
+compare :: Operator -&gt; Operator -&gt; Ordering
+$ccompare :: Operator -&gt; Operator -&gt; Ordering
+$cp1Ord :: Eq Operator
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688371288"><span id="local-6989586621688371290"><span id="local-6989586621688371292"><span class="annot"><span class="annottext">Int -&gt; Operator -&gt; ShowS
+[Operator] -&gt; ShowS
+Operator -&gt; String
+(Int -&gt; Operator -&gt; ShowS)
+-&gt; (Operator -&gt; String) -&gt; ([Operator] -&gt; ShowS) -&gt; Show Operator
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [Operator] -&gt; ShowS
+$cshowList :: [Operator] -&gt; ShowS
+show :: Operator -&gt; String
+$cshow :: Operator -&gt; String
+showsPrec :: Int -&gt; Operator -&gt; ShowS
+$cshowsPrec :: Int -&gt; Operator -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688371271"><span id="local-6989586621688371273"><span id="local-6989586621688371275"><span id="local-6989586621688371277"><span id="local-6989586621688371279"><span id="local-6989586621688371281"><span id="local-6989586621688371283"><span id="local-6989586621688371285"><span class="annot"><span class="annottext">Int -&gt; Operator
+Operator -&gt; Int
+Operator -&gt; [Operator]
+Operator -&gt; Operator
+Operator -&gt; Operator -&gt; [Operator]
+Operator -&gt; Operator -&gt; Operator -&gt; [Operator]
+(Operator -&gt; Operator)
+-&gt; (Operator -&gt; Operator)
+-&gt; (Int -&gt; Operator)
+-&gt; (Operator -&gt; Int)
+-&gt; (Operator -&gt; [Operator])
+-&gt; (Operator -&gt; Operator -&gt; [Operator])
+-&gt; (Operator -&gt; Operator -&gt; [Operator])
+-&gt; (Operator -&gt; Operator -&gt; Operator -&gt; [Operator])
+-&gt; Enum Operator
+forall a.
+(a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (Int -&gt; a)
+-&gt; (a -&gt; Int)
+-&gt; (a -&gt; [a])
+-&gt; (a -&gt; a -&gt; [a])
+-&gt; (a -&gt; a -&gt; [a])
+-&gt; (a -&gt; a -&gt; a -&gt; [a])
+-&gt; Enum a
+enumFromThenTo :: Operator -&gt; Operator -&gt; Operator -&gt; [Operator]
+$cenumFromThenTo :: Operator -&gt; Operator -&gt; Operator -&gt; [Operator]
+enumFromTo :: Operator -&gt; Operator -&gt; [Operator]
+$cenumFromTo :: Operator -&gt; Operator -&gt; [Operator]
+enumFromThen :: Operator -&gt; Operator -&gt; [Operator]
+$cenumFromThen :: Operator -&gt; Operator -&gt; [Operator]
+enumFrom :: Operator -&gt; [Operator]
+$cenumFrom :: Operator -&gt; [Operator]
+fromEnum :: Operator -&gt; Int
+$cfromEnum :: Operator -&gt; Int
+toEnum :: Int -&gt; Operator
+$ctoEnum :: Int -&gt; Operator
+pred :: Operator -&gt; Operator
+$cpred :: Operator -&gt; Operator
+succ :: Operator -&gt; Operator
+$csucc :: Operator -&gt; Operator
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688371266"><span id="local-6989586621688371268"><span class="annot"><span class="annottext">Operator
+Operator -&gt; Operator -&gt; Bounded Operator
+forall a. a -&gt; a -&gt; Bounded a
+maxBound :: Operator
+$cmaxBound :: Operator
+minBound :: Operator
+$cminBound :: Operator
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688371262"><span class="annot"><span class="annottext">Eq Operator
+Eq Operator
+-&gt; (Accesses -&gt; Operator -&gt; Operator -&gt; Bool) -&gt; Cacheable Operator
+Accesses -&gt; Operator -&gt; Operator -&gt; Bool
+forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
+unchanged :: Accesses -&gt; Operator -&gt; Operator -&gt; Bool
+$cunchanged :: Accesses -&gt; Operator -&gt; Operator -&gt; Bool
+$cp1Cacheable :: Eq Operator
+</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688371257"><span id="local-6989586621688371259"><span class="annot"><span class="annottext">Int -&gt; Operator -&gt; Int
+Operator -&gt; Int
+(Int -&gt; Operator -&gt; Int) -&gt; (Operator -&gt; Int) -&gt; Hashable Operator
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: Operator -&gt; Int
+$chash :: Operator -&gt; Int
+hashWithSalt :: Int -&gt; Operator -&gt; Int
+$chashWithSalt :: Int -&gt; Operator -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688371254"><span class="annot"><span class="annottext">Operator -&gt; ()
+(Operator -&gt; ()) -&gt; NFData Operator
+forall a. (a -&gt; ()) -&gt; NFData a
+rnf :: Operator -&gt; ()
+$crnf :: Operator -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688371249"><span id="local-6989586621688371251"><span class="annot"><span class="annottext">Value -&gt; Parser [Operator]
+Value -&gt; Parser Operator
+(Value -&gt; Parser Operator)
+-&gt; (Value -&gt; Parser [Operator]) -&gt; FromJSON Operator
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [Operator]
+$cparseJSONList :: Value -&gt; Parser [Operator]
+parseJSON :: Value -&gt; Parser Operator
+$cparseJSON :: Value -&gt; Parser Operator
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688371240"><span id="local-6989586621688371242"><span id="local-6989586621688371244"><span id="local-6989586621688371246"><span class="annot"><span class="annottext">[Operator] -&gt; Encoding
+[Operator] -&gt; Value
+Operator -&gt; Encoding
+Operator -&gt; Value
+(Operator -&gt; Value)
+-&gt; (Operator -&gt; Encoding)
+-&gt; ([Operator] -&gt; Value)
+-&gt; ([Operator] -&gt; Encoding)
+-&gt; ToJSON Operator
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [Operator] -&gt; Encoding
+$ctoEncodingList :: [Operator] -&gt; Encoding
+toJSONList :: [Operator] -&gt; Value
+$ctoJSONList :: [Operator] -&gt; Value
+toEncoding :: Operator -&gt; Encoding
+$ctoEncoding :: Operator -&gt; Encoding
+toJSON :: Operator -&gt; Value
+$ctoJSON :: Operator -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688371236"><span class="annot"><span class="annottext">Typeable Operator
+Typeable Operator
+-&gt; (Proxy Operator -&gt; Declare (Definitions Schema) NamedSchema)
+-&gt; ToSchema Operator
+Proxy Operator -&gt; Declare (Definitions Schema) NamedSchema
+forall a.
+Typeable a
+-&gt; (Proxy a -&gt; Declare (Definitions Schema) NamedSchema)
+-&gt; ToSchema a
+declareNamedSchema :: Proxy Operator -&gt; Declare (Definitions Schema) NamedSchema
+$cdeclareNamedSchema :: Proxy Operator -&gt; Declare (Definitions Schema) NamedSchema
+$cp1ToSchema :: Typeable Operator
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">ToSchema</span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Operator"><span class="hs-identifier hs-type">Operator</span></a></span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688371231"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Operator"><span class="hs-identifier hs-type">Operator</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-36"></span><span>  </span><span id="local-6989586621688371229"><span class="annot"><span class="annottext">codec :: JSONCodec Operator
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-37"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; JSONCodec Operator -&gt; JSONCodec Operator
+forall input output.
+Text -&gt; ValueCodec input output -&gt; ValueCodec input output
+</span><span class="hs-identifier hs-var">named</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Operator&quot;</span></span><span> </span><span class="annot"><span class="annottext">(JSONCodec Operator -&gt; JSONCodec Operator)
+-&gt; JSONCodec Operator -&gt; JSONCodec Operator
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-38"></span><span>      </span><span class="annot"><span class="annottext">NonEmpty (Operator, Text) -&gt; JSONCodec Operator
+forall constant.
+Eq constant =&gt;
+NonEmpty (constant, Text) -&gt; JSONCodec constant
+</span><a href="Autodocodec.Extended.html#disjointStringConstCodec"><span class="hs-identifier hs-var">disjointStringConstCodec</span></a></span><span>
+</span><span id="line-39"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Operator
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#LessThan"><span class="hs-identifier hs-var">LessThan</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;less_than&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Operator
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#LessThanOrEqual"><span class="hs-identifier hs-var">LessThanOrEqual</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;less_than_or_equal&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Operator
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#GreaterThan"><span class="hs-identifier hs-var">GreaterThan</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;greater_than&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Operator
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#GreaterThanOrEqual"><span class="hs-identifier hs-var">GreaterThanOrEqual</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;greater_than_or_equal&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span class="hs-comment">-- | A serializable representation of query expressions.</span><span>
+</span><span id="line-48"></span><span id="local-6989586621688371224"><span id="local-6989586621688371225"></span></span><span class="hs-keyword">data</span><span> </span><span id="Expression"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-var">Expression</span></a></span></span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | A constant 'Scalar.Value'.</span><span>
+</span><span id="line-50"></span><span>    </span><span id="Literal"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Literal"><span class="hs-identifier hs-var">Literal</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Autodocodec.Extended.html#ValueWrapper"><span class="hs-identifier hs-type">ValueWrapper</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;value&quot;</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Scalar.Value.html#Value"><span class="hs-identifier hs-type">API.V0.Scalar.Value</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="In"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#In"><span class="hs-identifier hs-var">In</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Autodocodec.Extended.html#ValueWrapper2"><span class="hs-identifier hs-type">ValueWrapper2</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;expression&quot;</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;values&quot;</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Scalar.Value.html#Value"><span class="hs-identifier hs-type">API.V0.Scalar.Value</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="And"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#And"><span class="hs-identifier hs-var">And</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Autodocodec.Extended.html#ValueWrapper"><span class="hs-identifier hs-type">ValueWrapper</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;expressions&quot;</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Or"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Or"><span class="hs-identifier hs-var">Or</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Autodocodec.Extended.html#ValueWrapper"><span class="hs-identifier hs-type">ValueWrapper</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;expressions&quot;</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Not"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Not"><span class="hs-identifier hs-var">Not</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Autodocodec.Extended.html#ValueWrapper"><span class="hs-identifier hs-type">ValueWrapper</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;expression&quot;</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="IsNull"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#IsNull"><span class="hs-identifier hs-var">IsNull</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Autodocodec.Extended.html#ValueWrapper"><span class="hs-identifier hs-type">ValueWrapper</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;expression&quot;</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="IsNotNull"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#IsNotNull"><span class="hs-identifier hs-var">IsNotNull</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Autodocodec.Extended.html#ValueWrapper"><span class="hs-identifier hs-type">ValueWrapper</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;expression&quot;</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Column"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Column"><span class="hs-identifier hs-var">Column</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Autodocodec.Extended.html#ValueWrapper"><span class="hs-identifier hs-type">ValueWrapper</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;column&quot;</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnName"><span class="hs-identifier hs-type">API.V0.ColumnName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Equal"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Equal"><span class="hs-identifier hs-var">Equal</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Autodocodec.Extended.html#ValueWrapper2"><span class="hs-identifier hs-type">ValueWrapper2</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;left&quot;</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;right&quot;</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="NotEqual"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#NotEqual"><span class="hs-identifier hs-var">NotEqual</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Autodocodec.Extended.html#ValueWrapper2"><span class="hs-identifier hs-type">ValueWrapper2</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;left&quot;</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;right&quot;</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ApplyOperator"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#ApplyOperator"><span class="hs-identifier hs-var">ApplyOperator</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Autodocodec.Extended.html#ValueWrapper3"><span class="hs-identifier hs-type">ValueWrapper3</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;operator&quot;</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Operator"><span class="hs-identifier hs-type">Operator</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;left&quot;</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;right&quot;</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-61"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cApplyOperator"><span id="%24cNotEqual"><span id="%24cEqual"><span id="%24cColumn"><span id="%24cIsNotNull"><span id="%24cIsNull"><span id="%24cNot"><span id="%24cOr"><span id="%24cAnd"><span id="%24cIn"><span id="%24cLiteral"><span id="%24tExpression"><span id="local-6989586621688371184"><span id="local-6989586621688371186"><span id="local-6989586621688371188"><span id="local-6989586621688371190"><span id="local-6989586621688371192"><span id="local-6989586621688371194"><span id="local-6989586621688371196"><span id="local-6989586621688371198"><span id="local-6989586621688371200"><span id="local-6989586621688371202"><span id="local-6989586621688371204"><span id="local-6989586621688371206"><span id="local-6989586621688371208"><span id="local-6989586621688371210"><span class="annot"><span class="annottext">Typeable Expression
 DataType
 Constr
 Typeable Expression
@@ -197,7 +586,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; Expression -&gt; c Expression
 $cp1Data :: Typeable Expression
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688310913"><span id="local-6989586621688310915"><span class="annot"><span class="annottext">Expression -&gt; Expression -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688371168"><span id="local-6989586621688371170"><span class="annot"><span class="annottext">Expression -&gt; Expression -&gt; Bool
 (Expression -&gt; Expression -&gt; Bool)
 -&gt; (Expression -&gt; Expression -&gt; Bool) -&gt; Eq Expression
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -213,7 +602,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Expression x -&gt; Expression
 $cfrom :: forall x. Expression -&gt; Rep Expression x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688310894"><span id="local-6989586621688310896"><span id="local-6989586621688310898"><span id="local-6989586621688310900"><span id="local-6989586621688310902"><span id="local-6989586621688310904"><span id="local-6989586621688310906"><span class="annot"><span class="annottext">Eq Expression
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688371151"><span id="local-6989586621688371153"><span id="local-6989586621688371155"><span id="local-6989586621688371157"><span id="local-6989586621688371159"><span id="local-6989586621688371161"><span id="local-6989586621688371163"><span class="annot"><span class="annottext">Eq Expression
 Eq Expression
 -&gt; (Expression -&gt; Expression -&gt; Ordering)
 -&gt; (Expression -&gt; Expression -&gt; Bool)
@@ -251,7 +640,7 @@ $c&lt; :: Expression -&gt; Expression -&gt; Bool
 compare :: Expression -&gt; Expression -&gt; Ordering
 $ccompare :: Expression -&gt; Expression -&gt; Ordering
 $cp1Ord :: Eq Expression
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688310887"><span id="local-6989586621688310889"><span id="local-6989586621688310891"><span class="annot"><span class="annottext">Int -&gt; Expression -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688371145"><span id="local-6989586621688371147"><span id="local-6989586621688371149"><span class="annot"><span class="annottext">Int -&gt; Expression -&gt; ShowS
 [Expression] -&gt; ShowS
 Expression -&gt; String
 (Int -&gt; Expression -&gt; ShowS)
@@ -267,7 +656,7 @@ $cshow :: Expression -&gt; String
 showsPrec :: Int -&gt; Expression -&gt; ShowS
 $cshowsPrec :: Int -&gt; Expression -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-33"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688310883"><span class="annot"><span class="annottext">Eq Expression
+</span><span id="line-62"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688371142"><span class="annot"><span class="annottext">Eq Expression
 Eq Expression
 -&gt; (Accesses -&gt; Expression -&gt; Expression -&gt; Bool)
 -&gt; Cacheable Expression
@@ -276,17 +665,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; Expression -&gt; Expression -&gt; Bool
 $cunchanged :: Accesses -&gt; Expression -&gt; Expression -&gt; Bool
 $cp1Cacheable :: Eq Expression
-</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688310878"><span id="local-6989586621688310880"><span class="annot"><span class="annottext">Value -&gt; Parser [Expression]
-Value -&gt; Parser Expression
-(Value -&gt; Parser Expression)
--&gt; (Value -&gt; Parser [Expression]) -&gt; FromJSON Expression
-forall a.
-(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
-parseJSONList :: Value -&gt; Parser [Expression]
-$cparseJSONList :: Value -&gt; Parser [Expression]
-parseJSON :: Value -&gt; Parser Expression
-$cparseJSON :: Value -&gt; Parser Expression
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688310873"><span id="local-6989586621688310875"><span class="annot"><span class="annottext">Int -&gt; Expression -&gt; Int
+</span><a href="#local-6989586621688371142"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688371138"><span id="local-6989586621688371140"><span class="annot"><span class="annottext">Int -&gt; Expression -&gt; Int
 Expression -&gt; Int
 (Int -&gt; Expression -&gt; Int)
 -&gt; (Expression -&gt; Int) -&gt; Hashable Expression
@@ -295,324 +674,167 @@ hash :: Expression -&gt; Int
 $chash :: Expression -&gt; Int
 hashWithSalt :: Int -&gt; Expression -&gt; Int
 $chashWithSalt :: Int -&gt; Expression -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688310870"><span class="annot"><span class="annottext">Expression -&gt; ()
+</span><a href="#local-6989586621688371138"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688371136"><span class="annot"><span class="annottext">Expression -&gt; ()
 (Expression -&gt; ()) -&gt; NFData Expression
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: Expression -&gt; ()
 $crnf :: Expression -&gt; ()
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688310861"><span id="local-6989586621688310863"><span id="local-6989586621688310865"><span id="local-6989586621688310867"><span class="annot"><span class="annottext">[Expression] -&gt; Encoding
-[Expression] -&gt; Value
-Expression -&gt; Encoding
-Expression -&gt; Value
-(Expression -&gt; Value)
--&gt; (Expression -&gt; Encoding)
--&gt; ([Expression] -&gt; Value)
--&gt; ([Expression] -&gt; Encoding)
--&gt; ToJSON Expression
-forall a.
-(a -&gt; Value)
--&gt; (a -&gt; Encoding)
--&gt; ([a] -&gt; Value)
--&gt; ([a] -&gt; Encoding)
--&gt; ToJSON a
-toEncodingList :: [Expression] -&gt; Encoding
-$ctoEncodingList :: [Expression] -&gt; Encoding
-toJSONList :: [Expression] -&gt; Value
-$ctoJSONList :: [Expression] -&gt; Value
-toEncoding :: Expression -&gt; Encoding
-$ctoEncoding :: Expression -&gt; Encoding
-toJSON :: Expression -&gt; Value
-$ctoJSON :: Expression -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-34"></span><span>
-</span><span id="line-35"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
-</span><span id="line-36"></span><span>
-</span><span id="line-37"></span><span class="hs-comment">-- | A serializable representation of query operators.</span><span>
-</span><span id="line-38"></span><span id="local-6989586621688310858"><span id="local-6989586621688310859"></span></span><span class="hs-keyword">data</span><span> </span><span id="Operator"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Operator"><span class="hs-identifier hs-var">Operator</span></a></span></span><span>
-</span><span id="line-39"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="LessThan"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#LessThan"><span class="hs-identifier hs-var">LessThan</span></a></span></span><span>
-</span><span id="line-40"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="LessThanOrEqual"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#LessThanOrEqual"><span class="hs-identifier hs-var">LessThanOrEqual</span></a></span></span><span>
-</span><span id="line-41"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="GreaterThan"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#GreaterThan"><span class="hs-identifier hs-var">GreaterThan</span></a></span></span><span>
-</span><span id="line-42"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="GreaterThanOrEqual"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#GreaterThanOrEqual"><span class="hs-identifier hs-var">GreaterThanOrEqual</span></a></span></span><span>
-</span><span id="line-43"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cGreaterThanOrEqual"><span id="%24cGreaterThan"><span id="%24cLessThanOrEqual"><span id="%24cLessThan"><span id="%24tOperator"><span id="local-6989586621688310825"><span id="local-6989586621688310827"><span id="local-6989586621688310829"><span id="local-6989586621688310831"><span id="local-6989586621688310833"><span id="local-6989586621688310835"><span id="local-6989586621688310837"><span id="local-6989586621688310839"><span id="local-6989586621688310841"><span id="local-6989586621688310843"><span id="local-6989586621688310845"><span id="local-6989586621688310847"><span id="local-6989586621688310849"><span id="local-6989586621688310851"><span class="annot"><span class="annottext">Typeable Operator
-DataType
-Constr
-Typeable Operator
--&gt; (forall (c :: * -&gt; *).
-    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
-    -&gt; (forall g. g -&gt; c g) -&gt; Operator -&gt; c Operator)
--&gt; (forall (c :: * -&gt; *).
-    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
-    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Operator)
--&gt; (Operator -&gt; Constr)
--&gt; (Operator -&gt; DataType)
--&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
-    Typeable t =&gt;
-    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Operator))
--&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
-    Typeable t =&gt;
-    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c Operator))
--&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; Operator -&gt; Operator)
--&gt; (forall r r'.
-    (r -&gt; r' -&gt; r)
-    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Operator -&gt; r)
--&gt; (forall r r'.
-    (r' -&gt; r -&gt; r)
-    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Operator -&gt; r)
--&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; Operator -&gt; [u])
--&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Operator -&gt; u)
--&gt; (forall (m :: * -&gt; *).
-    Monad m =&gt;
-    (forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator)
--&gt; (forall (m :: * -&gt; *).
-    MonadPlus m =&gt;
-    (forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator)
--&gt; (forall (m :: * -&gt; *).
-    MonadPlus m =&gt;
-    (forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator)
--&gt; Data Operator
-Operator -&gt; DataType
-Operator -&gt; Constr
-(forall b. Data b =&gt; b -&gt; b) -&gt; Operator -&gt; Operator
-(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
--&gt; (forall g. g -&gt; c g) -&gt; Operator -&gt; c Operator
-(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
--&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Operator
-forall a.
-Typeable a
--&gt; (forall (c :: * -&gt; *).
-    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
-    -&gt; (forall g. g -&gt; c g) -&gt; a -&gt; c a)
--&gt; (forall (c :: * -&gt; *).
-    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
-    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c a)
--&gt; (a -&gt; Constr)
--&gt; (a -&gt; DataType)
--&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
-    Typeable t =&gt;
-    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c a))
--&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
-    Typeable t =&gt;
-    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c a))
--&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; a -&gt; a)
--&gt; (forall r r'.
-    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
--&gt; (forall r r'.
-    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
--&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; [u])
--&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; u)
--&gt; (forall (m :: * -&gt; *).
-    Monad m =&gt;
-    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
--&gt; (forall (m :: * -&gt; *).
-    MonadPlus m =&gt;
-    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
--&gt; (forall (m :: * -&gt; *).
-    MonadPlus m =&gt;
-    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
--&gt; Data a
-forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Operator -&gt; u
-forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; Operator -&gt; [u]
-forall r r'.
-(r -&gt; r' -&gt; r)
--&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Operator -&gt; r
-forall r r'.
-(r' -&gt; r -&gt; r)
--&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Operator -&gt; r
-forall (m :: * -&gt; *).
-Monad m =&gt;
-(forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator
-forall (m :: * -&gt; *).
-MonadPlus m =&gt;
-(forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator
-forall (c :: * -&gt; *).
-(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
--&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Operator
-forall (c :: * -&gt; *).
-(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
--&gt; (forall g. g -&gt; c g) -&gt; Operator -&gt; c Operator
-forall (t :: * -&gt; *) (c :: * -&gt; *).
-Typeable t =&gt;
-(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Operator)
-forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
-Typeable t =&gt;
-(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c Operator)
-$cGreaterThanOrEqual :: Constr
-$cGreaterThan :: Constr
-$cLessThanOrEqual :: Constr
-$cLessThan :: Constr
-$tOperator :: DataType
-gmapMo :: (forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator
-$cgmapMo :: forall (m :: * -&gt; *).
-MonadPlus m =&gt;
-(forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator
-gmapMp :: (forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator
-$cgmapMp :: forall (m :: * -&gt; *).
-MonadPlus m =&gt;
-(forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator
-gmapM :: (forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator
-$cgmapM :: forall (m :: * -&gt; *).
-Monad m =&gt;
-(forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator
-gmapQi :: Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Operator -&gt; u
-$cgmapQi :: forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Operator -&gt; u
-gmapQ :: (forall d. Data d =&gt; d -&gt; u) -&gt; Operator -&gt; [u]
-$cgmapQ :: forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; Operator -&gt; [u]
-gmapQr :: (r' -&gt; r -&gt; r)
--&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Operator -&gt; r
-$cgmapQr :: forall r r'.
-(r' -&gt; r -&gt; r)
--&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Operator -&gt; r
-gmapQl :: (r -&gt; r' -&gt; r)
--&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Operator -&gt; r
-$cgmapQl :: forall r r'.
-(r -&gt; r' -&gt; r)
--&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Operator -&gt; r
-gmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; Operator -&gt; Operator
-$cgmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; Operator -&gt; Operator
-dataCast2 :: (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c Operator)
-$cdataCast2 :: forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
-Typeable t =&gt;
-(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c Operator)
-dataCast1 :: (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Operator)
-$cdataCast1 :: forall (t :: * -&gt; *) (c :: * -&gt; *).
-Typeable t =&gt;
-(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Operator)
-dataTypeOf :: Operator -&gt; DataType
-$cdataTypeOf :: Operator -&gt; DataType
-toConstr :: Operator -&gt; Constr
-$ctoConstr :: Operator -&gt; Constr
-gunfold :: (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
--&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Operator
-$cgunfold :: forall (c :: * -&gt; *).
-(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
--&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Operator
-gfoldl :: (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
--&gt; (forall g. g -&gt; c g) -&gt; Operator -&gt; c Operator
-$cgfoldl :: forall (c :: * -&gt; *).
-(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
--&gt; (forall g. g -&gt; c g) -&gt; Operator -&gt; c Operator
-$cp1Data :: Typeable Operator
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688310816"><span id="local-6989586621688310818"><span class="annot"><span class="annottext">Operator -&gt; Operator -&gt; Bool
-(Operator -&gt; Operator -&gt; Bool)
--&gt; (Operator -&gt; Operator -&gt; Bool) -&gt; Eq Operator
-forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
-/= :: Operator -&gt; Operator -&gt; Bool
-$c/= :: Operator -&gt; Operator -&gt; Bool
-== :: Operator -&gt; Operator -&gt; Bool
-$c== :: Operator -&gt; Operator -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. Operator -&gt; Rep Operator x)
--&gt; (forall x. Rep Operator x -&gt; Operator) -&gt; Generic Operator
-forall x. Rep Operator x -&gt; Operator
-forall x. Operator -&gt; Rep Operator x
-forall a.
-(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
-$cto :: forall x. Rep Operator x -&gt; Operator
-$cfrom :: forall x. Operator -&gt; Rep Operator x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688310799"><span id="local-6989586621688310801"><span id="local-6989586621688310803"><span id="local-6989586621688310805"><span id="local-6989586621688310807"><span id="local-6989586621688310809"><span id="local-6989586621688310811"><span class="annot"><span class="annottext">Eq Operator
-Eq Operator
--&gt; (Operator -&gt; Operator -&gt; Ordering)
--&gt; (Operator -&gt; Operator -&gt; Bool)
--&gt; (Operator -&gt; Operator -&gt; Bool)
--&gt; (Operator -&gt; Operator -&gt; Bool)
--&gt; (Operator -&gt; Operator -&gt; Bool)
--&gt; (Operator -&gt; Operator -&gt; Operator)
--&gt; (Operator -&gt; Operator -&gt; Operator)
--&gt; Ord Operator
-Operator -&gt; Operator -&gt; Bool
-Operator -&gt; Operator -&gt; Ordering
-Operator -&gt; Operator -&gt; Operator
-forall a.
-Eq a
--&gt; (a -&gt; a -&gt; Ordering)
--&gt; (a -&gt; a -&gt; Bool)
--&gt; (a -&gt; a -&gt; Bool)
--&gt; (a -&gt; a -&gt; Bool)
--&gt; (a -&gt; a -&gt; Bool)
--&gt; (a -&gt; a -&gt; a)
--&gt; (a -&gt; a -&gt; a)
--&gt; Ord a
-min :: Operator -&gt; Operator -&gt; Operator
-$cmin :: Operator -&gt; Operator -&gt; Operator
-max :: Operator -&gt; Operator -&gt; Operator
-$cmax :: Operator -&gt; Operator -&gt; Operator
-&gt;= :: Operator -&gt; Operator -&gt; Bool
-$c&gt;= :: Operator -&gt; Operator -&gt; Bool
-&gt; :: Operator -&gt; Operator -&gt; Bool
-$c&gt; :: Operator -&gt; Operator -&gt; Bool
-&lt;= :: Operator -&gt; Operator -&gt; Bool
-$c&lt;= :: Operator -&gt; Operator -&gt; Bool
-&lt; :: Operator -&gt; Operator -&gt; Bool
-$c&lt; :: Operator -&gt; Operator -&gt; Bool
-compare :: Operator -&gt; Operator -&gt; Ordering
-$ccompare :: Operator -&gt; Operator -&gt; Ordering
-$cp1Ord :: Eq Operator
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688310793"><span id="local-6989586621688310795"><span id="local-6989586621688310797"><span class="annot"><span class="annottext">Int -&gt; Operator -&gt; ShowS
-[Operator] -&gt; ShowS
-Operator -&gt; String
-(Int -&gt; Operator -&gt; ShowS)
--&gt; (Operator -&gt; String) -&gt; ([Operator] -&gt; ShowS) -&gt; Show Operator
-forall a.
-(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-showList :: [Operator] -&gt; ShowS
-$cshowList :: [Operator] -&gt; ShowS
-show :: Operator -&gt; String
-$cshow :: Operator -&gt; String
-showsPrec :: Int -&gt; Operator -&gt; ShowS
-$cshowsPrec :: Int -&gt; Operator -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-44"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688310790"><span class="annot"><span class="annottext">Eq Operator
-Eq Operator
--&gt; (Accesses -&gt; Operator -&gt; Operator -&gt; Bool) -&gt; Cacheable Operator
-Accesses -&gt; Operator -&gt; Operator -&gt; Bool
-forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
-unchanged :: Accesses -&gt; Operator -&gt; Operator -&gt; Bool
-$cunchanged :: Accesses -&gt; Operator -&gt; Operator -&gt; Bool
-$cp1Cacheable :: Eq Operator
-</span><a href="#local-6989586621688310790"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688310786"><span id="local-6989586621688310788"><span class="annot"><span class="annottext">Value -&gt; Parser [Operator]
-Value -&gt; Parser Operator
-(Value -&gt; Parser Operator)
--&gt; (Value -&gt; Parser [Operator]) -&gt; FromJSON Operator
-forall a.
-(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
-parseJSONList :: Value -&gt; Parser [Operator]
-$cparseJSONList :: Value -&gt; Parser [Operator]
-parseJSON :: Value -&gt; Parser Operator
-$cparseJSON :: Value -&gt; Parser Operator
-</span><a href="#local-6989586621688310786"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688310782"><span id="local-6989586621688310784"><span class="annot"><span class="annottext">Int -&gt; Operator -&gt; Int
-Operator -&gt; Int
-(Int -&gt; Operator -&gt; Int) -&gt; (Operator -&gt; Int) -&gt; Hashable Operator
-forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
-hash :: Operator -&gt; Int
-$chash :: Operator -&gt; Int
-hashWithSalt :: Int -&gt; Operator -&gt; Int
-$chashWithSalt :: Int -&gt; Operator -&gt; Int
-</span><a href="#local-6989586621688310782"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688310780"><span class="annot"><span class="annottext">Operator -&gt; ()
-(Operator -&gt; ()) -&gt; NFData Operator
-forall a. (a -&gt; ()) -&gt; NFData a
-rnf :: Operator -&gt; ()
-$crnf :: Operator -&gt; ()
-</span><a href="#local-6989586621688310780"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688310772"><span id="local-6989586621688310774"><span id="local-6989586621688310776"><span id="local-6989586621688310778"><span class="annot"><span class="annottext">[Operator] -&gt; Encoding
-[Operator] -&gt; Value
-Operator -&gt; Encoding
-Operator -&gt; Value
-(Operator -&gt; Value)
--&gt; (Operator -&gt; Encoding)
--&gt; ([Operator] -&gt; Value)
--&gt; ([Operator] -&gt; Encoding)
--&gt; ToJSON Operator
-forall a.
-(a -&gt; Value)
--&gt; (a -&gt; Encoding)
--&gt; ([a] -&gt; Value)
--&gt; ([a] -&gt; Encoding)
--&gt; ToJSON a
-toEncodingList :: [Operator] -&gt; Encoding
-$ctoEncodingList :: [Operator] -&gt; Encoding
-toJSONList :: [Operator] -&gt; Value
-$ctoJSONList :: [Operator] -&gt; Value
-toEncoding :: Operator -&gt; Encoding
-$ctoEncoding :: Operator -&gt; Encoding
-toJSON :: Operator -&gt; Value
-$ctoJSON :: Operator -&gt; Value
-</span><a href="#local-6989586621688310772"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-45"></span></pre></body></html>
+</span><a href="#local-6989586621688371136"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-63"></span><span>
+</span><span id="line-64"></span><span class="hs-special">$(</span><span id="_ApplyOperator"><span id="_NotEqual"><span id="_Equal"><span id="_Column"><span id="_IsNotNull"><span id="_IsNull"><span id="_Not"><span id="_Or"><span id="_And"><span id="_In"><span id="_Literal"><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Expression</span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688371122"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-67"></span><span>  </span><span id="local-6989586621688371121"><span class="annot"><span class="annottext">codec :: JSONCodec Expression
+</span><a href="#local-6989586621688371121"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-68"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; JSONCodec Expression -&gt; JSONCodec Expression
+forall input output.
+Text -&gt; ValueCodec input output -&gt; ValueCodec input output
+</span><span class="hs-identifier hs-var">named</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Expression&quot;</span></span><span> </span><span class="annot"><span class="annottext">(JSONCodec Expression -&gt; JSONCodec Expression)
+-&gt; JSONCodec Expression -&gt; JSONCodec Expression
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-69"></span><span>      </span><span class="annot"><span class="annottext">NonEmpty (TypeAlternative Expression) -&gt; JSONCodec Expression
+forall a. NonEmpty (TypeAlternative a) -&gt; JSONCodec a
+</span><a href="Autodocodec.Extended.html#sumTypeCodec"><span class="hs-identifier hs-var">sumTypeCodec</span></a></span><span>
+</span><span id="line-70"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; Text
+-&gt; Prism' Expression (ValueWrapper &quot;value&quot; Value)
+-&gt; TypeAlternative Expression
+forall b a.
+HasObjectCodec b =&gt;
+Text -&gt; Text -&gt; Prism' a b -&gt; TypeAlternative a
+</span><a href="Autodocodec.Extended.html#TypeAlternative"><span class="hs-identifier hs-var">TypeAlternative</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;LiteralExpression&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;literal&quot;</span></span><span> </span><span class="annot"><span class="annottext">Prism' Expression (ValueWrapper &quot;value&quot; Value)
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#_Literal"><span class="hs-identifier hs-var">_Literal</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-71"></span><span>          </span><span class="annot"><span class="annottext">Text
+-&gt; Text
+-&gt; Prism'
+     Expression (ValueWrapper2 &quot;expression&quot; Expression &quot;values&quot; [Value])
+-&gt; TypeAlternative Expression
+forall b a.
+HasObjectCodec b =&gt;
+Text -&gt; Text -&gt; Prism' a b -&gt; TypeAlternative a
+</span><a href="Autodocodec.Extended.html#TypeAlternative"><span class="hs-identifier hs-var">TypeAlternative</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;InExpression&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;in&quot;</span></span><span> </span><span class="annot"><span class="annottext">Prism'
+  Expression (ValueWrapper2 &quot;expression&quot; Expression &quot;values&quot; [Value])
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#_In"><span class="hs-identifier hs-var">_In</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-72"></span><span>          </span><span class="annot"><span class="annottext">Text
+-&gt; Text
+-&gt; Prism' Expression (ValueWrapper &quot;expressions&quot; [Expression])
+-&gt; TypeAlternative Expression
+forall b a.
+HasObjectCodec b =&gt;
+Text -&gt; Text -&gt; Prism' a b -&gt; TypeAlternative a
+</span><a href="Autodocodec.Extended.html#TypeAlternative"><span class="hs-identifier hs-var">TypeAlternative</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;AndExpression&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;and&quot;</span></span><span> </span><span class="annot"><span class="annottext">Prism' Expression (ValueWrapper &quot;expressions&quot; [Expression])
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#_And"><span class="hs-identifier hs-var">_And</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-73"></span><span>          </span><span class="annot"><span class="annottext">Text
+-&gt; Text
+-&gt; Prism' Expression (ValueWrapper &quot;expressions&quot; [Expression])
+-&gt; TypeAlternative Expression
+forall b a.
+HasObjectCodec b =&gt;
+Text -&gt; Text -&gt; Prism' a b -&gt; TypeAlternative a
+</span><a href="Autodocodec.Extended.html#TypeAlternative"><span class="hs-identifier hs-var">TypeAlternative</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;OrExpression&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;or&quot;</span></span><span> </span><span class="annot"><span class="annottext">Prism' Expression (ValueWrapper &quot;expressions&quot; [Expression])
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#_Or"><span class="hs-identifier hs-var">_Or</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-74"></span><span>          </span><span class="annot"><span class="annottext">Text
+-&gt; Text
+-&gt; Prism' Expression (ValueWrapper &quot;expression&quot; Expression)
+-&gt; TypeAlternative Expression
+forall b a.
+HasObjectCodec b =&gt;
+Text -&gt; Text -&gt; Prism' a b -&gt; TypeAlternative a
+</span><a href="Autodocodec.Extended.html#TypeAlternative"><span class="hs-identifier hs-var">TypeAlternative</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;NotExpression&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;not&quot;</span></span><span> </span><span class="annot"><span class="annottext">Prism' Expression (ValueWrapper &quot;expression&quot; Expression)
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#_Not"><span class="hs-identifier hs-var">_Not</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-75"></span><span>          </span><span class="annot"><span class="annottext">Text
+-&gt; Text
+-&gt; Prism' Expression (ValueWrapper &quot;expression&quot; Expression)
+-&gt; TypeAlternative Expression
+forall b a.
+HasObjectCodec b =&gt;
+Text -&gt; Text -&gt; Prism' a b -&gt; TypeAlternative a
+</span><a href="Autodocodec.Extended.html#TypeAlternative"><span class="hs-identifier hs-var">TypeAlternative</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;IsNullExpression&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;is_null&quot;</span></span><span> </span><span class="annot"><span class="annottext">Prism' Expression (ValueWrapper &quot;expression&quot; Expression)
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#_IsNull"><span class="hs-identifier hs-var">_IsNull</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-76"></span><span>          </span><span class="annot"><span class="annottext">Text
+-&gt; Text
+-&gt; Prism' Expression (ValueWrapper &quot;expression&quot; Expression)
+-&gt; TypeAlternative Expression
+forall b a.
+HasObjectCodec b =&gt;
+Text -&gt; Text -&gt; Prism' a b -&gt; TypeAlternative a
+</span><a href="Autodocodec.Extended.html#TypeAlternative"><span class="hs-identifier hs-var">TypeAlternative</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;IsNotNullExpression&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;is_not_null&quot;</span></span><span> </span><span class="annot"><span class="annottext">Prism' Expression (ValueWrapper &quot;expression&quot; Expression)
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#_IsNotNull"><span class="hs-identifier hs-var">_IsNotNull</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-77"></span><span>          </span><span class="annot"><span class="annottext">Text
+-&gt; Text
+-&gt; Prism' Expression (ValueWrapper &quot;column&quot; ColumnName)
+-&gt; TypeAlternative Expression
+forall b a.
+HasObjectCodec b =&gt;
+Text -&gt; Text -&gt; Prism' a b -&gt; TypeAlternative a
+</span><a href="Autodocodec.Extended.html#TypeAlternative"><span class="hs-identifier hs-var">TypeAlternative</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;ColumnExpression&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;column&quot;</span></span><span> </span><span class="annot"><span class="annottext">Prism' Expression (ValueWrapper &quot;column&quot; ColumnName)
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#_Column"><span class="hs-identifier hs-var">_Column</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-78"></span><span>          </span><span class="annot"><span class="annottext">Text
+-&gt; Text
+-&gt; Prism'
+     Expression (ValueWrapper2 &quot;left&quot; Expression &quot;right&quot; Expression)
+-&gt; TypeAlternative Expression
+forall b a.
+HasObjectCodec b =&gt;
+Text -&gt; Text -&gt; Prism' a b -&gt; TypeAlternative a
+</span><a href="Autodocodec.Extended.html#TypeAlternative"><span class="hs-identifier hs-var">TypeAlternative</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;EqualExpression&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;equal&quot;</span></span><span> </span><span class="annot"><span class="annottext">Prism'
+  Expression (ValueWrapper2 &quot;left&quot; Expression &quot;right&quot; Expression)
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#_Equal"><span class="hs-identifier hs-var">_Equal</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-79"></span><span>          </span><span class="annot"><span class="annottext">Text
+-&gt; Text
+-&gt; Prism'
+     Expression (ValueWrapper2 &quot;left&quot; Expression &quot;right&quot; Expression)
+-&gt; TypeAlternative Expression
+forall b a.
+HasObjectCodec b =&gt;
+Text -&gt; Text -&gt; Prism' a b -&gt; TypeAlternative a
+</span><a href="Autodocodec.Extended.html#TypeAlternative"><span class="hs-identifier hs-var">TypeAlternative</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;NotEqualExpression&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;not_equal&quot;</span></span><span> </span><span class="annot"><span class="annottext">Prism'
+  Expression (ValueWrapper2 &quot;left&quot; Expression &quot;right&quot; Expression)
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#_NotEqual"><span class="hs-identifier hs-var">_NotEqual</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-80"></span><span>          </span><span class="annot"><span class="annottext">Text
+-&gt; Text
+-&gt; Prism'
+     Expression
+     (ValueWrapper3
+        &quot;operator&quot; Operator &quot;left&quot; Expression &quot;right&quot; Expression)
+-&gt; TypeAlternative Expression
+forall b a.
+HasObjectCodec b =&gt;
+Text -&gt; Text -&gt; Prism' a b -&gt; TypeAlternative a
+</span><a href="Autodocodec.Extended.html#TypeAlternative"><span class="hs-identifier hs-var">TypeAlternative</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;ApplyOperatorExpression&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;op&quot;</span></span><span> </span><span class="annot"><span class="annottext">Prism'
+  Expression
+  (ValueWrapper3
+     &quot;operator&quot; Operator &quot;left&quot; Expression &quot;right&quot; Expression)
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#_ApplyOperator"><span class="hs-identifier hs-var">_ApplyOperator</span></a></span><span>
+</span><span id="line-81"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-82"></span><span>
+</span><span id="line-83"></span><span id="local-6989586621688371115"><span id="local-6989586621688371117"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span></span></span><span>
+</span><span id="line-84"></span><span>
+</span><span id="line-85"></span><span id="local-6989586621688371107"><span id="local-6989586621688371109"><span id="local-6989586621688371111"><span id="local-6989586621688371113"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span></span></span></span></span><span>
+</span><span id="line-86"></span><span>
+</span><span id="line-87"></span><span id="local-6989586621688371104"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToSchema</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span></span><span>
+</span><span id="line-88"></span></pre></body></html>
