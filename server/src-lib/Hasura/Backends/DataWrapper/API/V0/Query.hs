@@ -1,7 +1,13 @@
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 --
 module Hasura.Backends.DataWrapper.API.V0.Query
   ( Query (..),
     Field (..),
+    RelField (..),
     ForeignKey (..),
     PrimaryKey (..),
   )
@@ -9,8 +15,12 @@ where
 
 --------------------------------------------------------------------------------
 
-import Data.Aeson (FromJSON, ToJSON)
+import Autodocodec.Extended
+import Autodocodec.OpenAPI ()
+import Control.Lens.TH (makePrisms)
+import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.HashMap.Strict qualified as M
+import Data.OpenApi (ToSchema)
 import Hasura.Backends.DataWrapper.API.V0.Column qualified as API.V0
 import Hasura.Backends.DataWrapper.API.V0.Expression qualified as API.V0
 import Hasura.Backends.DataWrapper.API.V0.OrderBy qualified as API.V0
@@ -27,26 +37,77 @@ data Query = Query
     limit :: Maybe Int,
     offset :: Maybe Int,
     where_ :: Maybe API.V0.Expression,
-    orderBy :: [API.V0.OrderBy]
+    orderBy :: Maybe (NonEmpty API.V0.OrderBy)
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Query
+
+instance HasCodec Query where
+  codec =
+    -- named "query" $
+    object "Query" $
+      Query
+        <$> requiredField "fields" "Fields of the query" .= fields
+        <*> requiredField "from" "Source table" .= from
+        <*> optionalFieldOrNull "limit" "Optionally limit to N results" .= limit
+        <*> optionalFieldOrNull "offset" "Optionally offset from the Nth result" .= offset
+        <*> optionalFieldOrNull "where" "Optionally constrain the results to satisfy some predicate" .= where_
+        <*> optionalFieldOrNull "order_by" "Optionally order the results by the value of one or more fields" .= orderBy
+
+--------------------------------------------------------------------------------
+
+data RelField = RelField
+  { fieldMapping :: M.HashMap PrimaryKey ForeignKey,
+    query :: Query
+  }
+  deriving stock (Eq, Ord, Show, Generic, Data)
+
+instance HasObjectCodec RelField where
+  objectCodec =
+    RelField
+      <$> requiredField "field_mapping" "Mapping from local fields to remote fields" .= fieldMapping
+      <*> requiredField "query" "Relationship query" .= query
+
+--------------------------------------------------------------------------------
+
+newtype PrimaryKey = PrimaryKey {unPrimaryKey :: API.V0.ColumnName}
+  deriving stock (Data, Generic)
+  deriving newtype (Eq, Hashable, Ord, Show, ToJSONKey, FromJSONKey)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec PrimaryKey
+
+instance HasCodec PrimaryKey where
+  codec = dimapCodec PrimaryKey unPrimaryKey codec
+
+--------------------------------------------------------------------------------
+
+newtype ForeignKey = ForeignKey {unForeignKey :: API.V0.ColumnName}
+  deriving stock (Data, Generic)
+  deriving newtype (Eq, Hashable, Ord, Show)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ForeignKey
+
+instance HasCodec ForeignKey where
+  codec = dimapCodec ForeignKey unForeignKey codec
 
 --------------------------------------------------------------------------------
 
 -- | A serializable field targeted by a 'Query'.
 data Field
-  = ColumnField API.V0.ColumnName
-  | RelationshipField (M.HashMap PrimaryKey ForeignKey) Query
+  = ColumnField (ValueWrapper "column" API.V0.ColumnName)
+  | RelationshipField RelField
   deriving stock (Eq, Ord, Show, Generic, Data)
 
---------------------------------------------------------------------------------
+$(makePrisms ''Field)
 
-newtype PrimaryKey = PrimaryKey API.V0.ColumnName
-  deriving stock (Data, Generic)
-  deriving newtype (Eq, Hashable, Ord, Show, FromJSON, ToJSON)
+instance HasCodec Field where
+  codec =
+    named "Field" $
+      sumTypeCodec
+        [ TypeAlternative "ColumnField" "column" _ColumnField,
+          TypeAlternative "RelationshipField" "relationship" _RelationshipField
+        ]
 
---------------------------------------------------------------------------------
+deriving via Autodocodec Field instance FromJSON Field
 
-newtype ForeignKey = ForeignKey API.V0.ColumnName
-  deriving stock (Data, Generic)
-  deriving newtype (Eq, Hashable, Ord, Show, FromJSON, ToJSON)
+deriving via Autodocodec Field instance ToJSON Field
+
+deriving via Autodocodec Field instance ToSchema Field

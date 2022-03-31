@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE OverloadedLists #-}
 
 --
 module Hasura.Backends.DataWrapper.API.V0.OrderBy
@@ -9,9 +10,10 @@ where
 
 --------------------------------------------------------------------------------
 
+import Autodocodec.Extended
+import Autodocodec.OpenAPI ()
 import Data.Aeson (FromJSON, ToJSON)
-import Data.Aeson qualified as J
-import Data.Aeson.Casing (snakeCase)
+import Data.OpenApi (ToSchema)
 import Hasura.Backends.DataWrapper.API.V0.Column qualified as API.V0
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
@@ -24,31 +26,25 @@ data OrderBy = OrderBy
   }
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Cacheable, Hashable, NFData)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec OrderBy
 
-instance ToJSON OrderBy where
-  toJSON = J.genericToJSON J.defaultOptions
-
-instance FromJSON OrderBy where
-  parseJSON = J.genericParseJSON J.defaultOptions
+instance HasCodec OrderBy where
+  codec =
+    object "OrderBy" $
+      OrderBy
+        <$> requiredField "column" "Column to order by" .= column
+        <*> requiredField "ordering" "Ordering" .= ordering
 
 --------------------------------------------------------------------------------
 
 data OrderType
   = Ascending
   | Descending
-  deriving stock (Data, Eq, Generic, Ord, Show)
+  deriving stock (Data, Eq, Generic, Ord, Show, Enum, Bounded)
   deriving anyclass (Cacheable, Hashable, NFData)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec OrderType
 
-instance ToJSON OrderType where
-  toJSON =
-    J.genericToJSON $
-      J.defaultOptions
-        { J.constructorTagModifier = snakeCase
-        }
-
-instance FromJSON OrderType where
-  parseJSON =
-    J.genericParseJSON $
-      J.defaultOptions
-        { J.constructorTagModifier = snakeCase
-        }
+instance HasCodec OrderType where
+  codec =
+    named "OrderType" $
+      disjointStringConstCodec [(Ascending, "asc"), (Descending, "desc")]

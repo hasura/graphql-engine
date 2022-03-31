@@ -8,6 +8,7 @@ where
 
 --------------------------------------------------------------------------------
 
+import Autodocodec.Extended
 import Data.Aeson (FromJSON, ToJSON)
 import Data.HashSet qualified as S
 import Hasura.Backends.DataWrapper.API qualified as API
@@ -115,17 +116,17 @@ data Expression
 
 instance From API.Expression Expression where
   from = \case
-    API.Literal value -> Literal $ from value
-    API.In expr values -> In (from expr) (S.map from values)
-    API.And exprs -> And $ map from exprs
-    API.Or exprs -> Or $ map from exprs
-    API.Not expr -> Not $ from expr
-    API.IsNull expr -> IsNull $ from expr
-    API.IsNotNull expr -> IsNotNull $ from expr
-    API.Column name -> Column $ from name
-    API.Equal expr1 expr2 -> Equal (from expr1) (from expr2)
-    API.NotEqual expr1 expr2 -> NotEqual (from expr1) (from expr2)
-    API.ApplyOperator op expr1 expr2 -> ApplyOperator (from op) (from expr1) (from expr2)
+    API.Literal (ValueWrapper value) -> Literal $ from value
+    API.In (ValueWrapper2 expr values) -> In (from expr) (S.map from $ S.fromList values)
+    API.And (ValueWrapper exprs) -> And $ map from exprs
+    API.Or (ValueWrapper exprs) -> Or $ map from exprs
+    API.Not (ValueWrapper expr) -> Not $ from expr
+    API.IsNull (ValueWrapper expr) -> IsNull $ from expr
+    API.IsNotNull (ValueWrapper expr) -> IsNotNull $ from expr
+    API.Column (ValueWrapper name) -> Column $ from name
+    API.Equal (ValueWrapper2 expr1 expr2) -> Equal (from expr1) (from expr2)
+    API.NotEqual (ValueWrapper2 expr1 expr2) -> NotEqual (from expr1) (from expr2)
+    API.ApplyOperator (ValueWrapper3 op expr1 expr2) -> ApplyOperator (from op) (from expr1) (from expr2)
 
 --------------------------------------------------------------------------------
 

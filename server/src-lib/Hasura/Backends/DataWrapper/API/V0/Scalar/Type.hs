@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE OverloadedLists #-}
 
 --
 module Hasura.Backends.DataWrapper.API.V0.Scalar.Type
@@ -8,7 +9,10 @@ where
 
 --------------------------------------------------------------------------------
 
-import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
+import Autodocodec.Extended
+import Autodocodec.OpenAPI ()
+import Data.Aeson (FromJSON, ToJSON)
+import Data.OpenApi (ToSchema)
 import Data.Text.Extended
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
@@ -19,16 +23,18 @@ data Type
   = StringTy
   | NumberTy
   | BoolTy
-  deriving stock (Data, Eq, Generic, Ord, Show)
+  deriving stock (Data, Eq, Generic, Ord, Show, Enum, Bounded)
   deriving anyclass
     ( Cacheable,
-      FromJSON,
-      FromJSONKey,
       Hashable,
-      NFData,
-      ToJSON,
-      ToJSONKey
+      NFData
     )
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Type
+
+instance HasCodec Type where
+  codec =
+    named "Type" $
+      disjointStringConstCodec [(StringTy, "string"), (NumberTy, "number"), (BoolTy, "bool")]
 
 instance ToTxt Type where
   toTxt = tshow

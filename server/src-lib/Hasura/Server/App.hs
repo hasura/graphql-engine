@@ -40,6 +40,7 @@ import Data.Text.Extended
 import Data.Text.Lazy qualified as LT
 import Data.Text.Lazy.Encoding qualified as TL
 import GHC.Stats.Extended qualified as RTS
+import Hasura.Backends.DataWrapper.Agent.Schema (openApiSchema)
 import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -1036,6 +1037,11 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
           onlyAdmin
           respJ <- liftIO $ ES.dumpSubscriptionsState True $ scSubscriptionState serverCtx
           return (emptyHttpLogMetadata @m, JSONResp $ HttpResponse (encJFromJValue respJ) [])
+    Spock.get "dev/gdw/schema" $
+      spockAction encodeQErr id $
+        mkGetHandler $ do
+          onlyAdmin
+          return (emptyHttpLogMetadata @m, JSONResp $ HttpResponse (encJFromJValue openApiSchema) [])
   Spock.get "api/swagger/json" $
     spockAction encodeQErr id $
       mkGetHandler $ do
