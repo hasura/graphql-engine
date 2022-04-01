@@ -111,24 +111,6 @@ describe('using the mutation in server mode', () => {
     });
   });
 
-  it('should return an error when `` is passed to source', async () => {
-    const { result, waitFor } = renderHook(() => useMetadataMigration(), {
-      wrapper,
-    });
-
-    result.current.mutate({
-      source: '',
-      query: {
-        type: 'pg_create_remote_relationship',
-        args: {},
-      },
-      migrationName: '',
-    });
-
-    await waitFor(() => result.current.isError);
-    expect(result.current?.error?.message).toBe('source cannot be empty');
-  });
-
   it('should call the /v1/metadata when console is running in server mode', async () => {
     const { result, waitFor } = renderHook(() => useMetadataMigration(), {
       wrapper,

@@ -7,3 +7,13 @@ export const tables = {
     ],
   ],
 };
+
+export const tableColumnsResult = {
+  result_type: 'TuplesOk',
+  result: [
+    ['database', 'table_schema', 'table_name', 'column_name', 'data_type'],
+    ['chinook', 'public', 'Album', 'AlbumId', 'integer'],
+    ['chinook', 'public', 'Album', 'Title', 'character varying'],
+    ['chinook', 'public', 'Album', 'ArtistId', 'integer'],
+  ],
+};

@@ -1,5 +1,6 @@
 import React, { ReactText } from 'react';
 import get from 'lodash.get';
+import clsx from 'clsx';
 import { FieldError, useFormContext } from 'react-hook-form';
 import { FieldWrapper, FieldWrapperPassThroughProps } from './FieldWrapper';
 
@@ -14,6 +15,7 @@ export type SelectProps = FieldWrapperPassThroughProps & {
   options: SelectItem[];
   placeholder?: string;
   disabled?: boolean;
+  value?: string;
 };
 
 export const Select: React.VFC<SelectProps> = ({
@@ -21,6 +23,7 @@ export const Select: React.VFC<SelectProps> = ({
   placeholder,
   name,
   disabled = false,
+  value: val,
   ...wrapperProps
 }: SelectProps) => {
   const {
@@ -33,14 +36,16 @@ export const Select: React.VFC<SelectProps> = ({
   return (
     <FieldWrapper id={name} {...wrapperProps} error={maybeError}>
       <select
-        id={name}
-        className={`block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400 ${
+        className={clsx(
+          'block w-full max-w-xl h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400',
           disabled
             ? 'cursor-not-allowed bg-gray-100 border-gray-100'
             : 'hover:border-gray-400'
-        }`}
+        )}
         disabled={disabled}
+        value={val}
         {...register(name)}
+        id={name}
       >
         {placeholder ? (
           <option disabled value="">
