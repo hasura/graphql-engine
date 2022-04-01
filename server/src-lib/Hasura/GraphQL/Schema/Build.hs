@@ -106,7 +106,7 @@ buildTableInsertMutationFields ::
   TableName b ->
   TableInfo b ->
   G.Name ->
-  m [FieldParser n (AnnInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+  m [FieldParser n (AnnotatedInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 buildTableInsertMutationFields backendInsertAction scenario sourceName tableName tableInfo gqlName = do
   insertName <- mkRootFieldName . fromMaybe ($$(G.litName "insert_") <> gqlName) $ _crfName _tcrfInsert
   insertOneName <- mkRootFieldName . fromMaybe ($$(G.litName "insert_") <> gqlName <> $$(G.litName "_one")) $ _crfName _tcrfInsertOne

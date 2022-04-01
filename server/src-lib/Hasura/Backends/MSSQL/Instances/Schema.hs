@@ -205,7 +205,7 @@ msMkRelationshipParser ::
   MonadBuildSchema 'MSSQL r m n =>
   SourceName ->
   RelInfo 'MSSQL ->
-  m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsert 'MSSQL (UnpreparedValue 'MSSQL)))))
+  m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField 'MSSQL (UnpreparedValue 'MSSQL)))))
 msMkRelationshipParser _sourceName _relationshipInfo = do
   -- When we support nested inserts, we also need to ensure we limit ourselves
   -- to inserting into tables whch supports inserts:

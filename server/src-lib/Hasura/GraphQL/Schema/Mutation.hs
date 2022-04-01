@@ -58,7 +58,7 @@ insertIntoTable ::
   G.Name ->
   -- | field description, if any
   Maybe G.Description ->
-  m (Maybe (FieldParser n (IR.AnnInsert b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+  m (Maybe (FieldParser n (IR.AnnotatedInsert b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 insertIntoTable backendInsertAction scenario sourceName tableInfo fieldName description = runMaybeT $ do
   let viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsInsertable viewInfo
@@ -78,7 +78,7 @@ insertIntoTable backendInsertAction scenario sourceName tableInfo fieldName desc
           pure $ mkInsertObject objects tableInfo backendInsert insertPerms updatePerms
     pure $
       P.subselection fieldName description argsParser selectionParser
-        <&> \(insertObject, output) -> IR.AnnInsert (G.unName fieldName) False insertObject (IR.MOutMultirowFields output)
+        <&> \(insertObject, output) -> IR.AnnotatedInsert (G.unName fieldName) False insertObject (IR.MOutMultirowFields output)
   where
     mkObjectsArg objectParser =
       P.field
@@ -104,7 +104,7 @@ insertOneIntoTable ::
   G.Name ->
   -- | field description, if any
   Maybe G.Description ->
-  m (Maybe (FieldParser n (IR.AnnInsert b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+  m (Maybe (FieldParser n (IR.AnnotatedInsert b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 insertOneIntoTable backendInsertAction scenario sourceName tableInfo fieldName description = runMaybeT do
   let viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsInsertable viewInfo
@@ -122,7 +122,7 @@ insertOneIntoTable backendInsertAction scenario sourceName tableInfo fieldName d
           pure $ mkInsertObject [object] tableInfo backendInsert insertPerms updatePerms
     pure $
       P.subselection fieldName description argsParser selectionParser
-        <&> \(insertObject, output) -> IR.AnnInsert (G.unName fieldName) True insertObject (IR.MOutSinglerowObject output)
+        <&> \(insertObject, output) -> IR.AnnotatedInsert (G.unName fieldName) True insertObject (IR.MOutSinglerowObject output)
   where
     mkObjectArg objectParser =
       P.field
@@ -170,13 +170,13 @@ tableFieldsInput sourceName tableInfo =
     -- function does the necessary transformations to coalesce all of this in
     -- one 'InputFieldsParser'.
     coalesceFields ::
-      [Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsert b (UnpreparedValue b))))] ->
+      [Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (UnpreparedValue b))))] ->
       InputFieldsParser n (IR.AnnotatedInsertRow b (UnpreparedValue b))
     coalesceFields = fmap catMaybes . sequenceA . catMaybes
 
     mkFieldParser ::
       FieldInfo b ->
-      m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsert b (UnpreparedValue b)))))
+      m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (UnpreparedValue b)))))
     mkFieldParser = \case
       FIComputedField _ -> pure Nothing
       FIRemoteRelationship _ -> pure Nothing
@@ -188,7 +188,7 @@ tableFieldsInput sourceName tableInfo =
 
     mkColumnParser ::
       ColumnInfo b ->
-      m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsert b (UnpreparedValue b)))))
+      m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (UnpreparedValue b)))))
     mkColumnParser columnInfo = runMaybeT $ do
       insertPerms <- MaybeT $ (_permIns =<<) <$> tablePermissions tableInfo
       let columnName = ciName columnInfo
@@ -207,7 +207,7 @@ mkDefaultRelationshipParser ::
   XNestedInserts b ->
   SourceName ->
   RelInfo b ->
-  m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsert b (UnpreparedValue b)))))
+  m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (UnpreparedValue b)))))
 mkDefaultRelationshipParser backendInsertAction xNestedInserts sourceName relationshipInfo = runMaybeT do
   let otherTableName = riRTable relationshipInfo
       relName = riName relationshipInfo
@@ -219,14 +219,14 @@ mkDefaultRelationshipParser backendInsertAction xNestedInserts sourceName relati
       pure $
         P.fieldOptional relFieldName Nothing (P.nullable parser) <&> \objRelIns -> do
           rel <- join objRelIns
-          Just $ IR.AIObjectRelationship xNestedInserts $ IR.RelIns rel relationshipInfo
+          Just $ IR.AIObjectRelationship xNestedInserts $ IR.RelationInsert rel relationshipInfo
     ArrRel -> do
       parser <- MaybeT $ arrayRelationshipInput backendInsertAction sourceName otherTableInfo
       pure $
         P.fieldOptional relFieldName Nothing (P.nullable parser) <&> \arrRelIns -> do
           rel <- join arrRelIns
-          guard $ not $ null $ IR._aiInsObj rel
-          Just $ IR.AIArrayRelationship xNestedInserts $ IR.RelIns rel relationshipInfo
+          guard $ not $ null $ IR._aiInsertObject rel
+          Just $ IR.AIArrayRelationship xNestedInserts $ IR.RelationInsert rel relationshipInfo
 
 -- | Construct the parser for an input object that represents an insert through
 -- an object relationship.
@@ -241,7 +241,7 @@ objectRelationshipInput ::
   (SourceName -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) ->
   SourceName ->
   TableInfo b ->
-  m (Maybe (Parser 'Input n (IR.SingleObjIns b (UnpreparedValue b))))
+  m (Maybe (Parser 'Input n (IR.SingleObjectInsert b (UnpreparedValue b))))
 objectRelationshipInput backendInsertAction sourceName tableInfo = runMaybeT $ do
   insertPerms <- MaybeT $ (_permIns =<<) <$> tablePermissions tableInfo
   lift $ memoizeOn 'objectRelationshipInput (sourceName, tableName) do
@@ -274,7 +274,7 @@ arrayRelationshipInput ::
   (SourceName -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) ->
   SourceName ->
   TableInfo b ->
-  m (Maybe (Parser 'Input n (IR.MultiObjIns b (UnpreparedValue b))))
+  m (Maybe (Parser 'Input n (IR.MultiObjectInsert b (UnpreparedValue b))))
 arrayRelationshipInput backendInsertAction sourceName tableInfo = runMaybeT $ do
   insertPerms <- MaybeT $ (_permIns =<<) <$> tablePermissions tableInfo
   lift $ memoizeOn 'arrayRelationshipInput (sourceName, tableName) do
@@ -303,14 +303,14 @@ mkInsertObject ::
   BackendInsert b (UnpreparedValue b) ->
   InsPermInfo b ->
   Maybe (UpdPermInfo b) ->
-  IR.AnnIns b f (UnpreparedValue b)
+  IR.AnnotatedInsertData b f (UnpreparedValue b)
 mkInsertObject objects tableInfo backendInsert insertPerms updatePerms =
-  IR.AnnIns
-    { _aiInsObj = objects,
+  IR.AnnotatedInsertData
+    { _aiInsertObject = objects,
       _aiTableName = table,
-      _aiCheckCond = (insertCheck, updateCheck),
-      _aiTableCols = columns,
-      _aiDefVals = defaultValues,
+      _aiCheckCondition = (insertCheck, updateCheck),
+      _aiTableColumns = columns,
+      _aiDefaultValues = defaultValues,
       _aiBackendInsert = backendInsert
     }
   where

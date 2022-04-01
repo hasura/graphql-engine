@@ -109,7 +109,7 @@ class
     TableName b ->
     TableInfo b ->
     G.Name ->
-    m [FieldParser n (AnnInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+    m [FieldParser n (AnnotatedInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   -- | This method is responsible for building the GraphQL Schema for mutations
   -- backed by @UPDATE@ statements on some table, as described in
@@ -175,7 +175,7 @@ class
     MonadBuildSchema b r m n =>
     SourceName ->
     RelInfo b ->
-    m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsert b (UnpreparedValue b)))))
+    m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (UnpreparedValue b)))))
   mkRelationshipParser _ _ = pure Nothing
 
   -- backend extensions
