@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
+import { FaPlug } from 'react-icons/fa';
 
-import { Select } from '@/new-components/Form';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { useRemoteSchema } from '@/features/MetadataAPI';
 import { RemoteRelationship } from '@/metadata/types';
@@ -13,18 +13,17 @@ import {
 } from '../RemoteSchemaTree';
 
 import {
-  HasuraColumn,
+  HasuraRsFields,
   AllowedRootFields,
   RelationshipFields,
 } from '../../types';
 
 export interface RemoteSchemaWidgetProps {
-  type: 'from' | 'to';
-  schemaList: string[];
+  schemaName: string;
   /**
    * Columns array from the current table.
    */
-  columns: HasuraColumn;
+  fields: HasuraRsFields;
   /**
    * Remote relationship object from server, for already present permissions.
    * This will be parsed and tree will be populated accordingly
@@ -33,21 +32,17 @@ export interface RemoteSchemaWidgetProps {
   rootFields?: AllowedRootFields;
 }
 
+const resultSet = 'resultSet';
+
 export const RemoteSchemaWidget = ({
-  type,
-  schemaList,
-  columns,
+  schemaName,
+  fields,
   serverRelationship,
   rootFields = ['query'],
 }: RemoteSchemaWidgetProps) => {
-  const name = type === 'from' ? 'From' : 'To';
-  const schemaName = `remoteSchema${name}`;
-  const resultSet = `resultSet${name}`;
-
   const { fetchSchema, data, isLoading, isError } = useRemoteSchema();
 
   const { setValue, watch } = useFormContext();
-  const schemaNameValue = watch(schemaName);
   const resultSetValue = watch(resultSet);
 
   const [relationshipFields, setRelationshipFields] = useState<
@@ -56,36 +51,25 @@ export const RemoteSchemaWidget = ({
 
   useEffect(() => {
     if (serverRelationship) {
-      setValue(schemaName, serverRelationship.name);
       setRelationshipFields(parseServerRelationship(serverRelationship));
     }
-  }, [serverRelationship, setValue, schemaName]);
+  }, [serverRelationship, setValue]);
 
   useEffect(() => {
     const value = buildServerRemoteFieldObject(relationshipFields);
     const jsonValue = JSON.stringify(value ?? '');
-    setValue(`resultSet${name}`, jsonValue);
-  }, [relationshipFields, setValue, name]);
+    setValue('resultSet', jsonValue);
+  }, [relationshipFields, setValue]);
 
   useEffect(() => {
-    if (schemaNameValue) {
-      fetchSchema(schemaNameValue);
+    if (schemaName) {
+      fetchSchema(schemaName);
     }
-  }, [fetchSchema, schemaNameValue]);
+  }, [fetchSchema, schemaName]);
 
   return (
     <div className="grid gap-4 border border-gray-300 rounded shadow-sm p-4 bg-gray-50">
-      <div className="grid gap-4 w-96">
-        <Select
-          label="Remote Schema"
-          disabled={type === 'from'}
-          name={`remoteSchema${name}`}
-          placeholder="Select remote schema"
-          options={schemaList.map(value => ({
-            label: value,
-            value,
-          }))}
-        />
+      <div className="grid gap-4 w-full">
         <label className="block ">
           <span className="text-gray-600 mb-xs font-semibold">Result Set</span>
           <input
@@ -100,19 +84,26 @@ export const RemoteSchemaWidget = ({
 
       {isLoading && <div>Loading...</div>}
 
-      {data && (
-        <RemoteSchemaTree
-          schema={data}
-          relationshipFields={relationshipFields}
-          setRelationshipFields={setRelationshipFields}
-          columns={columns}
-          rootFields={rootFields}
-        />
-      )}
+      <div className="py-2 px-1 rounded-md border border-gray-300 bg-white">
+        <p className="flex gap-2 items-center font-semibold p-2 m-0">
+          <FaPlug />
+          {schemaName}
+        </p>
+
+        {data && (
+          <RemoteSchemaTree
+            schema={data}
+            relationshipFields={relationshipFields}
+            setRelationshipFields={setRelationshipFields}
+            fields={fields}
+            rootFields={rootFields}
+          />
+        )}
+      </div>
 
       {isError && (
         <IndicatorCard status="negative">
-          Error loading remote schemas
+          Error loading remote schema
         </IndicatorCard>
       )}
     </div>

@@ -31,8 +31,9 @@ export const Select: React.VFC<SelectProps> = ({
   const maybeError = get(errors, name) as FieldError | undefined;
 
   return (
-    <FieldWrapper {...wrapperProps} error={maybeError}>
+    <FieldWrapper id={name} {...wrapperProps} error={maybeError}>
       <select
+        id={name}
         className={`block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400 ${
           disabled
             ? 'cursor-not-allowed bg-gray-100 border-gray-100'

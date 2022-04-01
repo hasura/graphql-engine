@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArgValueForm } from './ArgValueForm';
-import { RelationshipFields, ArgValue, HasuraColumn } from '../../../types';
+import { RelationshipFields, ArgValue, HasuraRsFields } from '../../../types';
 
 type ArgFieldTitleProps = {
   title: string;
@@ -11,7 +11,7 @@ type ArgFieldTitleProps = {
   >;
   showForm: boolean;
   argValue: ArgValue;
-  columns: HasuraColumn;
+  fields: HasuraRsFields;
 };
 
 const titleStyles =
@@ -24,7 +24,7 @@ export const ArgFieldTitle = ({
   setRelationshipFields,
   showForm,
   argValue,
-  columns,
+  fields,
 }: ArgFieldTitleProps) => {
   return showForm ? (
     <>
@@ -34,7 +34,7 @@ export const ArgFieldTitle = ({
         relationshipFields={relationshipFields}
         setRelationshipFields={setRelationshipFields}
         argValue={argValue}
-        columns={columns}
+        fields={fields}
       />
     </>
   ) : (

@@ -32,6 +32,7 @@ export const handlers = (url = baseUrl) => [
 
     return res(ctx.json([{ message: 'success' }]));
   }),
+
   rest.post(`${url}/v2/query`, (req, res, ctx) => {
     const body = req.body as Record<string, any>;
     if (body?.args?.sql.includes('multi_table')) {
