@@ -35,5 +35,3 @@ CREATE OR REPLACE function hdb_catalog.#{qualifiedTriggerName}() RETURNS trigger
     RETURN NULL;
   END;
 $$;
-DROP TRIGGER IF EXISTS #{qualifiedTriggerName} ON #{qualifiedTable};
-CREATE TRIGGER #{qualifiedTriggerName} AFTER #{operation} ON #{qualifiedTable} FOR EACH ROW EXECUTE PROCEDURE hdb_catalog.#{qualifiedTriggerName}();
