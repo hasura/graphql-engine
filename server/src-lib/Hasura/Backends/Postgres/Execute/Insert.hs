@@ -45,13 +45,13 @@ convertToSQLTransaction ::
     PostgresAnnotatedFieldJSON pgKind,
     MonadReader QueryTagsComment m
   ) =>
-  IR.AnnInsert ('Postgres pgKind) Void PG.SQLExp ->
+  IR.AnnotatedInsert ('Postgres pgKind) Void PG.SQLExp ->
   UserInfo ->
   Seq.Seq Q.PrepArg ->
   StringifyNumbers ->
   m EncJSON
-convertToSQLTransaction (IR.AnnInsert fieldName isSingle annIns mutationOutput) userInfo planVars stringifyNum =
-  if null $ IR._aiInsObj annIns
+convertToSQLTransaction (IR.AnnotatedInsert fieldName isSingle annIns mutationOutput) userInfo planVars stringifyNum =
+  if null $ IR._aiInsertObject annIns
     then pure $ IR.buildEmptyMutResp mutationOutput
     else
       withPaths ["selectionSet", fieldName, "args", suffix] $
@@ -69,7 +69,7 @@ insertMultipleObjects ::
     PostgresAnnotatedFieldJSON pgKind,
     MonadReader QueryTagsComment m
   ) =>
-  IR.MultiObjIns ('Postgres pgKind) PG.SQLExp ->
+  IR.MultiObjectInsert ('Postgres pgKind) PG.SQLExp ->
   [(PGCol, PG.SQLExp)] ->
   UserInfo ->
   IR.MutationOutput ('Postgres pgKind) ->
@@ -79,7 +79,7 @@ insertMultipleObjects ::
 insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput planVars stringifyNum =
   bool withoutRelsInsert withRelsInsert anyRelsToInsert
   where
-    IR.AnnIns insObjs table checkCondition columnInfos defVals (BackendInsert conflictClause) = multiObjIns
+    IR.AnnotatedInsertData insObjs table checkCondition columnInfos defVals (BackendInsert conflictClause) = multiObjIns
     allInsObjRels = concatMap IR.getInsertObjectRelationships insObjs
     allInsArrRels = concatMap IR.getInsertArrayRelationships insObjs
     anyRelsToInsert = not $ null allInsArrRels && null allInsObjRels
@@ -98,14 +98,14 @@ insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput plan
               checkCondition
               mutationOutput
               columnInfos
-          rowCount = tshow . length $ IR._aiInsObj multiObjIns
+          rowCount = tshow . length $ IR._aiInsertObject multiObjIns
       Tracing.trace ("Insert (" <> rowCount <> ") " <> qualifiedObjectToText table) do
         Tracing.attachMetadata [("count", rowCount)]
         PGE.execInsertQuery stringifyNum userInfo (insertQuery, planVars)
 
     withRelsInsert = do
       insertRequests <- indexedForM insObjs \obj -> do
-        let singleObj = IR.AnnIns (IR.Single obj) table checkCondition columnInfos defVals (BackendInsert conflictClause)
+        let singleObj = IR.AnnotatedInsertData (IR.Single obj) table checkCondition columnInfos defVals (BackendInsert conflictClause)
         insertObject singleObj additionalColumns userInfo planVars stringifyNum
       let affectedRows = sum $ map fst insertRequests
           columnValues = mapMaybe snd insertRequests
@@ -128,14 +128,14 @@ insertObject ::
     PostgresAnnotatedFieldJSON pgKind,
     MonadReader QueryTagsComment m
   ) =>
-  IR.SingleObjIns ('Postgres pgKind) PG.SQLExp ->
+  IR.SingleObjectInsert ('Postgres pgKind) PG.SQLExp ->
   [(PGCol, PG.SQLExp)] ->
   UserInfo ->
   Seq.Seq Q.PrepArg ->
   StringifyNumbers ->
   m (Int, Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal))
 insertObject singleObjIns additionalColumns userInfo planVars stringifyNum = Tracing.trace ("Insert " <> qualifiedObjectToText table) do
-  validateInsert (map fst columns) (map IR._riRelInfo objectRels) (map fst additionalColumns)
+  validateInsert (map fst columns) (map IR._riRelationInfo objectRels) (map fst additionalColumns)
 
   -- insert all object relations and fetch this insert dependent column values
   objInsRes <- forM beforeInsert $ insertObjRel planVars userInfo stringifyNum
@@ -157,28 +157,28 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum = Tra
 
   return (totAffRows, colValM)
   where
-    IR.AnnIns (IR.Single annObj) table checkCond allColumns defaultValues (BackendInsert onConflict) = singleObjIns
+    IR.AnnotatedInsertData (IR.Single annObj) table checkCond allColumns defaultValues (BackendInsert onConflict) = singleObjIns
     columns = IR.getInsertColumns annObj
     objectRels = IR.getInsertObjectRelationships annObj
     arrayRels = IR.getInsertArrayRelationships annObj
 
-    afterInsert, beforeInsert :: [IR.ObjRelIns ('Postgres pgKind) PG.SQLExp]
+    afterInsert, beforeInsert :: [IR.ObjectRelationInsert ('Postgres pgKind) PG.SQLExp]
     (afterInsert, beforeInsert) =
-      L.partition ((== AfterParent) . riInsertOrder . IR._riRelInfo) objectRels
+      L.partition ((== AfterParent) . riInsertOrder . IR._riRelationInfo) objectRels
 
-    allAfterInsertRels :: [IR.ArrRelIns ('Postgres pgKind) PG.SQLExp]
+    allAfterInsertRels :: [IR.ArrayRelationInsert ('Postgres pgKind) PG.SQLExp]
     allAfterInsertRels = arrayRels <> map objToArr afterInsert
 
     afterInsertDepCols :: [ColumnInfo ('Postgres pgKind)]
     afterInsertDepCols =
       flip (getColInfos @('Postgres pgKind)) allColumns $
-        concatMap (Map.keys . riMapping . IR._riRelInfo) allAfterInsertRels
+        concatMap (Map.keys . riMapping . IR._riRelationInfo) allAfterInsertRels
 
-    objToArr :: forall a b. IR.ObjRelIns b a -> IR.ArrRelIns b a
-    objToArr IR.RelIns {..} = IR.RelIns (singleToMulti _riAnnIns) _riRelInfo
+    objToArr :: forall a b. IR.ObjectRelationInsert b a -> IR.ArrayRelationInsert b a
+    objToArr IR.RelationInsert {..} = IR.RelationInsert (singleToMulti _riInsertData) _riRelationInfo
 
-    singleToMulti :: forall a b. IR.SingleObjIns b a -> IR.MultiObjIns b a
-    singleToMulti annIns = annIns {IR._aiInsObj = [IR.unSingle $ IR._aiInsObj annIns]}
+    singleToMulti :: forall a b. IR.SingleObjectInsert b a -> IR.MultiObjectInsert b a
+    singleToMulti annIns = annIns {IR._aiInsertObject = [IR.unSingle $ IR._aiInsertObject annIns]}
 
     withArrRels ::
       Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal) ->
@@ -216,7 +216,7 @@ insertObjRel ::
   Seq.Seq Q.PrepArg ->
   UserInfo ->
   StringifyNumbers ->
-  IR.ObjRelIns ('Postgres pgKind) PG.SQLExp ->
+  IR.ObjectRelationInsert ('Postgres pgKind) PG.SQLExp ->
   m (Int, [(PGCol, PG.SQLExp)])
 insertObjRel planVars userInfo stringifyNum objRelIns =
   withPathK (relNameToTxt relName) $ do
@@ -228,11 +228,11 @@ insertObjRel planVars userInfo stringifyNum objRelIns =
           Just (column, value)
     pure (affRows, columns)
   where
-    IR.RelIns singleObjIns relInfo = objRelIns
+    IR.RelationInsert singleObjIns relInfo = objRelIns
     relName = riName relInfo
     table = riRTable relInfo
     mapCols = riMapping relInfo
-    allCols = IR._aiTableCols singleObjIns
+    allCols = IR._aiTableColumns singleObjIns
     rCols = Map.elems mapCols
     rColInfos = getColInfos rCols allCols
     errMsg =
@@ -252,7 +252,7 @@ insertArrRel ::
   UserInfo ->
   Seq.Seq Q.PrepArg ->
   StringifyNumbers ->
-  IR.ArrRelIns ('Postgres pgKind) PG.SQLExp ->
+  IR.ArrayRelationInsert ('Postgres pgKind) PG.SQLExp ->
   m Int
 insertArrRel resCols userInfo planVars stringifyNum arrRelIns =
   withPathK (relNameToTxt $ riName relInfo) $ do
@@ -266,7 +266,7 @@ insertArrRel resCols userInfo planVars stringifyNum arrRelIns =
     onNothing (Map.lookup ("affected_rows" :: Text) resObj) $
       throw500 "affected_rows not returned in array rel insert"
   where
-    IR.RelIns multiObjIns relInfo = arrRelIns
+    IR.RelationInsert multiObjIns relInfo = arrRelIns
     mapping = riMapping relInfo
     mutOutput = IR.MOutMultirowFields [("affected_rows", IR.MCount)]
 

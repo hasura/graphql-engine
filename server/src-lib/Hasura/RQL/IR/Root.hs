@@ -42,7 +42,7 @@ data RootField (db :: BackendType -> Type) remote action raw where
   RFRaw :: raw -> RootField db remote action raw
 
 data MutationDB (b :: BackendType) (r :: Type) v
-  = MDBInsert (AnnInsert b r v)
+  = MDBInsert (AnnotatedInsert b r v)
   | MDBUpdate (AnnotatedUpdateG b r v)
   | MDBDelete (AnnDelG b r v)
   | -- | This represents a VOLATILE function, and is AnnSimpleSelG for easy
