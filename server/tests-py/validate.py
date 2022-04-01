@@ -270,7 +270,7 @@ def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=Fals
     print(ws_client.ws_url)
     if not headers or len(headers) == 0:
         ws_client.init({})
-    
+
     if ws_client.remote_closed or ws_client.is_closing:
         ws_client.create_conn()
         if not headers or len(headers) == 0 or hge_ctx.hge_key is None:
