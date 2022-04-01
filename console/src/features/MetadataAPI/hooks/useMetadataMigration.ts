@@ -35,8 +35,6 @@ export function useMetadataMigration(
       try {
         const { source, query, migrationName } = props;
 
-        if (!source) throw Error('source cannot be empty');
-
         const migrateUrl = returnMigrateUrl(migrationMode ?? false, [query]);
 
         let body = {};

@@ -58,8 +58,8 @@ export const RemoteDatabaseWidget = () => {
   }
 
   return (
-    <div className="rounded bg-gray-50 border border-gray-300 p-md">
-      <div className="grid grid-cols-2 gap-3 mb-md">
+    <div className="bg-gray-50 col-span-5 rounded p-md border border-gray-300 border-l-4 border-l-indigo-600">
+      <div className="mb-sm">
         <Select
           label="Reference Database"
           name="database"
@@ -68,25 +68,23 @@ export const RemoteDatabaseWidget = () => {
           labelIcon={<FaDatabase />}
         />
       </div>
-      <div className="grid grid-cols-2 gap-3 mb-md">
-        <div>
-          <Select
-            label="Reference Schema"
-            name="schema"
-            placeholder="Select a schema"
-            options={schemaOptions}
-            labelIcon={<FaFolder />}
-          />
-        </div>
-        <div>
-          <Select
-            label="Reference Table"
-            name="table"
-            placeholder="Select a table"
-            options={tableOptions}
-            labelIcon={<FaTable />}
-          />
-        </div>
+      <div className="mb-sm">
+        <Select
+          label="Reference Schema"
+          name="schema"
+          placeholder="Select a schema"
+          options={schemaOptions}
+          labelIcon={<FaFolder />}
+        />
+      </div>
+      <div className="mb-sm">
+        <Select
+          label="Reference Table"
+          name="table"
+          placeholder="Select a table"
+          options={tableOptions}
+          labelIcon={<FaTable />}
+        />
       </div>
     </div>
   );

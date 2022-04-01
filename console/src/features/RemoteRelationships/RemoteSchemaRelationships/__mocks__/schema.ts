@@ -2,159 +2,18 @@ export const schema = {
   data: {
     __schema: {
       queryType: {
-        name: 'query_root',
+        name: 'Query',
       },
-      mutationType: {
-        name: 'mutation_root',
-      },
-      subscriptionType: {
-        name: 'subscription_root',
-      },
+      mutationType: null,
+      subscriptionType: null,
       types: [
         {
           kind: 'SCALAR',
           name: 'Boolean',
-          description: null,
-          fields: null,
-          inputFields: null,
-          interfaces: null,
-          enumValues: null,
-          possibleTypes: null,
-        },
-        {
-          kind: 'SCALAR',
-          name: 'Float',
-          description: null,
-          fields: null,
-          inputFields: null,
-          interfaces: null,
-          enumValues: null,
-          possibleTypes: null,
-        },
-        {
-          kind: 'SCALAR',
-          name: 'Int',
-          description: null,
-          fields: null,
-          inputFields: null,
-          interfaces: null,
-          enumValues: null,
-          possibleTypes: null,
-        },
-        {
-          kind: 'INPUT_OBJECT',
-          name: 'Int_comparison_exp',
           description:
-            'Boolean expression to compare columns of type "Int". All fields are combined with logical \'AND\'.',
+            'The `Boolean` scalar type represents `true` or `false`.',
           fields: null,
-          inputFields: [
-            {
-              name: '_eq',
-              description: null,
-              type: {
-                kind: 'SCALAR',
-                name: 'Int',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: '_gt',
-              description: null,
-              type: {
-                kind: 'SCALAR',
-                name: 'Int',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: '_gte',
-              description: null,
-              type: {
-                kind: 'SCALAR',
-                name: 'Int',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: '_in',
-              description: null,
-              type: {
-                kind: 'LIST',
-                name: null,
-                ofType: {
-                  kind: 'NON_NULL',
-                  name: null,
-                  ofType: {
-                    kind: 'SCALAR',
-                    name: 'Int',
-                    ofType: null,
-                  },
-                },
-              },
-              defaultValue: null,
-            },
-            {
-              name: '_is_null',
-              description: null,
-              type: {
-                kind: 'SCALAR',
-                name: 'Boolean',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: '_lt',
-              description: null,
-              type: {
-                kind: 'SCALAR',
-                name: 'Int',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: '_lte',
-              description: null,
-              type: {
-                kind: 'SCALAR',
-                name: 'Int',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: '_neq',
-              description: null,
-              type: {
-                kind: 'SCALAR',
-                name: 'Int',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: '_nin',
-              description: null,
-              type: {
-                kind: 'LIST',
-                name: null,
-                ofType: {
-                  kind: 'NON_NULL',
-                  name: null,
-                  ofType: {
-                    kind: 'SCALAR',
-                    name: 'Int',
-                    ofType: null,
-                  },
-                },
-              },
-              defaultValue: null,
-            },
-          ],
+          inputFields: null,
           interfaces: null,
           enumValues: null,
           possibleTypes: null,
@@ -162,230 +21,562 @@ export const schema = {
         {
           kind: 'SCALAR',
           name: 'String',
-          description: null,
+          description:
+            'The `String` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.',
           fields: null,
           inputFields: null,
+          interfaces: null,
+          enumValues: null,
+          possibleTypes: null,
+        },
+        {
+          kind: 'OBJECT',
+          name: 'Country',
+          description: null,
+          fields: [
+            {
+              name: 'code',
+              description: null,
+              args: [],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'SCALAR',
+                  name: 'ID',
+                  ofType: null,
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'name',
+              description: null,
+              args: [],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'SCALAR',
+                  name: 'String',
+                  ofType: null,
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'native',
+              description: null,
+              args: [],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'SCALAR',
+                  name: 'String',
+                  ofType: null,
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'phone',
+              description: null,
+              args: [],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'SCALAR',
+                  name: 'String',
+                  ofType: null,
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'continent',
+              description: null,
+              args: [],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'OBJECT',
+                  name: 'Continent',
+                  ofType: null,
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'capital',
+              description: null,
+              args: [],
+              type: {
+                kind: 'SCALAR',
+                name: 'String',
+                ofType: null,
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'currency',
+              description: null,
+              args: [],
+              type: {
+                kind: 'SCALAR',
+                name: 'String',
+                ofType: null,
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'languages',
+              description: null,
+              args: [],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'OBJECT',
+                      name: 'Language',
+                      ofType: null,
+                    },
+                  },
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'emoji',
+              description: null,
+              args: [],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'SCALAR',
+                  name: 'String',
+                  ofType: null,
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'emojiU',
+              description: null,
+              args: [],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'SCALAR',
+                  name: 'String',
+                  ofType: null,
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'states',
+              description: null,
+              args: [],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'OBJECT',
+                      name: 'State',
+                      ofType: null,
+                    },
+                  },
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+          ],
+          inputFields: null,
+          interfaces: [],
+          enumValues: null,
+          possibleTypes: null,
+        },
+        {
+          kind: 'SCALAR',
+          name: 'ID',
+          description:
+            'The `ID` scalar type represents a unique identifier, often used to refetch an object or as key for a cache. The ID type appears in a JSON response as a String; however, it is not intended to be human-readable. When expected as an input type, any string (such as `"4"`) or integer (such as `4`) input value will be accepted as an ID.',
+          fields: null,
+          inputFields: null,
+          interfaces: null,
+          enumValues: null,
+          possibleTypes: null,
+        },
+        {
+          kind: 'OBJECT',
+          name: 'Continent',
+          description: null,
+          fields: [
+            {
+              name: 'code',
+              description: null,
+              args: [],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'SCALAR',
+                  name: 'ID',
+                  ofType: null,
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'name',
+              description: null,
+              args: [],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'SCALAR',
+                  name: 'String',
+                  ofType: null,
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'countries',
+              description: null,
+              args: [],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'OBJECT',
+                      name: 'Country',
+                      ofType: null,
+                    },
+                  },
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+          ],
+          inputFields: null,
+          interfaces: [],
+          enumValues: null,
+          possibleTypes: null,
+        },
+        {
+          kind: 'OBJECT',
+          name: 'Language',
+          description: null,
+          fields: [
+            {
+              name: 'code',
+              description: null,
+              args: [],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'SCALAR',
+                  name: 'ID',
+                  ofType: null,
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'name',
+              description: null,
+              args: [],
+              type: {
+                kind: 'SCALAR',
+                name: 'String',
+                ofType: null,
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'native',
+              description: null,
+              args: [],
+              type: {
+                kind: 'SCALAR',
+                name: 'String',
+                ofType: null,
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'rtl',
+              description: null,
+              args: [],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'SCALAR',
+                  name: 'Boolean',
+                  ofType: null,
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+          ],
+          inputFields: null,
+          interfaces: [],
+          enumValues: null,
+          possibleTypes: null,
+        },
+        {
+          kind: 'OBJECT',
+          name: 'State',
+          description: null,
+          fields: [
+            {
+              name: 'code',
+              description: null,
+              args: [],
+              type: {
+                kind: 'SCALAR',
+                name: 'String',
+                ofType: null,
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'name',
+              description: null,
+              args: [],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'SCALAR',
+                  name: 'String',
+                  ofType: null,
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'country',
+              description: null,
+              args: [],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'OBJECT',
+                  name: 'Country',
+                  ofType: null,
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+          ],
+          inputFields: null,
+          interfaces: [],
+          enumValues: null,
+          possibleTypes: null,
+        },
+        {
+          kind: 'INPUT_OBJECT',
+          name: 'StringQueryOperatorInput',
+          description: null,
+          fields: null,
+          inputFields: [
+            {
+              name: 'eq',
+              description: null,
+              type: {
+                kind: 'SCALAR',
+                name: 'String',
+                ofType: null,
+              },
+              defaultValue: null,
+            },
+            {
+              name: 'ne',
+              description: null,
+              type: {
+                kind: 'SCALAR',
+                name: 'String',
+                ofType: null,
+              },
+              defaultValue: null,
+            },
+            {
+              name: 'in',
+              description: null,
+              type: {
+                kind: 'LIST',
+                name: null,
+                ofType: {
+                  kind: 'SCALAR',
+                  name: 'String',
+                  ofType: null,
+                },
+              },
+              defaultValue: null,
+            },
+            {
+              name: 'nin',
+              description: null,
+              type: {
+                kind: 'LIST',
+                name: null,
+                ofType: {
+                  kind: 'SCALAR',
+                  name: 'String',
+                  ofType: null,
+                },
+              },
+              defaultValue: null,
+            },
+            {
+              name: 'regex',
+              description: null,
+              type: {
+                kind: 'SCALAR',
+                name: 'String',
+                ofType: null,
+              },
+              defaultValue: null,
+            },
+            {
+              name: 'glob',
+              description: null,
+              type: {
+                kind: 'SCALAR',
+                name: 'String',
+                ofType: null,
+              },
+              defaultValue: null,
+            },
+          ],
           interfaces: null,
           enumValues: null,
           possibleTypes: null,
         },
         {
           kind: 'INPUT_OBJECT',
-          name: 'String_comparison_exp',
-          description:
-            'Boolean expression to compare columns of type "String". All fields are combined with logical \'AND\'.',
+          name: 'CountryFilterInput',
+          description: null,
           fields: null,
           inputFields: [
             {
-              name: '_eq',
+              name: 'code',
               description: null,
               type: {
-                kind: 'SCALAR',
-                name: 'String',
+                kind: 'INPUT_OBJECT',
+                name: 'StringQueryOperatorInput',
                 ofType: null,
               },
               defaultValue: null,
             },
             {
-              name: '_gt',
+              name: 'currency',
               description: null,
               type: {
-                kind: 'SCALAR',
-                name: 'String',
+                kind: 'INPUT_OBJECT',
+                name: 'StringQueryOperatorInput',
                 ofType: null,
               },
               defaultValue: null,
             },
             {
-              name: '_gte',
+              name: 'continent',
               description: null,
               type: {
-                kind: 'SCALAR',
-                name: 'String',
+                kind: 'INPUT_OBJECT',
+                name: 'StringQueryOperatorInput',
                 ofType: null,
               },
               defaultValue: null,
             },
+          ],
+          interfaces: null,
+          enumValues: null,
+          possibleTypes: null,
+        },
+        {
+          kind: 'INPUT_OBJECT',
+          name: 'ContinentFilterInput',
+          description: null,
+          fields: null,
+          inputFields: [
             {
-              name: '_ilike',
-              description:
-                'does the column match the given case-insensitive pattern',
-              type: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: '_in',
+              name: 'code',
               description: null,
               type: {
-                kind: 'LIST',
-                name: null,
-                ofType: {
-                  kind: 'NON_NULL',
-                  name: null,
-                  ofType: {
-                    kind: 'SCALAR',
-                    name: 'String',
-                    ofType: null,
-                  },
-                },
-              },
-              defaultValue: null,
-            },
-            {
-              name: '_iregex',
-              description:
-                'does the column match the given POSIX regular expression, case insensitive',
-              type: {
-                kind: 'SCALAR',
-                name: 'String',
+                kind: 'INPUT_OBJECT',
+                name: 'StringQueryOperatorInput',
                 ofType: null,
               },
               defaultValue: null,
             },
+          ],
+          interfaces: null,
+          enumValues: null,
+          possibleTypes: null,
+        },
+        {
+          kind: 'INPUT_OBJECT',
+          name: 'LanguageFilterInput',
+          description: null,
+          fields: null,
+          inputFields: [
             {
-              name: '_is_null',
+              name: 'code',
               description: null,
               type: {
-                kind: 'SCALAR',
-                name: 'Boolean',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: '_like',
-              description: 'does the column match the given pattern',
-              type: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: '_lt',
-              description: null,
-              type: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: '_lte',
-              description: null,
-              type: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: '_neq',
-              description: null,
-              type: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: '_nilike',
-              description:
-                'does the column NOT match the given case-insensitive pattern',
-              type: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: '_nin',
-              description: null,
-              type: {
-                kind: 'LIST',
-                name: null,
-                ofType: {
-                  kind: 'NON_NULL',
-                  name: null,
-                  ofType: {
-                    kind: 'SCALAR',
-                    name: 'String',
-                    ofType: null,
-                  },
-                },
-              },
-              defaultValue: null,
-            },
-            {
-              name: '_niregex',
-              description:
-                'does the column NOT match the given POSIX regular expression, case insensitive',
-              type: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: '_nlike',
-              description: 'does the column NOT match the given pattern',
-              type: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: '_nregex',
-              description:
-                'does the column NOT match the given POSIX regular expression, case sensitive',
-              type: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: '_nsimilar',
-              description:
-                'does the column NOT match the given SQL regular expression',
-              type: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: '_regex',
-              description:
-                'does the column match the given POSIX regular expression, case sensitive',
-              type: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: '_similar',
-              description:
-                'does the column match the given SQL regular expression',
-              type: {
-                kind: 'SCALAR',
-                name: 'String',
+                kind: 'INPUT_OBJECT',
+                name: 'StringQueryOperatorInput',
                 ofType: null,
               },
               defaultValue: null,
@@ -397,81 +588,250 @@ export const schema = {
         },
         {
           kind: 'OBJECT',
-          name: '__Directive',
+          name: 'Query',
           description: null,
           fields: [
             {
-              name: 'args',
+              name: '_entities',
+              description: null,
+              args: [
+                {
+                  name: 'representations',
+                  description: null,
+                  type: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'LIST',
+                      name: null,
+                      ofType: {
+                        kind: 'NON_NULL',
+                        name: null,
+                        ofType: {
+                          kind: 'SCALAR',
+                          name: '_Any',
+                          ofType: null,
+                        },
+                      },
+                    },
+                  },
+                  defaultValue: null,
+                },
+              ],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'UNION',
+                    name: '_Entity',
+                    ofType: null,
+                  },
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: '_service',
               description: null,
               args: [],
               type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'OBJECT',
+                  name: '_Service',
+                  ofType: null,
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'countries',
+              description: null,
+              args: [
+                {
+                  name: 'filter',
+                  description: null,
+                  type: {
+                    kind: 'INPUT_OBJECT',
+                    name: 'CountryFilterInput',
+                    ofType: null,
+                  },
+                  defaultValue: null,
+                },
+              ],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'OBJECT',
+                      name: 'Country',
+                      ofType: null,
+                    },
+                  },
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'country',
+              description: null,
+              args: [
+                {
+                  name: 'code',
+                  description: null,
+                  type: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'SCALAR',
+                      name: 'ID',
+                      ofType: null,
+                    },
+                  },
+                  defaultValue: null,
+                },
+              ],
+              type: {
                 kind: 'OBJECT',
-                name: '__InputValue',
+                name: 'Country',
                 ofType: null,
               },
               isDeprecated: false,
               deprecationReason: null,
             },
             {
-              name: 'description',
+              name: 'continents',
               description: null,
-              args: [],
+              args: [
+                {
+                  name: 'filter',
+                  description: null,
+                  type: {
+                    kind: 'INPUT_OBJECT',
+                    name: 'ContinentFilterInput',
+                    ofType: null,
+                  },
+                  defaultValue: null,
+                },
+              ],
               type: {
                 kind: 'NON_NULL',
                 name: null,
                 ofType: {
-                  kind: 'SCALAR',
-                  name: 'String',
-                  ofType: null,
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'OBJECT',
+                      name: 'Continent',
+                      ofType: null,
+                    },
+                  },
                 },
               },
               isDeprecated: false,
               deprecationReason: null,
             },
             {
-              name: 'isRepeatable',
+              name: 'continent',
               description: null,
-              args: [],
+              args: [
+                {
+                  name: 'code',
+                  description: null,
+                  type: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'SCALAR',
+                      name: 'ID',
+                      ofType: null,
+                    },
+                  },
+                  defaultValue: null,
+                },
+              ],
+              type: {
+                kind: 'OBJECT',
+                name: 'Continent',
+                ofType: null,
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'languages',
+              description: null,
+              args: [
+                {
+                  name: 'filter',
+                  description: null,
+                  type: {
+                    kind: 'INPUT_OBJECT',
+                    name: 'LanguageFilterInput',
+                    ofType: null,
+                  },
+                  defaultValue: null,
+                },
+              ],
               type: {
                 kind: 'NON_NULL',
                 name: null,
                 ofType: {
-                  kind: 'SCALAR',
-                  name: 'String',
-                  ofType: null,
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'OBJECT',
+                      name: 'Language',
+                      ofType: null,
+                    },
+                  },
                 },
               },
               isDeprecated: false,
               deprecationReason: null,
             },
             {
-              name: 'locations',
+              name: 'language',
               description: null,
-              args: [],
-              type: {
-                kind: 'NON_NULL',
-                name: null,
-                ofType: {
-                  kind: 'SCALAR',
-                  name: 'String',
-                  ofType: null,
+              args: [
+                {
+                  name: 'code',
+                  description: null,
+                  type: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'SCALAR',
+                      name: 'ID',
+                      ofType: null,
+                    },
+                  },
+                  defaultValue: null,
                 },
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'name',
-              description: null,
-              args: [],
+              ],
               type: {
-                kind: 'NON_NULL',
-                name: null,
-                ofType: {
-                  kind: 'SCALAR',
-                  name: 'String',
-                  ofType: null,
-                },
+                kind: 'OBJECT',
+                name: 'Language',
+                ofType: null,
               },
               isDeprecated: false,
               deprecationReason: null,
@@ -483,239 +843,54 @@ export const schema = {
           possibleTypes: null,
         },
         {
-          kind: 'OBJECT',
-          name: '__EnumValue',
+          kind: 'UNION',
+          name: '_Entity',
           description: null,
-          fields: [
+          fields: null,
+          inputFields: null,
+          interfaces: null,
+          enumValues: null,
+          possibleTypes: [
             {
-              name: 'deprecationReason',
-              description: null,
-              args: [],
-              type: {
-                kind: 'NON_NULL',
-                name: null,
-                ofType: {
-                  kind: 'SCALAR',
-                  name: 'String',
-                  ofType: null,
-                },
-              },
-              isDeprecated: false,
-              deprecationReason: null,
+              kind: 'OBJECT',
+              name: 'Country',
+              ofType: null,
             },
             {
-              name: 'description',
-              description: null,
-              args: [],
-              type: {
-                kind: 'NON_NULL',
-                name: null,
-                ofType: {
-                  kind: 'SCALAR',
-                  name: 'String',
-                  ofType: null,
-                },
-              },
-              isDeprecated: false,
-              deprecationReason: null,
+              kind: 'OBJECT',
+              name: 'Continent',
+              ofType: null,
             },
             {
-              name: 'isDeprecated',
-              description: null,
-              args: [],
-              type: {
-                kind: 'NON_NULL',
-                name: null,
-                ofType: {
-                  kind: 'SCALAR',
-                  name: 'String',
-                  ofType: null,
-                },
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'name',
-              description: null,
-              args: [],
-              type: {
-                kind: 'NON_NULL',
-                name: null,
-                ofType: {
-                  kind: 'SCALAR',
-                  name: 'String',
-                  ofType: null,
-                },
-              },
-              isDeprecated: false,
-              deprecationReason: null,
+              kind: 'OBJECT',
+              name: 'Language',
+              ofType: null,
             },
           ],
+        },
+        {
+          kind: 'SCALAR',
+          name: '_Any',
+          description: null,
+          fields: null,
           inputFields: null,
-          interfaces: [],
+          interfaces: null,
           enumValues: null,
           possibleTypes: null,
         },
         {
           kind: 'OBJECT',
-          name: '__Field',
+          name: '_Service',
           description: null,
           fields: [
             {
-              name: 'args',
-              description: null,
+              name: 'sdl',
+              description:
+                'The sdl representing the federated service capabilities. Includes federation directives, removes federation types, and includes rest of full schema after schema directives have been applied',
               args: [],
               type: {
-                kind: 'OBJECT',
-                name: '__InputValue',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'deprecationReason',
-              description: null,
-              args: [],
-              type: {
-                kind: 'NON_NULL',
-                name: null,
-                ofType: {
-                  kind: 'SCALAR',
-                  name: 'String',
-                  ofType: null,
-                },
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'description',
-              description: null,
-              args: [],
-              type: {
-                kind: 'NON_NULL',
-                name: null,
-                ofType: {
-                  kind: 'SCALAR',
-                  name: 'String',
-                  ofType: null,
-                },
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'isDeprecated',
-              description: null,
-              args: [],
-              type: {
-                kind: 'NON_NULL',
-                name: null,
-                ofType: {
-                  kind: 'SCALAR',
-                  name: 'String',
-                  ofType: null,
-                },
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'name',
-              description: null,
-              args: [],
-              type: {
-                kind: 'NON_NULL',
-                name: null,
-                ofType: {
-                  kind: 'SCALAR',
-                  name: 'String',
-                  ofType: null,
-                },
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'type',
-              description: null,
-              args: [],
-              type: {
-                kind: 'OBJECT',
-                name: '__Type',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-          ],
-          inputFields: null,
-          interfaces: [],
-          enumValues: null,
-          possibleTypes: null,
-        },
-        {
-          kind: 'OBJECT',
-          name: '__InputValue',
-          description: null,
-          fields: [
-            {
-              name: 'defaultValue',
-              description: null,
-              args: [],
-              type: {
-                kind: 'NON_NULL',
-                name: null,
-                ofType: {
-                  kind: 'SCALAR',
-                  name: 'String',
-                  ofType: null,
-                },
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'description',
-              description: null,
-              args: [],
-              type: {
-                kind: 'NON_NULL',
-                name: null,
-                ofType: {
-                  kind: 'SCALAR',
-                  name: 'String',
-                  ofType: null,
-                },
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'name',
-              description: null,
-              args: [],
-              type: {
-                kind: 'NON_NULL',
-                name: null,
-                ofType: {
-                  kind: 'SCALAR',
-                  name: 'String',
-                  ofType: null,
-                },
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'type',
-              description: null,
-              args: [],
-              type: {
-                kind: 'OBJECT',
-                name: '__Type',
+                kind: 'SCALAR',
+                name: 'String',
                 ofType: null,
               },
               isDeprecated: false,
@@ -730,18 +905,55 @@ export const schema = {
         {
           kind: 'OBJECT',
           name: '__Schema',
-          description: null,
+          description:
+            'A GraphQL Schema defines the capabilities of a GraphQL server. It exposes all available types and directives on the server, as well as the entry points for query, mutation, and subscription operations.',
           fields: [
             {
               name: 'description',
               description: null,
               args: [],
               type: {
+                kind: 'SCALAR',
+                name: 'String',
+                ofType: null,
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'types',
+              description: 'A list of all types supported by this server.',
+              args: [],
+              type: {
                 kind: 'NON_NULL',
                 name: null,
                 ofType: {
-                  kind: 'SCALAR',
-                  name: 'String',
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'OBJECT',
+                      name: '__Type',
+                      ofType: null,
+                    },
+                  },
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'queryType',
+              description: 'The type that query operations will be rooted at.',
+              args: [],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'OBJECT',
+                  name: '__Type',
                   ofType: null,
                 },
               },
@@ -749,32 +961,9 @@ export const schema = {
               deprecationReason: null,
             },
             {
-              name: 'directives',
-              description: null,
-              args: [],
-              type: {
-                kind: 'OBJECT',
-                name: '__Directive',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
               name: 'mutationType',
-              description: null,
-              args: [],
-              type: {
-                kind: 'OBJECT',
-                name: '__Type',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'queryType',
-              description: null,
+              description:
+                'If this server supports mutation, the type that mutation operations will be rooted at.',
               args: [],
               type: {
                 kind: 'OBJECT',
@@ -786,7 +975,8 @@ export const schema = {
             },
             {
               name: 'subscriptionType',
-              description: null,
+              description:
+                'If this server support subscription, the type that subscription operations will be rooted at.',
               args: [],
               type: {
                 kind: 'OBJECT',
@@ -797,13 +987,25 @@ export const schema = {
               deprecationReason: null,
             },
             {
-              name: 'types',
-              description: null,
+              name: 'directives',
+              description: 'A list of all directives supported by this server.',
               args: [],
               type: {
-                kind: 'OBJECT',
-                name: '__Type',
-                ofType: null,
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'OBJECT',
+                      name: '__Directive',
+                      ofType: null,
+                    },
+                  },
+                },
               },
               isDeprecated: false,
               deprecationReason: null,
@@ -817,94 +1019,9 @@ export const schema = {
         {
           kind: 'OBJECT',
           name: '__Type',
-          description: null,
+          description:
+            'The fundamental unit of any GraphQL Schema is the type. There are many kinds of types in GraphQL as represented by the `__TypeKind` enum.\n\nDepending on the kind of a type, certain fields describe information about that type. Scalar types provide no information beyond a name, description and optional `specifiedByUrl`, while Enum types provide their values. Object and Interface types provide the fields they describe. Abstract types, Union and Interface, provide the Object types possible at runtime. List and NonNull types compose other types.',
           fields: [
-            {
-              name: 'description',
-              description: null,
-              args: [],
-              type: {
-                kind: 'NON_NULL',
-                name: null,
-                ofType: {
-                  kind: 'SCALAR',
-                  name: 'String',
-                  ofType: null,
-                },
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'enumValues',
-              description: null,
-              args: [
-                {
-                  name: 'includeDeprecated',
-                  description: null,
-                  type: {
-                    kind: 'SCALAR',
-                    name: 'Boolean',
-                    ofType: null,
-                  },
-                  defaultValue: 'false',
-                },
-              ],
-              type: {
-                kind: 'OBJECT',
-                name: '__EnumValue',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'fields',
-              description: null,
-              args: [
-                {
-                  name: 'includeDeprecated',
-                  description: null,
-                  type: {
-                    kind: 'SCALAR',
-                    name: 'Boolean',
-                    ofType: null,
-                  },
-                  defaultValue: 'false',
-                },
-              ],
-              type: {
-                kind: 'OBJECT',
-                name: '__Field',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'inputFields',
-              description: null,
-              args: [],
-              type: {
-                kind: 'OBJECT',
-                name: '__InputValue',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'interfaces',
-              description: null,
-              args: [],
-              type: {
-                kind: 'OBJECT',
-                name: '__Type',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
             {
               name: 'kind',
               description: null,
@@ -926,12 +1043,165 @@ export const schema = {
               description: null,
               args: [],
               type: {
-                kind: 'NON_NULL',
+                kind: 'SCALAR',
+                name: 'String',
+                ofType: null,
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'description',
+              description: null,
+              args: [],
+              type: {
+                kind: 'SCALAR',
+                name: 'String',
+                ofType: null,
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'specifiedByUrl',
+              description: null,
+              args: [],
+              type: {
+                kind: 'SCALAR',
+                name: 'String',
+                ofType: null,
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'fields',
+              description: null,
+              args: [
+                {
+                  name: 'includeDeprecated',
+                  description: null,
+                  type: {
+                    kind: 'SCALAR',
+                    name: 'Boolean',
+                    ofType: null,
+                  },
+                  defaultValue: 'false',
+                },
+              ],
+              type: {
+                kind: 'LIST',
                 name: null,
                 ofType: {
-                  kind: 'SCALAR',
-                  name: 'String',
-                  ofType: null,
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'OBJECT',
+                    name: '__Field',
+                    ofType: null,
+                  },
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'interfaces',
+              description: null,
+              args: [],
+              type: {
+                kind: 'LIST',
+                name: null,
+                ofType: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'OBJECT',
+                    name: '__Type',
+                    ofType: null,
+                  },
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'possibleTypes',
+              description: null,
+              args: [],
+              type: {
+                kind: 'LIST',
+                name: null,
+                ofType: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'OBJECT',
+                    name: '__Type',
+                    ofType: null,
+                  },
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'enumValues',
+              description: null,
+              args: [
+                {
+                  name: 'includeDeprecated',
+                  description: null,
+                  type: {
+                    kind: 'SCALAR',
+                    name: 'Boolean',
+                    ofType: null,
+                  },
+                  defaultValue: 'false',
+                },
+              ],
+              type: {
+                kind: 'LIST',
+                name: null,
+                ofType: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'OBJECT',
+                    name: '__EnumValue',
+                    ofType: null,
+                  },
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'inputFields',
+              description: null,
+              args: [
+                {
+                  name: 'includeDeprecated',
+                  description: null,
+                  type: {
+                    kind: 'SCALAR',
+                    name: 'Boolean',
+                    ofType: null,
+                  },
+                  defaultValue: 'false',
+                },
+              ],
+              type: {
+                kind: 'LIST',
+                name: null,
+                ofType: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'OBJECT',
+                    name: '__InputValue',
+                    ofType: null,
+                  },
                 },
               },
               isDeprecated: false,
@@ -939,18 +1209,6 @@ export const schema = {
             },
             {
               name: 'ofType',
-              description: null,
-              args: [],
-              type: {
-                kind: 'OBJECT',
-                name: '__Type',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'possibleTypes',
               description: null,
               args: [],
               type: {
@@ -970,804 +1228,78 @@ export const schema = {
         {
           kind: 'ENUM',
           name: '__TypeKind',
-          description: null,
+          description:
+            'An enum describing what kind of type a given `__Type` is.',
           fields: null,
           inputFields: null,
           interfaces: null,
           enumValues: [
             {
-              name: 'ENUM',
-              description: null,
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'INPUT_OBJECT',
-              description: null,
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'INTERFACE',
-              description: null,
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'LIST',
-              description: null,
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'NON_NULL',
-              description: null,
+              name: 'SCALAR',
+              description: 'Indicates this type is a scalar.',
               isDeprecated: false,
               deprecationReason: null,
             },
             {
               name: 'OBJECT',
-              description: null,
+              description:
+                'Indicates this type is an object. `fields` and `interfaces` are valid fields.',
               isDeprecated: false,
               deprecationReason: null,
             },
             {
-              name: 'SCALAR',
-              description: null,
+              name: 'INTERFACE',
+              description:
+                'Indicates this type is an interface. `fields`, `interfaces`, and `possibleTypes` are valid fields.',
               isDeprecated: false,
               deprecationReason: null,
             },
             {
               name: 'UNION',
-              description: null,
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-          ],
-          possibleTypes: null,
-        },
-        {
-          kind: 'OBJECT',
-          name: 'mutation_root',
-          description: 'mutation root',
-          fields: [
-            {
-              name: 'delete_testUser',
-              description: 'delete data from the table: "testUser"',
-              args: [
-                {
-                  name: 'where',
-                  description: 'filter the rows which have to be deleted',
-                  type: {
-                    kind: 'NON_NULL',
-                    name: null,
-                    ofType: {
-                      kind: 'INPUT_OBJECT',
-                      name: 'testUser_bool_exp',
-                      ofType: null,
-                    },
-                  },
-                  defaultValue: null,
-                },
-              ],
-              type: {
-                kind: 'OBJECT',
-                name: 'testUser_mutation_response',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'delete_testUser_by_pk',
-              description: 'delete single row from the table: "testUser"',
-              args: [
-                {
-                  name: 'id',
-                  description: null,
-                  type: {
-                    kind: 'NON_NULL',
-                    name: null,
-                    ofType: {
-                      kind: 'SCALAR',
-                      name: 'Int',
-                      ofType: null,
-                    },
-                  },
-                  defaultValue: null,
-                },
-              ],
-              type: {
-                kind: 'OBJECT',
-                name: 'testUser',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'insert_testUser',
-              description: 'insert data into the table: "testUser"',
-              args: [
-                {
-                  name: 'objects',
-                  description: 'the rows to be inserted',
-                  type: {
-                    kind: 'NON_NULL',
-                    name: null,
-                    ofType: {
-                      kind: 'LIST',
-                      name: null,
-                      ofType: {
-                        kind: 'NON_NULL',
-                        name: null,
-                        ofType: {
-                          kind: 'INPUT_OBJECT',
-                          name: 'testUser_insert_input',
-                          ofType: null,
-                        },
-                      },
-                    },
-                  },
-                  defaultValue: null,
-                },
-                {
-                  name: 'on_conflict',
-                  description: 'on conflict condition',
-                  type: {
-                    kind: 'INPUT_OBJECT',
-                    name: 'testUser_on_conflict',
-                    ofType: null,
-                  },
-                  defaultValue: null,
-                },
-              ],
-              type: {
-                kind: 'OBJECT',
-                name: 'testUser_mutation_response',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'insert_testUser_one',
-              description: 'insert a single row into the table: "testUser"',
-              args: [
-                {
-                  name: 'object',
-                  description: 'the row to be inserted',
-                  type: {
-                    kind: 'NON_NULL',
-                    name: null,
-                    ofType: {
-                      kind: 'INPUT_OBJECT',
-                      name: 'testUser_insert_input',
-                      ofType: null,
-                    },
-                  },
-                  defaultValue: null,
-                },
-                {
-                  name: 'on_conflict',
-                  description: 'on conflict condition',
-                  type: {
-                    kind: 'INPUT_OBJECT',
-                    name: 'testUser_on_conflict',
-                    ofType: null,
-                  },
-                  defaultValue: null,
-                },
-              ],
-              type: {
-                kind: 'OBJECT',
-                name: 'testUser',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'update_testUser',
-              description: 'update data of the table: "testUser"',
-              args: [
-                {
-                  name: '_inc',
-                  description:
-                    'increments the numeric columns with given value of the filtered values',
-                  type: {
-                    kind: 'INPUT_OBJECT',
-                    name: 'testUser_inc_input',
-                    ofType: null,
-                  },
-                  defaultValue: null,
-                },
-                {
-                  name: '_set',
-                  description:
-                    'sets the columns of the filtered rows to the given values',
-                  type: {
-                    kind: 'INPUT_OBJECT',
-                    name: 'testUser_set_input',
-                    ofType: null,
-                  },
-                  defaultValue: null,
-                },
-                {
-                  name: 'where',
-                  description: 'filter the rows which have to be updated',
-                  type: {
-                    kind: 'NON_NULL',
-                    name: null,
-                    ofType: {
-                      kind: 'INPUT_OBJECT',
-                      name: 'testUser_bool_exp',
-                      ofType: null,
-                    },
-                  },
-                  defaultValue: null,
-                },
-              ],
-              type: {
-                kind: 'OBJECT',
-                name: 'testUser_mutation_response',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'update_testUser_by_pk',
-              description: 'update single row of the table: "testUser"',
-              args: [
-                {
-                  name: '_inc',
-                  description:
-                    'increments the numeric columns with given value of the filtered values',
-                  type: {
-                    kind: 'INPUT_OBJECT',
-                    name: 'testUser_inc_input',
-                    ofType: null,
-                  },
-                  defaultValue: null,
-                },
-                {
-                  name: '_set',
-                  description:
-                    'sets the columns of the filtered rows to the given values',
-                  type: {
-                    kind: 'INPUT_OBJECT',
-                    name: 'testUser_set_input',
-                    ofType: null,
-                  },
-                  defaultValue: null,
-                },
-                {
-                  name: 'pk_columns',
-                  description: null,
-                  type: {
-                    kind: 'NON_NULL',
-                    name: null,
-                    ofType: {
-                      kind: 'INPUT_OBJECT',
-                      name: 'testUser_pk_columns_input',
-                      ofType: null,
-                    },
-                  },
-                  defaultValue: null,
-                },
-              ],
-              type: {
-                kind: 'OBJECT',
-                name: 'testUser',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-          ],
-          inputFields: null,
-          interfaces: [],
-          enumValues: null,
-          possibleTypes: null,
-        },
-        {
-          kind: 'ENUM',
-          name: 'order_by',
-          description: 'column ordering options',
-          fields: null,
-          inputFields: null,
-          interfaces: null,
-          enumValues: [
-            {
-              name: 'asc',
-              description: 'in ascending order, nulls last',
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'asc_nulls_first',
-              description: 'in ascending order, nulls first',
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'asc_nulls_last',
-              description: 'in ascending order, nulls last',
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'desc',
-              description: 'in descending order, nulls first',
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'desc_nulls_first',
-              description: 'in descending order, nulls first',
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'desc_nulls_last',
-              description: 'in descending order, nulls last',
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-          ],
-          possibleTypes: null,
-        },
-        {
-          kind: 'OBJECT',
-          name: 'query_root',
-          description: null,
-          fields: [
-            {
-              name: 'testUser',
-              description: 'fetch data from the table: "testUser"',
-              args: [
-                {
-                  name: 'distinct_on',
-                  description: 'distinct select on columns',
-                  type: {
-                    kind: 'LIST',
-                    name: null,
-                    ofType: {
-                      kind: 'NON_NULL',
-                      name: null,
-                      ofType: {
-                        kind: 'ENUM',
-                        name: 'testUser_select_column',
-                        ofType: null,
-                      },
-                    },
-                  },
-                  defaultValue: null,
-                },
-                {
-                  name: 'limit',
-                  description: 'limit the number of rows returned',
-                  type: {
-                    kind: 'SCALAR',
-                    name: 'Int',
-                    ofType: null,
-                  },
-                  defaultValue: null,
-                },
-                {
-                  name: 'offset',
-                  description: 'skip the first n rows. Use only with order_by',
-                  type: {
-                    kind: 'SCALAR',
-                    name: 'Int',
-                    ofType: null,
-                  },
-                  defaultValue: null,
-                },
-                {
-                  name: 'order_by',
-                  description: 'sort the rows by one or more columns',
-                  type: {
-                    kind: 'LIST',
-                    name: null,
-                    ofType: {
-                      kind: 'NON_NULL',
-                      name: null,
-                      ofType: {
-                        kind: 'INPUT_OBJECT',
-                        name: 'testUser_order_by',
-                        ofType: null,
-                      },
-                    },
-                  },
-                  defaultValue: null,
-                },
-                {
-                  name: 'where',
-                  description: 'filter the rows returned',
-                  type: {
-                    kind: 'INPUT_OBJECT',
-                    name: 'testUser_bool_exp',
-                    ofType: null,
-                  },
-                  defaultValue: null,
-                },
-              ],
-              type: {
-                kind: 'NON_NULL',
-                name: null,
-                ofType: {
-                  kind: 'LIST',
-                  name: null,
-                  ofType: {
-                    kind: 'NON_NULL',
-                    name: null,
-                    ofType: {
-                      kind: 'OBJECT',
-                      name: 'testUser',
-                      ofType: null,
-                    },
-                  },
-                },
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'testUser_aggregate',
-              description: 'fetch aggregated fields from the table: "testUser"',
-              args: [
-                {
-                  name: 'distinct_on',
-                  description: 'distinct select on columns',
-                  type: {
-                    kind: 'LIST',
-                    name: null,
-                    ofType: {
-                      kind: 'NON_NULL',
-                      name: null,
-                      ofType: {
-                        kind: 'ENUM',
-                        name: 'testUser_select_column',
-                        ofType: null,
-                      },
-                    },
-                  },
-                  defaultValue: null,
-                },
-                {
-                  name: 'limit',
-                  description: 'limit the number of rows returned',
-                  type: {
-                    kind: 'SCALAR',
-                    name: 'Int',
-                    ofType: null,
-                  },
-                  defaultValue: null,
-                },
-                {
-                  name: 'offset',
-                  description: 'skip the first n rows. Use only with order_by',
-                  type: {
-                    kind: 'SCALAR',
-                    name: 'Int',
-                    ofType: null,
-                  },
-                  defaultValue: null,
-                },
-                {
-                  name: 'order_by',
-                  description: 'sort the rows by one or more columns',
-                  type: {
-                    kind: 'LIST',
-                    name: null,
-                    ofType: {
-                      kind: 'NON_NULL',
-                      name: null,
-                      ofType: {
-                        kind: 'INPUT_OBJECT',
-                        name: 'testUser_order_by',
-                        ofType: null,
-                      },
-                    },
-                  },
-                  defaultValue: null,
-                },
-                {
-                  name: 'where',
-                  description: 'filter the rows returned',
-                  type: {
-                    kind: 'INPUT_OBJECT',
-                    name: 'testUser_bool_exp',
-                    ofType: null,
-                  },
-                  defaultValue: null,
-                },
-              ],
-              type: {
-                kind: 'NON_NULL',
-                name: null,
-                ofType: {
-                  kind: 'OBJECT',
-                  name: 'testUser_aggregate',
-                  ofType: null,
-                },
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'testUser_by_pk',
               description:
-                'fetch data from the table: "testUser" using primary key columns',
-              args: [
-                {
-                  name: 'id',
-                  description: null,
-                  type: {
-                    kind: 'NON_NULL',
-                    name: null,
-                    ofType: {
-                      kind: 'SCALAR',
-                      name: 'Int',
-                      ofType: null,
-                    },
-                  },
-                  defaultValue: null,
-                },
-              ],
-              type: {
-                kind: 'OBJECT',
-                name: 'testUser',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-          ],
-          inputFields: null,
-          interfaces: [],
-          enumValues: null,
-          possibleTypes: null,
-        },
-        {
-          kind: 'OBJECT',
-          name: 'subscription_root',
-          description: null,
-          fields: [
-            {
-              name: 'testUser',
-              description: 'fetch data from the table: "testUser"',
-              args: [
-                {
-                  name: 'distinct_on',
-                  description: 'distinct select on columns',
-                  type: {
-                    kind: 'LIST',
-                    name: null,
-                    ofType: {
-                      kind: 'NON_NULL',
-                      name: null,
-                      ofType: {
-                        kind: 'ENUM',
-                        name: 'testUser_select_column',
-                        ofType: null,
-                      },
-                    },
-                  },
-                  defaultValue: null,
-                },
-                {
-                  name: 'limit',
-                  description: 'limit the number of rows returned',
-                  type: {
-                    kind: 'SCALAR',
-                    name: 'Int',
-                    ofType: null,
-                  },
-                  defaultValue: null,
-                },
-                {
-                  name: 'offset',
-                  description: 'skip the first n rows. Use only with order_by',
-                  type: {
-                    kind: 'SCALAR',
-                    name: 'Int',
-                    ofType: null,
-                  },
-                  defaultValue: null,
-                },
-                {
-                  name: 'order_by',
-                  description: 'sort the rows by one or more columns',
-                  type: {
-                    kind: 'LIST',
-                    name: null,
-                    ofType: {
-                      kind: 'NON_NULL',
-                      name: null,
-                      ofType: {
-                        kind: 'INPUT_OBJECT',
-                        name: 'testUser_order_by',
-                        ofType: null,
-                      },
-                    },
-                  },
-                  defaultValue: null,
-                },
-                {
-                  name: 'where',
-                  description: 'filter the rows returned',
-                  type: {
-                    kind: 'INPUT_OBJECT',
-                    name: 'testUser_bool_exp',
-                    ofType: null,
-                  },
-                  defaultValue: null,
-                },
-              ],
-              type: {
-                kind: 'NON_NULL',
-                name: null,
-                ofType: {
-                  kind: 'LIST',
-                  name: null,
-                  ofType: {
-                    kind: 'NON_NULL',
-                    name: null,
-                    ofType: {
-                      kind: 'OBJECT',
-                      name: 'testUser',
-                      ofType: null,
-                    },
-                  },
-                },
-              },
+                'Indicates this type is a union. `possibleTypes` is a valid field.',
               isDeprecated: false,
               deprecationReason: null,
             },
             {
-              name: 'testUser_aggregate',
-              description: 'fetch aggregated fields from the table: "testUser"',
-              args: [
-                {
-                  name: 'distinct_on',
-                  description: 'distinct select on columns',
-                  type: {
-                    kind: 'LIST',
-                    name: null,
-                    ofType: {
-                      kind: 'NON_NULL',
-                      name: null,
-                      ofType: {
-                        kind: 'ENUM',
-                        name: 'testUser_select_column',
-                        ofType: null,
-                      },
-                    },
-                  },
-                  defaultValue: null,
-                },
-                {
-                  name: 'limit',
-                  description: 'limit the number of rows returned',
-                  type: {
-                    kind: 'SCALAR',
-                    name: 'Int',
-                    ofType: null,
-                  },
-                  defaultValue: null,
-                },
-                {
-                  name: 'offset',
-                  description: 'skip the first n rows. Use only with order_by',
-                  type: {
-                    kind: 'SCALAR',
-                    name: 'Int',
-                    ofType: null,
-                  },
-                  defaultValue: null,
-                },
-                {
-                  name: 'order_by',
-                  description: 'sort the rows by one or more columns',
-                  type: {
-                    kind: 'LIST',
-                    name: null,
-                    ofType: {
-                      kind: 'NON_NULL',
-                      name: null,
-                      ofType: {
-                        kind: 'INPUT_OBJECT',
-                        name: 'testUser_order_by',
-                        ofType: null,
-                      },
-                    },
-                  },
-                  defaultValue: null,
-                },
-                {
-                  name: 'where',
-                  description: 'filter the rows returned',
-                  type: {
-                    kind: 'INPUT_OBJECT',
-                    name: 'testUser_bool_exp',
-                    ofType: null,
-                  },
-                  defaultValue: null,
-                },
-              ],
-              type: {
-                kind: 'NON_NULL',
-                name: null,
-                ofType: {
-                  kind: 'OBJECT',
-                  name: 'testUser_aggregate',
-                  ofType: null,
-                },
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'testUser_by_pk',
+              name: 'ENUM',
               description:
-                'fetch data from the table: "testUser" using primary key columns',
-              args: [
-                {
-                  name: 'id',
-                  description: null,
-                  type: {
-                    kind: 'NON_NULL',
-                    name: null,
-                    ofType: {
-                      kind: 'SCALAR',
-                      name: 'Int',
-                      ofType: null,
-                    },
-                  },
-                  defaultValue: null,
-                },
-              ],
-              type: {
-                kind: 'OBJECT',
-                name: 'testUser',
-                ofType: null,
-              },
+                'Indicates this type is an enum. `enumValues` is a valid field.',
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'INPUT_OBJECT',
+              description:
+                'Indicates this type is an input object. `inputFields` is a valid field.',
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'LIST',
+              description:
+                'Indicates this type is a list. `ofType` is a valid field.',
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'NON_NULL',
+              description:
+                'Indicates this type is a non-null. `ofType` is a valid field.',
               isDeprecated: false,
               deprecationReason: null,
             },
           ],
-          inputFields: null,
-          interfaces: [],
-          enumValues: null,
           possibleTypes: null,
         },
         {
           kind: 'OBJECT',
-          name: 'testUser',
+          name: '__Field',
           description:
-            'id table\n\n\ncolumns and relationships of "testUser"\n',
+            'Object and Interface types are described by a list of Fields, each of which has a name, potentially a list of arguments, and a return type.',
           fields: [
             {
-              name: 'age',
-              description: null,
-              args: [],
-              type: {
-                kind: 'NON_NULL',
-                name: null,
-                ofType: {
-                  kind: 'SCALAR',
-                  name: 'Int',
-                  ofType: null,
-                },
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'firstname',
+              name: 'name',
               description: null,
               args: [],
               type: {
@@ -1783,642 +1315,32 @@ export const schema = {
               deprecationReason: null,
             },
             {
-              name: 'id',
+              name: 'description',
               description: null,
               args: [],
               type: {
-                kind: 'NON_NULL',
-                name: null,
-                ofType: {
-                  kind: 'SCALAR',
-                  name: 'Int',
-                  ofType: null,
-                },
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'lastname',
-              description: null,
-              args: [],
-              type: {
-                kind: 'NON_NULL',
-                name: null,
-                ofType: {
-                  kind: 'SCALAR',
-                  name: 'String',
-                  ofType: null,
-                },
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-          ],
-          inputFields: null,
-          interfaces: [],
-          enumValues: null,
-          possibleTypes: null,
-        },
-        {
-          kind: 'OBJECT',
-          name: 'testUser_aggregate',
-          description: 'aggregated selection of "testUser"',
-          fields: [
-            {
-              name: 'aggregate',
-              description: null,
-              args: [],
-              type: {
-                kind: 'OBJECT',
-                name: 'testUser_aggregate_fields',
+                kind: 'SCALAR',
+                name: 'String',
                 ofType: null,
               },
               isDeprecated: false,
               deprecationReason: null,
             },
             {
-              name: 'nodes',
-              description: null,
-              args: [],
-              type: {
-                kind: 'NON_NULL',
-                name: null,
-                ofType: {
-                  kind: 'LIST',
-                  name: null,
-                  ofType: {
-                    kind: 'NON_NULL',
-                    name: null,
-                    ofType: {
-                      kind: 'OBJECT',
-                      name: 'testUser',
-                      ofType: null,
-                    },
-                  },
-                },
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-          ],
-          inputFields: null,
-          interfaces: [],
-          enumValues: null,
-          possibleTypes: null,
-        },
-        {
-          kind: 'OBJECT',
-          name: 'testUser_aggregate_fields',
-          description: 'aggregate fields of "testUser"',
-          fields: [
-            {
-              name: 'avg',
-              description: null,
-              args: [],
-              type: {
-                kind: 'OBJECT',
-                name: 'testUser_avg_fields',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'count',
+              name: 'args',
               description: null,
               args: [
                 {
-                  name: 'columns',
-                  description: null,
-                  type: {
-                    kind: 'LIST',
-                    name: null,
-                    ofType: {
-                      kind: 'NON_NULL',
-                      name: null,
-                      ofType: {
-                        kind: 'ENUM',
-                        name: 'testUser_select_column',
-                        ofType: null,
-                      },
-                    },
-                  },
-                  defaultValue: null,
-                },
-                {
-                  name: 'distinct',
+                  name: 'includeDeprecated',
                   description: null,
                   type: {
                     kind: 'SCALAR',
                     name: 'Boolean',
                     ofType: null,
                   },
-                  defaultValue: null,
+                  defaultValue: 'false',
                 },
               ],
-              type: {
-                kind: 'NON_NULL',
-                name: null,
-                ofType: {
-                  kind: 'SCALAR',
-                  name: 'Int',
-                  ofType: null,
-                },
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'max',
-              description: null,
-              args: [],
-              type: {
-                kind: 'OBJECT',
-                name: 'testUser_max_fields',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'min',
-              description: null,
-              args: [],
-              type: {
-                kind: 'OBJECT',
-                name: 'testUser_min_fields',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'stddev',
-              description: null,
-              args: [],
-              type: {
-                kind: 'OBJECT',
-                name: 'testUser_stddev_fields',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'stddev_pop',
-              description: null,
-              args: [],
-              type: {
-                kind: 'OBJECT',
-                name: 'testUser_stddev_pop_fields',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'stddev_samp',
-              description: null,
-              args: [],
-              type: {
-                kind: 'OBJECT',
-                name: 'testUser_stddev_samp_fields',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'sum',
-              description: null,
-              args: [],
-              type: {
-                kind: 'OBJECT',
-                name: 'testUser_sum_fields',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'var_pop',
-              description: null,
-              args: [],
-              type: {
-                kind: 'OBJECT',
-                name: 'testUser_var_pop_fields',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'var_samp',
-              description: null,
-              args: [],
-              type: {
-                kind: 'OBJECT',
-                name: 'testUser_var_samp_fields',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'variance',
-              description: null,
-              args: [],
-              type: {
-                kind: 'OBJECT',
-                name: 'testUser_variance_fields',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-          ],
-          inputFields: null,
-          interfaces: [],
-          enumValues: null,
-          possibleTypes: null,
-        },
-        {
-          kind: 'OBJECT',
-          name: 'testUser_avg_fields',
-          description: 'aggregate avg on columns',
-          fields: [
-            {
-              name: 'age',
-              description: null,
-              args: [],
-              type: {
-                kind: 'SCALAR',
-                name: 'Float',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'id',
-              description: null,
-              args: [],
-              type: {
-                kind: 'SCALAR',
-                name: 'Float',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-          ],
-          inputFields: null,
-          interfaces: [],
-          enumValues: null,
-          possibleTypes: null,
-        },
-        {
-          kind: 'INPUT_OBJECT',
-          name: 'testUser_bool_exp',
-          description:
-            'Boolean expression to filter rows from the table "testUser". All fields are combined with a logical \'AND\'.',
-          fields: null,
-          inputFields: [
-            {
-              name: '_and',
-              description: null,
-              type: {
-                kind: 'LIST',
-                name: null,
-                ofType: {
-                  kind: 'NON_NULL',
-                  name: null,
-                  ofType: {
-                    kind: 'INPUT_OBJECT',
-                    name: 'testUser_bool_exp',
-                    ofType: null,
-                  },
-                },
-              },
-              defaultValue: null,
-            },
-            {
-              name: '_not',
-              description: null,
-              type: {
-                kind: 'INPUT_OBJECT',
-                name: 'testUser_bool_exp',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: '_or',
-              description: null,
-              type: {
-                kind: 'LIST',
-                name: null,
-                ofType: {
-                  kind: 'NON_NULL',
-                  name: null,
-                  ofType: {
-                    kind: 'INPUT_OBJECT',
-                    name: 'testUser_bool_exp',
-                    ofType: null,
-                  },
-                },
-              },
-              defaultValue: null,
-            },
-            {
-              name: 'age',
-              description: null,
-              type: {
-                kind: 'INPUT_OBJECT',
-                name: 'Int_comparison_exp',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: 'firstname',
-              description: null,
-              type: {
-                kind: 'INPUT_OBJECT',
-                name: 'String_comparison_exp',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: 'id',
-              description: null,
-              type: {
-                kind: 'INPUT_OBJECT',
-                name: 'Int_comparison_exp',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: 'lastname',
-              description: null,
-              type: {
-                kind: 'INPUT_OBJECT',
-                name: 'String_comparison_exp',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-          ],
-          interfaces: null,
-          enumValues: null,
-          possibleTypes: null,
-        },
-        {
-          kind: 'ENUM',
-          name: 'testUser_constraint',
-          description: 'unique or primary key constraints on table "testUser"',
-          fields: null,
-          inputFields: null,
-          interfaces: null,
-          enumValues: [
-            {
-              name: 'testUser_pkey',
-              description: 'unique or primary key constraint',
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-          ],
-          possibleTypes: null,
-        },
-        {
-          kind: 'INPUT_OBJECT',
-          name: 'testUser_inc_input',
-          description:
-            'input type for incrementing numeric columns in table "testUser"',
-          fields: null,
-          inputFields: [
-            {
-              name: 'age',
-              description: null,
-              type: {
-                kind: 'SCALAR',
-                name: 'Int',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: 'id',
-              description: null,
-              type: {
-                kind: 'SCALAR',
-                name: 'Int',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-          ],
-          interfaces: null,
-          enumValues: null,
-          possibleTypes: null,
-        },
-        {
-          kind: 'INPUT_OBJECT',
-          name: 'testUser_insert_input',
-          description: 'input type for inserting data into table "testUser"',
-          fields: null,
-          inputFields: [
-            {
-              name: 'age',
-              description: null,
-              type: {
-                kind: 'SCALAR',
-                name: 'Int',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: 'firstname',
-              description: null,
-              type: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: 'id',
-              description: null,
-              type: {
-                kind: 'SCALAR',
-                name: 'Int',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: 'lastname',
-              description: null,
-              type: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-          ],
-          interfaces: null,
-          enumValues: null,
-          possibleTypes: null,
-        },
-        {
-          kind: 'OBJECT',
-          name: 'testUser_max_fields',
-          description: 'aggregate max on columns',
-          fields: [
-            {
-              name: 'age',
-              description: null,
-              args: [],
-              type: {
-                kind: 'SCALAR',
-                name: 'Int',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'firstname',
-              description: null,
-              args: [],
-              type: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'id',
-              description: null,
-              args: [],
-              type: {
-                kind: 'SCALAR',
-                name: 'Int',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'lastname',
-              description: null,
-              args: [],
-              type: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-          ],
-          inputFields: null,
-          interfaces: [],
-          enumValues: null,
-          possibleTypes: null,
-        },
-        {
-          kind: 'OBJECT',
-          name: 'testUser_min_fields',
-          description: 'aggregate min on columns',
-          fields: [
-            {
-              name: 'age',
-              description: null,
-              args: [],
-              type: {
-                kind: 'SCALAR',
-                name: 'Int',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'firstname',
-              description: null,
-              args: [],
-              type: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'id',
-              description: null,
-              args: [],
-              type: {
-                kind: 'SCALAR',
-                name: 'Int',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'lastname',
-              description: null,
-              args: [],
-              type: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-          ],
-          inputFields: null,
-          interfaces: [],
-          enumValues: null,
-          possibleTypes: null,
-        },
-        {
-          kind: 'OBJECT',
-          name: 'testUser_mutation_response',
-          description: 'response of any mutation on the table "testUser"',
-          fields: [
-            {
-              name: 'affected_rows',
-              description: 'number of rows affected by the mutation',
-              args: [],
-              type: {
-                kind: 'NON_NULL',
-                name: null,
-                ofType: {
-                  kind: 'SCALAR',
-                  name: 'Int',
-                  ofType: null,
-                },
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'returning',
-              description: 'data from the rows affected by the mutation',
-              args: [],
               type: {
                 kind: 'NON_NULL',
                 name: null,
@@ -2430,11 +1352,55 @@ export const schema = {
                     name: null,
                     ofType: {
                       kind: 'OBJECT',
-                      name: 'testUser',
+                      name: '__InputValue',
                       ofType: null,
                     },
                   },
                 },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'type',
+              description: null,
+              args: [],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'OBJECT',
+                  name: '__Type',
+                  ofType: null,
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'isDeprecated',
+              description: null,
+              args: [],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'SCALAR',
+                  name: 'Boolean',
+                  ofType: null,
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'deprecationReason',
+              description: null,
+              args: [],
+              type: {
+                kind: 'SCALAR',
+                name: 'String',
+                ofType: null,
               },
               isDeprecated: false,
               deprecationReason: null,
@@ -2446,28 +1412,224 @@ export const schema = {
           possibleTypes: null,
         },
         {
-          kind: 'INPUT_OBJECT',
-          name: 'testUser_on_conflict',
-          description: 'on conflict condition type for table "testUser"',
-          fields: null,
-          inputFields: [
+          kind: 'OBJECT',
+          name: '__InputValue',
+          description:
+            'Arguments provided to Fields or Directives and the input fields of an InputObject are represented as Input Values which describe their type and optionally a default value.',
+          fields: [
             {
-              name: 'constraint',
+              name: 'name',
               description: null,
+              args: [],
               type: {
                 kind: 'NON_NULL',
                 name: null,
                 ofType: {
-                  kind: 'ENUM',
-                  name: 'testUser_constraint',
+                  kind: 'SCALAR',
+                  name: 'String',
                   ofType: null,
                 },
               },
-              defaultValue: null,
+              isDeprecated: false,
+              deprecationReason: null,
             },
             {
-              name: 'update_columns',
+              name: 'description',
               description: null,
+              args: [],
+              type: {
+                kind: 'SCALAR',
+                name: 'String',
+                ofType: null,
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'type',
+              description: null,
+              args: [],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'OBJECT',
+                  name: '__Type',
+                  ofType: null,
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'defaultValue',
+              description:
+                'A GraphQL-formatted string representing the default value for this input value.',
+              args: [],
+              type: {
+                kind: 'SCALAR',
+                name: 'String',
+                ofType: null,
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'isDeprecated',
+              description: null,
+              args: [],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'SCALAR',
+                  name: 'Boolean',
+                  ofType: null,
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'deprecationReason',
+              description: null,
+              args: [],
+              type: {
+                kind: 'SCALAR',
+                name: 'String',
+                ofType: null,
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+          ],
+          inputFields: null,
+          interfaces: [],
+          enumValues: null,
+          possibleTypes: null,
+        },
+        {
+          kind: 'OBJECT',
+          name: '__EnumValue',
+          description:
+            'One possible value for a given Enum. Enum values are unique values, not a placeholder for a string or numeric value. However an Enum value is returned in a JSON response as a string.',
+          fields: [
+            {
+              name: 'name',
+              description: null,
+              args: [],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'SCALAR',
+                  name: 'String',
+                  ofType: null,
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'description',
+              description: null,
+              args: [],
+              type: {
+                kind: 'SCALAR',
+                name: 'String',
+                ofType: null,
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'isDeprecated',
+              description: null,
+              args: [],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'SCALAR',
+                  name: 'Boolean',
+                  ofType: null,
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'deprecationReason',
+              description: null,
+              args: [],
+              type: {
+                kind: 'SCALAR',
+                name: 'String',
+                ofType: null,
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+          ],
+          inputFields: null,
+          interfaces: [],
+          enumValues: null,
+          possibleTypes: null,
+        },
+        {
+          kind: 'OBJECT',
+          name: '__Directive',
+          description:
+            "A Directive provides a way to describe alternate runtime execution and type validation behavior in a GraphQL document.\n\nIn some cases, you need to provide options to alter GraphQL's execution behavior in ways field arguments will not suffice, such as conditionally including or skipping a field. Directives provide this by describing additional information to the executor.",
+          fields: [
+            {
+              name: 'name',
+              description: null,
+              args: [],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'SCALAR',
+                  name: 'String',
+                  ofType: null,
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'description',
+              description: null,
+              args: [],
+              type: {
+                kind: 'SCALAR',
+                name: 'String',
+                ofType: null,
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'isRepeatable',
+              description: null,
+              args: [],
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'SCALAR',
+                  name: 'Boolean',
+                  ofType: null,
+                },
+              },
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'locations',
+              description: null,
+              args: [],
               type: {
                 kind: 'NON_NULL',
                 name: null,
@@ -2479,322 +1641,47 @@ export const schema = {
                     name: null,
                     ofType: {
                       kind: 'ENUM',
-                      name: 'testUser_update_column',
+                      name: '__DirectiveLocation',
                       ofType: null,
                     },
                   },
                 },
               },
-              defaultValue: '[]',
+              isDeprecated: false,
+              deprecationReason: null,
             },
             {
-              name: 'where',
+              name: 'args',
               description: null,
-              type: {
-                kind: 'INPUT_OBJECT',
-                name: 'testUser_bool_exp',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-          ],
-          interfaces: null,
-          enumValues: null,
-          possibleTypes: null,
-        },
-        {
-          kind: 'INPUT_OBJECT',
-          name: 'testUser_order_by',
-          description: 'Ordering options when selecting data from "testUser".',
-          fields: null,
-          inputFields: [
-            {
-              name: 'age',
-              description: null,
-              type: {
-                kind: 'ENUM',
-                name: 'order_by',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: 'firstname',
-              description: null,
-              type: {
-                kind: 'ENUM',
-                name: 'order_by',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: 'id',
-              description: null,
-              type: {
-                kind: 'ENUM',
-                name: 'order_by',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: 'lastname',
-              description: null,
-              type: {
-                kind: 'ENUM',
-                name: 'order_by',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-          ],
-          interfaces: null,
-          enumValues: null,
-          possibleTypes: null,
-        },
-        {
-          kind: 'INPUT_OBJECT',
-          name: 'testUser_pk_columns_input',
-          description: 'primary key columns input for table: testUser',
-          fields: null,
-          inputFields: [
-            {
-              name: 'id',
-              description: null,
+              args: [
+                {
+                  name: 'includeDeprecated',
+                  description: null,
+                  type: {
+                    kind: 'SCALAR',
+                    name: 'Boolean',
+                    ofType: null,
+                  },
+                  defaultValue: 'false',
+                },
+              ],
               type: {
                 kind: 'NON_NULL',
                 name: null,
                 ofType: {
-                  kind: 'SCALAR',
-                  name: 'Int',
-                  ofType: null,
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'OBJECT',
+                      name: '__InputValue',
+                      ofType: null,
+                    },
+                  },
                 },
               },
-              defaultValue: null,
-            },
-          ],
-          interfaces: null,
-          enumValues: null,
-          possibleTypes: null,
-        },
-        {
-          kind: 'ENUM',
-          name: 'testUser_select_column',
-          description: 'select columns of table "testUser"',
-          fields: null,
-          inputFields: null,
-          interfaces: null,
-          enumValues: [
-            {
-              name: 'age',
-              description: 'column name',
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'firstname',
-              description: 'column name',
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'id',
-              description: 'column name',
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'lastname',
-              description: 'column name',
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-          ],
-          possibleTypes: null,
-        },
-        {
-          kind: 'INPUT_OBJECT',
-          name: 'testUser_set_input',
-          description: 'input type for updating data in table "testUser"',
-          fields: null,
-          inputFields: [
-            {
-              name: 'age',
-              description: null,
-              type: {
-                kind: 'SCALAR',
-                name: 'Int',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: 'firstname',
-              description: null,
-              type: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: 'id',
-              description: null,
-              type: {
-                kind: 'SCALAR',
-                name: 'Int',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-            {
-              name: 'lastname',
-              description: null,
-              type: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-              defaultValue: null,
-            },
-          ],
-          interfaces: null,
-          enumValues: null,
-          possibleTypes: null,
-        },
-        {
-          kind: 'OBJECT',
-          name: 'testUser_stddev_fields',
-          description: 'aggregate stddev on columns',
-          fields: [
-            {
-              name: 'age',
-              description: null,
-              args: [],
-              type: {
-                kind: 'SCALAR',
-                name: 'Float',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'id',
-              description: null,
-              args: [],
-              type: {
-                kind: 'SCALAR',
-                name: 'Float',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-          ],
-          inputFields: null,
-          interfaces: [],
-          enumValues: null,
-          possibleTypes: null,
-        },
-        {
-          kind: 'OBJECT',
-          name: 'testUser_stddev_pop_fields',
-          description: 'aggregate stddev_pop on columns',
-          fields: [
-            {
-              name: 'age',
-              description: null,
-              args: [],
-              type: {
-                kind: 'SCALAR',
-                name: 'Float',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'id',
-              description: null,
-              args: [],
-              type: {
-                kind: 'SCALAR',
-                name: 'Float',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-          ],
-          inputFields: null,
-          interfaces: [],
-          enumValues: null,
-          possibleTypes: null,
-        },
-        {
-          kind: 'OBJECT',
-          name: 'testUser_stddev_samp_fields',
-          description: 'aggregate stddev_samp on columns',
-          fields: [
-            {
-              name: 'age',
-              description: null,
-              args: [],
-              type: {
-                kind: 'SCALAR',
-                name: 'Float',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'id',
-              description: null,
-              args: [],
-              type: {
-                kind: 'SCALAR',
-                name: 'Float',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-          ],
-          inputFields: null,
-          interfaces: [],
-          enumValues: null,
-          possibleTypes: null,
-        },
-        {
-          kind: 'OBJECT',
-          name: 'testUser_sum_fields',
-          description: 'aggregate sum on columns',
-          fields: [
-            {
-              name: 'age',
-              description: null,
-              args: [],
-              type: {
-                kind: 'SCALAR',
-                name: 'Int',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'id',
-              description: null,
-              args: [],
-              type: {
-                kind: 'SCALAR',
-                name: 'Int',
-                ofType: null,
-              },
               isDeprecated: false,
               deprecationReason: null,
             },
@@ -2806,154 +1693,143 @@ export const schema = {
         },
         {
           kind: 'ENUM',
-          name: 'testUser_update_column',
-          description: 'update columns of table "testUser"',
+          name: '__DirectiveLocation',
+          description:
+            'A Directive can be adjacent to many parts of the GraphQL language, a __DirectiveLocation describes one such possible adjacencies.',
           fields: null,
           inputFields: null,
           interfaces: null,
           enumValues: [
             {
-              name: 'age',
-              description: 'column name',
+              name: 'QUERY',
+              description: 'Location adjacent to a query operation.',
               isDeprecated: false,
               deprecationReason: null,
             },
             {
-              name: 'firstname',
-              description: 'column name',
+              name: 'MUTATION',
+              description: 'Location adjacent to a mutation operation.',
               isDeprecated: false,
               deprecationReason: null,
             },
             {
-              name: 'id',
-              description: 'column name',
+              name: 'SUBSCRIPTION',
+              description: 'Location adjacent to a subscription operation.',
               isDeprecated: false,
               deprecationReason: null,
             },
             {
-              name: 'lastname',
-              description: 'column name',
+              name: 'FIELD',
+              description: 'Location adjacent to a field.',
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'FRAGMENT_DEFINITION',
+              description: 'Location adjacent to a fragment definition.',
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'FRAGMENT_SPREAD',
+              description: 'Location adjacent to a fragment spread.',
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'INLINE_FRAGMENT',
+              description: 'Location adjacent to an inline fragment.',
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'VARIABLE_DEFINITION',
+              description: 'Location adjacent to a variable definition.',
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'SCHEMA',
+              description: 'Location adjacent to a schema definition.',
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'SCALAR',
+              description: 'Location adjacent to a scalar definition.',
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'OBJECT',
+              description: 'Location adjacent to an object type definition.',
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'FIELD_DEFINITION',
+              description: 'Location adjacent to a field definition.',
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'ARGUMENT_DEFINITION',
+              description: 'Location adjacent to an argument definition.',
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'INTERFACE',
+              description: 'Location adjacent to an interface definition.',
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'UNION',
+              description: 'Location adjacent to a union definition.',
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'ENUM',
+              description: 'Location adjacent to an enum definition.',
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'ENUM_VALUE',
+              description: 'Location adjacent to an enum value definition.',
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'INPUT_OBJECT',
+              description:
+                'Location adjacent to an input object type definition.',
+              isDeprecated: false,
+              deprecationReason: null,
+            },
+            {
+              name: 'INPUT_FIELD_DEFINITION',
+              description:
+                'Location adjacent to an input object field definition.',
               isDeprecated: false,
               deprecationReason: null,
             },
           ],
-          possibleTypes: null,
-        },
-        {
-          kind: 'OBJECT',
-          name: 'testUser_var_pop_fields',
-          description: 'aggregate var_pop on columns',
-          fields: [
-            {
-              name: 'age',
-              description: null,
-              args: [],
-              type: {
-                kind: 'SCALAR',
-                name: 'Float',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'id',
-              description: null,
-              args: [],
-              type: {
-                kind: 'SCALAR',
-                name: 'Float',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-          ],
-          inputFields: null,
-          interfaces: [],
-          enumValues: null,
-          possibleTypes: null,
-        },
-        {
-          kind: 'OBJECT',
-          name: 'testUser_var_samp_fields',
-          description: 'aggregate var_samp on columns',
-          fields: [
-            {
-              name: 'age',
-              description: null,
-              args: [],
-              type: {
-                kind: 'SCALAR',
-                name: 'Float',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'id',
-              description: null,
-              args: [],
-              type: {
-                kind: 'SCALAR',
-                name: 'Float',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-          ],
-          inputFields: null,
-          interfaces: [],
-          enumValues: null,
-          possibleTypes: null,
-        },
-        {
-          kind: 'OBJECT',
-          name: 'testUser_variance_fields',
-          description: 'aggregate variance on columns',
-          fields: [
-            {
-              name: 'age',
-              description: null,
-              args: [],
-              type: {
-                kind: 'SCALAR',
-                name: 'Float',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-            {
-              name: 'id',
-              description: null,
-              args: [],
-              type: {
-                kind: 'SCALAR',
-                name: 'Float',
-                ofType: null,
-              },
-              isDeprecated: false,
-              deprecationReason: null,
-            },
-          ],
-          inputFields: null,
-          interfaces: [],
-          enumValues: null,
           possibleTypes: null,
         },
       ],
       directives: [
         {
           name: 'include',
-          description: 'whether this query should be included',
+          description:
+            'Directs the executor to include this field or fragment only when the `if` argument is true.',
           locations: ['FIELD', 'FRAGMENT_SPREAD', 'INLINE_FRAGMENT'],
           args: [
             {
               name: 'if',
-              description: null,
+              description: 'Included when true.',
               type: {
                 kind: 'NON_NULL',
                 name: null,
@@ -2969,12 +1845,13 @@ export const schema = {
         },
         {
           name: 'skip',
-          description: 'whether this query should be skipped',
+          description:
+            'Directs the executor to skip this field or fragment when the `if` argument is true.',
           locations: ['FIELD', 'FRAGMENT_SPREAD', 'INLINE_FRAGMENT'],
           args: [
             {
               name: 'if',
-              description: null,
+              description: 'Skipped when true.',
               type: {
                 kind: 'NON_NULL',
                 name: null,
@@ -2989,38 +1866,124 @@ export const schema = {
           ],
         },
         {
-          name: 'cached',
+          name: 'deprecated',
           description:
-            'whether this query should be cached (Hasura Cloud only)',
-          locations: ['QUERY'],
+            'Marks an element of a GraphQL schema as no longer supported.',
+          locations: [
+            'FIELD_DEFINITION',
+            'ARGUMENT_DEFINITION',
+            'INPUT_FIELD_DEFINITION',
+            'ENUM_VALUE',
+          ],
           args: [
             {
-              name: 'ttl',
-              description: 'measured in seconds',
+              name: 'reason',
+              description:
+                'Explains why this element was deprecated, usually also including a suggestion for how to access supported similar data. Formatted using the Markdown syntax, as specified by [CommonMark](https://commonmark.org/).',
               type: {
-                kind: 'NON_NULL',
-                name: null,
-                ofType: {
-                  kind: 'SCALAR',
-                  name: 'Int',
-                  ofType: null,
-                },
+                kind: 'SCALAR',
+                name: 'String',
+                ofType: null,
               },
-              defaultValue: '60',
+              defaultValue: '"No longer supported"',
             },
+          ],
+        },
+        {
+          name: 'specifiedBy',
+          description:
+            'Exposes a URL that specifies the behaviour of this scalar.',
+          locations: ['SCALAR'],
+          args: [
             {
-              name: 'refresh',
-              description: 'refresh the cache entry',
+              name: 'url',
+              description:
+                'The URL that specifies the behaviour of this scalar.',
               type: {
                 kind: 'NON_NULL',
                 name: null,
                 ofType: {
                   kind: 'SCALAR',
-                  name: 'Boolean',
+                  name: 'String',
                   ofType: null,
                 },
               },
-              defaultValue: 'false',
+              defaultValue: null,
+            },
+          ],
+        },
+        {
+          name: 'key',
+          description: null,
+          locations: ['OBJECT', 'INTERFACE'],
+          args: [
+            {
+              name: 'fields',
+              description: null,
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'SCALAR',
+                  name: 'String',
+                  ofType: null,
+                },
+              },
+              defaultValue: null,
+            },
+          ],
+        },
+        {
+          name: 'extends',
+          description: null,
+          locations: ['OBJECT', 'INTERFACE'],
+          args: [],
+        },
+        {
+          name: 'external',
+          description: null,
+          locations: ['OBJECT', 'FIELD_DEFINITION'],
+          args: [],
+        },
+        {
+          name: 'requires',
+          description: null,
+          locations: ['FIELD_DEFINITION'],
+          args: [
+            {
+              name: 'fields',
+              description: null,
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'SCALAR',
+                  name: 'String',
+                  ofType: null,
+                },
+              },
+              defaultValue: null,
+            },
+          ],
+        },
+        {
+          name: 'provides',
+          description: null,
+          locations: ['FIELD_DEFINITION'],
+          args: [
+            {
+              name: 'fields',
+              description: null,
+              type: {
+                kind: 'NON_NULL',
+                name: null,
+                ofType: {
+                  kind: 'SCALAR',
+                  name: 'String',
+                  ofType: null,
+                },
+              },
+              defaultValue: null,
             },
           ],
         },

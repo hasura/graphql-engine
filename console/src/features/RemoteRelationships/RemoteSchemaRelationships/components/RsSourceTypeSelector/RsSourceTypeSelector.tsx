@@ -24,7 +24,7 @@ export const RsSourceTypeSelector = ({
   const schemaOptions = [{ value: remoteSchemaName, label: remoteSchemaName }];
 
   return (
-    <div className="bg-gray-50 rounded p-md border border-gray-300 border-l-4 border-l-green-600">
+    <div className="bg-gray-50 col-span-5 rounded p-md border border-gray-300 border-l-4 border-l-green-600">
       <div className="mb-sm w-full">
         <Select
           label="Source Remote Schema"
@@ -41,7 +41,7 @@ export const RsSourceTypeSelector = ({
           name={sourceTypeKey}
           placeholder="Select a type"
           options={typeOptions}
-          labelIcon={<FiType />}
+          labelIcon={<FiType style={{ strokeWidth: 4.5 }} />}
         />
       </div>
     </div>
