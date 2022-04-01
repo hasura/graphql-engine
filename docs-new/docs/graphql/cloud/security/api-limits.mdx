@@ -44,6 +44,59 @@ If you rate-limit using the `role_name` and set the unique parameter for the rat
 
 Restricts a GraphQL operation based on its depth, preventing deeply nested queries.
 
+:::info Note
+
+GraphQL introspection queries are excluded from depth limits.
+
+:::
+
+You can see various queries as examples and their depths here:
+
+```graphql
+
+  # depth = 1
+  query deep1_1 {
+    viewer {
+      name
+    }
+  }
+
+  query deep1_2 {
+    viewer {
+      ... on User {
+        name
+      }
+    }
+  }
+
+  # depth = 2
+  query deep2 {
+    viewer {
+      albums {
+        title
+      }
+    }
+  }
+
+  # depth = 3
+  query deep3 {
+    viewer {
+      albums {
+        ...musicInfo
+        songs{
+          ...musicInfo
+        }
+      }
+    }
+  }
+
+  fragment musicInfo on Music {
+    id
+    title
+    artists
+  }
+```
+
 ### Node limits
 
 Restricts a GraphQL operation based on the number of nodes. This helps in limiting the number of different pieces of related data to be fetched.
