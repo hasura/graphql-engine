@@ -1,13 +1,10 @@
 import { EventDataNode } from 'antd/lib/tree';
 
-export type HasuraColumn = {
-  columns: string[];
-  computedFields: string[];
-};
+export type HasuraRsFields = string[];
 
 export type AllowedRootFields = ('query' | 'mutation' | 'subscription')[];
 
-export type ArgValueKind = 'column' | 'static';
+export type ArgValueKind = 'field' | 'static';
 
 export type ArgValue = {
   kind: ArgValueKind;

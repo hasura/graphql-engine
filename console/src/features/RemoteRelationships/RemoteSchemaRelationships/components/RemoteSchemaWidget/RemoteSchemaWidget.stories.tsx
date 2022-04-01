@@ -40,30 +40,16 @@ export default {
   },
 } as Meta;
 
-export const RemoteSchemaWidgetFrom: Story<RemoteSchemaWidgetProps> = args => (
+export const Primary: Story<RemoteSchemaWidgetProps> = args => (
   <RemoteSchemaWidget {...args} />
 );
-RemoteSchemaWidgetFrom.args = {
-  type: 'from',
-  schemaList: ['remoteSchema1', 'remoteSchema2'],
-  columns: customer_columns,
+Primary.args = {
+  schemaName: 'remoteSchema1',
+  fields: customer_columns,
   rootFields: ['query', 'mutation'],
-};
-RemoteSchemaWidgetFrom.parameters = {
-  // Disable chromatic snapshot for playground stories
-  chromatic: { disableSnapshot: true },
 };
 
-export const RemoteSchemaWidgetTo: Story<RemoteSchemaWidgetProps> = args => (
-  <RemoteSchemaWidget {...args} />
-);
-RemoteSchemaWidgetTo.args = {
-  type: 'to',
-  schemaList: ['remoteSchema1', 'remoteSchema2'],
-  columns: customer_columns,
-  rootFields: ['query', 'mutation'],
-};
-RemoteSchemaWidgetTo.parameters = {
+Primary.parameters = {
   // Disable chromatic snapshot for playground stories
   chromatic: { disableSnapshot: true },
 };
@@ -72,9 +58,8 @@ export const RemoteSchemaWidgetWithExistingRelationship: Story<RemoteSchemaWidge
   <RemoteSchemaWidget {...args} />
 );
 RemoteSchemaWidgetWithExistingRelationship.args = {
-  type: 'to',
-  schemaList: ['remoteSchema1', 'remoteSchema2'],
-  columns: customer_columns,
+  schemaName: 'remoteSchema1',
+  fields: customer_columns,
   rootFields: ['query', 'mutation'],
   serverRelationship: remote_rel_definition as any,
 };

@@ -34,7 +34,7 @@ export const InputField = ({
   const maybeError = get(errors, name) as FieldError | undefined;
 
   return (
-    <FieldWrapper {...wrapperProps} error={maybeError}>
+    <FieldWrapper id={name} {...wrapperProps} error={maybeError}>
       <div
         className={clsx(
           'relative',
@@ -49,6 +49,7 @@ export const InputField = ({
           </div>
         ) : null}
         <input
+          id={name}
           type={type}
           aria-invalid={maybeError ? 'true' : 'false'}
           className={clsx(

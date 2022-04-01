@@ -1,9 +1,13 @@
 import { RelationshipFields, RemoteRelationship } from '../types';
 
-export const customer_columns = {
-  columns: ['id', 'firstName', 'lastName', 'age', 'countryCode', 'country'],
-  computedFields: ['field1', 'field2'],
-};
+export const customer_columns = [
+  'id',
+  'firstName',
+  'lastName',
+  'age',
+  'countryCode',
+  'country',
+];
 
 export const remote_rel_definition: RemoteRelationship = {
   definition: {
@@ -64,7 +68,7 @@ export const relationship_fields: RelationshipFields[] = [
     depth: 3,
     checkable: true,
     argValue: {
-      kind: 'column',
+      kind: 'field',
       value: 'id',
       type: 'String',
     },
@@ -90,7 +94,7 @@ export const relationship_fields: RelationshipFields[] = [
     depth: 3,
     checkable: true,
     argValue: {
-      kind: 'column',
+      kind: 'field',
       value: 'id',
       type: 'String',
     },
