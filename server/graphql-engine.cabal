@@ -813,49 +813,6 @@ executable graphql-engine
                    , unix
                    , ekg-core
 
-test-suite graphql-engine-integration-tests
-  import: common-all, common-exe
-  type: exitcode-stdio-1.0
-  build-tool-depends: hspec-discover:hspec-discover
-  build-depends:
-      graphql-engine
-    , base
-    , aeson
-    , aeson-qq
-    , bytestring
-    , ekg-core
-    , exceptions
-    , hedgehog
-    , hspec >=2.8.3 && <3
-    , hspec-core >=2.8.3 && <3
-    , hspec-discover >=2.8.3 && <3
-    , hspec-expectations
-    , hspec-wai
-    , hspec-wai-json
-    , http-types
-    , lens
-    , monad-control
-    , mtl
-    , optparse-applicative
-    , pg-client
-    , shakespeare
-    , template-haskell
-    , text
-    , time
-    , tmp-postgres
-    , transformers
-    , unordered-containers
-    , wai
-    , wai-extra
-  hs-source-dirs: tests/integration
-  main-is: Main.hs
-  other-modules:
-    Backend.Postgres
-    Hasura.Test.App
-    Hasura.Test.Requests
-    Tests.RemoteSourceSpec
-    Tests.RemoteSourceSql
-
 test-suite graphql-engine-tests
   import: common-all, common-exe
   type: exitcode-stdio-1.0
