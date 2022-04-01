@@ -6,6 +6,7 @@ import Hasura.Backends.DataWrapper.API.V0.OrderBySpec qualified as OrderBySpec
 import Hasura.Backends.DataWrapper.API.V0.QuerySpec qualified as QuerySpec
 import Hasura.Backends.DataWrapper.API.V0.Scalar.TypeSpec qualified as TypeSpec
 import Hasura.Backends.DataWrapper.API.V0.Scalar.ValueSpec qualified as ValueSpec
+import Hasura.Backends.DataWrapper.API.V0.SchemaSpec qualified as SchemaSpec
 import Hasura.Backends.DataWrapper.API.V0.TableSpec qualified as TableSpec
 import Test.Hspec
 
@@ -17,4 +18,5 @@ spec = do
   describe "Query" QuerySpec.spec
   describe "Scalar.Type" TypeSpec.spec
   describe "Scalar.Value" ValueSpec.spec
+  describe "Schema" SchemaSpec.spec
   describe "Table" TableSpec.spec

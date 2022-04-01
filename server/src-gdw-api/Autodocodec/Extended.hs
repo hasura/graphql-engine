@@ -17,14 +17,20 @@ module Autodocodec.Extended
 where
 
 import Autodocodec
-import Control.Lens (Prism', review, (^?))
+import Control.DeepSeq (NFData)
+import Control.Lens (Prism', review, (<&>), (^?))
+import Control.Monad (void)
+import Data.Data (Data)
+import Data.Hashable (Hashable)
+import Data.List.NonEmpty (NonEmpty (..), nonEmpty)
 import Data.List.NonEmpty qualified as NE
 import Data.Maybe (fromJust)
-import Data.Proxy
+import Data.Proxy (Proxy (..))
+import Data.Text (Text)
 import Data.Text qualified as T
+import GHC.Generics (Generic)
 import GHC.TypeLits (KnownSymbol, Symbol, symbolVal)
-import Hasura.Incremental (Cacheable)
-import Hasura.Prelude
+import Prelude
 
 -- | A codec for an enum that can be written each with their own codec.
 -- Unlike enumCodec, disjointEnumCodec assumes that each provided codec is disjoint.
@@ -173,7 +179,7 @@ sumTypeCodec l =
 -- TODO: add some usage examples
 newtype ValueWrapper (t :: Symbol) a = ValueWrapper {getValue :: a}
   deriving stock (Eq, Ord, Show, Generic, Data)
-  deriving anyclass (Cacheable, Hashable, NFData)
+  deriving anyclass (Hashable, NFData)
 
 instance (KnownSymbol t, HasCodec a) => HasObjectCodec (ValueWrapper t a) where
   objectCodec =
@@ -185,7 +191,7 @@ data ValueWrapper2 (t1 :: Symbol) a1 (t2 :: Symbol) a2 = ValueWrapper2
     getValue2 :: a2
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
-  deriving anyclass (Cacheable, Hashable, NFData)
+  deriving anyclass (Hashable, NFData)
 
 instance (KnownSymbol t1, KnownSymbol t2, HasCodec a1, HasCodec a2) => HasObjectCodec (ValueWrapper2 t1 a1 t2 a2) where
   objectCodec =
@@ -199,7 +205,7 @@ data ValueWrapper3 (t1 :: Symbol) a1 (t2 :: Symbol) a2 (t3 :: Symbol) a3 = Value
     getValue3_ :: a3
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
-  deriving anyclass (Cacheable, Hashable, NFData)
+  deriving anyclass (Hashable, NFData)
 
 instance
   (KnownSymbol t1, KnownSymbol t2, KnownSymbol t3, HasCodec a1, HasCodec a2, HasCodec a3) =>

@@ -12,13 +12,16 @@ where
 
 import Autodocodec.Extended
 import Autodocodec.OpenAPI ()
+import Control.DeepSeq (NFData)
 import Control.Lens.TH (makePrisms)
 import Data.Aeson (FromJSON, ToJSON)
+import Data.Data (Data)
+import Data.Hashable (Hashable)
 import Data.OpenApi (ToSchema)
+import GHC.Generics (Generic)
 import Hasura.Backends.DataWrapper.API.V0.Column qualified as API.V0
 import Hasura.Backends.DataWrapper.API.V0.Scalar.Value qualified as API.V0.Scalar
-import Hasura.Incremental (Cacheable)
-import Hasura.Prelude
+import Prelude
 
 --------------------------------------------------------------------------------
 
@@ -29,7 +32,7 @@ data Operator
   | GreaterThan
   | GreaterThanOrEqual
   deriving stock (Data, Eq, Generic, Ord, Show, Enum, Bounded)
-  deriving anyclass (Cacheable, Hashable, NFData)
+  deriving anyclass (Hashable, NFData)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Operator
 
 instance HasCodec Operator where
@@ -59,7 +62,7 @@ data Expression
   | NotEqual (ValueWrapper2 "left" Expression "right" Expression)
   | ApplyOperator (ValueWrapper3 "operator" Operator "left" Expression "right" Expression)
   deriving stock (Data, Eq, Generic, Ord, Show)
-  deriving anyclass (Cacheable, Hashable, NFData)
+  deriving anyclass (Hashable, NFData)
 
 $(makePrisms ''Expression)
 

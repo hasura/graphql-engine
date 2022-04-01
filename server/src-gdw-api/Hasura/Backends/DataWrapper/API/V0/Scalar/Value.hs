@@ -12,13 +12,17 @@ where
 
 import Autodocodec.Extended
 import Autodocodec.OpenAPI ()
+import Control.DeepSeq (NFData)
 import Control.Lens ((^?))
 import Control.Lens.TH (makePrisms)
 import Data.Aeson (FromJSON, ToJSON)
+import Data.Data (Data)
+import Data.Hashable (Hashable)
 import Data.OpenApi (ToSchema)
-import Data.Scientific
-import Hasura.Incremental (Cacheable)
-import Hasura.Prelude
+import Data.Scientific (Scientific)
+import Data.Text (Text)
+import GHC.Generics (Generic)
+import Prelude
 
 --------------------------------------------------------------------------------
 
@@ -28,7 +32,7 @@ data Value
   | Boolean Bool
   | Null
   deriving stock (Data, Eq, Generic, Ord, Show)
-  deriving anyclass (Cacheable, Hashable, NFData)
+  deriving anyclass (Hashable, NFData)
 
 $(makePrisms ''Value)
 

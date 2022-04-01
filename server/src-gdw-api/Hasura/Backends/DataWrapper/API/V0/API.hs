@@ -6,6 +6,7 @@ module Hasura.Backends.DataWrapper.API.V0.API
     module Query,
     module Scalar.Type,
     module Scalar.Value,
+    module Schema,
     module Table,
   )
 where
@@ -16,4 +17,5 @@ import Hasura.Backends.DataWrapper.API.V0.OrderBy as OrderBy
 import Hasura.Backends.DataWrapper.API.V0.Query as Query
 import Hasura.Backends.DataWrapper.API.V0.Scalar.Type as Scalar.Type
 import Hasura.Backends.DataWrapper.API.V0.Scalar.Value as Scalar.Value
+import Hasura.Backends.DataWrapper.API.V0.Schema as Schema
 import Hasura.Backends.DataWrapper.API.V0.Table as Table
