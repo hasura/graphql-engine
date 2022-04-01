@@ -892,27 +892,27 @@ forall a. Seq a
 </span><span id="line-225"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.html#PostgresAnnotatedFieldJSON"><span class="hs-identifier hs-type">PostgresAnnotatedFieldJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688321357"><span class="hs-identifier hs-type">pgKind</span></a></span><span>
 </span><span id="line-226"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-227"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-228"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnInsert"><span class="hs-identifier hs-type">IR.AnnInsert</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688321357"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688321357"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-228"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsert"><span class="hs-identifier hs-type">IR.AnnotatedInsert</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688321357"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688321357"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-229"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#StringifyNumbers"><span class="hs-identifier hs-type">StringifyNumbers</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-230"></span><span>  </span><span class="annot"><a href="Hasura.QueryTags.html#QueryTagsComment"><span class="hs-identifier hs-type">QueryTagsComment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-231"></span><span>  </span><span class="annot"><a href="#local-6989586621688321358"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.html#TraceT"><span class="hs-identifier hs-type">Tracing.TraceT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Q.TxET</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-232"></span><span id="convertInsert"><span class="annot"><span class="annottext">convertInsert :: UserInfo
--&gt; AnnInsert
+-&gt; AnnotatedInsert
      ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind))
 -&gt; StringifyNumbers
 -&gt; QueryTagsComment
 -&gt; m (TraceT (TxET QErr IO) EncJSON)
 </span><a href="Hasura.Backends.Postgres.Instances.Execute.html#convertInsert"><span class="hs-identifier hs-var hs-var">convertInsert</span></a></span></span><span> </span><span id="local-6989586621688321147"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621688321147"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621688321146"><span class="annot"><span class="annottext">AnnInsert
+</span><a href="#local-6989586621688321147"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621688321146"><span class="annot"><span class="annottext">AnnotatedInsert
   ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind))
 </span><a href="#local-6989586621688321146"><span class="hs-identifier hs-var">insertOperation</span></a></span></span><span> </span><span id="local-6989586621688321145"><span class="annot"><span class="annottext">StringifyNumbers
 </span><a href="#local-6989586621688321145"><span class="hs-identifier hs-var">stringifyNum</span></a></span></span><span> </span><span id="local-6989586621688321144"><span class="annot"><span class="annottext">QueryTagsComment
 </span><a href="#local-6989586621688321144"><span class="hs-identifier hs-var">queryTags</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-233"></span><span>  </span><span id="local-6989586621688321143"><span class="annot"><span class="annottext">AnnInsert ('Postgres pgKind) Void SQLExp
+</span><span id="line-233"></span><span>  </span><span id="local-6989586621688321143"><span class="annot"><span class="annottext">AnnotatedInsert ('Postgres pgKind) Void SQLExp
 </span><a href="#local-6989586621688321143"><span class="hs-identifier hs-var">preparedInsert</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(UnpreparedValue ('Postgres pgKind) -&gt; m SQLExp)
--&gt; AnnInsert
+-&gt; AnnotatedInsert
      ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind))
--&gt; m (AnnInsert ('Postgres pgKind) Void SQLExp)
+-&gt; m (AnnotatedInsert ('Postgres pgKind) Void SQLExp)
 forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 (a -&gt; f b) -&gt; t a -&gt; f (t b)
@@ -921,7 +921,7 @@ forall (m :: * -&gt; *) (pgKind :: PostgresKind).
 MonadError QErr m =&gt;
 UserInfo -&gt; UnpreparedValue ('Postgres pgKind) -&gt; m SQLExp
 </span><a href="Hasura.Backends.Postgres.Execute.Prepare.html#prepareWithoutPlan"><span class="hs-identifier hs-var">prepareWithoutPlan</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621688321147"><span class="hs-identifier hs-var">userInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">AnnInsert
+</span><a href="#local-6989586621688321147"><span class="hs-identifier hs-var">userInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">AnnotatedInsert
   ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind))
 </span><a href="#local-6989586621688321146"><span class="hs-identifier hs-var">insertOperation</span></a></span><span>
 </span><span id="line-234"></span><span>  </span><span class="annot"><span class="annottext">TraceT (TxET QErr IO) EncJSON -&gt; m (TraceT (TxET QErr IO) EncJSON)
@@ -946,7 +946,7 @@ forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
 -&gt; ReaderT QueryTagsComment (TraceT (TxET QErr IO)) EncJSON
 -&gt; TraceT (TxET QErr IO) EncJSON
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">AnnInsert ('Postgres pgKind) Void SQLExp
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">AnnotatedInsert ('Postgres pgKind) Void SQLExp
 -&gt; UserInfo
 -&gt; Seq PrepArg
 -&gt; StringifyNumbers
@@ -955,9 +955,9 @@ forall (pgKind :: PostgresKind) (m :: * -&gt; *).
 (MonadTx m, MonadIO m, MonadTrace m, Backend ('Postgres pgKind),
  PostgresAnnotatedFieldJSON pgKind,
  MonadReader QueryTagsComment m) =&gt;
-AnnInsert ('Postgres pgKind) Void SQLExp
+AnnotatedInsert ('Postgres pgKind) Void SQLExp
 -&gt; UserInfo -&gt; Seq PrepArg -&gt; StringifyNumbers -&gt; m EncJSON
-</span><a href="Hasura.Backends.Postgres.Execute.Insert.html#convertToSQLTransaction"><span class="hs-identifier hs-var">convertToSQLTransaction</span></a></span><span> </span><span class="annot"><span class="annottext">AnnInsert ('Postgres pgKind) Void SQLExp
+</span><a href="Hasura.Backends.Postgres.Execute.Insert.html#convertToSQLTransaction"><span class="hs-identifier hs-var">convertToSQLTransaction</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedInsert ('Postgres pgKind) Void SQLExp
 </span><a href="#local-6989586621688321143"><span class="hs-identifier hs-var">preparedInsert</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
 </span><a href="#local-6989586621688321147"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Seq PrepArg
 forall a. Seq a
@@ -1166,10 +1166,10 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">MutationDB
   ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind))
 </span><a href="#local-6989586621688321124"><span class="hs-identifier hs-var">mrf</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-281"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#MDBInsert"><span class="hs-identifier hs-type">MDBInsert</span></a></span><span> </span><span id="local-6989586621688321120"><span class="annot"><span class="annottext">AnnInsert
+</span><span id="line-281"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#MDBInsert"><span class="hs-identifier hs-type">MDBInsert</span></a></span><span> </span><span id="local-6989586621688321120"><span class="annot"><span class="annottext">AnnotatedInsert
   ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind))
 </span><a href="#local-6989586621688321120"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">UserInfo
--&gt; AnnInsert
+-&gt; AnnotatedInsert
      ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind))
 -&gt; StringifyNumbers
 -&gt; QueryTagsComment
@@ -1178,13 +1178,13 @@ forall (pgKind :: PostgresKind) (m :: * -&gt; *).
 (MonadError QErr m, Backend ('Postgres pgKind),
  PostgresAnnotatedFieldJSON pgKind) =&gt;
 UserInfo
--&gt; AnnInsert
+-&gt; AnnotatedInsert
      ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind))
 -&gt; StringifyNumbers
 -&gt; QueryTagsComment
 -&gt; m (TraceT (TxET QErr IO) EncJSON)
 </span><a href="Hasura.Backends.Postgres.Instances.Execute.html#convertInsert"><span class="hs-identifier hs-var">convertInsert</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621688321128"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">AnnInsert
+</span><a href="#local-6989586621688321128"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedInsert
   ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind))
 </span><a href="#local-6989586621688321120"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
 </span><a href="#local-6989586621688321127"><span class="hs-identifier hs-var">stringifyNum</span></a></span><span> </span><span class="annot"><span class="annottext">QueryTagsComment

@@ -12,24 +12,24 @@
 </span><span id="line-12"></span><span class="hs-comment">-- need to be enforced the way it currently is, with booleans and different</span><span>
 </span><span id="line-13"></span><span class="hs-comment">-- types. The distinction could be made in the translation layer, if need be.</span><span>
 </span><span id="line-14"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.IR.Insert</span><span>
-</span><span id="line-15"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnIns"><span class="hs-identifier">AnnIns</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnInsert"><span class="hs-identifier">AnnInsert</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertData"><span class="hs-identifier">AnnotatedInsertData</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsert"><span class="hs-identifier">AnnotatedInsert</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-17"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#aiFieldName"><span class="hs-identifier">aiFieldName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-18"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#aiIsSingle"><span class="hs-identifier">aiIsSingle</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-19"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#aiData"><span class="hs-identifier">aiData</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-20"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#aiOutput"><span class="hs-identifier">aiOutput</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-21"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsert"><span class="hs-identifier">AnnotatedInsert</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertField"><span class="hs-identifier">AnnotatedInsertField</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-22"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertRow"><span class="hs-identifier">AnnotatedInsertRow</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-23"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ArrRelIns"><span class="hs-identifier">ArrRelIns</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ArrayRelationInsert"><span class="hs-identifier">ArrayRelationInsert</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-24"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#OnConflictClause"><span class="hs-identifier">OnConflictClause</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-25"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#OnConflictClauseData"><span class="hs-identifier">OnConflictClauseData</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-26"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#ConflictTarget"><span class="hs-identifier">ConflictTarget</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-27"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#InsertQueryP1"><span class="hs-identifier">InsertQueryP1</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-28"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#MultiObjIns"><span class="hs-identifier">MultiObjIns</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-29"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ObjRelIns"><span class="hs-identifier">ObjRelIns</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-30"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#RelIns"><span class="hs-identifier">RelIns</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#MultiObjectInsert"><span class="hs-identifier">MultiObjectInsert</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ObjectRelationInsert"><span class="hs-identifier">ObjectRelationInsert</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#RelationInsert"><span class="hs-identifier">RelationInsert</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-31"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#Single"><span class="hs-identifier">Single</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-32"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#SingleObjIns"><span class="hs-identifier">SingleObjIns</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#SingleObjectInsert"><span class="hs-identifier">SingleObjectInsert</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-33"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#getInsertArrayRelationships"><span class="hs-identifier">getInsertArrayRelationships</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-34"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#getInsertColumns"><span class="hs-identifier">getInsertColumns</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-35"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#getInsertObjectRelationships"><span class="hs-identifier">getInsertObjectRelationships</span></a></span><span class="hs-special">,</span><span>
@@ -53,102 +53,111 @@
 </span><span id="line-53"></span><span>
 </span><span id="line-54"></span><span class="hs-comment">-- | Overall representation of an insert mutation, corresponding to one root</span><span>
 </span><span id="line-55"></span><span class="hs-comment">-- field in our mutation, including the parsed selection set of the mutation's</span><span>
-</span><span id="line-56"></span><span class="hs-comment">-- output. For historical reasons, it will always contain a `MultiObjIns`,</span><span>
+</span><span id="line-56"></span><span class="hs-comment">-- output. For historical reasons, it will always contain a `MultiObjectInsert`,</span><span>
 </span><span id="line-57"></span><span class="hs-comment">-- whether the root mutation is a single row or not, and will distinguish</span><span>
 </span><span id="line-58"></span><span class="hs-comment">-- between them using a boolean field.</span><span>
-</span><span id="line-59"></span><span class="hs-keyword">data</span><span> </span><span id="AnnInsert"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnInsert"><span class="hs-identifier hs-var">AnnInsert</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688258400"><span class="annot"><a href="#local-6989586621688258400"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688258399"><span class="annot"><a href="#local-6989586621688258399"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688258398"><span class="annot"><a href="#local-6989586621688258398"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AnnInsert"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnInsert"><span class="hs-identifier hs-var">AnnInsert</span></a></span></span><span>
-</span><span id="line-60"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_aiFieldName"><span class="annot"><span class="annottext">AnnInsert b r v -&gt; Text
+</span><span id="line-59"></span><span class="hs-keyword">data</span><span> </span><span id="AnnotatedInsert"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsert"><span class="hs-identifier hs-var">AnnotatedInsert</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688258400"><span class="annot"><a href="#local-6989586621688258400"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688258399"><span class="annot"><a href="#local-6989586621688258399"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688258398"><span class="annot"><a href="#local-6989586621688258398"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AnnotatedInsert"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsert"><span class="hs-identifier hs-var">AnnotatedInsert</span></a></span></span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_aiFieldName"><span class="annot"><span class="annottext">AnnotatedInsert b r v -&gt; Text
 </span><a href="Hasura.RQL.IR.Insert.html#_aiFieldName"><span class="hs-identifier hs-var hs-var">_aiFieldName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
-</span><span id="line-61"></span><span>    </span><span id="_aiIsSingle"><span class="annot"><span class="annottext">AnnInsert b r v -&gt; Bool
+</span><span id="line-61"></span><span>    </span><span id="_aiIsSingle"><span class="annot"><span class="annottext">AnnotatedInsert b r v -&gt; Bool
 </span><a href="Hasura.RQL.IR.Insert.html#_aiIsSingle"><span class="hs-identifier hs-var hs-var">_aiIsSingle</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
-</span><span id="line-62"></span><span>    </span><span id="_aiData"><span class="annot"><span class="annottext">AnnInsert b r v -&gt; MultiObjIns b v
-</span><a href="Hasura.RQL.IR.Insert.html#_aiData"><span class="hs-identifier hs-var hs-var">_aiData</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#MultiObjIns"><span class="hs-identifier hs-type">MultiObjIns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258400"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258398"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-63"></span><span>    </span><span id="_aiOutput"><span class="annot"><span class="annottext">AnnInsert b r v -&gt; MutationOutputG b r v
+</span><span id="line-62"></span><span>    </span><span id="_aiData"><span class="annot"><span class="annottext">AnnotatedInsert b r v -&gt; MultiObjectInsert b v
+</span><a href="Hasura.RQL.IR.Insert.html#_aiData"><span class="hs-identifier hs-var hs-var">_aiData</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#MultiObjectInsert"><span class="hs-identifier hs-type">MultiObjectInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258400"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258398"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-63"></span><span>    </span><span id="_aiOutput"><span class="annot"><span class="annottext">AnnotatedInsert b r v -&gt; MutationOutputG b r v
 </span><a href="Hasura.RQL.IR.Insert.html#_aiOutput"><span class="hs-identifier hs-var hs-var">_aiOutput</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Returning.html#MutationOutputG"><span class="hs-identifier hs-type">MutationOutputG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258400"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258399"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258398"><span class="hs-identifier hs-type">v</span></a></span><span>
 </span><span id="line-64"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-65"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688258389"><span id="local-6989586621688258391"><span class="annot"><span class="annottext">a -&gt; AnnInsert b r b -&gt; AnnInsert b r a
-(a -&gt; b) -&gt; AnnInsert b r a -&gt; AnnInsert b r b
-(forall a b. (a -&gt; b) -&gt; AnnInsert b r a -&gt; AnnInsert b r b)
--&gt; (forall a b. a -&gt; AnnInsert b r b -&gt; AnnInsert b r a)
--&gt; Functor (AnnInsert b r)
-forall a b. a -&gt; AnnInsert b r b -&gt; AnnInsert b r a
-forall a b. (a -&gt; b) -&gt; AnnInsert b r a -&gt; AnnInsert b r b
+</span><span id="line-65"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688258389"><span id="local-6989586621688258391"><span class="annot"><span class="annottext">a -&gt; AnnotatedInsert b r b -&gt; AnnotatedInsert b r a
+(a -&gt; b) -&gt; AnnotatedInsert b r a -&gt; AnnotatedInsert b r b
+(forall a b.
+ (a -&gt; b) -&gt; AnnotatedInsert b r a -&gt; AnnotatedInsert b r b)
+-&gt; (forall a b.
+    a -&gt; AnnotatedInsert b r b -&gt; AnnotatedInsert b r a)
+-&gt; Functor (AnnotatedInsert b r)
+forall a b. a -&gt; AnnotatedInsert b r b -&gt; AnnotatedInsert b r a
+forall a b.
+(a -&gt; b) -&gt; AnnotatedInsert b r a -&gt; AnnotatedInsert b r b
 forall (b :: BackendType) r a b.
 Backend b =&gt;
-a -&gt; AnnInsert b r b -&gt; AnnInsert b r a
+a -&gt; AnnotatedInsert b r b -&gt; AnnotatedInsert b r a
 forall (b :: BackendType) r a b.
 Backend b =&gt;
-(a -&gt; b) -&gt; AnnInsert b r a -&gt; AnnInsert b r b
+(a -&gt; b) -&gt; AnnotatedInsert b r a -&gt; AnnotatedInsert b r b
 forall (f :: * -&gt; *).
 (forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
 -&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
-&lt;$ :: a -&gt; AnnInsert b r b -&gt; AnnInsert b r a
+&lt;$ :: a -&gt; AnnotatedInsert b r b -&gt; AnnotatedInsert b r a
 $c&lt;$ :: forall (b :: BackendType) r a b.
 Backend b =&gt;
-a -&gt; AnnInsert b r b -&gt; AnnInsert b r a
-fmap :: (a -&gt; b) -&gt; AnnInsert b r a -&gt; AnnInsert b r b
+a -&gt; AnnotatedInsert b r b -&gt; AnnotatedInsert b r a
+fmap :: (a -&gt; b) -&gt; AnnotatedInsert b r a -&gt; AnnotatedInsert b r b
 $cfmap :: forall (b :: BackendType) r a b.
 Backend b =&gt;
-(a -&gt; b) -&gt; AnnInsert b r a -&gt; AnnInsert b r b
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688258354"><span id="local-6989586621688258356"><span id="local-6989586621688258358"><span id="local-6989586621688258360"><span id="local-6989586621688258362"><span id="local-6989586621688258364"><span id="local-6989586621688258366"><span id="local-6989586621688258368"><span id="local-6989586621688258370"><span id="local-6989586621688258372"><span id="local-6989586621688258374"><span id="local-6989586621688258376"><span id="local-6989586621688258378"><span id="local-6989586621688258380"><span id="local-6989586621688258382"><span id="local-6989586621688258384"><span id="local-6989586621688258386"><span class="annot"><span class="annottext">AnnInsert b r a -&gt; Bool
-(a -&gt; m) -&gt; AnnInsert b r a -&gt; m
-(a -&gt; b -&gt; b) -&gt; b -&gt; AnnInsert b r a -&gt; b
-(forall m. Monoid m =&gt; AnnInsert b r m -&gt; m)
--&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnInsert b r a -&gt; m)
--&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnInsert b r a -&gt; m)
--&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnInsert b r a -&gt; b)
--&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnInsert b r a -&gt; b)
--&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnInsert b r a -&gt; b)
--&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnInsert b r a -&gt; b)
--&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnInsert b r a -&gt; a)
--&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnInsert b r a -&gt; a)
--&gt; (forall a. AnnInsert b r a -&gt; [a])
--&gt; (forall a. AnnInsert b r a -&gt; Bool)
--&gt; (forall a. AnnInsert b r a -&gt; Int)
--&gt; (forall a. Eq a =&gt; a -&gt; AnnInsert b r a -&gt; Bool)
--&gt; (forall a. Ord a =&gt; AnnInsert b r a -&gt; a)
--&gt; (forall a. Ord a =&gt; AnnInsert b r a -&gt; a)
--&gt; (forall a. Num a =&gt; AnnInsert b r a -&gt; a)
--&gt; (forall a. Num a =&gt; AnnInsert b r a -&gt; a)
--&gt; Foldable (AnnInsert b r)
-forall a. Eq a =&gt; a -&gt; AnnInsert b r a -&gt; Bool
-forall a. Num a =&gt; AnnInsert b r a -&gt; a
-forall a. Ord a =&gt; AnnInsert b r a -&gt; a
-forall m. Monoid m =&gt; AnnInsert b r m -&gt; m
-forall a. AnnInsert b r a -&gt; Bool
-forall a. AnnInsert b r a -&gt; Int
-forall a. AnnInsert b r a -&gt; [a]
-forall a. (a -&gt; a -&gt; a) -&gt; AnnInsert b r a -&gt; a
-forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnInsert b r a -&gt; m
-forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnInsert b r a -&gt; b
-forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnInsert b r a -&gt; b
+(a -&gt; b) -&gt; AnnotatedInsert b r a -&gt; AnnotatedInsert b r b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688258354"><span id="local-6989586621688258356"><span id="local-6989586621688258358"><span id="local-6989586621688258360"><span id="local-6989586621688258362"><span id="local-6989586621688258364"><span id="local-6989586621688258366"><span id="local-6989586621688258368"><span id="local-6989586621688258370"><span id="local-6989586621688258372"><span id="local-6989586621688258374"><span id="local-6989586621688258376"><span id="local-6989586621688258378"><span id="local-6989586621688258380"><span id="local-6989586621688258382"><span id="local-6989586621688258384"><span id="local-6989586621688258386"><span class="annot"><span class="annottext">AnnotatedInsert b r a -&gt; Bool
+(a -&gt; m) -&gt; AnnotatedInsert b r a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsert b r a -&gt; b
+(forall m. Monoid m =&gt; AnnotatedInsert b r m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnotatedInsert b r a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnotatedInsert b r a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsert b r a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsert b r a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsert b r a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsert b r a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedInsert b r a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedInsert b r a -&gt; a)
+-&gt; (forall a. AnnotatedInsert b r a -&gt; [a])
+-&gt; (forall a. AnnotatedInsert b r a -&gt; Bool)
+-&gt; (forall a. AnnotatedInsert b r a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; AnnotatedInsert b r a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; AnnotatedInsert b r a -&gt; a)
+-&gt; (forall a. Ord a =&gt; AnnotatedInsert b r a -&gt; a)
+-&gt; (forall a. Num a =&gt; AnnotatedInsert b r a -&gt; a)
+-&gt; (forall a. Num a =&gt; AnnotatedInsert b r a -&gt; a)
+-&gt; Foldable (AnnotatedInsert b r)
+forall a. Eq a =&gt; a -&gt; AnnotatedInsert b r a -&gt; Bool
+forall a. Num a =&gt; AnnotatedInsert b r a -&gt; a
+forall a. Ord a =&gt; AnnotatedInsert b r a -&gt; a
+forall m. Monoid m =&gt; AnnotatedInsert b r m -&gt; m
+forall a. AnnotatedInsert b r a -&gt; Bool
+forall a. AnnotatedInsert b r a -&gt; Int
+forall a. AnnotatedInsert b r a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedInsert b r a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnotatedInsert b r a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsert b r a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsert b r a -&gt; b
 forall (b :: BackendType) r a.
 (Backend b, Eq a) =&gt;
-a -&gt; AnnInsert b r a -&gt; Bool
+a -&gt; AnnotatedInsert b r a -&gt; Bool
 forall (b :: BackendType) r a.
 (Backend b, Num a) =&gt;
-AnnInsert b r a -&gt; a
+AnnotatedInsert b r a -&gt; a
 forall (b :: BackendType) r a.
 (Backend b, Ord a) =&gt;
-AnnInsert b r a -&gt; a
+AnnotatedInsert b r a -&gt; a
 forall (b :: BackendType) r m.
 (Backend b, Monoid m) =&gt;
-AnnInsert b r m -&gt; m
-forall (b :: BackendType) r a. Backend b =&gt; AnnInsert b r a -&gt; Bool
-forall (b :: BackendType) r a. Backend b =&gt; AnnInsert b r a -&gt; Int
-forall (b :: BackendType) r a. Backend b =&gt; AnnInsert b r a -&gt; [a]
+AnnotatedInsert b r m -&gt; m
 forall (b :: BackendType) r a.
 Backend b =&gt;
-(a -&gt; a -&gt; a) -&gt; AnnInsert b r a -&gt; a
+AnnotatedInsert b r a -&gt; Bool
+forall (b :: BackendType) r a.
+Backend b =&gt;
+AnnotatedInsert b r a -&gt; Int
+forall (b :: BackendType) r a.
+Backend b =&gt;
+AnnotatedInsert b r a -&gt; [a]
+forall (b :: BackendType) r a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; AnnotatedInsert b r a -&gt; a
 forall (b :: BackendType) r m a.
 (Backend b, Monoid m) =&gt;
-(a -&gt; m) -&gt; AnnInsert b r a -&gt; m
+(a -&gt; m) -&gt; AnnotatedInsert b r a -&gt; m
 forall (b :: BackendType) r b a.
 Backend b =&gt;
-(b -&gt; a -&gt; b) -&gt; b -&gt; AnnInsert b r a -&gt; b
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsert b r a -&gt; b
 forall (b :: BackendType) r a b.
 Backend b =&gt;
-(a -&gt; b -&gt; b) -&gt; b -&gt; AnnInsert b r a -&gt; b
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsert b r a -&gt; b
 forall (t :: * -&gt; *).
 (forall m. Monoid m =&gt; t m -&gt; m)
 -&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
@@ -168,100 +177,110 @@ forall (t :: * -&gt; *).
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; Foldable t
-product :: AnnInsert b r a -&gt; a
+product :: AnnotatedInsert b r a -&gt; a
 $cproduct :: forall (b :: BackendType) r a.
 (Backend b, Num a) =&gt;
-AnnInsert b r a -&gt; a
-sum :: AnnInsert b r a -&gt; a
+AnnotatedInsert b r a -&gt; a
+sum :: AnnotatedInsert b r a -&gt; a
 $csum :: forall (b :: BackendType) r a.
 (Backend b, Num a) =&gt;
-AnnInsert b r a -&gt; a
-minimum :: AnnInsert b r a -&gt; a
+AnnotatedInsert b r a -&gt; a
+minimum :: AnnotatedInsert b r a -&gt; a
 $cminimum :: forall (b :: BackendType) r a.
 (Backend b, Ord a) =&gt;
-AnnInsert b r a -&gt; a
-maximum :: AnnInsert b r a -&gt; a
+AnnotatedInsert b r a -&gt; a
+maximum :: AnnotatedInsert b r a -&gt; a
 $cmaximum :: forall (b :: BackendType) r a.
 (Backend b, Ord a) =&gt;
-AnnInsert b r a -&gt; a
-elem :: a -&gt; AnnInsert b r a -&gt; Bool
+AnnotatedInsert b r a -&gt; a
+elem :: a -&gt; AnnotatedInsert b r a -&gt; Bool
 $celem :: forall (b :: BackendType) r a.
 (Backend b, Eq a) =&gt;
-a -&gt; AnnInsert b r a -&gt; Bool
-length :: AnnInsert b r a -&gt; Int
-$clength :: forall (b :: BackendType) r a. Backend b =&gt; AnnInsert b r a -&gt; Int
-null :: AnnInsert b r a -&gt; Bool
-$cnull :: forall (b :: BackendType) r a. Backend b =&gt; AnnInsert b r a -&gt; Bool
-toList :: AnnInsert b r a -&gt; [a]
-$ctoList :: forall (b :: BackendType) r a. Backend b =&gt; AnnInsert b r a -&gt; [a]
-foldl1 :: (a -&gt; a -&gt; a) -&gt; AnnInsert b r a -&gt; a
+a -&gt; AnnotatedInsert b r a -&gt; Bool
+length :: AnnotatedInsert b r a -&gt; Int
+$clength :: forall (b :: BackendType) r a.
+Backend b =&gt;
+AnnotatedInsert b r a -&gt; Int
+null :: AnnotatedInsert b r a -&gt; Bool
+$cnull :: forall (b :: BackendType) r a.
+Backend b =&gt;
+AnnotatedInsert b r a -&gt; Bool
+toList :: AnnotatedInsert b r a -&gt; [a]
+$ctoList :: forall (b :: BackendType) r a.
+Backend b =&gt;
+AnnotatedInsert b r a -&gt; [a]
+foldl1 :: (a -&gt; a -&gt; a) -&gt; AnnotatedInsert b r a -&gt; a
 $cfoldl1 :: forall (b :: BackendType) r a.
 Backend b =&gt;
-(a -&gt; a -&gt; a) -&gt; AnnInsert b r a -&gt; a
-foldr1 :: (a -&gt; a -&gt; a) -&gt; AnnInsert b r a -&gt; a
+(a -&gt; a -&gt; a) -&gt; AnnotatedInsert b r a -&gt; a
+foldr1 :: (a -&gt; a -&gt; a) -&gt; AnnotatedInsert b r a -&gt; a
 $cfoldr1 :: forall (b :: BackendType) r a.
 Backend b =&gt;
-(a -&gt; a -&gt; a) -&gt; AnnInsert b r a -&gt; a
-foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; AnnInsert b r a -&gt; b
+(a -&gt; a -&gt; a) -&gt; AnnotatedInsert b r a -&gt; a
+foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsert b r a -&gt; b
 $cfoldl' :: forall (b :: BackendType) r b a.
 Backend b =&gt;
-(b -&gt; a -&gt; b) -&gt; b -&gt; AnnInsert b r a -&gt; b
-foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; AnnInsert b r a -&gt; b
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsert b r a -&gt; b
+foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsert b r a -&gt; b
 $cfoldl :: forall (b :: BackendType) r b a.
 Backend b =&gt;
-(b -&gt; a -&gt; b) -&gt; b -&gt; AnnInsert b r a -&gt; b
-foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; AnnInsert b r a -&gt; b
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsert b r a -&gt; b
+foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsert b r a -&gt; b
 $cfoldr' :: forall (b :: BackendType) r a b.
 Backend b =&gt;
-(a -&gt; b -&gt; b) -&gt; b -&gt; AnnInsert b r a -&gt; b
-foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; AnnInsert b r a -&gt; b
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsert b r a -&gt; b
+foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsert b r a -&gt; b
 $cfoldr :: forall (b :: BackendType) r a b.
 Backend b =&gt;
-(a -&gt; b -&gt; b) -&gt; b -&gt; AnnInsert b r a -&gt; b
-foldMap' :: (a -&gt; m) -&gt; AnnInsert b r a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsert b r a -&gt; b
+foldMap' :: (a -&gt; m) -&gt; AnnotatedInsert b r a -&gt; m
 $cfoldMap' :: forall (b :: BackendType) r m a.
 (Backend b, Monoid m) =&gt;
-(a -&gt; m) -&gt; AnnInsert b r a -&gt; m
-foldMap :: (a -&gt; m) -&gt; AnnInsert b r a -&gt; m
+(a -&gt; m) -&gt; AnnotatedInsert b r a -&gt; m
+foldMap :: (a -&gt; m) -&gt; AnnotatedInsert b r a -&gt; m
 $cfoldMap :: forall (b :: BackendType) r m a.
 (Backend b, Monoid m) =&gt;
-(a -&gt; m) -&gt; AnnInsert b r a -&gt; m
-fold :: AnnInsert b r m -&gt; m
+(a -&gt; m) -&gt; AnnotatedInsert b r a -&gt; m
+fold :: AnnotatedInsert b r m -&gt; m
 $cfold :: forall (b :: BackendType) r m.
 (Backend b, Monoid m) =&gt;
-AnnInsert b r m -&gt; m
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688258343"><span id="local-6989586621688258345"><span id="local-6989586621688258347"><span id="local-6989586621688258349"><span class="annot"><span class="annottext">Functor (AnnInsert b r)
-Foldable (AnnInsert b r)
-Functor (AnnInsert b r)
--&gt; Foldable (AnnInsert b r)
+AnnotatedInsert b r m -&gt; m
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688258343"><span id="local-6989586621688258345"><span id="local-6989586621688258347"><span id="local-6989586621688258349"><span class="annot"><span class="annottext">Functor (AnnotatedInsert b r)
+Foldable (AnnotatedInsert b r)
+Functor (AnnotatedInsert b r)
+-&gt; Foldable (AnnotatedInsert b r)
 -&gt; (forall (f :: * -&gt; *) a b.
     Applicative f =&gt;
-    (a -&gt; f b) -&gt; AnnInsert b r a -&gt; f (AnnInsert b r b))
+    (a -&gt; f b) -&gt; AnnotatedInsert b r a -&gt; f (AnnotatedInsert b r b))
 -&gt; (forall (f :: * -&gt; *) a.
     Applicative f =&gt;
-    AnnInsert b r (f a) -&gt; f (AnnInsert b r a))
+    AnnotatedInsert b r (f a) -&gt; f (AnnotatedInsert b r a))
 -&gt; (forall (m :: * -&gt; *) a b.
     Monad m =&gt;
-    (a -&gt; m b) -&gt; AnnInsert b r a -&gt; m (AnnInsert b r b))
+    (a -&gt; m b) -&gt; AnnotatedInsert b r a -&gt; m (AnnotatedInsert b r b))
 -&gt; (forall (m :: * -&gt; *) a.
     Monad m =&gt;
-    AnnInsert b r (m a) -&gt; m (AnnInsert b r a))
--&gt; Traversable (AnnInsert b r)
-(a -&gt; f b) -&gt; AnnInsert b r a -&gt; f (AnnInsert b r b)
-forall (b :: BackendType) r. Backend b =&gt; Functor (AnnInsert b r)
-forall (b :: BackendType) r. Backend b =&gt; Foldable (AnnInsert b r)
+    AnnotatedInsert b r (m a) -&gt; m (AnnotatedInsert b r a))
+-&gt; Traversable (AnnotatedInsert b r)
+(a -&gt; f b) -&gt; AnnotatedInsert b r a -&gt; f (AnnotatedInsert b r b)
+forall (b :: BackendType) r.
+Backend b =&gt;
+Functor (AnnotatedInsert b r)
+forall (b :: BackendType) r.
+Backend b =&gt;
+Foldable (AnnotatedInsert b r)
 forall (b :: BackendType) r (m :: * -&gt; *) a.
 (Backend b, Monad m) =&gt;
-AnnInsert b r (m a) -&gt; m (AnnInsert b r a)
+AnnotatedInsert b r (m a) -&gt; m (AnnotatedInsert b r a)
 forall (b :: BackendType) r (f :: * -&gt; *) a.
 (Backend b, Applicative f) =&gt;
-AnnInsert b r (f a) -&gt; f (AnnInsert b r a)
+AnnotatedInsert b r (f a) -&gt; f (AnnotatedInsert b r a)
 forall (b :: BackendType) r (m :: * -&gt; *) a b.
 (Backend b, Monad m) =&gt;
-(a -&gt; m b) -&gt; AnnInsert b r a -&gt; m (AnnInsert b r b)
+(a -&gt; m b) -&gt; AnnotatedInsert b r a -&gt; m (AnnotatedInsert b r b)
 forall (b :: BackendType) r (f :: * -&gt; *) a b.
 (Backend b, Applicative f) =&gt;
-(a -&gt; f b) -&gt; AnnInsert b r a -&gt; f (AnnInsert b r b)
+(a -&gt; f b) -&gt; AnnotatedInsert b r a -&gt; f (AnnotatedInsert b r b)
 forall (t :: * -&gt; *).
 Functor t
 -&gt; Foldable t
@@ -276,142 +295,159 @@ Functor t
 -&gt; Traversable t
 forall (m :: * -&gt; *) a.
 Monad m =&gt;
-AnnInsert b r (m a) -&gt; m (AnnInsert b r a)
+AnnotatedInsert b r (m a) -&gt; m (AnnotatedInsert b r a)
 forall (f :: * -&gt; *) a.
 Applicative f =&gt;
-AnnInsert b r (f a) -&gt; f (AnnInsert b r a)
+AnnotatedInsert b r (f a) -&gt; f (AnnotatedInsert b r a)
 forall (m :: * -&gt; *) a b.
 Monad m =&gt;
-(a -&gt; m b) -&gt; AnnInsert b r a -&gt; m (AnnInsert b r b)
+(a -&gt; m b) -&gt; AnnotatedInsert b r a -&gt; m (AnnotatedInsert b r b)
 forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
-(a -&gt; f b) -&gt; AnnInsert b r a -&gt; f (AnnInsert b r b)
-sequence :: AnnInsert b r (m a) -&gt; m (AnnInsert b r a)
+(a -&gt; f b) -&gt; AnnotatedInsert b r a -&gt; f (AnnotatedInsert b r b)
+sequence :: AnnotatedInsert b r (m a) -&gt; m (AnnotatedInsert b r a)
 $csequence :: forall (b :: BackendType) r (m :: * -&gt; *) a.
 (Backend b, Monad m) =&gt;
-AnnInsert b r (m a) -&gt; m (AnnInsert b r a)
-mapM :: (a -&gt; m b) -&gt; AnnInsert b r a -&gt; m (AnnInsert b r b)
+AnnotatedInsert b r (m a) -&gt; m (AnnotatedInsert b r a)
+mapM :: (a -&gt; m b) -&gt; AnnotatedInsert b r a -&gt; m (AnnotatedInsert b r b)
 $cmapM :: forall (b :: BackendType) r (m :: * -&gt; *) a b.
 (Backend b, Monad m) =&gt;
-(a -&gt; m b) -&gt; AnnInsert b r a -&gt; m (AnnInsert b r b)
-sequenceA :: AnnInsert b r (f a) -&gt; f (AnnInsert b r a)
+(a -&gt; m b) -&gt; AnnotatedInsert b r a -&gt; m (AnnotatedInsert b r b)
+sequenceA :: AnnotatedInsert b r (f a) -&gt; f (AnnotatedInsert b r a)
 $csequenceA :: forall (b :: BackendType) r (f :: * -&gt; *) a.
 (Backend b, Applicative f) =&gt;
-AnnInsert b r (f a) -&gt; f (AnnInsert b r a)
-traverse :: (a -&gt; f b) -&gt; AnnInsert b r a -&gt; f (AnnInsert b r b)
+AnnotatedInsert b r (f a) -&gt; f (AnnotatedInsert b r a)
+traverse :: (a -&gt; f b) -&gt; AnnotatedInsert b r a -&gt; f (AnnotatedInsert b r b)
 $ctraverse :: forall (b :: BackendType) r (f :: * -&gt; *) a b.
 (Backend b, Applicative f) =&gt;
-(a -&gt; f b) -&gt; AnnInsert b r a -&gt; f (AnnInsert b r b)
-$cp2Traversable :: forall (b :: BackendType) r. Backend b =&gt; Foldable (AnnInsert b r)
-$cp1Traversable :: forall (b :: BackendType) r. Backend b =&gt; Functor (AnnInsert b r)
+(a -&gt; f b) -&gt; AnnotatedInsert b r a -&gt; f (AnnotatedInsert b r b)
+$cp2Traversable :: forall (b :: BackendType) r.
+Backend b =&gt;
+Foldable (AnnotatedInsert b r)
+$cp1Traversable :: forall (b :: BackendType) r.
+Backend b =&gt;
+Functor (AnnotatedInsert b r)
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-66"></span><span>
 </span><span id="line-67"></span><span class="hs-comment">-- | One individual insert, one node from the tree.</span><span>
 </span><span id="line-68"></span><span class="hs-comment">-- The @f@ parameter is used to construct the container for the values to be</span><span>
 </span><span id="line-69"></span><span class="hs-comment">-- inserted: 'Single' for a single-row insert, '[]' for a multi-row insert.</span><span>
-</span><span id="line-70"></span><span class="hs-keyword">data</span><span> </span><span id="AnnIns"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnIns"><span class="hs-identifier hs-var">AnnIns</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688258341"><span class="annot"><a href="#local-6989586621688258341"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688258340"><span class="annot"><a href="#local-6989586621688258340"><span class="hs-identifier hs-type">f</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688258339"><span class="annot"><a href="#local-6989586621688258339"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AnnIns"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnIns"><span class="hs-identifier hs-var">AnnIns</span></a></span></span><span>
-</span><span id="line-71"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_aiInsObj"><span class="annot"><span class="annottext">AnnIns b f v -&gt; f (AnnotatedInsertRow b v)
-</span><a href="Hasura.RQL.IR.Insert.html#_aiInsObj"><span class="hs-identifier hs-var hs-var">_aiInsObj</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621688258340"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertRow"><span class="hs-identifier hs-type">AnnotatedInsertRow</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258341"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258339"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-72"></span><span>    </span><span id="_aiTableName"><span class="annot"><span class="annottext">AnnIns b f v -&gt; TableName b
+</span><span id="line-70"></span><span class="hs-keyword">data</span><span> </span><span id="AnnotatedInsertData"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertData"><span class="hs-identifier hs-var">AnnotatedInsertData</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688258341"><span class="annot"><a href="#local-6989586621688258341"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688258340"><span class="annot"><a href="#local-6989586621688258340"><span class="hs-identifier hs-type">f</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688258339"><span class="annot"><a href="#local-6989586621688258339"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AnnotatedInsertData"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertData"><span class="hs-identifier hs-var">AnnotatedInsertData</span></a></span></span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_aiInsertObject"><span class="annot"><span class="annottext">AnnotatedInsertData b f v -&gt; f (AnnotatedInsertRow b v)
+</span><a href="Hasura.RQL.IR.Insert.html#_aiInsertObject"><span class="hs-identifier hs-var hs-var">_aiInsertObject</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621688258340"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertRow"><span class="hs-identifier hs-type">AnnotatedInsertRow</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258341"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258339"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-72"></span><span>    </span><span id="_aiTableName"><span class="annot"><span class="annottext">AnnotatedInsertData b f v -&gt; TableName b
 </span><a href="Hasura.RQL.IR.Insert.html#_aiTableName"><span class="hs-identifier hs-var hs-var">_aiTableName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258341"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-73"></span><span>    </span><span id="_aiCheckCond"><span class="annot"><span class="annottext">AnnIns b f v -&gt; (AnnBoolExp b v, Maybe (AnnBoolExp b v))
-</span><a href="Hasura.RQL.IR.Insert.html#_aiCheckCond"><span class="hs-identifier hs-var hs-var">_aiCheckCond</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258341"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258339"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258341"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258339"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-74"></span><span>    </span><span id="_aiTableCols"><span class="annot"><span class="annottext">AnnIns b f v -&gt; [ColumnInfo b]
-</span><a href="Hasura.RQL.IR.Insert.html#_aiTableCols"><span class="hs-identifier hs-var hs-var">_aiTableCols</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258341"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
-</span><span id="line-75"></span><span>    </span><span id="_aiDefVals"><span class="annot"><span class="annottext">AnnIns b f v -&gt; PreSetColsG b v
-</span><a href="Hasura.RQL.IR.Insert.html#_aiDefVals"><span class="hs-identifier hs-var hs-var">_aiDefVals</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#PreSetColsG"><span class="hs-identifier hs-type">PreSetColsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258341"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258339"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-76"></span><span>    </span><span id="_aiBackendInsert"><span class="annot"><span class="annottext">AnnIns b f v -&gt; BackendInsert b v
+</span><span id="line-73"></span><span>    </span><span id="_aiCheckCondition"><span class="annot"><span class="annottext">AnnotatedInsertData b f v
+-&gt; (AnnBoolExp b v, Maybe (AnnBoolExp b v))
+</span><a href="Hasura.RQL.IR.Insert.html#_aiCheckCondition"><span class="hs-identifier hs-var hs-var">_aiCheckCondition</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258341"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258339"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258341"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258339"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-74"></span><span>    </span><span id="_aiTableColumns"><span class="annot"><span class="annottext">AnnotatedInsertData b f v -&gt; [ColumnInfo b]
+</span><a href="Hasura.RQL.IR.Insert.html#_aiTableColumns"><span class="hs-identifier hs-var hs-var">_aiTableColumns</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258341"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-75"></span><span>    </span><span id="_aiDefaultValues"><span class="annot"><span class="annottext">AnnotatedInsertData b f v -&gt; PreSetColsG b v
+</span><a href="Hasura.RQL.IR.Insert.html#_aiDefaultValues"><span class="hs-identifier hs-var hs-var">_aiDefaultValues</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#PreSetColsG"><span class="hs-identifier hs-type">PreSetColsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258341"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258339"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-76"></span><span>    </span><span id="_aiBackendInsert"><span class="annot"><span class="annottext">AnnotatedInsertData b f v -&gt; BackendInsert b v
 </span><a href="Hasura.RQL.IR.Insert.html#_aiBackendInsert"><span class="hs-identifier hs-var hs-var">_aiBackendInsert</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#BackendInsert"><span class="hs-identifier hs-type">BackendInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258341"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258339"><span class="hs-identifier hs-type">v</span></a></span><span>
 </span><span id="line-77"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-78"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688258328"><span id="local-6989586621688258330"><span class="annot"><span class="annottext">a -&gt; AnnIns b f b -&gt; AnnIns b f a
-(a -&gt; b) -&gt; AnnIns b f a -&gt; AnnIns b f b
-(forall a b. (a -&gt; b) -&gt; AnnIns b f a -&gt; AnnIns b f b)
--&gt; (forall a b. a -&gt; AnnIns b f b -&gt; AnnIns b f a)
--&gt; Functor (AnnIns b f)
-forall a b. a -&gt; AnnIns b f b -&gt; AnnIns b f a
-forall a b. (a -&gt; b) -&gt; AnnIns b f a -&gt; AnnIns b f b
+</span><span id="line-78"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688258328"><span id="local-6989586621688258330"><span class="annot"><span class="annottext">a -&gt; AnnotatedInsertData b f b -&gt; AnnotatedInsertData b f a
+(a -&gt; b) -&gt; AnnotatedInsertData b f a -&gt; AnnotatedInsertData b f b
+(forall a b.
+ (a -&gt; b) -&gt; AnnotatedInsertData b f a -&gt; AnnotatedInsertData b f b)
+-&gt; (forall a b.
+    a -&gt; AnnotatedInsertData b f b -&gt; AnnotatedInsertData b f a)
+-&gt; Functor (AnnotatedInsertData b f)
+forall a b.
+a -&gt; AnnotatedInsertData b f b -&gt; AnnotatedInsertData b f a
+forall a b.
+(a -&gt; b) -&gt; AnnotatedInsertData b f a -&gt; AnnotatedInsertData b f b
 forall (b :: BackendType) (f :: * -&gt; *) a b.
 (Backend b, Functor f) =&gt;
-a -&gt; AnnIns b f b -&gt; AnnIns b f a
+a -&gt; AnnotatedInsertData b f b -&gt; AnnotatedInsertData b f a
 forall (b :: BackendType) (f :: * -&gt; *) a b.
 (Backend b, Functor f) =&gt;
-(a -&gt; b) -&gt; AnnIns b f a -&gt; AnnIns b f b
+(a -&gt; b) -&gt; AnnotatedInsertData b f a -&gt; AnnotatedInsertData b f b
 forall (f :: * -&gt; *).
 (forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
 -&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
-&lt;$ :: a -&gt; AnnIns b f b -&gt; AnnIns b f a
+&lt;$ :: a -&gt; AnnotatedInsertData b f b -&gt; AnnotatedInsertData b f a
 $c&lt;$ :: forall (b :: BackendType) (f :: * -&gt; *) a b.
 (Backend b, Functor f) =&gt;
-a -&gt; AnnIns b f b -&gt; AnnIns b f a
-fmap :: (a -&gt; b) -&gt; AnnIns b f a -&gt; AnnIns b f b
+a -&gt; AnnotatedInsertData b f b -&gt; AnnotatedInsertData b f a
+fmap :: (a -&gt; b) -&gt; AnnotatedInsertData b f a -&gt; AnnotatedInsertData b f b
 $cfmap :: forall (b :: BackendType) (f :: * -&gt; *) a b.
 (Backend b, Functor f) =&gt;
-(a -&gt; b) -&gt; AnnIns b f a -&gt; AnnIns b f b
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688258294"><span id="local-6989586621688258296"><span id="local-6989586621688258298"><span id="local-6989586621688258300"><span id="local-6989586621688258302"><span id="local-6989586621688258304"><span id="local-6989586621688258306"><span id="local-6989586621688258308"><span id="local-6989586621688258310"><span id="local-6989586621688258312"><span id="local-6989586621688258314"><span id="local-6989586621688258316"><span id="local-6989586621688258318"><span id="local-6989586621688258320"><span id="local-6989586621688258322"><span id="local-6989586621688258324"><span id="local-6989586621688258326"><span class="annot"><span class="annottext">AnnIns b f a -&gt; Bool
-(a -&gt; m) -&gt; AnnIns b f a -&gt; m
-(a -&gt; b -&gt; b) -&gt; b -&gt; AnnIns b f a -&gt; b
-(forall m. Monoid m =&gt; AnnIns b f m -&gt; m)
--&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnIns b f a -&gt; m)
--&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnIns b f a -&gt; m)
--&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnIns b f a -&gt; b)
--&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnIns b f a -&gt; b)
--&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnIns b f a -&gt; b)
--&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnIns b f a -&gt; b)
--&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnIns b f a -&gt; a)
--&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnIns b f a -&gt; a)
--&gt; (forall a. AnnIns b f a -&gt; [a])
--&gt; (forall a. AnnIns b f a -&gt; Bool)
--&gt; (forall a. AnnIns b f a -&gt; Int)
--&gt; (forall a. Eq a =&gt; a -&gt; AnnIns b f a -&gt; Bool)
--&gt; (forall a. Ord a =&gt; AnnIns b f a -&gt; a)
--&gt; (forall a. Ord a =&gt; AnnIns b f a -&gt; a)
--&gt; (forall a. Num a =&gt; AnnIns b f a -&gt; a)
--&gt; (forall a. Num a =&gt; AnnIns b f a -&gt; a)
--&gt; Foldable (AnnIns b f)
-forall a. Eq a =&gt; a -&gt; AnnIns b f a -&gt; Bool
-forall a. Num a =&gt; AnnIns b f a -&gt; a
-forall a. Ord a =&gt; AnnIns b f a -&gt; a
-forall m. Monoid m =&gt; AnnIns b f m -&gt; m
-forall a. AnnIns b f a -&gt; Bool
-forall a. AnnIns b f a -&gt; Int
-forall a. AnnIns b f a -&gt; [a]
-forall a. (a -&gt; a -&gt; a) -&gt; AnnIns b f a -&gt; a
-forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnIns b f a -&gt; m
-forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnIns b f a -&gt; b
-forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnIns b f a -&gt; b
+(a -&gt; b) -&gt; AnnotatedInsertData b f a -&gt; AnnotatedInsertData b f b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688258294"><span id="local-6989586621688258296"><span id="local-6989586621688258298"><span id="local-6989586621688258300"><span id="local-6989586621688258302"><span id="local-6989586621688258304"><span id="local-6989586621688258306"><span id="local-6989586621688258308"><span id="local-6989586621688258310"><span id="local-6989586621688258312"><span id="local-6989586621688258314"><span id="local-6989586621688258316"><span id="local-6989586621688258318"><span id="local-6989586621688258320"><span id="local-6989586621688258322"><span id="local-6989586621688258324"><span id="local-6989586621688258326"><span class="annot"><span class="annottext">AnnotatedInsertData b f a -&gt; Bool
+(a -&gt; m) -&gt; AnnotatedInsertData b f a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsertData b f a -&gt; b
+(forall m. Monoid m =&gt; AnnotatedInsertData b f m -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; AnnotatedInsertData b f a -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; AnnotatedInsertData b f a -&gt; m)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsertData b f a -&gt; b)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsertData b f a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsertData b f a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsertData b f a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedInsertData b f a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedInsertData b f a -&gt; a)
+-&gt; (forall a. AnnotatedInsertData b f a -&gt; [a])
+-&gt; (forall a. AnnotatedInsertData b f a -&gt; Bool)
+-&gt; (forall a. AnnotatedInsertData b f a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; AnnotatedInsertData b f a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; AnnotatedInsertData b f a -&gt; a)
+-&gt; (forall a. Ord a =&gt; AnnotatedInsertData b f a -&gt; a)
+-&gt; (forall a. Num a =&gt; AnnotatedInsertData b f a -&gt; a)
+-&gt; (forall a. Num a =&gt; AnnotatedInsertData b f a -&gt; a)
+-&gt; Foldable (AnnotatedInsertData b f)
+forall a. Eq a =&gt; a -&gt; AnnotatedInsertData b f a -&gt; Bool
+forall a. Num a =&gt; AnnotatedInsertData b f a -&gt; a
+forall a. Ord a =&gt; AnnotatedInsertData b f a -&gt; a
+forall m. Monoid m =&gt; AnnotatedInsertData b f m -&gt; m
+forall a. AnnotatedInsertData b f a -&gt; Bool
+forall a. AnnotatedInsertData b f a -&gt; Int
+forall a. AnnotatedInsertData b f a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedInsertData b f a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnotatedInsertData b f a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsertData b f a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsertData b f a -&gt; b
 forall (b :: BackendType) (f :: * -&gt; *) a.
 (Backend b, Foldable f, Eq a) =&gt;
-a -&gt; AnnIns b f a -&gt; Bool
+a -&gt; AnnotatedInsertData b f a -&gt; Bool
 forall (b :: BackendType) (f :: * -&gt; *) a.
 (Backend b, Foldable f, Num a) =&gt;
-AnnIns b f a -&gt; a
+AnnotatedInsertData b f a -&gt; a
 forall (b :: BackendType) (f :: * -&gt; *) a.
 (Backend b, Foldable f, Ord a) =&gt;
-AnnIns b f a -&gt; a
+AnnotatedInsertData b f a -&gt; a
 forall (b :: BackendType) (f :: * -&gt; *) m.
 (Backend b, Foldable f, Monoid m) =&gt;
-AnnIns b f m -&gt; m
+AnnotatedInsertData b f m -&gt; m
 forall (b :: BackendType) (f :: * -&gt; *) a.
 (Backend b, Foldable f) =&gt;
-AnnIns b f a -&gt; Bool
+AnnotatedInsertData b f a -&gt; Bool
 forall (b :: BackendType) (f :: * -&gt; *) a.
 (Backend b, Foldable f) =&gt;
-AnnIns b f a -&gt; Int
+AnnotatedInsertData b f a -&gt; Int
 forall (b :: BackendType) (f :: * -&gt; *) a.
 (Backend b, Foldable f) =&gt;
-AnnIns b f a -&gt; [a]
+AnnotatedInsertData b f a -&gt; [a]
 forall (b :: BackendType) (f :: * -&gt; *) a.
 (Backend b, Foldable f) =&gt;
-(a -&gt; a -&gt; a) -&gt; AnnIns b f a -&gt; a
+(a -&gt; a -&gt; a) -&gt; AnnotatedInsertData b f a -&gt; a
 forall (b :: BackendType) (f :: * -&gt; *) m a.
 (Backend b, Foldable f, Monoid m) =&gt;
-(a -&gt; m) -&gt; AnnIns b f a -&gt; m
+(a -&gt; m) -&gt; AnnotatedInsertData b f a -&gt; m
 forall (b :: BackendType) (f :: * -&gt; *) b a.
 (Backend b, Foldable f) =&gt;
-(b -&gt; a -&gt; b) -&gt; b -&gt; AnnIns b f a -&gt; b
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsertData b f a -&gt; b
 forall (b :: BackendType) (f :: * -&gt; *) a b.
 (Backend b, Foldable f) =&gt;
-(a -&gt; b -&gt; b) -&gt; b -&gt; AnnIns b f a -&gt; b
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsertData b f a -&gt; b
 forall (t :: * -&gt; *).
 (forall m. Monoid m =&gt; t m -&gt; m)
 -&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
@@ -431,110 +467,115 @@ forall (t :: * -&gt; *).
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; Foldable t
-product :: AnnIns b f a -&gt; a
+product :: AnnotatedInsertData b f a -&gt; a
 $cproduct :: forall (b :: BackendType) (f :: * -&gt; *) a.
 (Backend b, Foldable f, Num a) =&gt;
-AnnIns b f a -&gt; a
-sum :: AnnIns b f a -&gt; a
+AnnotatedInsertData b f a -&gt; a
+sum :: AnnotatedInsertData b f a -&gt; a
 $csum :: forall (b :: BackendType) (f :: * -&gt; *) a.
 (Backend b, Foldable f, Num a) =&gt;
-AnnIns b f a -&gt; a
-minimum :: AnnIns b f a -&gt; a
+AnnotatedInsertData b f a -&gt; a
+minimum :: AnnotatedInsertData b f a -&gt; a
 $cminimum :: forall (b :: BackendType) (f :: * -&gt; *) a.
 (Backend b, Foldable f, Ord a) =&gt;
-AnnIns b f a -&gt; a
-maximum :: AnnIns b f a -&gt; a
+AnnotatedInsertData b f a -&gt; a
+maximum :: AnnotatedInsertData b f a -&gt; a
 $cmaximum :: forall (b :: BackendType) (f :: * -&gt; *) a.
 (Backend b, Foldable f, Ord a) =&gt;
-AnnIns b f a -&gt; a
-elem :: a -&gt; AnnIns b f a -&gt; Bool
+AnnotatedInsertData b f a -&gt; a
+elem :: a -&gt; AnnotatedInsertData b f a -&gt; Bool
 $celem :: forall (b :: BackendType) (f :: * -&gt; *) a.
 (Backend b, Foldable f, Eq a) =&gt;
-a -&gt; AnnIns b f a -&gt; Bool
-length :: AnnIns b f a -&gt; Int
+a -&gt; AnnotatedInsertData b f a -&gt; Bool
+length :: AnnotatedInsertData b f a -&gt; Int
 $clength :: forall (b :: BackendType) (f :: * -&gt; *) a.
 (Backend b, Foldable f) =&gt;
-AnnIns b f a -&gt; Int
-null :: AnnIns b f a -&gt; Bool
+AnnotatedInsertData b f a -&gt; Int
+null :: AnnotatedInsertData b f a -&gt; Bool
 $cnull :: forall (b :: BackendType) (f :: * -&gt; *) a.
 (Backend b, Foldable f) =&gt;
-AnnIns b f a -&gt; Bool
-toList :: AnnIns b f a -&gt; [a]
+AnnotatedInsertData b f a -&gt; Bool
+toList :: AnnotatedInsertData b f a -&gt; [a]
 $ctoList :: forall (b :: BackendType) (f :: * -&gt; *) a.
 (Backend b, Foldable f) =&gt;
-AnnIns b f a -&gt; [a]
-foldl1 :: (a -&gt; a -&gt; a) -&gt; AnnIns b f a -&gt; a
+AnnotatedInsertData b f a -&gt; [a]
+foldl1 :: (a -&gt; a -&gt; a) -&gt; AnnotatedInsertData b f a -&gt; a
 $cfoldl1 :: forall (b :: BackendType) (f :: * -&gt; *) a.
 (Backend b, Foldable f) =&gt;
-(a -&gt; a -&gt; a) -&gt; AnnIns b f a -&gt; a
-foldr1 :: (a -&gt; a -&gt; a) -&gt; AnnIns b f a -&gt; a
+(a -&gt; a -&gt; a) -&gt; AnnotatedInsertData b f a -&gt; a
+foldr1 :: (a -&gt; a -&gt; a) -&gt; AnnotatedInsertData b f a -&gt; a
 $cfoldr1 :: forall (b :: BackendType) (f :: * -&gt; *) a.
 (Backend b, Foldable f) =&gt;
-(a -&gt; a -&gt; a) -&gt; AnnIns b f a -&gt; a
-foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; AnnIns b f a -&gt; b
+(a -&gt; a -&gt; a) -&gt; AnnotatedInsertData b f a -&gt; a
+foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsertData b f a -&gt; b
 $cfoldl' :: forall (b :: BackendType) (f :: * -&gt; *) b a.
 (Backend b, Foldable f) =&gt;
-(b -&gt; a -&gt; b) -&gt; b -&gt; AnnIns b f a -&gt; b
-foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; AnnIns b f a -&gt; b
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsertData b f a -&gt; b
+foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsertData b f a -&gt; b
 $cfoldl :: forall (b :: BackendType) (f :: * -&gt; *) b a.
 (Backend b, Foldable f) =&gt;
-(b -&gt; a -&gt; b) -&gt; b -&gt; AnnIns b f a -&gt; b
-foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; AnnIns b f a -&gt; b
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsertData b f a -&gt; b
+foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsertData b f a -&gt; b
 $cfoldr' :: forall (b :: BackendType) (f :: * -&gt; *) a b.
 (Backend b, Foldable f) =&gt;
-(a -&gt; b -&gt; b) -&gt; b -&gt; AnnIns b f a -&gt; b
-foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; AnnIns b f a -&gt; b
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsertData b f a -&gt; b
+foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsertData b f a -&gt; b
 $cfoldr :: forall (b :: BackendType) (f :: * -&gt; *) a b.
 (Backend b, Foldable f) =&gt;
-(a -&gt; b -&gt; b) -&gt; b -&gt; AnnIns b f a -&gt; b
-foldMap' :: (a -&gt; m) -&gt; AnnIns b f a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsertData b f a -&gt; b
+foldMap' :: (a -&gt; m) -&gt; AnnotatedInsertData b f a -&gt; m
 $cfoldMap' :: forall (b :: BackendType) (f :: * -&gt; *) m a.
 (Backend b, Foldable f, Monoid m) =&gt;
-(a -&gt; m) -&gt; AnnIns b f a -&gt; m
-foldMap :: (a -&gt; m) -&gt; AnnIns b f a -&gt; m
+(a -&gt; m) -&gt; AnnotatedInsertData b f a -&gt; m
+foldMap :: (a -&gt; m) -&gt; AnnotatedInsertData b f a -&gt; m
 $cfoldMap :: forall (b :: BackendType) (f :: * -&gt; *) m a.
 (Backend b, Foldable f, Monoid m) =&gt;
-(a -&gt; m) -&gt; AnnIns b f a -&gt; m
-fold :: AnnIns b f m -&gt; m
+(a -&gt; m) -&gt; AnnotatedInsertData b f a -&gt; m
+fold :: AnnotatedInsertData b f m -&gt; m
 $cfold :: forall (b :: BackendType) (f :: * -&gt; *) m.
 (Backend b, Foldable f, Monoid m) =&gt;
-AnnIns b f m -&gt; m
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688258284"><span id="local-6989586621688258286"><span id="local-6989586621688258288"><span id="local-6989586621688258290"><span class="annot"><span class="annottext">Functor (AnnIns b f)
-Foldable (AnnIns b f)
-Functor (AnnIns b f)
--&gt; Foldable (AnnIns b f)
+AnnotatedInsertData b f m -&gt; m
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688258284"><span id="local-6989586621688258286"><span id="local-6989586621688258288"><span id="local-6989586621688258290"><span class="annot"><span class="annottext">Functor (AnnotatedInsertData b f)
+Foldable (AnnotatedInsertData b f)
+Functor (AnnotatedInsertData b f)
+-&gt; Foldable (AnnotatedInsertData b f)
 -&gt; (forall (f :: * -&gt; *) a b.
     Applicative f =&gt;
-    (a -&gt; f b) -&gt; AnnIns b f a -&gt; f (AnnIns b f b))
+    (a -&gt; f b)
+    -&gt; AnnotatedInsertData b f a -&gt; f (AnnotatedInsertData b f b))
 -&gt; (forall (f :: * -&gt; *) a.
     Applicative f =&gt;
-    AnnIns b f (f a) -&gt; f (AnnIns b f a))
+    AnnotatedInsertData b f (f a) -&gt; f (AnnotatedInsertData b f a))
 -&gt; (forall (m :: * -&gt; *) a b.
     Monad m =&gt;
-    (a -&gt; m b) -&gt; AnnIns b f a -&gt; m (AnnIns b f b))
+    (a -&gt; m b)
+    -&gt; AnnotatedInsertData b f a -&gt; m (AnnotatedInsertData b f b))
 -&gt; (forall (m :: * -&gt; *) a.
     Monad m =&gt;
-    AnnIns b f (m a) -&gt; m (AnnIns b f a))
--&gt; Traversable (AnnIns b f)
-(a -&gt; f b) -&gt; AnnIns b f a -&gt; f (AnnIns b f b)
+    AnnotatedInsertData b f (m a) -&gt; m (AnnotatedInsertData b f a))
+-&gt; Traversable (AnnotatedInsertData b f)
+(a -&gt; f b)
+-&gt; AnnotatedInsertData b f a -&gt; f (AnnotatedInsertData b f b)
 forall (b :: BackendType) (f :: * -&gt; *).
 (Backend b, Traversable f) =&gt;
-Functor (AnnIns b f)
+Functor (AnnotatedInsertData b f)
 forall (b :: BackendType) (f :: * -&gt; *).
 (Backend b, Traversable f) =&gt;
-Foldable (AnnIns b f)
+Foldable (AnnotatedInsertData b f)
 forall (b :: BackendType) (f :: * -&gt; *) (m :: * -&gt; *) a.
 (Backend b, Traversable f, Monad m) =&gt;
-AnnIns b f (m a) -&gt; m (AnnIns b f a)
+AnnotatedInsertData b f (m a) -&gt; m (AnnotatedInsertData b f a)
 forall (b :: BackendType) (f :: * -&gt; *) (f :: * -&gt; *) a.
 (Backend b, Traversable f, Applicative f) =&gt;
-AnnIns b f (f a) -&gt; f (AnnIns b f a)
+AnnotatedInsertData b f (f a) -&gt; f (AnnotatedInsertData b f a)
 forall (b :: BackendType) (f :: * -&gt; *) (m :: * -&gt; *) a b.
 (Backend b, Traversable f, Monad m) =&gt;
-(a -&gt; m b) -&gt; AnnIns b f a -&gt; m (AnnIns b f b)
+(a -&gt; m b)
+-&gt; AnnotatedInsertData b f a -&gt; m (AnnotatedInsertData b f b)
 forall (b :: BackendType) (f :: * -&gt; *) (f :: * -&gt; *) a b.
 (Backend b, Traversable f, Applicative f) =&gt;
-(a -&gt; f b) -&gt; AnnIns b f a -&gt; f (AnnIns b f b)
+(a -&gt; f b)
+-&gt; AnnotatedInsertData b f a -&gt; f (AnnotatedInsertData b f b)
 forall (t :: * -&gt; *).
 Functor t
 -&gt; Foldable t
@@ -549,38 +590,44 @@ Functor t
 -&gt; Traversable t
 forall (m :: * -&gt; *) a.
 Monad m =&gt;
-AnnIns b f (m a) -&gt; m (AnnIns b f a)
+AnnotatedInsertData b f (m a) -&gt; m (AnnotatedInsertData b f a)
 forall (f :: * -&gt; *) a.
 Applicative f =&gt;
-AnnIns b f (f a) -&gt; f (AnnIns b f a)
+AnnotatedInsertData b f (f a) -&gt; f (AnnotatedInsertData b f a)
 forall (m :: * -&gt; *) a b.
 Monad m =&gt;
-(a -&gt; m b) -&gt; AnnIns b f a -&gt; m (AnnIns b f b)
+(a -&gt; m b)
+-&gt; AnnotatedInsertData b f a -&gt; m (AnnotatedInsertData b f b)
 forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
-(a -&gt; f b) -&gt; AnnIns b f a -&gt; f (AnnIns b f b)
-sequence :: AnnIns b f (m a) -&gt; m (AnnIns b f a)
+(a -&gt; f b)
+-&gt; AnnotatedInsertData b f a -&gt; f (AnnotatedInsertData b f b)
+sequence :: AnnotatedInsertData b f (m a) -&gt; m (AnnotatedInsertData b f a)
 $csequence :: forall (b :: BackendType) (f :: * -&gt; *) (m :: * -&gt; *) a.
 (Backend b, Traversable f, Monad m) =&gt;
-AnnIns b f (m a) -&gt; m (AnnIns b f a)
-mapM :: (a -&gt; m b) -&gt; AnnIns b f a -&gt; m (AnnIns b f b)
+AnnotatedInsertData b f (m a) -&gt; m (AnnotatedInsertData b f a)
+mapM :: (a -&gt; m b)
+-&gt; AnnotatedInsertData b f a -&gt; m (AnnotatedInsertData b f b)
 $cmapM :: forall (b :: BackendType) (f :: * -&gt; *) (m :: * -&gt; *) a b.
 (Backend b, Traversable f, Monad m) =&gt;
-(a -&gt; m b) -&gt; AnnIns b f a -&gt; m (AnnIns b f b)
-sequenceA :: AnnIns b f (f a) -&gt; f (AnnIns b f a)
+(a -&gt; m b)
+-&gt; AnnotatedInsertData b f a -&gt; m (AnnotatedInsertData b f b)
+sequenceA :: AnnotatedInsertData b f (f a) -&gt; f (AnnotatedInsertData b f a)
 $csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) (f :: * -&gt; *) a.
 (Backend b, Traversable f, Applicative f) =&gt;
-AnnIns b f (f a) -&gt; f (AnnIns b f a)
-traverse :: (a -&gt; f b) -&gt; AnnIns b f a -&gt; f (AnnIns b f b)
+AnnotatedInsertData b f (f a) -&gt; f (AnnotatedInsertData b f a)
+traverse :: (a -&gt; f b)
+-&gt; AnnotatedInsertData b f a -&gt; f (AnnotatedInsertData b f b)
 $ctraverse :: forall (b :: BackendType) (f :: * -&gt; *) (f :: * -&gt; *) a b.
 (Backend b, Traversable f, Applicative f) =&gt;
-(a -&gt; f b) -&gt; AnnIns b f a -&gt; f (AnnIns b f b)
+(a -&gt; f b)
+-&gt; AnnotatedInsertData b f a -&gt; f (AnnotatedInsertData b f b)
 $cp2Traversable :: forall (b :: BackendType) (f :: * -&gt; *).
 (Backend b, Traversable f) =&gt;
-Foldable (AnnIns b f)
+Foldable (AnnotatedInsertData b f)
 $cp1Traversable :: forall (b :: BackendType) (f :: * -&gt; *).
 (Backend b, Traversable f) =&gt;
-Functor (AnnIns b f)
+Functor (AnnotatedInsertData b f)
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-79"></span><span>
 </span><span id="line-80"></span><span class="hs-comment">-- | Ad-hoc helper.</span><span>
@@ -746,106 +793,117 @@ $cp2Traversable :: Foldable Single
 $cp1Traversable :: Functor Single
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-87"></span><span>
-</span><span id="line-88"></span><span class="hs-keyword">type</span><span> </span><span id="SingleObjIns"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#SingleObjIns"><span class="hs-identifier hs-var">SingleObjIns</span></a></span></span><span> </span><span id="local-6989586621688258232"><span class="annot"><a href="#local-6989586621688258232"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621688258231"><span class="annot"><a href="#local-6989586621688258231"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnIns"><span class="hs-identifier hs-type">AnnIns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258232"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#Single"><span class="hs-identifier hs-type">Single</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258231"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-88"></span><span class="hs-keyword">type</span><span> </span><span id="SingleObjectInsert"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#SingleObjectInsert"><span class="hs-identifier hs-var">SingleObjectInsert</span></a></span></span><span> </span><span id="local-6989586621688258232"><span class="annot"><a href="#local-6989586621688258232"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621688258231"><span class="annot"><a href="#local-6989586621688258231"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertData"><span class="hs-identifier hs-type">AnnotatedInsertData</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258232"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#Single"><span class="hs-identifier hs-type">Single</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258231"><span class="hs-identifier hs-type">v</span></a></span><span>
 </span><span id="line-89"></span><span>
-</span><span id="line-90"></span><span class="hs-keyword">type</span><span> </span><span id="MultiObjIns"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#MultiObjIns"><span class="hs-identifier hs-var">MultiObjIns</span></a></span></span><span> </span><span id="local-6989586621688258230"><span class="annot"><a href="#local-6989586621688258230"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621688258229"><span class="annot"><a href="#local-6989586621688258229"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnIns"><span class="hs-identifier hs-type">AnnIns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258230"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621688258229"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-90"></span><span class="hs-keyword">type</span><span> </span><span id="MultiObjectInsert"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#MultiObjectInsert"><span class="hs-identifier hs-var">MultiObjectInsert</span></a></span></span><span> </span><span id="local-6989586621688258230"><span class="annot"><a href="#local-6989586621688258230"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621688258229"><span class="annot"><a href="#local-6989586621688258229"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertData"><span class="hs-identifier hs-type">AnnotatedInsertData</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258230"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621688258229"><span class="hs-identifier hs-type">v</span></a></span><span>
 </span><span id="line-91"></span><span>
 </span><span id="line-92"></span><span class="hs-comment">-- | An insert item.</span><span>
 </span><span id="line-93"></span><span class="hs-comment">-- The object and array relationships are not unavailable when 'XNestedInserts b = XDisable'</span><span>
-</span><span id="line-94"></span><span class="hs-keyword">data</span><span> </span><span id="AnnotatedInsert"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsert"><span class="hs-identifier hs-var">AnnotatedInsert</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688258428"><span class="annot"><a href="#local-6989586621688258428"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688258427"><span class="annot"><a href="#local-6989586621688258427"><span class="hs-identifier hs-type">v</span></a></span></span><span>
+</span><span id="line-94"></span><span class="hs-keyword">data</span><span> </span><span id="AnnotatedInsertField"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertField"><span class="hs-identifier hs-var">AnnotatedInsertField</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688258428"><span class="annot"><a href="#local-6989586621688258428"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688258427"><span class="annot"><a href="#local-6989586621688258427"><span class="hs-identifier hs-type">v</span></a></span></span><span>
 </span><span id="line-95"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="AIColumn"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AIColumn"><span class="hs-identifier hs-var">AIColumn</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258428"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621688258427"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-96"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AIObjectRelationship"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AIObjectRelationship"><span class="hs-identifier hs-var">AIObjectRelationship</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#XNestedInserts"><span class="hs-identifier hs-type">XNestedInserts</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258428"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ObjRelIns"><span class="hs-identifier hs-type">ObjRelIns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258428"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258427"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-97"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AIArrayRelationship"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AIArrayRelationship"><span class="hs-identifier hs-var">AIArrayRelationship</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#XNestedInserts"><span class="hs-identifier hs-type">XNestedInserts</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258428"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ArrRelIns"><span class="hs-identifier hs-type">ArrRelIns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258428"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258427"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-98"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688258222"><span id="local-6989586621688258224"><span class="annot"><span class="annottext">a -&gt; AnnotatedInsert b b -&gt; AnnotatedInsert b a
-(a -&gt; b) -&gt; AnnotatedInsert b a -&gt; AnnotatedInsert b b
+</span><span id="line-96"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AIObjectRelationship"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AIObjectRelationship"><span class="hs-identifier hs-var">AIObjectRelationship</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#XNestedInserts"><span class="hs-identifier hs-type">XNestedInserts</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258428"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ObjectRelationInsert"><span class="hs-identifier hs-type">ObjectRelationInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258428"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258427"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-97"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AIArrayRelationship"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AIArrayRelationship"><span class="hs-identifier hs-var">AIArrayRelationship</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#XNestedInserts"><span class="hs-identifier hs-type">XNestedInserts</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258428"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ArrayRelationInsert"><span class="hs-identifier hs-type">ArrayRelationInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258428"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258427"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-98"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688258222"><span id="local-6989586621688258224"><span class="annot"><span class="annottext">a -&gt; AnnotatedInsertField b b -&gt; AnnotatedInsertField b a
+(a -&gt; b) -&gt; AnnotatedInsertField b a -&gt; AnnotatedInsertField b b
 (forall a b.
- (a -&gt; b) -&gt; AnnotatedInsert b a -&gt; AnnotatedInsert b b)
--&gt; (forall a b. a -&gt; AnnotatedInsert b b -&gt; AnnotatedInsert b a)
--&gt; Functor (AnnotatedInsert b)
-forall a b. a -&gt; AnnotatedInsert b b -&gt; AnnotatedInsert b a
-forall a b. (a -&gt; b) -&gt; AnnotatedInsert b a -&gt; AnnotatedInsert b b
+ (a -&gt; b) -&gt; AnnotatedInsertField b a -&gt; AnnotatedInsertField b b)
+-&gt; (forall a b.
+    a -&gt; AnnotatedInsertField b b -&gt; AnnotatedInsertField b a)
+-&gt; Functor (AnnotatedInsertField b)
+forall a b.
+a -&gt; AnnotatedInsertField b b -&gt; AnnotatedInsertField b a
+forall a b.
+(a -&gt; b) -&gt; AnnotatedInsertField b a -&gt; AnnotatedInsertField b b
 forall (b :: BackendType) a b.
 Backend b =&gt;
-a -&gt; AnnotatedInsert b b -&gt; AnnotatedInsert b a
+a -&gt; AnnotatedInsertField b b -&gt; AnnotatedInsertField b a
 forall (b :: BackendType) a b.
 Backend b =&gt;
-(a -&gt; b) -&gt; AnnotatedInsert b a -&gt; AnnotatedInsert b b
+(a -&gt; b) -&gt; AnnotatedInsertField b a -&gt; AnnotatedInsertField b b
 forall (f :: * -&gt; *).
 (forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
 -&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
-&lt;$ :: a -&gt; AnnotatedInsert b b -&gt; AnnotatedInsert b a
+&lt;$ :: a -&gt; AnnotatedInsertField b b -&gt; AnnotatedInsertField b a
 $c&lt;$ :: forall (b :: BackendType) a b.
 Backend b =&gt;
-a -&gt; AnnotatedInsert b b -&gt; AnnotatedInsert b a
-fmap :: (a -&gt; b) -&gt; AnnotatedInsert b a -&gt; AnnotatedInsert b b
+a -&gt; AnnotatedInsertField b b -&gt; AnnotatedInsertField b a
+fmap :: (a -&gt; b) -&gt; AnnotatedInsertField b a -&gt; AnnotatedInsertField b b
 $cfmap :: forall (b :: BackendType) a b.
 Backend b =&gt;
-(a -&gt; b) -&gt; AnnotatedInsert b a -&gt; AnnotatedInsert b b
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688258188"><span id="local-6989586621688258190"><span id="local-6989586621688258192"><span id="local-6989586621688258194"><span id="local-6989586621688258196"><span id="local-6989586621688258198"><span id="local-6989586621688258200"><span id="local-6989586621688258202"><span id="local-6989586621688258204"><span id="local-6989586621688258206"><span id="local-6989586621688258208"><span id="local-6989586621688258210"><span id="local-6989586621688258212"><span id="local-6989586621688258214"><span id="local-6989586621688258216"><span id="local-6989586621688258218"><span id="local-6989586621688258220"><span class="annot"><span class="annottext">AnnotatedInsert b a -&gt; Bool
-(a -&gt; m) -&gt; AnnotatedInsert b a -&gt; m
-(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsert b a -&gt; b
-(forall m. Monoid m =&gt; AnnotatedInsert b m -&gt; m)
--&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnotatedInsert b a -&gt; m)
--&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnotatedInsert b a -&gt; m)
--&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsert b a -&gt; b)
--&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsert b a -&gt; b)
--&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsert b a -&gt; b)
--&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsert b a -&gt; b)
--&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedInsert b a -&gt; a)
--&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedInsert b a -&gt; a)
--&gt; (forall a. AnnotatedInsert b a -&gt; [a])
--&gt; (forall a. AnnotatedInsert b a -&gt; Bool)
--&gt; (forall a. AnnotatedInsert b a -&gt; Int)
--&gt; (forall a. Eq a =&gt; a -&gt; AnnotatedInsert b a -&gt; Bool)
--&gt; (forall a. Ord a =&gt; AnnotatedInsert b a -&gt; a)
--&gt; (forall a. Ord a =&gt; AnnotatedInsert b a -&gt; a)
--&gt; (forall a. Num a =&gt; AnnotatedInsert b a -&gt; a)
--&gt; (forall a. Num a =&gt; AnnotatedInsert b a -&gt; a)
--&gt; Foldable (AnnotatedInsert b)
-forall a. Eq a =&gt; a -&gt; AnnotatedInsert b a -&gt; Bool
-forall a. Num a =&gt; AnnotatedInsert b a -&gt; a
-forall a. Ord a =&gt; AnnotatedInsert b a -&gt; a
-forall m. Monoid m =&gt; AnnotatedInsert b m -&gt; m
-forall a. AnnotatedInsert b a -&gt; Bool
-forall a. AnnotatedInsert b a -&gt; Int
-forall a. AnnotatedInsert b a -&gt; [a]
-forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedInsert b a -&gt; a
-forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnotatedInsert b a -&gt; m
-forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsert b a -&gt; b
-forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsert b a -&gt; b
+(a -&gt; b) -&gt; AnnotatedInsertField b a -&gt; AnnotatedInsertField b b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688258188"><span id="local-6989586621688258190"><span id="local-6989586621688258192"><span id="local-6989586621688258194"><span id="local-6989586621688258196"><span id="local-6989586621688258198"><span id="local-6989586621688258200"><span id="local-6989586621688258202"><span id="local-6989586621688258204"><span id="local-6989586621688258206"><span id="local-6989586621688258208"><span id="local-6989586621688258210"><span id="local-6989586621688258212"><span id="local-6989586621688258214"><span id="local-6989586621688258216"><span id="local-6989586621688258218"><span id="local-6989586621688258220"><span class="annot"><span class="annottext">AnnotatedInsertField b a -&gt; Bool
+(a -&gt; m) -&gt; AnnotatedInsertField b a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsertField b a -&gt; b
+(forall m. Monoid m =&gt; AnnotatedInsertField b m -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; AnnotatedInsertField b a -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; AnnotatedInsertField b a -&gt; m)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsertField b a -&gt; b)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsertField b a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsertField b a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsertField b a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedInsertField b a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedInsertField b a -&gt; a)
+-&gt; (forall a. AnnotatedInsertField b a -&gt; [a])
+-&gt; (forall a. AnnotatedInsertField b a -&gt; Bool)
+-&gt; (forall a. AnnotatedInsertField b a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; AnnotatedInsertField b a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; AnnotatedInsertField b a -&gt; a)
+-&gt; (forall a. Ord a =&gt; AnnotatedInsertField b a -&gt; a)
+-&gt; (forall a. Num a =&gt; AnnotatedInsertField b a -&gt; a)
+-&gt; (forall a. Num a =&gt; AnnotatedInsertField b a -&gt; a)
+-&gt; Foldable (AnnotatedInsertField b)
+forall a. Eq a =&gt; a -&gt; AnnotatedInsertField b a -&gt; Bool
+forall a. Num a =&gt; AnnotatedInsertField b a -&gt; a
+forall a. Ord a =&gt; AnnotatedInsertField b a -&gt; a
+forall m. Monoid m =&gt; AnnotatedInsertField b m -&gt; m
+forall a. AnnotatedInsertField b a -&gt; Bool
+forall a. AnnotatedInsertField b a -&gt; Int
+forall a. AnnotatedInsertField b a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedInsertField b a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnotatedInsertField b a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsertField b a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsertField b a -&gt; b
 forall (b :: BackendType) a.
 (Backend b, Eq a) =&gt;
-a -&gt; AnnotatedInsert b a -&gt; Bool
+a -&gt; AnnotatedInsertField b a -&gt; Bool
 forall (b :: BackendType) a.
 (Backend b, Num a) =&gt;
-AnnotatedInsert b a -&gt; a
+AnnotatedInsertField b a -&gt; a
 forall (b :: BackendType) a.
 (Backend b, Ord a) =&gt;
-AnnotatedInsert b a -&gt; a
+AnnotatedInsertField b a -&gt; a
 forall (b :: BackendType) m.
 (Backend b, Monoid m) =&gt;
-AnnotatedInsert b m -&gt; m
+AnnotatedInsertField b m -&gt; m
 forall (b :: BackendType) a.
 Backend b =&gt;
-AnnotatedInsert b a -&gt; Bool
+AnnotatedInsertField b a -&gt; Bool
 forall (b :: BackendType) a.
 Backend b =&gt;
-AnnotatedInsert b a -&gt; Int
+AnnotatedInsertField b a -&gt; Int
 forall (b :: BackendType) a.
 Backend b =&gt;
-AnnotatedInsert b a -&gt; [a]
+AnnotatedInsertField b a -&gt; [a]
 forall (b :: BackendType) a.
 Backend b =&gt;
-(a -&gt; a -&gt; a) -&gt; AnnotatedInsert b a -&gt; a
+(a -&gt; a -&gt; a) -&gt; AnnotatedInsertField b a -&gt; a
 forall (b :: BackendType) m a.
 (Backend b, Monoid m) =&gt;
-(a -&gt; m) -&gt; AnnotatedInsert b a -&gt; m
+(a -&gt; m) -&gt; AnnotatedInsertField b a -&gt; m
 forall (b :: BackendType) b a.
 Backend b =&gt;
-(b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsert b a -&gt; b
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsertField b a -&gt; b
 forall (b :: BackendType) a b.
 Backend b =&gt;
-(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsert b a -&gt; b
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsertField b a -&gt; b
 forall (t :: * -&gt; *).
 (forall m. Monoid m =&gt; t m -&gt; m)
 -&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
@@ -865,108 +923,115 @@ forall (t :: * -&gt; *).
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; Foldable t
-product :: AnnotatedInsert b a -&gt; a
+product :: AnnotatedInsertField b a -&gt; a
 $cproduct :: forall (b :: BackendType) a.
 (Backend b, Num a) =&gt;
-AnnotatedInsert b a -&gt; a
-sum :: AnnotatedInsert b a -&gt; a
+AnnotatedInsertField b a -&gt; a
+sum :: AnnotatedInsertField b a -&gt; a
 $csum :: forall (b :: BackendType) a.
 (Backend b, Num a) =&gt;
-AnnotatedInsert b a -&gt; a
-minimum :: AnnotatedInsert b a -&gt; a
+AnnotatedInsertField b a -&gt; a
+minimum :: AnnotatedInsertField b a -&gt; a
 $cminimum :: forall (b :: BackendType) a.
 (Backend b, Ord a) =&gt;
-AnnotatedInsert b a -&gt; a
-maximum :: AnnotatedInsert b a -&gt; a
+AnnotatedInsertField b a -&gt; a
+maximum :: AnnotatedInsertField b a -&gt; a
 $cmaximum :: forall (b :: BackendType) a.
 (Backend b, Ord a) =&gt;
-AnnotatedInsert b a -&gt; a
-elem :: a -&gt; AnnotatedInsert b a -&gt; Bool
+AnnotatedInsertField b a -&gt; a
+elem :: a -&gt; AnnotatedInsertField b a -&gt; Bool
 $celem :: forall (b :: BackendType) a.
 (Backend b, Eq a) =&gt;
-a -&gt; AnnotatedInsert b a -&gt; Bool
-length :: AnnotatedInsert b a -&gt; Int
+a -&gt; AnnotatedInsertField b a -&gt; Bool
+length :: AnnotatedInsertField b a -&gt; Int
 $clength :: forall (b :: BackendType) a.
 Backend b =&gt;
-AnnotatedInsert b a -&gt; Int
-null :: AnnotatedInsert b a -&gt; Bool
+AnnotatedInsertField b a -&gt; Int
+null :: AnnotatedInsertField b a -&gt; Bool
 $cnull :: forall (b :: BackendType) a.
 Backend b =&gt;
-AnnotatedInsert b a -&gt; Bool
-toList :: AnnotatedInsert b a -&gt; [a]
+AnnotatedInsertField b a -&gt; Bool
+toList :: AnnotatedInsertField b a -&gt; [a]
 $ctoList :: forall (b :: BackendType) a.
 Backend b =&gt;
-AnnotatedInsert b a -&gt; [a]
-foldl1 :: (a -&gt; a -&gt; a) -&gt; AnnotatedInsert b a -&gt; a
+AnnotatedInsertField b a -&gt; [a]
+foldl1 :: (a -&gt; a -&gt; a) -&gt; AnnotatedInsertField b a -&gt; a
 $cfoldl1 :: forall (b :: BackendType) a.
 Backend b =&gt;
-(a -&gt; a -&gt; a) -&gt; AnnotatedInsert b a -&gt; a
-foldr1 :: (a -&gt; a -&gt; a) -&gt; AnnotatedInsert b a -&gt; a
+(a -&gt; a -&gt; a) -&gt; AnnotatedInsertField b a -&gt; a
+foldr1 :: (a -&gt; a -&gt; a) -&gt; AnnotatedInsertField b a -&gt; a
 $cfoldr1 :: forall (b :: BackendType) a.
 Backend b =&gt;
-(a -&gt; a -&gt; a) -&gt; AnnotatedInsert b a -&gt; a
-foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsert b a -&gt; b
+(a -&gt; a -&gt; a) -&gt; AnnotatedInsertField b a -&gt; a
+foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsertField b a -&gt; b
 $cfoldl' :: forall (b :: BackendType) b a.
 Backend b =&gt;
-(b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsert b a -&gt; b
-foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsert b a -&gt; b
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsertField b a -&gt; b
+foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsertField b a -&gt; b
 $cfoldl :: forall (b :: BackendType) b a.
 Backend b =&gt;
-(b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsert b a -&gt; b
-foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsert b a -&gt; b
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedInsertField b a -&gt; b
+foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsertField b a -&gt; b
 $cfoldr' :: forall (b :: BackendType) a b.
 Backend b =&gt;
-(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsert b a -&gt; b
-foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsert b a -&gt; b
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsertField b a -&gt; b
+foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsertField b a -&gt; b
 $cfoldr :: forall (b :: BackendType) a b.
 Backend b =&gt;
-(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsert b a -&gt; b
-foldMap' :: (a -&gt; m) -&gt; AnnotatedInsert b a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedInsertField b a -&gt; b
+foldMap' :: (a -&gt; m) -&gt; AnnotatedInsertField b a -&gt; m
 $cfoldMap' :: forall (b :: BackendType) m a.
 (Backend b, Monoid m) =&gt;
-(a -&gt; m) -&gt; AnnotatedInsert b a -&gt; m
-foldMap :: (a -&gt; m) -&gt; AnnotatedInsert b a -&gt; m
+(a -&gt; m) -&gt; AnnotatedInsertField b a -&gt; m
+foldMap :: (a -&gt; m) -&gt; AnnotatedInsertField b a -&gt; m
 $cfoldMap :: forall (b :: BackendType) m a.
 (Backend b, Monoid m) =&gt;
-(a -&gt; m) -&gt; AnnotatedInsert b a -&gt; m
-fold :: AnnotatedInsert b m -&gt; m
+(a -&gt; m) -&gt; AnnotatedInsertField b a -&gt; m
+fold :: AnnotatedInsertField b m -&gt; m
 $cfold :: forall (b :: BackendType) m.
 (Backend b, Monoid m) =&gt;
-AnnotatedInsert b m -&gt; m
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688258178"><span id="local-6989586621688258180"><span id="local-6989586621688258182"><span id="local-6989586621688258184"><span class="annot"><span class="annottext">Functor (AnnotatedInsert b)
-Foldable (AnnotatedInsert b)
-Functor (AnnotatedInsert b)
--&gt; Foldable (AnnotatedInsert b)
+AnnotatedInsertField b m -&gt; m
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688258178"><span id="local-6989586621688258180"><span id="local-6989586621688258182"><span id="local-6989586621688258184"><span class="annot"><span class="annottext">Functor (AnnotatedInsertField b)
+Foldable (AnnotatedInsertField b)
+Functor (AnnotatedInsertField b)
+-&gt; Foldable (AnnotatedInsertField b)
 -&gt; (forall (f :: * -&gt; *) a b.
     Applicative f =&gt;
-    (a -&gt; f b) -&gt; AnnotatedInsert b a -&gt; f (AnnotatedInsert b b))
+    (a -&gt; f b)
+    -&gt; AnnotatedInsertField b a -&gt; f (AnnotatedInsertField b b))
 -&gt; (forall (f :: * -&gt; *) a.
     Applicative f =&gt;
-    AnnotatedInsert b (f a) -&gt; f (AnnotatedInsert b a))
+    AnnotatedInsertField b (f a) -&gt; f (AnnotatedInsertField b a))
 -&gt; (forall (m :: * -&gt; *) a b.
     Monad m =&gt;
-    (a -&gt; m b) -&gt; AnnotatedInsert b a -&gt; m (AnnotatedInsert b b))
+    (a -&gt; m b)
+    -&gt; AnnotatedInsertField b a -&gt; m (AnnotatedInsertField b b))
 -&gt; (forall (m :: * -&gt; *) a.
     Monad m =&gt;
-    AnnotatedInsert b (m a) -&gt; m (AnnotatedInsert b a))
--&gt; Traversable (AnnotatedInsert b)
-(a -&gt; f b) -&gt; AnnotatedInsert b a -&gt; f (AnnotatedInsert b b)
-forall (b :: BackendType). Backend b =&gt; Functor (AnnotatedInsert b)
+    AnnotatedInsertField b (m a) -&gt; m (AnnotatedInsertField b a))
+-&gt; Traversable (AnnotatedInsertField b)
+(a -&gt; f b)
+-&gt; AnnotatedInsertField b a -&gt; f (AnnotatedInsertField b b)
 forall (b :: BackendType).
 Backend b =&gt;
-Foldable (AnnotatedInsert b)
+Functor (AnnotatedInsertField b)
+forall (b :: BackendType).
+Backend b =&gt;
+Foldable (AnnotatedInsertField b)
 forall (b :: BackendType) (m :: * -&gt; *) a.
 (Backend b, Monad m) =&gt;
-AnnotatedInsert b (m a) -&gt; m (AnnotatedInsert b a)
+AnnotatedInsertField b (m a) -&gt; m (AnnotatedInsertField b a)
 forall (b :: BackendType) (f :: * -&gt; *) a.
 (Backend b, Applicative f) =&gt;
-AnnotatedInsert b (f a) -&gt; f (AnnotatedInsert b a)
+AnnotatedInsertField b (f a) -&gt; f (AnnotatedInsertField b a)
 forall (b :: BackendType) (m :: * -&gt; *) a b.
 (Backend b, Monad m) =&gt;
-(a -&gt; m b) -&gt; AnnotatedInsert b a -&gt; m (AnnotatedInsert b b)
+(a -&gt; m b)
+-&gt; AnnotatedInsertField b a -&gt; m (AnnotatedInsertField b b)
 forall (b :: BackendType) (f :: * -&gt; *) a b.
 (Backend b, Applicative f) =&gt;
-(a -&gt; f b) -&gt; AnnotatedInsert b a -&gt; f (AnnotatedInsert b b)
+(a -&gt; f b)
+-&gt; AnnotatedInsertField b a -&gt; f (AnnotatedInsertField b b)
 forall (t :: * -&gt; *).
 Functor t
 -&gt; Foldable t
@@ -981,160 +1046,176 @@ Functor t
 -&gt; Traversable t
 forall (m :: * -&gt; *) a.
 Monad m =&gt;
-AnnotatedInsert b (m a) -&gt; m (AnnotatedInsert b a)
+AnnotatedInsertField b (m a) -&gt; m (AnnotatedInsertField b a)
 forall (f :: * -&gt; *) a.
 Applicative f =&gt;
-AnnotatedInsert b (f a) -&gt; f (AnnotatedInsert b a)
+AnnotatedInsertField b (f a) -&gt; f (AnnotatedInsertField b a)
 forall (m :: * -&gt; *) a b.
 Monad m =&gt;
-(a -&gt; m b) -&gt; AnnotatedInsert b a -&gt; m (AnnotatedInsert b b)
+(a -&gt; m b)
+-&gt; AnnotatedInsertField b a -&gt; m (AnnotatedInsertField b b)
 forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
-(a -&gt; f b) -&gt; AnnotatedInsert b a -&gt; f (AnnotatedInsert b b)
-sequence :: AnnotatedInsert b (m a) -&gt; m (AnnotatedInsert b a)
+(a -&gt; f b)
+-&gt; AnnotatedInsertField b a -&gt; f (AnnotatedInsertField b b)
+sequence :: AnnotatedInsertField b (m a) -&gt; m (AnnotatedInsertField b a)
 $csequence :: forall (b :: BackendType) (m :: * -&gt; *) a.
 (Backend b, Monad m) =&gt;
-AnnotatedInsert b (m a) -&gt; m (AnnotatedInsert b a)
-mapM :: (a -&gt; m b) -&gt; AnnotatedInsert b a -&gt; m (AnnotatedInsert b b)
+AnnotatedInsertField b (m a) -&gt; m (AnnotatedInsertField b a)
+mapM :: (a -&gt; m b)
+-&gt; AnnotatedInsertField b a -&gt; m (AnnotatedInsertField b b)
 $cmapM :: forall (b :: BackendType) (m :: * -&gt; *) a b.
 (Backend b, Monad m) =&gt;
-(a -&gt; m b) -&gt; AnnotatedInsert b a -&gt; m (AnnotatedInsert b b)
-sequenceA :: AnnotatedInsert b (f a) -&gt; f (AnnotatedInsert b a)
+(a -&gt; m b)
+-&gt; AnnotatedInsertField b a -&gt; m (AnnotatedInsertField b b)
+sequenceA :: AnnotatedInsertField b (f a) -&gt; f (AnnotatedInsertField b a)
 $csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) a.
 (Backend b, Applicative f) =&gt;
-AnnotatedInsert b (f a) -&gt; f (AnnotatedInsert b a)
-traverse :: (a -&gt; f b) -&gt; AnnotatedInsert b a -&gt; f (AnnotatedInsert b b)
+AnnotatedInsertField b (f a) -&gt; f (AnnotatedInsertField b a)
+traverse :: (a -&gt; f b)
+-&gt; AnnotatedInsertField b a -&gt; f (AnnotatedInsertField b b)
 $ctraverse :: forall (b :: BackendType) (f :: * -&gt; *) a b.
 (Backend b, Applicative f) =&gt;
-(a -&gt; f b) -&gt; AnnotatedInsert b a -&gt; f (AnnotatedInsert b b)
+(a -&gt; f b)
+-&gt; AnnotatedInsertField b a -&gt; f (AnnotatedInsertField b b)
 $cp2Traversable :: forall (b :: BackendType).
 Backend b =&gt;
-Foldable (AnnotatedInsert b)
-$cp1Traversable :: forall (b :: BackendType). Backend b =&gt; Functor (AnnotatedInsert b)
+Foldable (AnnotatedInsertField b)
+$cp1Traversable :: forall (b :: BackendType).
+Backend b =&gt;
+Functor (AnnotatedInsertField b)
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-99"></span><span>
 </span><span id="line-100"></span><span class="hs-comment">-- | One individual row to be inserted.</span><span>
 </span><span id="line-101"></span><span class="hs-comment">-- Contains the columns' values and all the matching recursive relationship inserts.</span><span>
-</span><span id="line-102"></span><span class="hs-keyword">type</span><span> </span><span id="AnnotatedInsertRow"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertRow"><span class="hs-identifier hs-var">AnnotatedInsertRow</span></a></span></span><span> </span><span id="local-6989586621688258177"><span class="annot"><a href="#local-6989586621688258177"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621688258176"><span class="annot"><a href="#local-6989586621688258176"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsert"><span class="hs-identifier hs-type">AnnotatedInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258177"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258176"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-102"></span><span class="hs-keyword">type</span><span> </span><span id="AnnotatedInsertRow"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertRow"><span class="hs-identifier hs-var">AnnotatedInsertRow</span></a></span></span><span> </span><span id="local-6989586621688258177"><span class="annot"><a href="#local-6989586621688258177"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621688258176"><span class="annot"><a href="#local-6989586621688258176"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertField"><span class="hs-identifier hs-type">AnnotatedInsertField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258177"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258176"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-103"></span><span>
 </span><span id="line-104"></span><span class="hs-comment">-- | One individual relationship.</span><span>
 </span><span id="line-105"></span><span class="hs-comment">-- Unlike other types, this one is not parameterized by the type of the leaves</span><span>
 </span><span id="line-106"></span><span class="hs-comment">-- @v@, but by the kind of insert has to be performed: multi-row or single row.</span><span>
-</span><span id="line-107"></span><span class="hs-comment">-- See 'ObjRelIns' and 'ArrRelIns'.</span><span>
-</span><span id="line-108"></span><span class="hs-keyword">data</span><span> </span><span id="RelIns"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#RelIns"><span class="hs-identifier hs-var">RelIns</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688258175"><span class="annot"><a href="#local-6989586621688258175"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688258174"><span class="annot"><a href="#local-6989586621688258174"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RelIns"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#RelIns"><span class="hs-identifier hs-var">RelIns</span></a></span></span><span>
-</span><span id="line-109"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_riAnnIns"><span class="annot"><span class="annottext">RelIns b a -&gt; a
-</span><a href="Hasura.RQL.IR.Insert.html#_riAnnIns"><span class="hs-identifier hs-var hs-var">_riAnnIns</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621688258174"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-110"></span><span>    </span><span id="_riRelInfo"><span class="annot"><span class="annottext">RelIns b a -&gt; RelInfo b
-</span><a href="Hasura.RQL.IR.Insert.html#_riRelInfo"><span class="hs-identifier hs-var hs-var">_riRelInfo</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#RelInfo"><span class="hs-identifier hs-type">RelInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258175"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-107"></span><span class="hs-comment">-- See 'ObjectRelationInsert' and 'ArrayRelationInsert'.</span><span>
+</span><span id="line-108"></span><span class="hs-keyword">data</span><span> </span><span id="RelationInsert"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#RelationInsert"><span class="hs-identifier hs-var">RelationInsert</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688258175"><span class="annot"><a href="#local-6989586621688258175"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688258174"><span class="annot"><a href="#local-6989586621688258174"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RelationInsert"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#RelationInsert"><span class="hs-identifier hs-var">RelationInsert</span></a></span></span><span>
+</span><span id="line-109"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_riInsertData"><span class="annot"><span class="annottext">RelationInsert b a -&gt; a
+</span><a href="Hasura.RQL.IR.Insert.html#_riInsertData"><span class="hs-identifier hs-var hs-var">_riInsertData</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621688258174"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-110"></span><span>    </span><span id="_riRelationInfo"><span class="annot"><span class="annottext">RelationInsert b a -&gt; RelInfo b
+</span><a href="Hasura.RQL.IR.Insert.html#_riRelationInfo"><span class="hs-identifier hs-var hs-var">_riRelationInfo</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#RelInfo"><span class="hs-identifier hs-type">RelInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258175"><span class="hs-identifier hs-type">b</span></a></span><span>
 </span><span id="line-111"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-112"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688258165"><span id="local-6989586621688258167"><span id="local-6989586621688258169"><span class="annot"><span class="annottext">Int -&gt; RelIns b a -&gt; ShowS
-[RelIns b a] -&gt; ShowS
-RelIns b a -&gt; String
-(Int -&gt; RelIns b a -&gt; ShowS)
--&gt; (RelIns b a -&gt; String)
--&gt; ([RelIns b a] -&gt; ShowS)
--&gt; Show (RelIns b a)
+</span><span id="line-112"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688258165"><span id="local-6989586621688258167"><span id="local-6989586621688258169"><span class="annot"><span class="annottext">Int -&gt; RelationInsert b a -&gt; ShowS
+[RelationInsert b a] -&gt; ShowS
+RelationInsert b a -&gt; String
+(Int -&gt; RelationInsert b a -&gt; ShowS)
+-&gt; (RelationInsert b a -&gt; String)
+-&gt; ([RelationInsert b a] -&gt; ShowS)
+-&gt; Show (RelationInsert b a)
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
 forall (b :: BackendType) a.
 (Backend b, Show a) =&gt;
-Int -&gt; RelIns b a -&gt; ShowS
+Int -&gt; RelationInsert b a -&gt; ShowS
 forall (b :: BackendType) a.
 (Backend b, Show a) =&gt;
-[RelIns b a] -&gt; ShowS
+[RelationInsert b a] -&gt; ShowS
 forall (b :: BackendType) a.
 (Backend b, Show a) =&gt;
-RelIns b a -&gt; String
-showList :: [RelIns b a] -&gt; ShowS
+RelationInsert b a -&gt; String
+showList :: [RelationInsert b a] -&gt; ShowS
 $cshowList :: forall (b :: BackendType) a.
 (Backend b, Show a) =&gt;
-[RelIns b a] -&gt; ShowS
-show :: RelIns b a -&gt; String
+[RelationInsert b a] -&gt; ShowS
+show :: RelationInsert b a -&gt; String
 $cshow :: forall (b :: BackendType) a.
 (Backend b, Show a) =&gt;
-RelIns b a -&gt; String
-showsPrec :: Int -&gt; RelIns b a -&gt; ShowS
+RelationInsert b a -&gt; String
+showsPrec :: Int -&gt; RelationInsert b a -&gt; ShowS
 $cshowsPrec :: forall (b :: BackendType) a.
 (Backend b, Show a) =&gt;
-Int -&gt; RelIns b a -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688258160"><span id="local-6989586621688258162"><span class="annot"><span class="annottext">RelIns b a -&gt; RelIns b a -&gt; Bool
-(RelIns b a -&gt; RelIns b a -&gt; Bool)
--&gt; (RelIns b a -&gt; RelIns b a -&gt; Bool) -&gt; Eq (RelIns b a)
+Int -&gt; RelationInsert b a -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688258160"><span id="local-6989586621688258162"><span class="annot"><span class="annottext">RelationInsert b a -&gt; RelationInsert b a -&gt; Bool
+(RelationInsert b a -&gt; RelationInsert b a -&gt; Bool)
+-&gt; (RelationInsert b a -&gt; RelationInsert b a -&gt; Bool)
+-&gt; Eq (RelationInsert b a)
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 forall (b :: BackendType) a.
 (Backend b, Eq a) =&gt;
-RelIns b a -&gt; RelIns b a -&gt; Bool
-/= :: RelIns b a -&gt; RelIns b a -&gt; Bool
+RelationInsert b a -&gt; RelationInsert b a -&gt; Bool
+/= :: RelationInsert b a -&gt; RelationInsert b a -&gt; Bool
 $c/= :: forall (b :: BackendType) a.
 (Backend b, Eq a) =&gt;
-RelIns b a -&gt; RelIns b a -&gt; Bool
-== :: RelIns b a -&gt; RelIns b a -&gt; Bool
+RelationInsert b a -&gt; RelationInsert b a -&gt; Bool
+== :: RelationInsert b a -&gt; RelationInsert b a -&gt; Bool
 $c== :: forall (b :: BackendType) a.
 (Backend b, Eq a) =&gt;
-RelIns b a -&gt; RelIns b a -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688258155"><span id="local-6989586621688258157"><span class="annot"><span class="annottext">a -&gt; RelIns b b -&gt; RelIns b a
-(a -&gt; b) -&gt; RelIns b a -&gt; RelIns b b
-(forall a b. (a -&gt; b) -&gt; RelIns b a -&gt; RelIns b b)
--&gt; (forall a b. a -&gt; RelIns b b -&gt; RelIns b a)
--&gt; Functor (RelIns b)
-forall a b. a -&gt; RelIns b b -&gt; RelIns b a
-forall a b. (a -&gt; b) -&gt; RelIns b a -&gt; RelIns b b
-forall (b :: BackendType) a b. a -&gt; RelIns b b -&gt; RelIns b a
-forall (b :: BackendType) a b. (a -&gt; b) -&gt; RelIns b a -&gt; RelIns b b
+RelationInsert b a -&gt; RelationInsert b a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688258155"><span id="local-6989586621688258157"><span class="annot"><span class="annottext">a -&gt; RelationInsert b b -&gt; RelationInsert b a
+(a -&gt; b) -&gt; RelationInsert b a -&gt; RelationInsert b b
+(forall a b. (a -&gt; b) -&gt; RelationInsert b a -&gt; RelationInsert b b)
+-&gt; (forall a b. a -&gt; RelationInsert b b -&gt; RelationInsert b a)
+-&gt; Functor (RelationInsert b)
+forall a b. a -&gt; RelationInsert b b -&gt; RelationInsert b a
+forall a b. (a -&gt; b) -&gt; RelationInsert b a -&gt; RelationInsert b b
+forall (b :: BackendType) a b.
+a -&gt; RelationInsert b b -&gt; RelationInsert b a
+forall (b :: BackendType) a b.
+(a -&gt; b) -&gt; RelationInsert b a -&gt; RelationInsert b b
 forall (f :: * -&gt; *).
 (forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
 -&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
-&lt;$ :: a -&gt; RelIns b b -&gt; RelIns b a
-$c&lt;$ :: forall (b :: BackendType) a b. a -&gt; RelIns b b -&gt; RelIns b a
-fmap :: (a -&gt; b) -&gt; RelIns b a -&gt; RelIns b b
-$cfmap :: forall (b :: BackendType) a b. (a -&gt; b) -&gt; RelIns b a -&gt; RelIns b b
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688258121"><span id="local-6989586621688258123"><span id="local-6989586621688258125"><span id="local-6989586621688258127"><span id="local-6989586621688258129"><span id="local-6989586621688258131"><span id="local-6989586621688258133"><span id="local-6989586621688258135"><span id="local-6989586621688258137"><span id="local-6989586621688258139"><span id="local-6989586621688258141"><span id="local-6989586621688258143"><span id="local-6989586621688258145"><span id="local-6989586621688258147"><span id="local-6989586621688258149"><span id="local-6989586621688258151"><span id="local-6989586621688258153"><span class="annot"><span class="annottext">RelIns b a -&gt; Bool
-(a -&gt; m) -&gt; RelIns b a -&gt; m
-(a -&gt; b -&gt; b) -&gt; b -&gt; RelIns b a -&gt; b
-(forall m. Monoid m =&gt; RelIns b m -&gt; m)
--&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; RelIns b a -&gt; m)
--&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; RelIns b a -&gt; m)
--&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; RelIns b a -&gt; b)
--&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; RelIns b a -&gt; b)
--&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; RelIns b a -&gt; b)
--&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; RelIns b a -&gt; b)
--&gt; (forall a. (a -&gt; a -&gt; a) -&gt; RelIns b a -&gt; a)
--&gt; (forall a. (a -&gt; a -&gt; a) -&gt; RelIns b a -&gt; a)
--&gt; (forall a. RelIns b a -&gt; [a])
--&gt; (forall a. RelIns b a -&gt; Bool)
--&gt; (forall a. RelIns b a -&gt; Int)
--&gt; (forall a. Eq a =&gt; a -&gt; RelIns b a -&gt; Bool)
--&gt; (forall a. Ord a =&gt; RelIns b a -&gt; a)
--&gt; (forall a. Ord a =&gt; RelIns b a -&gt; a)
--&gt; (forall a. Num a =&gt; RelIns b a -&gt; a)
--&gt; (forall a. Num a =&gt; RelIns b a -&gt; a)
--&gt; Foldable (RelIns b)
-forall a. Eq a =&gt; a -&gt; RelIns b a -&gt; Bool
-forall a. Num a =&gt; RelIns b a -&gt; a
-forall a. Ord a =&gt; RelIns b a -&gt; a
-forall m. Monoid m =&gt; RelIns b m -&gt; m
-forall a. RelIns b a -&gt; Bool
-forall a. RelIns b a -&gt; Int
-forall a. RelIns b a -&gt; [a]
-forall a. (a -&gt; a -&gt; a) -&gt; RelIns b a -&gt; a
-forall m a. Monoid m =&gt; (a -&gt; m) -&gt; RelIns b a -&gt; m
-forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; RelIns b a -&gt; b
-forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; RelIns b a -&gt; b
-forall (b :: BackendType) a. Eq a =&gt; a -&gt; RelIns b a -&gt; Bool
-forall (b :: BackendType) a. Num a =&gt; RelIns b a -&gt; a
-forall (b :: BackendType) a. Ord a =&gt; RelIns b a -&gt; a
-forall (b :: BackendType) m. Monoid m =&gt; RelIns b m -&gt; m
-forall (b :: BackendType) a. RelIns b a -&gt; Bool
-forall (b :: BackendType) a. RelIns b a -&gt; Int
-forall (b :: BackendType) a. RelIns b a -&gt; [a]
-forall (b :: BackendType) a. (a -&gt; a -&gt; a) -&gt; RelIns b a -&gt; a
+&lt;$ :: a -&gt; RelationInsert b b -&gt; RelationInsert b a
+$c&lt;$ :: forall (b :: BackendType) a b.
+a -&gt; RelationInsert b b -&gt; RelationInsert b a
+fmap :: (a -&gt; b) -&gt; RelationInsert b a -&gt; RelationInsert b b
+$cfmap :: forall (b :: BackendType) a b.
+(a -&gt; b) -&gt; RelationInsert b a -&gt; RelationInsert b b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688258121"><span id="local-6989586621688258123"><span id="local-6989586621688258125"><span id="local-6989586621688258127"><span id="local-6989586621688258129"><span id="local-6989586621688258131"><span id="local-6989586621688258133"><span id="local-6989586621688258135"><span id="local-6989586621688258137"><span id="local-6989586621688258139"><span id="local-6989586621688258141"><span id="local-6989586621688258143"><span id="local-6989586621688258145"><span id="local-6989586621688258147"><span id="local-6989586621688258149"><span id="local-6989586621688258151"><span id="local-6989586621688258153"><span class="annot"><span class="annottext">RelationInsert b a -&gt; Bool
+(a -&gt; m) -&gt; RelationInsert b a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; RelationInsert b a -&gt; b
+(forall m. Monoid m =&gt; RelationInsert b m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; RelationInsert b a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; RelationInsert b a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; RelationInsert b a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; RelationInsert b a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; RelationInsert b a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; RelationInsert b a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; RelationInsert b a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; RelationInsert b a -&gt; a)
+-&gt; (forall a. RelationInsert b a -&gt; [a])
+-&gt; (forall a. RelationInsert b a -&gt; Bool)
+-&gt; (forall a. RelationInsert b a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; RelationInsert b a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; RelationInsert b a -&gt; a)
+-&gt; (forall a. Ord a =&gt; RelationInsert b a -&gt; a)
+-&gt; (forall a. Num a =&gt; RelationInsert b a -&gt; a)
+-&gt; (forall a. Num a =&gt; RelationInsert b a -&gt; a)
+-&gt; Foldable (RelationInsert b)
+forall a. Eq a =&gt; a -&gt; RelationInsert b a -&gt; Bool
+forall a. Num a =&gt; RelationInsert b a -&gt; a
+forall a. Ord a =&gt; RelationInsert b a -&gt; a
+forall m. Monoid m =&gt; RelationInsert b m -&gt; m
+forall a. RelationInsert b a -&gt; Bool
+forall a. RelationInsert b a -&gt; Int
+forall a. RelationInsert b a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; RelationInsert b a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; RelationInsert b a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; RelationInsert b a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; RelationInsert b a -&gt; b
+forall (b :: BackendType) a.
+Eq a =&gt;
+a -&gt; RelationInsert b a -&gt; Bool
+forall (b :: BackendType) a. Num a =&gt; RelationInsert b a -&gt; a
+forall (b :: BackendType) a. Ord a =&gt; RelationInsert b a -&gt; a
+forall (b :: BackendType) m. Monoid m =&gt; RelationInsert b m -&gt; m
+forall (b :: BackendType) a. RelationInsert b a -&gt; Bool
+forall (b :: BackendType) a. RelationInsert b a -&gt; Int
+forall (b :: BackendType) a. RelationInsert b a -&gt; [a]
+forall (b :: BackendType) a.
+(a -&gt; a -&gt; a) -&gt; RelationInsert b a -&gt; a
 forall (b :: BackendType) m a.
 Monoid m =&gt;
-(a -&gt; m) -&gt; RelIns b a -&gt; m
+(a -&gt; m) -&gt; RelationInsert b a -&gt; m
 forall (b :: BackendType) b a.
-(b -&gt; a -&gt; b) -&gt; b -&gt; RelIns b a -&gt; b
+(b -&gt; a -&gt; b) -&gt; b -&gt; RelationInsert b a -&gt; b
 forall (b :: BackendType) a b.
-(a -&gt; b -&gt; b) -&gt; b -&gt; RelIns b a -&gt; b
+(a -&gt; b -&gt; b) -&gt; b -&gt; RelationInsert b a -&gt; b
 forall (t :: * -&gt; *).
 (forall m. Monoid m =&gt; t m -&gt; m)
 -&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
@@ -1154,80 +1235,84 @@ forall (t :: * -&gt; *).
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; Foldable t
-product :: RelIns b a -&gt; a
-$cproduct :: forall (b :: BackendType) a. Num a =&gt; RelIns b a -&gt; a
-sum :: RelIns b a -&gt; a
-$csum :: forall (b :: BackendType) a. Num a =&gt; RelIns b a -&gt; a
-minimum :: RelIns b a -&gt; a
-$cminimum :: forall (b :: BackendType) a. Ord a =&gt; RelIns b a -&gt; a
-maximum :: RelIns b a -&gt; a
-$cmaximum :: forall (b :: BackendType) a. Ord a =&gt; RelIns b a -&gt; a
-elem :: a -&gt; RelIns b a -&gt; Bool
-$celem :: forall (b :: BackendType) a. Eq a =&gt; a -&gt; RelIns b a -&gt; Bool
-length :: RelIns b a -&gt; Int
-$clength :: forall (b :: BackendType) a. RelIns b a -&gt; Int
-null :: RelIns b a -&gt; Bool
-$cnull :: forall (b :: BackendType) a. RelIns b a -&gt; Bool
-toList :: RelIns b a -&gt; [a]
-$ctoList :: forall (b :: BackendType) a. RelIns b a -&gt; [a]
-foldl1 :: (a -&gt; a -&gt; a) -&gt; RelIns b a -&gt; a
-$cfoldl1 :: forall (b :: BackendType) a. (a -&gt; a -&gt; a) -&gt; RelIns b a -&gt; a
-foldr1 :: (a -&gt; a -&gt; a) -&gt; RelIns b a -&gt; a
-$cfoldr1 :: forall (b :: BackendType) a. (a -&gt; a -&gt; a) -&gt; RelIns b a -&gt; a
-foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; RelIns b a -&gt; b
+product :: RelationInsert b a -&gt; a
+$cproduct :: forall (b :: BackendType) a. Num a =&gt; RelationInsert b a -&gt; a
+sum :: RelationInsert b a -&gt; a
+$csum :: forall (b :: BackendType) a. Num a =&gt; RelationInsert b a -&gt; a
+minimum :: RelationInsert b a -&gt; a
+$cminimum :: forall (b :: BackendType) a. Ord a =&gt; RelationInsert b a -&gt; a
+maximum :: RelationInsert b a -&gt; a
+$cmaximum :: forall (b :: BackendType) a. Ord a =&gt; RelationInsert b a -&gt; a
+elem :: a -&gt; RelationInsert b a -&gt; Bool
+$celem :: forall (b :: BackendType) a.
+Eq a =&gt;
+a -&gt; RelationInsert b a -&gt; Bool
+length :: RelationInsert b a -&gt; Int
+$clength :: forall (b :: BackendType) a. RelationInsert b a -&gt; Int
+null :: RelationInsert b a -&gt; Bool
+$cnull :: forall (b :: BackendType) a. RelationInsert b a -&gt; Bool
+toList :: RelationInsert b a -&gt; [a]
+$ctoList :: forall (b :: BackendType) a. RelationInsert b a -&gt; [a]
+foldl1 :: (a -&gt; a -&gt; a) -&gt; RelationInsert b a -&gt; a
+$cfoldl1 :: forall (b :: BackendType) a.
+(a -&gt; a -&gt; a) -&gt; RelationInsert b a -&gt; a
+foldr1 :: (a -&gt; a -&gt; a) -&gt; RelationInsert b a -&gt; a
+$cfoldr1 :: forall (b :: BackendType) a.
+(a -&gt; a -&gt; a) -&gt; RelationInsert b a -&gt; a
+foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; RelationInsert b a -&gt; b
 $cfoldl' :: forall (b :: BackendType) b a.
-(b -&gt; a -&gt; b) -&gt; b -&gt; RelIns b a -&gt; b
-foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; RelIns b a -&gt; b
+(b -&gt; a -&gt; b) -&gt; b -&gt; RelationInsert b a -&gt; b
+foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; RelationInsert b a -&gt; b
 $cfoldl :: forall (b :: BackendType) b a.
-(b -&gt; a -&gt; b) -&gt; b -&gt; RelIns b a -&gt; b
-foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; RelIns b a -&gt; b
+(b -&gt; a -&gt; b) -&gt; b -&gt; RelationInsert b a -&gt; b
+foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; RelationInsert b a -&gt; b
 $cfoldr' :: forall (b :: BackendType) a b.
-(a -&gt; b -&gt; b) -&gt; b -&gt; RelIns b a -&gt; b
-foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; RelIns b a -&gt; b
+(a -&gt; b -&gt; b) -&gt; b -&gt; RelationInsert b a -&gt; b
+foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; RelationInsert b a -&gt; b
 $cfoldr :: forall (b :: BackendType) a b.
-(a -&gt; b -&gt; b) -&gt; b -&gt; RelIns b a -&gt; b
-foldMap' :: (a -&gt; m) -&gt; RelIns b a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; RelationInsert b a -&gt; b
+foldMap' :: (a -&gt; m) -&gt; RelationInsert b a -&gt; m
 $cfoldMap' :: forall (b :: BackendType) m a.
 Monoid m =&gt;
-(a -&gt; m) -&gt; RelIns b a -&gt; m
-foldMap :: (a -&gt; m) -&gt; RelIns b a -&gt; m
+(a -&gt; m) -&gt; RelationInsert b a -&gt; m
+foldMap :: (a -&gt; m) -&gt; RelationInsert b a -&gt; m
 $cfoldMap :: forall (b :: BackendType) m a.
 Monoid m =&gt;
-(a -&gt; m) -&gt; RelIns b a -&gt; m
-fold :: RelIns b m -&gt; m
-$cfold :: forall (b :: BackendType) m. Monoid m =&gt; RelIns b m -&gt; m
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688258111"><span id="local-6989586621688258113"><span id="local-6989586621688258115"><span id="local-6989586621688258117"><span class="annot"><span class="annottext">Functor (RelIns b)
-Foldable (RelIns b)
-Functor (RelIns b)
--&gt; Foldable (RelIns b)
+(a -&gt; m) -&gt; RelationInsert b a -&gt; m
+fold :: RelationInsert b m -&gt; m
+$cfold :: forall (b :: BackendType) m. Monoid m =&gt; RelationInsert b m -&gt; m
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688258111"><span id="local-6989586621688258113"><span id="local-6989586621688258115"><span id="local-6989586621688258117"><span class="annot"><span class="annottext">Functor (RelationInsert b)
+Foldable (RelationInsert b)
+Functor (RelationInsert b)
+-&gt; Foldable (RelationInsert b)
 -&gt; (forall (f :: * -&gt; *) a b.
     Applicative f =&gt;
-    (a -&gt; f b) -&gt; RelIns b a -&gt; f (RelIns b b))
+    (a -&gt; f b) -&gt; RelationInsert b a -&gt; f (RelationInsert b b))
 -&gt; (forall (f :: * -&gt; *) a.
     Applicative f =&gt;
-    RelIns b (f a) -&gt; f (RelIns b a))
+    RelationInsert b (f a) -&gt; f (RelationInsert b a))
 -&gt; (forall (m :: * -&gt; *) a b.
     Monad m =&gt;
-    (a -&gt; m b) -&gt; RelIns b a -&gt; m (RelIns b b))
+    (a -&gt; m b) -&gt; RelationInsert b a -&gt; m (RelationInsert b b))
 -&gt; (forall (m :: * -&gt; *) a.
     Monad m =&gt;
-    RelIns b (m a) -&gt; m (RelIns b a))
--&gt; Traversable (RelIns b)
-(a -&gt; f b) -&gt; RelIns b a -&gt; f (RelIns b b)
-forall (b :: BackendType). Functor (RelIns b)
-forall (b :: BackendType). Foldable (RelIns b)
+    RelationInsert b (m a) -&gt; m (RelationInsert b a))
+-&gt; Traversable (RelationInsert b)
+(a -&gt; f b) -&gt; RelationInsert b a -&gt; f (RelationInsert b b)
+forall (b :: BackendType). Functor (RelationInsert b)
+forall (b :: BackendType). Foldable (RelationInsert b)
 forall (b :: BackendType) (m :: * -&gt; *) a.
 Monad m =&gt;
-RelIns b (m a) -&gt; m (RelIns b a)
+RelationInsert b (m a) -&gt; m (RelationInsert b a)
 forall (b :: BackendType) (f :: * -&gt; *) a.
 Applicative f =&gt;
-RelIns b (f a) -&gt; f (RelIns b a)
+RelationInsert b (f a) -&gt; f (RelationInsert b a)
 forall (b :: BackendType) (m :: * -&gt; *) a b.
 Monad m =&gt;
-(a -&gt; m b) -&gt; RelIns b a -&gt; m (RelIns b b)
+(a -&gt; m b) -&gt; RelationInsert b a -&gt; m (RelationInsert b b)
 forall (b :: BackendType) (f :: * -&gt; *) a b.
 Applicative f =&gt;
-(a -&gt; f b) -&gt; RelIns b a -&gt; f (RelIns b b)
+(a -&gt; f b) -&gt; RelationInsert b a -&gt; f (RelationInsert b b)
 forall (t :: * -&gt; *).
 Functor t
 -&gt; Foldable t
@@ -1240,47 +1325,49 @@ Functor t
     (a -&gt; m b) -&gt; t a -&gt; m (t b))
 -&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
 -&gt; Traversable t
-forall (m :: * -&gt; *) a. Monad m =&gt; RelIns b (m a) -&gt; m (RelIns b a)
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+RelationInsert b (m a) -&gt; m (RelationInsert b a)
 forall (f :: * -&gt; *) a.
 Applicative f =&gt;
-RelIns b (f a) -&gt; f (RelIns b a)
+RelationInsert b (f a) -&gt; f (RelationInsert b a)
 forall (m :: * -&gt; *) a b.
 Monad m =&gt;
-(a -&gt; m b) -&gt; RelIns b a -&gt; m (RelIns b b)
+(a -&gt; m b) -&gt; RelationInsert b a -&gt; m (RelationInsert b b)
 forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
-(a -&gt; f b) -&gt; RelIns b a -&gt; f (RelIns b b)
-sequence :: RelIns b (m a) -&gt; m (RelIns b a)
+(a -&gt; f b) -&gt; RelationInsert b a -&gt; f (RelationInsert b b)
+sequence :: RelationInsert b (m a) -&gt; m (RelationInsert b a)
 $csequence :: forall (b :: BackendType) (m :: * -&gt; *) a.
 Monad m =&gt;
-RelIns b (m a) -&gt; m (RelIns b a)
-mapM :: (a -&gt; m b) -&gt; RelIns b a -&gt; m (RelIns b b)
+RelationInsert b (m a) -&gt; m (RelationInsert b a)
+mapM :: (a -&gt; m b) -&gt; RelationInsert b a -&gt; m (RelationInsert b b)
 $cmapM :: forall (b :: BackendType) (m :: * -&gt; *) a b.
 Monad m =&gt;
-(a -&gt; m b) -&gt; RelIns b a -&gt; m (RelIns b b)
-sequenceA :: RelIns b (f a) -&gt; f (RelIns b a)
+(a -&gt; m b) -&gt; RelationInsert b a -&gt; m (RelationInsert b b)
+sequenceA :: RelationInsert b (f a) -&gt; f (RelationInsert b a)
 $csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) a.
 Applicative f =&gt;
-RelIns b (f a) -&gt; f (RelIns b a)
-traverse :: (a -&gt; f b) -&gt; RelIns b a -&gt; f (RelIns b b)
+RelationInsert b (f a) -&gt; f (RelationInsert b a)
+traverse :: (a -&gt; f b) -&gt; RelationInsert b a -&gt; f (RelationInsert b b)
 $ctraverse :: forall (b :: BackendType) (f :: * -&gt; *) a b.
 Applicative f =&gt;
-(a -&gt; f b) -&gt; RelIns b a -&gt; f (RelIns b b)
-$cp2Traversable :: forall (b :: BackendType). Foldable (RelIns b)
-$cp1Traversable :: forall (b :: BackendType). Functor (RelIns b)
+(a -&gt; f b) -&gt; RelationInsert b a -&gt; f (RelationInsert b b)
+$cp2Traversable :: forall (b :: BackendType). Foldable (RelationInsert b)
+$cp1Traversable :: forall (b :: BackendType). Functor (RelationInsert b)
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-113"></span><span>
 </span><span id="line-114"></span><span class="hs-comment">-- | Insert across an object relationship.</span><span>
 </span><span id="line-115"></span><span class="hs-comment">-- Object relationships are 1:1 relationships across tables; an insert across</span><span>
 </span><span id="line-116"></span><span class="hs-comment">-- such a relationship can only insert one single row at a time; 'RelIns' is</span><span>
-</span><span id="line-117"></span><span class="hs-comment">-- therefore parameterized by a 'SingleObjIns'.</span><span>
-</span><span id="line-118"></span><span class="hs-keyword">type</span><span> </span><span id="ObjRelIns"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ObjRelIns"><span class="hs-identifier hs-var">ObjRelIns</span></a></span></span><span> </span><span id="local-6989586621688258110"><span class="annot"><a href="#local-6989586621688258110"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621688258109"><span class="annot"><a href="#local-6989586621688258109"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#RelIns"><span class="hs-identifier hs-type">RelIns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258110"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#SingleObjIns"><span class="hs-identifier hs-type">SingleObjIns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258110"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258109"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-117"></span><span class="hs-comment">-- therefore parameterized by a 'SingleObjectInsert'.</span><span>
+</span><span id="line-118"></span><span class="hs-keyword">type</span><span> </span><span id="ObjectRelationInsert"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ObjectRelationInsert"><span class="hs-identifier hs-var">ObjectRelationInsert</span></a></span></span><span> </span><span id="local-6989586621688258110"><span class="annot"><a href="#local-6989586621688258110"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621688258109"><span class="annot"><a href="#local-6989586621688258109"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#RelationInsert"><span class="hs-identifier hs-type">RelationInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258110"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#SingleObjectInsert"><span class="hs-identifier hs-type">SingleObjectInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258110"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258109"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-119"></span><span>
 </span><span id="line-120"></span><span class="hs-comment">-- | Insert across an array relationship.</span><span>
 </span><span id="line-121"></span><span class="hs-comment">-- Array relationships are 1:* relationships across tables; an insert across</span><span>
 </span><span id="line-122"></span><span class="hs-comment">-- such a relationship may therefore contain multiple rows; 'RelIns' is</span><span>
-</span><span id="line-123"></span><span class="hs-comment">-- therefore parameterized by a 'MultiObjIns'.</span><span>
-</span><span id="line-124"></span><span class="hs-keyword">type</span><span> </span><span id="ArrRelIns"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ArrRelIns"><span class="hs-identifier hs-var">ArrRelIns</span></a></span></span><span> </span><span id="local-6989586621688258108"><span class="annot"><a href="#local-6989586621688258108"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621688258107"><span class="annot"><a href="#local-6989586621688258107"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#RelIns"><span class="hs-identifier hs-type">RelIns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258108"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#MultiObjIns"><span class="hs-identifier hs-type">MultiObjIns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258108"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258107"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-123"></span><span class="hs-comment">-- therefore parameterized by a 'MultiObjectInsert'.</span><span>
+</span><span id="line-124"></span><span class="hs-keyword">type</span><span> </span><span id="ArrayRelationInsert"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ArrayRelationInsert"><span class="hs-identifier hs-var">ArrayRelationInsert</span></a></span></span><span> </span><span id="local-6989586621688258108"><span class="annot"><a href="#local-6989586621688258108"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621688258107"><span class="annot"><a href="#local-6989586621688258107"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#RelationInsert"><span class="hs-identifier hs-type">RelationInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258108"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#MultiObjectInsert"><span class="hs-identifier hs-type">MultiObjectInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258108"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258107"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-125"></span><span>
 </span><span id="line-126"></span><span class="hs-comment">-- | Old-style representation used for non-recursive insertions.</span><span>
 </span><span id="line-127"></span><span class="hs-comment">-- This is the representation used by RQL.DML, instead of the new fancy</span><span>
@@ -1304,82 +1391,96 @@ $cp1Traversable :: forall (b :: BackendType). Functor (RelIns b)
 </span><a href="Hasura.RQL.IR.Insert.html#iqp1AllCols"><span class="hs-identifier hs-var hs-var">iqp1AllCols</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258106"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-139"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-140"></span><span>
-</span><span id="line-141"></span><span class="hs-special">$(</span><span id="local-6989586621688258097"><span id="local-6989586621688258398"><span id="local-6989586621688258399"><span id="local-6989586621688258400"><span id="aiOutput"><span id="aiData"><span id="aiIsSingle"><span id="aiFieldName"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">AnnInsert</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-142"></span><span>
-</span><span id="line-143"></span><span class="hs-special">$(</span><span id="_AIObjectRelationship"><span id="_AIColumn"><span id="_AIArrayRelationship"><span id="local-6989586621688258427"><span id="local-6989586621688258428"><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">AnnotatedInsert</span></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-144"></span><span>
-</span><span id="line-145"></span><span id="local-6989586621688258095"><span id="local-6989586621688258096"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#getInsertColumns"><span class="hs-identifier hs-type">getInsertColumns</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertRow"><span class="hs-identifier hs-type">AnnotatedInsertRow</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258096"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258095"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258096"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621688258095"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span></span></span><span>
-</span><span id="line-146"></span><span id="getInsertColumns"><span class="annot"><span class="annottext">getInsertColumns :: AnnotatedInsertRow b v -&gt; [(Column b, v)]
-</span><a href="Hasura.RQL.IR.Insert.html#getInsertColumns"><span class="hs-identifier hs-var hs-var">getInsertColumns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(AnnotatedInsert b v -&gt; Maybe (Column b, v))
+</span><span id="line-141"></span><span class="hs-special">$(</span><span id="local-6989586621688258097"><span id="local-6989586621688258398"><span id="local-6989586621688258399"><span id="local-6989586621688258400"><span id="aiOutput"><span id="aiData"><span id="aiIsSingle"><span id="aiFieldName"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">AnnotatedInsert</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-142"></span><span class="hs-special">$(</span><span id="_AIObjectRelationship"><span id="_AIColumn"><span id="_AIArrayRelationship"><span id="local-6989586621688258427"><span id="local-6989586621688258428"><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">AnnotatedInsertField</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-143"></span><span>
+</span><span id="line-144"></span><span id="local-6989586621688258095"><span id="local-6989586621688258096"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#getInsertColumns"><span class="hs-identifier hs-type">getInsertColumns</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertRow"><span class="hs-identifier hs-type">AnnotatedInsertRow</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258096"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258095"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258096"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621688258095"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span></span></span><span>
+</span><span id="line-145"></span><span id="getInsertColumns"><span class="annot"><span class="annottext">getInsertColumns :: AnnotatedInsertRow b v -&gt; [(Column b, v)]
+</span><a href="Hasura.RQL.IR.Insert.html#getInsertColumns"><span class="hs-identifier hs-var hs-var">getInsertColumns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(AnnotatedInsertField b v -&gt; Maybe (Column b, v))
 -&gt; AnnotatedInsertRow b v -&gt; [(Column b, v)]
 forall a b. (a -&gt; Maybe b) -&gt; [a] -&gt; [b]
-</span><span class="hs-identifier hs-var">mapMaybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnotatedInsert b v
+</span><span class="hs-identifier hs-var">mapMaybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnotatedInsertField b v
 -&gt; Getting
-     (First (Column b, v)) (AnnotatedInsert b v) (Column b, v)
+     (First (Column b, v)) (AnnotatedInsertField b v) (Column b, v)
 -&gt; Maybe (Column b, v)
 forall s a. s -&gt; Getting (First a) s a -&gt; Maybe a
-</span><span class="hs-operator hs-var">^?</span></span><span> </span><span class="annot"><span class="annottext">Getting (First (Column b, v)) (AnnotatedInsert b v) (Column b, v)
+</span><span class="hs-operator hs-var">^?</span></span><span> </span><span class="annot"><span class="annottext">Getting
+  (First (Column b, v)) (AnnotatedInsertField b v) (Column b, v)
 forall (b :: BackendType) v.
-Prism' (AnnotatedInsert b v) (Column b, v)
+Prism' (AnnotatedInsertField b v) (Column b, v)
 </span><a href="Hasura.RQL.IR.Insert.html#_AIColumn"><span class="hs-identifier hs-var">_AIColumn</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-147"></span><span>
-</span><span id="line-148"></span><span id="local-6989586621688258092"><span id="local-6989586621688258093"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#getInsertObjectRelationships"><span class="hs-identifier hs-type">getInsertObjectRelationships</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertRow"><span class="hs-identifier hs-type">AnnotatedInsertRow</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258093"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258092"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ObjRelIns"><span class="hs-identifier hs-type">ObjRelIns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258093"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258092"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span></span></span><span>
-</span><span id="line-149"></span><span id="getInsertObjectRelationships"><span class="annot"><span class="annottext">getInsertObjectRelationships :: AnnotatedInsertRow b v -&gt; [ObjRelIns b v]
-</span><a href="Hasura.RQL.IR.Insert.html#getInsertObjectRelationships"><span class="hs-identifier hs-var hs-var">getInsertObjectRelationships</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(AnnotatedInsert b v -&gt; Maybe (ObjRelIns b v))
--&gt; AnnotatedInsertRow b v -&gt; [ObjRelIns b v]
+</span><span id="line-146"></span><span>
+</span><span id="line-147"></span><span id="local-6989586621688258092"><span id="local-6989586621688258093"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#getInsertObjectRelationships"><span class="hs-identifier hs-type">getInsertObjectRelationships</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertRow"><span class="hs-identifier hs-type">AnnotatedInsertRow</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258093"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258092"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ObjectRelationInsert"><span class="hs-identifier hs-type">ObjectRelationInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258093"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258092"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span></span></span><span>
+</span><span id="line-148"></span><span id="getInsertObjectRelationships"><span class="annot"><span class="annottext">getInsertObjectRelationships :: AnnotatedInsertRow b v -&gt; [ObjectRelationInsert b v]
+</span><a href="Hasura.RQL.IR.Insert.html#getInsertObjectRelationships"><span class="hs-identifier hs-var hs-var">getInsertObjectRelationships</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(AnnotatedInsertField b v -&gt; Maybe (ObjectRelationInsert b v))
+-&gt; AnnotatedInsertRow b v -&gt; [ObjectRelationInsert b v]
 forall a b. (a -&gt; Maybe b) -&gt; [a] -&gt; [b]
-</span><span class="hs-identifier hs-var">mapMaybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">((XNestedInserts b, ObjRelIns b v) -&gt; ObjRelIns b v)
--&gt; Maybe (XNestedInserts b, ObjRelIns b v) -&gt; Maybe (ObjRelIns b v)
+</span><span class="hs-identifier hs-var">mapMaybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">((XNestedInserts b, ObjectRelationInsert b v)
+ -&gt; ObjectRelationInsert b v)
+-&gt; Maybe (XNestedInserts b, ObjectRelationInsert b v)
+-&gt; Maybe (ObjectRelationInsert b v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">(XNestedInserts b, ObjRelIns b v) -&gt; ObjRelIns b v
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">(XNestedInserts b, ObjectRelationInsert b v)
+-&gt; ObjectRelationInsert b v
 forall a b. (a, b) -&gt; b
-</span><span class="hs-identifier hs-var">snd</span></span><span> </span><span class="annot"><span class="annottext">(Maybe (XNestedInserts b, ObjRelIns b v) -&gt; Maybe (ObjRelIns b v))
--&gt; (AnnotatedInsert b v -&gt; Maybe (XNestedInserts b, ObjRelIns b v))
--&gt; AnnotatedInsert b v
--&gt; Maybe (ObjRelIns b v)
+</span><span class="hs-identifier hs-var">snd</span></span><span> </span><span class="annot"><span class="annottext">(Maybe (XNestedInserts b, ObjectRelationInsert b v)
+ -&gt; Maybe (ObjectRelationInsert b v))
+-&gt; (AnnotatedInsertField b v
+    -&gt; Maybe (XNestedInserts b, ObjectRelationInsert b v))
+-&gt; AnnotatedInsertField b v
+-&gt; Maybe (ObjectRelationInsert b v)
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnotatedInsert b v
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnotatedInsertField b v
 -&gt; Getting
-     (First (XNestedInserts b, ObjRelIns b v))
-     (AnnotatedInsert b v)
-     (XNestedInserts b, ObjRelIns b v)
--&gt; Maybe (XNestedInserts b, ObjRelIns b v)
+     (First (XNestedInserts b, ObjectRelationInsert b v))
+     (AnnotatedInsertField b v)
+     (XNestedInserts b, ObjectRelationInsert b v)
+-&gt; Maybe (XNestedInserts b, ObjectRelationInsert b v)
 forall s a. s -&gt; Getting (First a) s a -&gt; Maybe a
 </span><span class="hs-operator hs-var">^?</span></span><span> </span><span class="annot"><span class="annottext">Getting
-  (First (XNestedInserts b, ObjRelIns b v))
-  (AnnotatedInsert b v)
-  (XNestedInserts b, ObjRelIns b v)
+  (First (XNestedInserts b, ObjectRelationInsert b v))
+  (AnnotatedInsertField b v)
+  (XNestedInserts b, ObjectRelationInsert b v)
 forall (b :: BackendType) v.
-Prism' (AnnotatedInsert b v) (XNestedInserts b, ObjRelIns b v)
+Prism'
+  (AnnotatedInsertField b v)
+  (XNestedInserts b, ObjectRelationInsert b v)
 </span><a href="Hasura.RQL.IR.Insert.html#_AIObjectRelationship"><span class="hs-identifier hs-var">_AIObjectRelationship</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-150"></span><span>
-</span><span id="line-151"></span><span id="local-6989586621688258089"><span id="local-6989586621688258090"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#getInsertArrayRelationships"><span class="hs-identifier hs-type">getInsertArrayRelationships</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertRow"><span class="hs-identifier hs-type">AnnotatedInsertRow</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258090"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258089"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ArrRelIns"><span class="hs-identifier hs-type">ArrRelIns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258090"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258089"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span></span></span><span>
-</span><span id="line-152"></span><span id="getInsertArrayRelationships"><span class="annot"><span class="annottext">getInsertArrayRelationships :: AnnotatedInsertRow b v -&gt; [ArrRelIns b v]
-</span><a href="Hasura.RQL.IR.Insert.html#getInsertArrayRelationships"><span class="hs-identifier hs-var hs-var">getInsertArrayRelationships</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(AnnotatedInsert b v -&gt; Maybe (ArrRelIns b v))
--&gt; AnnotatedInsertRow b v -&gt; [ArrRelIns b v]
+</span><span id="line-149"></span><span>
+</span><span id="line-150"></span><span id="local-6989586621688258089"><span id="local-6989586621688258090"><span class="annot"><a href="Hasura.RQL.IR.Insert.html#getInsertArrayRelationships"><span class="hs-identifier hs-type">getInsertArrayRelationships</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertRow"><span class="hs-identifier hs-type">AnnotatedInsertRow</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258090"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258089"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ArrayRelationInsert"><span class="hs-identifier hs-type">ArrayRelationInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258090"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688258089"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span></span></span><span>
+</span><span id="line-151"></span><span id="getInsertArrayRelationships"><span class="annot"><span class="annottext">getInsertArrayRelationships :: AnnotatedInsertRow b v -&gt; [ArrayRelationInsert b v]
+</span><a href="Hasura.RQL.IR.Insert.html#getInsertArrayRelationships"><span class="hs-identifier hs-var hs-var">getInsertArrayRelationships</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(AnnotatedInsertField b v -&gt; Maybe (ArrayRelationInsert b v))
+-&gt; AnnotatedInsertRow b v -&gt; [ArrayRelationInsert b v]
 forall a b. (a -&gt; Maybe b) -&gt; [a] -&gt; [b]
-</span><span class="hs-identifier hs-var">mapMaybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">((XNestedInserts b, ArrRelIns b v) -&gt; ArrRelIns b v)
--&gt; Maybe (XNestedInserts b, ArrRelIns b v) -&gt; Maybe (ArrRelIns b v)
+</span><span class="hs-identifier hs-var">mapMaybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">((XNestedInserts b, ArrayRelationInsert b v)
+ -&gt; ArrayRelationInsert b v)
+-&gt; Maybe (XNestedInserts b, ArrayRelationInsert b v)
+-&gt; Maybe (ArrayRelationInsert b v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">(XNestedInserts b, ArrRelIns b v) -&gt; ArrRelIns b v
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">(XNestedInserts b, ArrayRelationInsert b v)
+-&gt; ArrayRelationInsert b v
 forall a b. (a, b) -&gt; b
-</span><span class="hs-identifier hs-var">snd</span></span><span> </span><span class="annot"><span class="annottext">(Maybe (XNestedInserts b, ArrRelIns b v) -&gt; Maybe (ArrRelIns b v))
--&gt; (AnnotatedInsert b v -&gt; Maybe (XNestedInserts b, ArrRelIns b v))
--&gt; AnnotatedInsert b v
--&gt; Maybe (ArrRelIns b v)
+</span><span class="hs-identifier hs-var">snd</span></span><span> </span><span class="annot"><span class="annottext">(Maybe (XNestedInserts b, ArrayRelationInsert b v)
+ -&gt; Maybe (ArrayRelationInsert b v))
+-&gt; (AnnotatedInsertField b v
+    -&gt; Maybe (XNestedInserts b, ArrayRelationInsert b v))
+-&gt; AnnotatedInsertField b v
+-&gt; Maybe (ArrayRelationInsert b v)
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnotatedInsert b v
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnotatedInsertField b v
 -&gt; Getting
-     (First (XNestedInserts b, ArrRelIns b v))
-     (AnnotatedInsert b v)
-     (XNestedInserts b, ArrRelIns b v)
--&gt; Maybe (XNestedInserts b, ArrRelIns b v)
+     (First (XNestedInserts b, ArrayRelationInsert b v))
+     (AnnotatedInsertField b v)
+     (XNestedInserts b, ArrayRelationInsert b v)
+-&gt; Maybe (XNestedInserts b, ArrayRelationInsert b v)
 forall s a. s -&gt; Getting (First a) s a -&gt; Maybe a
 </span><span class="hs-operator hs-var">^?</span></span><span> </span><span class="annot"><span class="annottext">Getting
-  (First (XNestedInserts b, ArrRelIns b v))
-  (AnnotatedInsert b v)
-  (XNestedInserts b, ArrRelIns b v)
+  (First (XNestedInserts b, ArrayRelationInsert b v))
+  (AnnotatedInsertField b v)
+  (XNestedInserts b, ArrayRelationInsert b v)
 forall (b :: BackendType) v.
-Prism' (AnnotatedInsert b v) (XNestedInserts b, ArrRelIns b v)
+Prism'
+  (AnnotatedInsertField b v)
+  (XNestedInserts b, ArrayRelationInsert b v)
 </span><a href="Hasura.RQL.IR.Insert.html#_AIArrayRelationship"><span class="hs-identifier hs-var">_AIArrayRelationship</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-153"></span></pre></body></html>
+</span><span id="line-152"></span></pre></body></html>

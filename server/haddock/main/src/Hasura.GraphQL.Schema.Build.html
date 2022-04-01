@@ -477,7 +477,7 @@ forall (b :: BackendType). TableInfo b -&gt; TableCoreInfo b
 </span><span id="line-106"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296187"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-107"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296187"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-108"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-109"></span><span>  </span><span class="annot"><a href="#local-6989586621688296185"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296184"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnInsert"><span class="hs-identifier hs-type">AnnInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296187"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-type">RemoteRelationshipField</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296187"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-109"></span><span>  </span><span class="annot"><a href="#local-6989586621688296185"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296184"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsert"><span class="hs-identifier hs-type">AnnotatedInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296187"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-type">RemoteRelationshipField</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296187"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-110"></span><span id="buildTableInsertMutationFields"><span class="annot"><span class="annottext">buildTableInsertMutationFields :: (SourceName
  -&gt; TableInfo b
  -&gt; m (InputFieldsParser n (BackendInsert b (UnpreparedValue b))))
@@ -488,7 +488,7 @@ forall (b :: BackendType). TableInfo b -&gt; TableCoreInfo b
 -&gt; Name
 -&gt; m [FieldParser
         n
-        (AnnInsert
+        (AnnotatedInsert
            b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 </span><a href="Hasura.GraphQL.Schema.Build.html#buildTableInsertMutationFields"><span class="hs-identifier hs-var hs-var">buildTableInsertMutationFields</span></a></span></span><span> </span><span id="local-6989586621688296183"><span class="annot"><span class="annottext">SourceName
 -&gt; TableInfo b
@@ -538,7 +538,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-113"></span><span>  </span><span id="local-6989586621688296173"><span class="annot"><span class="annottext">Maybe
   (FieldParser
      n
-     (AnnInsert
+     (AnnotatedInsert
         b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
 </span><a href="#local-6989586621688296173"><span class="hs-identifier hs-var">insert</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(SourceName
  -&gt; TableInfo b
@@ -551,7 +551,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; m (Maybe
         (FieldParser
            n
-           (AnnInsert
+           (AnnotatedInsert
               b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema b r m n =&gt;
@@ -566,7 +566,7 @@ MonadBuildSchema b r m n =&gt;
 -&gt; m (Maybe
         (FieldParser
            n
-           (AnnInsert
+           (AnnotatedInsert
               b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 </span><a href="Hasura.GraphQL.Schema.Mutation.html#insertIntoTable"><span class="hs-identifier hs-var">insertIntoTable</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 -&gt; TableInfo b
@@ -583,7 +583,7 @@ MonadBuildSchema b r m n =&gt;
 </span><span id="line-117"></span><span>  </span><span id="local-6989586621688296170"><span class="annot"><span class="annottext">Maybe
   (FieldParser
      n
-     (AnnInsert
+     (AnnotatedInsert
         b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
 </span><a href="#local-6989586621688296170"><span class="hs-identifier hs-var">insertOne</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(SourceName
  -&gt; TableInfo b
@@ -596,7 +596,7 @@ MonadBuildSchema b r m n =&gt;
 -&gt; m (Maybe
         (FieldParser
            n
-           (AnnInsert
+           (AnnotatedInsert
               b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema b r m n =&gt;
@@ -611,7 +611,7 @@ MonadBuildSchema b r m n =&gt;
 -&gt; m (Maybe
         (FieldParser
            n
-           (AnnInsert
+           (AnnotatedInsert
               b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 </span><a href="Hasura.GraphQL.Schema.Mutation.html#insertOneIntoTable"><span class="hs-identifier hs-var">insertOneIntoTable</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 -&gt; TableInfo b
@@ -624,49 +624,49 @@ MonadBuildSchema b r m n =&gt;
 </span><a href="#local-6989586621688296168"><span class="hs-identifier hs-var">insertOneDesc</span></a></span><span>
 </span><span id="line-118"></span><span>  </span><span class="annot"><span class="annottext">[FieldParser
    n
-   (AnnInsert
+   (AnnotatedInsert
       b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 -&gt; m [FieldParser
         n
-        (AnnInsert
+        (AnnotatedInsert
            b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">([FieldParser
     n
-    (AnnInsert
+    (AnnotatedInsert
        b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
  -&gt; m [FieldParser
          n
-         (AnnInsert
+         (AnnotatedInsert
             b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))])
 -&gt; [FieldParser
       n
-      (AnnInsert
+      (AnnotatedInsert
          b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 -&gt; m [FieldParser
         n
-        (AnnInsert
+        (AnnotatedInsert
            b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Maybe
    (FieldParser
       n
-      (AnnInsert
+      (AnnotatedInsert
          b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))]
 -&gt; [FieldParser
       n
-      (AnnInsert
+      (AnnotatedInsert
          b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 forall a. [Maybe a] -&gt; [a]
 </span><span class="hs-identifier hs-var">catMaybes</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Maybe
   (FieldParser
      n
-     (AnnInsert
+     (AnnotatedInsert
         b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
 </span><a href="#local-6989586621688296173"><span class="hs-identifier hs-var">insert</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe
   (FieldParser
      n
-     (AnnInsert
+     (AnnotatedInsert
         b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
 </span><a href="#local-6989586621688296170"><span class="hs-identifier hs-var">insertOne</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-119"></span><span>  </span><span class="hs-keyword">where</span><span>

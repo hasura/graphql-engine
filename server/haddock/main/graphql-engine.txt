@@ -17837,71 +17837,71 @@ module Hasura.RQL.IR.Insert
 -- | Overall representation of an insert mutation, corresponding to one
 --   root field in our mutation, including the parsed selection set of the
 --   mutation's output. For historical reasons, it will always contain a
---   <a>MultiObjIns</a>, whether the root mutation is a single row or not,
---   and will distinguish between them using a boolean field.
-data AnnInsert (b :: BackendType) (r :: Type) v
-AnnInsert :: Text -> Bool -> MultiObjIns b v -> MutationOutputG b r v -> AnnInsert (b :: BackendType) (r :: Type) v
-[_aiFieldName] :: AnnInsert (b :: BackendType) (r :: Type) v -> Text
-[_aiIsSingle] :: AnnInsert (b :: BackendType) (r :: Type) v -> Bool
-[_aiData] :: AnnInsert (b :: BackendType) (r :: Type) v -> MultiObjIns b v
-[_aiOutput] :: AnnInsert (b :: BackendType) (r :: Type) v -> MutationOutputG b r v
+--   <a>MultiObjectInsert</a>, whether the root mutation is a single row or
+--   not, and will distinguish between them using a boolean field.
+data AnnotatedInsert (b :: BackendType) (r :: Type) v
+AnnotatedInsert :: Text -> Bool -> MultiObjectInsert b v -> MutationOutputG b r v -> AnnotatedInsert (b :: BackendType) (r :: Type) v
+[_aiFieldName] :: AnnotatedInsert (b :: BackendType) (r :: Type) v -> Text
+[_aiIsSingle] :: AnnotatedInsert (b :: BackendType) (r :: Type) v -> Bool
+[_aiData] :: AnnotatedInsert (b :: BackendType) (r :: Type) v -> MultiObjectInsert b v
+[_aiOutput] :: AnnotatedInsert (b :: BackendType) (r :: Type) v -> MutationOutputG b r v
 
 -- | One individual insert, one node from the tree. The <tt>f</tt>
 --   parameter is used to construct the container for the values to be
 --   inserted: <a>Single</a> for a single-row insert, '[]' for a multi-row
 --   insert.
-data AnnIns (b :: BackendType) (f :: Type -> Type) (v :: Type)
-AnnIns :: f (AnnotatedInsertRow b v) -> TableName b -> (AnnBoolExp b v, Maybe (AnnBoolExp b v)) -> [ColumnInfo b] -> PreSetColsG b v -> BackendInsert b v -> AnnIns (b :: BackendType) (f :: Type -> Type) (v :: Type)
-[_aiInsObj] :: AnnIns (b :: BackendType) (f :: Type -> Type) (v :: Type) -> f (AnnotatedInsertRow b v)
-[_aiTableName] :: AnnIns (b :: BackendType) (f :: Type -> Type) (v :: Type) -> TableName b
-[_aiCheckCond] :: AnnIns (b :: BackendType) (f :: Type -> Type) (v :: Type) -> (AnnBoolExp b v, Maybe (AnnBoolExp b v))
-[_aiTableCols] :: AnnIns (b :: BackendType) (f :: Type -> Type) (v :: Type) -> [ColumnInfo b]
-[_aiDefVals] :: AnnIns (b :: BackendType) (f :: Type -> Type) (v :: Type) -> PreSetColsG b v
-[_aiBackendInsert] :: AnnIns (b :: BackendType) (f :: Type -> Type) (v :: Type) -> BackendInsert b v
+data AnnotatedInsertData (b :: BackendType) (f :: Type -> Type) (v :: Type)
+AnnotatedInsertData :: f (AnnotatedInsertRow b v) -> TableName b -> (AnnBoolExp b v, Maybe (AnnBoolExp b v)) -> [ColumnInfo b] -> PreSetColsG b v -> BackendInsert b v -> AnnotatedInsertData (b :: BackendType) (f :: Type -> Type) (v :: Type)
+[_aiInsertObject] :: AnnotatedInsertData (b :: BackendType) (f :: Type -> Type) (v :: Type) -> f (AnnotatedInsertRow b v)
+[_aiTableName] :: AnnotatedInsertData (b :: BackendType) (f :: Type -> Type) (v :: Type) -> TableName b
+[_aiCheckCondition] :: AnnotatedInsertData (b :: BackendType) (f :: Type -> Type) (v :: Type) -> (AnnBoolExp b v, Maybe (AnnBoolExp b v))
+[_aiTableColumns] :: AnnotatedInsertData (b :: BackendType) (f :: Type -> Type) (v :: Type) -> [ColumnInfo b]
+[_aiDefaultValues] :: AnnotatedInsertData (b :: BackendType) (f :: Type -> Type) (v :: Type) -> PreSetColsG b v
+[_aiBackendInsert] :: AnnotatedInsertData (b :: BackendType) (f :: Type -> Type) (v :: Type) -> BackendInsert b v
 
 -- | Ad-hoc helper. We differientate between single row inserts
---   (<a>SingleObjIns</a>) and multiple row inserts (<a>MultiObjIns</a>),
---   but both use the same underlying representation: <a>AnnIns</a>. The
---   only difference is which functor is used as a parameter. We use '[]'
---   for <a>MultiObjIns</a>, and we use this trivial <a>Single</a> for
---   <a>SingleObjIns</a>.
+--   (<tt>SingleObjIns</tt>) and multiple row inserts
+--   (<tt>MultiObjIns</tt>), but both use the same underlying
+--   representation: <tt>AnnIns</tt>. The only difference is which functor
+--   is used as a parameter. We use '[]' for <tt>MultiObjIns</tt>, and we
+--   use this trivial <a>Single</a> for <tt>SingleObjIns</tt>.
 newtype Single a
 Single :: a -> Single a
 [unSingle] :: Single a -> a
-type SingleObjIns b v = AnnIns b Single v
-type MultiObjIns b v = AnnIns b [] v
+type SingleObjectInsert b v = AnnotatedInsertData b Single v
+type MultiObjectInsert b v = AnnotatedInsertData b [] v
 
 -- | An insert item. The object and array relationships are not unavailable
 --   when 'XNestedInserts b = XDisable'
-data AnnotatedInsert (b :: BackendType) v
-AIColumn :: (Column b, v) -> AnnotatedInsert (b :: BackendType) v
-AIObjectRelationship :: XNestedInserts b -> ObjRelIns b v -> AnnotatedInsert (b :: BackendType) v
-AIArrayRelationship :: XNestedInserts b -> ArrRelIns b v -> AnnotatedInsert (b :: BackendType) v
+data AnnotatedInsertField (b :: BackendType) v
+AIColumn :: (Column b, v) -> AnnotatedInsertField (b :: BackendType) v
+AIObjectRelationship :: XNestedInserts b -> ObjectRelationInsert b v -> AnnotatedInsertField (b :: BackendType) v
+AIArrayRelationship :: XNestedInserts b -> ArrayRelationInsert b v -> AnnotatedInsertField (b :: BackendType) v
 
 -- | One individual row to be inserted. Contains the columns' values and
 --   all the matching recursive relationship inserts.
-type AnnotatedInsertRow b v = [AnnotatedInsert b v]
+type AnnotatedInsertRow b v = [AnnotatedInsertField b v]
 
 -- | One individual relationship. Unlike other types, this one is not
 --   parameterized by the type of the leaves <tt>v</tt>, but by the kind of
 --   insert has to be performed: multi-row or single row. See
---   <a>ObjRelIns</a> and <a>ArrRelIns</a>.
-data RelIns (b :: BackendType) a
-RelIns :: a -> RelInfo b -> RelIns (b :: BackendType) a
-[_riAnnIns] :: RelIns (b :: BackendType) a -> a
-[_riRelInfo] :: RelIns (b :: BackendType) a -> RelInfo b
+--   <a>ObjectRelationInsert</a> and <a>ArrayRelationInsert</a>.
+data RelationInsert (b :: BackendType) a
+RelationInsert :: a -> RelInfo b -> RelationInsert (b :: BackendType) a
+[_riInsertData] :: RelationInsert (b :: BackendType) a -> a
+[_riRelationInfo] :: RelationInsert (b :: BackendType) a -> RelInfo b
 
 -- | Insert across an object relationship. Object relationships are 1:1
 --   relationships across tables; an insert across such a relationship can
---   only insert one single row at a time; <a>RelIns</a> is therefore
---   parameterized by a <a>SingleObjIns</a>.
-type ObjRelIns b v = RelIns b (SingleObjIns b v)
+--   only insert one single row at a time; <tt>RelIns</tt> is therefore
+--   parameterized by a <a>SingleObjectInsert</a>.
+type ObjectRelationInsert b v = RelationInsert b (SingleObjectInsert b v)
 
 -- | Insert across an array relationship. Array relationships are 1:*
 --   relationships across tables; an insert across such a relationship may
---   therefore contain multiple rows; <a>RelIns</a> is therefore
---   parameterized by a <a>MultiObjIns</a>.
-type ArrRelIns b v = RelIns b (MultiObjIns b v)
+--   therefore contain multiple rows; <tt>RelIns</tt> is therefore
+--   parameterized by a <a>MultiObjectInsert</a>.
+type ArrayRelationInsert b v = RelationInsert b (MultiObjectInsert b v)
 
 -- | Old-style representation used for non-recursive insertions. This is
 --   the representation used by RQL.DML, instead of the new fancy recursive
@@ -17917,33 +17917,33 @@ InsertQueryP1 :: TableName b -> [Column b] -> [[SQLExpression b]] -> Maybe (OnCo
 [iqp1CheckCond] :: InsertQueryP1 (b :: BackendType) -> (AnnBoolExpSQL b, Maybe (AnnBoolExpSQL b))
 [iqp1Output] :: InsertQueryP1 (b :: BackendType) -> MutationOutput b
 [iqp1AllCols] :: InsertQueryP1 (b :: BackendType) -> [ColumnInfo b]
-aiOutput :: forall b_anifA r_anifB v_anifC r_anmpK. Lens (AnnInsert b_anifA r_anifB v_anifC) (AnnInsert b_anifA r_anmpK v_anifC) (MutationOutputG b_anifA r_anifB v_anifC) (MutationOutputG b_anifA r_anmpK v_anifC)
-aiIsSingle :: forall b_anifA r_anifB v_anifC. Lens' (AnnInsert b_anifA r_anifB v_anifC) Bool
-aiFieldName :: forall b_anifA r_anifB v_anifC. Lens' (AnnInsert b_anifA r_anifB v_anifC) Text
-aiData :: forall b_anifA r_anifB v_anifC. Lens' (AnnInsert b_anifA r_anifB v_anifC) (MultiObjIns b_anifA v_anifC)
-_AIArrayRelationship :: forall b_anifq v_anifr. Prism' (AnnotatedInsert b_anifq v_anifr) (XNestedInserts b_anifq, ArrRelIns b_anifq v_anifr)
-_AIObjectRelationship :: forall b_anifq v_anifr. Prism' (AnnotatedInsert b_anifq v_anifr) (XNestedInserts b_anifq, ObjRelIns b_anifq v_anifr)
-_AIColumn :: forall b_anifq v_anifr. Prism' (AnnotatedInsert b_anifq v_anifr) (Column b_anifq, v_anifr)
+aiOutput :: forall b_anifA r_anifB v_anifC r_anmpK. Lens (AnnotatedInsert b_anifA r_anifB v_anifC) (AnnotatedInsert b_anifA r_anmpK v_anifC) (MutationOutputG b_anifA r_anifB v_anifC) (MutationOutputG b_anifA r_anmpK v_anifC)
+aiIsSingle :: forall b_anifA r_anifB v_anifC. Lens' (AnnotatedInsert b_anifA r_anifB v_anifC) Bool
+aiFieldName :: forall b_anifA r_anifB v_anifC. Lens' (AnnotatedInsert b_anifA r_anifB v_anifC) Text
+aiData :: forall b_anifA r_anifB v_anifC. Lens' (AnnotatedInsert b_anifA r_anifB v_anifC) (MultiObjectInsert b_anifA v_anifC)
+_AIArrayRelationship :: forall b_anifq v_anifr. Prism' (AnnotatedInsertField b_anifq v_anifr) (XNestedInserts b_anifq, ArrayRelationInsert b_anifq v_anifr)
+_AIObjectRelationship :: forall b_anifq v_anifr. Prism' (AnnotatedInsertField b_anifq v_anifr) (XNestedInserts b_anifq, ObjectRelationInsert b_anifq v_anifr)
+_AIColumn :: forall b_anifq v_anifr. Prism' (AnnotatedInsertField b_anifq v_anifr) (Column b_anifq, v_anifr)
 getInsertColumns :: AnnotatedInsertRow b v -> [(Column b, v)]
-getInsertObjectRelationships :: AnnotatedInsertRow b v -> [ObjRelIns b v]
-getInsertArrayRelationships :: AnnotatedInsertRow b v -> [ArrRelIns b v]
+getInsertObjectRelationships :: AnnotatedInsertRow b v -> [ObjectRelationInsert b v]
+getInsertArrayRelationships :: AnnotatedInsertRow b v -> [ArrayRelationInsert b v]
 instance Data.Traversable.Traversable Hasura.RQL.IR.Insert.Single
 instance Data.Foldable.Foldable Hasura.RQL.IR.Insert.Single
 instance GHC.Base.Functor Hasura.RQL.IR.Insert.Single
-instance Data.Traversable.Traversable (Hasura.RQL.IR.Insert.RelIns b)
-instance Data.Foldable.Foldable (Hasura.RQL.IR.Insert.RelIns b)
-instance GHC.Base.Functor (Hasura.RQL.IR.Insert.RelIns b)
-instance (Hasura.RQL.Types.Backend.Backend b, GHC.Classes.Eq a) => GHC.Classes.Eq (Hasura.RQL.IR.Insert.RelIns b a)
-instance (Hasura.RQL.Types.Backend.Backend b, GHC.Show.Show a) => GHC.Show.Show (Hasura.RQL.IR.Insert.RelIns b a)
-instance Hasura.RQL.Types.Backend.Backend b => Data.Traversable.Traversable (Hasura.RQL.IR.Insert.AnnotatedInsert b)
-instance Hasura.RQL.Types.Backend.Backend b => Data.Foldable.Foldable (Hasura.RQL.IR.Insert.AnnotatedInsert b)
-instance Hasura.RQL.Types.Backend.Backend b => GHC.Base.Functor (Hasura.RQL.IR.Insert.AnnotatedInsert b)
-instance (Hasura.RQL.Types.Backend.Backend b, Data.Traversable.Traversable f) => Data.Traversable.Traversable (Hasura.RQL.IR.Insert.AnnIns b f)
-instance (Hasura.RQL.Types.Backend.Backend b, Data.Foldable.Foldable f) => Data.Foldable.Foldable (Hasura.RQL.IR.Insert.AnnIns b f)
-instance (Hasura.RQL.Types.Backend.Backend b, GHC.Base.Functor f) => GHC.Base.Functor (Hasura.RQL.IR.Insert.AnnIns b f)
-instance Hasura.RQL.Types.Backend.Backend b => Data.Traversable.Traversable (Hasura.RQL.IR.Insert.AnnInsert b r)
-instance Hasura.RQL.Types.Backend.Backend b => Data.Foldable.Foldable (Hasura.RQL.IR.Insert.AnnInsert b r)
-instance Hasura.RQL.Types.Backend.Backend b => GHC.Base.Functor (Hasura.RQL.IR.Insert.AnnInsert b r)
+instance Data.Traversable.Traversable (Hasura.RQL.IR.Insert.RelationInsert b)
+instance Data.Foldable.Foldable (Hasura.RQL.IR.Insert.RelationInsert b)
+instance GHC.Base.Functor (Hasura.RQL.IR.Insert.RelationInsert b)
+instance (Hasura.RQL.Types.Backend.Backend b, GHC.Classes.Eq a) => GHC.Classes.Eq (Hasura.RQL.IR.Insert.RelationInsert b a)
+instance (Hasura.RQL.Types.Backend.Backend b, GHC.Show.Show a) => GHC.Show.Show (Hasura.RQL.IR.Insert.RelationInsert b a)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Traversable.Traversable (Hasura.RQL.IR.Insert.AnnotatedInsertField b)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Foldable.Foldable (Hasura.RQL.IR.Insert.AnnotatedInsertField b)
+instance Hasura.RQL.Types.Backend.Backend b => GHC.Base.Functor (Hasura.RQL.IR.Insert.AnnotatedInsertField b)
+instance (Hasura.RQL.Types.Backend.Backend b, Data.Traversable.Traversable f) => Data.Traversable.Traversable (Hasura.RQL.IR.Insert.AnnotatedInsertData b f)
+instance (Hasura.RQL.Types.Backend.Backend b, Data.Foldable.Foldable f) => Data.Foldable.Foldable (Hasura.RQL.IR.Insert.AnnotatedInsertData b f)
+instance (Hasura.RQL.Types.Backend.Backend b, GHC.Base.Functor f) => GHC.Base.Functor (Hasura.RQL.IR.Insert.AnnotatedInsertData b f)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Traversable.Traversable (Hasura.RQL.IR.Insert.AnnotatedInsert b r)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Foldable.Foldable (Hasura.RQL.IR.Insert.AnnotatedInsert b r)
+instance Hasura.RQL.Types.Backend.Backend b => GHC.Base.Functor (Hasura.RQL.IR.Insert.AnnotatedInsert b r)
 
 module Hasura.RQL.IR.Delete
 data AnnDelG (b :: BackendType) (r :: Type) v
@@ -17971,7 +17971,7 @@ data RootField (db :: BackendType -> Type) remote action raw
 [RFAction] :: action -> RootField db remote action raw
 [RFRaw] :: raw -> RootField db remote action raw
 data MutationDB (b :: BackendType) (r :: Type) v
-MDBInsert :: AnnInsert b r v -> MutationDB (b :: BackendType) (r :: Type) v
+MDBInsert :: AnnotatedInsert b r v -> MutationDB (b :: BackendType) (r :: Type) v
 MDBUpdate :: AnnotatedUpdateG b r v -> MutationDB (b :: BackendType) (r :: Type) v
 MDBDelete :: AnnDelG b r v -> MutationDB (b :: BackendType) (r :: Type) v
 
@@ -19267,7 +19267,7 @@ fromUpdate :: AnnotatedUpdate 'MSSQL -> FromIr Update
 -- | This module defines the translation functions for insert and upsert
 --   mutations.
 module Hasura.Backends.MSSQL.FromIr.Insert
-fromInsert :: AnnInsert 'MSSQL Void Expression -> Insert
+fromInsert :: AnnotatedInsert 'MSSQL Void Expression -> Insert
 
 -- | Normalize a row by adding missing columns with <tt>DEFAULT</tt> value
 --   and sort by column name to make sure all rows are consistent in column
@@ -19303,7 +19303,7 @@ fromInsert :: AnnInsert 'MSSQL Void Expression -> Insert
 --   </pre>
 normalizeInsertRows :: HashMap (Column 'MSSQL) Expression -> [[(Column 'MSSQL, Expression)]] -> [[(Column 'MSSQL, Expression)]]
 
--- | Construct a MERGE statement from AnnInsert information. A MERGE
+-- | Construct a MERGE statement from AnnotatedInsert information. A MERGE
 --   statement is responsible for actually inserting and/or updating the
 --   data in the table.
 toMerge :: TableName -> [AnnotatedInsertRow 'MSSQL Expression] -> [ColumnInfo 'MSSQL] -> IfMatched Expression -> FromIr Merge
@@ -19316,7 +19316,7 @@ toMerge :: TableName -> [AnnotatedInsertRow 'MSSQL Expression] -> [ColumnInfo 'M
 --   the missing fields with <tt>DEFAULT</tt> in
 --   <tt>normalizeInsertRows</tt>, and we can't do that in a MERGE
 --   statement directly.
-toInsertValuesIntoTempTable :: TempTableName -> AnnInsert 'MSSQL Void Expression -> InsertValuesIntoTempTable
+toInsertValuesIntoTempTable :: TempTableName -> AnnotatedInsert 'MSSQL Void Expression -> InsertValuesIntoTempTable
 
 
 -- | This module defines the translation function for delete mutations.
@@ -21346,7 +21346,7 @@ type MonadBuildSchema b r m n = (BackendSchema b, MonadBuildSchemaBase r m n)
 class (Backend b, Eq (BooleanOperators b (UnpreparedValue b))) => BackendSchema (b :: BackendType)
 buildTableQueryFields :: (BackendSchema b, MonadBuildSchema b r m n) => SourceName -> TableName b -> TableInfo b -> Name -> m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 buildTableRelayQueryFields :: (BackendSchema b, MonadBuildSchema b r m n) => SourceName -> TableName b -> TableInfo b -> Name -> NESeq (ColumnInfo b) -> m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-buildTableInsertMutationFields :: (BackendSchema b, MonadBuildSchema b r m n) => Scenario -> SourceName -> TableName b -> TableInfo b -> Name -> m [FieldParser n (AnnInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+buildTableInsertMutationFields :: (BackendSchema b, MonadBuildSchema b r m n) => Scenario -> SourceName -> TableName b -> TableInfo b -> Name -> m [FieldParser n (AnnotatedInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
 -- | This method is responsible for building the GraphQL Schema for
 --   mutations backed by <tt>UPDATE</tt> statements on some table, as
@@ -21364,7 +21364,7 @@ tableArguments :: (BackendSchema b, MonadBuildSchema b r m n) => SourceName -> T
 
 -- | Make a parser for relationships. Default implementaton elides
 --   relationships altogether.
-mkRelationshipParser :: (BackendSchema b, MonadBuildSchema b r m n) => SourceName -> RelInfo b -> m (Maybe (InputFieldsParser n (Maybe (AnnotatedInsert b (UnpreparedValue b)))))
+mkRelationshipParser :: (BackendSchema b, MonadBuildSchema b r m n) => SourceName -> RelInfo b -> m (Maybe (InputFieldsParser n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))))
 relayExtension :: BackendSchema b => Maybe (XRelay b)
 nodesAggExtension :: BackendSchema b => Maybe (XNodesAgg b)
 columnParser :: (BackendSchema b, MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) => ColumnType b -> Nullability -> m (Parser 'Both n (ValueWithOrigin (ColumnValue b)))
@@ -23181,7 +23181,7 @@ module Hasura.GraphQL.Schema.Mutation
 --   field accepts the following arguments: - objects: the list of objects
 --   to insert into the table (see <a>tableFieldsInput</a>) - parser for
 --   backend-specific fields, e.g. upsert fields on_conflict or if_matched
-insertIntoTable :: forall b r m n. MonadBuildSchema b r m n => (SourceName -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) -> Scenario -> SourceName -> TableInfo b -> Name -> Maybe Description -> m (Maybe (FieldParser n (AnnInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+insertIntoTable :: forall b r m n. MonadBuildSchema b r m n => (SourceName -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) -> Scenario -> SourceName -> TableInfo b -> Name -> Maybe Description -> m (Maybe (FieldParser n (AnnotatedInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 
 -- | Variant of <a>insertIntoTable</a> that inserts a single row.
 --   
@@ -23189,7 +23189,7 @@ insertIntoTable :: forall b r m n. MonadBuildSchema b r m n => (SourceName -> Ta
 --   argument, this field instead expects a single <tt>object</tt>. Its
 --   selection set is also slightly different: it only allows selecting
 --   columns from the row being inserted.
-insertOneIntoTable :: forall b r m n. MonadBuildSchema b r m n => (SourceName -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) -> Scenario -> SourceName -> TableInfo b -> Name -> Maybe Description -> m (Maybe (FieldParser n (AnnInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+insertOneIntoTable :: forall b r m n. MonadBuildSchema b r m n => (SourceName -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) -> Scenario -> SourceName -> TableInfo b -> Name -> Maybe Description -> m (Maybe (FieldParser n (AnnotatedInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 
 -- | Creates the parser for an input object for a row of the given table.
 --   
@@ -23211,7 +23211,7 @@ insertOneIntoTable :: forall b r m n. MonadBuildSchema b r m n => (SourceName ->
 --   }
 --   </pre>
 tableFieldsInput :: forall b r m n. MonadBuildSchema b r m n => SourceName -> TableInfo b -> m (Parser 'Input n (AnnotatedInsertRow b (UnpreparedValue b)))
-mkDefaultRelationshipParser :: forall b r m n. MonadBuildSchema b r m n => (SourceName -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) -> XNestedInserts b -> SourceName -> RelInfo b -> m (Maybe (InputFieldsParser n (Maybe (AnnotatedInsert b (UnpreparedValue b)))))
+mkDefaultRelationshipParser :: forall b r m n. MonadBuildSchema b r m n => (SourceName -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) -> XNestedInserts b -> SourceName -> RelInfo b -> m (Maybe (InputFieldsParser n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))))
 
 -- | Construct the parser for an input object that represents an insert
 --   through an object relationship.
@@ -23220,7 +23220,7 @@ mkDefaultRelationshipParser :: forall b r m n. MonadBuildSchema b r m n => (Sour
 --   relationships. This function creates the parser for an object that
 --   represents the insertion object across an object relationship; it is
 --   co-recursive with <a>tableFieldsInput</a>.
-objectRelationshipInput :: forall b r m n. MonadBuildSchema b r m n => (SourceName -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) -> SourceName -> TableInfo b -> m (Maybe (Parser 'Input n (SingleObjIns b (UnpreparedValue b))))
+objectRelationshipInput :: forall b r m n. MonadBuildSchema b r m n => (SourceName -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) -> SourceName -> TableInfo b -> m (Maybe (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b))))
 
 -- | Construct the parser for an input object that represents an insert
 --   through an array relationship.
@@ -23229,10 +23229,10 @@ objectRelationshipInput :: forall b r m n. MonadBuildSchema b r m n => (SourceNa
 --   relationships. This function creates the parser for an object that
 --   represents the insertion object across an array relationship; it is
 --   co-recursive with <a>tableFieldsInput</a>.
-arrayRelationshipInput :: forall b r m n. MonadBuildSchema b r m n => (SourceName -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) -> SourceName -> TableInfo b -> m (Maybe (Parser 'Input n (MultiObjIns b (UnpreparedValue b))))
+arrayRelationshipInput :: forall b r m n. MonadBuildSchema b r m n => (SourceName -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) -> SourceName -> TableInfo b -> m (Maybe (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b))))
 
 -- | Helper function that creates an <tt>AnnIns</tt> object.
-mkInsertObject :: forall b f. BackendSchema b => f (AnnotatedInsertRow b (UnpreparedValue b)) -> TableInfo b -> BackendInsert b (UnpreparedValue b) -> InsPermInfo b -> Maybe (UpdPermInfo b) -> AnnIns b f (UnpreparedValue b)
+mkInsertObject :: forall b f. BackendSchema b => f (AnnotatedInsertRow b (UnpreparedValue b)) -> TableInfo b -> BackendInsert b (UnpreparedValue b) -> InsPermInfo b -> Maybe (UpdPermInfo b) -> AnnotatedInsertData b f (UnpreparedValue b)
 
 -- | Construct a root field, normally called delete_tablename, that can be
 --   used to delete several rows from a DB table
@@ -23401,7 +23401,7 @@ instance (GHC.Base.Functor m, GHC.Base.Functor n) => GHC.Base.Functor (Hasura.Gr
 --   uses of them that we can manage.
 module Hasura.GraphQL.Schema.Build
 buildTableQueryFields :: forall b r m n. MonadBuildSchema b r m n => SourceName -> TableName b -> TableInfo b -> Name -> m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-buildTableInsertMutationFields :: forall b r m n. MonadBuildSchema b r m n => (SourceName -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) -> Scenario -> SourceName -> TableName b -> TableInfo b -> Name -> m [FieldParser n (AnnInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+buildTableInsertMutationFields :: forall b r m n. MonadBuildSchema b r m n => (SourceName -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) -> Scenario -> SourceName -> TableName b -> TableInfo b -> Name -> m [FieldParser n (AnnotatedInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
 -- | This function is the basic building block for update mutations. It
 --   implements the mutation schema in the general shape described in
@@ -24423,11 +24423,11 @@ instance GHC.Generics.Generic (Hasura.Backends.Postgres.Execute.LiveQuery.QueryP
 --   
 --   See <a>Execute</a>.
 module Hasura.Backends.Postgres.Execute.Insert
-convertToSQLTransaction :: forall pgKind m. (MonadTx m, MonadIO m, MonadTrace m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => AnnInsert ('Postgres pgKind) Void SQLExp -> UserInfo -> Seq PrepArg -> StringifyNumbers -> m EncJSON
-insertMultipleObjects :: forall pgKind m. (MonadTx m, MonadIO m, MonadTrace m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => MultiObjIns ('Postgres pgKind) SQLExp -> [(PGCol, SQLExp)] -> UserInfo -> MutationOutput ('Postgres pgKind) -> Seq PrepArg -> StringifyNumbers -> m EncJSON
-insertObject :: forall pgKind m. (MonadTx m, MonadIO m, MonadTrace m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => SingleObjIns ('Postgres pgKind) SQLExp -> [(PGCol, SQLExp)] -> UserInfo -> Seq PrepArg -> StringifyNumbers -> m (Int, Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal))
-insertObjRel :: forall pgKind m. (MonadTx m, MonadIO m, MonadTrace m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => Seq PrepArg -> UserInfo -> StringifyNumbers -> ObjRelIns ('Postgres pgKind) SQLExp -> m (Int, [(PGCol, SQLExp)])
-insertArrRel :: (MonadTx m, MonadIO m, MonadTrace m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => [(PGCol, SQLExp)] -> UserInfo -> Seq PrepArg -> StringifyNumbers -> ArrRelIns ('Postgres pgKind) SQLExp -> m Int
+convertToSQLTransaction :: forall pgKind m. (MonadTx m, MonadIO m, MonadTrace m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => AnnotatedInsert ('Postgres pgKind) Void SQLExp -> UserInfo -> Seq PrepArg -> StringifyNumbers -> m EncJSON
+insertMultipleObjects :: forall pgKind m. (MonadTx m, MonadIO m, MonadTrace m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => MultiObjectInsert ('Postgres pgKind) SQLExp -> [(PGCol, SQLExp)] -> UserInfo -> MutationOutput ('Postgres pgKind) -> Seq PrepArg -> StringifyNumbers -> m EncJSON
+insertObject :: forall pgKind m. (MonadTx m, MonadIO m, MonadTrace m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => SingleObjectInsert ('Postgres pgKind) SQLExp -> [(PGCol, SQLExp)] -> UserInfo -> Seq PrepArg -> StringifyNumbers -> m (Int, Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal))
+insertObjRel :: forall pgKind m. (MonadTx m, MonadIO m, MonadTrace m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => Seq PrepArg -> UserInfo -> StringifyNumbers -> ObjectRelationInsert ('Postgres pgKind) SQLExp -> m (Int, [(PGCol, SQLExp)])
+insertArrRel :: (MonadTx m, MonadIO m, MonadTrace m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => [(PGCol, SQLExp)] -> UserInfo -> Seq PrepArg -> StringifyNumbers -> ArrayRelationInsert ('Postgres pgKind) SQLExp -> m Int
 
 -- | validate an insert object based on insert columns, | insert object
 --   relations and additional columns from parent
@@ -24515,7 +24515,7 @@ msBuildFunctionQueryFields :: MonadBuildSchema 'MSSQL r m n => SourceName -> Fun
 msBuildFunctionRelayQueryFields :: MonadBuildSchema 'MSSQL r m n => SourceName -> FunctionName 'MSSQL -> FunctionInfo 'MSSQL -> TableName 'MSSQL -> NESeq (ColumnInfo 'MSSQL) -> m [a]
 msBuildFunctionMutationFields :: MonadBuildSchema 'MSSQL r m n => SourceName -> FunctionName 'MSSQL -> FunctionInfo 'MSSQL -> TableName 'MSSQL -> m [a]
 msTableArgs :: forall r m n. MonadBuildSchema 'MSSQL r m n => SourceName -> TableInfo 'MSSQL -> m (InputFieldsParser n (SelectArgsG 'MSSQL (UnpreparedValue 'MSSQL)))
-msMkRelationshipParser :: forall r m n. MonadBuildSchema 'MSSQL r m n => SourceName -> RelInfo 'MSSQL -> m (Maybe (InputFieldsParser n (Maybe (AnnotatedInsert 'MSSQL (UnpreparedValue 'MSSQL)))))
+msMkRelationshipParser :: forall r m n. MonadBuildSchema 'MSSQL r m n => SourceName -> RelInfo 'MSSQL -> m (Maybe (InputFieldsParser n (Maybe (AnnotatedInsertField 'MSSQL (UnpreparedValue 'MSSQL)))))
 msColumnParser :: (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) => ColumnType 'MSSQL -> Nullability -> m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MSSQL)))
 msJsonPathArg :: MonadParse n => ColumnType 'MSSQL -> InputFieldsParser n (Maybe (ColumnOp 'MSSQL))
 msOrderByOperators :: NonEmpty (Definition EnumValueInfo, (BasicOrderType 'MSSQL, NullsOrderType 'MSSQL))
@@ -24581,7 +24581,7 @@ module Hasura.Backends.MSSQL.Execute.Insert
 
 -- | Execute and insert/upsert mutation against MS SQL Server. See the
 --   documentation for <a>buildInsertTx</a> to see how it's done.
-executeInsert :: MonadError QErr m => UserInfo -> StringifyNumbers -> SourceConfig 'MSSQL -> AnnInsert 'MSSQL Void (UnpreparedValue 'MSSQL) -> m (ExceptT QErr IO EncJSON)
+executeInsert :: MonadError QErr m => UserInfo -> StringifyNumbers -> SourceConfig 'MSSQL -> AnnotatedInsert 'MSSQL Void (UnpreparedValue 'MSSQL) -> m (ExceptT QErr IO EncJSON)
 
 -- | Translates an IR Insert/upsert mutation description to SQL and builds
 --   a corresponding transaction to run against MS SQL Server.
@@ -24700,7 +24700,7 @@ executeInsert :: MonadError QErr m => UserInfo -> StringifyNumbers -> SourceConf
 --   When executed, the above statement returns a single row with mutation
 --   response as a string value and check constraint result as an integer
 --   value.
-buildInsertTx :: TableName -> Text -> StringifyNumbers -> AnnInsert 'MSSQL Void Expression -> TxET QErr IO EncJSON
+buildInsertTx :: TableName -> Text -> StringifyNumbers -> AnnotatedInsert 'MSSQL Void Expression -> TxET QErr IO EncJSON
 
 -- | Translates an IR IfMatched clause to SQL and builds a corresponding
 --   transaction to run against MS SQL Server.
@@ -24719,11 +24719,11 @@ buildInsertTx :: TableName -> Text -> StringifyNumbers -> AnnInsert 'MSSQL Void 
 --   
 --   Should be used as part of a bigger transaction in
 --   <a>buildInsertTx</a>.
-buildUpsertTx :: TableName -> AnnInsert 'MSSQL Void Expression -> IfMatched Expression -> TxET QErr IO ()
+buildUpsertTx :: TableName -> AnnotatedInsert 'MSSQL Void Expression -> IfMatched Expression -> TxET QErr IO ()
 
 -- | Builds a response to the user using the values in the temporary table
 --   named #inserted.
-buildInsertResponseTx :: StringifyNumbers -> Text -> AnnInsert 'MSSQL Void Expression -> TxET QErr IO (Text, Int)
+buildInsertResponseTx :: StringifyNumbers -> Text -> AnnotatedInsert 'MSSQL Void Expression -> TxET QErr IO (Text, Int)
 
 
 -- | Responsible for translating and building an MSSQL execution plan for
@@ -25556,7 +25556,7 @@ pgDBQueryExplain :: forall pgKind m. (MonadError QErr m, Backend ('Postgres pgKi
 pgDBSubscriptionExplain :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m) => SubscriptionQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)) -> m SubscriptionQueryPlanExplanation
 convertDelete :: forall pgKind m. (MonadError QErr m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => UserInfo -> AnnDelG ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) -> StringifyNumbers -> QueryTagsComment -> m (TraceT (TxET QErr IO) EncJSON)
 convertUpdate :: forall pgKind m. (MonadError QErr m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => UserInfo -> AnnotatedUpdateG ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) -> StringifyNumbers -> QueryTagsComment -> m (TraceT (TxET QErr IO) EncJSON)
-convertInsert :: forall pgKind m. (MonadError QErr m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => UserInfo -> AnnInsert ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) -> StringifyNumbers -> QueryTagsComment -> m (TraceT (TxET QErr IO) EncJSON)
+convertInsert :: forall pgKind m. (MonadError QErr m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => UserInfo -> AnnotatedInsert ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) -> StringifyNumbers -> QueryTagsComment -> m (TraceT (TxET QErr IO) EncJSON)
 
 -- | A pared-down version of <a>convertQuerySelSet</a>, for use in
 --   execution of special case of SQL function mutations (see

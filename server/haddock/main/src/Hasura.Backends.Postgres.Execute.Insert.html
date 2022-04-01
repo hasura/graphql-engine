@@ -45,16 +45,16 @@
 </span><span id="line-45"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.html#PostgresAnnotatedFieldJSON"><span class="hs-identifier hs-type">PostgresAnnotatedFieldJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688308988"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-46"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#QueryTagsComment"><span class="hs-identifier hs-type">QueryTagsComment</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688308987"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-47"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-48"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnInsert"><span class="hs-identifier hs-type">IR.AnnInsert</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688308988"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">PG.SQLExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-48"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsert"><span class="hs-identifier hs-type">IR.AnnotatedInsert</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688308988"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">PG.SQLExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-49"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-50"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Seq.Seq</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.PrepArg</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-51"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#StringifyNumbers"><span class="hs-identifier hs-type">StringifyNumbers</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-52"></span><span>  </span><span class="annot"><a href="#local-6989586621688308987"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
-</span><span id="line-53"></span><span id="convertToSQLTransaction"><span class="annot"><span class="annottext">convertToSQLTransaction :: AnnInsert ('Postgres pgKind) Void SQLExp
+</span><span id="line-53"></span><span id="convertToSQLTransaction"><span class="annot"><span class="annottext">convertToSQLTransaction :: AnnotatedInsert ('Postgres pgKind) Void SQLExp
 -&gt; UserInfo -&gt; Seq PrepArg -&gt; StringifyNumbers -&gt; m EncJSON
-</span><a href="Hasura.Backends.Postgres.Execute.Insert.html#convertToSQLTransaction"><span class="hs-identifier hs-var hs-var">convertToSQLTransaction</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnInsert"><span class="hs-identifier hs-type">IR.AnnInsert</span></a></span><span> </span><span id="local-6989586621688308985"><span class="annot"><span class="annottext">Text
+</span><a href="Hasura.Backends.Postgres.Execute.Insert.html#convertToSQLTransaction"><span class="hs-identifier hs-var hs-var">convertToSQLTransaction</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsert"><span class="hs-identifier hs-type">IR.AnnotatedInsert</span></a></span><span> </span><span id="local-6989586621688308985"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621688308985"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span id="local-6989586621688308984"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688308984"><span class="hs-identifier hs-var">isSingle</span></a></span></span><span> </span><span id="local-6989586621688308983"><span class="annot"><span class="annottext">MultiObjIns ('Postgres pgKind) SQLExp
+</span><a href="#local-6989586621688308984"><span class="hs-identifier hs-var">isSingle</span></a></span></span><span> </span><span id="local-6989586621688308983"><span class="annot"><span class="annottext">MultiObjectInsert ('Postgres pgKind) SQLExp
 </span><a href="#local-6989586621688308983"><span class="hs-identifier hs-var">annIns</span></a></span></span><span> </span><span id="local-6989586621688308982"><span class="annot"><span class="annottext">MutationOutputG ('Postgres pgKind) Void SQLExp
 </span><a href="#local-6989586621688308982"><span class="hs-identifier hs-var">mutationOutput</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688308981"><span class="annot"><span class="annottext">UserInfo
 </span><a href="#local-6989586621688308981"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621688308980"><span class="annot"><span class="annottext">Seq PrepArg
@@ -65,11 +65,11 @@ forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">([AnnotatedInsertRow ('Postgres pgKind) SQLExp] -&gt; Bool)
 -&gt; [AnnotatedInsertRow ('Postgres pgKind) SQLExp] -&gt; Bool
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MultiObjIns ('Postgres pgKind) SQLExp
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MultiObjectInsert ('Postgres pgKind) SQLExp
 -&gt; [AnnotatedInsertRow ('Postgres pgKind) SQLExp]
 forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnIns b f v -&gt; f (AnnotatedInsertRow b v)
-</span><a href="Hasura.RQL.IR.Insert.html#_aiInsObj"><span class="hs-identifier hs-var hs-var">IR._aiInsObj</span></a></span><span> </span><span class="annot"><span class="annottext">MultiObjIns ('Postgres pgKind) SQLExp
+AnnotatedInsertData b f v -&gt; f (AnnotatedInsertRow b v)
+</span><a href="Hasura.RQL.IR.Insert.html#_aiInsertObject"><span class="hs-identifier hs-var hs-var">IR._aiInsertObject</span></a></span><span> </span><span class="annot"><span class="annottext">MultiObjectInsert ('Postgres pgKind) SQLExp
 </span><a href="#local-6989586621688308983"><span class="hs-identifier hs-var">annIns</span></a></span><span>
 </span><span id="line-55"></span><span>    </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -92,7 +92,7 @@ t Text -&gt; m a -&gt; m a
 </span><a href="#local-6989586621688308974"><span class="hs-identifier hs-var">suffix</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">(m EncJSON -&gt; m EncJSON) -&gt; m EncJSON -&gt; m EncJSON
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-58"></span><span>        </span><span class="annot"><span class="annottext">MultiObjIns ('Postgres pgKind) SQLExp
+</span><span id="line-58"></span><span>        </span><span class="annot"><span class="annottext">MultiObjectInsert ('Postgres pgKind) SQLExp
 -&gt; [(PGCol, SQLExp)]
 -&gt; UserInfo
 -&gt; MutationOutput ('Postgres pgKind)
@@ -103,14 +103,14 @@ forall (pgKind :: PostgresKind) (m :: * -&gt; *).
 (MonadTx m, MonadIO m, MonadTrace m, Backend ('Postgres pgKind),
  PostgresAnnotatedFieldJSON pgKind,
  MonadReader QueryTagsComment m) =&gt;
-MultiObjIns ('Postgres pgKind) SQLExp
+MultiObjectInsert ('Postgres pgKind) SQLExp
 -&gt; [(PGCol, SQLExp)]
 -&gt; UserInfo
 -&gt; MutationOutput ('Postgres pgKind)
 -&gt; Seq PrepArg
 -&gt; StringifyNumbers
 -&gt; m EncJSON
-</span><a href="Hasura.Backends.Postgres.Execute.Insert.html#insertMultipleObjects"><span class="hs-identifier hs-var">insertMultipleObjects</span></a></span><span> </span><span class="annot"><span class="annottext">MultiObjIns ('Postgres pgKind) SQLExp
+</span><a href="Hasura.Backends.Postgres.Execute.Insert.html#insertMultipleObjects"><span class="hs-identifier hs-var">insertMultipleObjects</span></a></span><span> </span><span class="annot"><span class="annottext">MultiObjectInsert ('Postgres pgKind) SQLExp
 </span><a href="#local-6989586621688308983"><span class="hs-identifier hs-var">annIns</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">UserInfo
 </span><a href="#local-6989586621688308981"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">MutationOutput ('Postgres pgKind)
 MutationOutputG ('Postgres pgKind) Void SQLExp
@@ -153,21 +153,21 @@ forall a. a -&gt; a -&gt; Bool -&gt; a
 </span><span id="line-69"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.html#PostgresAnnotatedFieldJSON"><span class="hs-identifier hs-type">PostgresAnnotatedFieldJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309200"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-70"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#QueryTagsComment"><span class="hs-identifier hs-type">QueryTagsComment</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309204"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-71"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-72"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#MultiObjIns"><span class="hs-identifier hs-type">IR.MultiObjIns</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309200"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">PG.SQLExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-72"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#MultiObjectInsert"><span class="hs-identifier hs-type">IR.MultiObjectInsert</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309200"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">PG.SQLExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-73"></span><span>  </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">PG.SQLExp</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-74"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-75"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Returning.html#MutationOutput"><span class="hs-identifier hs-type">IR.MutationOutput</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309200"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-76"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Seq.Seq</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.PrepArg</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-77"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#StringifyNumbers"><span class="hs-identifier hs-type">StringifyNumbers</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-78"></span><span>  </span><span class="annot"><a href="#local-6989586621688309204"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
-</span><span id="line-79"></span><span id="insertMultipleObjects"><span class="annot"><span class="annottext">insertMultipleObjects :: MultiObjIns ('Postgres pgKind) SQLExp
+</span><span id="line-79"></span><span id="insertMultipleObjects"><span class="annot"><span class="annottext">insertMultipleObjects :: MultiObjectInsert ('Postgres pgKind) SQLExp
 -&gt; [(PGCol, SQLExp)]
 -&gt; UserInfo
 -&gt; MutationOutput ('Postgres pgKind)
 -&gt; Seq PrepArg
 -&gt; StringifyNumbers
 -&gt; m EncJSON
-</span><a href="Hasura.Backends.Postgres.Execute.Insert.html#insertMultipleObjects"><span class="hs-identifier hs-var hs-var">insertMultipleObjects</span></a></span></span><span> </span><span id="local-6989586621688308966"><span class="annot"><span class="annottext">MultiObjIns ('Postgres pgKind) SQLExp
+</span><a href="Hasura.Backends.Postgres.Execute.Insert.html#insertMultipleObjects"><span class="hs-identifier hs-var hs-var">insertMultipleObjects</span></a></span></span><span> </span><span id="local-6989586621688308966"><span class="annot"><span class="annottext">MultiObjectInsert ('Postgres pgKind) SQLExp
 </span><a href="#local-6989586621688308966"><span class="hs-identifier hs-var">multiObjIns</span></a></span></span><span> </span><span id="local-6989586621688308965"><span class="annot"><span class="annottext">[(PGCol, SQLExp)]
 </span><a href="#local-6989586621688308965"><span class="hs-identifier hs-var">additionalColumns</span></a></span></span><span> </span><span id="local-6989586621688308964"><span class="annot"><span class="annottext">UserInfo
 </span><a href="#local-6989586621688308964"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621688308963"><span class="annot"><span class="annottext">MutationOutput ('Postgres pgKind)
@@ -181,49 +181,49 @@ forall a. a -&gt; a -&gt; Bool -&gt; a
 </span><a href="#local-6989586621688308959"><span class="hs-identifier hs-var">withRelsInsert</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621688308958"><span class="hs-identifier hs-var">anyRelsToInsert</span></a></span><span>
 </span><span id="line-81"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-82"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnIns"><span class="hs-identifier hs-type">IR.AnnIns</span></a></span><span> </span><span id="local-6989586621688308956"><span class="annot"><span class="annottext">[AnnotatedInsertRow ('Postgres pgKind) SQLExp]
+</span><span id="line-82"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertData"><span class="hs-identifier hs-type">IR.AnnotatedInsertData</span></a></span><span> </span><span id="local-6989586621688308956"><span class="annot"><span class="annottext">[AnnotatedInsertRow ('Postgres pgKind) SQLExp]
 </span><a href="#local-6989586621688308956"><span class="hs-identifier hs-var">insObjs</span></a></span></span><span> </span><span id="local-6989586621688308955"><span class="annot"><span class="annottext">TableName ('Postgres pgKind)
 </span><a href="#local-6989586621688308955"><span class="hs-identifier hs-var">table</span></a></span></span><span> </span><span id="local-6989586621688308954"><span class="annot"><span class="annottext">(AnnBoolExp ('Postgres pgKind) SQLExp,
  Maybe (AnnBoolExp ('Postgres pgKind) SQLExp))
 </span><a href="#local-6989586621688308954"><span class="hs-identifier hs-var">checkCondition</span></a></span></span><span> </span><span id="local-6989586621688308953"><span class="annot"><span class="annottext">[ColumnInfo ('Postgres pgKind)]
 </span><a href="#local-6989586621688308953"><span class="hs-identifier hs-var">columnInfos</span></a></span></span><span> </span><span id="local-6989586621688308952"><span class="annot"><span class="annottext">PreSetColsG ('Postgres pgKind) SQLExp
-</span><a href="#local-6989586621688308952"><span class="hs-identifier hs-var">defVals</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Insert.html#BackendInsert"><span class="hs-identifier hs-type">BackendInsert</span></a></span><span> </span><span id="local-6989586621688308950"><span class="annot"><a href="#local-6989586621688308950"><span class="hs-identifier hs-var">conflictClause</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MultiObjIns ('Postgres pgKind) SQLExp
+</span><a href="#local-6989586621688308952"><span class="hs-identifier hs-var">defVals</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Insert.html#BackendInsert"><span class="hs-identifier hs-type">BackendInsert</span></a></span><span> </span><span id="local-6989586621688308950"><span class="annot"><a href="#local-6989586621688308950"><span class="hs-identifier hs-var">conflictClause</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MultiObjectInsert ('Postgres pgKind) SQLExp
 </span><a href="#local-6989586621688308966"><span class="hs-identifier hs-var">multiObjIns</span></a></span><span>
-</span><span id="line-83"></span><span>    </span><span id="local-6989586621688308949"><span class="annot"><span class="annottext">allInsObjRels :: [ObjRelIns ('Postgres pgKind) SQLExp]
+</span><span id="line-83"></span><span>    </span><span id="local-6989586621688308949"><span class="annot"><span class="annottext">allInsObjRels :: [ObjectRelationInsert ('Postgres pgKind) SQLExp]
 </span><a href="#local-6989586621688308949"><span class="hs-identifier hs-var hs-var">allInsObjRels</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(AnnotatedInsertRow ('Postgres pgKind) SQLExp
- -&gt; [ObjRelIns ('Postgres pgKind) SQLExp])
+ -&gt; [ObjectRelationInsert ('Postgres pgKind) SQLExp])
 -&gt; [AnnotatedInsertRow ('Postgres pgKind) SQLExp]
--&gt; [ObjRelIns ('Postgres pgKind) SQLExp]
+-&gt; [ObjectRelationInsert ('Postgres pgKind) SQLExp]
 forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
 </span><span class="hs-identifier hs-var">concatMap</span></span><span> </span><span class="annot"><span class="annottext">AnnotatedInsertRow ('Postgres pgKind) SQLExp
--&gt; [ObjRelIns ('Postgres pgKind) SQLExp]
+-&gt; [ObjectRelationInsert ('Postgres pgKind) SQLExp]
 forall (b :: BackendType) v.
-AnnotatedInsertRow b v -&gt; [ObjRelIns b v]
+AnnotatedInsertRow b v -&gt; [ObjectRelationInsert b v]
 </span><a href="Hasura.RQL.IR.Insert.html#getInsertObjectRelationships"><span class="hs-identifier hs-var">IR.getInsertObjectRelationships</span></a></span><span> </span><span class="annot"><span class="annottext">[AnnotatedInsertRow ('Postgres pgKind) SQLExp]
 </span><a href="#local-6989586621688308956"><span class="hs-identifier hs-var">insObjs</span></a></span><span>
-</span><span id="line-84"></span><span>    </span><span id="local-6989586621688308946"><span class="annot"><span class="annottext">allInsArrRels :: [ArrRelIns ('Postgres pgKind) SQLExp]
+</span><span id="line-84"></span><span>    </span><span id="local-6989586621688308946"><span class="annot"><span class="annottext">allInsArrRels :: [ArrayRelationInsert ('Postgres pgKind) SQLExp]
 </span><a href="#local-6989586621688308946"><span class="hs-identifier hs-var hs-var">allInsArrRels</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(AnnotatedInsertRow ('Postgres pgKind) SQLExp
- -&gt; [ArrRelIns ('Postgres pgKind) SQLExp])
+ -&gt; [ArrayRelationInsert ('Postgres pgKind) SQLExp])
 -&gt; [AnnotatedInsertRow ('Postgres pgKind) SQLExp]
--&gt; [ArrRelIns ('Postgres pgKind) SQLExp]
+-&gt; [ArrayRelationInsert ('Postgres pgKind) SQLExp]
 forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
 </span><span class="hs-identifier hs-var">concatMap</span></span><span> </span><span class="annot"><span class="annottext">AnnotatedInsertRow ('Postgres pgKind) SQLExp
--&gt; [ArrRelIns ('Postgres pgKind) SQLExp]
+-&gt; [ArrayRelationInsert ('Postgres pgKind) SQLExp]
 forall (b :: BackendType) v.
-AnnotatedInsertRow b v -&gt; [ArrRelIns b v]
+AnnotatedInsertRow b v -&gt; [ArrayRelationInsert b v]
 </span><a href="Hasura.RQL.IR.Insert.html#getInsertArrayRelationships"><span class="hs-identifier hs-var">IR.getInsertArrayRelationships</span></a></span><span> </span><span class="annot"><span class="annottext">[AnnotatedInsertRow ('Postgres pgKind) SQLExp]
 </span><a href="#local-6989586621688308956"><span class="hs-identifier hs-var">insObjs</span></a></span><span>
 </span><span id="line-85"></span><span>    </span><span id="local-6989586621688308958"><span class="annot"><span class="annottext">anyRelsToInsert :: Bool
 </span><a href="#local-6989586621688308958"><span class="hs-identifier hs-var hs-var">anyRelsToInsert</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Bool) -&gt; Bool -&gt; Bool
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[ArrRelIns ('Postgres pgKind) SQLExp] -&gt; Bool
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[ArrayRelationInsert ('Postgres pgKind) SQLExp] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
-</span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">[ArrRelIns ('Postgres pgKind) SQLExp]
+</span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">[ArrayRelationInsert ('Postgres pgKind) SQLExp]
 </span><a href="#local-6989586621688308946"><span class="hs-identifier hs-var">allInsArrRels</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
-</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">[ObjRelIns ('Postgres pgKind) SQLExp] -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">[ObjectRelationInsert ('Postgres pgKind) SQLExp] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
-</span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">[ObjRelIns ('Postgres pgKind) SQLExp]
+</span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">[ObjectRelationInsert ('Postgres pgKind) SQLExp]
 </span><a href="#local-6989586621688308949"><span class="hs-identifier hs-var">allInsObjRels</span></a></span><span>
 </span><span id="line-86"></span><span>
 </span><span id="line-87"></span><span>    </span><span id="local-6989586621688308960"><span class="annot"><span class="annottext">withoutRelsInsert :: m EncJSON
@@ -349,11 +349,11 @@ forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
 </span><span class="hs-identifier hs-var">length</span></span><span> </span><span class="annot"><span class="annottext">([AnnotatedInsertRow ('Postgres pgKind) SQLExp] -&gt; Text)
 -&gt; [AnnotatedInsertRow ('Postgres pgKind) SQLExp] -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MultiObjIns ('Postgres pgKind) SQLExp
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MultiObjectInsert ('Postgres pgKind) SQLExp
 -&gt; [AnnotatedInsertRow ('Postgres pgKind) SQLExp]
 forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnIns b f v -&gt; f (AnnotatedInsertRow b v)
-</span><a href="Hasura.RQL.IR.Insert.html#_aiInsObj"><span class="hs-identifier hs-var hs-var">IR._aiInsObj</span></a></span><span> </span><span class="annot"><span class="annottext">MultiObjIns ('Postgres pgKind) SQLExp
+AnnotatedInsertData b f v -&gt; f (AnnotatedInsertRow b v)
+</span><a href="Hasura.RQL.IR.Insert.html#_aiInsertObject"><span class="hs-identifier hs-var hs-var">IR._aiInsertObject</span></a></span><span> </span><span class="annot"><span class="annottext">MultiObjectInsert ('Postgres pgKind) SQLExp
 </span><a href="#local-6989586621688308966"><span class="hs-identifier hs-var">multiObjIns</span></a></span><span>
 </span><span id="line-102"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; m EncJSON -&gt; m EncJSON
 forall (m :: * -&gt; *) a. MonadTrace m =&gt; Text -&gt; m a -&gt; m a
@@ -405,7 +405,7 @@ forall (m :: * -&gt; *) a b. QErrM m =&gt; [a] -&gt; (a -&gt; m b) -&gt; m [b]
 </span><a href="Hasura.Base.Error.html#indexedForM"><span class="hs-identifier hs-var">indexedForM</span></a></span><span> </span><span class="annot"><span class="annottext">[AnnotatedInsertRow ('Postgres pgKind) SQLExp]
 </span><a href="#local-6989586621688308956"><span class="hs-identifier hs-var">insObjs</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688308921"><span class="annot"><span class="annottext">AnnotatedInsertRow ('Postgres pgKind) SQLExp
 </span><a href="#local-6989586621688308921"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-108"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688308920"><span class="annot"><span class="annottext">singleObj :: AnnIns ('Postgres pgKind) Single SQLExp
+</span><span id="line-108"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688308920"><span class="annot"><span class="annottext">singleObj :: AnnotatedInsertData ('Postgres pgKind) Single SQLExp
 </span><a href="#local-6989586621688308920"><span class="hs-identifier hs-var hs-var">singleObj</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Single (AnnotatedInsertRow ('Postgres pgKind) SQLExp)
 -&gt; TableName ('Postgres pgKind)
 -&gt; (AnnBoolExp ('Postgres pgKind) SQLExp,
@@ -413,7 +413,7 @@ forall (m :: * -&gt; *) a b. QErrM m =&gt; [a] -&gt; (a -&gt; m b) -&gt; m [b]
 -&gt; [ColumnInfo ('Postgres pgKind)]
 -&gt; PreSetColsG ('Postgres pgKind) SQLExp
 -&gt; BackendInsert ('Postgres pgKind) SQLExp
--&gt; AnnIns ('Postgres pgKind) Single SQLExp
+-&gt; AnnotatedInsertData ('Postgres pgKind) Single SQLExp
 forall (b :: BackendType) (f :: * -&gt; *) v.
 f (AnnotatedInsertRow b v)
 -&gt; TableName b
@@ -421,8 +421,8 @@ f (AnnotatedInsertRow b v)
 -&gt; [ColumnInfo b]
 -&gt; PreSetColsG b v
 -&gt; BackendInsert b v
--&gt; AnnIns b f v
-</span><a href="Hasura.RQL.IR.Insert.html#AnnIns"><span class="hs-identifier hs-var">IR.AnnIns</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnotatedInsertRow ('Postgres pgKind) SQLExp
+-&gt; AnnotatedInsertData b f v
+</span><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertData"><span class="hs-identifier hs-var">IR.AnnotatedInsertData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnotatedInsertRow ('Postgres pgKind) SQLExp
 -&gt; Single (AnnotatedInsertRow ('Postgres pgKind) SQLExp)
 forall a. a -&gt; Single a
 </span><a href="Hasura.RQL.IR.Insert.html#Single"><span class="hs-identifier hs-var">IR.Single</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedInsertRow ('Postgres pgKind) SQLExp
@@ -438,7 +438,7 @@ Maybe (OnConflictClause ('Postgres pgKind) v)
 -&gt; BackendInsert pgKind v
 </span><a href="Hasura.Backends.Postgres.Types.Insert.html#BackendInsert"><span class="hs-identifier hs-var">BackendInsert</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (OnConflictClause ('Postgres pgKind) SQLExp)
 </span><a href="#local-6989586621688308950"><span class="hs-identifier hs-var">conflictClause</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-109"></span><span>        </span><span class="annot"><span class="annottext">AnnIns ('Postgres pgKind) Single SQLExp
+</span><span id="line-109"></span><span>        </span><span class="annot"><span class="annottext">AnnotatedInsertData ('Postgres pgKind) Single SQLExp
 -&gt; [(PGCol, SQLExp)]
 -&gt; UserInfo
 -&gt; Seq PrepArg
@@ -448,13 +448,13 @@ forall (pgKind :: PostgresKind) (m :: * -&gt; *).
 (MonadTx m, MonadIO m, MonadTrace m, Backend ('Postgres pgKind),
  PostgresAnnotatedFieldJSON pgKind,
  MonadReader QueryTagsComment m) =&gt;
-SingleObjIns ('Postgres pgKind) SQLExp
+SingleObjectInsert ('Postgres pgKind) SQLExp
 -&gt; [(PGCol, SQLExp)]
 -&gt; UserInfo
 -&gt; Seq PrepArg
 -&gt; StringifyNumbers
 -&gt; m (Int, Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal))
-</span><a href="Hasura.Backends.Postgres.Execute.Insert.html#insertObject"><span class="hs-identifier hs-var">insertObject</span></a></span><span> </span><span class="annot"><span class="annottext">AnnIns ('Postgres pgKind) Single SQLExp
+</span><a href="Hasura.Backends.Postgres.Execute.Insert.html#insertObject"><span class="hs-identifier hs-var">insertObject</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedInsertData ('Postgres pgKind) Single SQLExp
 </span><a href="#local-6989586621688308920"><span class="hs-identifier hs-var">singleObj</span></a></span><span> </span><span class="annot"><span class="annottext">[(PGCol, SQLExp)]
 </span><a href="#local-6989586621688308965"><span class="hs-identifier hs-var">additionalColumns</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
 </span><a href="#local-6989586621688308964"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Seq PrepArg
@@ -548,19 +548,19 @@ forall a. a -&gt; Maybe a
 </span><span id="line-128"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.html#PostgresAnnotatedFieldJSON"><span class="hs-identifier hs-type">PostgresAnnotatedFieldJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309120"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-129"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#QueryTagsComment"><span class="hs-identifier hs-type">QueryTagsComment</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309121"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-130"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-131"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#SingleObjIns"><span class="hs-identifier hs-type">IR.SingleObjIns</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309120"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">PG.SQLExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-131"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#SingleObjectInsert"><span class="hs-identifier hs-type">IR.SingleObjectInsert</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309120"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">PG.SQLExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-132"></span><span>  </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">PG.SQLExp</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-133"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-134"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Seq.Seq</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.PrepArg</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-135"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#StringifyNumbers"><span class="hs-identifier hs-type">StringifyNumbers</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-136"></span><span>  </span><span class="annot"><a href="#local-6989586621688309121"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValues"><span class="hs-identifier hs-type">ColumnValues</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309120"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.SQL.Value.html#TxtEncodedVal"><span class="hs-identifier hs-type">TxtEncodedVal</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-137"></span><span id="insertObject"><span class="annot"><span class="annottext">insertObject :: SingleObjIns ('Postgres pgKind) SQLExp
+</span><span id="line-137"></span><span id="insertObject"><span class="annot"><span class="annottext">insertObject :: SingleObjectInsert ('Postgres pgKind) SQLExp
 -&gt; [(PGCol, SQLExp)]
 -&gt; UserInfo
 -&gt; Seq PrepArg
 -&gt; StringifyNumbers
 -&gt; m (Int, Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal))
-</span><a href="Hasura.Backends.Postgres.Execute.Insert.html#insertObject"><span class="hs-identifier hs-var hs-var">insertObject</span></a></span></span><span> </span><span id="local-6989586621688308909"><span class="annot"><span class="annottext">SingleObjIns ('Postgres pgKind) SQLExp
+</span><a href="Hasura.Backends.Postgres.Execute.Insert.html#insertObject"><span class="hs-identifier hs-var hs-var">insertObject</span></a></span></span><span> </span><span id="local-6989586621688308909"><span class="annot"><span class="annottext">SingleObjectInsert ('Postgres pgKind) SQLExp
 </span><a href="#local-6989586621688308909"><span class="hs-identifier hs-var">singleObjIns</span></a></span></span><span> </span><span id="local-6989586621688308908"><span class="annot"><span class="annottext">[(PGCol, SQLExp)]
 </span><a href="#local-6989586621688308908"><span class="hs-identifier hs-var">additionalColumns</span></a></span></span><span> </span><span id="local-6989586621688308907"><span class="annot"><span class="annottext">UserInfo
 </span><a href="#local-6989586621688308907"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621688308906"><span class="annot"><span class="annottext">Seq PrepArg
@@ -587,17 +587,19 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 forall a b. (a, b) -&gt; a
 </span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="annot"><span class="annottext">[(Column ('Postgres pgKind), SQLExp)]
 [(PGCol, SQLExp)]
-</span><a href="#local-6989586621688308903"><span class="hs-identifier hs-var">columns</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(RelIns ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)
+</span><a href="#local-6989586621688308903"><span class="hs-identifier hs-var">columns</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(RelationInsert
+   ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)
  -&gt; RelInfo ('Postgres pgKind))
--&gt; [RelIns
-      ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)]
+-&gt; [RelationInsert
+      ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)]
 -&gt; [RelInfo ('Postgres pgKind)]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
-</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">RelIns ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">RelationInsert
+  ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)
 -&gt; RelInfo ('Postgres pgKind)
-forall (b :: BackendType) a. RelIns b a -&gt; RelInfo b
-</span><a href="Hasura.RQL.IR.Insert.html#_riRelInfo"><span class="hs-identifier hs-var hs-var">IR._riRelInfo</span></a></span><span> </span><span class="annot"><span class="annottext">[RelIns
-   ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)]
+forall (b :: BackendType) a. RelationInsert b a -&gt; RelInfo b
+</span><a href="Hasura.RQL.IR.Insert.html#_riRelationInfo"><span class="hs-identifier hs-var hs-var">IR._riRelationInfo</span></a></span><span> </span><span class="annot"><span class="annottext">[RelationInsert
+   ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)]
 </span><a href="#local-6989586621688308901"><span class="hs-identifier hs-var">objectRels</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">((PGCol, SQLExp) -&gt; PGCol) -&gt; [(PGCol, SQLExp)] -&gt; [PGCol]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(PGCol, SQLExp) -&gt; PGCol
@@ -607,31 +609,31 @@ forall a b. (a, b) -&gt; a
 </span><span id="line-139"></span><span>
 </span><span id="line-140"></span><span>  </span><span class="hs-comment">-- insert all object relations and fetch this insert dependent column values</span><span>
 </span><span id="line-141"></span><span>  </span><span id="local-6989586621688308900"><span class="annot"><span class="annottext">[(Int, [(PGCol, SQLExp)])]
-</span><a href="#local-6989586621688308900"><span class="hs-identifier hs-var">objInsRes</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[RelIns
-   ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)]
--&gt; (RelIns
-      ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)
+</span><a href="#local-6989586621688308900"><span class="hs-identifier hs-var">objInsRes</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[RelationInsert
+   ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)]
+-&gt; (RelationInsert
+      ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)
     -&gt; m (Int, [(PGCol, SQLExp)]))
 -&gt; m [(Int, [(PGCol, SQLExp)])]
 forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (Traversable t, Monad m) =&gt;
 t a -&gt; (a -&gt; m b) -&gt; m (t b)
-</span><span class="hs-identifier hs-var">forM</span></span><span> </span><span class="annot"><span class="annottext">[RelIns
-   ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)]
-</span><a href="#local-6989586621688308898"><span class="hs-identifier hs-var">beforeInsert</span></a></span><span> </span><span class="annot"><span class="annottext">((RelIns
-    ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)
+</span><span class="hs-identifier hs-var">forM</span></span><span> </span><span class="annot"><span class="annottext">[RelationInsert
+   ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)]
+</span><a href="#local-6989586621688308898"><span class="hs-identifier hs-var">beforeInsert</span></a></span><span> </span><span class="annot"><span class="annottext">((RelationInsert
+    ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)
   -&gt; m (Int, [(PGCol, SQLExp)]))
  -&gt; m [(Int, [(PGCol, SQLExp)])])
--&gt; (RelIns
-      ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)
+-&gt; (RelationInsert
+      ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)
     -&gt; m (Int, [(PGCol, SQLExp)]))
 -&gt; m [(Int, [(PGCol, SQLExp)])]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Seq PrepArg
 -&gt; UserInfo
 -&gt; StringifyNumbers
--&gt; RelIns
-     ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)
+-&gt; RelationInsert
+     ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)
 -&gt; m (Int, [(PGCol, SQLExp)])
 forall (pgKind :: PostgresKind) (m :: * -&gt; *).
 (MonadTx m, MonadIO m, MonadTrace m, Backend ('Postgres pgKind),
@@ -640,7 +642,7 @@ forall (pgKind :: PostgresKind) (m :: * -&gt; *).
 Seq PrepArg
 -&gt; UserInfo
 -&gt; StringifyNumbers
--&gt; ObjRelIns ('Postgres pgKind) SQLExp
+-&gt; ObjectRelationInsert ('Postgres pgKind) SQLExp
 -&gt; m (Int, [(PGCol, SQLExp)])
 </span><a href="Hasura.Backends.Postgres.Execute.Insert.html#insertObjRel"><span class="hs-identifier hs-var">insertObjRel</span></a></span><span> </span><span class="annot"><span class="annottext">Seq PrepArg
 </span><a href="#local-6989586621688308906"><span class="hs-identifier hs-var">planVars</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
@@ -757,9 +759,9 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; m Int) -&gt; Bool -&gt; m Int
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[ArrRelIns ('Postgres pgKind) SQLExp] -&gt; Bool
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[ArrayRelationInsert ('Postgres pgKind) SQLExp] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
-</span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">[ArrRelIns ('Postgres pgKind) SQLExp]
+</span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">[ArrayRelationInsert ('Postgres pgKind) SQLExp]
 </span><a href="#local-6989586621688308877"><span class="hs-identifier hs-var">allAfterInsertRels</span></a></span><span>
 </span><span id="line-156"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688308876"><span class="annot"><span class="annottext">totAffRows :: Int
 </span><a href="#local-6989586621688308876"><span class="hs-identifier hs-var hs-var">totAffRows</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
@@ -778,13 +780,13 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="#local-6989586621688308876"><span class="hs-identifier hs-var">totAffRows</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe (HashMap PGCol TxtEncodedVal)
 </span><a href="#local-6989586621688308881"><span class="hs-identifier hs-var">colValM</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-159"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-160"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnIns"><span class="hs-identifier hs-type">IR.AnnIns</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#Single"><span class="hs-identifier hs-type">IR.Single</span></a></span><span> </span><span id="local-6989586621688308874"><span class="annot"><span class="annottext">AnnotatedInsertRow ('Postgres pgKind) SQLExp
+</span><span id="line-160"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertData"><span class="hs-identifier hs-type">IR.AnnotatedInsertData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#Single"><span class="hs-identifier hs-type">IR.Single</span></a></span><span> </span><span id="local-6989586621688308874"><span class="annot"><span class="annottext">AnnotatedInsertRow ('Postgres pgKind) SQLExp
 </span><a href="#local-6989586621688308874"><span class="hs-identifier hs-var">annObj</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688308904"><span class="annot"><span class="annottext">TableName ('Postgres pgKind)
 </span><a href="#local-6989586621688308904"><span class="hs-identifier hs-var">table</span></a></span></span><span> </span><span id="local-6989586621688308889"><span class="annot"><span class="annottext">(AnnBoolExp ('Postgres pgKind) SQLExp,
  Maybe (AnnBoolExp ('Postgres pgKind) SQLExp))
 </span><a href="#local-6989586621688308889"><span class="hs-identifier hs-var">checkCond</span></a></span></span><span> </span><span id="local-6989586621688308883"><span class="annot"><span class="annottext">[ColumnInfo ('Postgres pgKind)]
 </span><a href="#local-6989586621688308883"><span class="hs-identifier hs-var">allColumns</span></a></span></span><span> </span><span id="local-6989586621688308890"><span class="annot"><span class="annottext">PreSetColsG ('Postgres pgKind) SQLExp
-</span><a href="#local-6989586621688308890"><span class="hs-identifier hs-var">defaultValues</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Insert.html#BackendInsert"><span class="hs-identifier hs-type">BackendInsert</span></a></span><span> </span><span id="local-6989586621688308891"><span class="annot"><a href="#local-6989586621688308891"><span class="hs-identifier hs-var">onConflict</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SingleObjIns ('Postgres pgKind) SQLExp
+</span><a href="#local-6989586621688308890"><span class="hs-identifier hs-var">defaultValues</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Insert.html#BackendInsert"><span class="hs-identifier hs-type">BackendInsert</span></a></span><span> </span><span id="local-6989586621688308891"><span class="annot"><a href="#local-6989586621688308891"><span class="hs-identifier hs-var">onConflict</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SingleObjectInsert ('Postgres pgKind) SQLExp
 </span><a href="#local-6989586621688308909"><span class="hs-identifier hs-var">singleObjIns</span></a></span><span>
 </span><span id="line-161"></span><span>    </span><span id="local-6989586621688308903"><span class="annot"><span class="annottext">columns :: [(Column ('Postgres pgKind), SQLExp)]
 </span><a href="#local-6989586621688308903"><span class="hs-identifier hs-var hs-var">columns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AnnotatedInsertRow ('Postgres pgKind) SQLExp
@@ -793,84 +795,89 @@ forall (b :: BackendType) v.
 AnnotatedInsertRow b v -&gt; [(Column b, v)]
 </span><a href="Hasura.RQL.IR.Insert.html#getInsertColumns"><span class="hs-identifier hs-var">IR.getInsertColumns</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedInsertRow ('Postgres pgKind) SQLExp
 </span><a href="#local-6989586621688308874"><span class="hs-identifier hs-var">annObj</span></a></span><span>
-</span><span id="line-162"></span><span>    </span><span id="local-6989586621688308901"><span class="annot"><span class="annottext">objectRels :: [RelIns
-   ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)]
+</span><span id="line-162"></span><span>    </span><span id="local-6989586621688308901"><span class="annot"><span class="annottext">objectRels :: [RelationInsert
+   ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)]
 </span><a href="#local-6989586621688308901"><span class="hs-identifier hs-var hs-var">objectRels</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AnnotatedInsertRow ('Postgres pgKind) SQLExp
--&gt; [RelIns
-      ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)]
+-&gt; [RelationInsert
+      ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)]
 forall (b :: BackendType) v.
-AnnotatedInsertRow b v -&gt; [ObjRelIns b v]
+AnnotatedInsertRow b v -&gt; [ObjectRelationInsert b v]
 </span><a href="Hasura.RQL.IR.Insert.html#getInsertObjectRelationships"><span class="hs-identifier hs-var">IR.getInsertObjectRelationships</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedInsertRow ('Postgres pgKind) SQLExp
 </span><a href="#local-6989586621688308874"><span class="hs-identifier hs-var">annObj</span></a></span><span>
-</span><span id="line-163"></span><span>    </span><span id="local-6989586621688308873"><span class="annot"><span class="annottext">arrayRels :: [ArrRelIns ('Postgres pgKind) SQLExp]
+</span><span id="line-163"></span><span>    </span><span id="local-6989586621688308873"><span class="annot"><span class="annottext">arrayRels :: [ArrayRelationInsert ('Postgres pgKind) SQLExp]
 </span><a href="#local-6989586621688308873"><span class="hs-identifier hs-var hs-var">arrayRels</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AnnotatedInsertRow ('Postgres pgKind) SQLExp
--&gt; [ArrRelIns ('Postgres pgKind) SQLExp]
+-&gt; [ArrayRelationInsert ('Postgres pgKind) SQLExp]
 forall (b :: BackendType) v.
-AnnotatedInsertRow b v -&gt; [ArrRelIns b v]
+AnnotatedInsertRow b v -&gt; [ArrayRelationInsert b v]
 </span><a href="Hasura.RQL.IR.Insert.html#getInsertArrayRelationships"><span class="hs-identifier hs-var">IR.getInsertArrayRelationships</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedInsertRow ('Postgres pgKind) SQLExp
 </span><a href="#local-6989586621688308874"><span class="hs-identifier hs-var">annObj</span></a></span><span>
 </span><span id="line-164"></span><span>
-</span><span id="line-165"></span><span>    </span><span class="annot"><a href="#local-6989586621688308872"><span class="hs-identifier hs-type">afterInsert</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621688308898"><span class="hs-identifier hs-type">beforeInsert</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ObjRelIns"><span class="hs-identifier hs-type">IR.ObjRelIns</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309120"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">PG.SQLExp</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-166"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621688308872"><span class="annot"><span class="annottext">[RelIns
-   ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)]
-</span><a href="#local-6989586621688308872"><span class="hs-identifier hs-var">afterInsert</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688308898"><span class="annot"><span class="annottext">[RelIns
-   ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)]
+</span><span id="line-165"></span><span>    </span><span class="annot"><a href="#local-6989586621688308872"><span class="hs-identifier hs-type">afterInsert</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621688308898"><span class="hs-identifier hs-type">beforeInsert</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ObjectRelationInsert"><span class="hs-identifier hs-type">IR.ObjectRelationInsert</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309120"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">PG.SQLExp</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-166"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621688308872"><span class="annot"><span class="annottext">[RelationInsert
+   ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)]
+</span><a href="#local-6989586621688308872"><span class="hs-identifier hs-var">afterInsert</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688308898"><span class="annot"><span class="annottext">[RelationInsert
+   ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)]
 </span><a href="#local-6989586621688308898"><span class="hs-identifier hs-var">beforeInsert</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-167"></span><span>      </span><span class="annot"><span class="annottext">(RelIns ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)
+</span><span id="line-167"></span><span>      </span><span class="annot"><span class="annottext">(RelationInsert
+   ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)
  -&gt; Bool)
--&gt; [RelIns
-      ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)]
--&gt; ([RelIns
-       ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)],
-    [RelIns
-       ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)])
+-&gt; [RelationInsert
+      ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)]
+-&gt; ([RelationInsert
+       ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)],
+    [RelationInsert
+       ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)])
 forall a. (a -&gt; Bool) -&gt; [a] -&gt; ([a], [a])
 </span><span class="hs-identifier hs-var">L.partition</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">InsertOrder -&gt; InsertOrder -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">InsertOrder
 </span><a href="Hasura.RQL.Types.Common.html#AfterParent"><span class="hs-identifier hs-var">AfterParent</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(InsertOrder -&gt; Bool)
--&gt; (RelIns
-      ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)
+-&gt; (RelationInsert
+      ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)
     -&gt; InsertOrder)
--&gt; RelIns
-     ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)
+-&gt; RelationInsert
+     ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)
 -&gt; Bool
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">RelInfo ('Postgres pgKind) -&gt; InsertOrder
 forall (b :: BackendType). RelInfo b -&gt; InsertOrder
 </span><a href="Hasura.RQL.Types.Relationships.Local.html#riInsertOrder"><span class="hs-identifier hs-var hs-var">riInsertOrder</span></a></span><span> </span><span class="annot"><span class="annottext">(RelInfo ('Postgres pgKind) -&gt; InsertOrder)
--&gt; (RelIns
-      ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)
+-&gt; (RelationInsert
+      ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)
     -&gt; RelInfo ('Postgres pgKind))
--&gt; RelIns
-     ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)
+-&gt; RelationInsert
+     ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)
 -&gt; InsertOrder
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">RelIns ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">RelationInsert
+  ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)
 -&gt; RelInfo ('Postgres pgKind)
-forall (b :: BackendType) a. RelIns b a -&gt; RelInfo b
-</span><a href="Hasura.RQL.IR.Insert.html#_riRelInfo"><span class="hs-identifier hs-var hs-var">IR._riRelInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[RelIns
-   ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)]
+forall (b :: BackendType) a. RelationInsert b a -&gt; RelInfo b
+</span><a href="Hasura.RQL.IR.Insert.html#_riRelationInfo"><span class="hs-identifier hs-var hs-var">IR._riRelationInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[RelationInsert
+   ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)]
 </span><a href="#local-6989586621688308901"><span class="hs-identifier hs-var">objectRels</span></a></span><span>
 </span><span id="line-168"></span><span>
-</span><span id="line-169"></span><span>    </span><span class="annot"><a href="#local-6989586621688308877"><span class="hs-identifier hs-type">allAfterInsertRels</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ArrRelIns"><span class="hs-identifier hs-type">IR.ArrRelIns</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309120"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">PG.SQLExp</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-170"></span><span>    </span><span id="local-6989586621688308877"><span class="annot"><span class="annottext">allAfterInsertRels :: [ArrRelIns ('Postgres pgKind) SQLExp]
-</span><a href="#local-6989586621688308877"><span class="hs-identifier hs-var hs-var">allAfterInsertRels</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ArrRelIns ('Postgres pgKind) SQLExp]
-</span><a href="#local-6989586621688308873"><span class="hs-identifier hs-var">arrayRels</span></a></span><span> </span><span class="annot"><span class="annottext">[ArrRelIns ('Postgres pgKind) SQLExp]
--&gt; [ArrRelIns ('Postgres pgKind) SQLExp]
--&gt; [ArrRelIns ('Postgres pgKind) SQLExp]
+</span><span id="line-169"></span><span>    </span><span class="annot"><a href="#local-6989586621688308877"><span class="hs-identifier hs-type">allAfterInsertRels</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ArrayRelationInsert"><span class="hs-identifier hs-type">IR.ArrayRelationInsert</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309120"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">PG.SQLExp</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-170"></span><span>    </span><span id="local-6989586621688308877"><span class="annot"><span class="annottext">allAfterInsertRels :: [ArrayRelationInsert ('Postgres pgKind) SQLExp]
+</span><a href="#local-6989586621688308877"><span class="hs-identifier hs-var hs-var">allAfterInsertRels</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ArrayRelationInsert ('Postgres pgKind) SQLExp]
+</span><a href="#local-6989586621688308873"><span class="hs-identifier hs-var">arrayRels</span></a></span><span> </span><span class="annot"><span class="annottext">[ArrayRelationInsert ('Postgres pgKind) SQLExp]
+-&gt; [ArrayRelationInsert ('Postgres pgKind) SQLExp]
+-&gt; [ArrayRelationInsert ('Postgres pgKind) SQLExp]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">(RelIns ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)
- -&gt; ArrRelIns ('Postgres pgKind) SQLExp)
--&gt; [RelIns
-      ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)]
--&gt; [ArrRelIns ('Postgres pgKind) SQLExp]
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">(RelationInsert
+   ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)
+ -&gt; ArrayRelationInsert ('Postgres pgKind) SQLExp)
+-&gt; [RelationInsert
+      ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)]
+-&gt; [ArrayRelationInsert ('Postgres pgKind) SQLExp]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
-</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">RelIns ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)
--&gt; ArrRelIns ('Postgres pgKind) SQLExp
-forall a (b :: BackendType). ObjRelIns b a -&gt; ArrRelIns b a
-</span><a href="#local-6989586621688308868"><span class="hs-identifier hs-var">objToArr</span></a></span><span> </span><span class="annot"><span class="annottext">[RelIns
-   ('Postgres pgKind) (SingleObjIns ('Postgres pgKind) SQLExp)]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">RelationInsert
+  ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)
+-&gt; ArrayRelationInsert ('Postgres pgKind) SQLExp
+forall a (b :: BackendType).
+ObjectRelationInsert b a -&gt; ArrayRelationInsert b a
+</span><a href="#local-6989586621688308868"><span class="hs-identifier hs-var">objToArr</span></a></span><span> </span><span class="annot"><span class="annottext">[RelationInsert
+   ('Postgres pgKind) (SingleObjectInsert ('Postgres pgKind) SQLExp)]
 </span><a href="#local-6989586621688308872"><span class="hs-identifier hs-var">afterInsert</span></a></span><span>
 </span><span id="line-171"></span><span>
 </span><span id="line-172"></span><span>    </span><span class="annot"><a href="#local-6989586621688308867"><span class="hs-identifier hs-type">afterInsertDepCols</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309120"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
@@ -895,60 +902,63 @@ Backend b =&gt;
 -&gt; [PGCol] -&gt; [ColumnInfo ('Postgres pgKind)]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-175"></span><span>        </span><span class="annot"><span class="annottext">(ArrRelIns ('Postgres pgKind) SQLExp -&gt; [PGCol])
--&gt; [ArrRelIns ('Postgres pgKind) SQLExp] -&gt; [PGCol]
+</span><span id="line-175"></span><span>        </span><span class="annot"><span class="annottext">(ArrayRelationInsert ('Postgres pgKind) SQLExp -&gt; [PGCol])
+-&gt; [ArrayRelationInsert ('Postgres pgKind) SQLExp] -&gt; [PGCol]
 forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
 </span><span class="hs-identifier hs-var">concatMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap PGCol PGCol -&gt; [PGCol]
 forall k v. HashMap k v -&gt; [k]
 </span><span class="hs-identifier hs-var">Map.keys</span></span><span> </span><span class="annot"><span class="annottext">(HashMap PGCol PGCol -&gt; [PGCol])
--&gt; (ArrRelIns ('Postgres pgKind) SQLExp -&gt; HashMap PGCol PGCol)
--&gt; ArrRelIns ('Postgres pgKind) SQLExp
+-&gt; (ArrayRelationInsert ('Postgres pgKind) SQLExp
+    -&gt; HashMap PGCol PGCol)
+-&gt; ArrayRelationInsert ('Postgres pgKind) SQLExp
 -&gt; [PGCol]
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">RelInfo ('Postgres pgKind) -&gt; HashMap PGCol PGCol
 forall (b :: BackendType).
 RelInfo b -&gt; HashMap (Column b) (Column b)
 </span><a href="Hasura.RQL.Types.Relationships.Local.html#riMapping"><span class="hs-identifier hs-var hs-var">riMapping</span></a></span><span> </span><span class="annot"><span class="annottext">(RelInfo ('Postgres pgKind) -&gt; HashMap PGCol PGCol)
--&gt; (ArrRelIns ('Postgres pgKind) SQLExp
+-&gt; (ArrayRelationInsert ('Postgres pgKind) SQLExp
     -&gt; RelInfo ('Postgres pgKind))
--&gt; ArrRelIns ('Postgres pgKind) SQLExp
+-&gt; ArrayRelationInsert ('Postgres pgKind) SQLExp
 -&gt; HashMap PGCol PGCol
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ArrRelIns ('Postgres pgKind) SQLExp -&gt; RelInfo ('Postgres pgKind)
-forall (b :: BackendType) a. RelIns b a -&gt; RelInfo b
-</span><a href="Hasura.RQL.IR.Insert.html#_riRelInfo"><span class="hs-identifier hs-var hs-var">IR._riRelInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[ArrRelIns ('Postgres pgKind) SQLExp]
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ArrayRelationInsert ('Postgres pgKind) SQLExp
+-&gt; RelInfo ('Postgres pgKind)
+forall (b :: BackendType) a. RelationInsert b a -&gt; RelInfo b
+</span><a href="Hasura.RQL.IR.Insert.html#_riRelationInfo"><span class="hs-identifier hs-var hs-var">IR._riRelationInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[ArrayRelationInsert ('Postgres pgKind) SQLExp]
 </span><a href="#local-6989586621688308877"><span class="hs-identifier hs-var">allAfterInsertRels</span></a></span><span>
 </span><span id="line-176"></span><span>
-</span><span id="line-177"></span><span>    </span><span class="annot"><a href="#local-6989586621688308868"><span class="hs-identifier hs-type">objToArr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688309081"><span class="annot"><a href="#local-6989586621688309081"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621688309082"><span class="annot"><a href="#local-6989586621688309082"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ObjRelIns"><span class="hs-identifier hs-type">IR.ObjRelIns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309082"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309081"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ArrRelIns"><span class="hs-identifier hs-type">IR.ArrRelIns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309082"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309081"><span class="hs-identifier hs-type">a</span></a></span><span>
-</span><span id="line-178"></span><span>    </span><span id="local-6989586621688308868"><span class="annot"><span class="annottext">objToArr :: ObjRelIns b a -&gt; ArrRelIns b a
-</span><a href="#local-6989586621688308868"><span class="hs-identifier hs-var hs-var">objToArr</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#RelIns"><span class="hs-identifier hs-type">IR.RelIns</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688308861"><span id="local-6989586621688308862"><span class="annot"><span class="annottext">RelInfo b
-SingleObjIns b a
-_riAnnIns :: forall (b :: BackendType) a. RelIns b a -&gt; a
-_riRelInfo :: RelInfo b
-_riAnnIns :: SingleObjIns b a
-_riRelInfo :: forall (b :: BackendType) a. RelIns b a -&gt; RelInfo b
-</span><a href="Hasura.RQL.IR.Insert.html#_riAnnIns"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MultiObjIns b a -&gt; RelInfo b -&gt; ArrRelIns b a
-forall (b :: BackendType) a. a -&gt; RelInfo b -&gt; RelIns b a
-</span><a href="Hasura.RQL.IR.Insert.html#RelIns"><span class="hs-identifier hs-var">IR.RelIns</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SingleObjIns b a -&gt; MultiObjIns b a
-forall a (b :: BackendType). SingleObjIns b a -&gt; MultiObjIns b a
-</span><a href="#local-6989586621688308859"><span class="hs-identifier hs-var">singleToMulti</span></a></span><span> </span><span class="annot"><span class="annottext">SingleObjIns b a
-</span><a href="#local-6989586621688308862"><span class="hs-identifier hs-var">_riAnnIns</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RelInfo b
-</span><a href="#local-6989586621688308861"><span class="hs-identifier hs-var">_riRelInfo</span></a></span><span>
+</span><span id="line-177"></span><span>    </span><span class="annot"><a href="#local-6989586621688308868"><span class="hs-identifier hs-type">objToArr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688309081"><span class="annot"><a href="#local-6989586621688309081"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621688309082"><span class="annot"><a href="#local-6989586621688309082"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ObjectRelationInsert"><span class="hs-identifier hs-type">IR.ObjectRelationInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309082"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309081"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ArrayRelationInsert"><span class="hs-identifier hs-type">IR.ArrayRelationInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309082"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309081"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-178"></span><span>    </span><span id="local-6989586621688308868"><span class="annot"><span class="annottext">objToArr :: ObjectRelationInsert b a -&gt; ArrayRelationInsert b a
+</span><a href="#local-6989586621688308868"><span class="hs-identifier hs-var hs-var">objToArr</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#RelationInsert"><span class="hs-identifier hs-type">IR.RelationInsert</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688308861"><span id="local-6989586621688308862"><span class="annot"><span class="annottext">RelInfo b
+SingleObjectInsert b a
+_riInsertData :: forall (b :: BackendType) a. RelationInsert b a -&gt; a
+_riRelationInfo :: RelInfo b
+_riInsertData :: SingleObjectInsert b a
+_riRelationInfo :: forall (b :: BackendType) a. RelationInsert b a -&gt; RelInfo b
+</span><a href="Hasura.RQL.IR.Insert.html#_riInsertData"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MultiObjectInsert b a -&gt; RelInfo b -&gt; ArrayRelationInsert b a
+forall (b :: BackendType) a. a -&gt; RelInfo b -&gt; RelationInsert b a
+</span><a href="Hasura.RQL.IR.Insert.html#RelationInsert"><span class="hs-identifier hs-var">IR.RelationInsert</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SingleObjectInsert b a -&gt; MultiObjectInsert b a
+forall a (b :: BackendType).
+SingleObjectInsert b a -&gt; MultiObjectInsert b a
+</span><a href="#local-6989586621688308859"><span class="hs-identifier hs-var">singleToMulti</span></a></span><span> </span><span class="annot"><span class="annottext">SingleObjectInsert b a
+</span><a href="#local-6989586621688308862"><span class="hs-identifier hs-var">_riInsertData</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RelInfo b
+</span><a href="#local-6989586621688308861"><span class="hs-identifier hs-var">_riRelationInfo</span></a></span><span>
 </span><span id="line-179"></span><span>
-</span><span id="line-180"></span><span>    </span><span class="annot"><a href="#local-6989586621688308859"><span class="hs-identifier hs-type">singleToMulti</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688309073"><span class="annot"><a href="#local-6989586621688309073"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621688309074"><span class="annot"><a href="#local-6989586621688309074"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#SingleObjIns"><span class="hs-identifier hs-type">IR.SingleObjIns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309074"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309073"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#MultiObjIns"><span class="hs-identifier hs-type">IR.MultiObjIns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309074"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309073"><span class="hs-identifier hs-type">a</span></a></span><span>
-</span><span id="line-181"></span><span>    </span><span id="local-6989586621688308859"><span class="annot"><span class="annottext">singleToMulti :: SingleObjIns b a -&gt; MultiObjIns b a
-</span><a href="#local-6989586621688308859"><span class="hs-identifier hs-var hs-var">singleToMulti</span></a></span></span><span> </span><span id="local-6989586621688308858"><span class="annot"><span class="annottext">SingleObjIns b a
-</span><a href="#local-6989586621688308858"><span class="hs-identifier hs-var">annIns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SingleObjIns b a
-</span><a href="#local-6989586621688308858"><span class="hs-identifier hs-var">annIns</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_aiInsObj :: [AnnotatedInsertRow b a]
-</span><a href="Hasura.RQL.IR.Insert.html#_aiInsObj"><span class="hs-identifier hs-var">IR._aiInsObj</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Single (AnnotatedInsertRow b a) -&gt; AnnotatedInsertRow b a
+</span><span id="line-180"></span><span>    </span><span class="annot"><a href="#local-6989586621688308859"><span class="hs-identifier hs-type">singleToMulti</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688309073"><span class="annot"><a href="#local-6989586621688309073"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621688309074"><span class="annot"><a href="#local-6989586621688309074"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#SingleObjectInsert"><span class="hs-identifier hs-type">IR.SingleObjectInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309074"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309073"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#MultiObjectInsert"><span class="hs-identifier hs-type">IR.MultiObjectInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309074"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309073"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-181"></span><span>    </span><span id="local-6989586621688308859"><span class="annot"><span class="annottext">singleToMulti :: SingleObjectInsert b a -&gt; MultiObjectInsert b a
+</span><a href="#local-6989586621688308859"><span class="hs-identifier hs-var hs-var">singleToMulti</span></a></span></span><span> </span><span id="local-6989586621688308858"><span class="annot"><span class="annottext">SingleObjectInsert b a
+</span><a href="#local-6989586621688308858"><span class="hs-identifier hs-var">annIns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SingleObjectInsert b a
+</span><a href="#local-6989586621688308858"><span class="hs-identifier hs-var">annIns</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_aiInsertObject :: [AnnotatedInsertRow b a]
+</span><a href="Hasura.RQL.IR.Insert.html#_aiInsertObject"><span class="hs-identifier hs-var">IR._aiInsertObject</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Single (AnnotatedInsertRow b a) -&gt; AnnotatedInsertRow b a
 forall a. Single a -&gt; a
 </span><a href="Hasura.RQL.IR.Insert.html#unSingle"><span class="hs-identifier hs-var hs-var">IR.unSingle</span></a></span><span> </span><span class="annot"><span class="annottext">(Single (AnnotatedInsertRow b a) -&gt; AnnotatedInsertRow b a)
 -&gt; Single (AnnotatedInsertRow b a) -&gt; AnnotatedInsertRow b a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SingleObjIns b a -&gt; Single (AnnotatedInsertRow b a)
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SingleObjectInsert b a -&gt; Single (AnnotatedInsertRow b a)
 forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnIns b f v -&gt; f (AnnotatedInsertRow b v)
-</span><a href="Hasura.RQL.IR.Insert.html#_aiInsObj"><span class="hs-identifier hs-var hs-var">IR._aiInsObj</span></a></span><span> </span><span class="annot"><span class="annottext">SingleObjIns b a
+AnnotatedInsertData b f v -&gt; f (AnnotatedInsertRow b v)
+</span><a href="Hasura.RQL.IR.Insert.html#_aiInsertObject"><span class="hs-identifier hs-var hs-var">IR._aiInsertObject</span></a></span><span> </span><span class="annot"><span class="annottext">SingleObjectInsert b a
 </span><a href="#local-6989586621688308858"><span class="hs-identifier hs-var">annIns</span></a></span><span class="hs-special">]</span><span class="hs-special">}</span><span>
 </span><span id="line-182"></span><span>
 </span><span id="line-183"></span><span>    </span><span class="annot"><a href="#local-6989586621688308878"><span class="hs-identifier hs-type">withArrRels</span></a></span><span> </span><span class="hs-glyph">::</span><span>
@@ -987,21 +997,24 @@ HashMap PGCol TxtEncodedVal
 </span><a href="#local-6989586621688308867"><span class="hs-identifier hs-var">afterInsertDepCols</span></a></span><span>
 </span><span id="line-189"></span><span>      </span><span id="local-6989586621688308848"><span class="annot"><span class="annottext">[Int]
 </span><a href="#local-6989586621688308848"><span class="hs-identifier hs-var">arrInsARows</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
-</span><span id="line-190"></span><span>        </span><span class="annot"><span class="annottext">[ArrRelIns ('Postgres pgKind) SQLExp]
--&gt; (ArrRelIns ('Postgres pgKind) SQLExp -&gt; m Int) -&gt; m [Int]
+</span><span id="line-190"></span><span>        </span><span class="annot"><span class="annottext">[ArrayRelationInsert ('Postgres pgKind) SQLExp]
+-&gt; (ArrayRelationInsert ('Postgres pgKind) SQLExp -&gt; m Int)
+-&gt; m [Int]
 forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (Traversable t, Monad m) =&gt;
 t a -&gt; (a -&gt; m b) -&gt; m (t b)
-</span><span class="hs-identifier hs-var">forM</span></span><span> </span><span class="annot"><span class="annottext">[ArrRelIns ('Postgres pgKind) SQLExp]
-</span><a href="#local-6989586621688308877"><span class="hs-identifier hs-var">allAfterInsertRels</span></a></span><span> </span><span class="annot"><span class="annottext">((ArrRelIns ('Postgres pgKind) SQLExp -&gt; m Int) -&gt; m [Int])
--&gt; (ArrRelIns ('Postgres pgKind) SQLExp -&gt; m Int) -&gt; m [Int]
+</span><span class="hs-identifier hs-var">forM</span></span><span> </span><span class="annot"><span class="annottext">[ArrayRelationInsert ('Postgres pgKind) SQLExp]
+</span><a href="#local-6989586621688308877"><span class="hs-identifier hs-var">allAfterInsertRels</span></a></span><span> </span><span class="annot"><span class="annottext">((ArrayRelationInsert ('Postgres pgKind) SQLExp -&gt; m Int)
+ -&gt; m [Int])
+-&gt; (ArrayRelationInsert ('Postgres pgKind) SQLExp -&gt; m Int)
+-&gt; m [Int]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-191"></span><span>          </span><span class="annot"><span class="annottext">[(PGCol, SQLExp)]
 -&gt; UserInfo
 -&gt; Seq PrepArg
 -&gt; StringifyNumbers
--&gt; ArrRelIns ('Postgres pgKind) SQLExp
+-&gt; ArrayRelationInsert ('Postgres pgKind) SQLExp
 -&gt; m Int
 forall (m :: * -&gt; *) (pgKind :: PostgresKind).
 (MonadTx m, MonadIO m, MonadTrace m, Backend ('Postgres pgKind),
@@ -1011,7 +1024,7 @@ forall (m :: * -&gt; *) (pgKind :: PostgresKind).
 -&gt; UserInfo
 -&gt; Seq PrepArg
 -&gt; StringifyNumbers
--&gt; ArrRelIns ('Postgres pgKind) SQLExp
+-&gt; ArrayRelationInsert ('Postgres pgKind) SQLExp
 -&gt; m Int
 </span><a href="Hasura.Backends.Postgres.Execute.Insert.html#insertArrRel"><span class="hs-identifier hs-var">insertArrRel</span></a></span><span> </span><span class="annot"><span class="annottext">[(PGCol, SQLExp)]
 </span><a href="#local-6989586621688308850"><span class="hs-identifier hs-var">afterInsertDepColsWithVal</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
@@ -1085,17 +1098,17 @@ forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><span id="line-216"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Seq.Seq</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.PrepArg</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-217"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-218"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#StringifyNumbers"><span class="hs-identifier hs-type">StringifyNumbers</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-219"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ObjRelIns"><span class="hs-identifier hs-type">IR.ObjRelIns</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309097"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">PG.SQLExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-219"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ObjectRelationInsert"><span class="hs-identifier hs-type">IR.ObjectRelationInsert</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309097"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">PG.SQLExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-220"></span><span>  </span><span class="annot"><a href="#local-6989586621688309098"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">PG.SQLExp</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-221"></span><span id="insertObjRel"><span class="annot"><span class="annottext">insertObjRel :: Seq PrepArg
 -&gt; UserInfo
 -&gt; StringifyNumbers
--&gt; ObjRelIns ('Postgres pgKind) SQLExp
+-&gt; ObjectRelationInsert ('Postgres pgKind) SQLExp
 -&gt; m (Int, [(PGCol, SQLExp)])
 </span><a href="Hasura.Backends.Postgres.Execute.Insert.html#insertObjRel"><span class="hs-identifier hs-var hs-var">insertObjRel</span></a></span></span><span> </span><span id="local-6989586621688308843"><span class="annot"><span class="annottext">Seq PrepArg
 </span><a href="#local-6989586621688308843"><span class="hs-identifier hs-var">planVars</span></a></span></span><span> </span><span id="local-6989586621688308842"><span class="annot"><span class="annottext">UserInfo
 </span><a href="#local-6989586621688308842"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621688308841"><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="#local-6989586621688308841"><span class="hs-identifier hs-var">stringifyNum</span></a></span></span><span> </span><span id="local-6989586621688308840"><span class="annot"><span class="annottext">ObjRelIns ('Postgres pgKind) SQLExp
+</span><a href="#local-6989586621688308841"><span class="hs-identifier hs-var">stringifyNum</span></a></span></span><span> </span><span id="local-6989586621688308840"><span class="annot"><span class="annottext">ObjectRelationInsert ('Postgres pgKind) SQLExp
 </span><a href="#local-6989586621688308840"><span class="hs-identifier hs-var">objRelIns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-222"></span><span>  </span><span class="annot"><span class="annottext">Text -&gt; m (Int, [(PGCol, SQLExp)]) -&gt; m (Int, [(PGCol, SQLExp)])
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
@@ -1117,7 +1130,7 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
 -&gt; m (Int, Maybe (HashMap PGCol TxtEncodedVal))
 -&gt; m (Int, Maybe (HashMap PGCol TxtEncodedVal))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SingleObjIns ('Postgres pgKind) SQLExp
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SingleObjectInsert ('Postgres pgKind) SQLExp
 -&gt; [(PGCol, SQLExp)]
 -&gt; UserInfo
 -&gt; Seq PrepArg
@@ -1127,13 +1140,13 @@ forall (pgKind :: PostgresKind) (m :: * -&gt; *).
 (MonadTx m, MonadIO m, MonadTrace m, Backend ('Postgres pgKind),
  PostgresAnnotatedFieldJSON pgKind,
  MonadReader QueryTagsComment m) =&gt;
-SingleObjIns ('Postgres pgKind) SQLExp
+SingleObjectInsert ('Postgres pgKind) SQLExp
 -&gt; [(PGCol, SQLExp)]
 -&gt; UserInfo
 -&gt; Seq PrepArg
 -&gt; StringifyNumbers
 -&gt; m (Int, Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal))
-</span><a href="Hasura.Backends.Postgres.Execute.Insert.html#insertObject"><span class="hs-identifier hs-var">insertObject</span></a></span><span> </span><span class="annot"><span class="annottext">SingleObjIns ('Postgres pgKind) SQLExp
+</span><a href="Hasura.Backends.Postgres.Execute.Insert.html#insertObject"><span class="hs-identifier hs-var">insertObject</span></a></span><span> </span><span class="annot"><span class="annottext">SingleObjectInsert ('Postgres pgKind) SQLExp
 </span><a href="#local-6989586621688308835"><span class="hs-identifier hs-var">singleObjIns</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">UserInfo
 </span><a href="#local-6989586621688308842"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Seq PrepArg
 </span><a href="#local-6989586621688308843"><span class="hs-identifier hs-var">planVars</span></a></span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
@@ -1199,9 +1212,9 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="#local-6989586621688308837"><span class="hs-identifier hs-var">affRows</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[(PGCol, SQLExp)]
 </span><a href="#local-6989586621688308830"><span class="hs-identifier hs-var">columns</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-230"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-231"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#RelIns"><span class="hs-identifier hs-type">IR.RelIns</span></a></span><span> </span><span id="local-6989586621688308835"><span class="annot"><span class="annottext">SingleObjIns ('Postgres pgKind) SQLExp
+</span><span id="line-231"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#RelationInsert"><span class="hs-identifier hs-type">IR.RelationInsert</span></a></span><span> </span><span id="local-6989586621688308835"><span class="annot"><span class="annottext">SingleObjectInsert ('Postgres pgKind) SQLExp
 </span><a href="#local-6989586621688308835"><span class="hs-identifier hs-var">singleObjIns</span></a></span></span><span> </span><span id="local-6989586621688308823"><span class="annot"><span class="annottext">RelInfo ('Postgres pgKind)
-</span><a href="#local-6989586621688308823"><span class="hs-identifier hs-var">relInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ObjRelIns ('Postgres pgKind) SQLExp
+</span><a href="#local-6989586621688308823"><span class="hs-identifier hs-var">relInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ObjectRelationInsert ('Postgres pgKind) SQLExp
 </span><a href="#local-6989586621688308840"><span class="hs-identifier hs-var">objRelIns</span></a></span><span>
 </span><span id="line-232"></span><span>    </span><span id="local-6989586621688308838"><span class="annot"><span class="annottext">relName :: RelName
 </span><a href="#local-6989586621688308838"><span class="hs-identifier hs-var hs-var">relName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RelInfo ('Postgres pgKind) -&gt; RelName
@@ -1221,11 +1234,11 @@ RelInfo b -&gt; HashMap (Column b) (Column b)
 </span><a href="Hasura.RQL.Types.Relationships.Local.html#riMapping"><span class="hs-identifier hs-var hs-var">riMapping</span></a></span><span> </span><span class="annot"><span class="annottext">RelInfo ('Postgres pgKind)
 </span><a href="#local-6989586621688308823"><span class="hs-identifier hs-var">relInfo</span></a></span><span>
 </span><span id="line-235"></span><span>    </span><span id="local-6989586621688308819"><span class="annot"><span class="annottext">allCols :: [ColumnInfo ('Postgres pgKind)]
-</span><a href="#local-6989586621688308819"><span class="hs-identifier hs-var hs-var">allCols</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SingleObjIns ('Postgres pgKind) SQLExp
+</span><a href="#local-6989586621688308819"><span class="hs-identifier hs-var hs-var">allCols</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SingleObjectInsert ('Postgres pgKind) SQLExp
 -&gt; [ColumnInfo ('Postgres pgKind)]
 forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnIns b f v -&gt; [ColumnInfo b]
-</span><a href="Hasura.RQL.IR.Insert.html#_aiTableCols"><span class="hs-identifier hs-var hs-var">IR._aiTableCols</span></a></span><span> </span><span class="annot"><span class="annottext">SingleObjIns ('Postgres pgKind) SQLExp
+AnnotatedInsertData b f v -&gt; [ColumnInfo b]
+</span><a href="Hasura.RQL.IR.Insert.html#_aiTableColumns"><span class="hs-identifier hs-var hs-var">IR._aiTableColumns</span></a></span><span> </span><span class="annot"><span class="annottext">SingleObjectInsert ('Postgres pgKind) SQLExp
 </span><a href="#local-6989586621688308835"><span class="hs-identifier hs-var">singleObjIns</span></a></span><span>
 </span><span id="line-236"></span><span>    </span><span id="local-6989586621688308817"><span class="annot"><span class="annottext">rCols :: [PGCol]
 </span><a href="#local-6989586621688308817"><span class="hs-identifier hs-var hs-var">rCols</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap PGCol PGCol -&gt; [PGCol]
@@ -1276,19 +1289,19 @@ forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><span id="line-252"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-253"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Seq.Seq</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.PrepArg</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-254"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#StringifyNumbers"><span class="hs-identifier hs-type">StringifyNumbers</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-255"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ArrRelIns"><span class="hs-identifier hs-type">IR.ArrRelIns</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309062"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">PG.SQLExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-255"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#ArrayRelationInsert"><span class="hs-identifier hs-type">IR.ArrayRelationInsert</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688309062"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">PG.SQLExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-256"></span><span>  </span><span class="annot"><a href="#local-6989586621688309063"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span></span></span><span>
 </span><span id="line-257"></span><span id="insertArrRel"><span class="annot"><span class="annottext">insertArrRel :: [(PGCol, SQLExp)]
 -&gt; UserInfo
 -&gt; Seq PrepArg
 -&gt; StringifyNumbers
--&gt; ArrRelIns ('Postgres pgKind) SQLExp
+-&gt; ArrayRelationInsert ('Postgres pgKind) SQLExp
 -&gt; m Int
 </span><a href="Hasura.Backends.Postgres.Execute.Insert.html#insertArrRel"><span class="hs-identifier hs-var hs-var">insertArrRel</span></a></span></span><span> </span><span id="local-6989586621688308815"><span class="annot"><span class="annottext">[(PGCol, SQLExp)]
 </span><a href="#local-6989586621688308815"><span class="hs-identifier hs-var">resCols</span></a></span></span><span> </span><span id="local-6989586621688308814"><span class="annot"><span class="annottext">UserInfo
 </span><a href="#local-6989586621688308814"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621688308813"><span class="annot"><span class="annottext">Seq PrepArg
 </span><a href="#local-6989586621688308813"><span class="hs-identifier hs-var">planVars</span></a></span></span><span> </span><span id="local-6989586621688308812"><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="#local-6989586621688308812"><span class="hs-identifier hs-var">stringifyNum</span></a></span></span><span> </span><span id="local-6989586621688308811"><span class="annot"><span class="annottext">ArrRelIns ('Postgres pgKind) SQLExp
+</span><a href="#local-6989586621688308812"><span class="hs-identifier hs-var">stringifyNum</span></a></span></span><span> </span><span id="local-6989586621688308811"><span class="annot"><span class="annottext">ArrayRelationInsert ('Postgres pgKind) SQLExp
 </span><a href="#local-6989586621688308811"><span class="hs-identifier hs-var">arrRelIns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-258"></span><span>  </span><span class="annot"><span class="annottext">Text -&gt; m Int -&gt; m Int
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
@@ -1335,7 +1348,7 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
 </span><span class="hs-string">&quot;data&quot;</span></span><span> </span><span class="annot"><span class="annottext">(m EncJSON -&gt; m EncJSON) -&gt; m EncJSON -&gt; m EncJSON
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-264"></span><span>        </span><span class="annot"><span class="annottext">MultiObjIns ('Postgres pgKind) SQLExp
+</span><span id="line-264"></span><span>        </span><span class="annot"><span class="annottext">MultiObjectInsert ('Postgres pgKind) SQLExp
 -&gt; [(PGCol, SQLExp)]
 -&gt; UserInfo
 -&gt; MutationOutput ('Postgres pgKind)
@@ -1346,14 +1359,14 @@ forall (pgKind :: PostgresKind) (m :: * -&gt; *).
 (MonadTx m, MonadIO m, MonadTrace m, Backend ('Postgres pgKind),
  PostgresAnnotatedFieldJSON pgKind,
  MonadReader QueryTagsComment m) =&gt;
-MultiObjIns ('Postgres pgKind) SQLExp
+MultiObjectInsert ('Postgres pgKind) SQLExp
 -&gt; [(PGCol, SQLExp)]
 -&gt; UserInfo
 -&gt; MutationOutput ('Postgres pgKind)
 -&gt; Seq PrepArg
 -&gt; StringifyNumbers
 -&gt; m EncJSON
-</span><a href="Hasura.Backends.Postgres.Execute.Insert.html#insertMultipleObjects"><span class="hs-identifier hs-var">insertMultipleObjects</span></a></span><span> </span><span class="annot"><span class="annottext">MultiObjIns ('Postgres pgKind) SQLExp
+</span><a href="Hasura.Backends.Postgres.Execute.Insert.html#insertMultipleObjects"><span class="hs-identifier hs-var">insertMultipleObjects</span></a></span><span> </span><span class="annot"><span class="annottext">MultiObjectInsert ('Postgres pgKind) SQLExp
 </span><a href="#local-6989586621688308802"><span class="hs-identifier hs-var">multiObjIns</span></a></span><span> </span><span class="annot"><span class="annottext">[(PGCol, SQLExp)]
 </span><a href="#local-6989586621688308809"><span class="hs-identifier hs-var">additionalColumns</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
 </span><a href="#local-6989586621688308814"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">MutationOutput ('Postgres pgKind)
@@ -1380,9 +1393,9 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;affected_rows not returned in array rel insert&quot;</span></span><span>
 </span><span id="line-268"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-269"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#RelIns"><span class="hs-identifier hs-type">IR.RelIns</span></a></span><span> </span><span id="local-6989586621688308802"><span class="annot"><span class="annottext">MultiObjIns ('Postgres pgKind) SQLExp
+</span><span id="line-269"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#RelationInsert"><span class="hs-identifier hs-type">IR.RelationInsert</span></a></span><span> </span><span id="local-6989586621688308802"><span class="annot"><span class="annottext">MultiObjectInsert ('Postgres pgKind) SQLExp
 </span><a href="#local-6989586621688308802"><span class="hs-identifier hs-var">multiObjIns</span></a></span></span><span> </span><span id="local-6989586621688308810"><span class="annot"><span class="annottext">RelInfo ('Postgres pgKind)
-</span><a href="#local-6989586621688308810"><span class="hs-identifier hs-var">relInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ArrRelIns ('Postgres pgKind) SQLExp
+</span><a href="#local-6989586621688308810"><span class="hs-identifier hs-var">relInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ArrayRelationInsert ('Postgres pgKind) SQLExp
 </span><a href="#local-6989586621688308811"><span class="hs-identifier hs-var">arrRelIns</span></a></span><span>
 </span><span id="line-270"></span><span>    </span><span id="local-6989586621688308804"><span class="annot"><span class="annottext">mapping :: HashMap (Column ('Postgres pgKind)) (Column ('Postgres pgKind))
 </span><a href="#local-6989586621688308804"><span class="hs-identifier hs-var hs-var">mapping</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RelInfo ('Postgres pgKind)

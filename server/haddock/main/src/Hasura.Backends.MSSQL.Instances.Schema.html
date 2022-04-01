@@ -110,7 +110,7 @@ SourceName
 -&gt; Name
 -&gt; m [FieldParser
         n
-        (AnnInsert
+        (AnnotatedInsert
            'MSSQL
            (RemoteRelationshipField UnpreparedValue)
            (UnpreparedValue 'MSSQL))]
@@ -126,7 +126,7 @@ SourceName
 -&gt; Name
 -&gt; m [FieldParser
         n
-        (AnnInsert
+        (AnnotatedInsert
            'MSSQL
            (RemoteRelationshipField UnpreparedValue)
            (UnpreparedValue 'MSSQL))]
@@ -142,7 +142,7 @@ MonadBuildSchema b r m n =&gt;
 -&gt; Name
 -&gt; m [FieldParser
         n
-        (AnnInsert
+        (AnnotatedInsert
            b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 </span><a href="Hasura.GraphQL.Schema.Build.html#buildTableInsertMutationFields"><span class="hs-identifier hs-var">GSB.buildTableInsertMutationFields</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 -&gt; TableInfo 'MSSQL
@@ -337,19 +337,19 @@ SourceName
 -&gt; RelInfo 'MSSQL
 -&gt; m (Maybe
         (InputFieldsParser
-           n (Maybe (AnnotatedInsert 'MSSQL (UnpreparedValue 'MSSQL)))))
+           n (Maybe (AnnotatedInsertField 'MSSQL (UnpreparedValue 'MSSQL)))))
 </span><a href="Hasura.GraphQL.Schema.Backend.html#mkRelationshipParser"><span class="hs-identifier hs-var hs-var hs-var hs-var">mkRelationshipParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceName
 -&gt; RelInfo 'MSSQL
 -&gt; m (Maybe
         (InputFieldsParser
-           n (Maybe (AnnotatedInsert 'MSSQL (UnpreparedValue 'MSSQL)))))
+           n (Maybe (AnnotatedInsertField 'MSSQL (UnpreparedValue 'MSSQL)))))
 forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema 'MSSQL r m n =&gt;
 SourceName
 -&gt; RelInfo 'MSSQL
 -&gt; m (Maybe
         (InputFieldsParser
-           n (Maybe (AnnotatedInsert 'MSSQL (UnpreparedValue 'MSSQL)))))
+           n (Maybe (AnnotatedInsertField 'MSSQL (UnpreparedValue 'MSSQL)))))
 </span><a href="Hasura.Backends.MSSQL.Instances.Schema.html#msMkRelationshipParser"><span class="hs-identifier hs-var">msMkRelationshipParser</span></a></span><span>
 </span><span id="line-62"></span><span>
 </span><span id="line-63"></span><span>  </span><span class="hs-comment">-- individual components</span><span>
@@ -1107,12 +1107,12 @@ forall a. Maybe a
 </span><span id="line-205"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688310281"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688310280"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688310279"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-206"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-207"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#RelInfo"><span class="hs-identifier hs-type">RelInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-208"></span><span>  </span><span class="annot"><a href="#local-6989586621688310280"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688310279"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsert"><span class="hs-identifier hs-type">IR.AnnotatedInsert</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-208"></span><span>  </span><span class="annot"><a href="#local-6989586621688310280"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688310279"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertField"><span class="hs-identifier hs-type">IR.AnnotatedInsertField</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-209"></span><span id="msMkRelationshipParser"><span class="annot"><span class="annottext">msMkRelationshipParser :: SourceName
 -&gt; RelInfo 'MSSQL
 -&gt; m (Maybe
         (InputFieldsParser
-           n (Maybe (AnnotatedInsert 'MSSQL (UnpreparedValue 'MSSQL)))))
+           n (Maybe (AnnotatedInsertField 'MSSQL (UnpreparedValue 'MSSQL)))))
 </span><a href="Hasura.Backends.MSSQL.Instances.Schema.html#msMkRelationshipParser"><span class="hs-identifier hs-var hs-var">msMkRelationshipParser</span></a></span></span><span> </span><span id="local-6989586621688310278"><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621688310278"><span class="hs-identifier hs-var">_sourceName</span></a></span></span><span> </span><span id="local-6989586621688310277"><span class="annot"><span class="annottext">RelInfo 'MSSQL
 </span><a href="#local-6989586621688310277"><span class="hs-identifier hs-var">_relationshipInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
@@ -1128,14 +1128,14 @@ forall a. Maybe a
   -}</span><span>
 </span><span id="line-220"></span><span>  </span><span class="annot"><span class="annottext">Maybe
   (InputFieldsParser
-     n (Maybe (AnnotatedInsert 'MSSQL (UnpreparedValue 'MSSQL))))
+     n (Maybe (AnnotatedInsertField 'MSSQL (UnpreparedValue 'MSSQL))))
 -&gt; m (Maybe
         (InputFieldsParser
-           n (Maybe (AnnotatedInsert 'MSSQL (UnpreparedValue 'MSSQL)))))
+           n (Maybe (AnnotatedInsertField 'MSSQL (UnpreparedValue 'MSSQL)))))
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">Maybe
   (InputFieldsParser
-     n (Maybe (AnnotatedInsert 'MSSQL (UnpreparedValue 'MSSQL))))
+     n (Maybe (AnnotatedInsertField 'MSSQL (UnpreparedValue 'MSSQL))))
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-221"></span><span>

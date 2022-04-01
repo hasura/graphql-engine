@@ -389,7 +389,7 @@ SourceName
 -&gt; Name
 -&gt; m [FieldParser
         n
-        (AnnInsert
+        (AnnotatedInsert
            ('Postgres pgKind)
            (RemoteRelationshipField UnpreparedValue)
            (UnpreparedValue ('Postgres pgKind)))]
@@ -406,7 +406,7 @@ SourceName
 -&gt; Name
 -&gt; m [FieldParser
         n
-        (AnnInsert
+        (AnnotatedInsert
            ('Postgres pgKind)
            (RemoteRelationshipField UnpreparedValue)
            (UnpreparedValue ('Postgres pgKind)))]
@@ -422,7 +422,7 @@ MonadBuildSchema b r m n =&gt;
 -&gt; Name
 -&gt; m [FieldParser
         n
-        (AnnInsert
+        (AnnotatedInsert
            b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 </span><a href="Hasura.GraphQL.Schema.Build.html#buildTableInsertMutationFields"><span class="hs-identifier hs-var">GSB.buildTableInsertMutationFields</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 -&gt; TableInfo ('Postgres pgKind)
@@ -624,7 +624,7 @@ SourceName -&gt; TableInfo b -&gt; m (InputFieldsParser n (SelectArgs b))
         (InputFieldsParser
            n
            (Maybe
-              (AnnotatedInsert
+              (AnnotatedInsertField
                  ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))))
 </span><a href="Hasura.GraphQL.Schema.Backend.html#mkRelationshipParser"><span class="hs-identifier hs-var hs-var hs-var hs-var">mkRelationshipParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(SourceName
  -&gt; TableInfo ('Postgres pgKind)
@@ -639,7 +639,7 @@ SourceName -&gt; TableInfo b -&gt; m (InputFieldsParser n (SelectArgs b))
         (InputFieldsParser
            n
            (Maybe
-              (AnnotatedInsert
+              (AnnotatedInsertField
                  ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))))
 forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema b r m n =&gt;
@@ -651,7 +651,7 @@ MonadBuildSchema b r m n =&gt;
 -&gt; RelInfo b
 -&gt; m (Maybe
         (InputFieldsParser
-           n (Maybe (AnnotatedInsert b (UnpreparedValue b)))))
+           n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))))
 </span><a href="Hasura.GraphQL.Schema.Mutation.html#mkDefaultRelationshipParser"><span class="hs-identifier hs-var">GSB.mkDefaultRelationshipParser</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 -&gt; TableInfo ('Postgres pgKind)
 -&gt; m (InputFieldsParser

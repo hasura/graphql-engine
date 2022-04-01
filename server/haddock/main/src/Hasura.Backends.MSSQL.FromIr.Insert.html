@@ -20,23 +20,24 @@
 </span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html"><span class="hs-identifier">Hasura.RQL.Types.Column</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">IR</span></span><span>
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
 </span><span id="line-22"></span><span>
-</span><span id="line-23"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#fromInsert"><span class="hs-identifier hs-type">fromInsert</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnInsert"><span class="hs-identifier hs-type">IR.AnnInsert</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Insert"><span class="hs-identifier hs-type">Insert</span></a></span><span>
-</span><span id="line-24"></span><span id="fromInsert"><span class="annot"><span class="annottext">fromInsert :: AnnInsert 'MSSQL Void Expression -&gt; Insert
-</span><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#fromInsert"><span class="hs-identifier hs-var hs-var">fromInsert</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnInsert"><span class="hs-identifier hs-type">IR.AnnInsert</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688268383"><span id="local-6989586621688268384"><span id="local-6989586621688268385"><span id="local-6989586621688268386"><span class="annot"><span class="annottext">Bool
+</span><span id="line-23"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#fromInsert"><span class="hs-identifier hs-type">fromInsert</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsert"><span class="hs-identifier hs-type">IR.AnnotatedInsert</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Insert"><span class="hs-identifier hs-type">Insert</span></a></span><span>
+</span><span id="line-24"></span><span id="fromInsert"><span class="annot"><span class="annottext">fromInsert :: AnnotatedInsert 'MSSQL Void Expression -&gt; Insert
+</span><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#fromInsert"><span class="hs-identifier hs-var hs-var">fromInsert</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsert"><span class="hs-identifier hs-type">IR.AnnotatedInsert</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688268383"><span id="local-6989586621688268384"><span id="local-6989586621688268385"><span id="local-6989586621688268386"><span class="annot"><span class="annottext">Bool
 Text
 MutationOutputG 'MSSQL Void Expression
-MultiObjIns 'MSSQL Expression
+MultiObjectInsert 'MSSQL Expression
 _aiOutput :: forall (b :: BackendType) r v.
-AnnInsert b r v -&gt; MutationOutputG b r v
-_aiData :: forall (b :: BackendType) r v. AnnInsert b r v -&gt; MultiObjIns b v
-_aiIsSingle :: forall (b :: BackendType) r v. AnnInsert b r v -&gt; Bool
-_aiFieldName :: forall (b :: BackendType) r v. AnnInsert b r v -&gt; Text
+AnnotatedInsert b r v -&gt; MutationOutputG b r v
+_aiData :: forall (b :: BackendType) r v.
+AnnotatedInsert b r v -&gt; MultiObjectInsert b v
+_aiIsSingle :: forall (b :: BackendType) r v. AnnotatedInsert b r v -&gt; Bool
+_aiFieldName :: forall (b :: BackendType) r v. AnnotatedInsert b r v -&gt; Text
 _aiOutput :: MutationOutputG 'MSSQL Void Expression
-_aiData :: MultiObjIns 'MSSQL Expression
+_aiData :: MultiObjectInsert 'MSSQL Expression
 _aiIsSingle :: Bool
 _aiFieldName :: Text
 </span><a href="Hasura.RQL.IR.Insert.html#_aiOutput"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-25"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnIns"><span class="hs-identifier hs-type">IR.AnnIns</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688268372"><span id="local-6989586621688268373"><span id="local-6989586621688268374"><span id="local-6989586621688268375"><span id="local-6989586621688268376"><span id="local-6989586621688268377"><span class="annot"><span class="annottext">[AnnotatedInsertRow 'MSSQL Expression]
+</span><span id="line-25"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertData"><span class="hs-identifier hs-type">IR.AnnotatedInsertData</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688268372"><span id="local-6989586621688268373"><span id="local-6989586621688268374"><span id="local-6989586621688268375"><span id="local-6989586621688268376"><span id="local-6989586621688268377"><span class="annot"><span class="annottext">[AnnotatedInsertRow 'MSSQL Expression]
 [ColumnInfo 'MSSQL]
 (AnnBoolExp 'MSSQL Expression,
  Maybe (AnnBoolExp 'MSSQL Expression))
@@ -44,25 +45,26 @@ PreSetColsG 'MSSQL Expression
 TableName 'MSSQL
 BackendInsert 'MSSQL Expression
 _aiBackendInsert :: forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnIns b f v -&gt; BackendInsert b v
-_aiDefVals :: forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnIns b f v -&gt; PreSetColsG b v
-_aiTableCols :: forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnIns b f v -&gt; [ColumnInfo b]
-_aiCheckCond :: forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnIns b f v -&gt; (AnnBoolExp b v, Maybe (AnnBoolExp b v))
+AnnotatedInsertData b f v -&gt; BackendInsert b v
+_aiDefaultValues :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnotatedInsertData b f v -&gt; PreSetColsG b v
+_aiTableColumns :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnotatedInsertData b f v -&gt; [ColumnInfo b]
+_aiCheckCondition :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnotatedInsertData b f v
+-&gt; (AnnBoolExp b v, Maybe (AnnBoolExp b v))
 _aiTableName :: forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnIns b f v -&gt; TableName b
-_aiInsObj :: forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnIns b f v -&gt; f (AnnotatedInsertRow b v)
+AnnotatedInsertData b f v -&gt; TableName b
+_aiInsertObject :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnotatedInsertData b f v -&gt; f (AnnotatedInsertRow b v)
 _aiBackendInsert :: BackendInsert 'MSSQL Expression
-_aiDefVals :: PreSetColsG 'MSSQL Expression
-_aiTableCols :: [ColumnInfo 'MSSQL]
-_aiCheckCond :: (AnnBoolExp 'MSSQL Expression,
+_aiDefaultValues :: PreSetColsG 'MSSQL Expression
+_aiTableColumns :: [ColumnInfo 'MSSQL]
+_aiCheckCondition :: (AnnBoolExp 'MSSQL Expression,
  Maybe (AnnBoolExp 'MSSQL Expression))
 _aiTableName :: TableName 'MSSQL
-_aiInsObj :: [AnnotatedInsertRow 'MSSQL Expression]
-</span><a href="Hasura.RQL.IR.Insert.html#_aiBackendInsert"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MultiObjIns 'MSSQL Expression
+_aiInsertObject :: [AnnotatedInsertRow 'MSSQL Expression]
+</span><a href="Hasura.RQL.IR.Insert.html#_aiBackendInsert"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MultiObjectInsert 'MSSQL Expression
 </span><a href="#local-6989586621688268384"><span class="hs-identifier hs-var">_aiData</span></a></span><span>
 </span><span id="line-26"></span><span>      </span><span id="local-6989586621688268365"><span class="annot"><span class="annottext">insertRows :: [[(Column 'MSSQL, Expression)]]
 </span><a href="#local-6989586621688268365"><span class="hs-identifier hs-var hs-var">insertRows</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap (Column 'MSSQL) Expression
@@ -70,7 +72,7 @@ _aiInsObj :: [AnnotatedInsertRow 'MSSQL Expression]
 -&gt; [[(Column 'MSSQL, Expression)]]
 </span><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#normalizeInsertRows"><span class="hs-identifier hs-var">normalizeInsertRows</span></a></span><span> </span><span class="annot"><span class="annottext">PreSetColsG 'MSSQL Expression
 HashMap (Column 'MSSQL) Expression
-</span><a href="#local-6989586621688268373"><span class="hs-identifier hs-var">_aiDefVals</span></a></span><span> </span><span class="annot"><span class="annottext">([[(Column 'MSSQL, Expression)]]
+</span><a href="#local-6989586621688268373"><span class="hs-identifier hs-var">_aiDefaultValues</span></a></span><span> </span><span class="annot"><span class="annottext">([[(Column 'MSSQL, Expression)]]
  -&gt; [[(Column 'MSSQL, Expression)]])
 -&gt; [[(Column 'MSSQL, Expression)]]
 -&gt; [[(Column 'MSSQL, Expression)]]
@@ -85,7 +87,7 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 forall (b :: BackendType) v.
 AnnotatedInsertRow b v -&gt; [(Column b, v)]
 </span><a href="Hasura.RQL.IR.Insert.html#getInsertColumns"><span class="hs-identifier hs-var">IR.getInsertColumns</span></a></span><span> </span><span class="annot"><span class="annottext">[AnnotatedInsertRow 'MSSQL Expression]
-</span><a href="#local-6989586621688268377"><span class="hs-identifier hs-var">_aiInsObj</span></a></span><span>
+</span><a href="#local-6989586621688268377"><span class="hs-identifier hs-var">_aiInsertObject</span></a></span><span>
 </span><span id="line-27"></span><span>      </span><span id="local-6989586621688268362"><span class="annot"><span class="annottext">insertColumnNames :: [Column 'MSSQL]
 </span><a href="#local-6989586621688268362"><span class="hs-identifier hs-var hs-var">insertColumnNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Column 'MSSQL]
 -&gt; ([(Column 'MSSQL, Expression)] -&gt; [Column 'MSSQL])
@@ -129,7 +131,7 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL -&gt; Column 'MSSQL
 forall (b :: BackendType). ColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var hs-var">IR.ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">[ColumnInfo 'MSSQL]
-</span><a href="#local-6989586621688268374"><span class="hs-identifier hs-var">_aiTableCols</span></a></span><span>
+</span><a href="#local-6989586621688268374"><span class="hs-identifier hs-var">_aiTableColumns</span></a></span><span>
 </span><span id="line-30"></span><span>      </span><span id="local-6989586621688268354"><span class="annot"><span class="annottext">insertOutput :: Output Inserted
 </span><a href="#local-6989586621688268354"><span class="hs-identifier hs-var hs-var">insertOutput</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Inserted -&gt; [OutputColumn] -&gt; Output Inserted
 forall t. t -&gt; [OutputColumn] -&gt; Output t
@@ -287,7 +289,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="#local-6989586621688268337"><span class="hs-identifier hs-var">addMissingColumns</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[[(Column 'MSSQL, Expression)]]
 </span><a href="#local-6989586621688268346"><span class="hs-identifier hs-var">insertRows</span></a></span><span>
 </span><span id="line-71"></span><span>
-</span><span id="line-72"></span><span class="hs-comment">-- | Construct a MERGE statement from AnnInsert information.</span><span>
+</span><span id="line-72"></span><span class="hs-comment">-- | Construct a MERGE statement from AnnotatedInsert information.</span><span>
 </span><span id="line-73"></span><span class="hs-comment">--   A MERGE statement is responsible for actually inserting and/or updating</span><span>
 </span><span id="line-74"></span><span class="hs-comment">--   the data in the table.</span><span>
 </span><span id="line-75"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#toMerge"><span class="hs-identifier hs-type">toMerge</span></a></span><span> </span><span class="hs-glyph">::</span><span>
@@ -453,25 +455,27 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span id="line-105"></span><span class="hs-comment">--   We insert the values into a temporary table first in order to replace the missing</span><span>
 </span><span id="line-106"></span><span class="hs-comment">--   fields with @DEFAULT@ in @normalizeInsertRows@, and we can't do that in a</span><span>
 </span><span id="line-107"></span><span class="hs-comment">--   MERGE statement directly.</span><span>
-</span><span id="line-108"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#toInsertValuesIntoTempTable"><span class="hs-identifier hs-type">toInsertValuesIntoTempTable</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#TempTableName"><span class="hs-identifier hs-type">TempTableName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnInsert"><span class="hs-identifier hs-type">IR.AnnInsert</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#InsertValuesIntoTempTable"><span class="hs-identifier hs-type">InsertValuesIntoTempTable</span></a></span><span>
+</span><span id="line-108"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#toInsertValuesIntoTempTable"><span class="hs-identifier hs-type">toInsertValuesIntoTempTable</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#TempTableName"><span class="hs-identifier hs-type">TempTableName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsert"><span class="hs-identifier hs-type">IR.AnnotatedInsert</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#InsertValuesIntoTempTable"><span class="hs-identifier hs-type">InsertValuesIntoTempTable</span></a></span><span>
 </span><span id="line-109"></span><span id="toInsertValuesIntoTempTable"><span class="annot"><span class="annottext">toInsertValuesIntoTempTable :: TempTableName
--&gt; AnnInsert 'MSSQL Void Expression -&gt; InsertValuesIntoTempTable
+-&gt; AnnotatedInsert 'MSSQL Void Expression
+-&gt; InsertValuesIntoTempTable
 </span><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#toInsertValuesIntoTempTable"><span class="hs-identifier hs-var hs-var">toInsertValuesIntoTempTable</span></a></span></span><span> </span><span id="local-6989586621688268296"><span class="annot"><span class="annottext">TempTableName
-</span><a href="#local-6989586621688268296"><span class="hs-identifier hs-var">tempTable</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnInsert"><span class="hs-identifier hs-type">IR.AnnInsert</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688268292"><span id="local-6989586621688268293"><span id="local-6989586621688268294"><span id="local-6989586621688268295"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688268296"><span class="hs-identifier hs-var">tempTable</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsert"><span class="hs-identifier hs-type">IR.AnnotatedInsert</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688268292"><span id="local-6989586621688268293"><span id="local-6989586621688268294"><span id="local-6989586621688268295"><span class="annot"><span class="annottext">Bool
 Text
 MutationOutputG 'MSSQL Void Expression
-MultiObjIns 'MSSQL Expression
+MultiObjectInsert 'MSSQL Expression
 _aiOutput :: MutationOutputG 'MSSQL Void Expression
-_aiData :: MultiObjIns 'MSSQL Expression
+_aiData :: MultiObjectInsert 'MSSQL Expression
 _aiIsSingle :: Bool
 _aiFieldName :: Text
 _aiOutput :: forall (b :: BackendType) r v.
-AnnInsert b r v -&gt; MutationOutputG b r v
-_aiData :: forall (b :: BackendType) r v. AnnInsert b r v -&gt; MultiObjIns b v
-_aiIsSingle :: forall (b :: BackendType) r v. AnnInsert b r v -&gt; Bool
-_aiFieldName :: forall (b :: BackendType) r v. AnnInsert b r v -&gt; Text
+AnnotatedInsert b r v -&gt; MutationOutputG b r v
+_aiData :: forall (b :: BackendType) r v.
+AnnotatedInsert b r v -&gt; MultiObjectInsert b v
+_aiIsSingle :: forall (b :: BackendType) r v. AnnotatedInsert b r v -&gt; Bool
+_aiFieldName :: forall (b :: BackendType) r v. AnnotatedInsert b r v -&gt; Text
 </span><a href="#local-6989586621688268292"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-110"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnIns"><span class="hs-identifier hs-type">IR.AnnIns</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688268286"><span id="local-6989586621688268287"><span id="local-6989586621688268288"><span id="local-6989586621688268289"><span id="local-6989586621688268290"><span id="local-6989586621688268291"><span class="annot"><span class="annottext">[AnnotatedInsertRow 'MSSQL Expression]
+</span><span id="line-110"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertData"><span class="hs-identifier hs-type">IR.AnnotatedInsertData</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688268286"><span id="local-6989586621688268287"><span id="local-6989586621688268288"><span id="local-6989586621688268289"><span id="local-6989586621688268290"><span id="local-6989586621688268291"><span class="annot"><span class="annottext">[AnnotatedInsertRow 'MSSQL Expression]
 [ColumnInfo 'MSSQL]
 (AnnBoolExp 'MSSQL Expression,
  Maybe (AnnBoolExp 'MSSQL Expression))
@@ -479,25 +483,26 @@ PreSetColsG 'MSSQL Expression
 TableName 'MSSQL
 BackendInsert 'MSSQL Expression
 _aiBackendInsert :: BackendInsert 'MSSQL Expression
-_aiDefVals :: PreSetColsG 'MSSQL Expression
-_aiTableCols :: [ColumnInfo 'MSSQL]
-_aiCheckCond :: (AnnBoolExp 'MSSQL Expression,
+_aiDefaultValues :: PreSetColsG 'MSSQL Expression
+_aiTableColumns :: [ColumnInfo 'MSSQL]
+_aiCheckCondition :: (AnnBoolExp 'MSSQL Expression,
  Maybe (AnnBoolExp 'MSSQL Expression))
 _aiTableName :: TableName 'MSSQL
-_aiInsObj :: [AnnotatedInsertRow 'MSSQL Expression]
+_aiInsertObject :: [AnnotatedInsertRow 'MSSQL Expression]
 _aiBackendInsert :: forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnIns b f v -&gt; BackendInsert b v
-_aiDefVals :: forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnIns b f v -&gt; PreSetColsG b v
-_aiTableCols :: forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnIns b f v -&gt; [ColumnInfo b]
-_aiCheckCond :: forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnIns b f v -&gt; (AnnBoolExp b v, Maybe (AnnBoolExp b v))
+AnnotatedInsertData b f v -&gt; BackendInsert b v
+_aiDefaultValues :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnotatedInsertData b f v -&gt; PreSetColsG b v
+_aiTableColumns :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnotatedInsertData b f v -&gt; [ColumnInfo b]
+_aiCheckCondition :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnotatedInsertData b f v
+-&gt; (AnnBoolExp b v, Maybe (AnnBoolExp b v))
 _aiTableName :: forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnIns b f v -&gt; TableName b
-_aiInsObj :: forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnIns b f v -&gt; f (AnnotatedInsertRow b v)
-</span><a href="#local-6989586621688268286"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MultiObjIns 'MSSQL Expression
+AnnotatedInsertData b f v -&gt; TableName b
+_aiInsertObject :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnotatedInsertData b f v -&gt; f (AnnotatedInsertRow b v)
+</span><a href="#local-6989586621688268286"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MultiObjectInsert 'MSSQL Expression
 </span><a href="#local-6989586621688268293"><span class="hs-identifier hs-var">_aiData</span></a></span><span>
 </span><span id="line-111"></span><span>      </span><span id="local-6989586621688268285"><span class="annot"><span class="annottext">insertRows :: [[(Column 'MSSQL, Expression)]]
 </span><a href="#local-6989586621688268285"><span class="hs-identifier hs-var hs-var">insertRows</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap (Column 'MSSQL) Expression
@@ -505,7 +510,7 @@ AnnIns b f v -&gt; f (AnnotatedInsertRow b v)
 -&gt; [[(Column 'MSSQL, Expression)]]
 </span><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#normalizeInsertRows"><span class="hs-identifier hs-var">normalizeInsertRows</span></a></span><span> </span><span class="annot"><span class="annottext">PreSetColsG 'MSSQL Expression
 HashMap (Column 'MSSQL) Expression
-</span><a href="#local-6989586621688268287"><span class="hs-identifier hs-var">_aiDefVals</span></a></span><span> </span><span class="annot"><span class="annottext">([[(Column 'MSSQL, Expression)]]
+</span><a href="#local-6989586621688268287"><span class="hs-identifier hs-var">_aiDefaultValues</span></a></span><span> </span><span class="annot"><span class="annottext">([[(Column 'MSSQL, Expression)]]
  -&gt; [[(Column 'MSSQL, Expression)]])
 -&gt; [[(Column 'MSSQL, Expression)]]
 -&gt; [[(Column 'MSSQL, Expression)]]
@@ -520,7 +525,7 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 forall (b :: BackendType) v.
 AnnotatedInsertRow b v -&gt; [(Column b, v)]
 </span><a href="Hasura.RQL.IR.Insert.html#getInsertColumns"><span class="hs-identifier hs-var">IR.getInsertColumns</span></a></span><span> </span><span class="annot"><span class="annottext">[AnnotatedInsertRow 'MSSQL Expression]
-</span><a href="#local-6989586621688268291"><span class="hs-identifier hs-var">_aiInsObj</span></a></span><span>
+</span><a href="#local-6989586621688268291"><span class="hs-identifier hs-var">_aiInsertObject</span></a></span><span>
 </span><span id="line-112"></span><span>      </span><span id="local-6989586621688268284"><span class="annot"><span class="annottext">insertColumnNames :: [Column 'MSSQL]
 </span><a href="#local-6989586621688268284"><span class="hs-identifier hs-var hs-var">insertColumnNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Column 'MSSQL]
 -&gt; ([(Column 'MSSQL, Expression)] -&gt; [Column 'MSSQL])

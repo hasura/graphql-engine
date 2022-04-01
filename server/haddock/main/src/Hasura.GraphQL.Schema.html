@@ -5954,13 +5954,13 @@ TableInfo b -&gt; m Name
 </span><a href="#local-6989586621688312920"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-530"></span><span>    </span><span id="local-6989586621688312918"><span class="annot"><span class="annottext">[FieldParser n (MutationRootField UnpreparedValue)]
 </span><a href="#local-6989586621688312918"><span class="hs-identifier hs-var">inserts</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
-</span><span id="line-531"></span><span>      </span><span class="annot"><span class="annottext">(AnnInsert
+</span><span id="line-531"></span><span>      </span><span class="annot"><span class="annottext">(AnnotatedInsert
    b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
  -&gt; MutationDBRoot
       (RemoteRelationshipField UnpreparedValue) UnpreparedValue b)
 -&gt; m [FieldParser
         n
-        (AnnInsert
+        (AnnotatedInsert
            b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 -&gt; m [FieldParser n (MutationRootField UnpreparedValue)]
 forall a (db :: BackendType -&gt; *) remote action raw.
@@ -5977,28 +5977,29 @@ MutationDB b r (v b) -&gt; MutationDBRoot r v b
    b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
  -&gt; MutationDBRoot
       (RemoteRelationshipField UnpreparedValue) UnpreparedValue b)
--&gt; (AnnInsert
+-&gt; (AnnotatedInsert
       b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
     -&gt; MutationDB
          b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
--&gt; AnnInsert
+-&gt; AnnotatedInsert
      b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
 -&gt; MutationDBRoot
      (RemoteRelationshipField UnpreparedValue) UnpreparedValue b
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">AnnInsert
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">AnnotatedInsert
   b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
 -&gt; MutationDB
      b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
-forall (b :: BackendType) r v. AnnInsert b r v -&gt; MutationDB b r v
+forall (b :: BackendType) r v.
+AnnotatedInsert b r v -&gt; MutationDB b r v
 </span><a href="Hasura.RQL.IR.Root.html#MDBInsert"><span class="hs-identifier hs-var">MDBInsert</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m [FieldParser
       n
-      (AnnInsert
+      (AnnotatedInsert
          b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
  -&gt; m [FieldParser n (MutationRootField UnpreparedValue)])
 -&gt; m [FieldParser
         n
-        (AnnInsert
+        (AnnotatedInsert
            b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 -&gt; m [FieldParser n (MutationRootField UnpreparedValue)]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -6009,7 +6010,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; Name
 -&gt; m [FieldParser
         n
-        (AnnInsert
+        (AnnotatedInsert
            b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 (BackendSchema b, MonadBuildSchema b r m n) =&gt;
@@ -6020,7 +6021,7 @@ Scenario
 -&gt; Name
 -&gt; m [FieldParser
         n
-        (AnnInsert
+        (AnnotatedInsert
            b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 </span><a href="Hasura.GraphQL.Schema.Backend.html#buildTableInsertMutationFields"><span class="hs-identifier hs-var">buildTableInsertMutationFields</span></a></span><span> </span><span class="annot"><span class="annottext">Scenario
 </span><a href="#local-6989586621688312930"><span class="hs-identifier hs-var">scenario</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName

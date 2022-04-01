@@ -58,7 +58,7 @@
 </span><span id="line-58"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-59"></span><span>  </span><span class="hs-comment">-- | field description, if any</span><span>
 </span><span id="line-60"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Description</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-61"></span><span>  </span><span class="annot"><a href="#local-6989586621688295238"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295237"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnInsert"><span class="hs-identifier hs-type">IR.AnnInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295240"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-type">IR.RemoteRelationshipField</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295240"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-61"></span><span>  </span><span class="annot"><a href="#local-6989586621688295238"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295237"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsert"><span class="hs-identifier hs-type">IR.AnnotatedInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295240"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-type">IR.RemoteRelationshipField</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295240"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-62"></span><span id="insertIntoTable"><span class="annot"><span class="annottext">insertIntoTable :: (SourceName
  -&gt; TableInfo b
  -&gt; m (InputFieldsParser n (BackendInsert b (UnpreparedValue b))))
@@ -70,7 +70,7 @@
 -&gt; m (Maybe
         (FieldParser
            n
-           (AnnInsert
+           (AnnotatedInsert
               b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 </span><a href="Hasura.GraphQL.Schema.Mutation.html#insertIntoTable"><span class="hs-identifier hs-var hs-var">insertIntoTable</span></a></span></span><span> </span><span id="local-6989586621688295236"><span class="annot"><span class="annottext">SourceName
 -&gt; TableInfo b
@@ -84,35 +84,35 @@
   m
   (FieldParser
      n
-     (AnnInsert
+     (AnnotatedInsert
         b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
 -&gt; m (Maybe
         (FieldParser
            n
-           (AnnInsert
+           (AnnotatedInsert
               b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 forall (m :: * -&gt; *) a. MaybeT m a -&gt; m (Maybe a)
 </span><span class="hs-identifier hs-var hs-var">runMaybeT</span></span><span> </span><span class="annot"><span class="annottext">(MaybeT
    m
    (FieldParser
       n
-      (AnnInsert
+      (AnnotatedInsert
          b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
  -&gt; m (Maybe
          (FieldParser
             n
-            (AnnInsert
+            (AnnotatedInsert
                b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))))
 -&gt; MaybeT
      m
      (FieldParser
         n
-        (AnnInsert
+        (AnnotatedInsert
            b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
 -&gt; m (Maybe
         (FieldParser
            n
-           (AnnInsert
+           (AnnotatedInsert
               b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
@@ -174,13 +174,13 @@ forall (b :: BackendType). InsPermInfo b -&gt; Bool
 </span><a href="#local-6989586621688295224"><span class="hs-identifier hs-var">insertPerms</span></a></span><span>
 </span><span id="line-68"></span><span>  </span><span class="annot"><span class="annottext">m (FieldParser
      n
-     (AnnInsert
+     (AnnotatedInsert
         b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
 -&gt; MaybeT
      m
      (FieldParser
         n
-        (AnnInsert
+        (AnnotatedInsert
            b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
 forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
@@ -246,7 +246,7 @@ SourceName
 </span><a href="Hasura.GraphQL.Schema.Mutation.html#mutationSelectionSet"><span class="hs-identifier hs-var">mutationSelectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621688295234"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
 </span><a href="#local-6989586621688295233"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-75"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688295207"><span class="annot"><span class="annottext">argsParser :: InputFieldsParser n (AnnIns b [] (UnpreparedValue b))
+</span><span id="line-75"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688295207"><span class="annot"><span class="annottext">argsParser :: InputFieldsParser n (AnnotatedInsertData b [] (UnpreparedValue b))
 </span><a href="#local-6989586621688295207"><span class="hs-identifier hs-var hs-var">argsParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-76"></span><span>          </span><span id="local-6989586621688295206"><span class="annot"><span class="annottext">BackendInsert b (UnpreparedValue b)
 </span><a href="#local-6989586621688295206"><span class="hs-identifier hs-var">backendInsert</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n (BackendInsert b (UnpreparedValue b))
@@ -261,7 +261,7 @@ SourceName
 -&gt; BackendInsert b (UnpreparedValue b)
 -&gt; InsPermInfo b
 -&gt; Maybe (UpdPermInfo b)
--&gt; AnnIns b [] (UnpreparedValue b)
+-&gt; AnnotatedInsertData b [] (UnpreparedValue b)
 forall (b :: BackendType) (f :: * -&gt; *).
 BackendSchema b =&gt;
 f (AnnotatedInsertRow b (UnpreparedValue b))
@@ -269,7 +269,7 @@ f (AnnotatedInsertRow b (UnpreparedValue b))
 -&gt; BackendInsert b (UnpreparedValue b)
 -&gt; InsPermInfo b
 -&gt; Maybe (UpdPermInfo b)
--&gt; AnnIns b f (UnpreparedValue b)
+-&gt; AnnotatedInsertData b f (UnpreparedValue b)
 </span><a href="Hasura.GraphQL.Schema.Mutation.html#mkInsertObject"><span class="hs-identifier hs-var">mkInsertObject</span></a></span><span> </span><span class="annot"><span class="annottext">[AnnotatedInsertRow b (UnpreparedValue b)]
 </span><a href="#local-6989586621688295205"><span class="hs-identifier hs-var">objects</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
 </span><a href="#local-6989586621688295233"><span class="hs-identifier hs-var">tableInfo</span></a></span><span> </span><span class="annot"><span class="annottext">BackendInsert b (UnpreparedValue b)
@@ -278,34 +278,35 @@ f (AnnotatedInsertRow b (UnpreparedValue b))
 </span><a href="#local-6989586621688295213"><span class="hs-identifier hs-var">updatePerms</span></a></span><span>
 </span><span id="line-79"></span><span>    </span><span class="annot"><span class="annottext">FieldParser
   n
-  (AnnInsert
+  (AnnotatedInsert
      b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
 -&gt; m (FieldParser
         n
-        (AnnInsert
+        (AnnotatedInsert
            b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(FieldParser
    n
-   (AnnInsert
+   (AnnotatedInsert
       b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
  -&gt; m (FieldParser
          n
-         (AnnInsert
+         (AnnotatedInsert
             b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 -&gt; FieldParser
      n
-     (AnnInsert
+     (AnnotatedInsert
         b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
 -&gt; m (FieldParser
         n
-        (AnnInsert
+        (AnnotatedInsert
            b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-80"></span><span>      </span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Description
--&gt; InputFieldsParser n (AnnIns b [] (UnpreparedValue b))
+-&gt; InputFieldsParser
+     n (AnnotatedInsertData b [] (UnpreparedValue b))
 -&gt; Parser
      'Output
      n
@@ -313,7 +314,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
         b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
 -&gt; FieldParser
      n
-     (AnnIns b [] (UnpreparedValue b),
+     (AnnotatedInsertData b [] (UnpreparedValue b),
       MutFldsG
         b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
 forall (m :: * -&gt; *) a b.
@@ -325,7 +326,7 @@ Name
 -&gt; FieldParser m (a, b)
 </span><a href="Hasura.GraphQL.Parser.Internal.Parser.html#subselection"><span class="hs-identifier hs-var">P.subselection</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621688295232"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621688295231"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n (AnnIns b [] (UnpreparedValue b))
+</span><a href="#local-6989586621688295231"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n (AnnotatedInsertData b [] (UnpreparedValue b))
 </span><a href="#local-6989586621688295207"><span class="hs-identifier hs-var">argsParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
   'Output
   n
@@ -334,39 +335,39 @@ Name
 </span><a href="#local-6989586621688295208"><span class="hs-identifier hs-var">selectionParser</span></a></span><span>
 </span><span id="line-81"></span><span>        </span><span class="annot"><span class="annottext">FieldParser
   n
-  (AnnIns b [] (UnpreparedValue b),
+  (AnnotatedInsertData b [] (UnpreparedValue b),
    MutFldsG
      b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
--&gt; ((AnnIns b [] (UnpreparedValue b),
+-&gt; ((AnnotatedInsertData b [] (UnpreparedValue b),
      MutFldsG
        b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
-    -&gt; AnnInsert
+    -&gt; AnnotatedInsert
          b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
 -&gt; FieldParser
      n
-     (AnnInsert
+     (AnnotatedInsert
         b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
 forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
-</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621688295200"><span class="annot"><span class="annottext">AnnIns b [] (UnpreparedValue b)
+</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621688295200"><span class="annot"><span class="annottext">AnnotatedInsertData b [] (UnpreparedValue b)
 </span><a href="#local-6989586621688295200"><span class="hs-identifier hs-var">insertObject</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688295199"><span class="annot"><span class="annottext">MutFldsG
   b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
 </span><a href="#local-6989586621688295199"><span class="hs-identifier hs-var">output</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 -&gt; Bool
--&gt; AnnIns b [] (UnpreparedValue b)
+-&gt; AnnotatedInsertData b [] (UnpreparedValue b)
 -&gt; MutationOutputG
      b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
--&gt; AnnInsert
+-&gt; AnnotatedInsert
      b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
 forall (b :: BackendType) r v.
 Text
 -&gt; Bool
--&gt; MultiObjIns b v
+-&gt; MultiObjectInsert b v
 -&gt; MutationOutputG b r v
--&gt; AnnInsert b r v
-</span><a href="Hasura.RQL.IR.Insert.html#AnnInsert"><span class="hs-identifier hs-var">IR.AnnInsert</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Text
+-&gt; AnnotatedInsert b r v
+</span><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsert"><span class="hs-identifier hs-var">IR.AnnotatedInsert</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">G.unName</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621688295232"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="annot"><span class="annottext">AnnIns b [] (UnpreparedValue b)
+</span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="annot"><span class="annottext">AnnotatedInsertData b [] (UnpreparedValue b)
 </span><a href="#local-6989586621688295200"><span class="hs-identifier hs-var">insertObject</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MutFldsG
   b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
 -&gt; MutationOutputG
@@ -420,7 +421,7 @@ Parser k m a -&gt; Parser k m [a]
 </span><span id="line-104"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-105"></span><span>  </span><span class="hs-comment">-- | field description, if any</span><span>
 </span><span id="line-106"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Description</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-107"></span><span>  </span><span class="annot"><a href="#local-6989586621688295187"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295186"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnInsert"><span class="hs-identifier hs-type">IR.AnnInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295189"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-type">IR.RemoteRelationshipField</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295189"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-107"></span><span>  </span><span class="annot"><a href="#local-6989586621688295187"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295186"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsert"><span class="hs-identifier hs-type">IR.AnnotatedInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295189"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-type">IR.RemoteRelationshipField</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295189"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-108"></span><span id="insertOneIntoTable"><span class="annot"><span class="annottext">insertOneIntoTable :: (SourceName
  -&gt; TableInfo b
  -&gt; m (InputFieldsParser n (BackendInsert b (UnpreparedValue b))))
@@ -432,7 +433,7 @@ Parser k m a -&gt; Parser k m [a]
 -&gt; m (Maybe
         (FieldParser
            n
-           (AnnInsert
+           (AnnotatedInsert
               b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 </span><a href="Hasura.GraphQL.Schema.Mutation.html#insertOneIntoTable"><span class="hs-identifier hs-var hs-var">insertOneIntoTable</span></a></span></span><span> </span><span id="local-6989586621688295185"><span class="annot"><span class="annottext">SourceName
 -&gt; TableInfo b
@@ -446,12 +447,12 @@ Parser k m a -&gt; Parser k m [a]
   m
   (FieldParser
      n
-     (AnnInsert
+     (AnnotatedInsert
         b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
 -&gt; m (Maybe
         (FieldParser
            n
-           (AnnInsert
+           (AnnotatedInsert
               b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 forall (m :: * -&gt; *) a. MaybeT m a -&gt; m (Maybe a)
 </span><span class="hs-identifier hs-var hs-var">runMaybeT</span></span><span> </span><span class="hs-keyword">do</span><span>
@@ -531,13 +532,13 @@ SourceName
 </span><a href="#local-6989586621688295182"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-115"></span><span>  </span><span class="annot"><span class="annottext">m (FieldParser
      n
-     (AnnInsert
+     (AnnotatedInsert
         b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
 -&gt; MaybeT
      m
      (FieldParser
         n
-        (AnnInsert
+        (AnnotatedInsert
            b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
 forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
@@ -577,7 +578,7 @@ SourceName
 </span><a href="#local-6989586621688295185"><span class="hs-identifier hs-var">backendInsertAction</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621688295183"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
 </span><a href="#local-6989586621688295182"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-119"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688295172"><span class="annot"><span class="annottext">argsParser :: InputFieldsParser n (AnnIns b [] (UnpreparedValue b))
+</span><span id="line-119"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688295172"><span class="annot"><span class="annottext">argsParser :: InputFieldsParser n (AnnotatedInsertData b [] (UnpreparedValue b))
 </span><a href="#local-6989586621688295172"><span class="hs-identifier hs-var hs-var">argsParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-120"></span><span>          </span><span id="local-6989586621688295171"><span class="annot"><span class="annottext">BackendInsert b (UnpreparedValue b)
 </span><a href="#local-6989586621688295171"><span class="hs-identifier hs-var">backendInsert</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n (BackendInsert b (UnpreparedValue b))
@@ -592,7 +593,7 @@ SourceName
 -&gt; BackendInsert b (UnpreparedValue b)
 -&gt; InsPermInfo b
 -&gt; Maybe (UpdPermInfo b)
--&gt; AnnIns b [] (UnpreparedValue b)
+-&gt; AnnotatedInsertData b [] (UnpreparedValue b)
 forall (b :: BackendType) (f :: * -&gt; *).
 BackendSchema b =&gt;
 f (AnnotatedInsertRow b (UnpreparedValue b))
@@ -600,7 +601,7 @@ f (AnnotatedInsertRow b (UnpreparedValue b))
 -&gt; BackendInsert b (UnpreparedValue b)
 -&gt; InsPermInfo b
 -&gt; Maybe (UpdPermInfo b)
--&gt; AnnIns b f (UnpreparedValue b)
+-&gt; AnnotatedInsertData b f (UnpreparedValue b)
 </span><a href="Hasura.GraphQL.Schema.Mutation.html#mkInsertObject"><span class="hs-identifier hs-var">mkInsertObject</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">AnnotatedInsertRow b (UnpreparedValue b)
 </span><a href="#local-6989586621688295170"><span class="hs-identifier hs-var">object</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">TableInfo b
 </span><a href="#local-6989586621688295182"><span class="hs-identifier hs-var">tableInfo</span></a></span><span> </span><span class="annot"><span class="annottext">BackendInsert b (UnpreparedValue b)
@@ -609,37 +610,38 @@ f (AnnotatedInsertRow b (UnpreparedValue b))
 </span><a href="#local-6989586621688295175"><span class="hs-identifier hs-var">updatePerms</span></a></span><span>
 </span><span id="line-123"></span><span>    </span><span class="annot"><span class="annottext">FieldParser
   n
-  (AnnInsert
+  (AnnotatedInsert
      b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
 -&gt; m (FieldParser
         n
-        (AnnInsert
+        (AnnotatedInsert
            b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(FieldParser
    n
-   (AnnInsert
+   (AnnotatedInsert
       b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
  -&gt; m (FieldParser
          n
-         (AnnInsert
+         (AnnotatedInsert
             b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 -&gt; FieldParser
      n
-     (AnnInsert
+     (AnnotatedInsert
         b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
 -&gt; m (FieldParser
         n
-        (AnnInsert
+        (AnnotatedInsert
            b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-124"></span><span>      </span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Description
--&gt; InputFieldsParser n (AnnIns b [] (UnpreparedValue b))
+-&gt; InputFieldsParser
+     n (AnnotatedInsertData b [] (UnpreparedValue b))
 -&gt; Parser 'Output n (AnnotatedFields b)
 -&gt; FieldParser
-     n (AnnIns b [] (UnpreparedValue b), AnnotatedFields b)
+     n (AnnotatedInsertData b [] (UnpreparedValue b), AnnotatedFields b)
 forall (m :: * -&gt; *) a b.
 MonadParse m =&gt;
 Name
@@ -649,37 +651,39 @@ Name
 -&gt; FieldParser m (a, b)
 </span><a href="Hasura.GraphQL.Parser.Internal.Parser.html#subselection"><span class="hs-identifier hs-var">P.subselection</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621688295181"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621688295180"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n (AnnIns b [] (UnpreparedValue b))
+</span><a href="#local-6989586621688295180"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n (AnnotatedInsertData b [] (UnpreparedValue b))
 </span><a href="#local-6989586621688295172"><span class="hs-identifier hs-var">argsParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Output n (AnnotatedFields b)
 </span><a href="#local-6989586621688295177"><span class="hs-identifier hs-var">selectionParser</span></a></span><span>
-</span><span id="line-125"></span><span>        </span><span class="annot"><span class="annottext">FieldParser n (AnnIns b [] (UnpreparedValue b), AnnotatedFields b)
--&gt; ((AnnIns b [] (UnpreparedValue b), AnnotatedFields b)
-    -&gt; AnnInsert
+</span><span id="line-125"></span><span>        </span><span class="annot"><span class="annottext">FieldParser
+  n (AnnotatedInsertData b [] (UnpreparedValue b), AnnotatedFields b)
+-&gt; ((AnnotatedInsertData b [] (UnpreparedValue b),
+     AnnotatedFields b)
+    -&gt; AnnotatedInsert
          b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
 -&gt; FieldParser
      n
-     (AnnInsert
+     (AnnotatedInsert
         b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
 forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
-</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621688295168"><span class="annot"><span class="annottext">AnnIns b [] (UnpreparedValue b)
+</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621688295168"><span class="annot"><span class="annottext">AnnotatedInsertData b [] (UnpreparedValue b)
 </span><a href="#local-6989586621688295168"><span class="hs-identifier hs-var">insertObject</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688295167"><span class="annot"><span class="annottext">AnnotatedFields b
 </span><a href="#local-6989586621688295167"><span class="hs-identifier hs-var">output</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 -&gt; Bool
--&gt; AnnIns b [] (UnpreparedValue b)
+-&gt; AnnotatedInsertData b [] (UnpreparedValue b)
 -&gt; MutationOutputG
      b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
--&gt; AnnInsert
+-&gt; AnnotatedInsert
      b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
 forall (b :: BackendType) r v.
 Text
 -&gt; Bool
--&gt; MultiObjIns b v
+-&gt; MultiObjectInsert b v
 -&gt; MutationOutputG b r v
--&gt; AnnInsert b r v
-</span><a href="Hasura.RQL.IR.Insert.html#AnnInsert"><span class="hs-identifier hs-var">IR.AnnInsert</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Text
+-&gt; AnnotatedInsert b r v
+</span><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsert"><span class="hs-identifier hs-var">IR.AnnotatedInsert</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">G.unName</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621688295181"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="annot"><span class="annottext">AnnIns b [] (UnpreparedValue b)
+</span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="annot"><span class="annottext">AnnotatedInsertData b [] (UnpreparedValue b)
 </span><a href="#local-6989586621688295168"><span class="hs-identifier hs-var">insertObject</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnotatedFields b
 -&gt; MutationOutputG
      b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
@@ -757,22 +761,22 @@ TableInfo b -&gt; m Name
 </span><a href="#local-6989586621688295163"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-159"></span><span>    </span><span id="local-6989586621688295158"><span class="annot"><span class="annottext">[Maybe
    (InputFieldsParser
-      n (Maybe (AnnotatedInsert b (UnpreparedValue b))))]
+      n (Maybe (AnnotatedInsertField b (UnpreparedValue b))))]
 </span><a href="#local-6989586621688295158"><span class="hs-identifier hs-var">objectFields</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(FieldInfo b
  -&gt; m (Maybe
          (InputFieldsParser
-            n (Maybe (AnnotatedInsert b (UnpreparedValue b))))))
+            n (Maybe (AnnotatedInsertField b (UnpreparedValue b))))))
 -&gt; [FieldInfo b]
 -&gt; m [Maybe
         (InputFieldsParser
-           n (Maybe (AnnotatedInsert b (UnpreparedValue b))))]
+           n (Maybe (AnnotatedInsertField b (UnpreparedValue b))))]
 forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 (a -&gt; f b) -&gt; t a -&gt; f (t b)
 </span><span class="hs-identifier hs-var">traverse</span></span><span> </span><span class="annot"><span class="annottext">FieldInfo b
 -&gt; m (Maybe
         (InputFieldsParser
-           n (Maybe (AnnotatedInsert b (UnpreparedValue b)))))
+           n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))))
 </span><a href="#local-6989586621688295156"><span class="hs-identifier hs-var">mkFieldParser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap FieldName (FieldInfo b) -&gt; [FieldInfo b]
 forall k v. HashMap k v -&gt; [v]
 </span><span class="hs-identifier hs-var">Map.elems</span></span><span> </span><span class="annot"><span class="annottext">HashMap FieldName (FieldInfo b)
@@ -824,11 +828,11 @@ forall a. a -&gt; Maybe a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Maybe
    (InputFieldsParser
-      n (Maybe (AnnotatedInsert b (UnpreparedValue b))))]
+      n (Maybe (AnnotatedInsertField b (UnpreparedValue b))))]
 -&gt; InputFieldsParser n (AnnotatedInsertRow b (UnpreparedValue b))
 </span><a href="#local-6989586621688295147"><span class="hs-identifier hs-var">coalesceFields</span></a></span><span> </span><span class="annot"><span class="annottext">[Maybe
    (InputFieldsParser
-      n (Maybe (AnnotatedInsert b (UnpreparedValue b))))]
+      n (Maybe (AnnotatedInsertField b (UnpreparedValue b))))]
 </span><a href="#local-6989586621688295158"><span class="hs-identifier hs-var">objectFields</span></a></span><span>
 </span><span id="line-163"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-164"></span><span>    </span><span id="local-6989586621688295154"><span class="annot"><span class="annottext">allFields :: HashMap FieldName (FieldInfo b)
@@ -861,96 +865,96 @@ forall (b :: BackendType). TableInfo b -&gt; TableName b
 </span><span id="line-170"></span><span>    </span><span class="hs-comment">-- function does the necessary transformations to coalesce all of this in</span><span>
 </span><span id="line-171"></span><span>    </span><span class="hs-comment">-- one 'InputFieldsParser'.</span><span>
 </span><span id="line-172"></span><span>    </span><span class="annot"><a href="#local-6989586621688295147"><span class="hs-identifier hs-type">coalesceFields</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-173"></span><span>      </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295507"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsert"><span class="hs-identifier hs-type">IR.AnnotatedInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295510"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295510"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-173"></span><span>      </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295507"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertField"><span class="hs-identifier hs-type">IR.AnnotatedInsertField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295510"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295510"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-174"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295507"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertRow"><span class="hs-identifier hs-type">IR.AnnotatedInsertRow</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295510"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295510"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-175"></span><span>    </span><span id="local-6989586621688295147"><span class="annot"><span class="annottext">coalesceFields :: [Maybe
    (InputFieldsParser
-      n (Maybe (AnnotatedInsert b (UnpreparedValue b))))]
+      n (Maybe (AnnotatedInsertField b (UnpreparedValue b))))]
 -&gt; InputFieldsParser n (AnnotatedInsertRow b (UnpreparedValue b))
-</span><a href="#local-6989586621688295147"><span class="hs-identifier hs-var hs-var">coalesceFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">([Maybe (AnnotatedInsert b (UnpreparedValue b))]
+</span><a href="#local-6989586621688295147"><span class="hs-identifier hs-var hs-var">coalesceFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">([Maybe (AnnotatedInsertField b (UnpreparedValue b))]
  -&gt; AnnotatedInsertRow b (UnpreparedValue b))
 -&gt; InputFieldsParser
-     n [Maybe (AnnotatedInsert b (UnpreparedValue b))]
+     n [Maybe (AnnotatedInsertField b (UnpreparedValue b))]
 -&gt; InputFieldsParser n (AnnotatedInsertRow b (UnpreparedValue b))
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">[Maybe (AnnotatedInsert b (UnpreparedValue b))]
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">[Maybe (AnnotatedInsertField b (UnpreparedValue b))]
 -&gt; AnnotatedInsertRow b (UnpreparedValue b)
 forall a. [Maybe a] -&gt; [a]
 </span><span class="hs-identifier hs-var">catMaybes</span></span><span> </span><span class="annot"><span class="annottext">(InputFieldsParser
-   n [Maybe (AnnotatedInsert b (UnpreparedValue b))]
+   n [Maybe (AnnotatedInsertField b (UnpreparedValue b))]
  -&gt; InputFieldsParser n (AnnotatedInsertRow b (UnpreparedValue b)))
 -&gt; ([Maybe
        (InputFieldsParser
-          n (Maybe (AnnotatedInsert b (UnpreparedValue b))))]
+          n (Maybe (AnnotatedInsertField b (UnpreparedValue b))))]
     -&gt; InputFieldsParser
-         n [Maybe (AnnotatedInsert b (UnpreparedValue b))])
+         n [Maybe (AnnotatedInsertField b (UnpreparedValue b))])
 -&gt; [Maybe
       (InputFieldsParser
-         n (Maybe (AnnotatedInsert b (UnpreparedValue b))))]
+         n (Maybe (AnnotatedInsertField b (UnpreparedValue b))))]
 -&gt; InputFieldsParser n (AnnotatedInsertRow b (UnpreparedValue b))
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">[InputFieldsParser
-   n (Maybe (AnnotatedInsert b (UnpreparedValue b)))]
+   n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))]
 -&gt; InputFieldsParser
-     n [Maybe (AnnotatedInsert b (UnpreparedValue b))]
+     n [Maybe (AnnotatedInsertField b (UnpreparedValue b))]
 forall (t :: * -&gt; *) (f :: * -&gt; *) a.
 (Traversable t, Applicative f) =&gt;
 t (f a) -&gt; f (t a)
 </span><span class="hs-identifier hs-var">sequenceA</span></span><span> </span><span class="annot"><span class="annottext">([InputFieldsParser
-    n (Maybe (AnnotatedInsert b (UnpreparedValue b)))]
+    n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))]
  -&gt; InputFieldsParser
-      n [Maybe (AnnotatedInsert b (UnpreparedValue b))])
+      n [Maybe (AnnotatedInsertField b (UnpreparedValue b))])
 -&gt; ([Maybe
        (InputFieldsParser
-          n (Maybe (AnnotatedInsert b (UnpreparedValue b))))]
+          n (Maybe (AnnotatedInsertField b (UnpreparedValue b))))]
     -&gt; [InputFieldsParser
-          n (Maybe (AnnotatedInsert b (UnpreparedValue b)))])
+          n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))])
 -&gt; [Maybe
       (InputFieldsParser
-         n (Maybe (AnnotatedInsert b (UnpreparedValue b))))]
+         n (Maybe (AnnotatedInsertField b (UnpreparedValue b))))]
 -&gt; InputFieldsParser
-     n [Maybe (AnnotatedInsert b (UnpreparedValue b))]
+     n [Maybe (AnnotatedInsertField b (UnpreparedValue b))]
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">[Maybe
    (InputFieldsParser
-      n (Maybe (AnnotatedInsert b (UnpreparedValue b))))]
+      n (Maybe (AnnotatedInsertField b (UnpreparedValue b))))]
 -&gt; [InputFieldsParser
-      n (Maybe (AnnotatedInsert b (UnpreparedValue b)))]
+      n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))]
 forall a. [Maybe a] -&gt; [a]
 </span><span class="hs-identifier hs-var">catMaybes</span></span><span>
 </span><span id="line-176"></span><span>
 </span><span id="line-177"></span><span>    </span><span class="annot"><a href="#local-6989586621688295156"><span class="hs-identifier hs-type">mkFieldParser</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-178"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295510"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-179"></span><span>      </span><span class="annot"><a href="#local-6989586621688295508"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295507"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsert"><span class="hs-identifier hs-type">IR.AnnotatedInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295510"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295510"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-179"></span><span>      </span><span class="annot"><a href="#local-6989586621688295508"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295507"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertField"><span class="hs-identifier hs-type">IR.AnnotatedInsertField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295510"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295510"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-180"></span><span>    </span><span id="local-6989586621688295156"><span class="annot"><span class="annottext">mkFieldParser :: FieldInfo b
 -&gt; m (Maybe
         (InputFieldsParser
-           n (Maybe (AnnotatedInsert b (UnpreparedValue b)))))
+           n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))))
 </span><a href="#local-6989586621688295156"><span class="hs-identifier hs-var hs-var">mkFieldParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-181"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIComputedField"><span class="hs-identifier hs-type">FIComputedField</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldInfo b
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe
   (InputFieldsParser
-     n (Maybe (AnnotatedInsert b (UnpreparedValue b))))
+     n (Maybe (AnnotatedInsertField b (UnpreparedValue b))))
 -&gt; m (Maybe
         (InputFieldsParser
-           n (Maybe (AnnotatedInsert b (UnpreparedValue b)))))
+           n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe
   (InputFieldsParser
-     n (Maybe (AnnotatedInsert b (UnpreparedValue b))))
+     n (Maybe (AnnotatedInsertField b (UnpreparedValue b))))
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-182"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIRemoteRelationship"><span class="hs-identifier hs-type">FIRemoteRelationship</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteFieldInfo (DBJoinField b)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe
   (InputFieldsParser
-     n (Maybe (AnnotatedInsert b (UnpreparedValue b))))
+     n (Maybe (AnnotatedInsertField b (UnpreparedValue b))))
 -&gt; m (Maybe
         (InputFieldsParser
-           n (Maybe (AnnotatedInsert b (UnpreparedValue b)))))
+           n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe
   (InputFieldsParser
-     n (Maybe (AnnotatedInsert b (UnpreparedValue b))))
+     n (Maybe (AnnotatedInsertField b (UnpreparedValue b))))
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-183"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIColumn"><span class="hs-identifier hs-type">FIColumn</span></a></span><span> </span><span id="local-6989586621688295138"><span class="annot"><span class="annottext">ColumnInfo b
@@ -965,19 +969,19 @@ forall (b :: BackendType). ColumnInfo b -&gt; ColumnMutability
 </span><span id="line-185"></span><span>          </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
 -&gt; m (Maybe
         (InputFieldsParser
-           n (Maybe (AnnotatedInsert b (UnpreparedValue b)))))
+           n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))))
 </span><a href="#local-6989586621688295135"><span class="hs-identifier hs-var">mkColumnParser</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
 </span><a href="#local-6989586621688295138"><span class="hs-identifier hs-var">columnInfo</span></a></span><span>
 </span><span id="line-186"></span><span>          </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">Maybe
   (InputFieldsParser
-     n (Maybe (AnnotatedInsert b (UnpreparedValue b))))
+     n (Maybe (AnnotatedInsertField b (UnpreparedValue b))))
 -&gt; m (Maybe
         (InputFieldsParser
-           n (Maybe (AnnotatedInsert b (UnpreparedValue b)))))
+           n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe
   (InputFieldsParser
-     n (Maybe (AnnotatedInsert b (UnpreparedValue b))))
+     n (Maybe (AnnotatedInsertField b (UnpreparedValue b))))
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-187"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIRelationship"><span class="hs-identifier hs-type">FIRelationship</span></a></span><span> </span><span id="local-6989586621688295133"><span class="annot"><span class="annottext">RelInfo b
@@ -985,48 +989,48 @@ forall a. Maybe a
 -&gt; RelInfo b
 -&gt; m (Maybe
         (InputFieldsParser
-           n (Maybe (AnnotatedInsert b (UnpreparedValue b)))))
+           n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))))
 forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 (BackendSchema b, MonadBuildSchema b r m n) =&gt;
 SourceName
 -&gt; RelInfo b
 -&gt; m (Maybe
         (InputFieldsParser
-           n (Maybe (AnnotatedInsert b (UnpreparedValue b)))))
+           n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))))
 </span><a href="Hasura.GraphQL.Schema.Backend.html#mkRelationshipParser"><span class="hs-identifier hs-var">mkRelationshipParser</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621688295164"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">RelInfo b
 </span><a href="#local-6989586621688295133"><span class="hs-identifier hs-var">relInfo</span></a></span><span>
 </span><span id="line-188"></span><span>
 </span><span id="line-189"></span><span>    </span><span class="annot"><a href="#local-6989586621688295135"><span class="hs-identifier hs-type">mkColumnParser</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-190"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295510"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-191"></span><span>      </span><span class="annot"><a href="#local-6989586621688295508"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295507"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsert"><span class="hs-identifier hs-type">IR.AnnotatedInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295510"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295510"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-191"></span><span>      </span><span class="annot"><a href="#local-6989586621688295508"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295507"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertField"><span class="hs-identifier hs-type">IR.AnnotatedInsertField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295510"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295510"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-192"></span><span>    </span><span id="local-6989586621688295135"><span class="annot"><span class="annottext">mkColumnParser :: ColumnInfo b
 -&gt; m (Maybe
         (InputFieldsParser
-           n (Maybe (AnnotatedInsert b (UnpreparedValue b)))))
+           n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))))
 </span><a href="#local-6989586621688295135"><span class="hs-identifier hs-var hs-var">mkColumnParser</span></a></span></span><span> </span><span id="local-6989586621688295131"><span class="annot"><span class="annottext">ColumnInfo b
 </span><a href="#local-6989586621688295131"><span class="hs-identifier hs-var">columnInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MaybeT
   m
   (InputFieldsParser
-     n (Maybe (AnnotatedInsert b (UnpreparedValue b))))
+     n (Maybe (AnnotatedInsertField b (UnpreparedValue b))))
 -&gt; m (Maybe
         (InputFieldsParser
-           n (Maybe (AnnotatedInsert b (UnpreparedValue b)))))
+           n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))))
 forall (m :: * -&gt; *) a. MaybeT m a -&gt; m (Maybe a)
 </span><span class="hs-identifier hs-var hs-var">runMaybeT</span></span><span> </span><span class="annot"><span class="annottext">(MaybeT
    m
    (InputFieldsParser
-      n (Maybe (AnnotatedInsert b (UnpreparedValue b))))
+      n (Maybe (AnnotatedInsertField b (UnpreparedValue b))))
  -&gt; m (Maybe
          (InputFieldsParser
-            n (Maybe (AnnotatedInsert b (UnpreparedValue b))))))
+            n (Maybe (AnnotatedInsertField b (UnpreparedValue b))))))
 -&gt; MaybeT
      m
      (InputFieldsParser
-        n (Maybe (AnnotatedInsert b (UnpreparedValue b))))
+        n (Maybe (AnnotatedInsertField b (UnpreparedValue b))))
 -&gt; m (Maybe
         (InputFieldsParser
-           n (Maybe (AnnotatedInsert b (UnpreparedValue b)))))
+           n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-193"></span><span>      </span><span id="local-6989586621688295130"><span class="annot"><span class="annottext">InsPermInfo b
@@ -1119,9 +1123,9 @@ Name
 </span><a href="#local-6989586621688295127"><span class="hs-identifier hs-var">columnDesc</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue b))
 </span><a href="#local-6989586621688295121"><span class="hs-identifier hs-var">fieldParser</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n (Maybe (ValueWithOrigin (ColumnValue b)))
 -&gt; (ValueWithOrigin (ColumnValue b)
-    -&gt; AnnotatedInsert b (UnpreparedValue b))
+    -&gt; AnnotatedInsertField b (UnpreparedValue b))
 -&gt; InputFieldsParser
-     n (Maybe (AnnotatedInsert b (UnpreparedValue b)))
+     n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))
 forall (m :: * -&gt; *) a b.
 Functor m =&gt;
 InputFieldsParser m (Maybe a)
@@ -1129,8 +1133,9 @@ InputFieldsParser m (Maybe a)
 </span><a href="Hasura.GraphQL.Schema.Common.html#mapField"><span class="hs-operator hs-var">`mapField`</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688295114"><span class="annot"><span class="annottext">ValueWithOrigin (ColumnValue b)
 </span><a href="#local-6989586621688295114"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-201"></span><span>          </span><span class="annot"><span class="annottext">(Column b, UnpreparedValue b)
--&gt; AnnotatedInsert b (UnpreparedValue b)
-forall (b :: BackendType) v. (Column b, v) -&gt; AnnotatedInsert b v
+-&gt; AnnotatedInsertField b (UnpreparedValue b)
+forall (b :: BackendType) v.
+(Column b, v) -&gt; AnnotatedInsertField b v
 </span><a href="Hasura.RQL.IR.Insert.html#AIColumn"><span class="hs-identifier hs-var">IR.AIColumn</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnInfo b -&gt; Column b
 forall (b :: BackendType). ColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var hs-var">ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
@@ -1147,7 +1152,7 @@ ValueWithOrigin (ColumnValue b) -&gt; UnpreparedValue b
 </span><span id="line-207"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#XNestedInserts"><span class="hs-identifier hs-type">XNestedInserts</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295112"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-208"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-209"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#RelInfo"><span class="hs-identifier hs-type">RelInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295112"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-210"></span><span>  </span><span class="annot"><a href="#local-6989586621688295110"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295109"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsert"><span class="hs-identifier hs-type">IR.AnnotatedInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295112"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295112"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-210"></span><span>  </span><span class="annot"><a href="#local-6989586621688295110"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295109"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertField"><span class="hs-identifier hs-type">IR.AnnotatedInsertField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295112"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295112"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-211"></span><span id="mkDefaultRelationshipParser"><span class="annot"><span class="annottext">mkDefaultRelationshipParser :: (SourceName
  -&gt; TableInfo b
  -&gt; m (InputFieldsParser n (BackendInsert b (UnpreparedValue b))))
@@ -1156,7 +1161,7 @@ ValueWithOrigin (ColumnValue b) -&gt; UnpreparedValue b
 -&gt; RelInfo b
 -&gt; m (Maybe
         (InputFieldsParser
-           n (Maybe (AnnotatedInsert b (UnpreparedValue b)))))
+           n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))))
 </span><a href="Hasura.GraphQL.Schema.Mutation.html#mkDefaultRelationshipParser"><span class="hs-identifier hs-var hs-var">mkDefaultRelationshipParser</span></a></span></span><span> </span><span id="local-6989586621688295108"><span class="annot"><span class="annottext">SourceName
 -&gt; TableInfo b
 -&gt; m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))
@@ -1166,10 +1171,10 @@ ValueWithOrigin (ColumnValue b) -&gt; UnpreparedValue b
 </span><a href="#local-6989586621688295105"><span class="hs-identifier hs-var">relationshipInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MaybeT
   m
   (InputFieldsParser
-     n (Maybe (AnnotatedInsert b (UnpreparedValue b))))
+     n (Maybe (AnnotatedInsertField b (UnpreparedValue b))))
 -&gt; m (Maybe
         (InputFieldsParser
-           n (Maybe (AnnotatedInsert b (UnpreparedValue b)))))
+           n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))))
 forall (m :: * -&gt; *) a. MaybeT m a -&gt; m (Maybe a)
 </span><span class="hs-identifier hs-var hs-var">runMaybeT</span></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-212"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688295104"><span class="annot"><span class="annottext">otherTableName :: TableName b
@@ -1211,21 +1216,28 @@ forall (b :: BackendType). RelInfo b -&gt; RelType
 </span><a href="#local-6989586621688295105"><span class="hs-identifier hs-var">relationshipInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-217"></span><span>    </span><span class="annot"><span class="annottext">RelType
 </span><a href="Hasura.RQL.Types.Common.html#ObjRel"><span class="hs-identifier hs-var">ObjRel</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-218"></span><span>      </span><span id="local-6989586621688295093"><span class="annot"><span class="annottext">Parser 'Input n (SingleObjIns b (UnpreparedValue b))
-</span><a href="#local-6989586621688295093"><span class="hs-identifier hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (Maybe (Parser 'Input n (SingleObjIns b (UnpreparedValue b))))
--&gt; MaybeT m (Parser 'Input n (SingleObjIns b (UnpreparedValue b)))
+</span><span id="line-218"></span><span>      </span><span id="local-6989586621688295093"><span class="annot"><span class="annottext">Parser 'Input n (SingleObjectInsert b (UnpreparedValue b))
+</span><a href="#local-6989586621688295093"><span class="hs-identifier hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (Maybe
+     (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b))))
+-&gt; MaybeT
+     m (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b)))
 forall (m :: * -&gt; *) a. m (Maybe a) -&gt; MaybeT m a
-</span><span class="hs-identifier hs-var">MaybeT</span></span><span> </span><span class="annot"><span class="annottext">(m (Maybe (Parser 'Input n (SingleObjIns b (UnpreparedValue b))))
- -&gt; MaybeT m (Parser 'Input n (SingleObjIns b (UnpreparedValue b))))
--&gt; m (Maybe (Parser 'Input n (SingleObjIns b (UnpreparedValue b))))
--&gt; MaybeT m (Parser 'Input n (SingleObjIns b (UnpreparedValue b)))
+</span><span class="hs-identifier hs-var">MaybeT</span></span><span> </span><span class="annot"><span class="annottext">(m (Maybe
+      (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b))))
+ -&gt; MaybeT
+      m (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b))))
+-&gt; m (Maybe
+        (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b))))
+-&gt; MaybeT
+     m (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b)))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(SourceName
  -&gt; TableInfo b
  -&gt; m (InputFieldsParser n (BackendInsert b (UnpreparedValue b))))
 -&gt; SourceName
 -&gt; TableInfo b
--&gt; m (Maybe (Parser 'Input n (SingleObjIns b (UnpreparedValue b))))
+-&gt; m (Maybe
+        (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b))))
 forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema b r m n =&gt;
 (SourceName
@@ -1233,7 +1245,8 @@ MonadBuildSchema b r m n =&gt;
  -&gt; m (InputFieldsParser n (BackendInsert b (UnpreparedValue b))))
 -&gt; SourceName
 -&gt; TableInfo b
--&gt; m (Maybe (Parser 'Input n (SingleObjIns b (UnpreparedValue b))))
+-&gt; m (Maybe
+        (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b))))
 </span><a href="Hasura.GraphQL.Schema.Mutation.html#objectRelationshipInput"><span class="hs-identifier hs-var">objectRelationshipInput</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 -&gt; TableInfo b
 -&gt; m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))
@@ -1243,9 +1256,10 @@ MonadBuildSchema b r m n =&gt;
 </span><span id="line-219"></span><span>      </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span>
 </span><span id="line-220"></span><span>        </span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Description
--&gt; Parser 'Input n (Maybe (SingleObjIns b (UnpreparedValue b)))
+-&gt; Parser
+     'Input n (Maybe (SingleObjectInsert b (UnpreparedValue b)))
 -&gt; InputFieldsParser
-     n (Maybe (Maybe (SingleObjIns b (UnpreparedValue b))))
+     n (Maybe (Maybe (SingleObjectInsert b (UnpreparedValue b))))
 forall (m :: * -&gt; *) (k :: Kind) a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Name
@@ -1255,69 +1269,78 @@ Name
 </span><a href="Hasura.GraphQL.Parser.Internal.Input.html#fieldOptional"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621688295098"><span class="hs-identifier hs-var">relFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
 forall a. Maybe a
-</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Parser 'Input n (SingleObjIns b (UnpreparedValue b))
--&gt; Parser 'Input n (Maybe (SingleObjIns b (UnpreparedValue b)))
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Parser 'Input n (SingleObjectInsert b (UnpreparedValue b))
+-&gt; Parser
+     'Input n (Maybe (SingleObjectInsert b (UnpreparedValue b)))
 forall (k :: Kind) (m :: * -&gt; *) a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Parser k m a -&gt; Parser k m (Maybe a)
-</span><a href="Hasura.GraphQL.Parser.Internal.Parser.html#nullable"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Input n (SingleObjIns b (UnpreparedValue b))
+</span><a href="Hasura.GraphQL.Parser.Internal.Parser.html#nullable"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Input n (SingleObjectInsert b (UnpreparedValue b))
 </span><a href="#local-6989586621688295093"><span class="hs-identifier hs-var">parser</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">InputFieldsParser
-  n (Maybe (Maybe (SingleObjIns b (UnpreparedValue b))))
--&gt; (Maybe (Maybe (SingleObjIns b (UnpreparedValue b)))
-    -&gt; Maybe (AnnotatedInsert b (UnpreparedValue b)))
+  n (Maybe (Maybe (SingleObjectInsert b (UnpreparedValue b))))
+-&gt; (Maybe (Maybe (SingleObjectInsert b (UnpreparedValue b)))
+    -&gt; Maybe (AnnotatedInsertField b (UnpreparedValue b)))
 -&gt; InputFieldsParser
-     n (Maybe (AnnotatedInsert b (UnpreparedValue b)))
+     n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))
 forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
-</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688295090"><span class="annot"><span class="annottext">Maybe (Maybe (SingleObjIns b (UnpreparedValue b)))
+</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688295090"><span class="annot"><span class="annottext">Maybe (Maybe (SingleObjectInsert b (UnpreparedValue b)))
 </span><a href="#local-6989586621688295090"><span class="hs-identifier hs-var">objRelIns</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-221"></span><span>          </span><span id="local-6989586621688295089"><span class="annot"><span class="annottext">SingleObjIns b (UnpreparedValue b)
-</span><a href="#local-6989586621688295089"><span class="hs-identifier hs-var">rel</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe (Maybe (SingleObjIns b (UnpreparedValue b)))
--&gt; Maybe (SingleObjIns b (UnpreparedValue b))
+</span><span id="line-221"></span><span>          </span><span id="local-6989586621688295089"><span class="annot"><span class="annottext">SingleObjectInsert b (UnpreparedValue b)
+</span><a href="#local-6989586621688295089"><span class="hs-identifier hs-var">rel</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe (Maybe (SingleObjectInsert b (UnpreparedValue b)))
+-&gt; Maybe (SingleObjectInsert b (UnpreparedValue b))
 forall (m :: * -&gt; *) a. Monad m =&gt; m (m a) -&gt; m a
-</span><span class="hs-identifier hs-var">join</span></span><span> </span><span class="annot"><span class="annottext">Maybe (Maybe (SingleObjIns b (UnpreparedValue b)))
+</span><span class="hs-identifier hs-var">join</span></span><span> </span><span class="annot"><span class="annottext">Maybe (Maybe (SingleObjectInsert b (UnpreparedValue b)))
 </span><a href="#local-6989586621688295090"><span class="hs-identifier hs-var">objRelIns</span></a></span><span>
-</span><span id="line-222"></span><span>          </span><span class="annot"><span class="annottext">AnnotatedInsert b (UnpreparedValue b)
--&gt; Maybe (AnnotatedInsert b (UnpreparedValue b))
+</span><span id="line-222"></span><span>          </span><span class="annot"><span class="annottext">AnnotatedInsertField b (UnpreparedValue b)
+-&gt; Maybe (AnnotatedInsertField b (UnpreparedValue b))
 forall a. a -&gt; Maybe a
-</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(AnnotatedInsert b (UnpreparedValue b)
- -&gt; Maybe (AnnotatedInsert b (UnpreparedValue b)))
--&gt; AnnotatedInsert b (UnpreparedValue b)
--&gt; Maybe (AnnotatedInsert b (UnpreparedValue b))
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(AnnotatedInsertField b (UnpreparedValue b)
+ -&gt; Maybe (AnnotatedInsertField b (UnpreparedValue b)))
+-&gt; AnnotatedInsertField b (UnpreparedValue b)
+-&gt; Maybe (AnnotatedInsertField b (UnpreparedValue b))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">XNestedInserts b
--&gt; ObjRelIns b (UnpreparedValue b)
--&gt; AnnotatedInsert b (UnpreparedValue b)
+-&gt; ObjectRelationInsert b (UnpreparedValue b)
+-&gt; AnnotatedInsertField b (UnpreparedValue b)
 forall (b :: BackendType) v.
-XNestedInserts b -&gt; ObjRelIns b v -&gt; AnnotatedInsert b v
+XNestedInserts b
+-&gt; ObjectRelationInsert b v -&gt; AnnotatedInsertField b v
 </span><a href="Hasura.RQL.IR.Insert.html#AIObjectRelationship"><span class="hs-identifier hs-var">IR.AIObjectRelationship</span></a></span><span> </span><span class="annot"><span class="annottext">XNestedInserts b
-</span><a href="#local-6989586621688295107"><span class="hs-identifier hs-var">xNestedInserts</span></a></span><span> </span><span class="annot"><span class="annottext">(ObjRelIns b (UnpreparedValue b)
- -&gt; AnnotatedInsert b (UnpreparedValue b))
--&gt; ObjRelIns b (UnpreparedValue b)
--&gt; AnnotatedInsert b (UnpreparedValue b)
+</span><a href="#local-6989586621688295107"><span class="hs-identifier hs-var">xNestedInserts</span></a></span><span> </span><span class="annot"><span class="annottext">(ObjectRelationInsert b (UnpreparedValue b)
+ -&gt; AnnotatedInsertField b (UnpreparedValue b))
+-&gt; ObjectRelationInsert b (UnpreparedValue b)
+-&gt; AnnotatedInsertField b (UnpreparedValue b)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SingleObjIns b (UnpreparedValue b)
--&gt; RelInfo b -&gt; ObjRelIns b (UnpreparedValue b)
-forall (b :: BackendType) a. a -&gt; RelInfo b -&gt; RelIns b a
-</span><a href="Hasura.RQL.IR.Insert.html#RelIns"><span class="hs-identifier hs-var">IR.RelIns</span></a></span><span> </span><span class="annot"><span class="annottext">SingleObjIns b (UnpreparedValue b)
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SingleObjectInsert b (UnpreparedValue b)
+-&gt; RelInfo b -&gt; ObjectRelationInsert b (UnpreparedValue b)
+forall (b :: BackendType) a. a -&gt; RelInfo b -&gt; RelationInsert b a
+</span><a href="Hasura.RQL.IR.Insert.html#RelationInsert"><span class="hs-identifier hs-var">IR.RelationInsert</span></a></span><span> </span><span class="annot"><span class="annottext">SingleObjectInsert b (UnpreparedValue b)
 </span><a href="#local-6989586621688295089"><span class="hs-identifier hs-var">rel</span></a></span><span> </span><span class="annot"><span class="annottext">RelInfo b
 </span><a href="#local-6989586621688295105"><span class="hs-identifier hs-var">relationshipInfo</span></a></span><span>
 </span><span id="line-223"></span><span>    </span><span class="annot"><span class="annottext">RelType
 </span><a href="Hasura.RQL.Types.Common.html#ArrRel"><span class="hs-identifier hs-var">ArrRel</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-224"></span><span>      </span><span id="local-6989586621688295085"><span class="annot"><span class="annottext">Parser 'Input n (MultiObjIns b (UnpreparedValue b))
-</span><a href="#local-6989586621688295085"><span class="hs-identifier hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (Maybe (Parser 'Input n (MultiObjIns b (UnpreparedValue b))))
--&gt; MaybeT m (Parser 'Input n (MultiObjIns b (UnpreparedValue b)))
+</span><span id="line-224"></span><span>      </span><span id="local-6989586621688295085"><span class="annot"><span class="annottext">Parser 'Input n (MultiObjectInsert b (UnpreparedValue b))
+</span><a href="#local-6989586621688295085"><span class="hs-identifier hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (Maybe
+     (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b))))
+-&gt; MaybeT
+     m (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b)))
 forall (m :: * -&gt; *) a. m (Maybe a) -&gt; MaybeT m a
-</span><span class="hs-identifier hs-var">MaybeT</span></span><span> </span><span class="annot"><span class="annottext">(m (Maybe (Parser 'Input n (MultiObjIns b (UnpreparedValue b))))
- -&gt; MaybeT m (Parser 'Input n (MultiObjIns b (UnpreparedValue b))))
--&gt; m (Maybe (Parser 'Input n (MultiObjIns b (UnpreparedValue b))))
--&gt; MaybeT m (Parser 'Input n (MultiObjIns b (UnpreparedValue b)))
+</span><span class="hs-identifier hs-var">MaybeT</span></span><span> </span><span class="annot"><span class="annottext">(m (Maybe
+      (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b))))
+ -&gt; MaybeT
+      m (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b))))
+-&gt; m (Maybe
+        (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b))))
+-&gt; MaybeT
+     m (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b)))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(SourceName
  -&gt; TableInfo b
  -&gt; m (InputFieldsParser n (BackendInsert b (UnpreparedValue b))))
 -&gt; SourceName
 -&gt; TableInfo b
--&gt; m (Maybe (Parser 'Input n (MultiObjIns b (UnpreparedValue b))))
+-&gt; m (Maybe
+        (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b))))
 forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema b r m n =&gt;
 (SourceName
@@ -1325,7 +1348,8 @@ MonadBuildSchema b r m n =&gt;
  -&gt; m (InputFieldsParser n (BackendInsert b (UnpreparedValue b))))
 -&gt; SourceName
 -&gt; TableInfo b
--&gt; m (Maybe (Parser 'Input n (MultiObjIns b (UnpreparedValue b))))
+-&gt; m (Maybe
+        (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b))))
 </span><a href="Hasura.GraphQL.Schema.Mutation.html#arrayRelationshipInput"><span class="hs-identifier hs-var">arrayRelationshipInput</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 -&gt; TableInfo b
 -&gt; m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))
@@ -1335,9 +1359,10 @@ MonadBuildSchema b r m n =&gt;
 </span><span id="line-225"></span><span>      </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span>
 </span><span id="line-226"></span><span>        </span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Description
--&gt; Parser 'Input n (Maybe (MultiObjIns b (UnpreparedValue b)))
+-&gt; Parser
+     'Input n (Maybe (MultiObjectInsert b (UnpreparedValue b)))
 -&gt; InputFieldsParser
-     n (Maybe (Maybe (MultiObjIns b (UnpreparedValue b))))
+     n (Maybe (Maybe (MultiObjectInsert b (UnpreparedValue b))))
 forall (m :: * -&gt; *) (k :: Kind) a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Name
@@ -1347,26 +1372,27 @@ Name
 </span><a href="Hasura.GraphQL.Parser.Internal.Input.html#fieldOptional"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621688295098"><span class="hs-identifier hs-var">relFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
 forall a. Maybe a
-</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Parser 'Input n (MultiObjIns b (UnpreparedValue b))
--&gt; Parser 'Input n (Maybe (MultiObjIns b (UnpreparedValue b)))
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Parser 'Input n (MultiObjectInsert b (UnpreparedValue b))
+-&gt; Parser
+     'Input n (Maybe (MultiObjectInsert b (UnpreparedValue b)))
 forall (k :: Kind) (m :: * -&gt; *) a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Parser k m a -&gt; Parser k m (Maybe a)
-</span><a href="Hasura.GraphQL.Parser.Internal.Parser.html#nullable"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Input n (MultiObjIns b (UnpreparedValue b))
+</span><a href="Hasura.GraphQL.Parser.Internal.Parser.html#nullable"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Input n (MultiObjectInsert b (UnpreparedValue b))
 </span><a href="#local-6989586621688295085"><span class="hs-identifier hs-var">parser</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">InputFieldsParser
-  n (Maybe (Maybe (MultiObjIns b (UnpreparedValue b))))
--&gt; (Maybe (Maybe (MultiObjIns b (UnpreparedValue b)))
-    -&gt; Maybe (AnnotatedInsert b (UnpreparedValue b)))
+  n (Maybe (Maybe (MultiObjectInsert b (UnpreparedValue b))))
+-&gt; (Maybe (Maybe (MultiObjectInsert b (UnpreparedValue b)))
+    -&gt; Maybe (AnnotatedInsertField b (UnpreparedValue b)))
 -&gt; InputFieldsParser
-     n (Maybe (AnnotatedInsert b (UnpreparedValue b)))
+     n (Maybe (AnnotatedInsertField b (UnpreparedValue b)))
 forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
-</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688295083"><span class="annot"><span class="annottext">Maybe (Maybe (MultiObjIns b (UnpreparedValue b)))
+</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688295083"><span class="annot"><span class="annottext">Maybe (Maybe (MultiObjectInsert b (UnpreparedValue b)))
 </span><a href="#local-6989586621688295083"><span class="hs-identifier hs-var">arrRelIns</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-227"></span><span>          </span><span id="local-6989586621688295082"><span class="annot"><span class="annottext">MultiObjIns b (UnpreparedValue b)
-</span><a href="#local-6989586621688295082"><span class="hs-identifier hs-var">rel</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe (Maybe (MultiObjIns b (UnpreparedValue b)))
--&gt; Maybe (MultiObjIns b (UnpreparedValue b))
+</span><span id="line-227"></span><span>          </span><span id="local-6989586621688295082"><span class="annot"><span class="annottext">MultiObjectInsert b (UnpreparedValue b)
+</span><a href="#local-6989586621688295082"><span class="hs-identifier hs-var">rel</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe (Maybe (MultiObjectInsert b (UnpreparedValue b)))
+-&gt; Maybe (MultiObjectInsert b (UnpreparedValue b))
 forall (m :: * -&gt; *) a. Monad m =&gt; m (m a) -&gt; m a
-</span><span class="hs-identifier hs-var">join</span></span><span> </span><span class="annot"><span class="annottext">Maybe (Maybe (MultiObjIns b (UnpreparedValue b)))
+</span><span class="hs-identifier hs-var">join</span></span><span> </span><span class="annot"><span class="annottext">Maybe (Maybe (MultiObjectInsert b (UnpreparedValue b)))
 </span><a href="#local-6989586621688295083"><span class="hs-identifier hs-var">arrRelIns</span></a></span><span>
 </span><span id="line-228"></span><span>          </span><span class="annot"><span class="annottext">Bool -&gt; Maybe ()
 forall (f :: * -&gt; *). Alternative f =&gt; Bool -&gt; f ()
@@ -1380,35 +1406,36 @@ forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">([AnnotatedInsertRow b (UnpreparedValue b)] -&gt; Bool)
 -&gt; [AnnotatedInsertRow b (UnpreparedValue b)] -&gt; Bool
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MultiObjIns b (UnpreparedValue b)
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MultiObjectInsert b (UnpreparedValue b)
 -&gt; [AnnotatedInsertRow b (UnpreparedValue b)]
 forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnIns b f v -&gt; f (AnnotatedInsertRow b v)
-</span><a href="Hasura.RQL.IR.Insert.html#_aiInsObj"><span class="hs-identifier hs-var hs-var">IR._aiInsObj</span></a></span><span> </span><span class="annot"><span class="annottext">MultiObjIns b (UnpreparedValue b)
+AnnotatedInsertData b f v -&gt; f (AnnotatedInsertRow b v)
+</span><a href="Hasura.RQL.IR.Insert.html#_aiInsertObject"><span class="hs-identifier hs-var hs-var">IR._aiInsertObject</span></a></span><span> </span><span class="annot"><span class="annottext">MultiObjectInsert b (UnpreparedValue b)
 </span><a href="#local-6989586621688295082"><span class="hs-identifier hs-var">rel</span></a></span><span>
-</span><span id="line-229"></span><span>          </span><span class="annot"><span class="annottext">AnnotatedInsert b (UnpreparedValue b)
--&gt; Maybe (AnnotatedInsert b (UnpreparedValue b))
+</span><span id="line-229"></span><span>          </span><span class="annot"><span class="annottext">AnnotatedInsertField b (UnpreparedValue b)
+-&gt; Maybe (AnnotatedInsertField b (UnpreparedValue b))
 forall a. a -&gt; Maybe a
-</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(AnnotatedInsert b (UnpreparedValue b)
- -&gt; Maybe (AnnotatedInsert b (UnpreparedValue b)))
--&gt; AnnotatedInsert b (UnpreparedValue b)
--&gt; Maybe (AnnotatedInsert b (UnpreparedValue b))
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(AnnotatedInsertField b (UnpreparedValue b)
+ -&gt; Maybe (AnnotatedInsertField b (UnpreparedValue b)))
+-&gt; AnnotatedInsertField b (UnpreparedValue b)
+-&gt; Maybe (AnnotatedInsertField b (UnpreparedValue b))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">XNestedInserts b
--&gt; ArrRelIns b (UnpreparedValue b)
--&gt; AnnotatedInsert b (UnpreparedValue b)
+-&gt; ArrayRelationInsert b (UnpreparedValue b)
+-&gt; AnnotatedInsertField b (UnpreparedValue b)
 forall (b :: BackendType) v.
-XNestedInserts b -&gt; ArrRelIns b v -&gt; AnnotatedInsert b v
+XNestedInserts b
+-&gt; ArrayRelationInsert b v -&gt; AnnotatedInsertField b v
 </span><a href="Hasura.RQL.IR.Insert.html#AIArrayRelationship"><span class="hs-identifier hs-var">IR.AIArrayRelationship</span></a></span><span> </span><span class="annot"><span class="annottext">XNestedInserts b
-</span><a href="#local-6989586621688295107"><span class="hs-identifier hs-var">xNestedInserts</span></a></span><span> </span><span class="annot"><span class="annottext">(ArrRelIns b (UnpreparedValue b)
- -&gt; AnnotatedInsert b (UnpreparedValue b))
--&gt; ArrRelIns b (UnpreparedValue b)
--&gt; AnnotatedInsert b (UnpreparedValue b)
+</span><a href="#local-6989586621688295107"><span class="hs-identifier hs-var">xNestedInserts</span></a></span><span> </span><span class="annot"><span class="annottext">(ArrayRelationInsert b (UnpreparedValue b)
+ -&gt; AnnotatedInsertField b (UnpreparedValue b))
+-&gt; ArrayRelationInsert b (UnpreparedValue b)
+-&gt; AnnotatedInsertField b (UnpreparedValue b)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MultiObjIns b (UnpreparedValue b)
--&gt; RelInfo b -&gt; ArrRelIns b (UnpreparedValue b)
-forall (b :: BackendType) a. a -&gt; RelInfo b -&gt; RelIns b a
-</span><a href="Hasura.RQL.IR.Insert.html#RelIns"><span class="hs-identifier hs-var">IR.RelIns</span></a></span><span> </span><span class="annot"><span class="annottext">MultiObjIns b (UnpreparedValue b)
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MultiObjectInsert b (UnpreparedValue b)
+-&gt; RelInfo b -&gt; ArrayRelationInsert b (UnpreparedValue b)
+forall (b :: BackendType) a. a -&gt; RelInfo b -&gt; RelationInsert b a
+</span><a href="Hasura.RQL.IR.Insert.html#RelationInsert"><span class="hs-identifier hs-var">IR.RelationInsert</span></a></span><span> </span><span class="annot"><span class="annottext">MultiObjectInsert b (UnpreparedValue b)
 </span><a href="#local-6989586621688295082"><span class="hs-identifier hs-var">rel</span></a></span><span> </span><span class="annot"><span class="annottext">RelInfo b
 </span><a href="#local-6989586621688295105"><span class="hs-identifier hs-var">relationshipInfo</span></a></span><span>
 </span><span id="line-230"></span><span>
@@ -1425,26 +1452,32 @@ forall (b :: BackendType) a. a -&gt; RelInfo b -&gt; RelIns b a
 </span><span id="line-241"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295370"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688295368"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295367"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#BackendInsert"><span class="hs-identifier hs-type">BackendInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295370"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295370"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-242"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-243"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295370"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-244"></span><span>  </span><span class="annot"><a href="#local-6989586621688295368"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Input"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295367"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#SingleObjIns"><span class="hs-identifier hs-type">IR.SingleObjIns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295370"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295370"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-244"></span><span>  </span><span class="annot"><a href="#local-6989586621688295368"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Input"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295367"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#SingleObjectInsert"><span class="hs-identifier hs-type">IR.SingleObjectInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295370"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295370"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-245"></span><span id="objectRelationshipInput"><span class="annot"><span class="annottext">objectRelationshipInput :: (SourceName
  -&gt; TableInfo b
  -&gt; m (InputFieldsParser n (BackendInsert b (UnpreparedValue b))))
 -&gt; SourceName
 -&gt; TableInfo b
--&gt; m (Maybe (Parser 'Input n (SingleObjIns b (UnpreparedValue b))))
+-&gt; m (Maybe
+        (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b))))
 </span><a href="Hasura.GraphQL.Schema.Mutation.html#objectRelationshipInput"><span class="hs-identifier hs-var hs-var">objectRelationshipInput</span></a></span></span><span> </span><span id="local-6989586621688295078"><span class="annot"><span class="annottext">SourceName
 -&gt; TableInfo b
 -&gt; m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))
 </span><a href="#local-6989586621688295078"><span class="hs-identifier hs-var">backendInsertAction</span></a></span></span><span> </span><span id="local-6989586621688295077"><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621688295077"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621688295076"><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621688295076"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MaybeT m (Parser 'Input n (SingleObjIns b (UnpreparedValue b)))
--&gt; m (Maybe (Parser 'Input n (SingleObjIns b (UnpreparedValue b))))
+</span><a href="#local-6989586621688295076"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MaybeT
+  m (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b)))
+-&gt; m (Maybe
+        (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b))))
 forall (m :: * -&gt; *) a. MaybeT m a -&gt; m (Maybe a)
-</span><span class="hs-identifier hs-var hs-var">runMaybeT</span></span><span> </span><span class="annot"><span class="annottext">(MaybeT m (Parser 'Input n (SingleObjIns b (UnpreparedValue b)))
+</span><span class="hs-identifier hs-var hs-var">runMaybeT</span></span><span> </span><span class="annot"><span class="annottext">(MaybeT
+   m (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b)))
  -&gt; m (Maybe
-         (Parser 'Input n (SingleObjIns b (UnpreparedValue b)))))
--&gt; MaybeT m (Parser 'Input n (SingleObjIns b (UnpreparedValue b)))
--&gt; m (Maybe (Parser 'Input n (SingleObjIns b (UnpreparedValue b))))
+         (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b)))))
+-&gt; MaybeT
+     m (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b)))
+-&gt; m (Maybe
+        (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b))))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-246"></span><span>  </span><span id="local-6989586621688295075"><span class="annot"><span class="annottext">InsPermInfo b
@@ -1467,20 +1500,23 @@ forall (b :: BackendType) r (m :: * -&gt; *).
 TableInfo b -&gt; m (Maybe (RolePermInfo b))
 </span><a href="Hasura.GraphQL.Schema.Table.html#tablePermissions"><span class="hs-identifier hs-var">tablePermissions</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
 </span><a href="#local-6989586621688295076"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-247"></span><span>  </span><span class="annot"><span class="annottext">m (Parser 'Input n (SingleObjIns b (UnpreparedValue b)))
--&gt; MaybeT m (Parser 'Input n (SingleObjIns b (UnpreparedValue b)))
+</span><span id="line-247"></span><span>  </span><span class="annot"><span class="annottext">m (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b)))
+-&gt; MaybeT
+     m (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b)))
 forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
-</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(m (Parser 'Input n (SingleObjIns b (UnpreparedValue b)))
- -&gt; MaybeT m (Parser 'Input n (SingleObjIns b (UnpreparedValue b))))
--&gt; m (Parser 'Input n (SingleObjIns b (UnpreparedValue b)))
--&gt; MaybeT m (Parser 'Input n (SingleObjIns b (UnpreparedValue b)))
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(m (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b)))
+ -&gt; MaybeT
+      m (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b))))
+-&gt; m (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b)))
+-&gt; MaybeT
+     m (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b)))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name
 -&gt; (SourceName, TableName b)
--&gt; m (Parser 'Input n (SingleObjIns b (UnpreparedValue b)))
--&gt; m (Parser 'Input n (SingleObjIns b (UnpreparedValue b)))
+-&gt; m (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b)))
+-&gt; m (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b)))
 forall (n :: * -&gt; *) (m :: * -&gt; *) (p :: (* -&gt; *) -&gt; * -&gt; *) a b.
 (MonadSchema n m, HasCallStack, Ord a, Typeable p, Typeable a,
  Typeable b) =&gt;
@@ -1566,7 +1602,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621688295074"><span class="hs-identifier hs-var">tableName</span></a></span><span>
-</span><span id="line-256"></span><span>        </span><span id="local-6989586621688295064"><span class="annot"><span class="annottext">inputParser :: InputFieldsParser n (SingleObjIns b (UnpreparedValue b))
+</span><span id="line-256"></span><span>        </span><span id="local-6989586621688295064"><span class="annot"><span class="annottext">inputParser :: InputFieldsParser n (SingleObjectInsert b (UnpreparedValue b))
 </span><a href="#local-6989586621688295064"><span class="hs-identifier hs-var hs-var">inputParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-257"></span><span>          </span><span id="local-6989586621688295063"><span class="annot"><span class="annottext">BackendInsert b (UnpreparedValue b)
 </span><a href="#local-6989586621688295063"><span class="hs-identifier hs-var">backendInsert</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n (BackendInsert b (UnpreparedValue b))
@@ -1589,7 +1625,7 @@ forall a. Maybe a
 -&gt; BackendInsert b (UnpreparedValue b)
 -&gt; InsPermInfo b
 -&gt; Maybe (UpdPermInfo b)
--&gt; SingleObjIns b (UnpreparedValue b)
+-&gt; SingleObjectInsert b (UnpreparedValue b)
 forall (b :: BackendType) (f :: * -&gt; *).
 BackendSchema b =&gt;
 f (AnnotatedInsertRow b (UnpreparedValue b))
@@ -1597,7 +1633,7 @@ f (AnnotatedInsertRow b (UnpreparedValue b))
 -&gt; BackendInsert b (UnpreparedValue b)
 -&gt; InsPermInfo b
 -&gt; Maybe (UpdPermInfo b)
--&gt; AnnIns b f (UnpreparedValue b)
+-&gt; AnnotatedInsertData b f (UnpreparedValue b)
 </span><a href="Hasura.GraphQL.Schema.Mutation.html#mkInsertObject"><span class="hs-identifier hs-var">mkInsertObject</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnotatedInsertRow b (UnpreparedValue b)
 -&gt; Single (AnnotatedInsertRow b (UnpreparedValue b))
 forall a. a -&gt; Single a
@@ -1607,18 +1643,18 @@ forall a. a -&gt; Single a
 </span><a href="#local-6989586621688295063"><span class="hs-identifier hs-var">backendInsert</span></a></span><span> </span><span class="annot"><span class="annottext">InsPermInfo b
 </span><a href="#local-6989586621688295075"><span class="hs-identifier hs-var">insertPerms</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (UpdPermInfo b)
 </span><a href="#local-6989586621688295073"><span class="hs-identifier hs-var">updatePerms</span></a></span><span>
-</span><span id="line-260"></span><span>    </span><span class="annot"><span class="annottext">Parser 'Input n (SingleObjIns b (UnpreparedValue b))
--&gt; m (Parser 'Input n (SingleObjIns b (UnpreparedValue b)))
+</span><span id="line-260"></span><span>    </span><span class="annot"><span class="annottext">Parser 'Input n (SingleObjectInsert b (UnpreparedValue b))
+-&gt; m (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b)))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Parser 'Input n (SingleObjIns b (UnpreparedValue b))
- -&gt; m (Parser 'Input n (SingleObjIns b (UnpreparedValue b))))
--&gt; Parser 'Input n (SingleObjIns b (UnpreparedValue b))
--&gt; m (Parser 'Input n (SingleObjIns b (UnpreparedValue b)))
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Parser 'Input n (SingleObjectInsert b (UnpreparedValue b))
+ -&gt; m (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b))))
+-&gt; Parser 'Input n (SingleObjectInsert b (UnpreparedValue b))
+-&gt; m (Parser 'Input n (SingleObjectInsert b (UnpreparedValue b)))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Description
--&gt; InputFieldsParser n (SingleObjIns b (UnpreparedValue b))
--&gt; Parser 'Input n (SingleObjIns b (UnpreparedValue b))
+-&gt; InputFieldsParser n (SingleObjectInsert b (UnpreparedValue b))
+-&gt; Parser 'Input n (SingleObjectInsert b (UnpreparedValue b))
 forall (m :: * -&gt; *) a.
 MonadParse m =&gt;
 Name
@@ -1627,7 +1663,7 @@ Name
 </span><a href="#local-6989586621688295067"><span class="hs-identifier hs-var">inputName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Description
-</span><a href="#local-6989586621688295065"><span class="hs-identifier hs-var">inputDesc</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n (SingleObjIns b (UnpreparedValue b))
+</span><a href="#local-6989586621688295065"><span class="hs-identifier hs-var">inputDesc</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n (SingleObjectInsert b (UnpreparedValue b))
 </span><a href="#local-6989586621688295064"><span class="hs-identifier hs-var">inputParser</span></a></span><span>
 </span><span id="line-261"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-262"></span><span>    </span><span id="local-6989586621688295074"><span class="annot"><span class="annottext">tableName :: TableName b
@@ -1649,25 +1685,32 @@ forall (b :: BackendType). TableInfo b -&gt; TableName b
 </span><span id="line-274"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295357"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688295355"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295354"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#BackendInsert"><span class="hs-identifier hs-type">BackendInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295357"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295357"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-275"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-276"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295357"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-277"></span><span>  </span><span class="annot"><a href="#local-6989586621688295355"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Input"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295354"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#MultiObjIns"><span class="hs-identifier hs-type">IR.MultiObjIns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295357"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295357"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-277"></span><span>  </span><span class="annot"><a href="#local-6989586621688295355"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Input"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295354"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#MultiObjectInsert"><span class="hs-identifier hs-type">IR.MultiObjectInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295357"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295357"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-278"></span><span id="arrayRelationshipInput"><span class="annot"><span class="annottext">arrayRelationshipInput :: (SourceName
  -&gt; TableInfo b
  -&gt; m (InputFieldsParser n (BackendInsert b (UnpreparedValue b))))
 -&gt; SourceName
 -&gt; TableInfo b
--&gt; m (Maybe (Parser 'Input n (MultiObjIns b (UnpreparedValue b))))
+-&gt; m (Maybe
+        (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b))))
 </span><a href="Hasura.GraphQL.Schema.Mutation.html#arrayRelationshipInput"><span class="hs-identifier hs-var hs-var">arrayRelationshipInput</span></a></span></span><span> </span><span id="local-6989586621688295060"><span class="annot"><span class="annottext">SourceName
 -&gt; TableInfo b
 -&gt; m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))
 </span><a href="#local-6989586621688295060"><span class="hs-identifier hs-var">backendInsertAction</span></a></span></span><span> </span><span id="local-6989586621688295059"><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621688295059"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621688295058"><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621688295058"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MaybeT m (Parser 'Input n (MultiObjIns b (UnpreparedValue b)))
--&gt; m (Maybe (Parser 'Input n (MultiObjIns b (UnpreparedValue b))))
+</span><a href="#local-6989586621688295058"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MaybeT
+  m (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b)))
+-&gt; m (Maybe
+        (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b))))
 forall (m :: * -&gt; *) a. MaybeT m a -&gt; m (Maybe a)
-</span><span class="hs-identifier hs-var hs-var">runMaybeT</span></span><span> </span><span class="annot"><span class="annottext">(MaybeT m (Parser 'Input n (MultiObjIns b (UnpreparedValue b)))
- -&gt; m (Maybe (Parser 'Input n (MultiObjIns b (UnpreparedValue b)))))
--&gt; MaybeT m (Parser 'Input n (MultiObjIns b (UnpreparedValue b)))
--&gt; m (Maybe (Parser 'Input n (MultiObjIns b (UnpreparedValue b))))
+</span><span class="hs-identifier hs-var hs-var">runMaybeT</span></span><span> </span><span class="annot"><span class="annottext">(MaybeT
+   m (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b)))
+ -&gt; m (Maybe
+         (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b)))))
+-&gt; MaybeT
+     m (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b)))
+-&gt; m (Maybe
+        (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b))))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-279"></span><span>  </span><span id="local-6989586621688295057"><span class="annot"><span class="annottext">InsPermInfo b
@@ -1690,20 +1733,23 @@ forall (b :: BackendType) r (m :: * -&gt; *).
 TableInfo b -&gt; m (Maybe (RolePermInfo b))
 </span><a href="Hasura.GraphQL.Schema.Table.html#tablePermissions"><span class="hs-identifier hs-var">tablePermissions</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
 </span><a href="#local-6989586621688295058"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-280"></span><span>  </span><span class="annot"><span class="annottext">m (Parser 'Input n (MultiObjIns b (UnpreparedValue b)))
--&gt; MaybeT m (Parser 'Input n (MultiObjIns b (UnpreparedValue b)))
+</span><span id="line-280"></span><span>  </span><span class="annot"><span class="annottext">m (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b)))
+-&gt; MaybeT
+     m (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b)))
 forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
-</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(m (Parser 'Input n (MultiObjIns b (UnpreparedValue b)))
- -&gt; MaybeT m (Parser 'Input n (MultiObjIns b (UnpreparedValue b))))
--&gt; m (Parser 'Input n (MultiObjIns b (UnpreparedValue b)))
--&gt; MaybeT m (Parser 'Input n (MultiObjIns b (UnpreparedValue b)))
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(m (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b)))
+ -&gt; MaybeT
+      m (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b))))
+-&gt; m (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b)))
+-&gt; MaybeT
+     m (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b)))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name
 -&gt; (SourceName, TableName b)
--&gt; m (Parser 'Input n (MultiObjIns b (UnpreparedValue b)))
--&gt; m (Parser 'Input n (MultiObjIns b (UnpreparedValue b)))
+-&gt; m (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b)))
+-&gt; m (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b)))
 forall (n :: * -&gt; *) (m :: * -&gt; *) (p :: (* -&gt; *) -&gt; * -&gt; *) a b.
 (MonadSchema n m, HasCallStack, Ord a, Typeable p, Typeable a,
  Typeable b) =&gt;
@@ -1789,7 +1835,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621688295056"><span class="hs-identifier hs-var">tableName</span></a></span><span>
-</span><span id="line-289"></span><span>        </span><span id="local-6989586621688295047"><span class="annot"><span class="annottext">inputParser :: InputFieldsParser n (MultiObjIns b (UnpreparedValue b))
+</span><span id="line-289"></span><span>        </span><span id="local-6989586621688295047"><span class="annot"><span class="annottext">inputParser :: InputFieldsParser n (MultiObjectInsert b (UnpreparedValue b))
 </span><a href="#local-6989586621688295047"><span class="hs-identifier hs-var hs-var">inputParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-290"></span><span>          </span><span id="local-6989586621688295046"><span class="annot"><span class="annottext">BackendInsert b (UnpreparedValue b)
 </span><a href="#local-6989586621688295046"><span class="hs-identifier hs-var">backendInsert</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n (BackendInsert b (UnpreparedValue b))
@@ -1822,7 +1868,7 @@ Parser k m a -&gt; Parser k m [a]
 -&gt; BackendInsert b (UnpreparedValue b)
 -&gt; InsPermInfo b
 -&gt; Maybe (UpdPermInfo b)
--&gt; MultiObjIns b (UnpreparedValue b)
+-&gt; MultiObjectInsert b (UnpreparedValue b)
 forall (b :: BackendType) (f :: * -&gt; *).
 BackendSchema b =&gt;
 f (AnnotatedInsertRow b (UnpreparedValue b))
@@ -1830,25 +1876,25 @@ f (AnnotatedInsertRow b (UnpreparedValue b))
 -&gt; BackendInsert b (UnpreparedValue b)
 -&gt; InsPermInfo b
 -&gt; Maybe (UpdPermInfo b)
--&gt; AnnIns b f (UnpreparedValue b)
+-&gt; AnnotatedInsertData b f (UnpreparedValue b)
 </span><a href="Hasura.GraphQL.Schema.Mutation.html#mkInsertObject"><span class="hs-identifier hs-var">mkInsertObject</span></a></span><span> </span><span class="annot"><span class="annottext">[AnnotatedInsertRow b (UnpreparedValue b)]
 </span><a href="#local-6989586621688295045"><span class="hs-identifier hs-var">objects</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
 </span><a href="#local-6989586621688295058"><span class="hs-identifier hs-var">tableInfo</span></a></span><span> </span><span class="annot"><span class="annottext">BackendInsert b (UnpreparedValue b)
 </span><a href="#local-6989586621688295046"><span class="hs-identifier hs-var">backendInsert</span></a></span><span> </span><span class="annot"><span class="annottext">InsPermInfo b
 </span><a href="#local-6989586621688295057"><span class="hs-identifier hs-var">insertPerms</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (UpdPermInfo b)
 </span><a href="#local-6989586621688295055"><span class="hs-identifier hs-var">updatePerms</span></a></span><span>
-</span><span id="line-293"></span><span>    </span><span class="annot"><span class="annottext">Parser 'Input n (MultiObjIns b (UnpreparedValue b))
--&gt; m (Parser 'Input n (MultiObjIns b (UnpreparedValue b)))
+</span><span id="line-293"></span><span>    </span><span class="annot"><span class="annottext">Parser 'Input n (MultiObjectInsert b (UnpreparedValue b))
+-&gt; m (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b)))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Parser 'Input n (MultiObjIns b (UnpreparedValue b))
- -&gt; m (Parser 'Input n (MultiObjIns b (UnpreparedValue b))))
--&gt; Parser 'Input n (MultiObjIns b (UnpreparedValue b))
--&gt; m (Parser 'Input n (MultiObjIns b (UnpreparedValue b)))
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Parser 'Input n (MultiObjectInsert b (UnpreparedValue b))
+ -&gt; m (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b))))
+-&gt; Parser 'Input n (MultiObjectInsert b (UnpreparedValue b))
+-&gt; m (Parser 'Input n (MultiObjectInsert b (UnpreparedValue b)))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Description
--&gt; InputFieldsParser n (MultiObjIns b (UnpreparedValue b))
--&gt; Parser 'Input n (MultiObjIns b (UnpreparedValue b))
+-&gt; InputFieldsParser n (MultiObjectInsert b (UnpreparedValue b))
+-&gt; Parser 'Input n (MultiObjectInsert b (UnpreparedValue b))
 forall (m :: * -&gt; *) a.
 MonadParse m =&gt;
 Name
@@ -1857,7 +1903,7 @@ Name
 </span><a href="#local-6989586621688295050"><span class="hs-identifier hs-var">inputName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Description
-</span><a href="#local-6989586621688295048"><span class="hs-identifier hs-var">inputDesc</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n (MultiObjIns b (UnpreparedValue b))
+</span><a href="#local-6989586621688295048"><span class="hs-identifier hs-var">inputDesc</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n (MultiObjectInsert b (UnpreparedValue b))
 </span><a href="#local-6989586621688295047"><span class="hs-identifier hs-var">inputParser</span></a></span><span>
 </span><span id="line-294"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-295"></span><span>    </span><span id="local-6989586621688295056"><span class="annot"><span class="annottext">tableName :: TableName b
@@ -1875,44 +1921,44 @@ forall (b :: BackendType). TableInfo b -&gt; TableName b
 </span><span id="line-303"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#BackendInsert"><span class="hs-identifier hs-type">BackendInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295498"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295498"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-304"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#InsPermInfo"><span class="hs-identifier hs-type">InsPermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295498"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-305"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#UpdPermInfo"><span class="hs-identifier hs-type">UpdPermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295498"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-306"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnIns"><span class="hs-identifier hs-type">IR.AnnIns</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295498"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295496"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295498"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-306"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertData"><span class="hs-identifier hs-type">IR.AnnotatedInsertData</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295498"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295496"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688295498"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-307"></span><span id="mkInsertObject"><span class="annot"><span class="annottext">mkInsertObject :: f (AnnotatedInsertRow b (UnpreparedValue b))
 -&gt; TableInfo b
 -&gt; BackendInsert b (UnpreparedValue b)
 -&gt; InsPermInfo b
 -&gt; Maybe (UpdPermInfo b)
--&gt; AnnIns b f (UnpreparedValue b)
+-&gt; AnnotatedInsertData b f (UnpreparedValue b)
 </span><a href="Hasura.GraphQL.Schema.Mutation.html#mkInsertObject"><span class="hs-identifier hs-var hs-var">mkInsertObject</span></a></span></span><span> </span><span id="local-6989586621688295044"><span class="annot"><span class="annottext">f (AnnotatedInsertRow b (UnpreparedValue b))
 </span><a href="#local-6989586621688295044"><span class="hs-identifier hs-var">objects</span></a></span></span><span> </span><span id="local-6989586621688295043"><span class="annot"><span class="annottext">TableInfo b
 </span><a href="#local-6989586621688295043"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span id="local-6989586621688295042"><span class="annot"><span class="annottext">BackendInsert b (UnpreparedValue b)
 </span><a href="#local-6989586621688295042"><span class="hs-identifier hs-var">backendInsert</span></a></span></span><span> </span><span id="local-6989586621688295041"><span class="annot"><span class="annottext">InsPermInfo b
 </span><a href="#local-6989586621688295041"><span class="hs-identifier hs-var">insertPerms</span></a></span></span><span> </span><span id="local-6989586621688295040"><span class="annot"><span class="annottext">Maybe (UpdPermInfo b)
 </span><a href="#local-6989586621688295040"><span class="hs-identifier hs-var">updatePerms</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-308"></span><span>  </span><span class="annot"><span class="annottext">AnnIns :: forall (b :: BackendType) (f :: * -&gt; *) v.
+</span><span id="line-308"></span><span>  </span><span class="annot"><span class="annottext">AnnotatedInsertData :: forall (b :: BackendType) (f :: * -&gt; *) v.
 f (AnnotatedInsertRow b v)
 -&gt; TableName b
 -&gt; (AnnBoolExp b v, Maybe (AnnBoolExp b v))
 -&gt; [ColumnInfo b]
 -&gt; PreSetColsG b v
 -&gt; BackendInsert b v
--&gt; AnnIns b f v
-</span><a href="Hasura.RQL.IR.Insert.html#AnnIns"><span class="hs-identifier hs-type">IR.AnnIns</span></a></span><span>
-</span><span id="line-309"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_aiInsObj :: f (AnnotatedInsertRow b (UnpreparedValue b))
-</span><a href="Hasura.RQL.IR.Insert.html#_aiInsObj"><span class="hs-identifier hs-var">_aiInsObj</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">f (AnnotatedInsertRow b (UnpreparedValue b))
+-&gt; AnnotatedInsertData b f v
+</span><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertData"><span class="hs-identifier hs-type">IR.AnnotatedInsertData</span></a></span><span>
+</span><span id="line-309"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_aiInsertObject :: f (AnnotatedInsertRow b (UnpreparedValue b))
+</span><a href="Hasura.RQL.IR.Insert.html#_aiInsertObject"><span class="hs-identifier hs-var">_aiInsertObject</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">f (AnnotatedInsertRow b (UnpreparedValue b))
 </span><a href="#local-6989586621688295044"><span class="hs-identifier hs-var">objects</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-310"></span><span>      </span><span class="annot"><span class="annottext">_aiTableName :: TableName b
 </span><a href="Hasura.RQL.IR.Insert.html#_aiTableName"><span class="hs-identifier hs-var">_aiTableName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621688295037"><span class="hs-identifier hs-var">table</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-311"></span><span>      </span><span class="annot"><span class="annottext">_aiCheckCond :: (AnnBoolExp b (UnpreparedValue b),
+</span><span id="line-311"></span><span>      </span><span class="annot"><span class="annottext">_aiCheckCondition :: (AnnBoolExp b (UnpreparedValue b),
  Maybe (AnnBoolExp b (UnpreparedValue b)))
-</span><a href="Hasura.RQL.IR.Insert.html#_aiCheckCond"><span class="hs-identifier hs-var">_aiCheckCond</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnBoolExp b (UnpreparedValue b)
+</span><a href="Hasura.RQL.IR.Insert.html#_aiCheckCondition"><span class="hs-identifier hs-var">_aiCheckCondition</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnBoolExp b (UnpreparedValue b)
 </span><a href="#local-6989586621688295035"><span class="hs-identifier hs-var">insertCheck</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe (AnnBoolExp b (UnpreparedValue b))
 </span><a href="#local-6989586621688295034"><span class="hs-identifier hs-var">updateCheck</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-312"></span><span>      </span><span class="annot"><span class="annottext">_aiTableCols :: [ColumnInfo b]
-</span><a href="Hasura.RQL.IR.Insert.html#_aiTableCols"><span class="hs-identifier hs-var">_aiTableCols</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ColumnInfo b]
+</span><span id="line-312"></span><span>      </span><span class="annot"><span class="annottext">_aiTableColumns :: [ColumnInfo b]
+</span><a href="Hasura.RQL.IR.Insert.html#_aiTableColumns"><span class="hs-identifier hs-var">_aiTableColumns</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ColumnInfo b]
 </span><a href="#local-6989586621688295032"><span class="hs-identifier hs-var">columns</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-313"></span><span>      </span><span class="annot"><span class="annottext">_aiDefVals :: PreSetColsG b (UnpreparedValue b)
-</span><a href="Hasura.RQL.IR.Insert.html#_aiDefVals"><span class="hs-identifier hs-var">_aiDefVals</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PreSetColsG b (UnpreparedValue b)
+</span><span id="line-313"></span><span>      </span><span class="annot"><span class="annottext">_aiDefaultValues :: PreSetColsG b (UnpreparedValue b)
+</span><a href="Hasura.RQL.IR.Insert.html#_aiDefaultValues"><span class="hs-identifier hs-var">_aiDefaultValues</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PreSetColsG b (UnpreparedValue b)
 </span><a href="#local-6989586621688295030"><span class="hs-identifier hs-var">defaultValues</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-314"></span><span>      </span><span class="annot"><span class="annottext">_aiBackendInsert :: BackendInsert b (UnpreparedValue b)
 </span><a href="Hasura.RQL.IR.Insert.html#_aiBackendInsert"><span class="hs-identifier hs-var">_aiBackendInsert</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BackendInsert b (UnpreparedValue b)

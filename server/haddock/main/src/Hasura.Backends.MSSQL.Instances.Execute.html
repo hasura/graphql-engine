@@ -732,23 +732,23 @@ forall a. Maybe a
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">MutationDB 'MSSQL Void (UnpreparedValue 'MSSQL)
 </span><a href="#local-6989586621688322285"><span class="hs-identifier hs-var">mrf</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-241"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#MDBInsert"><span class="hs-identifier hs-type">MDBInsert</span></a></span><span> </span><span id="local-6989586621688322282"><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void (UnpreparedValue 'MSSQL)
+</span><span id="line-241"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#MDBInsert"><span class="hs-identifier hs-type">MDBInsert</span></a></span><span> </span><span id="local-6989586621688322282"><span class="annot"><span class="annottext">AnnotatedInsert 'MSSQL Void (UnpreparedValue 'MSSQL)
 </span><a href="#local-6989586621688322282"><span class="hs-identifier hs-var">annInsert</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">UserInfo
 -&gt; StringifyNumbers
 -&gt; SourceConfig 'MSSQL
--&gt; AnnInsert 'MSSQL Void (UnpreparedValue 'MSSQL)
+-&gt; AnnotatedInsert 'MSSQL Void (UnpreparedValue 'MSSQL)
 -&gt; m (ExceptT QErr IO EncJSON)
 forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 UserInfo
 -&gt; StringifyNumbers
 -&gt; SourceConfig 'MSSQL
--&gt; AnnInsert 'MSSQL Void (UnpreparedValue 'MSSQL)
+-&gt; AnnotatedInsert 'MSSQL Void (UnpreparedValue 'MSSQL)
 -&gt; m (ExceptT QErr IO EncJSON)
 </span><a href="Hasura.Backends.MSSQL.Execute.Insert.html#executeInsert"><span class="hs-identifier hs-var">executeInsert</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
 </span><a href="#local-6989586621688322289"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
 </span><a href="#local-6989586621688322288"><span class="hs-identifier hs-var">stringifyNum</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
-</span><a href="#local-6989586621688322286"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">AnnInsert 'MSSQL Void (UnpreparedValue 'MSSQL)
+</span><a href="#local-6989586621688322286"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedInsert 'MSSQL Void (UnpreparedValue 'MSSQL)
 </span><a href="#local-6989586621688322282"><span class="hs-identifier hs-var">annInsert</span></a></span><span>
 </span><span id="line-242"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#MDBDelete"><span class="hs-identifier hs-type">MDBDelete</span></a></span><span> </span><span id="local-6989586621688322279"><span class="annot"><span class="annottext">AnnDelG 'MSSQL Void (UnpreparedValue 'MSSQL)
 </span><a href="#local-6989586621688322279"><span class="hs-identifier hs-var">annDelete</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">UserInfo
