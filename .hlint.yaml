@@ -73,6 +73,7 @@
 - ignore: {name: Redundant return}
 - ignore: {name: Use <$>, within: [Hasura.RQL.DDL.Metadata, Hasura.Backends.MSSQL.Types.Instances]}
 - ignore: {name: Functor law, within: Hasura.Server.AuthSpec}
+- ignore: {name: Use underscore} # suggests to format port numbers
 
 # Define some custom infix operators
 # - fixity: infixr 3 ~^#^~
