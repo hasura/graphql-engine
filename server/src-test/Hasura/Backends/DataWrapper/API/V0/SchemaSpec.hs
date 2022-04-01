@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Hasura.Backends.DataWrapper.Agent.SchemaSpec (spec) where
+module Hasura.Backends.DataWrapper.API.V0.SchemaSpec (spec) where
 
 import Data.Aeson.QQ.Simple (aesonQQ)
+import Hasura.Backends.DataWrapper.API.V0.Schema
 import Hasura.Backends.DataWrapper.API.V0.TableSpec (genTableInfo)
-import Hasura.Backends.DataWrapper.Agent.Schema
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
@@ -21,9 +21,6 @@ spec = do
   describe "SchemaResponse" $ do
     testToFromJSONToSchema (SchemaResponse (Capabilities True) []) [aesonQQ|{"capabilities": {"relationships": true}, "tables": []}|]
     jsonOpenApiProperties genSchemaResponse
-  describe "QueryResponse" $ do
-    testToFromJSONToSchema (QueryResponse []) [aesonQQ|[]|]
-    jsonOpenApiProperties genQueryResponse
 
 genCapabilities :: MonadGen m => m Capabilities
 genCapabilities = Capabilities <$> Gen.bool
@@ -33,7 +30,3 @@ genSchemaResponse =
   SchemaResponse
     <$> genCapabilities
     <*> Gen.list (linear 0 5) genTableInfo
-
-genQueryResponse :: MonadGen m => m QueryResponse
-genQueryResponse =
-  QueryResponse <$> Gen.list (linear 0 5) genObject

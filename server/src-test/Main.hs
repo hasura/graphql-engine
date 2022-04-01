@@ -25,7 +25,6 @@ import Hasura.App
     mkPgSourceResolver,
   )
 import Hasura.Backends.DataWrapper.API.V0Spec qualified as DataWrapper.API.V0Spec
-import Hasura.Backends.DataWrapper.Agent.SchemaSpec qualified as DataWrapper.Agent.SchemaSpec
 import Hasura.Backends.MSSQL.ErrorSpec qualified as MSSQLErrorSpec
 import Hasura.Backends.MySQL.DataLoader.ExecuteTests qualified as MySQLDataLoader
 import Hasura.EventingSpec qualified as EventingSpec
@@ -98,7 +97,6 @@ unitSpecs = do
   describe "Data.Parser.JSONPath" JsonPath.spec
   describe "Data.Time" TimeSpec.spec
   describe "Data.Trie" TrieSpec.spec
-  describe "Hasura.Backends.DataWrapper.Agent.Schema" DataWrapper.Agent.SchemaSpec.spec
   describe "Hasura.Backends.DataWrapper.API.V0" DataWrapper.API.V0Spec.spec
   describe "Hasura.Backends.MSSQL.ErrorSpec" MSSQLErrorSpec.spec
   describe "Hasura.Backends.MySQL.DataLoader.ExecuteTests" MySQLDataLoader.spec

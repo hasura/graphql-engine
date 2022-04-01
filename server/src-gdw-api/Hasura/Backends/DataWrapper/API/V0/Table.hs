@@ -11,17 +11,21 @@ where
 
 import Autodocodec
 import Autodocodec.OpenAPI ()
+import Control.DeepSeq (NFData)
 import Data.Aeson (FromJSON, ToJSON)
+import Data.Data (Data)
+import Data.Hashable (Hashable)
 import Data.OpenApi (ToSchema)
+import Data.Text (Text)
+import GHC.Generics (Generic)
 import Hasura.Backends.DataWrapper.API.V0.Column qualified as API.V0
-import Hasura.Incremental (Cacheable)
-import Hasura.Prelude
+import Prelude
 
 --------------------------------------------------------------------------------
 
 newtype TableName = TableName {unTableName :: Text}
   deriving stock (Eq, Ord, Show, Generic, Data)
-  deriving anyclass (NFData, Cacheable, Hashable)
+  deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec TableName
 
 instance HasCodec TableName where
@@ -37,7 +41,7 @@ data TableInfo = TableInfo
     dtiDescription :: Maybe Text
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
-  deriving anyclass (NFData, Cacheable, Hashable)
+  deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec TableInfo
 
 instance HasCodec TableInfo where

@@ -10,6 +10,8 @@ import Hasura.Backends.DataWrapper.API.V0.API
 import Hasura.Backends.DataWrapper.API.V0.ColumnSpec (genColumnName)
 import Hasura.Prelude
 import Hedgehog
+import Hedgehog.Gen qualified as Gen
+import Hedgehog.Range
 import Test.Aeson.Utils
 import Test.Hspec
 
@@ -61,6 +63,13 @@ spec = do
           "order_by": [{"column": "my_column_name", "ordering": "asc"}]
         }
       |]
+  describe "QueryResponse" $ do
+    testToFromJSONToSchema (QueryResponse []) [aesonQQ|[]|]
+    jsonOpenApiProperties genQueryResponse
 
 genPrimaryKey :: MonadGen m => m PrimaryKey
 genPrimaryKey = PrimaryKey <$> genColumnName
+
+genQueryResponse :: MonadGen m => m QueryResponse
+genQueryResponse =
+  QueryResponse <$> Gen.list (linear 0 5) genObject

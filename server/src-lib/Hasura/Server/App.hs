@@ -40,7 +40,7 @@ import Data.Text.Extended
 import Data.Text.Lazy qualified as LT
 import Data.Text.Lazy.Encoding qualified as TL
 import GHC.Stats.Extended qualified as RTS
-import Hasura.Backends.DataWrapper.Agent.Schema (openApiSchema)
+import Hasura.Backends.DataWrapper.API (openApiSchema)
 import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Base.Error
 import Hasura.EncJSON
