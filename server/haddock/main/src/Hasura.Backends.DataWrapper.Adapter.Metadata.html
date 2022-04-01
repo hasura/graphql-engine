@@ -9,8 +9,8 @@
 </span><span id="line-9"></span><span>
 </span><span id="line-10"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-11"></span><span>
-</span><span id="line-12"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688263329"><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataWrapper"><span class="hs-identifier hs-type">DataWrapper</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-13"></span><span>  </span><span id="local-6989586621688263327"><span class="annot"><span class="annottext">resolveSourceConfig :: SourceName
+</span><span id="line-12"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688265900"><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataWrapper"><span class="hs-identifier hs-type">DataWrapper</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-13"></span><span>  </span><span id="local-6989586621688265898"><span class="annot"><span class="annottext">resolveSourceConfig :: SourceName
 -&gt; SourceConnConfiguration 'DataWrapper
 -&gt; Environment
 -&gt; m (Either QErr (SourceConfig 'DataWrapper))
@@ -18,7 +18,7 @@
 forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;resolveSourceConfig: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-14"></span><span>  </span><span id="local-6989586621688263324"><span class="annot"><span class="annottext">resolveDatabaseMetadata :: SourceMetadata 'DataWrapper
+</span><span id="line-14"></span><span>  </span><span id="local-6989586621688265895"><span class="annot"><span class="annottext">resolveDatabaseMetadata :: SourceMetadata 'DataWrapper
 -&gt; SourceConfig 'DataWrapper
 -&gt; SourceTypeCustomization
 -&gt; m (Either QErr (ResolvedSource 'DataWrapper))
@@ -30,7 +30,7 @@ forall a. HasCallStack =&gt; [Char] -&gt; a
 forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;resolveDatabaseMetadata: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-15"></span><span>  </span><span id="local-6989586621688263322"><span class="annot"><span class="annottext">parseBoolExpOperations :: ValueParser 'DataWrapper m v
+</span><span id="line-15"></span><span>  </span><span id="local-6989586621688265893"><span class="annot"><span class="annottext">parseBoolExpOperations :: ValueParser 'DataWrapper m v
 -&gt; TableName 'DataWrapper
 -&gt; FieldInfoMap (FieldInfo 'DataWrapper)
 -&gt; ColumnReference 'DataWrapper
@@ -46,7 +46,7 @@ forall a. HasCallStack =&gt; [Char] -&gt; a
 forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;parseBoolExpOperations: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-16"></span><span>  </span><span id="local-6989586621688263320"><span class="annot"><span class="annottext">parseCollectableType :: CollectableType (ColumnType 'DataWrapper)
+</span><span id="line-16"></span><span>  </span><span id="local-6989586621688265891"><span class="annot"><span class="annottext">parseCollectableType :: CollectableType (ColumnType 'DataWrapper)
 -&gt; Value -&gt; m (PartialSQLExp 'DataWrapper)
 </span><a href="Hasura.RQL.Types.Metadata.Backend.html#parseCollectableType"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseCollectableType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char]
 -&gt; CollectableType (ColumnType 'DataWrapper)
@@ -55,7 +55,7 @@ forall a. HasCallStack =&gt; [Char] -&gt; a
 forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;parseCollectableType: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-17"></span><span>  </span><span id="local-6989586621688263318"><span class="annot"><span class="annottext">buildComputedFieldInfo :: HashSet (TableName 'DataWrapper)
+</span><span id="line-17"></span><span>  </span><span id="local-6989586621688265889"><span class="annot"><span class="annottext">buildComputedFieldInfo :: HashSet (TableName 'DataWrapper)
 -&gt; TableName 'DataWrapper
 -&gt; ComputedFieldName
 -&gt; ComputedFieldDefinition 'DataWrapper
@@ -73,7 +73,7 @@ forall a. HasCallStack =&gt; [Char] -&gt; a
 forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;buildComputedFieldInfo: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-18"></span><span>  </span><span id="local-6989586621688263316"><span class="annot"><span class="annottext">fetchAndValidateEnumValues :: SourceConfig 'DataWrapper
+</span><span id="line-18"></span><span>  </span><span id="local-6989586621688265887"><span class="annot"><span class="annottext">fetchAndValidateEnumValues :: SourceConfig 'DataWrapper
 -&gt; TableName 'DataWrapper
 -&gt; Maybe (PrimaryKey 'DataWrapper (RawColumnInfo 'DataWrapper))
 -&gt; [RawColumnInfo 'DataWrapper]
@@ -87,7 +87,7 @@ forall a. HasCallStack =&gt; [Char] -&gt; a
 forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;fetchAndValidateEnumValues: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-19"></span><span>  </span><span id="local-6989586621688263314"><span class="annot"><span class="annottext">buildFunctionInfo :: SourceName
+</span><span id="line-19"></span><span>  </span><span id="local-6989586621688265885"><span class="annot"><span class="annottext">buildFunctionInfo :: SourceName
 -&gt; FunctionName 'DataWrapper
 -&gt; SystemDefined
 -&gt; FunctionConfig
@@ -107,7 +107,7 @@ forall a. HasCallStack =&gt; [Char] -&gt; a
 forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;buildFunctionInfo: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-20"></span><span>  </span><span id="local-6989586621688263312"><span class="annot"><span class="annottext">updateColumnInEventTrigger :: TableName 'DataWrapper
+</span><span id="line-20"></span><span>  </span><span id="local-6989586621688265883"><span class="annot"><span class="annottext">updateColumnInEventTrigger :: TableName 'DataWrapper
 -&gt; Column 'DataWrapper
 -&gt; Column 'DataWrapper
 -&gt; TableName 'DataWrapper
@@ -123,7 +123,7 @@ forall a. HasCallStack =&gt; [Char] -&gt; a
 forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;updateColumnInEventTrigger: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-21"></span><span>  </span><span id="local-6989586621688263310"><span class="annot"><span class="annottext">postDropSourceHook :: SourceConfig 'DataWrapper -&gt; m ()
+</span><span id="line-21"></span><span>  </span><span id="local-6989586621688265881"><span class="annot"><span class="annottext">postDropSourceHook :: SourceConfig 'DataWrapper -&gt; m ()
 </span><a href="Hasura.RQL.Types.Metadata.Backend.html#postDropSourceHook"><span class="hs-identifier hs-var hs-var hs-var hs-var">postDropSourceHook</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; () -&gt; m ()
 forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]

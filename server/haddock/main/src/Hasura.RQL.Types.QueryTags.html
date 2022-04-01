@@ -14,10 +14,10 @@
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.html"><span class="hs-identifier">Hasura.Incremental</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-16"></span><span>
-</span><span id="line-17"></span><span id="local-6989586621688189648"><span id="local-6989586621688189649"></span></span><span class="hs-keyword">data</span><span> </span><span id="QueryTagsFormat"><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsFormat"><span class="hs-identifier hs-var">QueryTagsFormat</span></a></span></span><span>
+</span><span id="line-17"></span><span id="local-6989586621688192170"><span id="local-6989586621688192171"></span></span><span class="hs-keyword">data</span><span> </span><span id="QueryTagsFormat"><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsFormat"><span class="hs-identifier hs-var">QueryTagsFormat</span></a></span></span><span>
 </span><span id="line-18"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Standard"><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#Standard"><span class="hs-identifier hs-var">Standard</span></a></span></span><span>
 </span><span id="line-19"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="SQLCommenter"><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#SQLCommenter"><span class="hs-identifier hs-var">SQLCommenter</span></a></span></span><span>
-</span><span id="line-20"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688189640"><span id="local-6989586621688189642"><span id="local-6989586621688189644"><span class="annot"><span class="annottext">Int -&gt; QueryTagsFormat -&gt; ShowS
+</span><span id="line-20"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688192162"><span id="local-6989586621688192164"><span id="local-6989586621688192166"><span class="annot"><span class="annottext">Int -&gt; QueryTagsFormat -&gt; ShowS
 [QueryTagsFormat] -&gt; ShowS
 QueryTagsFormat -&gt; String
 (Int -&gt; QueryTagsFormat -&gt; ShowS)
@@ -32,7 +32,7 @@ show :: QueryTagsFormat -&gt; String
 $cshow :: QueryTagsFormat -&gt; String
 showsPrec :: Int -&gt; QueryTagsFormat -&gt; ShowS
 $cshowsPrec :: Int -&gt; QueryTagsFormat -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688189635"><span id="local-6989586621688189637"><span class="annot"><span class="annottext">QueryTagsFormat -&gt; QueryTagsFormat -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688192157"><span id="local-6989586621688192159"><span class="annot"><span class="annottext">QueryTagsFormat -&gt; QueryTagsFormat -&gt; Bool
 (QueryTagsFormat -&gt; QueryTagsFormat -&gt; Bool)
 -&gt; (QueryTagsFormat -&gt; QueryTagsFormat -&gt; Bool)
 -&gt; Eq QueryTagsFormat
@@ -52,14 +52,14 @@ $cto :: forall x. Rep QueryTagsFormat x -&gt; QueryTagsFormat
 $cfrom :: forall x. QueryTagsFormat -&gt; Rep QueryTagsFormat x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-21"></span><span>
-</span><span id="line-22"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688189628"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsFormat"><span class="hs-identifier hs-type">QueryTagsFormat</span></a></span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688192150"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsFormat"><span class="hs-identifier hs-type">QueryTagsFormat</span></a></span></span><span>
 </span><span id="line-23"></span><span>
-</span><span id="line-24"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688189623"><span id="local-6989586621688189625"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsFormat"><span class="hs-identifier hs-type">QueryTagsFormat</span></a></span></span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688192145"><span id="local-6989586621688192147"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsFormat"><span class="hs-identifier hs-type">QueryTagsFormat</span></a></span></span></span><span>
 </span><span id="line-25"></span><span>
-</span><span id="line-26"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688189620"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsFormat"><span class="hs-identifier hs-type">QueryTagsFormat</span></a></span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688192142"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsFormat"><span class="hs-identifier hs-type">QueryTagsFormat</span></a></span></span><span>
 </span><span id="line-27"></span><span>
-</span><span id="line-28"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688189612"><span id="local-6989586621688189614"><span id="local-6989586621688189616"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsFormat"><span class="hs-identifier hs-type">QueryTagsFormat</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-29"></span><span>  </span><span id="local-6989586621688189610"><span class="annot"><span class="annottext">toJSON :: QueryTagsFormat -&gt; Value
+</span><span id="line-28"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688192134"><span id="local-6989586621688192136"><span id="local-6989586621688192138"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsFormat"><span class="hs-identifier hs-type">QueryTagsFormat</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-29"></span><span>  </span><span id="local-6989586621688192132"><span class="annot"><span class="annottext">toJSON :: QueryTagsFormat -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-30"></span><span>    </span><span class="annot"><span class="annottext">QueryTagsFormat
 </span><a href="Hasura.RQL.Types.QueryTags.html#Standard"><span class="hs-identifier hs-var">Standard</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
@@ -68,8 +68,8 @@ $cfrom :: forall x. QueryTagsFormat -&gt; Rep QueryTagsFormat x
 </span><a href="Hasura.RQL.Types.QueryTags.html#SQLCommenter"><span class="hs-identifier hs-var">SQLCommenter</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-string">&quot;sqlcommenter&quot;</span></span><span>
 </span><span id="line-32"></span><span>
-</span><span id="line-33"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688189606"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsFormat"><span class="hs-identifier hs-type">QueryTagsFormat</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-34"></span><span>  </span><span id="local-6989586621688189604"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser QueryTagsFormat
+</span><span id="line-33"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688192128"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsFormat"><span class="hs-identifier hs-type">QueryTagsFormat</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-34"></span><span>  </span><span id="local-6989586621688192126"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser QueryTagsFormat
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Text -&gt; Parser QueryTagsFormat)
 -&gt; Value
@@ -83,10 +83,10 @@ forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Parser QueryTagsFormat
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-35"></span><span>    </span><span class="hs-glyph">\</span><span id="local-6989586621688189601"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688189601"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><span id="line-35"></span><span>    </span><span class="hs-glyph">\</span><span id="local-6989586621688192123"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688192123"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
 </span><span class="hs-identifier hs-var">T.toLower</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688189601"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688192123"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-36"></span><span>      </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;standard&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">QueryTagsFormat -&gt; Parser QueryTagsFormat
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -101,19 +101,19 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser QueryTagsFormat
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688189599"><span class="hs-identifier hs-var">errMsg</span></a></span><span>
+</span><a href="#local-6989586621688192121"><span class="hs-identifier hs-var">errMsg</span></a></span><span>
 </span><span id="line-39"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-40"></span><span>      </span><span id="local-6989586621688189599"><span class="annot"><span class="annottext">errMsg :: String
-</span><a href="#local-6989586621688189599"><span class="hs-identifier hs-var hs-var">errMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-40"></span><span>      </span><span id="local-6989586621688192121"><span class="annot"><span class="annottext">errMsg :: String
+</span><a href="#local-6989586621688192121"><span class="hs-identifier hs-var hs-var">errMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Not a valid query tags format value. Use either standard or sqlcommenter&quot;</span></span><span>
 </span><span id="line-41"></span><span>
-</span><span id="line-42"></span><span id="local-6989586621688189597"><span id="local-6989586621688189598"></span></span><span class="hs-keyword">data</span><span> </span><span id="QueryTagsConfig"><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsConfig"><span class="hs-identifier hs-var">QueryTagsConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="QueryTagsConfig"><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsConfig"><span class="hs-identifier hs-var">QueryTagsConfig</span></a></span></span><span>
+</span><span id="line-42"></span><span id="local-6989586621688192119"><span id="local-6989586621688192120"></span></span><span class="hs-keyword">data</span><span> </span><span id="QueryTagsConfig"><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsConfig"><span class="hs-identifier hs-var">QueryTagsConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="QueryTagsConfig"><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsConfig"><span class="hs-identifier hs-var">QueryTagsConfig</span></a></span></span><span>
 </span><span id="line-43"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_qtcDisabled"><span class="annot"><span class="annottext">QueryTagsConfig -&gt; Bool
 </span><a href="Hasura.RQL.Types.QueryTags.html#_qtcDisabled"><span class="hs-identifier hs-var hs-var">_qtcDisabled</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
 </span><span id="line-44"></span><span>    </span><span id="_qtcFormat"><span class="annot"><span class="annottext">QueryTagsConfig -&gt; QueryTagsFormat
 </span><a href="Hasura.RQL.Types.QueryTags.html#_qtcFormat"><span class="hs-identifier hs-var hs-var">_qtcFormat</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsFormat"><span class="hs-identifier hs-type">QueryTagsFormat</span></a></span><span>
 </span><span id="line-45"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-46"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688189588"><span id="local-6989586621688189590"><span id="local-6989586621688189592"><span class="annot"><span class="annottext">Int -&gt; QueryTagsConfig -&gt; ShowS
+</span><span id="line-46"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688192110"><span id="local-6989586621688192112"><span id="local-6989586621688192114"><span class="annot"><span class="annottext">Int -&gt; QueryTagsConfig -&gt; ShowS
 [QueryTagsConfig] -&gt; ShowS
 QueryTagsConfig -&gt; String
 (Int -&gt; QueryTagsConfig -&gt; ShowS)
@@ -128,7 +128,7 @@ show :: QueryTagsConfig -&gt; String
 $cshow :: QueryTagsConfig -&gt; String
 showsPrec :: Int -&gt; QueryTagsConfig -&gt; ShowS
 $cshowsPrec :: Int -&gt; QueryTagsConfig -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688189584"><span id="local-6989586621688189586"><span class="annot"><span class="annottext">QueryTagsConfig -&gt; QueryTagsConfig -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688192106"><span id="local-6989586621688192108"><span class="annot"><span class="annottext">QueryTagsConfig -&gt; QueryTagsConfig -&gt; Bool
 (QueryTagsConfig -&gt; QueryTagsConfig -&gt; Bool)
 -&gt; (QueryTagsConfig -&gt; QueryTagsConfig -&gt; Bool)
 -&gt; Eq QueryTagsConfig
@@ -148,17 +148,17 @@ $cto :: forall x. Rep QueryTagsConfig x -&gt; QueryTagsConfig
 $cfrom :: forall x. QueryTagsConfig -&gt; Rep QueryTagsConfig x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-47"></span><span>
-</span><span id="line-48"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688189579"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsConfig"><span class="hs-identifier hs-type">QueryTagsConfig</span></a></span></span><span>
+</span><span id="line-48"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688192101"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsConfig"><span class="hs-identifier hs-type">QueryTagsConfig</span></a></span></span><span>
 </span><span id="line-49"></span><span>
-</span><span id="line-50"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688189575"><span id="local-6989586621688189577"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsConfig"><span class="hs-identifier hs-type">QueryTagsConfig</span></a></span></span></span><span>
+</span><span id="line-50"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688192097"><span id="local-6989586621688192099"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsConfig"><span class="hs-identifier hs-type">QueryTagsConfig</span></a></span></span></span><span>
 </span><span id="line-51"></span><span>
-</span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688189573"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsConfig"><span class="hs-identifier hs-type">QueryTagsConfig</span></a></span></span><span>
+</span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688192095"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsConfig"><span class="hs-identifier hs-type">QueryTagsConfig</span></a></span></span><span>
 </span><span id="line-53"></span><span>
-</span><span id="line-54"></span><span class="hs-special">$(</span><span id="local-6989586621688189565"><span id="local-6989586621688189567"><span id="local-6989586621688189569"><span id="local-6989586621688189571"><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">J.aesonDrop</span><span> </span><span class="hs-number">4</span><span> </span><span class="hs-identifier">J.snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">QueryTagsConfig</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span class="hs-special">$(</span><span id="local-6989586621688192087"><span id="local-6989586621688192089"><span id="local-6989586621688192091"><span id="local-6989586621688192093"><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">J.aesonDrop</span><span> </span><span class="hs-number">4</span><span> </span><span class="hs-identifier">J.snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">QueryTagsConfig</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-55"></span><span>
-</span><span id="line-56"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688189561"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsConfig"><span class="hs-identifier hs-type">QueryTagsConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-57"></span><span>  </span><span id="local-6989586621688189560"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser QueryTagsConfig
-</span><a href="#local-6989586621688189560"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-56"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688192083"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsConfig"><span class="hs-identifier hs-type">QueryTagsConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-57"></span><span>  </span><span id="local-6989586621688192082"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser QueryTagsConfig
+</span><a href="#local-6989586621688192082"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser QueryTagsConfig)
 -&gt; Value
 -&gt; Parser QueryTagsConfig
@@ -170,15 +170,15 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser QueryTagsConfig
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688189558"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688189558"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688192080"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688192080"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-58"></span><span>    </span><span class="annot"><span class="annottext">Bool -&gt; QueryTagsFormat -&gt; QueryTagsConfig
 </span><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsConfig"><span class="hs-identifier hs-var">QueryTagsConfig</span></a></span><span>
 </span><span id="line-59"></span><span>      </span><span class="annot"><span class="annottext">(Bool -&gt; QueryTagsFormat -&gt; QueryTagsConfig)
 -&gt; Parser Bool -&gt; Parser (QueryTagsFormat -&gt; QueryTagsConfig)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688189558"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe Bool)
+</span><a href="#local-6989586621688192080"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe Bool)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;disabled&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Bool) -&gt; Bool -&gt; Parser Bool
@@ -189,7 +189,7 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 -&gt; Parser QueryTagsFormat -&gt; Parser QueryTagsConfig
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688189558"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe QueryTagsFormat)
+</span><a href="#local-6989586621688192080"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe QueryTagsFormat)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;format&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe QueryTagsFormat)
