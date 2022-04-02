@@ -171,6 +171,7 @@ the right-hand side for now.
 - console: fix an issue where editing both a column's name and its GraphQL field name at the same time caused an error
 - console: fix redirect to metadata status page on inconsistent inherited role (#8343)
 - console: fix malformed request with REST live preview section (#8316)
+- console: fixed actions search to be case-insensitive
 - cli: add support for customization field in sources metadata (#8292)
 - cli: fix inherited roles metadata not being updated when dropping all roles (#7872)
 - ci: ubuntu and centos flavoured graphql-engine images are now available
