@@ -5,6 +5,7 @@
 module Harness.Exceptions
   ( catchRethrow,
     tryInOrder,
+    forFinally_,
     module GHC.Stack,
     module Control.Exception.Safe,
     Exceptions (..),
@@ -44,6 +45,14 @@ tryInOrder action1 action2 =
           action2
           (throwIO . Exceptions action1Ex)
     )
+
+-- | Like 'for_', but uses 'finally' instead of '*>' to make sure all actions run even when
+--   an exception occurs. Will throw the first error it runs into.
+forFinally_ :: [a] -> (a -> IO ()) -> IO ()
+forFinally_ list f =
+  case list of
+    [] -> pure ()
+    x : xs -> f x `finally` forFinally_ xs f
 
 -- | Two exceptions, bundled as one.
 data Exceptions
