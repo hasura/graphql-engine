@@ -46,11 +46,11 @@
 -- instantiations are exactly as powerful as their `Monad` equivalents. Otherwise
 -- they wouldn't be very equivalent, would they?
 --
--- Just like `liftEither` interprets the @`Either` e@ monad into an arbitrary monad
--- implementing @`MonadError` e@, we add `interpA` which interprets certain
--- concrete monads such as @`Control.Monad.Trans.Writer.CPS.Writer` w@ into arrows
--- satisfying constraints, in this example the ones satisfying @`ArrowWriter` w@.
--- This means that the part of the code that only uses such interpretable arrow
+-- Just like `liftEither` interprets the @`Either` e@ monad into an arbitrary
+-- monad implementing @`MonadError` e@, we add interpret certain concrete monads
+-- such as @`Control.Monad.Trans.Writer.CPS.Writer` w@ into arrows satisfying
+-- constraints, in this example the ones satisfying @`ArrowWriter` w@.  This
+-- means that the part of the code that only uses such interpretable arrow
 -- effects can be written /monadically/, and then used in /arrow/ constructions
 -- down the line.
 --
@@ -61,18 +61,15 @@
 -- @`Hasura.Incremental.ArrowCache` m@ in the context cannot be rewritten
 -- monadically using this technique.
 module Control.Arrow.Interpret
-  ( ArrowInterpret (..),
+  ( interpretWriter,
   )
 where
 
 import Control.Arrow
 import Control.Arrow.Extended
-import Control.Monad.Trans.Except
-import Control.Monad.Trans.Reader
-import Data.Functor.Identity
-import Hasura.Prelude
+import Control.Monad.Trans.Writer
 
--- | Translate the monadic effect stack of a computation into arrow-based
+-- | Translate a monadic writer effect stack of a computation into arrow-based
 -- effects.
 --
 -- NB: This is conceptually different from `ArrowKleisli`, which /inserts/ a
@@ -81,26 +78,8 @@ import Hasura.Prelude
 -- NB: This is conceptually different from `ArrowApply`, which expresses that a
 -- given `Arrow` /is/ a Kleisli arrow.  `ArrowInterpret` has no such condition
 -- on @arr@.
-class ArrowInterpret m arr where
-  interpA :: arr (m a) a
-
-instance Arrow arr => ArrowInterpret Identity arr where
-  interpA = arr runIdentity
-
-instance (ArrowInterpret m arr, ArrowWriter w arr) => ArrowInterpret (WriterT w m) arr where
-  interpA = proc m -> do
-    (a, w) <- interpA -< runWriterT m
-    tellA -< w
-    returnA -< a
-
-instance (ArrowInterpret m arr, ArrowReader r arr) => ArrowInterpret (ReaderT r m) arr where
-  interpA = proc m -> do
-    r <- askA -< ()
-    interpA -< runReaderT m r
-
-instance (ArrowInterpret m arr, ArrowError e arr, ArrowChoice arr) => ArrowInterpret (ExceptT e m) arr where
-  interpA = proc m -> do
-    o <- interpA -< runExceptT m
-    case o of
-      Left e -> throwA -< e
-      Right a -> returnA -< a
+interpretWriter :: ArrowWriter w arr => Writer w a `arr` a
+interpretWriter = proc m -> do
+  let (a, w) = runWriter m
+  tellA -< w
+  returnA -< a

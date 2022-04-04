@@ -280,7 +280,7 @@ buildInfoMap extractKey mkMetadataObject buildInfo = proc (e, infos) ->
     >-> (|
           Inc.keyed
             ( \_ duplicateInfos ->
-                (noDuplicates mkMetadataObject duplicateInfos >- interpA @(WriterT _ Identity))
+                (noDuplicates mkMetadataObject duplicateInfos >- interpretWriter)
                   >-> (| traverseA (\info -> (e, info) >- buildInfo) |)
                   >-> (\info -> join info >- returnA)
             )
