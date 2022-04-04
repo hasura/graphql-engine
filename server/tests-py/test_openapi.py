@@ -68,10 +68,10 @@ class TestOpenAPISpec:
 
         #create inconsistent metadata
         inconsistent_query = [collections.OrderedDict([
-            ('name', 'wrong_queries'), 
+            ('name', 'wrong_queries'),
             ('definition', collections.OrderedDict([
                 ('queries', [collections.OrderedDict([
-                    ('name', 'random_query'), 
+                    ('name', 'random_query'),
                     ('query', 'query { random_field_name test_table { random_col_name } }')
                 ])])
             ]))
@@ -86,7 +86,7 @@ class TestOpenAPISpec:
             ("url", "some_url"),
             ("methods", ["GET"]),
             ("name", "wrong_endpoint"),
-            ("comment", None) 
+            ("comment", None)
         ])]
         new_metadata["query_collections"] = inconsistent_query
         new_metadata["rest_endpoints"] = res_endpoint

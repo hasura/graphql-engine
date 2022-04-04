@@ -75,9 +75,9 @@
         name: temp_query
         query: query { temp_table { col1 col2 } }
       reason: "Inconsistent object: In query collection \"temp_collection\" the query\
-        \ \"temp_query\" is invalid with the following error(s): \"Couldn't find field temp_table\
-        \ in root field query_root\". This query is being used in the following REST endpoint(s):\
-        \ \"temp_rest_API\""
+      \ \"temp_query\" is invalid with the following error(s): \"$.temp_table: field\
+      \ 'temp_table' not found in object 'query_root'\". This query is being used\
+      \ in the following REST endpoint(s): \"temp_rest_API\""
       name: query_collections temp_query in temp_collection
       type: query_collections
     path: $.args
@@ -109,8 +109,8 @@
         name: temp_query
         query: query { temp_table { col1 col2 } }
       reason: "Inconsistent object: In query collection \"temp_collection\" the query\
-        \ \"temp_query\" is invalid with the following error(s): \"Couldn't find field\
-        \ temp_table in root field query_root\""
+      \ \"temp_query\" is invalid with the following error(s): \"$.temp_table: field\
+      \ 'temp_table' not found in object 'query_root'\""
       name: query_collections temp_query in temp_collection
       type: query_collections
     path: $.args

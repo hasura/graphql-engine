@@ -407,12 +407,7 @@ validateQuery ::
   (a -> [Text] -> Text) ->
   (a, G.ExecutableDefinition G.Name) ->
   Either (MetadataObject, Text) ()
-validateQuery rSchema getMetaObj formatError (eMeta, eDef) = do
-  let analysis = analyzeGraphqlQuery eDef rSchema
-  case analysis of
-    Nothing -> Left (getMetaObj eMeta, formatError eMeta ["Cannot analyse the GraphQL query"])
-    Just a ->
-      let allErrs = getAllAnalysisErrs a
-       in if (null allErrs)
-            then Right ()
-            else Left (getMetaObj eMeta, formatError eMeta allErrs)
+validateQuery rSchema getMetaObj formatError (eMeta, eDef) =
+  case diagnoseGraphQLQuery rSchema eDef of
+    Nothing -> Right ()
+    Just errors -> Left (getMetaObj eMeta, formatError eMeta errors)

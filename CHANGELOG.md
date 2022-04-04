@@ -4,6 +4,7 @@
 
 ### Bug fixes and improvements
 
+- server: refactor GQL query static analysis and improve OpenAPI warning messages
 - console: add support for setting aggregation query permissions for ms sql server
 - cli: fix remote schema metadata formatting issues (#7608)
 - cli: fix query collections metadata formatting issues (#7616)

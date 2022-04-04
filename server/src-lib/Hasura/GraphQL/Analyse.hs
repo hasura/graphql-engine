@@ -1,281 +1,363 @@
 {-# LANGUAGE TemplateHaskell #-}
 
+-- | Tools to analyze the structure of a GraphQL request.
 module Hasura.GraphQL.Analyse
-  ( Analysis (..),
-    FieldAnalysis (..),
-    FieldDef (..),
-    analyzeGraphqlQuery,
-    getAllAnalysisErrs,
+  ( -- * Query structure
+    Structure (..),
+    Selection (..),
+    FieldInfo (..),
+    VariableInfo (..),
+
+    -- * Analysis
+    diagnoseGraphQLQuery,
+    analyzeGraphQLQuery,
   )
 where
 
+import Control.Monad.Writer (Writer, runWriter)
 import Data.HashMap.Strict qualified as Map
-import Data.HashMap.Strict.InsOrd qualified as OMap
-import Hasura.Prelude hiding (get, put)
-import Language.GraphQL.Draft.Syntax (ExecutableDefinition, Field, GType, Name, TypeDefinition)
+import Data.Sequence ((|>))
+import Data.Text qualified as T
+import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
 
--- | Analysis and FieldAnalysis are almost similar, except, Analysis will have a bool field (in future)
---   to indicate whether the GQL query is valid or not
-data Analysis var = Analysis
-  { -- | ordered hashmap from the fields to it's definition and analysis
-    _aFields :: InsOrdHashMap FieldName (FieldDef, Maybe (FieldAnalysis var)),
-    -- | map of all the variables, their type and default value (if there is any)
-    _aVars :: HashMap VarName (GType, Maybe (G.Value Void)),
-    _aErrs :: [Text]
+-------------------------------------------------------------------------------
+-- GraphQL query structure
+
+-- | Overall structure of a given query.
+data Structure = Structure
+  { _stSelection :: Selection,
+    _stVariables :: HashMap G.Name VariableInfo
   }
-  deriving (Show)
 
-data FieldAnalysis var = FieldAnalysis
-  { _fFields :: InsOrdHashMap FieldName (FieldDef, Maybe (FieldAnalysis var)),
-    _fVars :: HashMap VarName (GType, Maybe (G.Value var)),
-    _fErrs :: [Text]
+instance Semigroup Structure where
+  Structure s1 v1 <> Structure s2 v2 = Structure (s1 <> s2) (v1 <> v2)
+
+instance Monoid Structure where
+  mempty = Structure mempty mempty
+
+-- | Represents a selection of fields within a query.
+data Selection = Selection
+  { _seFields :: HashMap G.Name FieldInfo
   }
-  deriving (Show)
 
-instance Monoid (FieldAnalysis v) where
-  mempty = FieldAnalysis mempty mempty []
-
-instance Semigroup (FieldAnalysis v) where
-  (<>) fa1 fa2 = FieldAnalysis unionFields (_fVars fa1 <> _fVars fa2) (_fErrs fa1 <> _fErrs fa2)
+-- | In case of field collisions, we want to keep the union of all their
+-- selections sets. For instance, given:
+--
+--  >  query MyQuery {
+--  >    test {
+--  >      a
+--  >      b
+--  >    }
+--  >    test {
+--  >      b
+--  >      c
+--  >    }
+--  >  }
+--
+-- We want to keep a Selection with all three @a@, @b@, and @c@.
+instance Semigroup Selection where
+  Selection s1 <> Selection s2 = Selection $ Map.unionWith combineFields s1 s2
     where
-      unionFields = foldl' (safeInsertInFieldMap) (_fFields fa1) (OMap.toList (_fFields fa2))
+      combineFields f1 f2 = f1 {_fiSelection = _fiSelection f1 <> _fiSelection f2}
 
-instance Monoid (Analysis v) where
-  mempty = Analysis mempty mempty []
+instance Monoid Selection where
+  mempty = Selection mempty
 
-instance Semigroup (Analysis v) where
-  (<>) fa1 fa2 = Analysis unionFields (_aVars fa1 <> _aVars fa2) (_aErrs fa1 <> _aErrs fa2)
-    where
-      unionFields = foldl' (safeInsertInFieldMap) (_aFields fa1) (OMap.toList (_aFields fa2))
+data FieldInfo = FieldInfo
+  { _fiType :: G.GType,
+    _fiTypeDefinition :: G.TypeDefinition [G.Name] G.InputValueDefinition,
+    _fiSelection :: Maybe Selection
+  }
 
--- | FieldDef is analogous to `GType` from the `Language.GraphQL.Draft.Syntax` module
-data FieldDef = FieldInfo G.Nullability (TypeDefinition [Name] G.InputValueDefinition) | FieldList G.Nullability FieldDef deriving (Show)
+-- | TODO: document this
+data VariableInfo = VariableInfo
+  { _viType :: G.GType,
+    _viDefaultValue :: Maybe (G.Value Void)
+  }
 
-type FieldName = Name
+-------------------------------------------------------------------------------
+-- Analysis
 
-type VarName = Name
-
-analyzeGraphqlQuery :: ExecutableDefinition Name -> G.SchemaIntrospection -> Maybe (Analysis Name)
-analyzeGraphqlQuery (G.ExecutableDefinitionOperation (G.OperationDefinitionTyped td)) sc = do
-  let t = (G._todType td,) <$> G._todSelectionSet td
-      varDefs = G._todVariableDefinitions td
-      varMapList = map (\v -> (G._vdName v, (G._vdType v, G._vdDefaultValue v))) varDefs
-      varMap = Map.fromList varMapList
-      (fieldMap, errs) = getFieldsMap sc t
-  pure Analysis {_aFields = fieldMap, _aVars = varMap, _aErrs = errs}
-analyzeGraphqlQuery _ _ = Nothing
-
-getAllAnalysisErrs :: Analysis Name -> [Text]
-getAllAnalysisErrs Analysis {..} = _aErrs <> getFieldErrs (OMap.toList _aFields) []
-  where
-    getFieldErrs :: [(G.Name, (FieldDef, Maybe (FieldAnalysis G.Name)))] -> [Text] -> [Text]
-    getFieldErrs [] lst = lst
-    getFieldErrs ((_, (_, Just FieldAnalysis {..})) : xs) lst = _fErrs <> (getFieldErrs (OMap.toList _fFields) []) <> (getFieldErrs xs lst)
-    getFieldErrs ((_, (_, Nothing)) : xs) lst = getFieldErrs xs lst
-
--- | inserts in field map, if there is already a key, then take a union of the fields inside
---   i.e. for the following graphql query:
---      query MyQuery {
---        test {
---          a
---          b
---        }
---        test {
---          b
---          c
---        }
---      }
---   The final field map of `test` will have a, b and c
-safeInsertInFieldMap ::
-  (Eq k, Hashable k, Semigroup a1) =>
-  InsOrdHashMap k (a2, Maybe a1) ->
-  (k, (a2, Maybe a1)) ->
-  InsOrdHashMap k (a2, Maybe a1)
-safeInsertInFieldMap m (k, v) =
-  OMap.insertWith (\(fdef, (f1)) (_, (f2)) -> (fdef, f1 <> f2)) k v m
-
-getFieldName :: Field frag var -> Name
-getFieldName f = fromMaybe (G._fName f) (G._fAlias f)
-
-getFieldsMap ::
+-- | Given the schema's definition, and a query, validate that the query is
+-- consistent. We do this by running the analysis, but discarding the result: we
+-- do not care about the structure, only about the validity of the query.
+--
+-- Returns 'Nothing' if the query is valid, or a list of messages otherwise.
+diagnoseGraphQLQuery ::
   G.SchemaIntrospection ->
-  [(G.OperationType, G.Selection frag var)] ->
-  (InsOrdHashMap FieldName (FieldDef, Maybe (FieldAnalysis var)), [Text])
-getFieldsMap rs ss =
-  foldl'
-    ( \(m, e) (o, f) -> case lookupRoot rs (o, f) of
-        Left x0 -> (safeInsertInFieldMap m (getFieldName f, x0), e)
-        Right txts -> (m, e <> txts)
+  G.ExecutableDefinition G.Name ->
+  Maybe [Text]
+diagnoseGraphQLQuery schema query =
+  let (_structure, errors) = analyzeGraphQLQuery schema query
+   in if null errors
+        then Nothing
+        else Just errors
+
+-- | Given the schema's definition, and a query, run the analysis.
+--
+-- We process all possible fields, and return a partially filled structure if
+-- necessary. Given the following query:
+--
+--   > query {
+--   >   foo {
+--   >     bar
+--   >   }
+--   >   does_not_exist {
+--   >     ghsdflgh
+--   >   }
+--   > }
+--
+-- We would return a structure containing:
+--
+--   > foo: {
+--   >   bar: {
+--   >   }
+--   > }
+--
+-- AND an error about "does_not_exist" not existing.
+analyzeGraphQLQuery ::
+  G.SchemaIntrospection ->
+  G.ExecutableDefinition G.Name ->
+  (Structure, [Text])
+analyzeGraphQLQuery schema query = runAnalysis schema $ case query of
+  G.ExecutableDefinitionFragment _ ->
+    throwDiagnosis TopLevelFragment
+  G.ExecutableDefinitionOperation operation -> case operation of
+    G.OperationDefinitionUnTyped _ ->
+      throwDiagnosis UntypedTopLevelOperation
+    G.OperationDefinitionTyped (G.TypedOperationDefinition {..}) -> do
+      -- traverse the fields recursively
+      selection <- withCatchAndRecord do
+        let rootTypeName = case _todType of
+              G.OperationTypeQuery -> queryRootName
+              G.OperationTypeMutation -> mutationRootName
+              G.OperationTypeSubscription -> subscriptionRootName
+        rootTypeDefinition <-
+          lookupType rootTypeName
+            `onNothingM` throwDiagnosis (TypeNotFound rootTypeName)
+        analyzeSelectionSet rootTypeDefinition _todSelectionSet
+          `onNothingM` throwDiagnosis NoTopLevelSelection
+      -- collect variables
+      let variables =
+            _todVariableDefinitions <&> \G.VariableDefinition {..} ->
+              (_vdName, VariableInfo _vdType _vdDefaultValue)
+      pure $
+        Structure
+          (fromMaybe mempty selection)
+          (Map.fromList variables)
+
+-- | Check the consistency between the schema information about a type and a
+-- selection set (or lack thereof) on that type.
+analyzeSelectionSet ::
+  G.TypeDefinition [G.Name] G.InputValueDefinition ->
+  G.SelectionSet G.FragmentSpread G.Name ->
+  Analysis (Maybe Selection)
+analyzeSelectionSet typeDef selectionSet = case typeDef of
+  G.TypeDefinitionInputObject iotd -> do
+    -- input objects aren't allowed in selection sets
+    throwDiagnosis $ InputObjectSelectionSet $ G._iotdName iotd
+  G.TypeDefinitionScalar std -> do
+    -- scalars do not admit a selection set
+    unless (null selectionSet) $
+      throwDiagnosis $ ScalarSelectionSet $ G._stdName std
+    pure Nothing
+  G.TypeDefinitionEnum etd -> do
+    -- enums do not admit a selection set
+    unless (null selectionSet) $
+      throwDiagnosis $ EnumSelectionSet $ G._etdName etd
+    pure Nothing
+  G.TypeDefinitionUnion _utd ->
+    -- TODO: implement unions
+    pure Nothing
+  G.TypeDefinitionInterface _itd ->
+    -- TODO: implement interfaces
+    pure Nothing
+  G.TypeDefinitionObject otd ->
+    Just <$> analyzeObjectSelectionSet otd selectionSet
+
+-- | Analyze the fields of an object selection set against its definition, and
+-- emit the corresponding 'Selection'. We ignore the fields that fail, and we
+-- continue accumulating the others.
+analyzeObjectSelectionSet ::
+  G.ObjectTypeDefinition G.InputValueDefinition ->
+  G.SelectionSet G.FragmentSpread G.Name ->
+  Analysis Selection
+analyzeObjectSelectionSet (G.ObjectTypeDefinition {..}) selectionSet = do
+  mconcat . catMaybes <$> for selectionSet \case
+    -- TODO: implement fragments
+    G.SelectionFragmentSpread _ ->
+      pure Nothing
+    G.SelectionInlineFragment _ ->
+      pure Nothing
+    G.SelectionField (G.Field {..}) ->
+      withField _fName $ withCatchAndRecord do
+        -- attempt to find that field in the object's definition
+        G.FieldDefinition {..} <-
+          findDefinition _fName
+            `onNothing` throwDiagnosis (ObjectFieldNotFound _otdName _fName)
+        -- attempt to find its type in the schema
+        let baseType = G.getBaseType _fldType
+        typeDefinition <-
+          lookupType baseType
+            `onNothingM` throwDiagnosis (TypeNotFound baseType)
+        -- recursively processthe selection set
+        subSelection <- analyzeSelectionSet typeDefinition _fSelectionSet
+        -- TODO: should we check arguments?
+        pure $
+          Selection $
+            Map.singleton
+              (fromMaybe _fName _fAlias)
+              (FieldInfo _fldType typeDefinition subSelection)
+  where
+    -- Additional hidden fields that are allowed despite not being listed in the
+    -- schema.
+    systemFields :: [G.FieldDefinition G.InputValueDefinition]
+    systemFields =
+      if _otdName `elem` [queryRootName, mutationRootName, subscriptionRootName]
+        then [typenameField, schemaField, typeField]
+        else [typenameField]
+
+    -- Search for that field in the schema's definition.
+    findDefinition :: G.Name -> Maybe (G.FieldDefinition G.InputValueDefinition)
+    findDefinition name =
+      find
+        (\fieldDef -> G._fldName fieldDef == name)
+        (_otdFieldsDefinition <> systemFields)
+
+-------------------------------------------------------------------------------
+-- Internal Analysis monad and helpers
+
+-- | The monad in which we run our analysis.
+--
+-- Has three capabilities:
+--   - reader carries the current path, and the full schema for lookups
+--   - writer logs all errors we have caught
+--   - except allows for short-circuiting errors
+newtype Analysis a
+  = Analysis
+      ( ExceptT
+          AnalysisError
+          ( ReaderT
+              (Path, G.SchemaIntrospection)
+              (Writer [AnalysisError])
+          )
+          a
+      )
+  deriving newtype
+    ( Functor,
+      Applicative,
+      Monad,
+      MonadReader (Path, G.SchemaIntrospection),
+      MonadWriter [AnalysisError],
+      MonadError AnalysisError
     )
-    (OMap.empty, [])
-    fields
+
+runAnalysis :: Monoid a => G.SchemaIntrospection -> Analysis a -> (a, [Text])
+runAnalysis schema (Analysis a) =
+  postProcess $
+    runWriter $
+      flip runReaderT (pure "$", schema) $
+        runExceptT a
   where
-    fields = mapMaybe (\(o, s) -> (o,) <$> field s) ss
+    -- if there was an uncaught error, add it to the list
+    postProcess = \case
+      (Left err, errors) ->
+        postProcess (Right mempty, errors ++ [err])
+      (Right result, errors) ->
+        (result, map render errors)
 
-getFieldsTypeM :: Name -> TypeDefinition possibleTypes inputType -> Maybe GType
-getFieldsTypeM fieldName operationDefinitionSum = do
-  operationDefinitionObject <- asObjectTypeDefinition operationDefinitionSum
-  fieldDefinition <- find ((== fieldName) . G._fldName) $ G._otdFieldsDefinition operationDefinitionObject
-  pure $ G._fldType fieldDefinition
+-- | Look up a type in the schema.
+lookupType :: G.Name -> Analysis (Maybe (G.TypeDefinition [G.Name] G.InputValueDefinition))
+lookupType name = do
+  G.SchemaIntrospection types <- asks snd
+  pure $ Map.lookup name types
 
-lookupRoot ::
-  G.SchemaIntrospection ->
-  (G.OperationType, G.Field frag var) ->
-  Either (FieldDef, Maybe (FieldAnalysis var)) [Text]
-lookupRoot rs (ot, f) = do
-  let rootFieldName = getRootFieldNameFromOpType ot
-      fieldName = G._fName f
-      fieldTypeM = do
-        operationDefinitionSum <- lookupRS rs rootFieldName
-        getFieldsTypeM fieldName operationDefinitionSum
+-- | Add the current field to the error path.
+withField :: G.Name -> Analysis a -> Analysis a
+withField name = local $ first (|> G.unName name)
 
-  case fieldTypeM of
-    Nothing ->
-      case isMetaField fieldName True of
-        Nothing -> Right $ ["Couldn't find field " <> G.unName fieldName <> " in root field " <> G.unName rootFieldName]
-        Just fld -> lookupDefinition rs fld f
-    Just fieldType -> lookupDefinition rs fieldType f
+-- | Throws an 'AnalysisError' by combining the given diagnosis with the current
+-- path. This interrupts the computation in the given branch, and must be caught
+-- for the analysis to resume.
+throwDiagnosis :: Diagnosis -> Analysis a
+throwDiagnosis d = do
+  currentPath <- asks fst
+  throwError $ AnalysisError currentPath d
 
-isMetaField :: Name -> Bool -> Maybe GType
-isMetaField nam isRoot = do
-  n <- fieldTypeMetaFields $ nam
-  case G.unName nam of
-    "__schema" -> if isRoot then Just $ mkGType n else Nothing
-    "__type" -> if isRoot then Just $ mkGType n else Nothing
-    "__typename" -> Just $ mkGType n
-    _ -> Nothing
-  where
-    mkGType :: Name -> GType
-    mkGType fName =
-      G.TypeNamed
-        (G.Nullability {unNullability = False})
-        fName
+-- | Runs the given computation. if it fails, cacthes the error, records it in
+-- the monad, and return 'Nothing'. This allows for a clean recovery.
+withCatchAndRecord :: Analysis a -> Analysis (Maybe a)
+withCatchAndRecord action =
+  fmap Just action `catchError` \e -> do
+    tell [e]
+    pure Nothing
 
-fieldTypeMetaFields :: Name -> Maybe Name
-fieldTypeMetaFields nam
-  | (Just nam) == G.mkName "__schema" = G.mkName "__Schema"
-  | (Just nam) == G.mkName "__type" = G.mkName "__Type"
-  | (Just nam) == G.mkName "__typename" = G.mkName "String"
-  | otherwise = Nothing
+-------------------------------------------------------------------------------
+-- Analysis errors
 
-lookupDefinition ::
-  G.SchemaIntrospection ->
-  GType ->
-  G.Field frag var ->
-  Either (FieldDef, Maybe (FieldAnalysis var)) [Text]
-lookupDefinition rs t f = do
-  typeToSchemaM t \n ->
-    case lookupRS rs n of
-      Nothing -> Right ["Cannot find type definition for " <> G.unName n <> " in field " <> G.unName (G._fName f)]
-      Just tDef -> Left $ getDefinition rs tDef (G._fSelectionSet f)
+data AnalysisError = AnalysisError
+  { _aePath :: Path,
+    _aeDiagnosis :: Diagnosis
+  }
 
-field :: G.Selection frag var -> Maybe (G.Field frag var)
-field (G.SelectionField f) = Just f
-field _ = Nothing
+type Path = Seq Text
 
-infixl 7 &&&&
+data Diagnosis
+  = TopLevelFragment
+  | UntypedTopLevelOperation
+  | NoTopLevelSelection
+  | TypeNotFound G.Name
+  | EnumSelectionSet G.Name
+  | ScalarSelectionSet G.Name
+  | InputObjectSelectionSet G.Name
+  | ObjectFieldNotFound G.Name G.Name
 
-(&&&&) :: Applicative f => (t -> f a1) -> (t -> f a2) -> t -> f (a1, a2)
-f &&&& g = \a -> (,) <$> f a <*> g a
+render :: AnalysisError -> Text
+render (AnalysisError path diagnosis) =
+  T.intercalate "." (toList path) <> ": " <> case diagnosis of
+    TopLevelFragment ->
+      "found a fragment operation at the top level"
+    UntypedTopLevelOperation ->
+      "found an untyped operation at the top level"
+    NoTopLevelSelection ->
+      "did not find a valid selection set at the top level"
+    TypeNotFound name ->
+      "type '" <> G.unName name <> "' not found in the schema"
+    EnumSelectionSet name ->
+      "enum '" <> G.unName name <> "' does not accept a selection set"
+    ScalarSelectionSet name ->
+      "scalar '" <> G.unName name <> "' does not accept a selection set"
+    InputObjectSelectionSet name ->
+      "input object '" <> G.unName name <> "' cannot be used for output"
+    ObjectFieldNotFound objName fieldName ->
+      "field '" <> G.unName fieldName <> "' not found in object '" <> G.unName objName <> "'"
 
-getRootFieldNameFromOpType :: G.OperationType -> G.Name
-getRootFieldNameFromOpType G.OperationTypeQuery = $$(G.litName "query_root")
-getRootFieldNameFromOpType G.OperationTypeMutation = $$(G.litName "mutation_root")
-getRootFieldNameFromOpType G.OperationTypeSubscription = $$(G.litName "subscription_root")
+-------------------------------------------------------------------------------
+-- GraphQL internals
 
-asObjectTypeDefinition :: G.TypeDefinition possibleTypes inputType -> Maybe (G.ObjectTypeDefinition inputType)
-asObjectTypeDefinition (G.TypeDefinitionObject o) = Just o
-asObjectTypeDefinition _ = Nothing
+-- Special type names
 
-lookupRS :: G.SchemaIntrospection -> G.Name -> Maybe (TypeDefinition [Name] G.InputValueDefinition)
-lookupRS (G.SchemaIntrospection rsDefs) n = Map.lookup n rsDefs
+queryRootName :: G.Name
+queryRootName = $$(G.litName "query_root")
 
-typeToSchemaM ::
-  GType ->
-  (Name -> Either (TypeDefinition [Name] G.InputValueDefinition, Maybe (FieldAnalysis var)) [Text]) ->
-  Either (FieldDef, Maybe (FieldAnalysis var)) [Text]
-typeToSchemaM (G.TypeNamed n tName) k = case k tName of
-  Right x -> Right x
-  Left (t, x) -> Left (FieldInfo n t, x)
-typeToSchemaM (G.TypeList n t) k = case typeToSchemaM t k of
-  Right x -> Right x
-  Left (t', x) -> Left (FieldList n t', x)
+mutationRootName :: G.Name
+mutationRootName = $$(G.litName "mutation_root")
 
-getDefinition ::
-  G.SchemaIntrospection ->
-  TypeDefinition [Name] G.InputValueDefinition ->
-  G.SelectionSet frag var ->
-  (TypeDefinition [Name] G.InputValueDefinition, Maybe (FieldAnalysis var))
-getDefinition rs td sels =
-  (td,) $ case td of
-    (G.TypeDefinitionObject otd) -> do
-      ps <-
-        for
-          sels
-          \sel -> case (lookupFieldBySelection sel otd) of
-            Left txts -> pure $ FieldAnalysis mempty mempty txts
-            Right fd -> (mkFieldAnalysis rs sel fd)
-      pure $ fold ps
-    _ -> Nothing
+subscriptionRootName :: G.Name
+subscriptionRootName = $$(G.litName "subscription_root")
 
-itrListWith :: GType -> (Name -> p) -> p
-itrListWith (G.TypeNamed _ tName) k = k tName
-itrListWith (G.TypeList _ t) k = itrListWith t k
+-- Reserved fields
 
-getFieldVars :: G.FieldDefinition G.InputValueDefinition -> HashMap Name (G.Value var) -> [(VarName, (GType, Maybe (G.Value var)))]
-getFieldVars fDef' agMap =
-  map
-    ( \G.InputValueDefinition {..} ->
-        (_ivdName, (_ivdType, Map.lookup _ivdName agMap))
-    )
-    (G._fldArgumentsDefinition fDef')
+typenameField :: G.FieldDefinition G.InputValueDefinition
+typenameField = mkReservedField $$(G.litName "__typename") $$(G.litName "String")
 
-mkFieldAnalysis ::
-  G.SchemaIntrospection ->
-  G.Selection frag var ->
-  G.FieldDefinition G.InputValueDefinition ->
-  Maybe (FieldAnalysis var)
--- TODO: Handle `SelectionFragmentSpread` and `SelectionInlineFragment` as well
-mkFieldAnalysis _ (G.SelectionFragmentSpread _) _ = Nothing
-mkFieldAnalysis _ (G.SelectionInlineFragment _) _ = Nothing
-mkFieldAnalysis rs (G.SelectionField f) fd = do
-  let ag = G._fArguments f
-      ft = G._fldType fd
-      fn = getFieldName f
-      (fFds, fVrs, fErrs) = itrListWith ft \n ->
-        case lookupRS rs n of
-          Nothing -> (mempty, mempty, ["Couldn't find definition for type " <> G.unName n <> " in field " <> G.unName fn <> " selected by " <> G.unName (G._fName f)])
-          Just tDef ->
-            let (def, fAn) = getDefinition rs tDef (G._fSelectionSet f)
-             in case ft of
-                  G.TypeNamed n' _ ->
-                    (OMap.singleton fn (FieldInfo n' def, fAn), Map.fromList (getFieldVars fd ag), [])
-                  G.TypeList n' _ ->
-                    (OMap.singleton fn (FieldList n' $ FieldInfo n' def, fAn), Map.fromList (getFieldVars fd ag), [])
+schemaField :: G.FieldDefinition G.InputValueDefinition
+schemaField = mkReservedField $$(G.litName "__schema") $$(G.litName "__Schema")
 
-  pure
-    FieldAnalysis
-      { _fFields = fFds,
-        _fVars = fVrs,
-        _fErrs = fErrs
-      }
+typeField :: G.FieldDefinition G.InputValueDefinition
+typeField = mkReservedField $$(G.litName "__type") $$(G.litName "__Type")
 
-lookupFieldBySelection :: G.Selection frag0 var0 -> G.ObjectTypeDefinition G.InputValueDefinition -> Either [Text] (G.FieldDefinition G.InputValueDefinition)
-lookupFieldBySelection (G.SelectionField f) otd = case find (\d -> G._fName f == G._fldName d) lst of
-  Nothing -> case isMetaField (G._fName f) False of
-    Nothing -> Left ["Couldn't find definition for field " <> G.unName (getFieldName f) <> " in " <> G.unName (G._otdName otd)]
-    Just gt -> Right $ mkFieldDef (G._fName f) gt
-  Just fd -> Right fd
-  where
-    lst = G._otdFieldsDefinition otd
-    mkFieldDef :: G.Name -> GType -> G.FieldDefinition G.InputValueDefinition
-    mkFieldDef gName gt =
-      G.FieldDefinition
-        { _fldDescription = Nothing,
-          _fldName = gName,
-          _fldArgumentsDefinition = [],
-          _fldType = gt,
-          _fldDirectives = []
-        }
-lookupFieldBySelection _ _ = Left []
+mkReservedField :: G.Name -> G.Name -> G.FieldDefinition G.InputValueDefinition
+mkReservedField fieldName typeName =
+  G.FieldDefinition Nothing fieldName [] (G.TypeNamed (G.Nullability False) typeName) []
