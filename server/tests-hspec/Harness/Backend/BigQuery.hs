@@ -24,9 +24,9 @@ import Data.String
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated)
-import GHC.Stack
 import Harness.Constants as Constants
 import Harness.Env
+import Harness.Exceptions (HasCallStack, forFinally_)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.State (State)
@@ -219,9 +219,9 @@ args:
 teardown :: [Schema.Table] -> (State, ()) -> IO ()
 teardown (reverse -> tables) (state, _) = do
   -- Teardown relationships first
-  for_ tables $ \table ->
+  forFinally_ tables $ \table ->
     Schema.untrackRelationships BigQuery table state
   -- Then teardown tables
-  for_ tables $ \table -> do
+  forFinally_ tables $ \table -> do
     untrackTable state table
     dropTable table

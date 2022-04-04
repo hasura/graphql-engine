@@ -235,7 +235,7 @@ setup tables (state, _) = do
 -- NOTE: Certain test modules may warrant having their own version.
 teardown :: [Schema.Table] -> (State, ()) -> IO ()
 teardown tables (state, _) = do
-  for_ (reverse tables) $ \table ->
+  forFinally_ (reverse tables) $ \table ->
     finally
       (Schema.untrackRelationships Postgres table state)
       ( finally

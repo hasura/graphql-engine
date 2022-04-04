@@ -19,7 +19,6 @@ module Harness.Backend.Mysql
 where
 
 import Control.Concurrent
-import Control.Exception
 import Control.Monad.Reader
 import Data.Aeson (Value)
 import Data.Bool (bool)
@@ -29,8 +28,8 @@ import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated)
 import Database.MySQL.Simple as Mysql
-import GHC.Stack
 import Harness.Constants as Constants
+import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.State (State)
@@ -221,7 +220,7 @@ setup tables (state, _) = do
 -- NOTE: Certain test modules may warrant having their own version.
 teardown :: [Schema.Table] -> (State, ()) -> IO ()
 teardown tables (state, _) = do
-  for_ (reverse tables) $ \table ->
+  forFinally_ (reverse tables) $ \table ->
     finally
       (Schema.untrackRelationships MySQL table state)
       ( finally
