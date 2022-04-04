@@ -105,6 +105,7 @@ export const RemoteSchemaToDbForm = ({
                 type="submit"
                 isLoading={mutation.isLoading}
                 loadingText="Creating relationship"
+                data-test="add-rs-relationship"
               >
                 Add Relationship
               </Button>

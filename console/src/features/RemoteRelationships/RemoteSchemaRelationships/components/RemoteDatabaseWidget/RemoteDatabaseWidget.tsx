@@ -65,6 +65,7 @@ export const RemoteDatabaseWidget = () => {
           name="database"
           placeholder="Select a database"
           options={sourceOptions}
+          dataTest="select-ref-db"
           labelIcon={<FaDatabase />}
         />
       </div>
@@ -74,6 +75,7 @@ export const RemoteDatabaseWidget = () => {
           name="schema"
           placeholder="Select a schema"
           options={schemaOptions}
+          dataTest="select-ref-schema"
           labelIcon={<FaFolder />}
         />
       </div>
@@ -83,6 +85,7 @@ export const RemoteDatabaseWidget = () => {
           name="table"
           placeholder="Select a table"
           options={tableOptions}
+          dataTest="select-ref-table"
           labelIcon={<FaTable />}
         />
       </div>

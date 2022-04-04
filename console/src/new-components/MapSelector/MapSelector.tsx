@@ -21,16 +21,19 @@ const SelectOne = ({
   options,
   value,
   placeholder,
+  dataTest,
   onChange,
 }: {
   options: MapSelectorProps['types'];
   value: string;
   placeholder: string;
+  dataTest?: string;
   onChange: (e: any) => void;
 }) => (
   <select
     value={value}
     onChange={onChange}
+    data-test={dataTest}
     className="block w-full h-input font-normal shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
   >
     <option disabled value="">
@@ -112,6 +115,7 @@ export const MapSelector = ({
                 value={field}
                 placeholder="Select a field..."
                 key={i}
+                dataTest="select-source-field"
                 onChange={e => {
                   onModifyItem(i, {
                     field: e.target.value,
@@ -129,6 +133,7 @@ export const MapSelector = ({
                 options={columns}
                 value={column}
                 placeholder="Select a column..."
+                dataTest="select-ref-col"
                 key={i}
                 onChange={e => {
                   onModifyItem(i, {
@@ -154,6 +159,7 @@ export const MapSelector = ({
               t => !existingMaps.map(x => x.field).includes(t)
             )}
             value={newMap.field}
+            dataTest="select-source-field"
             placeholder="Select a field..."
             onChange={e => {
               setNewMap({ ...newMap, field: e.target.value });

@@ -2,6 +2,7 @@ import { CardedTable } from '@/new-components/CardedTable';
 import React, { ReactNode } from 'react';
 import { FaArrowRight } from 'react-icons/fa';
 import { rsToDbRelDef, rsToRsRelDef } from '@/metadata/types';
+import { IndicatorCard } from '@/new-components/IndicatorCard';
 import ModifyActions from './components/ModifyActions';
 import NameColumnCell from './components/NameColumnCell';
 import RelationshipDestinationCell from './components/RelationshipDestinationCell';
@@ -79,7 +80,13 @@ export const RemoteSchemaRelationshipTable = ({
         data-test="remote-schema-relationships-table"
       />
     );
-  return <div>No remote schema relationships found!</div>;
+  return (
+    <div className="py-1.5">
+      <IndicatorCard status="info">
+        No remote schema relationships found!
+      </IndicatorCard>
+    </div>
+  );
 };
 
 export default RemoteSchemaRelationshipTable;
