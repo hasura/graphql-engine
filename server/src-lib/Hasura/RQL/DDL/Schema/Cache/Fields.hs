@@ -76,7 +76,7 @@ addNonColumnFields =
         (_cfmName . (^. _4))
         (\(s, _, t, c) -> mkComputedFieldMetadataObject (s, t, c))
         ( proc (a, (b, c, d, e)) -> do
-            o <- interpA @(WriterT _ Identity) -< buildComputedField a b c d e
+            o <- interpretWriter -< buildComputedField a b c d e
             arrM liftEither -< o
         )
         -<
@@ -114,7 +114,7 @@ addNonColumnFields =
         (_rrName . (^. _3))
         (mkRemoteRelationshipMetadataObject @b)
         ( proc ((a, b, c), d) -> do
-            o <- interpA @(WriterT _ Identity) -< buildRemoteRelationship a b c d
+            o <- interpretWriter -< buildRemoteRelationship a b c d
             arrM liftEither -< o
         )
         -<
@@ -217,7 +217,7 @@ buildObjectRelationship ::
     `arr` Maybe (RelInfo b)
 buildObjectRelationship = proc (fkeysMap, (source, table, relDef)) -> do
   let buildRelInfo def = objRelP2Setup source table fkeysMap def
-  interpA -< buildRelationship @(WriterT _ Identity) source table buildRelInfo ObjRel relDef
+  interpretWriter -< buildRelationship source table buildRelInfo ObjRel relDef
 
 buildArrayRelationship ::
   ( ArrowChoice arr,
@@ -233,7 +233,7 @@ buildArrayRelationship ::
     `arr` Maybe (RelInfo b)
 buildArrayRelationship = proc (fkeysMap, (source, table, relDef)) -> do
   let buildRelInfo def = arrRelP2Setup fkeysMap source table def
-  interpA -< buildRelationship @(WriterT _ Identity) source table buildRelInfo ArrRel relDef
+  interpretWriter -< buildRelationship source table buildRelInfo ArrRel relDef
 
 buildRelationship ::
   forall m b a.
