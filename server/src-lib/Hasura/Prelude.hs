@@ -6,6 +6,7 @@ module Hasura.Prelude
     alphabet,
     alphaNumerics,
     onNothing,
+    onNothingM,
     onJust,
     withJust,
     onLeft,
@@ -151,6 +152,9 @@ alphaNumerics = alphabet ++ "0123456789"
 
 onNothing :: Applicative m => Maybe a -> m a -> m a
 onNothing m act = maybe act pure m
+
+onNothingM :: Monad m => m (Maybe a) -> m a -> m a
+onNothingM m act = m >>= (`onNothing` act)
 
 onJust :: Applicative m => Maybe a -> (a -> m ()) -> m ()
 onJust m action = maybe (pure ()) action m

@@ -1,3 +1,7 @@
+{-# LANGUAGE ViewPatterns #-}
+-- This prevents hlint errors on the "pattern" lens.
+{-# LANGUAGE NoPatternSynonyms #-}
+
 -- |
 -- Module      : Hasura.Server.OpenAPI
 -- Description : Builds an OpenAPI specification for the REST endpoints from a SchemaCache via the `declareOpenApiSpec` function.
@@ -30,7 +34,7 @@ import Hasura.GraphQL.Analyse
 import Hasura.Prelude hiding (get, put)
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.QueryCollection
-import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCache hiding (FieldInfo)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Media.MediaType ((//))
 
@@ -126,98 +130,103 @@ Example stepthrough initiated by call to getSelectionSchema:
 mdDefinitions :: EndpointMetadata GQLQueryWithText -> [G.ExecutableDefinition G.Name]
 mdDefinitions = G.getExecutableDefinitions . unGQLQuery . getGQLQuery . _edQuery . _ceDefinition
 
-mkResponse :: EndpointMethod -> String -> G.SchemaIntrospection -> Analysis G.Name -> Declare (Definitions Schema) (Maybe Response)
-mkResponse epMethod epUrl rs Analysis {..} = do
-  fs <- getSelectionSchema rs (OMap.toList _aFields)
+mkResponse ::
+  Structure ->
+  EndpointMethod ->
+  String ->
+  Declare (Definitions Schema) (Maybe Response)
+mkResponse (Structure (Selection fields) _) epMethod epUrl = do
+  fs <- getSelectionSchema (Map.toList fields)
   pure $
     Just $
       mempty
         & content .~ OMap.singleton ("application" // "json") (mempty & schema ?~ Inline fs)
         & description .~ "Responses for " <> tshow epMethod <> " " <> T.pack epUrl
 
-getSelectionSchema :: G.SchemaIntrospection -> [(G.Name, (FieldDef, Maybe (FieldAnalysis var)))] -> Declare (Definitions Schema) Schema
-getSelectionSchema rs fields = do
-  ps <- traverse (pure . G.unName . fst &&&& (\(fN, (td, fA)) -> getDefinitionSchema rs fN td fA {- (\(fN,(td,fA)) -> pure $ (G.unName fN,) $ getDefinitionSchema rs td fA) -})) fields
-  pure $ mempty & properties .~ OMap.fromList (map (second Inline) ps)
-
--- | A helper function to set the pattern field in Schema
---   Why not lens `pattern`? hlint doesn't like the name `pattern`
---   https://github.com/ndmitchell/hlint/issues/607
-setPattern :: Maybe Pattern -> Schema -> Schema
-setPattern p s = s {_schemaPattern = p}
+getSelectionSchema ::
+  [(G.Name, FieldInfo)] ->
+  Declare (Definitions Schema) Schema
+getSelectionSchema fields = do
+  props <- for fields \(fieldName, fieldInfo) -> do
+    fieldSchema <- getDefinitionSchema fieldName fieldInfo
+    pure (G.unName fieldName, fieldSchema)
+  pure $ mempty & properties .~ fmap Inline (OMap.fromList props)
 
 getDefinitionSchema ::
-  G.SchemaIntrospection ->
   G.Name ->
-  FieldDef ->
-  Maybe (FieldAnalysis var) ->
+  FieldInfo ->
   Declare (Definitions Schema) Schema
-getDefinitionSchema rs tn fd fA =
-  typeToSchemaM
-    fd
-    ( \case
-        (G.TypeDefinitionInterface _) -> pure $ mempty & description ?~ "Unsupported field type TypeDefinitionInterface: " <> G.unName tn
-        (G.TypeDefinitionUnion _) -> pure $ mempty & description ?~ "Unsupported field type TypeDefinitionUnion: " <> G.unName tn
-        (G.TypeDefinitionEnum _) -> pure $ mempty & description ?~ "Unsupported field type TypeDefinitionEnum: " <> G.unName tn
-        (G.TypeDefinitionInputObject _) -> pure $ mempty & description ?~ "Unsupported field type TypeDefinitionInputObject: " <> G.unName tn
-        (G.TypeDefinitionObject _) ->
-          case fA of
-            Nothing -> pure $ mempty & description ?~ "Field analysis not found"
-            Just FieldAnalysis {..} -> do
-              ps <- traverse (pure . G.unName . fst &&&& (\(fN, (td', fA')) -> getDefinitionSchema rs fN td' fA')) (OMap.toList _fFields)
-              pure $
-                mempty
-                  & properties .~ OMap.fromList (map (second Inline) ps)
-                  & type_ ?~ OpenApiObject
-        (G.TypeDefinitionScalar std) -> do
-          let (refType, patt) = referenceType True (T.toLower $ G.unName $ G._stdName std)
+getDefinitionSchema fieldName (FieldInfo {..}) =
+  _fiType & go \typeName -> case _fiTypeDefinition of
+    G.TypeDefinitionInterface _ ->
+      pure $
+        mempty & description
+          ?~ "Unsupported type interface " <> G.unName typeName <> " for field " <> G.unName fieldName
+    G.TypeDefinitionUnion _ ->
+      pure $
+        mempty & description
+          ?~ "Unsupported type union: " <> G.unName typeName <> " for field " <> G.unName fieldName
+    G.TypeDefinitionEnum _ ->
+      pure $
+        mempty & description
+          ?~ "Unsupported type enum: " <> G.unName typeName <> " for field " <> G.unName fieldName
+    G.TypeDefinitionInputObject _ ->
+      pure $
+        mempty & description
+          ?~ "Internal error! Input type " <> G.unName typeName <> " in output selection set for field " <> G.unName fieldName
+    G.TypeDefinitionObject _ ->
+      case _fiSelection of
+        Nothing -> pure $ mempty & description ?~ "Missing selection for object type: " <> G.unName typeName
+        Just (Selection fields) -> do
+          objectSchema <- getSelectionSchema $ Map.toList fields
           pure $
-            mempty
-              & title ?~ G.unName (G._stdName std)
-              & description .~ (G.unDescription <$> G._stdDescription std)
-              & type_ .~ refType
-              & setPattern patt
-    )
-
-typeToSchemaM :: Monad m => FieldDef -> (G.TypeDefinition [G.Name] G.InputValueDefinition -> m Schema) -> m Schema
-typeToSchemaM (FieldInfo _nullability tName) k = k tName
-typeToSchemaM (FieldList n t) k = do
-  t' <- typeToSchemaM t k
-  pure $
-    mempty
-      & nullable ?~ G.unNullability n
-      & type_ ?~ OpenApiArray
-      & items ?~ OpenApiItemsObject (Inline t') -- TODO: Why do we assume objects here?
-
-infixl 7 &&&&
-
-(&&&&) :: Applicative f => (t -> f a1) -> (t -> f a2) -> t -> f (a1, a2)
-f &&&& g = \a -> (,) <$> f a <*> g a
+            objectSchema
+              & type_ ?~ OpenApiObject
+    G.TypeDefinitionScalar std -> do
+      let (refType, typePattern) = referenceType True (T.toLower $ G.unName typeName)
+      pure $
+        mempty
+          & title ?~ G.unName typeName
+          & description .~ (G.unDescription <$> G._stdDescription std)
+          & type_ .~ refType
+          & pattern .~ typePattern
+  where
+    go :: (G.Name -> Declare (Definitions Schema) Schema) -> G.GType -> Declare (Definitions Schema) Schema
+    go fun = \case
+      -- TODO: why do we ignore the nullability for the leaf?
+      G.TypeNamed _nullability typeName -> fun typeName
+      G.TypeList (G.Nullability isNullable) innerType -> do
+        result <- go fun innerType
+        pure $
+          mempty
+            & nullable ?~ isNullable
+            & type_ ?~ OpenApiArray
+            & items ?~ OpenApiItemsObject (Inline result) -- TODO: Why do we assume objects here?
 
 -- * URL / Query Params and Request Body Functions
 
 -- There could be an additional partitioning scheme besides referentiality to support more types in Params
-getParams :: Analysis G.Name -> EndpointUrl -> [Referenced Param]
-getParams Analysis {..} eURL = varDetails =<< Map.toList _aVars
+getParams :: Structure -> EndpointUrl -> [Referenced Param]
+getParams (Structure _fields vars) eURL = do
+  (G.unName -> varName, varInfo) <- Map.toList vars
+  -- Complex types are not allowed as params
+  case getType $ _viType varInfo of
+    Left _ -> []
+    Right (refType, typePattern) -> do
+      let isRequired = not $ G.isNullable $ _viType varInfo
+      pure $
+        Inline $
+          mkParam
+            varName
+            (if isRequired then Just $ "_\"" <> varName <> "\" is required (enter it either in parameters or request body)_" else Nothing)
+            Nothing
+            (if varName `elem` pathVars then ParamPath else ParamQuery)
+            Nothing
+            (gqlToJsonValue <$> _viDefaultValue varInfo)
+            (Just refType)
+            typePattern
   where
     pathVars = map T.tail $ concat $ splitPath pure (const []) eURL -- NOTE: URL Variable name ':' prefix is removed for `elem` lookup.
-    varDetails (_vdName, (_vdType, _vdDefaultValue)) =
-      let vName = G.unName _vdName
-          isRequired = not $ G.isNullable _vdType
-       in case getType _vdType of
-            Left _foo -> [] -- Complex types are not allowed as params
-            Right (vdType, patt) ->
-              pure $
-                Inline $
-                  mkParam
-                    vName
-                    (if isRequired then Just $ "_\"" <> vName <> "\" is required (enter it either in parameters or request body)_" else Nothing)
-                    Nothing
-                    (if vName `elem` pathVars then ParamPath else ParamQuery)
-                    Nothing
-                    (gqlToJsonValue <$> _vdDefaultValue)
-                    (Just vdType)
-                    patt
 
 getType :: G.GType -> Either G.GType (OpenApiType, Maybe Pattern)
 getType gt@(G.TypeNamed _ na) = case referenceType True t of
@@ -227,87 +236,91 @@ getType gt@(G.TypeNamed _ na) = case referenceType True t of
     t = T.toLower $ G.unName na
 getType t = Left t -- Non scalar types are deferred to reference types for processing using introspection
 
-mkProperties :: G.SchemaIntrospection -> Analysis G.Name -> Declare (Definitions Schema) (InsOrdHashMap Text (Referenced Schema))
-mkProperties (G.SchemaIntrospection sd) Analysis {..} = OMap.fromList <$> traverse (mkProperty sdMap) ds
-  where
-    ds = Map.toList _aVars
-    sdMap = OMap.fromList $ map (first G.unName) $ Map.toList sd
+mkProperties ::
+  G.SchemaIntrospection ->
+  Structure ->
+  Declare (Definitions Schema) (InsOrdHashMap Text (Referenced Schema))
+mkProperties schemaTypes Structure {..} =
+  OMap.fromList
+    <$> for (Map.toList _stVariables) \(varName, varInfo) -> do
+      property <- mkProperty schemaTypes varInfo
+      pure (G.unName varName, property)
 
-mkProperty :: InsOrdHashMap Text (G.TypeDefinition [G.Name] G.InputValueDefinition) -> (G.Name, (G.GType, Maybe (G.Value Void))) -> Declare (Definitions Schema) (Text, Referenced Schema)
-mkProperty sd (_vdName, (_vdType, _vdDefaultValue)) = do
-  d <- case getType _vdType of
-    Left t -> handleRefType sd t
-    Right (vdType, patt) ->
+mkProperty ::
+  G.SchemaIntrospection ->
+  VariableInfo ->
+  Declare (Definitions Schema) (Referenced Schema)
+mkProperty schemaTypes VariableInfo {..} =
+  case getType _viType of
+    Left t -> handleRefType schemaTypes t
+    Right (refType, typePattern) ->
       pure $
         Inline $
           mempty
-            & nullable ?~ G.isNullable _vdType
-            & type_ ?~ vdType
-            & default_ .~ fmap gqlToJsonValue _vdDefaultValue
-            & setPattern patt
+            & nullable ?~ G.isNullable _viType
+            & type_ ?~ refType
+            & default_ .~ fmap gqlToJsonValue _viDefaultValue
+            & pattern .~ typePattern
 
-  pure (G.unName _vdName, d)
-
-handleRefType :: OMap.InsOrdHashMap Text (G.TypeDefinition a G.InputValueDefinition) -> G.GType -> Declare (Definitions Schema) (Referenced Schema)
-handleRefType sd = \case
-  G.TypeNamed nullability nameWrapper -> do
-    let n = G.unName nameWrapper
-    declareReference nullability n sd
-    pure $ Ref $ Reference n
+handleRefType ::
+  G.SchemaIntrospection ->
+  G.GType ->
+  Declare (Definitions Schema) (Referenced Schema)
+handleRefType schemaTypes = \case
+  G.TypeNamed nullability varName -> do
+    declareReference schemaTypes nullability varName
+    pure $ Ref $ Reference $ G.unName varName
   G.TypeList nullability subType -> do
-    st <- handleRefType sd subType
+    st <- handleRefType schemaTypes subType
     pure $
       Inline $
         mempty
+          -- TODO: is that correct? we do something different for objects.
           & nullable ?~ (G.unNullability nullability && G.isNullable subType)
           & type_ ?~ OpenApiArray
           & items ?~ OpenApiItemsObject st
 
 -- TODO: No reference types should be nullable and only references to reference types
 
-declareReference :: G.Nullability -> Text -> OMap.InsOrdHashMap Text (G.TypeDefinition a G.InputValueDefinition) -> Declare (Definitions Schema) ()
-declareReference nullability n ts = do
-  isAvailable <- referenceAvailable n
-  unless isAvailable do
-    for_ (OMap.lookup n ts) \t -> do
-      let properties' = getPropertyReferences ts (typeProperties t)
-
-      result <-
-        declare $
-          OMap.singleton n $
-            let (refType, patt) = referenceType (null properties') (T.toLower n)
-             in mempty
-                  & nullable ?~ G.unNullability nullability
-                  & description .~ typeDescription t
-                  & properties .~ properties'
-                  & type_ .~ refType
-                  & setPattern patt
-      void $ processProperties ts (typeProperties t)
-      pure result
+declareReference ::
+  G.SchemaIntrospection ->
+  G.Nullability ->
+  G.Name ->
+  Declare (Definitions Schema) ()
+declareReference schemaTypes@(G.SchemaIntrospection typeDefinitions) nullability refName = do
+  isAvailable <- referenceAvailable $ G.unName refName
+  unless isAvailable $
+    for_ (Map.lookup refName typeDefinitions) \typeDefinition -> do
+      let properties' = getPropertyReferences $ typeProperties typeDefinition
+          (refType, typePattern) = referenceType (null properties') (T.toLower $ G.unName refName)
+      declare $
+        OMap.singleton (G.unName refName) $
+          mempty
+            & nullable ?~ G.unNullability nullability
+            & description .~ typeDescription typeDefinition
+            & properties .~ properties'
+            & type_ .~ refType
+            & pattern .~ typePattern
+      void $ processProperties schemaTypes $ typeProperties typeDefinition
 
 referenceAvailable :: Text -> DeclareT (Definitions Schema) Identity Bool
 referenceAvailable n = OMap.member n <$> look
 
-getPropertyReferences :: InsOrdHashMap Text (G.TypeDefinition a G.InputValueDefinition) -> Maybe [G.InputValueDefinition] -> InsOrdHashMap Text (Referenced Schema)
-getPropertyReferences _ Nothing = mempty
-getPropertyReferences sd (Just ds) =
-  let ds' = fmap (processProperty' sd) ds
-   in OMap.fromList ds'
+getPropertyReferences :: Maybe [G.InputValueDefinition] -> InsOrdHashMap Text (Referenced Schema)
+getPropertyReferences = \case
+  Nothing -> mempty
+  Just definitions ->
+    OMap.fromList $
+      definitions <&> \G.InputValueDefinition {..} ->
+        (G.unName $ _ivdName, handleRefType' _ivdType)
 
-processProperty' :: InsOrdHashMap Text (G.TypeDefinition a G.InputValueDefinition) -> G.InputValueDefinition -> (Text, Referenced Schema)
-processProperty' sd d =
-  let n = G._ivdName d
-      t = G._ivdType d
-      rt = handleRefType' sd t
-   in (G.unName n, rt)
-
-handleRefType' :: OMap.InsOrdHashMap Text (G.TypeDefinition a G.InputValueDefinition) -> G.GType -> Referenced Schema
-handleRefType' sd = \case
+handleRefType' :: G.GType -> Referenced Schema
+handleRefType' = \case
   G.TypeNamed _nullability nameWrapper ->
     let n = G.unName nameWrapper
      in Ref $ Reference n
   G.TypeList nullability subType ->
-    let st = handleRefType' sd subType
+    let st = handleRefType' subType
      in Inline $
           mempty
             & nullable ?~ (G.unNullability nullability && G.isNullable subType)
@@ -348,18 +361,16 @@ referenceType True = \case
   "id" -> (Just OpenApiString, Nothing)
   _ -> (Nothing, Nothing)
 
-processProperties :: InsOrdHashMap Text (G.TypeDefinition a G.InputValueDefinition) -> Maybe [G.InputValueDefinition] -> DeclareT (Definitions Schema) Identity (InsOrdHashMap Text (Referenced Schema))
-processProperties _ Nothing = pure mempty
-processProperties sd (Just ds) = do
-  ds' <- traverse (processProperty sd) ds
-  pure $ OMap.fromList ds'
-
-processProperty :: InsOrdHashMap Text (G.TypeDefinition a G.InputValueDefinition) -> G.InputValueDefinition -> DeclareT (Definitions Schema) Identity (Text, Referenced Schema)
-processProperty sd d = do
-  let n = G._ivdName d
-      t = G._ivdType d
-  rt <- handleRefType sd t
-  pure (G.unName n, rt)
+processProperties ::
+  G.SchemaIntrospection ->
+  Maybe [G.InputValueDefinition] ->
+  DeclareT (Definitions Schema) Identity (InsOrdHashMap Text (Referenced Schema))
+processProperties schemaTypes = \case
+  Nothing -> pure mempty
+  Just definitions ->
+    OMap.fromList <$> for definitions \G.InputValueDefinition {..} -> do
+      property <- handleRefType schemaTypes _ivdType
+      pure (G.unName $ _ivdName, property)
 
 getGQLQueryFromTrie :: EndpointMetadata GQLQueryWithText -> Text
 getGQLQueryFromTrie = getGQLQueryText . _edQuery . _ceDefinition
@@ -377,7 +388,7 @@ mkParam nameP desc req loc allowEmpty def varType patt =
         ( mempty
             & default_ .~ def
             & type_ .~ varType
-            & setPattern patt
+            & pattern .~ patt
         )
 
 gqlToJsonValue :: G.Value Void -> J.Value
@@ -410,20 +421,20 @@ getURL d =
     dropColonPrefix = T.drop 1
 
 extractEndpointInfo :: G.SchemaIntrospection -> EndpointMethod -> EndpointMetadata GQLQueryWithText -> Declare (Definitions Schema) EndpointData
-extractEndpointInfo sd method d = do
-  _edProperties <- mkProperties sd _analysis
-  _edResponse <- foldMap (Map.singleton method) <$> mkResponse method _edUrl sd _analysis
+extractEndpointInfo schemaTypes method d = do
+  _edProperties <- mkProperties schemaTypes analysis
+  _edResponse <- foldMap (Map.singleton method) <$> mkResponse analysis method _edUrl
   pure EndpointData {..}
   where
+    (analysis, allErrors) = mconcat $ analyzeGraphQLQuery schemaTypes <$> _eDef
     _eDef = mdDefinitions d
     -- mdDefinition returns a list, but there should only be one definition associated, so it is safe to fold
-    _analysis = fromMaybe mempty (foldMap (\e -> analyzeGraphqlQuery e sd) _eDef)
     _edUrl = T.unpack . getURL $ d
-    _edVarList = getParams _analysis (_ceUrl d)
+    _edVarList = getParams analysis (_ceUrl d)
     _edDescription = getComment d
     _edName = unNonEmptyText $ unEndpointName $ _ceName d
     _edMethod = Set.singleton method -- NOTE: Methods are grouped with into matching endpoints - Name used for grouping.
-    _edErrs = getAllAnalysisErrs _analysis
+    _edErrs = allErrors
 
 getEndpointsData ::
   G.SchemaIntrospection ->
@@ -562,7 +573,7 @@ declareOpenApiSpec sc = do
           else
             oldWarn <> "\n\nEndpoint \""
               <> _edName
-              <> "\":\n"
+              <> "\":"
               <> foldl (\w err -> w <> "\n- ⚠️ " <> err) "" _edErrs
 
   return $
