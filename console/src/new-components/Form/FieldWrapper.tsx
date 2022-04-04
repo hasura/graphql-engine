@@ -13,6 +13,7 @@ type FieldWrapperProps = {
   error?: FieldError | undefined;
   description?: string;
   tooltip?: string;
+  dataTest?: string;
 };
 
 export type FieldWrapperPassThroughProps = Omit<

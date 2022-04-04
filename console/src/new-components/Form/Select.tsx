@@ -21,6 +21,7 @@ export type SelectProps = FieldWrapperPassThroughProps & {
 export const Select: React.VFC<SelectProps> = ({
   options,
   placeholder,
+  dataTest,
   name,
   disabled = false,
   value: val,
@@ -44,6 +45,7 @@ export const Select: React.VFC<SelectProps> = ({
         )}
         disabled={disabled}
         value={val}
+        data-test={dataTest}
         {...register(name)}
         id={name}
       >

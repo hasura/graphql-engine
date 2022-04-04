@@ -3,7 +3,7 @@ import { useRemoteSchema } from '@/features/MetadataAPI';
 import { useTableColumns } from '@/features/SqlQueries/hooks/useTableColumns';
 import { InputField, Select } from '@/new-components/Form';
 import { MapSelector } from '@/new-components/MapSelector';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { FaLink } from 'react-icons/fa';
 import { RemoteDatabaseWidget } from '../RemoteDatabaseWidget';
@@ -42,6 +42,10 @@ export const FormElements = ({
   const [typeMap, setTypeMap] = useState<{ field: string; column: string }[]>(
     []
   );
+
+  useEffect(() => {
+    setTypeMap([]);
+  }, [RSTypeName]);
 
   if (!data)
     return (
@@ -87,6 +91,7 @@ export const FormElements = ({
             name="relationshipName"
             label="Name"
             placeholder="Relationship name"
+            dataTest="rs-to-db-rel-name"
           />
         </div>
 
@@ -94,6 +99,7 @@ export const FormElements = ({
           <Select
             name="relationshipType"
             label="Type"
+            dataTest="select-rel-type"
             placeholder="Select a relationship type..."
             options={[
               {
@@ -155,7 +161,6 @@ export const FormElements = ({
         placeholder=""
         name="mapping"
         onChange={e => {
-          console.log(e);
           setTypeMap([...e]);
         }}
       />

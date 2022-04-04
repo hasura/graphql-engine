@@ -41,6 +41,7 @@ export const RsSourceTypeSelector = ({
           name={sourceTypeKey}
           placeholder="Select a type"
           options={typeOptions}
+          dataTest="select-source-type"
           labelIcon={<FiType style={{ strokeWidth: 4.5 }} />}
         />
       </div>
