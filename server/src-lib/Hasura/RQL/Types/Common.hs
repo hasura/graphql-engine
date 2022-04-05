@@ -258,7 +258,7 @@ data StringifyNumbers
   deriving (Eq, Show)
 
 successMsg :: EncJSON
-successMsg = "{\"message\":\"success\"}"
+successMsg = encJFromBuilder "{\"message\":\"success\"}"
 
 newtype NonNegativeInt = NonNegativeInt {getNonNegativeInt :: Int}
   deriving (Show, Eq, ToJSON, Generic, NFData, Cacheable, Num)

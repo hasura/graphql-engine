@@ -205,7 +205,7 @@ encodeGQResp :: GQResponse -> EncJSON
 encodeGQResp gqResp =
   encJFromAssocList $ case gqResp of
     Right r -> [("data", encJFromLBS r)]
-    Left e -> [("data", "null"), ("errors", encJFromJValue e)]
+    Left e -> [("data", encJFromBuilder "null"), ("errors", encJFromJValue e)]
 
 -- We don't want to force the `Maybe GQResponse` unless absolutely necessary
 -- Decode EncJSON from Cache for HTTP endpoints
