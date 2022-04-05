@@ -19270,15 +19270,26 @@ mkMutationOutputSelect :: StringifyNumbers -> Text -> MutationOutputG 'MSSQL Voi
 --   on any row is not met, the summed value will not equal to "0" (always
 --   &gt; 1).
 --   
---   <a>check_constraint_select</a> := SELECT SUM(CASE WHEN
---   <a>check_boolean_expression</a> THEN 0 ELSE 1 END) FROM [with_alias]
+--   <pre>
+--   &lt;check_constraint_select&gt; :=
+--     SELECT SUM([check_sub_query].[check_evaluation])
+--     FROM
+--       ( SELECT
+--           (CASE WHEN &lt;check_boolean_expression&gt; THEN 0 ELSE 1 END) AS [check_evaluation]
+--         FROM
+--           [with_alias]
+--       ) AS [check_sub_query]
 --   
---   <a>mutation_output_select</a> := SELECT (SELECT COUNT(*) FROM
---   [with_alias]) AS [affected_rows], (select_from_returning) AS
---   [returning] FOR JSON PATH, INCLUDE_NULL_VALUES, WITHOUT_ARRAY_WRAPPER
+--   &lt;mutation_output_select&gt; :=
+--     SELECT
+--       (SELECT COUNT(*) FROM [with_alias]) AS [affected_rows],
+--       (select_from_returning) AS [returning]
+--     FOR JSON PATH, INCLUDE_NULL_VALUES, WITHOUT_ARRAY_WRAPPER
 --   
---   SELECT (<a>mutation_output_select</a>) AS [mutation_response],
---   (<a>check_constraint_select</a>) AS [check_constraint_select]
+--   SELECT
+--     (&lt;mutation_output_select&gt;) AS [mutation_response],
+--     (&lt;check_constraint_select&gt;) AS [check_constraint_select]
+--   </pre>
 selectMutationOutputAndCheckCondition :: Text -> Select -> Expression -> Select
 
 
@@ -20934,20 +20945,20 @@ CreateEventTriggerQuery :: !SourceName -> !TriggerName -> !TableName b -> !Maybe
 [_cetqReplace] :: CreateEventTriggerQuery (b :: BackendType) -> !Bool
 [_cetqRequestTransform] :: CreateEventTriggerQuery (b :: BackendType) -> !Maybe RequestTransform
 [_cetqResponseTrasnform] :: CreateEventTriggerQuery (b :: BackendType) -> !Maybe MetadataResponseTransform
-cetqWebhookFromEnv :: forall b_aqQ42. Lens' (CreateEventTriggerQuery b_aqQ42) (Maybe Text)
-cetqWebhook :: forall b_aqQ42. Lens' (CreateEventTriggerQuery b_aqQ42) (Maybe InputWebhook)
-cetqUpdate :: forall b_aqQ42. Lens' (CreateEventTriggerQuery b_aqQ42) (Maybe (SubscribeOpSpec b_aqQ42))
-cetqTable :: forall b_aqQ42. Lens' (CreateEventTriggerQuery b_aqQ42) (TableName b_aqQ42)
-cetqSource :: forall b_aqQ42. Lens' (CreateEventTriggerQuery b_aqQ42) SourceName
-cetqRetryConf :: forall b_aqQ42. Lens' (CreateEventTriggerQuery b_aqQ42) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aqQ42. Lens' (CreateEventTriggerQuery b_aqQ42) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aqQ42. Lens' (CreateEventTriggerQuery b_aqQ42) (Maybe RequestTransform)
-cetqReplace :: forall b_aqQ42. Lens' (CreateEventTriggerQuery b_aqQ42) Bool
-cetqName :: forall b_aqQ42. Lens' (CreateEventTriggerQuery b_aqQ42) TriggerName
-cetqInsert :: forall b_aqQ42. Lens' (CreateEventTriggerQuery b_aqQ42) (Maybe (SubscribeOpSpec b_aqQ42))
-cetqHeaders :: forall b_aqQ42. Lens' (CreateEventTriggerQuery b_aqQ42) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aqQ42. Lens' (CreateEventTriggerQuery b_aqQ42) (Maybe Bool)
-cetqDelete :: forall b_aqQ42. Lens' (CreateEventTriggerQuery b_aqQ42) (Maybe (SubscribeOpSpec b_aqQ42))
+cetqWebhookFromEnv :: forall b_aqQaU. Lens' (CreateEventTriggerQuery b_aqQaU) (Maybe Text)
+cetqWebhook :: forall b_aqQaU. Lens' (CreateEventTriggerQuery b_aqQaU) (Maybe InputWebhook)
+cetqUpdate :: forall b_aqQaU. Lens' (CreateEventTriggerQuery b_aqQaU) (Maybe (SubscribeOpSpec b_aqQaU))
+cetqTable :: forall b_aqQaU. Lens' (CreateEventTriggerQuery b_aqQaU) (TableName b_aqQaU)
+cetqSource :: forall b_aqQaU. Lens' (CreateEventTriggerQuery b_aqQaU) SourceName
+cetqRetryConf :: forall b_aqQaU. Lens' (CreateEventTriggerQuery b_aqQaU) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aqQaU. Lens' (CreateEventTriggerQuery b_aqQaU) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aqQaU. Lens' (CreateEventTriggerQuery b_aqQaU) (Maybe RequestTransform)
+cetqReplace :: forall b_aqQaU. Lens' (CreateEventTriggerQuery b_aqQaU) Bool
+cetqName :: forall b_aqQaU. Lens' (CreateEventTriggerQuery b_aqQaU) TriggerName
+cetqInsert :: forall b_aqQaU. Lens' (CreateEventTriggerQuery b_aqQaU) (Maybe (SubscribeOpSpec b_aqQaU))
+cetqHeaders :: forall b_aqQaU. Lens' (CreateEventTriggerQuery b_aqQaU) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aqQaU. Lens' (CreateEventTriggerQuery b_aqQaU) (Maybe Bool)
+cetqDelete :: forall b_aqQaU. Lens' (CreateEventTriggerQuery b_aqQaU) (Maybe (SubscribeOpSpec b_aqQaU))
 data DeleteEventTriggerQuery (b :: BackendType)
 DeleteEventTriggerQuery :: !SourceName -> !TriggerName -> DeleteEventTriggerQuery (b :: BackendType)
 [_detqSource] :: DeleteEventTriggerQuery (b :: BackendType) -> !SourceName
@@ -21644,7 +21655,7 @@ module Hasura.GraphQL.Execute.Subscription.Plan
 newtype ValidatedVariables f
 ValidatedVariables :: f TxtEncodedVal -> ValidatedVariables f
 [_unValidatedVariables] :: ValidatedVariables f -> f TxtEncodedVal
-unValidatedVariables :: forall f_arWEK f_arWML. Iso (ValidatedVariables f_arWEK) (ValidatedVariables f_arWML) (f_arWEK TxtEncodedVal) (f_arWML TxtEncodedVal)
+unValidatedVariables :: forall f_arWLC f_arWTD. Iso (ValidatedVariables f_arWLC) (ValidatedVariables f_arWTD) (f_arWLC TxtEncodedVal) (f_arWTD TxtEncodedVal)
 type ValidatedQueryVariables = ValidatedVariables (HashMap Name)
 type ValidatedSyntheticVariables = ValidatedVariables []
 mkUnsafeValidateVariables :: f TxtEncodedVal -> ValidatedVariables f
@@ -24452,9 +24463,9 @@ QueryParametersInfo :: !HashMap Name (ColumnValue b) -> !Seq (ColumnValue b) -> 
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> !HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_awLbF. Lens' (QueryParametersInfo b_awLbF) (Seq (ColumnValue b_awLbF))
-qpiReusableVariableValues :: forall b_awLbF. Lens' (QueryParametersInfo b_awLbF) (HashMap Name (ColumnValue b_awLbF))
-qpiReferencedSessionVariables :: forall b_awLbF. Lens' (QueryParametersInfo b_awLbF) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_awLix. Lens' (QueryParametersInfo b_awLix) (Seq (ColumnValue b_awLix))
+qpiReusableVariableValues :: forall b_awLix. Lens' (QueryParametersInfo b_awLix) (HashMap Name (ColumnValue b_awLix))
+qpiReferencedSessionVariables :: forall b_awLix. Lens' (QueryParametersInfo b_awLix) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
@@ -24753,8 +24764,13 @@ executeInsert :: MonadError QErr m => UserInfo -> StringifyNumbers -> SourceConf
 --   
 --   <pre>
 --   &lt;check_constraint_select&gt; :=
---     SELECT SUM(CASE WHEN &lt;check_boolean_expression&gt; THEN 0 ELSE 1 END)
---     FROM [with_alias]
+--     SELECT SUM([check_sub_query].[check_evaluation])
+--     FROM
+--       ( SELECT
+--           (CASE WHEN &lt;check_boolean_expression&gt; THEN 0 ELSE 1 END) AS [check_evaluation]
+--         FROM
+--           [with_alias]
+--       ) AS [check_sub_query]
 --   </pre>
 --   
 --   d. The final select statement look like

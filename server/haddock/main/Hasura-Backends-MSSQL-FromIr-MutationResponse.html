@@ -8,16 +8,21 @@
  CASE expression so that the int value &quot;0&quot; is returned when check constraint
  is true otherwise the int value &quot;1&quot; is returned.  We use <a href="SUM.html">SUM</a> aggregation on
  the returned value and if check constraint on any row is not met, the summed
- value will not equal to &quot;0&quot; (always &gt; 1).</p><p><a href="check_constraint_select">check_constraint_select</a> :=
-     SELECT
-       SUM(CASE WHEN <a href="check_boolean_expression">check_boolean_expression</a>
-           THEN 0
-           ELSE 1
-           END)
-     FROM [with_alias]</p><p><a href="mutation_output_select">mutation_output_select</a> :=
-     SELECT
-       (SELECT COUNT(*) FROM [with_alias]) AS [affected_rows],
-       (select_from_returning) AS [returning]
-     FOR JSON PATH, INCLUDE_NULL_VALUES, WITHOUT_ARRAY_WRAPPER</p><p>SELECT
-     (<a href="mutation_output_select">mutation_output_select</a>) AS [mutation_response],
-     (<a href="check_constraint_select">check_constraint_select</a>) AS [check_constraint_select]</p></div></div></div></div><div id="footer"><p>Produced by <a href="http://www.haskell.org/haddock/">Haddock</a> version 2.24.2</p></div></body></html>
+ value will not equal to &quot;0&quot; (always &gt; 1).</p><pre>  &lt;check_constraint_select&gt; :=
+    SELECT SUM([check_sub_query].[check_evaluation])
+    FROM
+      ( SELECT
+          (CASE WHEN &lt;check_boolean_expression&gt; THEN 0 ELSE 1 END) AS [check_evaluation]
+        FROM
+          [with_alias]
+      ) AS [check_sub_query]
+
+  &lt;mutation_output_select&gt; :=
+    SELECT
+      (SELECT COUNT(*) FROM [with_alias]) AS [affected_rows],
+      (select_from_returning) AS [returning]
+    FOR JSON PATH, INCLUDE_NULL_VALUES, WITHOUT_ARRAY_WRAPPER
+
+  SELECT
+    (&lt;mutation_output_select&gt;) AS [mutation_response],
+    (&lt;check_constraint_select&gt;) AS [check_constraint_select]</pre></div></div></div></div><div id="footer"><p>Produced by <a href="http://www.haskell.org/haddock/">Haddock</a> version 2.24.2</p></div></body></html>

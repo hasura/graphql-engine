@@ -32,26 +32,26 @@
 </span><a href="Hasura.GraphQL.Analyse.html#_stVariables"><span class="hs-identifier hs-var hs-var">_stVariables</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#VariableInfo"><span class="hs-identifier hs-type">VariableInfo</span></a></span><span>
 </span><span id="line-31"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-32"></span><span>
-</span><span id="line-33"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688171116"><span id="local-6989586621688171118"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Structure"><span class="hs-identifier hs-type">Structure</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-34"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Structure"><span class="hs-identifier hs-type">Structure</span></a></span><span> </span><span id="local-6989586621688171114"><span class="annot"><span class="annottext">Selection
-</span><a href="#local-6989586621688171114"><span class="hs-identifier hs-var">s1</span></a></span></span><span> </span><span id="local-6989586621688171113"><span class="annot"><span class="annottext">HashMap Name VariableInfo
-</span><a href="#local-6989586621688171113"><span class="hs-identifier hs-var">v1</span></a></span></span><span> </span><span id="local-6989586621688171112"><span class="annot"><span class="annottext">&lt;&gt; :: Structure -&gt; Structure -&gt; Structure
-</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Structure"><span class="hs-identifier hs-type">Structure</span></a></span><span> </span><span id="local-6989586621688171111"><span class="annot"><span class="annottext">Selection
-</span><a href="#local-6989586621688171111"><span class="hs-identifier hs-var">s2</span></a></span></span><span> </span><span id="local-6989586621688171110"><span class="annot"><span class="annottext">HashMap Name VariableInfo
-</span><a href="#local-6989586621688171110"><span class="hs-identifier hs-var">v2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Selection -&gt; HashMap Name VariableInfo -&gt; Structure
+</span><span id="line-33"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688171542"><span id="local-6989586621688171544"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Structure"><span class="hs-identifier hs-type">Structure</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-34"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Structure"><span class="hs-identifier hs-type">Structure</span></a></span><span> </span><span id="local-6989586621688171540"><span class="annot"><span class="annottext">Selection
+</span><a href="#local-6989586621688171540"><span class="hs-identifier hs-var">s1</span></a></span></span><span> </span><span id="local-6989586621688171539"><span class="annot"><span class="annottext">HashMap Name VariableInfo
+</span><a href="#local-6989586621688171539"><span class="hs-identifier hs-var">v1</span></a></span></span><span> </span><span id="local-6989586621688171538"><span class="annot"><span class="annottext">&lt;&gt; :: Structure -&gt; Structure -&gt; Structure
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Structure"><span class="hs-identifier hs-type">Structure</span></a></span><span> </span><span id="local-6989586621688171537"><span class="annot"><span class="annottext">Selection
+</span><a href="#local-6989586621688171537"><span class="hs-identifier hs-var">s2</span></a></span></span><span> </span><span id="local-6989586621688171536"><span class="annot"><span class="annottext">HashMap Name VariableInfo
+</span><a href="#local-6989586621688171536"><span class="hs-identifier hs-var">v2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Selection -&gt; HashMap Name VariableInfo -&gt; Structure
 </span><a href="Hasura.GraphQL.Analyse.html#Structure"><span class="hs-identifier hs-var">Structure</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Selection
-</span><a href="#local-6989586621688171114"><span class="hs-identifier hs-var">s1</span></a></span><span> </span><span class="annot"><span class="annottext">Selection -&gt; Selection -&gt; Selection
+</span><a href="#local-6989586621688171540"><span class="hs-identifier hs-var">s1</span></a></span><span> </span><span class="annot"><span class="annottext">Selection -&gt; Selection -&gt; Selection
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Selection
-</span><a href="#local-6989586621688171111"><span class="hs-identifier hs-var">s2</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap Name VariableInfo
-</span><a href="#local-6989586621688171113"><span class="hs-identifier hs-var">v1</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name VariableInfo
+</span><a href="#local-6989586621688171537"><span class="hs-identifier hs-var">s2</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap Name VariableInfo
+</span><a href="#local-6989586621688171539"><span class="hs-identifier hs-var">v1</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name VariableInfo
 -&gt; HashMap Name VariableInfo -&gt; HashMap Name VariableInfo
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name VariableInfo
-</span><a href="#local-6989586621688171110"><span class="hs-identifier hs-var">v2</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688171536"><span class="hs-identifier hs-var">v2</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-35"></span><span>
-</span><span id="line-36"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688171104"><span id="local-6989586621688171106"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Structure"><span class="hs-identifier hs-type">Structure</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-37"></span><span>  </span><span id="local-6989586621688171102"><span class="annot"><span class="annottext">mempty :: Structure
+</span><span id="line-36"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688171530"><span id="local-6989586621688171532"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Structure"><span class="hs-identifier hs-type">Structure</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-37"></span><span>  </span><span id="local-6989586621688171528"><span class="annot"><span class="annottext">mempty :: Structure
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">mempty</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Selection -&gt; HashMap Name VariableInfo -&gt; Structure
 </span><a href="Hasura.GraphQL.Analyse.html#Structure"><span class="hs-identifier hs-var">Structure</span></a></span><span> </span><span class="annot"><span class="annottext">Selection
 forall a. Monoid a =&gt; a
@@ -80,11 +80,11 @@ forall a. Monoid a =&gt; a
 </span><span id="line-56"></span><span class="hs-comment">--  &gt;  }</span><span>
 </span><span id="line-57"></span><span class="hs-comment">--</span><span>
 </span><span id="line-58"></span><span class="hs-comment">-- We want to keep a Selection with all three @a@, @b@, and @c@.</span><span>
-</span><span id="line-59"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688171095"><span id="local-6989586621688171097"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Selection"><span class="hs-identifier hs-type">Selection</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-60"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Selection"><span class="hs-identifier hs-type">Selection</span></a></span><span> </span><span id="local-6989586621688171094"><span class="annot"><span class="annottext">HashMap Name FieldInfo
-</span><a href="#local-6989586621688171094"><span class="hs-identifier hs-var">s1</span></a></span></span><span> </span><span id="local-6989586621688171093"><span class="annot"><span class="annottext">&lt;&gt; :: Selection -&gt; Selection -&gt; Selection
-</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Selection"><span class="hs-identifier hs-type">Selection</span></a></span><span> </span><span id="local-6989586621688171092"><span class="annot"><span class="annottext">HashMap Name FieldInfo
-</span><a href="#local-6989586621688171092"><span class="hs-identifier hs-var">s2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap Name FieldInfo -&gt; Selection
+</span><span id="line-59"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688171521"><span id="local-6989586621688171523"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Selection"><span class="hs-identifier hs-type">Selection</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-60"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Selection"><span class="hs-identifier hs-type">Selection</span></a></span><span> </span><span id="local-6989586621688171520"><span class="annot"><span class="annottext">HashMap Name FieldInfo
+</span><a href="#local-6989586621688171520"><span class="hs-identifier hs-var">s1</span></a></span></span><span> </span><span id="local-6989586621688171519"><span class="annot"><span class="annottext">&lt;&gt; :: Selection -&gt; Selection -&gt; Selection
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Selection"><span class="hs-identifier hs-type">Selection</span></a></span><span> </span><span id="local-6989586621688171518"><span class="annot"><span class="annottext">HashMap Name FieldInfo
+</span><a href="#local-6989586621688171518"><span class="hs-identifier hs-var">s2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap Name FieldInfo -&gt; Selection
 </span><a href="Hasura.GraphQL.Analyse.html#Selection"><span class="hs-identifier hs-var">Selection</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap Name FieldInfo -&gt; Selection)
 -&gt; HashMap Name FieldInfo -&gt; Selection
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -96,25 +96,25 @@ forall k v.
 (Eq k, Hashable k) =&gt;
 (v -&gt; v -&gt; v) -&gt; HashMap k v -&gt; HashMap k v -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">Map.unionWith</span></span><span> </span><span class="annot"><span class="annottext">FieldInfo -&gt; FieldInfo -&gt; FieldInfo
-</span><a href="#local-6989586621688171090"><span class="hs-identifier hs-var">combineFields</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name FieldInfo
-</span><a href="#local-6989586621688171094"><span class="hs-identifier hs-var">s1</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name FieldInfo
-</span><a href="#local-6989586621688171092"><span class="hs-identifier hs-var">s2</span></a></span><span>
+</span><a href="#local-6989586621688171516"><span class="hs-identifier hs-var">combineFields</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name FieldInfo
+</span><a href="#local-6989586621688171520"><span class="hs-identifier hs-var">s1</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name FieldInfo
+</span><a href="#local-6989586621688171518"><span class="hs-identifier hs-var">s2</span></a></span><span>
 </span><span id="line-61"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-62"></span><span>      </span><span id="local-6989586621688171090"><span class="annot"><span class="annottext">combineFields :: FieldInfo -&gt; FieldInfo -&gt; FieldInfo
-</span><a href="#local-6989586621688171090"><span class="hs-identifier hs-var hs-var">combineFields</span></a></span></span><span> </span><span id="local-6989586621688171089"><span class="annot"><span class="annottext">FieldInfo
-</span><a href="#local-6989586621688171089"><span class="hs-identifier hs-var">f1</span></a></span></span><span> </span><span id="local-6989586621688171088"><span class="annot"><span class="annottext">FieldInfo
-</span><a href="#local-6989586621688171088"><span class="hs-identifier hs-var">f2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FieldInfo
-</span><a href="#local-6989586621688171089"><span class="hs-identifier hs-var">f1</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_fiSelection :: Maybe Selection
+</span><span id="line-62"></span><span>      </span><span id="local-6989586621688171516"><span class="annot"><span class="annottext">combineFields :: FieldInfo -&gt; FieldInfo -&gt; FieldInfo
+</span><a href="#local-6989586621688171516"><span class="hs-identifier hs-var hs-var">combineFields</span></a></span></span><span> </span><span id="local-6989586621688171515"><span class="annot"><span class="annottext">FieldInfo
+</span><a href="#local-6989586621688171515"><span class="hs-identifier hs-var">f1</span></a></span></span><span> </span><span id="local-6989586621688171514"><span class="annot"><span class="annottext">FieldInfo
+</span><a href="#local-6989586621688171514"><span class="hs-identifier hs-var">f2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FieldInfo
+</span><a href="#local-6989586621688171515"><span class="hs-identifier hs-var">f1</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_fiSelection :: Maybe Selection
 </span><a href="Hasura.GraphQL.Analyse.html#_fiSelection"><span class="hs-identifier hs-var">_fiSelection</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FieldInfo -&gt; Maybe Selection
 </span><a href="Hasura.GraphQL.Analyse.html#_fiSelection"><span class="hs-identifier hs-var hs-var">_fiSelection</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfo
-</span><a href="#local-6989586621688171089"><span class="hs-identifier hs-var">f1</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Selection -&gt; Maybe Selection -&gt; Maybe Selection
+</span><a href="#local-6989586621688171515"><span class="hs-identifier hs-var">f1</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Selection -&gt; Maybe Selection -&gt; Maybe Selection
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">FieldInfo -&gt; Maybe Selection
 </span><a href="Hasura.GraphQL.Analyse.html#_fiSelection"><span class="hs-identifier hs-var hs-var">_fiSelection</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfo
-</span><a href="#local-6989586621688171088"><span class="hs-identifier hs-var">f2</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621688171514"><span class="hs-identifier hs-var">f2</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-63"></span><span>
-</span><span id="line-64"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688171081"><span id="local-6989586621688171083"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Selection"><span class="hs-identifier hs-type">Selection</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-65"></span><span>  </span><span id="local-6989586621688171080"><span class="annot"><span class="annottext">mempty :: Selection
+</span><span id="line-64"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688171507"><span id="local-6989586621688171509"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Selection"><span class="hs-identifier hs-type">Selection</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-65"></span><span>  </span><span id="local-6989586621688171506"><span class="annot"><span class="annottext">mempty :: Selection
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">mempty</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap Name FieldInfo -&gt; Selection
 </span><a href="Hasura.GraphQL.Analyse.html#Selection"><span class="hs-identifier hs-var">Selection</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name FieldInfo
 forall a. Monoid a =&gt; a
@@ -150,27 +150,27 @@ forall a. Monoid a =&gt; a
 </span><span id="line-89"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.ExecutableDefinition</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-90"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span><span>
 </span><span id="line-91"></span><span id="diagnoseGraphQLQuery"><span class="annot"><span class="annottext">diagnoseGraphQLQuery :: SchemaIntrospection -&gt; ExecutableDefinition Name -&gt; Maybe [Text]
-</span><a href="Hasura.GraphQL.Analyse.html#diagnoseGraphQLQuery"><span class="hs-identifier hs-var hs-var">diagnoseGraphQLQuery</span></a></span></span><span> </span><span id="local-6989586621688171073"><span class="annot"><span class="annottext">SchemaIntrospection
-</span><a href="#local-6989586621688171073"><span class="hs-identifier hs-var">schema</span></a></span></span><span> </span><span id="local-6989586621688171072"><span class="annot"><span class="annottext">ExecutableDefinition Name
-</span><a href="#local-6989586621688171072"><span class="hs-identifier hs-var">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-92"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688171071"><span class="annot"><span class="annottext">Structure
-</span><a href="#local-6989586621688171071"><span class="hs-identifier hs-var">_structure</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688171070"><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621688171070"><span class="hs-identifier hs-var">errors</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SchemaIntrospection
+</span><a href="Hasura.GraphQL.Analyse.html#diagnoseGraphQLQuery"><span class="hs-identifier hs-var hs-var">diagnoseGraphQLQuery</span></a></span></span><span> </span><span id="local-6989586621688171499"><span class="annot"><span class="annottext">SchemaIntrospection
+</span><a href="#local-6989586621688171499"><span class="hs-identifier hs-var">schema</span></a></span></span><span> </span><span id="local-6989586621688171498"><span class="annot"><span class="annottext">ExecutableDefinition Name
+</span><a href="#local-6989586621688171498"><span class="hs-identifier hs-var">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-92"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688171497"><span class="annot"><span class="annottext">Structure
+</span><a href="#local-6989586621688171497"><span class="hs-identifier hs-var">_structure</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688171496"><span class="annot"><span class="annottext">[Text]
+</span><a href="#local-6989586621688171496"><span class="hs-identifier hs-var">errors</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SchemaIntrospection
 -&gt; ExecutableDefinition Name -&gt; (Structure, [Text])
 </span><a href="Hasura.GraphQL.Analyse.html#analyzeGraphQLQuery"><span class="hs-identifier hs-var">analyzeGraphQLQuery</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaIntrospection
-</span><a href="#local-6989586621688171073"><span class="hs-identifier hs-var">schema</span></a></span><span> </span><span class="annot"><span class="annottext">ExecutableDefinition Name
-</span><a href="#local-6989586621688171072"><span class="hs-identifier hs-var">query</span></a></span><span>
+</span><a href="#local-6989586621688171499"><span class="hs-identifier hs-var">schema</span></a></span><span> </span><span class="annot"><span class="annottext">ExecutableDefinition Name
+</span><a href="#local-6989586621688171498"><span class="hs-identifier hs-var">query</span></a></span><span>
 </span><span id="line-93"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621688171070"><span class="hs-identifier hs-var">errors</span></a></span><span>
+</span><a href="#local-6989586621688171496"><span class="hs-identifier hs-var">errors</span></a></span><span>
 </span><span id="line-94"></span><span>        </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Maybe [Text]
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-95"></span><span>        </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Maybe [Text]
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621688171070"><span class="hs-identifier hs-var">errors</span></a></span><span>
+</span><a href="#local-6989586621688171496"><span class="hs-identifier hs-var">errors</span></a></span><span>
 </span><span id="line-96"></span><span>
 </span><span id="line-97"></span><span class="hs-comment">-- | Given the schema's definition, and a query, run the analysis.</span><span>
 </span><span id="line-98"></span><span class="hs-comment">--</span><span>
@@ -200,34 +200,34 @@ forall a. a -&gt; Maybe a
 </span><span id="line-122"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Structure"><span class="hs-identifier hs-type">Structure</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-123"></span><span id="analyzeGraphQLQuery"><span class="annot"><span class="annottext">analyzeGraphQLQuery :: SchemaIntrospection
 -&gt; ExecutableDefinition Name -&gt; (Structure, [Text])
-</span><a href="Hasura.GraphQL.Analyse.html#analyzeGraphQLQuery"><span class="hs-identifier hs-var hs-var">analyzeGraphQLQuery</span></a></span></span><span> </span><span id="local-6989586621688171068"><span class="annot"><span class="annottext">SchemaIntrospection
-</span><a href="#local-6989586621688171068"><span class="hs-identifier hs-var">schema</span></a></span></span><span> </span><span id="local-6989586621688171067"><span class="annot"><span class="annottext">ExecutableDefinition Name
-</span><a href="#local-6989586621688171067"><span class="hs-identifier hs-var">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SchemaIntrospection -&gt; Analysis Structure -&gt; (Structure, [Text])
+</span><a href="Hasura.GraphQL.Analyse.html#analyzeGraphQLQuery"><span class="hs-identifier hs-var hs-var">analyzeGraphQLQuery</span></a></span></span><span> </span><span id="local-6989586621688171494"><span class="annot"><span class="annottext">SchemaIntrospection
+</span><a href="#local-6989586621688171494"><span class="hs-identifier hs-var">schema</span></a></span></span><span> </span><span id="local-6989586621688171493"><span class="annot"><span class="annottext">ExecutableDefinition Name
+</span><a href="#local-6989586621688171493"><span class="hs-identifier hs-var">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SchemaIntrospection -&gt; Analysis Structure -&gt; (Structure, [Text])
 forall a.
 Monoid a =&gt;
 SchemaIntrospection -&gt; Analysis a -&gt; (a, [Text])
 </span><a href="Hasura.GraphQL.Analyse.html#runAnalysis"><span class="hs-identifier hs-var">runAnalysis</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaIntrospection
-</span><a href="#local-6989586621688171068"><span class="hs-identifier hs-var">schema</span></a></span><span> </span><span class="annot"><span class="annottext">(Analysis Structure -&gt; (Structure, [Text]))
+</span><a href="#local-6989586621688171494"><span class="hs-identifier hs-var">schema</span></a></span><span> </span><span class="annot"><span class="annottext">(Analysis Structure -&gt; (Structure, [Text]))
 -&gt; Analysis Structure -&gt; (Structure, [Text])
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ExecutableDefinition Name
-</span><a href="#local-6989586621688171067"><span class="hs-identifier hs-var">query</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688171493"><span class="hs-identifier hs-var">query</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-124"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.ExecutableDefinitionFragment</span></span><span> </span><span class="annot"><span class="annottext">FragmentDefinition
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-125"></span><span>    </span><span class="annot"><span class="annottext">Diagnosis -&gt; Analysis Structure
 forall a. Diagnosis -&gt; Analysis a
 </span><a href="Hasura.GraphQL.Analyse.html#throwDiagnosis"><span class="hs-identifier hs-var">throwDiagnosis</span></a></span><span> </span><span class="annot"><span class="annottext">Diagnosis
 </span><a href="Hasura.GraphQL.Analyse.html#TopLevelFragment"><span class="hs-identifier hs-var">TopLevelFragment</span></a></span><span>
-</span><span id="line-126"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.ExecutableDefinitionOperation</span></span><span> </span><span id="local-6989586621688171061"><span class="annot"><span class="annottext">OperationDefinition FragmentSpread Name
-</span><a href="#local-6989586621688171061"><span class="hs-identifier hs-var">operation</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">OperationDefinition FragmentSpread Name
-</span><a href="#local-6989586621688171061"><span class="hs-identifier hs-var">operation</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-126"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.ExecutableDefinitionOperation</span></span><span> </span><span id="local-6989586621688171487"><span class="annot"><span class="annottext">OperationDefinition FragmentSpread Name
+</span><a href="#local-6989586621688171487"><span class="hs-identifier hs-var">operation</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">OperationDefinition FragmentSpread Name
+</span><a href="#local-6989586621688171487"><span class="hs-identifier hs-var">operation</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-127"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">G.OperationDefinitionUnTyped</span></span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-128"></span><span>      </span><span class="annot"><span class="annottext">Diagnosis -&gt; Analysis Structure
 forall a. Diagnosis -&gt; Analysis a
 </span><a href="Hasura.GraphQL.Analyse.html#throwDiagnosis"><span class="hs-identifier hs-var">throwDiagnosis</span></a></span><span> </span><span class="annot"><span class="annottext">Diagnosis
 </span><a href="Hasura.GraphQL.Analyse.html#UntypedTopLevelOperation"><span class="hs-identifier hs-var">UntypedTopLevelOperation</span></a></span><span>
-</span><span id="line-129"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">G.OperationDefinitionTyped</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.TypedOperationDefinition</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688171052"><span id="local-6989586621688171053"><span id="local-6989586621688171054"><span id="local-6989586621688171055"><span id="local-6989586621688171056"><span class="annot"><span class="annottext">[Directive Name]
+</span><span id="line-129"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">G.OperationDefinitionTyped</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.TypedOperationDefinition</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688171478"><span id="local-6989586621688171479"><span id="local-6989586621688171480"><span id="local-6989586621688171481"><span id="local-6989586621688171482"><span class="annot"><span class="annottext">[Directive Name]
 SelectionSet FragmentSpread Name
 [VariableDefinition]
 Maybe Name
@@ -249,13 +249,13 @@ _todName :: Maybe Name
 _todType :: OperationType
 </span><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></span></span></span></span></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-130"></span><span>      </span><span class="hs-comment">-- traverse the fields recursively</span><span>
-</span><span id="line-131"></span><span>      </span><span id="local-6989586621688171046"><span class="annot"><span class="annottext">Maybe Selection
-</span><a href="#local-6989586621688171046"><span class="hs-identifier hs-var">selection</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Analysis Selection -&gt; Analysis (Maybe Selection)
+</span><span id="line-131"></span><span>      </span><span id="local-6989586621688171472"><span class="annot"><span class="annottext">Maybe Selection
+</span><a href="#local-6989586621688171472"><span class="hs-identifier hs-var">selection</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Analysis Selection -&gt; Analysis (Maybe Selection)
 forall a. Analysis a -&gt; Analysis (Maybe a)
 </span><a href="Hasura.GraphQL.Analyse.html#withCatchAndRecord"><span class="hs-identifier hs-var">withCatchAndRecord</span></a></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-132"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688171044"><span class="annot"><span class="annottext">rootTypeName :: Name
-</span><a href="#local-6989586621688171044"><span class="hs-identifier hs-var hs-var">rootTypeName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">OperationType
-</span><a href="#local-6989586621688171056"><span class="hs-identifier hs-var">_todType</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-132"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688171470"><span class="annot"><span class="annottext">rootTypeName :: Name
+</span><a href="#local-6989586621688171470"><span class="hs-identifier hs-var hs-var">rootTypeName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">OperationType
+</span><a href="#local-6989586621688171482"><span class="hs-identifier hs-var">_todType</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-133"></span><span>              </span><span class="annot"><span class="annottext">OperationType
 </span><span class="hs-identifier hs-var">G.OperationTypeQuery</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.GraphQL.Analyse.html#queryRootName"><span class="hs-identifier hs-var">queryRootName</span></a></span><span>
@@ -265,12 +265,12 @@ forall a. Analysis a -&gt; Analysis (Maybe a)
 </span><span id="line-135"></span><span>              </span><span class="annot"><span class="annottext">OperationType
 </span><span class="hs-identifier hs-var">G.OperationTypeSubscription</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.GraphQL.Analyse.html#subscriptionRootName"><span class="hs-identifier hs-var">subscriptionRootName</span></a></span><span>
-</span><span id="line-136"></span><span>        </span><span id="local-6989586621688171037"><span class="annot"><span class="annottext">TypeDefinition [Name] InputValueDefinition
-</span><a href="#local-6989586621688171037"><span class="hs-identifier hs-var">rootTypeDefinition</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-136"></span><span>        </span><span id="local-6989586621688171463"><span class="annot"><span class="annottext">TypeDefinition [Name] InputValueDefinition
+</span><a href="#local-6989586621688171463"><span class="hs-identifier hs-var">rootTypeDefinition</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-137"></span><span>          </span><span class="annot"><span class="annottext">Name
 -&gt; Analysis (Maybe (TypeDefinition [Name] InputValueDefinition))
 </span><a href="Hasura.GraphQL.Analyse.html#lookupType"><span class="hs-identifier hs-var">lookupType</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688171044"><span class="hs-identifier hs-var">rootTypeName</span></a></span><span>
+</span><a href="#local-6989586621688171470"><span class="hs-identifier hs-var">rootTypeName</span></a></span><span>
 </span><span id="line-138"></span><span>            </span><span class="annot"><span class="annottext">Analysis (Maybe (TypeDefinition [Name] InputValueDefinition))
 -&gt; Analysis (TypeDefinition [Name] InputValueDefinition)
 -&gt; Analysis (TypeDefinition [Name] InputValueDefinition)
@@ -279,12 +279,12 @@ forall (m :: * -&gt; *) a. Monad m =&gt; m (Maybe a) -&gt; m a -&gt; m a
 forall a. Diagnosis -&gt; Analysis a
 </span><a href="Hasura.GraphQL.Analyse.html#throwDiagnosis"><span class="hs-identifier hs-var">throwDiagnosis</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Diagnosis
 </span><a href="Hasura.GraphQL.Analyse.html#TypeNotFound"><span class="hs-identifier hs-var">TypeNotFound</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688171044"><span class="hs-identifier hs-var">rootTypeName</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688171470"><span class="hs-identifier hs-var">rootTypeName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-139"></span><span>        </span><span class="annot"><span class="annottext">TypeDefinition [Name] InputValueDefinition
 -&gt; SelectionSet FragmentSpread Name -&gt; Analysis (Maybe Selection)
 </span><a href="Hasura.GraphQL.Analyse.html#analyzeSelectionSet"><span class="hs-identifier hs-var">analyzeSelectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">TypeDefinition [Name] InputValueDefinition
-</span><a href="#local-6989586621688171037"><span class="hs-identifier hs-var">rootTypeDefinition</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
-</span><a href="#local-6989586621688171052"><span class="hs-identifier hs-var">_todSelectionSet</span></a></span><span>
+</span><a href="#local-6989586621688171463"><span class="hs-identifier hs-var">rootTypeDefinition</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
+</span><a href="#local-6989586621688171478"><span class="hs-identifier hs-var">_todSelectionSet</span></a></span><span>
 </span><span id="line-140"></span><span>          </span><span class="annot"><span class="annottext">Analysis (Maybe Selection)
 -&gt; Analysis Selection -&gt; Analysis Selection
 forall (m :: * -&gt; *) a. Monad m =&gt; m (Maybe a) -&gt; m a -&gt; m a
@@ -293,14 +293,14 @@ forall a. Diagnosis -&gt; Analysis a
 </span><a href="Hasura.GraphQL.Analyse.html#throwDiagnosis"><span class="hs-identifier hs-var">throwDiagnosis</span></a></span><span> </span><span class="annot"><span class="annottext">Diagnosis
 </span><a href="Hasura.GraphQL.Analyse.html#NoTopLevelSelection"><span class="hs-identifier hs-var">NoTopLevelSelection</span></a></span><span>
 </span><span id="line-141"></span><span>      </span><span class="hs-comment">-- collect variables</span><span>
-</span><span id="line-142"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688171031"><span class="annot"><span class="annottext">variables :: [(Name, VariableInfo)]
-</span><a href="#local-6989586621688171031"><span class="hs-identifier hs-var hs-var">variables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-142"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688171457"><span class="annot"><span class="annottext">variables :: [(Name, VariableInfo)]
+</span><a href="#local-6989586621688171457"><span class="hs-identifier hs-var hs-var">variables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-143"></span><span>            </span><span class="annot"><span class="annottext">[VariableDefinition]
-</span><a href="#local-6989586621688171054"><span class="hs-identifier hs-var">_todVariableDefinitions</span></a></span><span> </span><span class="annot"><span class="annottext">[VariableDefinition]
+</span><a href="#local-6989586621688171480"><span class="hs-identifier hs-var">_todVariableDefinitions</span></a></span><span> </span><span class="annot"><span class="annottext">[VariableDefinition]
 -&gt; (VariableDefinition -&gt; (Name, VariableInfo))
 -&gt; [(Name, VariableInfo)]
 forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
-</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span class="annot"><span class="hs-identifier hs-type">G.VariableDefinition</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688171026"><span id="local-6989586621688171027"><span id="local-6989586621688171028"><span class="annot"><span class="annottext">Maybe (Value Void)
+</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span class="annot"><span class="hs-identifier hs-type">G.VariableDefinition</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688171452"><span id="local-6989586621688171453"><span id="local-6989586621688171454"><span class="annot"><span class="annottext">Maybe (Value Void)
 GType
 Name
 _vdType :: VariableDefinition -&gt; GType
@@ -311,10 +311,10 @@ _vdType :: GType
 _vdName :: Name
 </span><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-144"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688171028"><span class="hs-identifier hs-var">_vdName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">GType -&gt; Maybe (Value Void) -&gt; VariableInfo
+</span><a href="#local-6989586621688171454"><span class="hs-identifier hs-var">_vdName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">GType -&gt; Maybe (Value Void) -&gt; VariableInfo
 </span><a href="Hasura.GraphQL.Analyse.html#VariableInfo"><span class="hs-identifier hs-var">VariableInfo</span></a></span><span> </span><span class="annot"><span class="annottext">GType
-</span><a href="#local-6989586621688171027"><span class="hs-identifier hs-var">_vdType</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (Value Void)
-</span><a href="#local-6989586621688171026"><span class="hs-identifier hs-var">_vdDefaultValue</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688171453"><span class="hs-identifier hs-var">_vdType</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (Value Void)
+</span><a href="#local-6989586621688171452"><span class="hs-identifier hs-var">_vdDefaultValue</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-145"></span><span>      </span><span class="annot"><span class="annottext">Structure -&gt; Analysis Structure
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Structure -&gt; Analysis Structure)
@@ -328,11 +328,11 @@ forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Selection
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="annot"><span class="annottext">Maybe Selection
-</span><a href="#local-6989586621688171046"><span class="hs-identifier hs-var">selection</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688171472"><span class="hs-identifier hs-var">selection</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-148"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[(Name, VariableInfo)] -&gt; HashMap Name VariableInfo
 forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">Map.fromList</span></span><span> </span><span class="annot"><span class="annottext">[(Name, VariableInfo)]
-</span><a href="#local-6989586621688171031"><span class="hs-identifier hs-var">variables</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688171457"><span class="hs-identifier hs-var">variables</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-149"></span><span>
 </span><span id="line-150"></span><span class="hs-comment">-- | Check the consistency between the schema information about a type and a</span><span>
 </span><span id="line-151"></span><span class="hs-comment">-- selection set (or lack thereof) on that type.</span><span>
@@ -342,12 +342,12 @@ forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
 </span><span id="line-155"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Analysis"><span class="hs-identifier hs-type">Analysis</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Selection"><span class="hs-identifier hs-type">Selection</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-156"></span><span id="analyzeSelectionSet"><span class="annot"><span class="annottext">analyzeSelectionSet :: TypeDefinition [Name] InputValueDefinition
 -&gt; SelectionSet FragmentSpread Name -&gt; Analysis (Maybe Selection)
-</span><a href="Hasura.GraphQL.Analyse.html#analyzeSelectionSet"><span class="hs-identifier hs-var hs-var">analyzeSelectionSet</span></a></span></span><span> </span><span id="local-6989586621688171020"><span class="annot"><span class="annottext">TypeDefinition [Name] InputValueDefinition
-</span><a href="#local-6989586621688171020"><span class="hs-identifier hs-var">typeDef</span></a></span></span><span> </span><span id="local-6989586621688171019"><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
-</span><a href="#local-6989586621688171019"><span class="hs-identifier hs-var">selectionSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">TypeDefinition [Name] InputValueDefinition
-</span><a href="#local-6989586621688171020"><span class="hs-identifier hs-var">typeDef</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-157"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinitionInputObject</span></span><span> </span><span id="local-6989586621688171017"><span class="annot"><span class="annottext">InputObjectTypeDefinition InputValueDefinition
-</span><a href="#local-6989586621688171017"><span class="hs-identifier hs-var">iotd</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="Hasura.GraphQL.Analyse.html#analyzeSelectionSet"><span class="hs-identifier hs-var hs-var">analyzeSelectionSet</span></a></span></span><span> </span><span id="local-6989586621688171446"><span class="annot"><span class="annottext">TypeDefinition [Name] InputValueDefinition
+</span><a href="#local-6989586621688171446"><span class="hs-identifier hs-var">typeDef</span></a></span></span><span> </span><span id="local-6989586621688171445"><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
+</span><a href="#local-6989586621688171445"><span class="hs-identifier hs-var">selectionSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">TypeDefinition [Name] InputValueDefinition
+</span><a href="#local-6989586621688171446"><span class="hs-identifier hs-var">typeDef</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-157"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinitionInputObject</span></span><span> </span><span id="local-6989586621688171443"><span class="annot"><span class="annottext">InputObjectTypeDefinition InputValueDefinition
+</span><a href="#local-6989586621688171443"><span class="hs-identifier hs-var">iotd</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-158"></span><span>    </span><span class="hs-comment">-- input objects aren't allowed in selection sets</span><span>
 </span><span id="line-159"></span><span>    </span><span class="annot"><span class="annottext">Diagnosis -&gt; Analysis (Maybe Selection)
 forall a. Diagnosis -&gt; Analysis a
@@ -360,16 +360,16 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">InputObjectTypeDefinition InputValueDefinition -&gt; Name
 forall inputType. InputObjectTypeDefinition inputType -&gt; Name
 </span><span class="hs-identifier hs-var hs-var">G._iotdName</span></span><span> </span><span class="annot"><span class="annottext">InputObjectTypeDefinition InputValueDefinition
-</span><a href="#local-6989586621688171017"><span class="hs-identifier hs-var">iotd</span></a></span><span>
-</span><span id="line-160"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinitionScalar</span></span><span> </span><span id="local-6989586621688171013"><span class="annot"><span class="annottext">ScalarTypeDefinition
-</span><a href="#local-6989586621688171013"><span class="hs-identifier hs-var">std</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621688171443"><span class="hs-identifier hs-var">iotd</span></a></span><span>
+</span><span id="line-160"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinitionScalar</span></span><span> </span><span id="local-6989586621688171439"><span class="annot"><span class="annottext">ScalarTypeDefinition
+</span><a href="#local-6989586621688171439"><span class="hs-identifier hs-var">std</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-161"></span><span>    </span><span class="hs-comment">-- scalars do not admit a selection set</span><span>
 </span><span id="line-162"></span><span>    </span><span class="annot"><span class="annottext">Bool -&gt; Analysis () -&gt; Analysis ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
-</span><a href="#local-6989586621688171019"><span class="hs-identifier hs-var">selectionSet</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Analysis () -&gt; Analysis ()) -&gt; Analysis () -&gt; Analysis ()
+</span><a href="#local-6989586621688171445"><span class="hs-identifier hs-var">selectionSet</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Analysis () -&gt; Analysis ()) -&gt; Analysis () -&gt; Analysis ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-163"></span><span>      </span><span class="annot"><span class="annottext">Diagnosis -&gt; Analysis ()
@@ -381,21 +381,21 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ScalarTypeDefinition -&gt; Name
 </span><span class="hs-identifier hs-var hs-var">G._stdName</span></span><span> </span><span class="annot"><span class="annottext">ScalarTypeDefinition
-</span><a href="#local-6989586621688171013"><span class="hs-identifier hs-var">std</span></a></span><span>
+</span><a href="#local-6989586621688171439"><span class="hs-identifier hs-var">std</span></a></span><span>
 </span><span id="line-164"></span><span>    </span><span class="annot"><span class="annottext">Maybe Selection -&gt; Analysis (Maybe Selection)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe Selection
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-165"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinitionEnum</span></span><span> </span><span id="local-6989586621688171008"><span class="annot"><span class="annottext">EnumTypeDefinition
-</span><a href="#local-6989586621688171008"><span class="hs-identifier hs-var">etd</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-165"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinitionEnum</span></span><span> </span><span id="local-6989586621688171434"><span class="annot"><span class="annottext">EnumTypeDefinition
+</span><a href="#local-6989586621688171434"><span class="hs-identifier hs-var">etd</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-166"></span><span>    </span><span class="hs-comment">-- enums do not admit a selection set</span><span>
 </span><span id="line-167"></span><span>    </span><span class="annot"><span class="annottext">Bool -&gt; Analysis () -&gt; Analysis ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
-</span><a href="#local-6989586621688171019"><span class="hs-identifier hs-var">selectionSet</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Analysis () -&gt; Analysis ()) -&gt; Analysis () -&gt; Analysis ()
+</span><a href="#local-6989586621688171445"><span class="hs-identifier hs-var">selectionSet</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Analysis () -&gt; Analysis ()) -&gt; Analysis () -&gt; Analysis ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-168"></span><span>      </span><span class="annot"><span class="annottext">Diagnosis -&gt; Analysis ()
@@ -407,30 +407,30 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">EnumTypeDefinition -&gt; Name
 </span><span class="hs-identifier hs-var hs-var">G._etdName</span></span><span> </span><span class="annot"><span class="annottext">EnumTypeDefinition
-</span><a href="#local-6989586621688171008"><span class="hs-identifier hs-var">etd</span></a></span><span>
+</span><a href="#local-6989586621688171434"><span class="hs-identifier hs-var">etd</span></a></span><span>
 </span><span id="line-169"></span><span>    </span><span class="annot"><span class="annottext">Maybe Selection -&gt; Analysis (Maybe Selection)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe Selection
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-170"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinitionUnion</span></span><span> </span><span id="local-6989586621688171004"><span class="annot"><span class="annottext">UnionTypeDefinition
-</span><a href="#local-6989586621688171004"><span class="hs-identifier hs-var">_utd</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-170"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinitionUnion</span></span><span> </span><span id="local-6989586621688171430"><span class="annot"><span class="annottext">UnionTypeDefinition
+</span><a href="#local-6989586621688171430"><span class="hs-identifier hs-var">_utd</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-171"></span><span>    </span><span class="hs-comment">-- TODO: implement unions</span><span>
 </span><span id="line-172"></span><span>    </span><span class="annot"><span class="annottext">Maybe Selection -&gt; Analysis (Maybe Selection)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe Selection
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-173"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinitionInterface</span></span><span> </span><span id="local-6989586621688171002"><span class="annot"><span class="annottext">InterfaceTypeDefinition [Name] InputValueDefinition
-</span><a href="#local-6989586621688171002"><span class="hs-identifier hs-var">_itd</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-173"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinitionInterface</span></span><span> </span><span id="local-6989586621688171428"><span class="annot"><span class="annottext">InterfaceTypeDefinition [Name] InputValueDefinition
+</span><a href="#local-6989586621688171428"><span class="hs-identifier hs-var">_itd</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-174"></span><span>    </span><span class="hs-comment">-- TODO: implement interfaces</span><span>
 </span><span id="line-175"></span><span>    </span><span class="annot"><span class="annottext">Maybe Selection -&gt; Analysis (Maybe Selection)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe Selection
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-176"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinitionObject</span></span><span> </span><span id="local-6989586621688171000"><span class="annot"><span class="annottext">ObjectTypeDefinition InputValueDefinition
-</span><a href="#local-6989586621688171000"><span class="hs-identifier hs-var">otd</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-176"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinitionObject</span></span><span> </span><span id="local-6989586621688171426"><span class="annot"><span class="annottext">ObjectTypeDefinition InputValueDefinition
+</span><a href="#local-6989586621688171426"><span class="hs-identifier hs-var">otd</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-177"></span><span>    </span><span class="annot"><span class="annottext">Selection -&gt; Maybe Selection
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Selection -&gt; Maybe Selection)
@@ -439,8 +439,8 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ObjectTypeDefinition InputValueDefinition
 -&gt; SelectionSet FragmentSpread Name -&gt; Analysis Selection
 </span><a href="Hasura.GraphQL.Analyse.html#analyzeObjectSelectionSet"><span class="hs-identifier hs-var">analyzeObjectSelectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">ObjectTypeDefinition InputValueDefinition
-</span><a href="#local-6989586621688171000"><span class="hs-identifier hs-var">otd</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
-</span><a href="#local-6989586621688171019"><span class="hs-identifier hs-var">selectionSet</span></a></span><span>
+</span><a href="#local-6989586621688171426"><span class="hs-identifier hs-var">otd</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
+</span><a href="#local-6989586621688171445"><span class="hs-identifier hs-var">selectionSet</span></a></span><span>
 </span><span id="line-178"></span><span>
 </span><span id="line-179"></span><span class="hs-comment">-- | Analyze the fields of an object selection set against its definition, and</span><span>
 </span><span id="line-180"></span><span class="hs-comment">-- emit the corresponding 'Selection'. We ignore the fields that fail, and we</span><span>
@@ -451,7 +451,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span id="line-185"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Analysis"><span class="hs-identifier hs-type">Analysis</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Selection"><span class="hs-identifier hs-type">Selection</span></a></span><span>
 </span><span id="line-186"></span><span id="analyzeObjectSelectionSet"><span class="annot"><span class="annottext">analyzeObjectSelectionSet :: ObjectTypeDefinition InputValueDefinition
 -&gt; SelectionSet FragmentSpread Name -&gt; Analysis Selection
-</span><a href="Hasura.GraphQL.Analyse.html#analyzeObjectSelectionSet"><span class="hs-identifier hs-var hs-var">analyzeObjectSelectionSet</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.ObjectTypeDefinition</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688170992"><span id="local-6989586621688170993"><span id="local-6989586621688170994"><span id="local-6989586621688170995"><span id="local-6989586621688170996"><span class="annot"><span class="annottext">[Directive Void]
+</span><a href="Hasura.GraphQL.Analyse.html#analyzeObjectSelectionSet"><span class="hs-identifier hs-var hs-var">analyzeObjectSelectionSet</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.ObjectTypeDefinition</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688171418"><span id="local-6989586621688171419"><span id="local-6989586621688171420"><span id="local-6989586621688171421"><span id="local-6989586621688171422"><span class="annot"><span class="annottext">[Directive Void]
 [FieldDefinition InputValueDefinition]
 [Name]
 Maybe Description
@@ -469,8 +469,8 @@ _otdDirectives :: [Directive Void]
 _otdImplementsInterfaces :: [Name]
 _otdName :: Name
 _otdDescription :: Maybe Description
-</span><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></span></span></span></span></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span id="local-6989586621688170986"><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
-</span><a href="#local-6989586621688170986"><span class="hs-identifier hs-var">selectionSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></span></span></span></span></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span id="local-6989586621688171412"><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
+</span><a href="#local-6989586621688171412"><span class="hs-identifier hs-var">selectionSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-187"></span><span>  </span><span class="annot"><span class="annottext">[Selection] -&gt; Selection
 forall a. Monoid a =&gt; [a] -&gt; a
 </span><span class="hs-identifier hs-var">mconcat</span></span><span> </span><span class="annot"><span class="annottext">([Selection] -&gt; Selection)
@@ -490,7 +490,7 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><span class="hs-identifier hs-var">for</span></span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
-</span><a href="#local-6989586621688170986"><span class="hs-identifier hs-var">selectionSet</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><a href="#local-6989586621688171412"><span class="hs-identifier hs-var">selectionSet</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-188"></span><span>    </span><span class="hs-comment">-- TODO: implement fragments</span><span>
 </span><span id="line-189"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">G.SelectionFragmentSpread</span></span><span> </span><span class="annot"><span class="annottext">FragmentSpread Name
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -506,7 +506,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe Selection
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-193"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">G.SelectionField</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.Field</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688170974"><span id="local-6989586621688170975"><span id="local-6989586621688170976"><span id="local-6989586621688170977"><span id="local-6989586621688170978"><span class="annot"><span class="annottext">[Directive Name]
+</span><span id="line-193"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">G.SelectionField</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.Field</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688171400"><span id="local-6989586621688171401"><span id="local-6989586621688171402"><span id="local-6989586621688171403"><span id="local-6989586621688171404"><span class="annot"><span class="annottext">[Directive Name]
 SelectionSet FragmentSpread Name
 Maybe Name
 HashMap Name (Value Name)
@@ -527,14 +527,14 @@ _fAlias :: Maybe Name
 </span><span id="line-194"></span><span>      </span><span class="annot"><span class="annottext">Name -&gt; Analysis (Maybe Selection) -&gt; Analysis (Maybe Selection)
 forall a. Name -&gt; Analysis a -&gt; Analysis a
 </span><a href="Hasura.GraphQL.Analyse.html#withField"><span class="hs-identifier hs-var">withField</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170977"><span class="hs-identifier hs-var">_fName</span></a></span><span> </span><span class="annot"><span class="annottext">(Analysis (Maybe Selection) -&gt; Analysis (Maybe Selection))
+</span><a href="#local-6989586621688171403"><span class="hs-identifier hs-var">_fName</span></a></span><span> </span><span class="annot"><span class="annottext">(Analysis (Maybe Selection) -&gt; Analysis (Maybe Selection))
 -&gt; Analysis (Maybe Selection) -&gt; Analysis (Maybe Selection)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Analysis Selection -&gt; Analysis (Maybe Selection)
 forall a. Analysis a -&gt; Analysis (Maybe a)
 </span><a href="Hasura.GraphQL.Analyse.html#withCatchAndRecord"><span class="hs-identifier hs-var">withCatchAndRecord</span></a></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-195"></span><span>        </span><span class="hs-comment">-- attempt to find that field in the object's definition</span><span>
-</span><span id="line-196"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">G.FieldDefinition</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688170962"><span id="local-6989586621688170963"><span id="local-6989586621688170964"><span id="local-6989586621688170965"><span id="local-6989586621688170966"><span class="annot"><span class="annottext">[Directive Void]
+</span><span id="line-196"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">G.FieldDefinition</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688171388"><span id="local-6989586621688171389"><span id="local-6989586621688171390"><span id="local-6989586621688171391"><span id="local-6989586621688171392"><span class="annot"><span class="annottext">[Directive Void]
 ArgumentsDefinition InputValueDefinition
 Maybe Description
 GType
@@ -552,8 +552,8 @@ _fldName :: Name
 _fldDescription :: Maybe Description
 </span><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-197"></span><span>          </span><span class="annot"><span class="annottext">Name -&gt; Maybe (FieldDefinition InputValueDefinition)
-</span><a href="#local-6989586621688170956"><span class="hs-identifier hs-var">findDefinition</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170977"><span class="hs-identifier hs-var">_fName</span></a></span><span>
+</span><a href="#local-6989586621688171382"><span class="hs-identifier hs-var">findDefinition</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688171403"><span class="hs-identifier hs-var">_fName</span></a></span><span>
 </span><span id="line-198"></span><span>            </span><span class="annot"><span class="annottext">Maybe (FieldDefinition InputValueDefinition)
 -&gt; Analysis (FieldDefinition InputValueDefinition)
 -&gt; Analysis (FieldDefinition InputValueDefinition)
@@ -562,19 +562,19 @@ forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 forall a. Diagnosis -&gt; Analysis a
 </span><a href="Hasura.GraphQL.Analyse.html#throwDiagnosis"><span class="hs-identifier hs-var">throwDiagnosis</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Diagnosis
 </span><a href="Hasura.GraphQL.Analyse.html#ObjectFieldNotFound"><span class="hs-identifier hs-var">ObjectFieldNotFound</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170995"><span class="hs-identifier hs-var">_otdName</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170977"><span class="hs-identifier hs-var">_fName</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688171421"><span class="hs-identifier hs-var">_otdName</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688171403"><span class="hs-identifier hs-var">_fName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-199"></span><span>        </span><span class="hs-comment">-- attempt to find its type in the schema</span><span>
-</span><span id="line-200"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688170953"><span class="annot"><span class="annottext">baseType :: Name
-</span><a href="#local-6989586621688170953"><span class="hs-identifier hs-var hs-var">baseType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">GType -&gt; Name
+</span><span id="line-200"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688171379"><span class="annot"><span class="annottext">baseType :: Name
+</span><a href="#local-6989586621688171379"><span class="hs-identifier hs-var hs-var">baseType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">GType -&gt; Name
 </span><span class="hs-identifier hs-var">G.getBaseType</span></span><span> </span><span class="annot"><span class="annottext">GType
-</span><a href="#local-6989586621688170963"><span class="hs-identifier hs-var">_fldType</span></a></span><span>
-</span><span id="line-201"></span><span>        </span><span id="local-6989586621688170951"><span class="annot"><span class="annottext">TypeDefinition [Name] InputValueDefinition
-</span><a href="#local-6989586621688170951"><span class="hs-identifier hs-var">typeDefinition</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621688171389"><span class="hs-identifier hs-var">_fldType</span></a></span><span>
+</span><span id="line-201"></span><span>        </span><span id="local-6989586621688171377"><span class="annot"><span class="annottext">TypeDefinition [Name] InputValueDefinition
+</span><a href="#local-6989586621688171377"><span class="hs-identifier hs-var">typeDefinition</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-202"></span><span>          </span><span class="annot"><span class="annottext">Name
 -&gt; Analysis (Maybe (TypeDefinition [Name] InputValueDefinition))
 </span><a href="Hasura.GraphQL.Analyse.html#lookupType"><span class="hs-identifier hs-var">lookupType</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170953"><span class="hs-identifier hs-var">baseType</span></a></span><span>
+</span><a href="#local-6989586621688171379"><span class="hs-identifier hs-var">baseType</span></a></span><span>
 </span><span id="line-203"></span><span>            </span><span class="annot"><span class="annottext">Analysis (Maybe (TypeDefinition [Name] InputValueDefinition))
 -&gt; Analysis (TypeDefinition [Name] InputValueDefinition)
 -&gt; Analysis (TypeDefinition [Name] InputValueDefinition)
@@ -583,14 +583,14 @@ forall (m :: * -&gt; *) a. Monad m =&gt; m (Maybe a) -&gt; m a -&gt; m a
 forall a. Diagnosis -&gt; Analysis a
 </span><a href="Hasura.GraphQL.Analyse.html#throwDiagnosis"><span class="hs-identifier hs-var">throwDiagnosis</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Diagnosis
 </span><a href="Hasura.GraphQL.Analyse.html#TypeNotFound"><span class="hs-identifier hs-var">TypeNotFound</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170953"><span class="hs-identifier hs-var">baseType</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688171379"><span class="hs-identifier hs-var">baseType</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-204"></span><span>        </span><span class="hs-comment">-- recursively processthe selection set</span><span>
-</span><span id="line-205"></span><span>        </span><span id="local-6989586621688170950"><span class="annot"><span class="annottext">Maybe Selection
-</span><a href="#local-6989586621688170950"><span class="hs-identifier hs-var">subSelection</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TypeDefinition [Name] InputValueDefinition
+</span><span id="line-205"></span><span>        </span><span id="local-6989586621688171376"><span class="annot"><span class="annottext">Maybe Selection
+</span><a href="#local-6989586621688171376"><span class="hs-identifier hs-var">subSelection</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TypeDefinition [Name] InputValueDefinition
 -&gt; SelectionSet FragmentSpread Name -&gt; Analysis (Maybe Selection)
 </span><a href="Hasura.GraphQL.Analyse.html#analyzeSelectionSet"><span class="hs-identifier hs-var">analyzeSelectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">TypeDefinition [Name] InputValueDefinition
-</span><a href="#local-6989586621688170951"><span class="hs-identifier hs-var">typeDefinition</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
-</span><a href="#local-6989586621688170974"><span class="hs-identifier hs-var">_fSelectionSet</span></a></span><span>
+</span><a href="#local-6989586621688171377"><span class="hs-identifier hs-var">typeDefinition</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
+</span><a href="#local-6989586621688171400"><span class="hs-identifier hs-var">_fSelectionSet</span></a></span><span>
 </span><span id="line-206"></span><span>        </span><span class="hs-comment">-- TODO: should we check arguments?</span><span>
 </span><span id="line-207"></span><span>        </span><span class="annot"><span class="annottext">Selection -&gt; Analysis Selection
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -609,24 +609,24 @@ forall k v. Hashable k =&gt; k -&gt; v -&gt; HashMap k v
 </span><span id="line-210"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Maybe Name -&gt; Name
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170977"><span class="hs-identifier hs-var">_fName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621688170978"><span class="hs-identifier hs-var">_fAlias</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688171403"><span class="hs-identifier hs-var">_fName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621688171404"><span class="hs-identifier hs-var">_fAlias</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-211"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">GType
 -&gt; TypeDefinition [Name] InputValueDefinition
 -&gt; Maybe Selection
 -&gt; FieldInfo
 </span><a href="Hasura.GraphQL.Analyse.html#FieldInfo"><span class="hs-identifier hs-var">FieldInfo</span></a></span><span> </span><span class="annot"><span class="annottext">GType
-</span><a href="#local-6989586621688170963"><span class="hs-identifier hs-var">_fldType</span></a></span><span> </span><span class="annot"><span class="annottext">TypeDefinition [Name] InputValueDefinition
-</span><a href="#local-6989586621688170951"><span class="hs-identifier hs-var">typeDefinition</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Selection
-</span><a href="#local-6989586621688170950"><span class="hs-identifier hs-var">subSelection</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688171389"><span class="hs-identifier hs-var">_fldType</span></a></span><span> </span><span class="annot"><span class="annottext">TypeDefinition [Name] InputValueDefinition
+</span><a href="#local-6989586621688171377"><span class="hs-identifier hs-var">typeDefinition</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Selection
+</span><a href="#local-6989586621688171376"><span class="hs-identifier hs-var">subSelection</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-212"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-213"></span><span>    </span><span class="hs-comment">-- Additional hidden fields that are allowed despite not being listed in the</span><span>
 </span><span id="line-214"></span><span>    </span><span class="hs-comment">-- schema.</span><span>
-</span><span id="line-215"></span><span>    </span><span class="annot"><a href="#local-6989586621688170948"><span class="hs-identifier hs-type">systemFields</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">G.FieldDefinition</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.InputValueDefinition</span></span><span class="hs-special">]</span><span>
-</span><span id="line-216"></span><span>    </span><span id="local-6989586621688170948"><span class="annot"><span class="annottext">systemFields :: [FieldDefinition InputValueDefinition]
-</span><a href="#local-6989586621688170948"><span class="hs-identifier hs-var hs-var">systemFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-215"></span><span>    </span><span class="annot"><a href="#local-6989586621688171374"><span class="hs-identifier hs-type">systemFields</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">G.FieldDefinition</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.InputValueDefinition</span></span><span class="hs-special">]</span><span>
+</span><span id="line-216"></span><span>    </span><span id="local-6989586621688171374"><span class="annot"><span class="annottext">systemFields :: [FieldDefinition InputValueDefinition]
+</span><a href="#local-6989586621688171374"><span class="hs-identifier hs-var hs-var">systemFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-217"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170995"><span class="hs-identifier hs-var">_otdName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; [Name] -&gt; Bool
+</span><a href="#local-6989586621688171421"><span class="hs-identifier hs-var">_otdName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; [Name] -&gt; Bool
 forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><span class="hs-operator hs-var">`elem`</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.GraphQL.Analyse.html#queryRootName"><span class="hs-identifier hs-var">queryRootName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Name
@@ -640,30 +640,30 @@ forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><a href="Hasura.GraphQL.Analyse.html#typenameField"><span class="hs-identifier hs-var">typenameField</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-220"></span><span>
 </span><span id="line-221"></span><span>    </span><span class="hs-comment">-- Search for that field in the schema's definition.</span><span>
-</span><span id="line-222"></span><span>    </span><span class="annot"><a href="#local-6989586621688170956"><span class="hs-identifier hs-type">findDefinition</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.FieldDefinition</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.InputValueDefinition</span></span><span class="hs-special">)</span><span>
-</span><span id="line-223"></span><span>    </span><span id="local-6989586621688170956"><span class="annot"><span class="annottext">findDefinition :: Name -&gt; Maybe (FieldDefinition InputValueDefinition)
-</span><a href="#local-6989586621688170956"><span class="hs-identifier hs-var hs-var">findDefinition</span></a></span></span><span> </span><span id="local-6989586621688170943"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170943"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-222"></span><span>    </span><span class="annot"><a href="#local-6989586621688171382"><span class="hs-identifier hs-type">findDefinition</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.FieldDefinition</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.InputValueDefinition</span></span><span class="hs-special">)</span><span>
+</span><span id="line-223"></span><span>    </span><span id="local-6989586621688171382"><span class="annot"><span class="annottext">findDefinition :: Name -&gt; Maybe (FieldDefinition InputValueDefinition)
+</span><a href="#local-6989586621688171382"><span class="hs-identifier hs-var hs-var">findDefinition</span></a></span></span><span> </span><span id="local-6989586621688171369"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688171369"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-224"></span><span>      </span><span class="annot"><span class="annottext">(FieldDefinition InputValueDefinition -&gt; Bool)
 -&gt; [FieldDefinition InputValueDefinition]
 -&gt; Maybe (FieldDefinition InputValueDefinition)
 forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">find</span></span><span>
-</span><span id="line-225"></span><span>        </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621688170941"><span class="annot"><span class="annottext">FieldDefinition InputValueDefinition
-</span><a href="#local-6989586621688170941"><span class="hs-identifier hs-var">fieldDef</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FieldDefinition InputValueDefinition -&gt; Name
+</span><span id="line-225"></span><span>        </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621688171367"><span class="annot"><span class="annottext">FieldDefinition InputValueDefinition
+</span><a href="#local-6989586621688171367"><span class="hs-identifier hs-var">fieldDef</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FieldDefinition InputValueDefinition -&gt; Name
 forall inputType. FieldDefinition inputType -&gt; Name
 </span><span class="hs-identifier hs-var hs-var">G._fldName</span></span><span> </span><span class="annot"><span class="annottext">FieldDefinition InputValueDefinition
-</span><a href="#local-6989586621688170941"><span class="hs-identifier hs-var">fieldDef</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Bool
+</span><a href="#local-6989586621688171367"><span class="hs-identifier hs-var">fieldDef</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170943"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688171369"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-226"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[FieldDefinition InputValueDefinition]
-</span><a href="#local-6989586621688170992"><span class="hs-identifier hs-var">_otdFieldsDefinition</span></a></span><span> </span><span class="annot"><span class="annottext">[FieldDefinition InputValueDefinition]
+</span><a href="#local-6989586621688171418"><span class="hs-identifier hs-var">_otdFieldsDefinition</span></a></span><span> </span><span class="annot"><span class="annottext">[FieldDefinition InputValueDefinition]
 -&gt; [FieldDefinition InputValueDefinition]
 -&gt; [FieldDefinition InputValueDefinition]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[FieldDefinition InputValueDefinition]
-</span><a href="#local-6989586621688170948"><span class="hs-identifier hs-var">systemFields</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688171374"><span class="hs-identifier hs-var">systemFields</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-227"></span><span>
 </span><span id="line-228"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
 </span><span id="line-229"></span><span class="hs-comment">-- Internal Analysis monad and helpers</span><span>
@@ -674,7 +674,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-234"></span><span class="hs-comment">--   - reader carries the current path, and the full schema for lookups</span><span>
 </span><span id="line-235"></span><span class="hs-comment">--   - writer logs all errors we have caught</span><span>
 </span><span id="line-236"></span><span class="hs-comment">--   - except allows for short-circuiting errors</span><span>
-</span><span id="line-237"></span><span class="hs-keyword">newtype</span><span> </span><span id="Analysis"><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Analysis"><span class="hs-identifier hs-var">Analysis</span></a></span></span><span> </span><span id="local-6989586621688170940"><span class="annot"><a href="#local-6989586621688170940"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-237"></span><span class="hs-keyword">newtype</span><span> </span><span id="Analysis"><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Analysis"><span class="hs-identifier hs-var">Analysis</span></a></span></span><span> </span><span id="local-6989586621688171366"><span class="annot"><a href="#local-6989586621688171366"><span class="hs-identifier hs-type">a</span></a></span></span><span>
 </span><span id="line-238"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Analysis"><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Analysis"><span class="hs-identifier hs-var">Analysis</span></a></span></span><span>
 </span><span id="line-239"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span>
 </span><span id="line-240"></span><span>          </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#AnalysisError"><span class="hs-identifier hs-type">AnalysisError</span></a></span><span>
@@ -682,10 +682,10 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-242"></span><span>              </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Path"><span class="hs-identifier hs-type">Path</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.SchemaIntrospection</span></span><span class="hs-special">)</span><span>
 </span><span id="line-243"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Writer</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#AnalysisError"><span class="hs-identifier hs-type">AnalysisError</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-244"></span><span>          </span><span class="hs-special">)</span><span>
-</span><span id="line-245"></span><span>          </span><span class="annot"><a href="#local-6989586621688170940"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-245"></span><span>          </span><span class="annot"><a href="#local-6989586621688171366"><span class="hs-identifier hs-type">a</span></a></span><span>
 </span><span id="line-246"></span><span>      </span><span class="hs-special">)</span><span>
 </span><span id="line-247"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span>
-</span><span id="line-248"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621688170935"><span id="local-6989586621688170937"><span class="annot"><span class="annottext">a -&gt; Analysis b -&gt; Analysis a
+</span><span id="line-248"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621688171361"><span id="local-6989586621688171363"><span class="annot"><span class="annottext">a -&gt; Analysis b -&gt; Analysis a
 (a -&gt; b) -&gt; Analysis a -&gt; Analysis b
 (forall a b. (a -&gt; b) -&gt; Analysis a -&gt; Analysis b)
 -&gt; (forall a b. a -&gt; Analysis b -&gt; Analysis a) -&gt; Functor Analysis
@@ -699,7 +699,7 @@ $c&lt;$ :: forall a b. a -&gt; Analysis b -&gt; Analysis a
 fmap :: (a -&gt; b) -&gt; Analysis a -&gt; Analysis b
 $cfmap :: forall a b. (a -&gt; b) -&gt; Analysis a -&gt; Analysis b
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-249"></span><span>      </span><span id="local-6989586621688170923"><span id="local-6989586621688170925"><span id="local-6989586621688170927"><span id="local-6989586621688170929"><span id="local-6989586621688170931"><span class="annot"><span class="annottext">Functor Analysis
+</span><span id="line-249"></span><span>      </span><span id="local-6989586621688171349"><span id="local-6989586621688171351"><span id="local-6989586621688171353"><span id="local-6989586621688171355"><span id="local-6989586621688171357"><span class="annot"><span class="annottext">Functor Analysis
 a -&gt; Analysis a
 Functor Analysis
 -&gt; (forall a. a -&gt; Analysis a)
@@ -740,7 +740,7 @@ pure :: a -&gt; Analysis a
 $cpure :: forall a. a -&gt; Analysis a
 $cp1Applicative :: Functor Analysis
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Applicative</span></span></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-250"></span><span>      </span><span id="local-6989586621688170915"><span id="local-6989586621688170917"><span id="local-6989586621688170919"><span class="annot"><span class="annottext">Applicative Analysis
+</span><span id="line-250"></span><span>      </span><span id="local-6989586621688171341"><span id="local-6989586621688171343"><span id="local-6989586621688171345"><span class="annot"><span class="annottext">Applicative Analysis
 a -&gt; Analysis a
 Applicative Analysis
 -&gt; (forall a b. Analysis a -&gt; (a -&gt; Analysis b) -&gt; Analysis b)
@@ -766,21 +766,21 @@ $c&gt;&gt; :: forall a b. Analysis a -&gt; Analysis b -&gt; Analysis b
 $c&gt;&gt;= :: forall a b. Analysis a -&gt; (a -&gt; Analysis b) -&gt; Analysis b
 $cp1Monad :: Applicative Analysis
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monad</span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-251"></span><span>      </span><span id="local-6989586621688170907"><span id="local-6989586621688170909"><span id="local-6989586621688170911"><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Path"><span class="hs-identifier hs-type">Path</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.SchemaIntrospection</span></span><span class="hs-special">)</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-252"></span><span>      </span><span id="local-6989586621688170896"><span id="local-6989586621688170898"><span id="local-6989586621688170900"><span id="local-6989586621688170902"><span class="annot"><span class="hs-identifier hs-type">MonadWriter</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#AnalysisError"><span class="hs-identifier hs-type">AnalysisError</span></a></span><span class="hs-special">]</span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-253"></span><span>      </span><span id="local-6989586621688170890"><span id="local-6989586621688170892"><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#AnalysisError"><span class="hs-identifier hs-type">AnalysisError</span></a></span></span></span><span>
+</span><span id="line-251"></span><span>      </span><span id="local-6989586621688171333"><span id="local-6989586621688171335"><span id="local-6989586621688171337"><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Path"><span class="hs-identifier hs-type">Path</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.SchemaIntrospection</span></span><span class="hs-special">)</span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-252"></span><span>      </span><span id="local-6989586621688171322"><span id="local-6989586621688171324"><span id="local-6989586621688171326"><span id="local-6989586621688171328"><span class="annot"><span class="hs-identifier hs-type">MonadWriter</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#AnalysisError"><span class="hs-identifier hs-type">AnalysisError</span></a></span><span class="hs-special">]</span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-253"></span><span>      </span><span id="local-6989586621688171316"><span id="local-6989586621688171318"><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#AnalysisError"><span class="hs-identifier hs-type">AnalysisError</span></a></span></span></span><span>
 </span><span id="line-254"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-255"></span><span>
-</span><span id="line-256"></span><span id="local-6989586621688171320"><span class="annot"><a href="Hasura.GraphQL.Analyse.html#runAnalysis"><span class="hs-identifier hs-type">runAnalysis</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="#local-6989586621688171320"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.SchemaIntrospection</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Analysis"><span class="hs-identifier hs-type">Analysis</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688171320"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688171320"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span><span class="hs-special">)</span></span><span>
+</span><span id="line-256"></span><span id="local-6989586621688171746"><span class="annot"><a href="Hasura.GraphQL.Analyse.html#runAnalysis"><span class="hs-identifier hs-type">runAnalysis</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="#local-6989586621688171746"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.SchemaIntrospection</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Analysis"><span class="hs-identifier hs-type">Analysis</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688171746"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688171746"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span><span class="hs-special">)</span></span><span>
 </span><span id="line-257"></span><span id="runAnalysis"><span class="annot"><span class="annottext">runAnalysis :: SchemaIntrospection -&gt; Analysis a -&gt; (a, [Text])
-</span><a href="Hasura.GraphQL.Analyse.html#runAnalysis"><span class="hs-identifier hs-var hs-var">runAnalysis</span></a></span></span><span> </span><span id="local-6989586621688170888"><span class="annot"><span class="annottext">SchemaIntrospection
-</span><a href="#local-6989586621688170888"><span class="hs-identifier hs-var">schema</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Analysis"><span class="hs-identifier hs-type">Analysis</span></a></span><span> </span><span id="local-6989586621688170887"><span class="annot"><span class="annottext">ExceptT
+</span><a href="Hasura.GraphQL.Analyse.html#runAnalysis"><span class="hs-identifier hs-var hs-var">runAnalysis</span></a></span></span><span> </span><span id="local-6989586621688171314"><span class="annot"><span class="annottext">SchemaIntrospection
+</span><a href="#local-6989586621688171314"><span class="hs-identifier hs-var">schema</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Analysis"><span class="hs-identifier hs-type">Analysis</span></a></span><span> </span><span id="local-6989586621688171313"><span class="annot"><span class="annottext">ExceptT
   AnalysisError
   (ReaderT (Path, SchemaIntrospection) (Writer [AnalysisError]))
   a
-</span><a href="#local-6989586621688170887"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621688171313"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-258"></span><span>  </span><span class="annot"><span class="annottext">(Either AnalysisError a, [AnalysisError]) -&gt; (a, [Text])
-</span><a href="#local-6989586621688170886"><span class="hs-identifier hs-var">postProcess</span></a></span><span> </span><span class="annot"><span class="annottext">((Either AnalysisError a, [AnalysisError]) -&gt; (a, [Text]))
+</span><a href="#local-6989586621688171312"><span class="hs-identifier hs-var">postProcess</span></a></span><span> </span><span class="annot"><span class="annottext">((Either AnalysisError a, [AnalysisError]) -&gt; (a, [Text]))
 -&gt; (Either AnalysisError a, [AnalysisError]) -&gt; (a, [Text])
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
@@ -817,7 +817,7 @@ forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SchemaIntrospection
-</span><a href="#local-6989586621688170888"><span class="hs-identifier hs-var">schema</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(ReaderT
+</span><a href="#local-6989586621688171314"><span class="hs-identifier hs-var">schema</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(ReaderT
    (Path, SchemaIntrospection)
    (Writer [AnalysisError])
    (Either AnalysisError a)
@@ -842,42 +842,42 @@ forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
   AnalysisError
   (ReaderT (Path, SchemaIntrospection) (Writer [AnalysisError]))
   a
-</span><a href="#local-6989586621688170887"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><a href="#local-6989586621688171313"><span class="hs-identifier hs-var">a</span></a></span><span>
 </span><span id="line-262"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-263"></span><span>    </span><span class="hs-comment">-- if there was an uncaught error, add it to the list</span><span>
-</span><span id="line-264"></span><span>    </span><span id="local-6989586621688170886"><span class="annot"><span class="annottext">postProcess :: (Either AnalysisError a, [AnalysisError]) -&gt; (a, [Text])
-</span><a href="#local-6989586621688170886"><span class="hs-identifier hs-var hs-var">postProcess</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-265"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621688170882"><span class="annot"><span class="annottext">AnalysisError
-</span><a href="#local-6989586621688170882"><span class="hs-identifier hs-var">err</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688170881"><span class="annot"><span class="annottext">[AnalysisError]
-</span><a href="#local-6989586621688170881"><span class="hs-identifier hs-var">errors</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-264"></span><span>    </span><span id="local-6989586621688171312"><span class="annot"><span class="annottext">postProcess :: (Either AnalysisError a, [AnalysisError]) -&gt; (a, [Text])
+</span><a href="#local-6989586621688171312"><span class="hs-identifier hs-var hs-var">postProcess</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-265"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621688171308"><span class="annot"><span class="annottext">AnalysisError
+</span><a href="#local-6989586621688171308"><span class="hs-identifier hs-var">err</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688171307"><span class="annot"><span class="annottext">[AnalysisError]
+</span><a href="#local-6989586621688171307"><span class="hs-identifier hs-var">errors</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-266"></span><span>        </span><span class="annot"><span class="annottext">(Either AnalysisError a, [AnalysisError]) -&gt; (a, [Text])
-</span><a href="#local-6989586621688170886"><span class="hs-identifier hs-var">postProcess</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; Either AnalysisError a
+</span><a href="#local-6989586621688171312"><span class="hs-identifier hs-var">postProcess</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; Either AnalysisError a
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">a
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[AnalysisError]
-</span><a href="#local-6989586621688170881"><span class="hs-identifier hs-var">errors</span></a></span><span> </span><span class="annot"><span class="annottext">[AnalysisError] -&gt; [AnalysisError] -&gt; [AnalysisError]
+</span><a href="#local-6989586621688171307"><span class="hs-identifier hs-var">errors</span></a></span><span> </span><span class="annot"><span class="annottext">[AnalysisError] -&gt; [AnalysisError] -&gt; [AnalysisError]
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">AnalysisError
-</span><a href="#local-6989586621688170882"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
-</span><span id="line-267"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621688170880"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621688170880"><span class="hs-identifier hs-var">result</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688170879"><span class="annot"><span class="annottext">[AnalysisError]
-</span><a href="#local-6989586621688170879"><span class="hs-identifier hs-var">errors</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621688171308"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-267"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621688171306"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688171306"><span class="hs-identifier hs-var">result</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688171305"><span class="annot"><span class="annottext">[AnalysisError]
+</span><a href="#local-6989586621688171305"><span class="hs-identifier hs-var">errors</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-268"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621688170880"><span class="hs-identifier hs-var">result</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(AnalysisError -&gt; Text) -&gt; [AnalysisError] -&gt; [Text]
+</span><a href="#local-6989586621688171306"><span class="hs-identifier hs-var">result</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(AnalysisError -&gt; Text) -&gt; [AnalysisError] -&gt; [Text]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">AnalysisError -&gt; Text
 </span><a href="Hasura.GraphQL.Analyse.html#render"><span class="hs-identifier hs-var">render</span></a></span><span> </span><span class="annot"><span class="annottext">[AnalysisError]
-</span><a href="#local-6989586621688170879"><span class="hs-identifier hs-var">errors</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688171305"><span class="hs-identifier hs-var">errors</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-269"></span><span>
 </span><span id="line-270"></span><span class="hs-comment">-- | Look up a type in the schema.</span><span>
 </span><span id="line-271"></span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#lookupType"><span class="hs-identifier hs-type">lookupType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Analysis"><span class="hs-identifier hs-type">Analysis</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinition</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.InputValueDefinition</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-272"></span><span id="lookupType"><span class="annot"><span class="annottext">lookupType :: Name
 -&gt; Analysis (Maybe (TypeDefinition [Name] InputValueDefinition))
-</span><a href="Hasura.GraphQL.Analyse.html#lookupType"><span class="hs-identifier hs-var hs-var">lookupType</span></a></span></span><span> </span><span id="local-6989586621688170877"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170877"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-273"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.SchemaIntrospection</span></span><span> </span><span id="local-6989586621688170875"><span class="annot"><span class="annottext">HashMap Name (TypeDefinition [Name] InputValueDefinition)
-</span><a href="#local-6989586621688170875"><span class="hs-identifier hs-var">types</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">((Path, SchemaIntrospection) -&gt; SchemaIntrospection)
+</span><a href="Hasura.GraphQL.Analyse.html#lookupType"><span class="hs-identifier hs-var hs-var">lookupType</span></a></span></span><span> </span><span id="local-6989586621688171303"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688171303"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-273"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.SchemaIntrospection</span></span><span> </span><span id="local-6989586621688171301"><span class="annot"><span class="annottext">HashMap Name (TypeDefinition [Name] InputValueDefinition)
+</span><a href="#local-6989586621688171301"><span class="hs-identifier hs-var">types</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">((Path, SchemaIntrospection) -&gt; SchemaIntrospection)
 -&gt; Analysis SchemaIntrospection
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">(Path, SchemaIntrospection) -&gt; SchemaIntrospection
@@ -896,14 +896,14 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; Maybe (TypeDefinition [Name] InputValueDefinition)
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170877"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (TypeDefinition [Name] InputValueDefinition)
-</span><a href="#local-6989586621688170875"><span class="hs-identifier hs-var">types</span></a></span><span>
+</span><a href="#local-6989586621688171303"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (TypeDefinition [Name] InputValueDefinition)
+</span><a href="#local-6989586621688171301"><span class="hs-identifier hs-var">types</span></a></span><span>
 </span><span id="line-275"></span><span>
 </span><span id="line-276"></span><span class="hs-comment">-- | Add the current field to the error path.</span><span>
-</span><span id="line-277"></span><span id="local-6989586621688171249"><span class="annot"><a href="Hasura.GraphQL.Analyse.html#withField"><span class="hs-identifier hs-type">withField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Analysis"><span class="hs-identifier hs-type">Analysis</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688171249"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Analysis"><span class="hs-identifier hs-type">Analysis</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688171249"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-277"></span><span id="local-6989586621688171675"><span class="annot"><a href="Hasura.GraphQL.Analyse.html#withField"><span class="hs-identifier hs-type">withField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Analysis"><span class="hs-identifier hs-type">Analysis</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688171675"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Analysis"><span class="hs-identifier hs-type">Analysis</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688171675"><span class="hs-identifier hs-type">a</span></a></span></span><span>
 </span><span id="line-278"></span><span id="withField"><span class="annot"><span class="annottext">withField :: Name -&gt; Analysis a -&gt; Analysis a
-</span><a href="Hasura.GraphQL.Analyse.html#withField"><span class="hs-identifier hs-var hs-var">withField</span></a></span></span><span> </span><span id="local-6989586621688170872"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170872"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Path, SchemaIntrospection) -&gt; (Path, SchemaIntrospection))
+</span><a href="Hasura.GraphQL.Analyse.html#withField"><span class="hs-identifier hs-var hs-var">withField</span></a></span></span><span> </span><span id="local-6989586621688171298"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688171298"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Path, SchemaIntrospection) -&gt; (Path, SchemaIntrospection))
 -&gt; Analysis a -&gt; Analysis a
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; r) -&gt; m a -&gt; m a
 </span><span class="hs-identifier hs-var">local</span></span><span> </span><span class="annot"><span class="annottext">(((Path, SchemaIntrospection) -&gt; (Path, SchemaIntrospection))
@@ -921,17 +921,17 @@ a b c -&gt; a (b, d) (c, d)
 forall a. Seq a -&gt; a -&gt; Seq a
 </span><span class="hs-operator hs-var">|&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">G.unName</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170872"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688171298"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-279"></span><span>
 </span><span id="line-280"></span><span class="hs-comment">-- | Throws an 'AnalysisError' by combining the given diagnosis with the current</span><span>
 </span><span id="line-281"></span><span class="hs-comment">-- path. This interrupts the computation in the given branch, and must be caught</span><span>
 </span><span id="line-282"></span><span class="hs-comment">-- for the analysis to resume.</span><span>
-</span><span id="line-283"></span><span id="local-6989586621688171317"><span class="annot"><a href="Hasura.GraphQL.Analyse.html#throwDiagnosis"><span class="hs-identifier hs-type">throwDiagnosis</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Diagnosis"><span class="hs-identifier hs-type">Diagnosis</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Analysis"><span class="hs-identifier hs-type">Analysis</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688171317"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-283"></span><span id="local-6989586621688171743"><span class="annot"><a href="Hasura.GraphQL.Analyse.html#throwDiagnosis"><span class="hs-identifier hs-type">throwDiagnosis</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Diagnosis"><span class="hs-identifier hs-type">Diagnosis</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Analysis"><span class="hs-identifier hs-type">Analysis</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688171743"><span class="hs-identifier hs-type">a</span></a></span></span><span>
 </span><span id="line-284"></span><span id="throwDiagnosis"><span class="annot"><span class="annottext">throwDiagnosis :: Diagnosis -&gt; Analysis a
-</span><a href="Hasura.GraphQL.Analyse.html#throwDiagnosis"><span class="hs-identifier hs-var hs-var">throwDiagnosis</span></a></span></span><span> </span><span id="local-6989586621688170869"><span class="annot"><span class="annottext">Diagnosis
-</span><a href="#local-6989586621688170869"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-285"></span><span>  </span><span id="local-6989586621688170868"><span class="annot"><span class="annottext">Path
-</span><a href="#local-6989586621688170868"><span class="hs-identifier hs-var">currentPath</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">((Path, SchemaIntrospection) -&gt; Path) -&gt; Analysis Path
+</span><a href="Hasura.GraphQL.Analyse.html#throwDiagnosis"><span class="hs-identifier hs-var hs-var">throwDiagnosis</span></a></span></span><span> </span><span id="local-6989586621688171295"><span class="annot"><span class="annottext">Diagnosis
+</span><a href="#local-6989586621688171295"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-285"></span><span>  </span><span id="local-6989586621688171294"><span class="annot"><span class="annottext">Path
+</span><a href="#local-6989586621688171294"><span class="hs-identifier hs-var">currentPath</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">((Path, SchemaIntrospection) -&gt; Path) -&gt; Analysis Path
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">(Path, SchemaIntrospection) -&gt; Path
 forall a b. (a, b) -&gt; a
@@ -942,31 +942,31 @@ forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Path -&gt; Diagnosis -&gt; AnalysisError
 </span><a href="Hasura.GraphQL.Analyse.html#AnalysisError"><span class="hs-identifier hs-var">AnalysisError</span></a></span><span> </span><span class="annot"><span class="annottext">Path
-</span><a href="#local-6989586621688170868"><span class="hs-identifier hs-var">currentPath</span></a></span><span> </span><span class="annot"><span class="annottext">Diagnosis
-</span><a href="#local-6989586621688170869"><span class="hs-identifier hs-var">d</span></a></span><span>
+</span><a href="#local-6989586621688171294"><span class="hs-identifier hs-var">currentPath</span></a></span><span> </span><span class="annot"><span class="annottext">Diagnosis
+</span><a href="#local-6989586621688171295"><span class="hs-identifier hs-var">d</span></a></span><span>
 </span><span id="line-287"></span><span>
 </span><span id="line-288"></span><span class="hs-comment">-- | Runs the given computation. if it fails, cacthes the error, records it in</span><span>
 </span><span id="line-289"></span><span class="hs-comment">-- the monad, and return 'Nothing'. This allows for a clean recovery.</span><span>
-</span><span id="line-290"></span><span id="local-6989586621688171299"><span class="annot"><a href="Hasura.GraphQL.Analyse.html#withCatchAndRecord"><span class="hs-identifier hs-type">withCatchAndRecord</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Analysis"><span class="hs-identifier hs-type">Analysis</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688171299"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Analysis"><span class="hs-identifier hs-type">Analysis</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621688171299"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-290"></span><span id="local-6989586621688171725"><span class="annot"><a href="Hasura.GraphQL.Analyse.html#withCatchAndRecord"><span class="hs-identifier hs-type">withCatchAndRecord</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Analysis"><span class="hs-identifier hs-type">Analysis</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688171725"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#Analysis"><span class="hs-identifier hs-type">Analysis</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621688171725"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-291"></span><span id="withCatchAndRecord"><span class="annot"><span class="annottext">withCatchAndRecord :: Analysis a -&gt; Analysis (Maybe a)
-</span><a href="Hasura.GraphQL.Analyse.html#withCatchAndRecord"><span class="hs-identifier hs-var hs-var">withCatchAndRecord</span></a></span></span><span> </span><span id="local-6989586621688170865"><span class="annot"><span class="annottext">Analysis a
-</span><a href="#local-6989586621688170865"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Analyse.html#withCatchAndRecord"><span class="hs-identifier hs-var hs-var">withCatchAndRecord</span></a></span></span><span> </span><span id="local-6989586621688171291"><span class="annot"><span class="annottext">Analysis a
+</span><a href="#local-6989586621688171291"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-292"></span><span>  </span><span class="annot"><span class="annottext">(a -&gt; Maybe a) -&gt; Analysis a -&gt; Analysis (Maybe a)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; Maybe a
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Analysis a
-</span><a href="#local-6989586621688170865"><span class="hs-identifier hs-var">action</span></a></span><span> </span><span class="annot"><span class="annottext">Analysis (Maybe a)
+</span><a href="#local-6989586621688171291"><span class="hs-identifier hs-var">action</span></a></span><span> </span><span class="annot"><span class="annottext">Analysis (Maybe a)
 -&gt; (AnalysisError -&gt; Analysis (Maybe a)) -&gt; Analysis (Maybe a)
 forall e (m :: * -&gt; *) a.
 MonadError e m =&gt;
 m a -&gt; (e -&gt; m a) -&gt; m a
-</span><span class="hs-operator hs-var">`catchError`</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688170863"><span class="annot"><span class="annottext">AnalysisError
-</span><a href="#local-6989586621688170863"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span class="hs-operator hs-var">`catchError`</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688171289"><span class="annot"><span class="annottext">AnalysisError
+</span><a href="#local-6989586621688171289"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-293"></span><span>    </span><span class="annot"><span class="annottext">[AnalysisError] -&gt; Analysis ()
 forall w (m :: * -&gt; *). MonadWriter w m =&gt; w -&gt; m ()
 </span><span class="hs-identifier hs-var">tell</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">AnalysisError
-</span><a href="#local-6989586621688170863"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621688171289"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-294"></span><span>    </span><span class="annot"><span class="annottext">Maybe a -&gt; Analysis (Maybe a)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe a
@@ -997,21 +997,21 @@ forall a. Maybe a
 </span><span id="line-315"></span><span>
 </span><span id="line-316"></span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#render"><span class="hs-identifier hs-type">render</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#AnalysisError"><span class="hs-identifier hs-type">AnalysisError</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-317"></span><span id="render"><span class="annot"><span class="annottext">render :: AnalysisError -&gt; Text
-</span><a href="Hasura.GraphQL.Analyse.html#render"><span class="hs-identifier hs-var hs-var">render</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#AnalysisError"><span class="hs-identifier hs-type">AnalysisError</span></a></span><span> </span><span id="local-6989586621688170859"><span class="annot"><span class="annottext">Path
-</span><a href="#local-6989586621688170859"><span class="hs-identifier hs-var">path</span></a></span></span><span> </span><span id="local-6989586621688170858"><span class="annot"><span class="annottext">Diagnosis
-</span><a href="#local-6989586621688170858"><span class="hs-identifier hs-var">diagnosis</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Analyse.html#render"><span class="hs-identifier hs-var hs-var">render</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#AnalysisError"><span class="hs-identifier hs-type">AnalysisError</span></a></span><span> </span><span id="local-6989586621688171285"><span class="annot"><span class="annottext">Path
+</span><a href="#local-6989586621688171285"><span class="hs-identifier hs-var">path</span></a></span></span><span> </span><span id="local-6989586621688171284"><span class="annot"><span class="annottext">Diagnosis
+</span><a href="#local-6989586621688171284"><span class="hs-identifier hs-var">diagnosis</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-318"></span><span>  </span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; Text
 </span><span class="hs-identifier hs-var">T.intercalate</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;.&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Path -&gt; [Text]
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 </span><span class="hs-identifier hs-var">toList</span></span><span> </span><span class="annot"><span class="annottext">Path
-</span><a href="#local-6989586621688170859"><span class="hs-identifier hs-var">path</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688171285"><span class="hs-identifier hs-var">path</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Diagnosis
-</span><a href="#local-6989586621688170858"><span class="hs-identifier hs-var">diagnosis</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688171284"><span class="hs-identifier hs-var">diagnosis</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-319"></span><span>    </span><span class="annot"><span class="annottext">Diagnosis
 </span><a href="Hasura.GraphQL.Analyse.html#TopLevelFragment"><span class="hs-identifier hs-var">TopLevelFragment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-320"></span><span>      </span><span class="annot"><span class="annottext">Text
@@ -1024,66 +1024,66 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="Hasura.GraphQL.Analyse.html#NoTopLevelSelection"><span class="hs-identifier hs-var">NoTopLevelSelection</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-324"></span><span>      </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;did not find a valid selection set at the top level&quot;</span></span><span>
-</span><span id="line-325"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#TypeNotFound"><span class="hs-identifier hs-type">TypeNotFound</span></a></span><span> </span><span id="local-6989586621688170855"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170855"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-325"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#TypeNotFound"><span class="hs-identifier hs-type">TypeNotFound</span></a></span><span> </span><span id="local-6989586621688171281"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688171281"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-326"></span><span>      </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;type '&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">G.unName</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170855"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688171281"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;' not found in the schema&quot;</span></span><span>
-</span><span id="line-327"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#EnumSelectionSet"><span class="hs-identifier hs-type">EnumSelectionSet</span></a></span><span> </span><span id="local-6989586621688170854"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170854"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-327"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#EnumSelectionSet"><span class="hs-identifier hs-type">EnumSelectionSet</span></a></span><span> </span><span id="local-6989586621688171280"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688171280"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-328"></span><span>      </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;enum '&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">G.unName</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170854"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688171280"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;' does not accept a selection set&quot;</span></span><span>
-</span><span id="line-329"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#ScalarSelectionSet"><span class="hs-identifier hs-type">ScalarSelectionSet</span></a></span><span> </span><span id="local-6989586621688170853"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170853"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-329"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#ScalarSelectionSet"><span class="hs-identifier hs-type">ScalarSelectionSet</span></a></span><span> </span><span id="local-6989586621688171279"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688171279"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-330"></span><span>      </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;scalar '&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">G.unName</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170853"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688171279"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;' does not accept a selection set&quot;</span></span><span>
-</span><span id="line-331"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#InputObjectSelectionSet"><span class="hs-identifier hs-type">InputObjectSelectionSet</span></a></span><span> </span><span id="local-6989586621688170852"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170852"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-331"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#InputObjectSelectionSet"><span class="hs-identifier hs-type">InputObjectSelectionSet</span></a></span><span> </span><span id="local-6989586621688171278"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688171278"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-332"></span><span>      </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;input object '&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">G.unName</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170852"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688171278"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;' cannot be used for output&quot;</span></span><span>
-</span><span id="line-333"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#ObjectFieldNotFound"><span class="hs-identifier hs-type">ObjectFieldNotFound</span></a></span><span> </span><span id="local-6989586621688170851"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170851"><span class="hs-identifier hs-var">objName</span></a></span></span><span> </span><span id="local-6989586621688170850"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170850"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-333"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#ObjectFieldNotFound"><span class="hs-identifier hs-type">ObjectFieldNotFound</span></a></span><span> </span><span id="local-6989586621688171277"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688171277"><span class="hs-identifier hs-var">objName</span></a></span></span><span> </span><span id="local-6989586621688171276"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688171276"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-334"></span><span>      </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;field '&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">G.unName</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170850"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688171276"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;' not found in object '&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">G.unName</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170851"><span class="hs-identifier hs-var">objName</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688171277"><span class="hs-identifier hs-var">objName</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;'&quot;</span></span><span>
@@ -1124,9 +1124,9 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-360"></span><span>
 </span><span id="line-361"></span><span class="annot"><a href="Hasura.GraphQL.Analyse.html#mkReservedField"><span class="hs-identifier hs-type">mkReservedField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.FieldDefinition</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.InputValueDefinition</span></span><span>
 </span><span id="line-362"></span><span id="mkReservedField"><span class="annot"><span class="annottext">mkReservedField :: Name -&gt; Name -&gt; FieldDefinition InputValueDefinition
-</span><a href="Hasura.GraphQL.Analyse.html#mkReservedField"><span class="hs-identifier hs-var hs-var">mkReservedField</span></a></span></span><span> </span><span id="local-6989586621688170845"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170845"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span id="local-6989586621688170844"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170844"><span class="hs-identifier hs-var">typeName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Analyse.html#mkReservedField"><span class="hs-identifier hs-var hs-var">mkReservedField</span></a></span></span><span> </span><span id="local-6989586621688171271"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688171271"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span id="local-6989586621688171270"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688171270"><span class="hs-identifier hs-var">typeName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-363"></span><span>  </span><span class="annot"><span class="annottext">Maybe Description
 -&gt; Name
 -&gt; ArgumentsDefinition InputValueDefinition
@@ -1143,9 +1143,9 @@ Maybe Description
 </span><span class="hs-identifier hs-var">G.FieldDefinition</span></span><span> </span><span class="annot"><span class="annottext">Maybe Description
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170845"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Nullability -&gt; Name -&gt; GType
+</span><a href="#local-6989586621688171271"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Nullability -&gt; Name -&gt; GType
 </span><span class="hs-identifier hs-var">G.TypeNamed</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Nullability
 </span><span class="hs-identifier hs-var">G.Nullability</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688170844"><span class="hs-identifier hs-var">typeName</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621688171270"><span class="hs-identifier hs-var">typeName</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-364"></span></pre></body></html>
