@@ -312,7 +312,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
 
     -- run system authorization on the GraphQL API
     reqParsed <-
-      E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed
+      E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed reqId
         >>= flip onLeft throwError
 
     operationLimit <- askGraphqlOperationLimit
