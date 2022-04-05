@@ -71,27 +71,27 @@
 </span><span id="line-68"></span><span class="hs-special">$(</span><span id="ieFragmentStack"><span class="hs-identifier">makeLensesFor</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="hs-string">&quot;_ieFragmentStack&quot;</span><span class="hs-special">,</span><span> </span><span class="hs-string">&quot;ieFragmentStack&quot;</span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">InlineEnv</span></span><span class="hs-special">)</span><span>
 </span><span id="line-69"></span><span class="hs-special">$(</span><span id="isFragmentCache"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">InlineState</span></span><span class="hs-special">)</span><span>
 </span><span id="line-70"></span><span>
-</span><span id="line-71"></span><span class="hs-keyword">type</span><span> </span><span id="MonadInline"><span class="annot"><a href="Hasura.GraphQL.Execute.Inline.html#MonadInline"><span class="hs-identifier hs-var">MonadInline</span></a></span></span><span> </span><span id="local-6989586621688177508"><span class="annot"><a href="#local-6989586621688177508"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-72"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688177508"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-73"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Inline.html#InlineEnv"><span class="hs-identifier hs-type">InlineEnv</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688177508"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-74"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadState</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Inline.html#InlineState"><span class="hs-identifier hs-type">InlineState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688177508"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-71"></span><span class="hs-keyword">type</span><span> </span><span id="MonadInline"><span class="annot"><a href="Hasura.GraphQL.Execute.Inline.html#MonadInline"><span class="hs-identifier hs-var">MonadInline</span></a></span></span><span> </span><span id="local-6989586621688176939"><span class="annot"><a href="#local-6989586621688176939"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-72"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688176939"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-73"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Inline.html#InlineEnv"><span class="hs-identifier hs-type">InlineEnv</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688176939"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-74"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadState</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Inline.html#InlineState"><span class="hs-identifier hs-type">InlineState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688176939"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-75"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-76"></span><span>
 </span><span id="line-77"></span><span class="hs-comment">-- | Inlines all fragment spreads in a 'SelectionSet'; see the module</span><span>
 </span><span id="line-78"></span><span class="hs-comment">-- documentation for &quot;Hasura.GraphQL.Execute.Inline&quot; for details.</span><span>
-</span><span id="line-79"></span><span id="local-6989586621688177504"><span id="local-6989586621688177505"><span class="annot"><a href="Hasura.GraphQL.Execute.Inline.html#inlineSelectionSet"><span class="hs-identifier hs-type">inlineSelectionSet</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-80"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688177505"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Foldable</span></span><span> </span><span class="annot"><a href="#local-6989586621688177504"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-81"></span><span>  </span><span class="annot"><a href="#local-6989586621688177504"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">FragmentDefinition</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-79"></span><span id="local-6989586621688176935"><span id="local-6989586621688176936"><span class="annot"><a href="Hasura.GraphQL.Execute.Inline.html#inlineSelectionSet"><span class="hs-identifier hs-type">inlineSelectionSet</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-80"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688176936"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Foldable</span></span><span> </span><span class="annot"><a href="#local-6989586621688176935"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-81"></span><span>  </span><span class="annot"><a href="#local-6989586621688176935"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">FragmentDefinition</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-82"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">SelectionSet</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">FragmentSpread</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-83"></span><span>  </span><span class="annot"><a href="#local-6989586621688177505"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">SelectionSet</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NoFragments</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-83"></span><span>  </span><span class="annot"><a href="#local-6989586621688176936"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">SelectionSet</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NoFragments</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-84"></span><span id="inlineSelectionSet"><span class="annot"><span class="annottext">inlineSelectionSet :: t FragmentDefinition
 -&gt; SelectionSet FragmentSpread Name
 -&gt; m (SelectionSet NoFragments Name)
-</span><a href="Hasura.GraphQL.Execute.Inline.html#inlineSelectionSet"><span class="hs-identifier hs-var hs-var">inlineSelectionSet</span></a></span></span><span> </span><span id="local-6989586621688177503"><span class="annot"><span class="annottext">t FragmentDefinition
-</span><a href="#local-6989586621688177503"><span class="hs-identifier hs-var">fragmentDefinitions</span></a></span></span><span> </span><span id="local-6989586621688177502"><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
-</span><a href="#local-6989586621688177502"><span class="hs-identifier hs-var">selectionSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-85"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688177501"><span class="annot"><span class="annottext">fragmentDefinitionMap :: HashMap Name (NonEmpty FragmentDefinition)
-</span><a href="#local-6989586621688177501"><span class="hs-identifier hs-var hs-var">fragmentDefinitionMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(FragmentDefinition -&gt; Name)
+</span><a href="Hasura.GraphQL.Execute.Inline.html#inlineSelectionSet"><span class="hs-identifier hs-var hs-var">inlineSelectionSet</span></a></span></span><span> </span><span id="local-6989586621688176934"><span class="annot"><span class="annottext">t FragmentDefinition
+</span><a href="#local-6989586621688176934"><span class="hs-identifier hs-var">fragmentDefinitions</span></a></span></span><span> </span><span id="local-6989586621688176933"><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
+</span><a href="#local-6989586621688176933"><span class="hs-identifier hs-var">selectionSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-85"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688176932"><span class="annot"><span class="annottext">fragmentDefinitionMap :: HashMap Name (NonEmpty FragmentDefinition)
+</span><a href="#local-6989586621688176932"><span class="hs-identifier hs-var hs-var">fragmentDefinitionMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(FragmentDefinition -&gt; Name)
 -&gt; t FragmentDefinition
 -&gt; HashMap Name (NonEmpty FragmentDefinition)
 forall k (t :: * -&gt; *) v.
@@ -99,9 +99,9 @@ forall k (t :: * -&gt; *) v.
 (v -&gt; k) -&gt; t v -&gt; HashMap k (NonEmpty v)
 </span><a href="Data.HashMap.Strict.Extended.html#groupOnNE"><span class="hs-identifier hs-var">Map.groupOnNE</span></a></span><span> </span><span class="annot"><span class="annottext">FragmentDefinition -&gt; Name
 </span><span class="hs-identifier hs-var hs-var">_fdName</span></span><span> </span><span class="annot"><span class="annottext">t FragmentDefinition
-</span><a href="#local-6989586621688177503"><span class="hs-identifier hs-var">fragmentDefinitions</span></a></span><span>
-</span><span id="line-86"></span><span>  </span><span id="local-6989586621688177498"><span class="annot"><span class="annottext">HashMap Name FragmentDefinition
-</span><a href="#local-6989586621688177498"><span class="hs-identifier hs-var">uniqueFragmentDefinitions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">((Name -&gt; NonEmpty FragmentDefinition -&gt; m FragmentDefinition)
+</span><a href="#local-6989586621688176934"><span class="hs-identifier hs-var">fragmentDefinitions</span></a></span><span>
+</span><span id="line-86"></span><span>  </span><span id="local-6989586621688176929"><span class="annot"><span class="annottext">HashMap Name FragmentDefinition
+</span><a href="#local-6989586621688176929"><span class="hs-identifier hs-var">uniqueFragmentDefinitions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">((Name -&gt; NonEmpty FragmentDefinition -&gt; m FragmentDefinition)
  -&gt; HashMap Name (NonEmpty FragmentDefinition)
  -&gt; m (HashMap Name FragmentDefinition))
 -&gt; HashMap Name (NonEmpty FragmentDefinition)
@@ -117,17 +117,17 @@ Applicative f =&gt;
 (k -&gt; v1 -&gt; f v2) -&gt; HashMap k v1 -&gt; f (HashMap k v2)
 </span><span class="hs-identifier hs-var">Map.traverseWithKey</span></span><span>
 </span><span id="line-88"></span><span>    </span><span class="annot"><span class="annottext">HashMap Name (NonEmpty FragmentDefinition)
-</span><a href="#local-6989586621688177501"><span class="hs-identifier hs-var">fragmentDefinitionMap</span></a></span><span>
-</span><span id="line-89"></span><span>    </span><span class="hs-glyph">\</span><span id="local-6989586621688177495"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688177495"><span class="hs-identifier hs-var">fragmentName</span></a></span></span><span> </span><span id="local-6989586621688177494"><span class="annot"><span class="annottext">NonEmpty FragmentDefinition
-</span><a href="#local-6989586621688177494"><span class="hs-identifier hs-var">fragmentDefinitions'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621688176932"><span class="hs-identifier hs-var">fragmentDefinitionMap</span></a></span><span>
+</span><span id="line-89"></span><span>    </span><span class="hs-glyph">\</span><span id="local-6989586621688176926"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688176926"><span class="hs-identifier hs-var">fragmentName</span></a></span></span><span> </span><span id="local-6989586621688176925"><span class="annot"><span class="annottext">NonEmpty FragmentDefinition
+</span><a href="#local-6989586621688176925"><span class="hs-identifier hs-var">fragmentDefinitions'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-90"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">NonEmpty FragmentDefinition
-</span><a href="#local-6989586621688177494"><span class="hs-identifier hs-var">fragmentDefinitions'</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-91"></span><span>        </span><span id="local-6989586621688177493"><span class="annot"><span class="annottext">FragmentDefinition
-</span><a href="#local-6989586621688177493"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-type">:|</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FragmentDefinition -&gt; m FragmentDefinition
+</span><a href="#local-6989586621688176925"><span class="hs-identifier hs-var">fragmentDefinitions'</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-91"></span><span>        </span><span id="local-6989586621688176924"><span class="annot"><span class="annottext">FragmentDefinition
+</span><a href="#local-6989586621688176924"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-type">:|</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FragmentDefinition -&gt; m FragmentDefinition
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">FragmentDefinition
-</span><a href="#local-6989586621688177493"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><a href="#local-6989586621688176924"><span class="hs-identifier hs-var">a</span></a></span><span>
 </span><span id="line-92"></span><span>        </span><span class="annot"><span class="annottext">NonEmpty FragmentDefinition
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m FragmentDefinition
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
@@ -138,40 +138,40 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;multiple definitions for fragment &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Name -&gt; Text
 forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688177495"><span class="hs-identifier hs-var">fragmentName</span></a></span><span>
-</span><span id="line-93"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688177488"><span class="annot"><span class="annottext">usedFragmentNames :: HashSet Name
-</span><a href="#local-6989586621688177488"><span class="hs-identifier hs-var hs-var">usedFragmentNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Name] -&gt; HashSet Name
+</span><a href="#local-6989586621688176926"><span class="hs-identifier hs-var">fragmentName</span></a></span><span>
+</span><span id="line-93"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688176919"><span class="annot"><span class="annottext">usedFragmentNames :: HashSet Name
+</span><a href="#local-6989586621688176919"><span class="hs-identifier hs-var hs-var">usedFragmentNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Name] -&gt; HashSet Name
 forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
 </span><span class="hs-identifier hs-var">Set.fromList</span></span><span> </span><span class="annot"><span class="annottext">([Name] -&gt; HashSet Name) -&gt; [Name] -&gt; HashSet Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name -&gt; [Name]
-</span><a href="#local-6989586621688177486"><span class="hs-identifier hs-var">fragmentsInSelectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
-</span><a href="#local-6989586621688177502"><span class="hs-identifier hs-var">selectionSet</span></a></span><span>
-</span><span id="line-94"></span><span>      </span><span id="local-6989586621688177485"><span class="annot"><span class="annottext">definedFragmentNames :: HashSet Name
-</span><a href="#local-6989586621688177485"><span class="hs-identifier hs-var hs-var">definedFragmentNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Name] -&gt; HashSet Name
+</span><a href="#local-6989586621688176917"><span class="hs-identifier hs-var">fragmentsInSelectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
+</span><a href="#local-6989586621688176933"><span class="hs-identifier hs-var">selectionSet</span></a></span><span>
+</span><span id="line-94"></span><span>      </span><span id="local-6989586621688176916"><span class="annot"><span class="annottext">definedFragmentNames :: HashSet Name
+</span><a href="#local-6989586621688176916"><span class="hs-identifier hs-var hs-var">definedFragmentNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Name] -&gt; HashSet Name
 forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
 </span><span class="hs-identifier hs-var">Set.fromList</span></span><span> </span><span class="annot"><span class="annottext">([Name] -&gt; HashSet Name) -&gt; [Name] -&gt; HashSet Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name FragmentDefinition -&gt; [Name]
 forall k v. HashMap k v -&gt; [k]
 </span><span class="hs-identifier hs-var">Map.keys</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name FragmentDefinition
-</span><a href="#local-6989586621688177498"><span class="hs-identifier hs-var">uniqueFragmentDefinitions</span></a></span><span>
+</span><a href="#local-6989586621688176929"><span class="hs-identifier hs-var">uniqueFragmentDefinitions</span></a></span><span>
 </span><span id="line-95"></span><span>      </span><span class="hs-comment">-- At the time of writing, this check is disabled using</span><span>
 </span><span id="line-96"></span><span>      </span><span class="hs-comment">-- a local binding because, the master branch doesn't implement this</span><span>
 </span><span id="line-97"></span><span>      </span><span class="hs-comment">-- check.</span><span>
 </span><span id="line-98"></span><span>      </span><span class="hs-comment">-- TODO: Do this check using a feature flag</span><span>
-</span><span id="line-99"></span><span>      </span><span id="local-6989586621688177483"><span class="annot"><span class="annottext">isFragmentValidationEnabled :: Bool
-</span><a href="#local-6989586621688177483"><span class="hs-identifier hs-var hs-var">isFragmentValidationEnabled</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-99"></span><span>      </span><span id="local-6989586621688176914"><span class="annot"><span class="annottext">isFragmentValidationEnabled :: Bool
+</span><a href="#local-6989586621688176914"><span class="hs-identifier hs-var hs-var">isFragmentValidationEnabled</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
 </span><span id="line-100"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688177483"><span class="hs-identifier hs-var">isFragmentValidationEnabled</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621688176914"><span class="hs-identifier hs-var">isFragmentValidationEnabled</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashSet Name
-</span><a href="#local-6989586621688177488"><span class="hs-identifier hs-var">usedFragmentNames</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet Name -&gt; HashSet Name -&gt; Bool
+</span><a href="#local-6989586621688176919"><span class="hs-identifier hs-var">usedFragmentNames</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet Name -&gt; HashSet Name -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">HashSet Name
-</span><a href="#local-6989586621688177485"><span class="hs-identifier hs-var">definedFragmentNames</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+</span><a href="#local-6989586621688176916"><span class="hs-identifier hs-var">definedFragmentNames</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-101"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
@@ -206,8 +206,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-107"></span><span>                  </span><span class="annot"><span class="annottext">HashSet Name -&gt; HashSet Name -&gt; HashSet Name
 forall a. (Eq a, Hashable a) =&gt; HashSet a -&gt; HashSet a -&gt; HashSet a
 </span><span class="hs-identifier hs-var">Set.difference</span></span><span> </span><span class="annot"><span class="annottext">HashSet Name
-</span><a href="#local-6989586621688177485"><span class="hs-identifier hs-var">definedFragmentNames</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet Name
-</span><a href="#local-6989586621688177488"><span class="hs-identifier hs-var">usedFragmentNames</span></a></span><span>
+</span><a href="#local-6989586621688176916"><span class="hs-identifier hs-var">definedFragmentNames</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet Name
+</span><a href="#local-6989586621688176919"><span class="hs-identifier hs-var">usedFragmentNames</span></a></span><span>
 </span><span id="line-108"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-109"></span><span>  </span><span class="annot"><span class="annottext">(Selection FragmentSpread Name
  -&gt; StateT
@@ -225,7 +225,7 @@ forall (m :: * -&gt; *).
 MonadInline m =&gt;
 Selection FragmentSpread Name -&gt; m (Selection NoFragments Name)
 </span><a href="Hasura.GraphQL.Execute.Inline.html#inlineSelection"><span class="hs-identifier hs-var">inlineSelection</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
-</span><a href="#local-6989586621688177502"><span class="hs-identifier hs-var">selectionSet</span></a></span><span>
+</span><a href="#local-6989586621688176933"><span class="hs-identifier hs-var">selectionSet</span></a></span><span>
 </span><span id="line-110"></span><span>    </span><span class="annot"><span class="annottext">StateT
   InlineState (ReaderT InlineEnv m) (SelectionSet NoFragments Name)
 -&gt; (StateT
@@ -272,42 +272,42 @@ forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
 </span><a href="Hasura.GraphQL.Execute.Inline.html#InlineEnv"><span class="hs-identifier hs-type">InlineEnv</span></a></span><span>
 </span><span id="line-114"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_ieFragmentDefinitions :: HashMap Name FragmentDefinition
 </span><a href="Hasura.GraphQL.Execute.Inline.html#_ieFragmentDefinitions"><span class="hs-identifier hs-var">_ieFragmentDefinitions</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap Name FragmentDefinition
-</span><a href="#local-6989586621688177498"><span class="hs-identifier hs-var">uniqueFragmentDefinitions</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688176929"><span class="hs-identifier hs-var">uniqueFragmentDefinitions</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-115"></span><span>          </span><span class="annot"><span class="annottext">_ieFragmentStack :: [Name]
 </span><a href="Hasura.GraphQL.Execute.Inline.html#_ieFragmentStack"><span class="hs-identifier hs-var">_ieFragmentStack</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-116"></span><span>        </span><span class="hs-special">}</span><span>
 </span><span id="line-117"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-118"></span><span>    </span><span class="annot"><a href="#local-6989586621688177486"><span class="hs-identifier hs-type">fragmentsInSelectionSet</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SelectionSet</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">FragmentSpread</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span class="hs-special">]</span><span>
-</span><span id="line-119"></span><span>    </span><span id="local-6989586621688177486"><span class="annot"><span class="annottext">fragmentsInSelectionSet :: SelectionSet FragmentSpread Name -&gt; [Name]
-</span><a href="#local-6989586621688177486"><span class="hs-identifier hs-var hs-var">fragmentsInSelectionSet</span></a></span></span><span> </span><span id="local-6989586621688177468"><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
-</span><a href="#local-6989586621688177468"><span class="hs-identifier hs-var">selectionSet'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Selection FragmentSpread Name -&gt; [Name])
+</span><span id="line-118"></span><span>    </span><span class="annot"><a href="#local-6989586621688176917"><span class="hs-identifier hs-type">fragmentsInSelectionSet</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SelectionSet</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">FragmentSpread</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span class="hs-special">]</span><span>
+</span><span id="line-119"></span><span>    </span><span id="local-6989586621688176917"><span class="annot"><span class="annottext">fragmentsInSelectionSet :: SelectionSet FragmentSpread Name -&gt; [Name]
+</span><a href="#local-6989586621688176917"><span class="hs-identifier hs-var hs-var">fragmentsInSelectionSet</span></a></span></span><span> </span><span id="local-6989586621688176899"><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
+</span><a href="#local-6989586621688176899"><span class="hs-identifier hs-var">selectionSet'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Selection FragmentSpread Name -&gt; [Name])
 -&gt; SelectionSet FragmentSpread Name -&gt; [Name]
 forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
 </span><span class="hs-identifier hs-var">concatMap</span></span><span> </span><span class="annot"><span class="annottext">Selection FragmentSpread Name -&gt; [Name]
-</span><a href="#local-6989586621688177466"><span class="hs-identifier hs-var">getFragFromSelection</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
-</span><a href="#local-6989586621688177468"><span class="hs-identifier hs-var">selectionSet'</span></a></span><span>
+</span><a href="#local-6989586621688176897"><span class="hs-identifier hs-var">getFragFromSelection</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
+</span><a href="#local-6989586621688176899"><span class="hs-identifier hs-var">selectionSet'</span></a></span><span>
 </span><span id="line-120"></span><span>
-</span><span id="line-121"></span><span>    </span><span class="annot"><a href="#local-6989586621688177466"><span class="hs-identifier hs-type">getFragFromSelection</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Selection</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">FragmentSpread</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span class="hs-special">]</span><span>
-</span><span id="line-122"></span><span>    </span><span id="local-6989586621688177466"><span class="annot"><span class="annottext">getFragFromSelection :: Selection FragmentSpread Name -&gt; [Name]
-</span><a href="#local-6989586621688177466"><span class="hs-identifier hs-var hs-var">getFragFromSelection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-123"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">SelectionField</span></span><span> </span><span id="local-6989586621688177464"><span class="annot"><span class="annottext">Field FragmentSpread Name
-</span><a href="#local-6989586621688177464"><span class="hs-identifier hs-var">fld</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name -&gt; [Name]
-</span><a href="#local-6989586621688177486"><span class="hs-identifier hs-var">fragmentsInSelectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">(SelectionSet FragmentSpread Name -&gt; [Name])
+</span><span id="line-121"></span><span>    </span><span class="annot"><a href="#local-6989586621688176897"><span class="hs-identifier hs-type">getFragFromSelection</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Selection</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">FragmentSpread</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span class="hs-special">]</span><span>
+</span><span id="line-122"></span><span>    </span><span id="local-6989586621688176897"><span class="annot"><span class="annottext">getFragFromSelection :: Selection FragmentSpread Name -&gt; [Name]
+</span><a href="#local-6989586621688176897"><span class="hs-identifier hs-var hs-var">getFragFromSelection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-123"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">SelectionField</span></span><span> </span><span id="local-6989586621688176895"><span class="annot"><span class="annottext">Field FragmentSpread Name
+</span><a href="#local-6989586621688176895"><span class="hs-identifier hs-var">fld</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name -&gt; [Name]
+</span><a href="#local-6989586621688176917"><span class="hs-identifier hs-var">fragmentsInSelectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">(SelectionSet FragmentSpread Name -&gt; [Name])
 -&gt; SelectionSet FragmentSpread Name -&gt; [Name]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Field FragmentSpread Name -&gt; SelectionSet FragmentSpread Name
 forall (frag :: * -&gt; *) var.
 Field frag var -&gt; SelectionSet frag var
 </span><span class="hs-identifier hs-var hs-var">_fSelectionSet</span></span><span> </span><span class="annot"><span class="annottext">Field FragmentSpread Name
-</span><a href="#local-6989586621688177464"><span class="hs-identifier hs-var">fld</span></a></span><span>
-</span><span id="line-124"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">SelectionFragmentSpread</span></span><span> </span><span id="local-6989586621688177461"><span class="annot"><span class="annottext">FragmentSpread Name
-</span><a href="#local-6989586621688177461"><span class="hs-identifier hs-var">fragmentSpread</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">FragmentSpread Name -&gt; Name
+</span><a href="#local-6989586621688176895"><span class="hs-identifier hs-var">fld</span></a></span><span>
+</span><span id="line-124"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">SelectionFragmentSpread</span></span><span> </span><span id="local-6989586621688176892"><span class="annot"><span class="annottext">FragmentSpread Name
+</span><a href="#local-6989586621688176892"><span class="hs-identifier hs-var">fragmentSpread</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">FragmentSpread Name -&gt; Name
 forall var. FragmentSpread var -&gt; Name
 </span><span class="hs-identifier hs-var hs-var">_fsName</span></span><span> </span><span class="annot"><span class="annottext">FragmentSpread Name
-</span><a href="#local-6989586621688177461"><span class="hs-identifier hs-var">fragmentSpread</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-125"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">SelectionInlineFragment</span></span><span> </span><span id="local-6989586621688177458"><span class="annot"><span class="annottext">InlineFragment FragmentSpread Name
-</span><a href="#local-6989586621688177458"><span class="hs-identifier hs-var">inlineFragment</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name -&gt; [Name]
-</span><a href="#local-6989586621688177486"><span class="hs-identifier hs-var">fragmentsInSelectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">(SelectionSet FragmentSpread Name -&gt; [Name])
+</span><a href="#local-6989586621688176892"><span class="hs-identifier hs-var">fragmentSpread</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-125"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">SelectionInlineFragment</span></span><span> </span><span id="local-6989586621688176889"><span class="annot"><span class="annottext">InlineFragment FragmentSpread Name
+</span><a href="#local-6989586621688176889"><span class="hs-identifier hs-var">inlineFragment</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name -&gt; [Name]
+</span><a href="#local-6989586621688176917"><span class="hs-identifier hs-var">fragmentsInSelectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">(SelectionSet FragmentSpread Name -&gt; [Name])
 -&gt; SelectionSet FragmentSpread Name -&gt; [Name]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">InlineFragment FragmentSpread Name
@@ -315,19 +315,19 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (frag :: * -&gt; *) var.
 InlineFragment frag var -&gt; SelectionSet frag var
 </span><span class="hs-identifier hs-var hs-var">_ifSelectionSet</span></span><span> </span><span class="annot"><span class="annottext">InlineFragment FragmentSpread Name
-</span><a href="#local-6989586621688177458"><span class="hs-identifier hs-var">inlineFragment</span></a></span><span>
+</span><a href="#local-6989586621688176889"><span class="hs-identifier hs-var">inlineFragment</span></a></span><span>
 </span><span id="line-126"></span><span>
-</span><span id="line-127"></span><span id="local-6989586621688177586"><span class="annot"><a href="Hasura.GraphQL.Execute.Inline.html#inlineSelection"><span class="hs-identifier hs-type">inlineSelection</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-128"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.Inline.html#MonadInline"><span class="hs-identifier hs-type">MonadInline</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688177586"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-127"></span><span id="local-6989586621688177017"><span class="annot"><a href="Hasura.GraphQL.Execute.Inline.html#inlineSelection"><span class="hs-identifier hs-type">inlineSelection</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-128"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.Inline.html#MonadInline"><span class="hs-identifier hs-type">MonadInline</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688177017"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-129"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Selection</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">FragmentSpread</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-130"></span><span>  </span><span class="annot"><a href="#local-6989586621688177586"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Selection</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NoFragments</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span class="hs-special">)</span></span><span>
+</span><span id="line-130"></span><span>  </span><span class="annot"><a href="#local-6989586621688177017"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Selection</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NoFragments</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span class="hs-special">)</span></span><span>
 </span><span id="line-131"></span><span id="inlineSelection"><span class="annot"><span class="annottext">inlineSelection :: Selection FragmentSpread Name -&gt; m (Selection NoFragments Name)
-</span><a href="Hasura.GraphQL.Execute.Inline.html#inlineSelection"><span class="hs-identifier hs-var hs-var">inlineSelection</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">SelectionField</span></span><span> </span><span id="local-6989586621688177456"><span class="annot"><span class="annottext">field :: Field FragmentSpread Name
-</span><a href="#local-6989586621688177456"><span class="hs-identifier hs-var">field</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">Field</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688177454"><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
+</span><a href="Hasura.GraphQL.Execute.Inline.html#inlineSelection"><span class="hs-identifier hs-var hs-var">inlineSelection</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">SelectionField</span></span><span> </span><span id="local-6989586621688176887"><span class="annot"><span class="annottext">field :: Field FragmentSpread Name
+</span><a href="#local-6989586621688176887"><span class="hs-identifier hs-var">field</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">Field</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688176885"><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
 _fSelectionSet :: SelectionSet FragmentSpread Name
 _fSelectionSet :: forall (frag :: * -&gt; *) var.
 Field frag var -&gt; SelectionSet frag var
-</span><a href="#local-6989586621688177454"><span class="hs-identifier hs-var hs-var">_fSelectionSet</span></a></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621688176885"><span class="hs-identifier hs-var hs-var">_fSelectionSet</span></a></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-132"></span><span>  </span><span class="annot"><span class="annottext">Text
 -&gt; m (Selection NoFragments Name) -&gt; m (Selection NoFragments Name)
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
@@ -345,12 +345,12 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Field FragmentSpread Name -&gt; Name
 forall (frag :: * -&gt; *) var. Field frag var -&gt; Name
 </span><span class="hs-identifier hs-var hs-var">_fName</span></span><span> </span><span class="annot"><span class="annottext">Field FragmentSpread Name
-</span><a href="#local-6989586621688177456"><span class="hs-identifier hs-var">field</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m (Selection NoFragments Name) -&gt; m (Selection NoFragments Name))
+</span><a href="#local-6989586621688176887"><span class="hs-identifier hs-var">field</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m (Selection NoFragments Name) -&gt; m (Selection NoFragments Name))
 -&gt; m (Selection NoFragments Name) -&gt; m (Selection NoFragments Name)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-134"></span><span>      </span><span id="local-6989586621688177451"><span class="annot"><span class="annottext">SelectionSet NoFragments Name
-</span><a href="#local-6989586621688177451"><span class="hs-identifier hs-var">selectionSet</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Selection FragmentSpread Name -&gt; m (Selection NoFragments Name))
+</span><span id="line-134"></span><span>      </span><span id="local-6989586621688176882"><span class="annot"><span class="annottext">SelectionSet NoFragments Name
+</span><a href="#local-6989586621688176882"><span class="hs-identifier hs-var">selectionSet</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Selection FragmentSpread Name -&gt; m (Selection NoFragments Name))
 -&gt; SelectionSet FragmentSpread Name
 -&gt; m (SelectionSet NoFragments Name)
 forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
@@ -361,7 +361,7 @@ forall (m :: * -&gt; *).
 MonadInline m =&gt;
 Selection FragmentSpread Name -&gt; m (Selection NoFragments Name)
 </span><a href="Hasura.GraphQL.Execute.Inline.html#inlineSelection"><span class="hs-identifier hs-var">inlineSelection</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
-</span><a href="#local-6989586621688177454"><span class="hs-identifier hs-var">_fSelectionSet</span></a></span><span>
+</span><a href="#local-6989586621688176885"><span class="hs-identifier hs-var">_fSelectionSet</span></a></span><span>
 </span><span id="line-135"></span><span>      </span><span class="annot"><span class="annottext">Selection NoFragments Name -&gt; m (Selection NoFragments Name)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Selection NoFragments Name -&gt; m (Selection NoFragments Name))
@@ -370,11 +370,11 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$!</span></span><span> </span><span class="annot"><span class="annottext">Field NoFragments Name -&gt; Selection NoFragments Name
 forall (frag :: * -&gt; *) var. Field frag var -&gt; Selection frag var
 </span><span class="hs-identifier hs-var">SelectionField</span></span><span> </span><span class="annot"><span class="annottext">Field FragmentSpread Name
-</span><a href="#local-6989586621688177456"><span class="hs-identifier hs-var">field</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_fSelectionSet :: SelectionSet NoFragments Name
+</span><a href="#local-6989586621688176887"><span class="hs-identifier hs-var">field</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_fSelectionSet :: SelectionSet NoFragments Name
 </span><span class="hs-identifier hs-var">_fSelectionSet</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Name
-</span><a href="#local-6989586621688177451"><span class="hs-identifier hs-var">selectionSet</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-136"></span><span class="annot"><a href="Hasura.GraphQL.Execute.Inline.html#inlineSelection"><span class="hs-identifier hs-var">inlineSelection</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">SelectionFragmentSpread</span></span><span> </span><span id="local-6989586621688177449"><span class="annot"><span class="annottext">FragmentSpread Name
-</span><a href="#local-6989586621688177449"><span class="hs-identifier hs-var">spread</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621688176882"><span class="hs-identifier hs-var">selectionSet</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-136"></span><span class="annot"><a href="Hasura.GraphQL.Execute.Inline.html#inlineSelection"><span class="hs-identifier hs-var">inlineSelection</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">SelectionFragmentSpread</span></span><span> </span><span id="local-6989586621688176880"><span class="annot"><span class="annottext">FragmentSpread Name
+</span><a href="#local-6989586621688176880"><span class="hs-identifier hs-var">spread</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-137"></span><span>  </span><span class="annot"><span class="annottext">Text
 -&gt; m (Selection NoFragments Name) -&gt; m (Selection NoFragments Name)
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
@@ -395,15 +395,15 @@ forall (m :: * -&gt; *).
 MonadInline m =&gt;
 FragmentSpread Name -&gt; m (InlineFragment NoFragments Name)
 </span><a href="Hasura.GraphQL.Execute.Inline.html#inlineFragmentSpread"><span class="hs-identifier hs-var">inlineFragmentSpread</span></a></span><span> </span><span class="annot"><span class="annottext">FragmentSpread Name
-</span><a href="#local-6989586621688177449"><span class="hs-identifier hs-var">spread</span></a></span><span>
-</span><span id="line-139"></span><span class="annot"><a href="Hasura.GraphQL.Execute.Inline.html#inlineSelection"><span class="hs-identifier hs-var">inlineSelection</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">SelectionInlineFragment</span></span><span> </span><span id="local-6989586621688177446"><span class="annot"><span class="annottext">fragment :: InlineFragment FragmentSpread Name
-</span><a href="#local-6989586621688177446"><span class="hs-identifier hs-var">fragment</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">InlineFragment</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688177444"><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
+</span><a href="#local-6989586621688176880"><span class="hs-identifier hs-var">spread</span></a></span><span>
+</span><span id="line-139"></span><span class="annot"><a href="Hasura.GraphQL.Execute.Inline.html#inlineSelection"><span class="hs-identifier hs-var">inlineSelection</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">SelectionInlineFragment</span></span><span> </span><span id="local-6989586621688176877"><span class="annot"><span class="annottext">fragment :: InlineFragment FragmentSpread Name
+</span><a href="#local-6989586621688176877"><span class="hs-identifier hs-var">fragment</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">InlineFragment</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688176875"><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
 _ifSelectionSet :: SelectionSet FragmentSpread Name
 _ifSelectionSet :: forall (frag :: * -&gt; *) var.
 InlineFragment frag var -&gt; SelectionSet frag var
-</span><a href="#local-6989586621688177444"><span class="hs-identifier hs-var hs-var">_ifSelectionSet</span></a></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-140"></span><span>  </span><span id="local-6989586621688177443"><span class="annot"><span class="annottext">SelectionSet NoFragments Name
-</span><a href="#local-6989586621688177443"><span class="hs-identifier hs-var">selectionSet</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Selection FragmentSpread Name -&gt; m (Selection NoFragments Name))
+</span><a href="#local-6989586621688176875"><span class="hs-identifier hs-var hs-var">_ifSelectionSet</span></a></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-140"></span><span>  </span><span id="local-6989586621688176874"><span class="annot"><span class="annottext">SelectionSet NoFragments Name
+</span><a href="#local-6989586621688176874"><span class="hs-identifier hs-var">selectionSet</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Selection FragmentSpread Name -&gt; m (Selection NoFragments Name))
 -&gt; SelectionSet FragmentSpread Name
 -&gt; m (SelectionSet NoFragments Name)
 forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
@@ -414,7 +414,7 @@ forall (m :: * -&gt; *).
 MonadInline m =&gt;
 Selection FragmentSpread Name -&gt; m (Selection NoFragments Name)
 </span><a href="Hasura.GraphQL.Execute.Inline.html#inlineSelection"><span class="hs-identifier hs-var">inlineSelection</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
-</span><a href="#local-6989586621688177444"><span class="hs-identifier hs-var">_ifSelectionSet</span></a></span><span>
+</span><a href="#local-6989586621688176875"><span class="hs-identifier hs-var">_ifSelectionSet</span></a></span><span>
 </span><span id="line-141"></span><span>  </span><span class="annot"><span class="annottext">Selection NoFragments Name -&gt; m (Selection NoFragments Name)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Selection NoFragments Name -&gt; m (Selection NoFragments Name))
@@ -424,48 +424,48 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (frag :: * -&gt; *) var.
 InlineFragment frag var -&gt; Selection frag var
 </span><span class="hs-identifier hs-var">SelectionInlineFragment</span></span><span> </span><span class="annot"><span class="annottext">InlineFragment FragmentSpread Name
-</span><a href="#local-6989586621688177446"><span class="hs-identifier hs-var">fragment</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_ifSelectionSet :: SelectionSet NoFragments Name
+</span><a href="#local-6989586621688176877"><span class="hs-identifier hs-var">fragment</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_ifSelectionSet :: SelectionSet NoFragments Name
 </span><span class="hs-identifier hs-var">_ifSelectionSet</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Name
-</span><a href="#local-6989586621688177443"><span class="hs-identifier hs-var">selectionSet</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621688176874"><span class="hs-identifier hs-var">selectionSet</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-142"></span><span>
-</span><span id="line-143"></span><span id="local-6989586621688177553"><span class="annot"><a href="Hasura.GraphQL.Execute.Inline.html#inlineFragmentSpread"><span class="hs-identifier hs-type">inlineFragmentSpread</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-144"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.Inline.html#MonadInline"><span class="hs-identifier hs-type">MonadInline</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688177553"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-143"></span><span id="local-6989586621688176984"><span class="annot"><a href="Hasura.GraphQL.Execute.Inline.html#inlineFragmentSpread"><span class="hs-identifier hs-type">inlineFragmentSpread</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-144"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.Inline.html#MonadInline"><span class="hs-identifier hs-type">MonadInline</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688176984"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-145"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">FragmentSpread</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-146"></span><span>  </span><span class="annot"><a href="#local-6989586621688177553"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InlineFragment</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NoFragments</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span class="hs-special">)</span></span><span>
+</span><span id="line-146"></span><span>  </span><span class="annot"><a href="#local-6989586621688176984"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InlineFragment</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NoFragments</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span class="hs-special">)</span></span><span>
 </span><span id="line-147"></span><span id="inlineFragmentSpread"><span class="annot"><span class="annottext">inlineFragmentSpread :: FragmentSpread Name -&gt; m (InlineFragment NoFragments Name)
-</span><a href="Hasura.GraphQL.Execute.Inline.html#inlineFragmentSpread"><span class="hs-identifier hs-var hs-var">inlineFragmentSpread</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">FragmentSpread</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688177441"><span class="annot"><span class="annottext">Name
+</span><a href="Hasura.GraphQL.Execute.Inline.html#inlineFragmentSpread"><span class="hs-identifier hs-var hs-var">inlineFragmentSpread</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">FragmentSpread</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688176872"><span class="annot"><span class="annottext">Name
 _fsName :: Name
 _fsName :: forall var. FragmentSpread var -&gt; Name
-</span><a href="#local-6989586621688177441"><span class="hs-identifier hs-var hs-var">_fsName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688177440"><span class="annot"><span class="annottext">[Directive Name]
+</span><a href="#local-6989586621688176872"><span class="hs-identifier hs-var hs-var">_fsName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688176871"><span class="annot"><span class="annottext">[Directive Name]
 _fsDirectives :: forall var. FragmentSpread var -&gt; [Directive var]
 _fsDirectives :: [Directive Name]
 </span><span class="hs-identifier hs-var hs-var">_fsDirectives</span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-148"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.Inline.html#InlineEnv"><span class="hs-identifier hs-type">InlineEnv</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688177438"><span class="annot"><span class="annottext">HashMap Name FragmentDefinition
+</span><span id="line-148"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.Inline.html#InlineEnv"><span class="hs-identifier hs-type">InlineEnv</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688176869"><span class="annot"><span class="annottext">HashMap Name FragmentDefinition
 _ieFragmentDefinitions :: HashMap Name FragmentDefinition
 _ieFragmentDefinitions :: InlineEnv -&gt; HashMap Name FragmentDefinition
-</span><a href="#local-6989586621688177438"><span class="hs-identifier hs-var hs-var">_ieFragmentDefinitions</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688177437"><span class="annot"><span class="annottext">[Name]
+</span><a href="#local-6989586621688176869"><span class="hs-identifier hs-var hs-var">_ieFragmentDefinitions</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688176868"><span class="annot"><span class="annottext">[Name]
 _ieFragmentStack :: [Name]
 _ieFragmentStack :: InlineEnv -&gt; [Name]
-</span><a href="#local-6989586621688177437"><span class="hs-identifier hs-var hs-var">_ieFragmentStack</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m InlineEnv
+</span><a href="#local-6989586621688176868"><span class="hs-identifier hs-var hs-var">_ieFragmentStack</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m InlineEnv
 forall r (m :: * -&gt; *). MonadReader r m =&gt; m r
 </span><span class="hs-identifier hs-var">ask</span></span><span>
-</span><span id="line-149"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.Inline.html#InlineState"><span class="hs-identifier hs-type">InlineState</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688177435"><span class="annot"><span class="annottext">HashMap Name (InlineFragment NoFragments Name)
+</span><span id="line-149"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.Inline.html#InlineState"><span class="hs-identifier hs-type">InlineState</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688176866"><span class="annot"><span class="annottext">HashMap Name (InlineFragment NoFragments Name)
 _isFragmentCache :: HashMap Name (InlineFragment NoFragments Name)
 _isFragmentCache :: InlineState -&gt; HashMap Name (InlineFragment NoFragments Name)
-</span><a href="#local-6989586621688177435"><span class="hs-identifier hs-var hs-var">_isFragmentCache</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m InlineState
+</span><a href="#local-6989586621688176866"><span class="hs-identifier hs-var hs-var">_isFragmentCache</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m InlineState
 forall s (m :: * -&gt; *). MonadState s m =&gt; m s
 </span><span class="hs-identifier hs-var">get</span></span><span>
 </span><span id="line-150"></span><span>
 </span><span id="line-151"></span><span>  </span><span class="hs-keyword">if</span><span>
 </span><span id="line-152"></span><span>      </span><span class="hs-comment">-- If we&#8217;ve already inlined this fragment, no need to process it again.</span><span>
-</span><span id="line-153"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688177433"><span class="annot"><span class="annottext">InlineFragment NoFragments Name
-</span><a href="#local-6989586621688177433"><span class="hs-identifier hs-var">fragment</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name
+</span><span id="line-153"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688176864"><span class="annot"><span class="annottext">InlineFragment NoFragments Name
+</span><a href="#local-6989586621688176864"><span class="hs-identifier hs-var">fragment</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name
 -&gt; HashMap Name (InlineFragment NoFragments Name)
 -&gt; Maybe (InlineFragment NoFragments Name)
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688177441"><span class="hs-identifier hs-var">_fsName</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (InlineFragment NoFragments Name)
-</span><a href="#local-6989586621688177435"><span class="hs-identifier hs-var">_isFragmentCache</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621688176872"><span class="hs-identifier hs-var">_fsName</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (InlineFragment NoFragments Name)
+</span><a href="#local-6989586621688176866"><span class="hs-identifier hs-var">_isFragmentCache</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-154"></span><span>        </span><span class="annot"><span class="annottext">InlineFragment NoFragments Name
 -&gt; m (InlineFragment NoFragments Name)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -475,20 +475,20 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 -&gt; m (InlineFragment NoFragments Name)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$!</span></span><span> </span><span class="annot"><span class="annottext">InlineFragment NoFragments Name -&gt; InlineFragment NoFragments Name
-</span><a href="#local-6989586621688177431"><span class="hs-identifier hs-var">addSpreadDirectives</span></a></span><span> </span><span class="annot"><span class="annottext">InlineFragment NoFragments Name
-</span><a href="#local-6989586621688177433"><span class="hs-identifier hs-var">fragment</span></a></span><span>
+</span><a href="#local-6989586621688176862"><span class="hs-identifier hs-var">addSpreadDirectives</span></a></span><span> </span><span class="annot"><span class="annottext">InlineFragment NoFragments Name
+</span><a href="#local-6989586621688176864"><span class="hs-identifier hs-var">fragment</span></a></span><span>
 </span><span id="line-155"></span><span>      </span><span class="hs-comment">-- Fragment cycles are always illegal; see</span><span>
 </span><span id="line-156"></span><span>      </span><span class="hs-comment">-- http://spec.graphql.org/June2018/#sec-Fragment-spreads-must-not-form-cycles</span><span>
-</span><span id="line-157"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688177430"><span class="annot"><span class="annottext">[Name]
-</span><a href="#local-6989586621688177430"><span class="hs-identifier hs-var">fragmentCycle</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Name
+</span><span id="line-157"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688176861"><span class="annot"><span class="annottext">[Name]
+</span><a href="#local-6989586621688176861"><span class="hs-identifier hs-var">fragmentCycle</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Name
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span class="annot"><span class="annottext">[Name]
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Bool) -&gt; [Name] -&gt; ([Name], [Name])
 forall a. (a -&gt; Bool) -&gt; [a] -&gt; ([a], [a])
 </span><span class="hs-identifier hs-var">break</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688177441"><span class="hs-identifier hs-var">_fsName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Name]
-</span><a href="#local-6989586621688177437"><span class="hs-identifier hs-var">_ieFragmentStack</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621688176872"><span class="hs-identifier hs-var">_fsName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Name]
+</span><a href="#local-6989586621688176868"><span class="hs-identifier hs-var">_ieFragmentStack</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-158"></span><span>        </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m (InlineFragment NoFragments Name)
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
@@ -507,43 +507,43 @@ forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Text) -&gt; NonEmpty Name -&gt; NonEmpty Text
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688177441"><span class="hs-identifier hs-var">_fsName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; [Name] -&gt; NonEmpty Name
+</span><a href="#local-6989586621688176872"><span class="hs-identifier hs-var">_fsName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; [Name] -&gt; NonEmpty Name
 forall a. a -&gt; [a] -&gt; NonEmpty a
 </span><span class="hs-operator hs-var">:|</span></span><span> </span><span class="annot"><span class="annottext">[Name] -&gt; [Name]
 forall a. [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">reverse</span></span><span> </span><span class="annot"><span class="annottext">[Name]
-</span><a href="#local-6989586621688177430"><span class="hs-identifier hs-var">fragmentCycle</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688176861"><span class="hs-identifier hs-var">fragmentCycle</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-161"></span><span>            </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; form a cycle&quot;</span></span><span>
 </span><span id="line-162"></span><span>      </span><span class="hs-comment">-- We didn&#8217;t hit the fragment cache, so look up the definition and convert</span><span>
 </span><span id="line-163"></span><span>      </span><span class="hs-comment">-- it to an inline fragment.</span><span>
-</span><span id="line-164"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">FragmentDefinition</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688177424"><span class="annot"><span class="annottext">Name
+</span><span id="line-164"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">FragmentDefinition</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688176855"><span class="annot"><span class="annottext">Name
 _fdTypeCondition :: FragmentDefinition -&gt; Name
 _fdTypeCondition :: Name
-</span><span class="hs-identifier hs-var hs-var">_fdTypeCondition</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688177422"><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
+</span><span class="hs-identifier hs-var hs-var">_fdTypeCondition</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688176853"><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
 _fdSelectionSet :: FragmentDefinition -&gt; SelectionSet FragmentSpread Name
 _fdSelectionSet :: SelectionSet FragmentSpread Name
 </span><span class="hs-identifier hs-var hs-var">_fdSelectionSet</span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-165"></span><span>          </span><span class="annot"><span class="annottext">Name -&gt; HashMap Name FragmentDefinition -&gt; Maybe FragmentDefinition
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688177441"><span class="hs-identifier hs-var">_fsName</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name FragmentDefinition
-</span><a href="#local-6989586621688177438"><span class="hs-identifier hs-var">_ieFragmentDefinitions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688176872"><span class="hs-identifier hs-var">_fsName</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name FragmentDefinition
+</span><a href="#local-6989586621688176869"><span class="hs-identifier hs-var">_ieFragmentDefinitions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 -&gt; m (InlineFragment NoFragments Name)
 -&gt; m (InlineFragment NoFragments Name)
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
 </span><a href="Hasura.Base.Error.html#withPathK"><span class="hs-identifier hs-var">withPathK</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">unName</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688177441"><span class="hs-identifier hs-var">_fsName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m (InlineFragment NoFragments Name)
+</span><a href="#local-6989586621688176872"><span class="hs-identifier hs-var">_fsName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m (InlineFragment NoFragments Name)
  -&gt; m (InlineFragment NoFragments Name))
 -&gt; m (InlineFragment NoFragments Name)
 -&gt; m (InlineFragment NoFragments Name)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-166"></span><span>        </span><span id="local-6989586621688177420"><span class="annot"><span class="annottext">SelectionSet NoFragments Name
-</span><a href="#local-6989586621688177420"><span class="hs-identifier hs-var">selectionSet</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-166"></span><span>        </span><span id="local-6989586621688176851"><span class="annot"><span class="annottext">SelectionSet NoFragments Name
+</span><a href="#local-6989586621688176851"><span class="hs-identifier hs-var">selectionSet</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-167"></span><span>          </span><span class="annot"><span class="annottext">ASetter InlineEnv InlineEnv [Name] [Name]
 -&gt; ([Name] -&gt; [Name])
 -&gt; m (SelectionSet NoFragments Name)
@@ -554,7 +554,7 @@ ASetter s s a b -&gt; (a -&gt; b) -&gt; m r -&gt; m r
 </span><span class="hs-identifier hs-var">locally</span></span><span> </span><span class="annot"><span class="annottext">ASetter InlineEnv InlineEnv [Name] [Name]
 Lens' InlineEnv [Name]
 </span><a href="Hasura.GraphQL.Execute.Inline.html#ieFragmentStack"><span class="hs-identifier hs-var">ieFragmentStack</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688177441"><span class="hs-identifier hs-var">_fsName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; [Name] -&gt; [Name]
+</span><a href="#local-6989586621688176872"><span class="hs-identifier hs-var">_fsName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; [Name] -&gt; [Name]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m (SelectionSet NoFragments Name)
  -&gt; m (SelectionSet NoFragments Name))
@@ -573,10 +573,10 @@ forall (m :: * -&gt; *).
 MonadInline m =&gt;
 Selection FragmentSpread Name -&gt; m (Selection NoFragments Name)
 </span><a href="Hasura.GraphQL.Execute.Inline.html#inlineSelection"><span class="hs-identifier hs-var">inlineSelection</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet FragmentSpread Name
-</span><a href="#local-6989586621688177422"><span class="hs-identifier hs-var">_fdSelectionSet</span></a></span><span>
+</span><a href="#local-6989586621688176853"><span class="hs-identifier hs-var">_fdSelectionSet</span></a></span><span>
 </span><span id="line-169"></span><span>
-</span><span id="line-170"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688177418"><span class="annot"><span class="annottext">fragment :: InlineFragment NoFragments Name
-</span><a href="#local-6989586621688177418"><span class="hs-identifier hs-var hs-var">fragment</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-170"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688176849"><span class="annot"><span class="annottext">fragment :: InlineFragment NoFragments Name
+</span><a href="#local-6989586621688176849"><span class="hs-identifier hs-var hs-var">fragment</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-171"></span><span>              </span><span class="annot"><span class="annottext">InlineFragment :: forall (frag :: * -&gt; *) var.
 Maybe Name
 -&gt; [Directive var]
@@ -587,7 +587,7 @@ Maybe Name
 </span><span class="hs-identifier hs-var">_ifTypeCondition</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Maybe Name
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688177424"><span class="hs-identifier hs-var">_fdTypeCondition</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688176855"><span class="hs-identifier hs-var">_fdTypeCondition</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-173"></span><span>                  </span><span class="hs-comment">-- As far as I can tell, the GraphQL spec says that directives</span><span>
 </span><span id="line-174"></span><span>                  </span><span class="hs-comment">-- on the fragment definition do NOT apply to the fields in its</span><span>
 </span><span id="line-175"></span><span>                  </span><span class="hs-comment">-- selection set.</span><span>
@@ -595,7 +595,7 @@ forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">_ifDirectives</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">,</span><span>
 </span><span id="line-177"></span><span>                  </span><span class="annot"><span class="annottext">_ifSelectionSet :: SelectionSet NoFragments Name
 </span><span class="hs-identifier hs-var">_ifSelectionSet</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Name
-</span><a href="#local-6989586621688177420"><span class="hs-identifier hs-var">selectionSet</span></a></span><span>
+</span><a href="#local-6989586621688176851"><span class="hs-identifier hs-var">selectionSet</span></a></span><span>
 </span><span id="line-178"></span><span>                </span><span class="hs-special">}</span><span>
 </span><span id="line-179"></span><span>        </span><span class="annot"><span class="annottext">(InlineState -&gt; InlineState) -&gt; m ()
 forall s (m :: * -&gt; *). MonadState s m =&gt; (s -&gt; s) -&gt; m ()
@@ -634,8 +634,8 @@ forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; HashMap k v -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">Map.insert</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688177441"><span class="hs-identifier hs-var">_fsName</span></a></span><span> </span><span class="annot"><span class="annottext">InlineFragment NoFragments Name
-</span><a href="#local-6989586621688177418"><span class="hs-identifier hs-var">fragment</span></a></span><span>
+</span><a href="#local-6989586621688176872"><span class="hs-identifier hs-var">_fsName</span></a></span><span> </span><span class="annot"><span class="annottext">InlineFragment NoFragments Name
+</span><a href="#local-6989586621688176849"><span class="hs-identifier hs-var">fragment</span></a></span><span>
 </span><span id="line-180"></span><span>        </span><span class="annot"><span class="annottext">InlineFragment NoFragments Name
 -&gt; m (InlineFragment NoFragments Name)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -645,8 +645,8 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 -&gt; m (InlineFragment NoFragments Name)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$!</span></span><span> </span><span class="annot"><span class="annottext">InlineFragment NoFragments Name -&gt; InlineFragment NoFragments Name
-</span><a href="#local-6989586621688177431"><span class="hs-identifier hs-var">addSpreadDirectives</span></a></span><span> </span><span class="annot"><span class="annottext">InlineFragment NoFragments Name
-</span><a href="#local-6989586621688177418"><span class="hs-identifier hs-var">fragment</span></a></span><span>
+</span><a href="#local-6989586621688176862"><span class="hs-identifier hs-var">addSpreadDirectives</span></a></span><span> </span><span class="annot"><span class="annottext">InlineFragment NoFragments Name
+</span><a href="#local-6989586621688176849"><span class="hs-identifier hs-var">fragment</span></a></span><span>
 </span><span id="line-181"></span><span>
 </span><span id="line-182"></span><span>      </span><span class="hs-comment">-- If we get here, the fragment name is unbound; raise an error.</span><span>
 </span><span id="line-183"></span><span>      </span><span class="hs-comment">-- http://spec.graphql.org/June2018/#sec-Fragment-spread-target-defined</span><span>
@@ -663,19 +663,19 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;reference to undefined fragment &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Name -&gt; Text
 forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688177441"><span class="hs-identifier hs-var">_fsName</span></a></span><span>
+</span><a href="#local-6989586621688176872"><span class="hs-identifier hs-var">_fsName</span></a></span><span>
 </span><span id="line-187"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-188"></span><span>    </span><span id="local-6989586621688177431"><span class="annot"><span class="annottext">addSpreadDirectives :: InlineFragment NoFragments Name -&gt; InlineFragment NoFragments Name
-</span><a href="#local-6989586621688177431"><span class="hs-identifier hs-var hs-var">addSpreadDirectives</span></a></span></span><span> </span><span id="local-6989586621688177412"><span class="annot"><span class="annottext">InlineFragment NoFragments Name
-</span><a href="#local-6989586621688177412"><span class="hs-identifier hs-var">fragment</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-188"></span><span>    </span><span id="local-6989586621688176862"><span class="annot"><span class="annottext">addSpreadDirectives :: InlineFragment NoFragments Name -&gt; InlineFragment NoFragments Name
+</span><a href="#local-6989586621688176862"><span class="hs-identifier hs-var hs-var">addSpreadDirectives</span></a></span></span><span> </span><span id="local-6989586621688176843"><span class="annot"><span class="annottext">InlineFragment NoFragments Name
+</span><a href="#local-6989586621688176843"><span class="hs-identifier hs-var">fragment</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-189"></span><span>      </span><span class="annot"><span class="annottext">InlineFragment NoFragments Name
-</span><a href="#local-6989586621688177412"><span class="hs-identifier hs-var">fragment</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_ifDirectives :: [Directive Name]
+</span><a href="#local-6989586621688176843"><span class="hs-identifier hs-var">fragment</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_ifDirectives :: [Directive Name]
 </span><span class="hs-identifier hs-var">_ifDirectives</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InlineFragment NoFragments Name -&gt; [Directive Name]
 forall (frag :: * -&gt; *) var.
 InlineFragment frag var -&gt; [Directive var]
 </span><span class="hs-identifier hs-var hs-var">_ifDirectives</span></span><span> </span><span class="annot"><span class="annottext">InlineFragment NoFragments Name
-</span><a href="#local-6989586621688177412"><span class="hs-identifier hs-var">fragment</span></a></span><span> </span><span class="annot"><span class="annottext">[Directive Name] -&gt; [Directive Name] -&gt; [Directive Name]
+</span><a href="#local-6989586621688176843"><span class="hs-identifier hs-var">fragment</span></a></span><span> </span><span class="annot"><span class="annottext">[Directive Name] -&gt; [Directive Name] -&gt; [Directive Name]
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">[Directive Name]
-</span><a href="#local-6989586621688177440"><span class="hs-identifier hs-var">_fsDirectives</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621688176871"><span class="hs-identifier hs-var">_fsDirectives</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-190"></span></pre></body></html>
