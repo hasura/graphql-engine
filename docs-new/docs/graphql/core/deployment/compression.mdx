@@ -1,0 +1,20 @@
+---
+description: Use HTTP compression with Hasura GraphQL engine
+keywords:
+  - hasura
+  - docs
+  - deployment
+  - http compression
+sidebar_position: 9
+---
+
+# HTTP Compression
+
+The Hasura GraphQL Engine supports HTTP compression. The server looks
+for the `Accept-Encoding` header in request. If the header contains
+`gzip` then the server uses [Gzip](https://en.wikipedia.org/wiki/Gzip)
+compression. Also, the server sets the `Content-Encoding` response
+header value to `gzip`.
+
+**Only responses from "/v2/query" and "/v1/graphql" endpoints are
+compressed.**

@@ -24,6 +24,7 @@ export const InputField = ({
   iconPosition = 'start',
   placeholder,
   disabled,
+  dataTest,
   ...wrapperProps
 }: InputFieldProps) => {
   const {
@@ -34,7 +35,7 @@ export const InputField = ({
   const maybeError = get(errors, name) as FieldError | undefined;
 
   return (
-    <FieldWrapper {...wrapperProps} error={maybeError}>
+    <FieldWrapper id={name} {...wrapperProps} error={maybeError}>
       <div
         className={clsx(
           'relative',
@@ -49,10 +50,13 @@ export const InputField = ({
           </div>
         ) : null}
         <input
+          id={name}
           type={type}
           aria-invalid={maybeError ? 'true' : 'false'}
+          aria-label={wrapperProps.label}
+          data-test={dataTest}
           className={clsx(
-            'block h-input w-full shadow-sm rounded focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400',
+            'block w-full max-w-xl h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400',
             maybeError
               ? 'border-red-600 hover:border-red-700 placeholder-red-600 '
               : 'border-gray-300 placeholder-gray-600',

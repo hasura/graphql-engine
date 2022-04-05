@@ -49,7 +49,58 @@ be applied depending on both those parameteres. i.e If the requests come from a 
 
 Depth limits
 ^^^^^^^^^^^^
+
 Restricts a GraphQL operation based on its depth, preventing deeply nested queries.
+
+.. admonition:: Note
+
+  GraphQL introspection queries are excluded from depth limits.
+
+You can see various queries as examples and their depths here:
+
+.. code-block:: graphql
+
+  # depth = 1
+  query deep1_1 {
+    viewer {
+      name
+    }
+  }
+
+  query deep1_2 {
+    viewer {
+      ... on User {
+        name
+      }
+    }
+  }
+
+  # depth = 2
+  query deep2 {
+    viewer {
+      albums {
+        title
+      }
+    }
+  }
+
+  # depth = 3
+  query deep3 {
+    viewer {
+      albums {
+        ...musicInfo
+        songs{
+          ...musicInfo
+        }
+      }
+    }
+  }
+
+  fragment musicInfo on Music {
+    id
+    title
+    artists
+  }
 
 Node limits
 ^^^^^^^^^^^

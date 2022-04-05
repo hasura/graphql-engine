@@ -1,0 +1,63 @@
+---
+sidebar_label: Hasura - Citus compatibility
+sidebar_position: 2
+description: Hasura Citus Hyperscale Postgres database support
+keywords:
+  - hasura
+  - docs
+  - databases
+  - citus-hyperscale-postgres
+  - compatibility
+---
+
+# Hasura - Citus compatibility
+
+## Introduction
+
+As Citus is an extension of Postgres, the way it functions with Hasura
+is also very similar. Currently the following features are supported
+with Citus and Hasura:
+
+## Tables
+
+Querying from all kinds of tables and views is currently supported. This
+includes local, reference and distributed tables. All the tables can be
+tracked from the console.
+
+## Relationships
+
+The following table describes the supported relationships based on the
+supported joins in Citus:
+
+|                      | To Local      | To Reference  | To Distributed |
+|----------------------|---------------|---------------|----------------|
+| **From Local**       | Object, Array | Object, Array |                |
+| **From Reference**   | Object, Array | Object, Array |                |
+| **From Distributed** |               | Object        | Object, Array  |
+
+The Hasura console allows you to add all the supported relationships.
+
+## Permissions
+
+All permissions work like on Postgres without any restrictions.
+
+## Functions
+
+Citus supported `plpgsql` functions are supported on Hasura with the
+following restrictions:
+
+-   Fetching relationships as part of the function’s response is
+    currently not supported
+
+## Mutations
+
+Mutations are supported in GraphQL engine with the following
+restrictions:
+
+-   Fetching relationship data as part of `returning` is not yet
+    supported
+
+## Event triggers
+
+Citus does not yet support creating triggers ([See issue](https://github.com/citusdata/citus/issues/4425)) on reference
+tables. Hence this is currently not supported.

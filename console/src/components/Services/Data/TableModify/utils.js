@@ -57,7 +57,8 @@ export const sanitiseRootFields = rootFields => {
       rootField = rootField.trim() || null;
     } else if (rootField) {
       rootField.name = rootField.name ? rootField.name.trim() : null;
-      rootField.comment = rootField.comment ? rootField.comment.trim() : null;
+      rootField.comment =
+        typeof rootField.comment === 'string' ? rootField.comment.trim() : null;
     }
     santisedRootFields[rootFieldType] = rootField;
   });

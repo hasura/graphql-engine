@@ -6,11 +6,17 @@ import type { Permission, ComputedField } from '@/dataSources/types';
 import type {
   QualifiedTable,
   RemoteRelationship,
+  rsToRsRelDef,
   TableEntry,
+  rsToDbRelDef,
 } from '@/metadata/types';
 import { MetadataResponse } from '..';
 
 export namespace MetadataSelector {
+  export const getAllSources = () => (m: MetadataResponse) => {
+    return m.metadata?.sources;
+  };
+
   export const getTablesFromAllSources = (
     m: MetadataResponse
   ): (TableEntry & { source: string })[] => {
@@ -36,27 +42,40 @@ export namespace MetadataSelector {
     return m.metadata?.sources.find(source => source.name === dataSource);
   };
 
+  export const listRemoteSchemas = () => (m: MetadataResponse) => {
+    return m?.metadata?.remote_schemas?.map(({ name }) => name);
+  };
+
+  export const getRemoteSchema = (schemaName: string) => (
+    m: MetadataResponse
+  ) => {
+    const schemaMeta = m?.metadata.remote_schemas?.find(
+      s => s.name === schemaName
+    );
+    return schemaMeta;
+  };
+
   export const getAllRemoteSchemaRelationships = () => (
     m: MetadataResponse
   ) => {
-    let allRemoteSchemaRelationships: Array<
-      { table_name: string } & RemoteRelationship
-    > = [];
-    m.metadata?.sources?.forEach(source => {
-      source?.tables.forEach(tableDefinition => {
-        if (tableDefinition?.remote_relationships) {
-          const table_name = tableDefinition?.table?.name;
-          // Remote relations can be 3 types, legacy remote schema, new RS, and remote source relationships
-          // filtering out remote source relationships => allowing only remote schema relationships
-          const remoteSchemaTableRels = tableDefinition?.remote_relationships
-            .filter(relationship => !relationship?.definition?.to_source)
-            .map(i => ({ ...i, table_name }));
-          allRemoteSchemaRelationships = [
-            ...allRemoteSchemaRelationships,
-            ...remoteSchemaTableRels,
-          ];
-        }
-      });
+    let allRemoteSchemaRelationships: ({ rsName: string } & (
+      | rsToDbRelDef
+      | rsToRsRelDef
+    ))[] = [];
+
+    m.metadata?.remote_schemas?.forEach(rs => {
+      const rsName = rs?.name;
+
+      if (rs?.remote_relationships) {
+        const temp_rels = rs.remote_relationships.map(rel => {
+          return { ...rel, rsName };
+        });
+
+        allRemoteSchemaRelationships = [
+          ...allRemoteSchemaRelationships,
+          ...temp_rels,
+        ];
+      }
     });
     return allRemoteSchemaRelationships;
   };
@@ -112,7 +131,7 @@ export namespace MetadataSelector {
     const computed_fields: ComputedField[] = (
       metadataTable?.computed_fields || []
     ).map(field => ({
-      comment: field.comment || '',
+      comment: field.comment,
       computed_field_name: field.name,
       name: field.name,
       table_name: table.name,

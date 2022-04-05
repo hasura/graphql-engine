@@ -1,0 +1,242 @@
+---
+description: Hasura Cloud Vercel Integration
+keywords:
+  - hasura
+  - cloud
+  - docs
+  - vercel
+  - integration
+sidebar_position: 13
+---
+
+import Thumbnail from "@site/src/components/Thumbnail";
+
+# Vercel Integration
+
+## Introduction
+
+You can connect your front-end [Vercel](https://vercel.com/dashboard)
+applications with a [Hasura Cloud](https://cloud.hasura.io/) project.
+
+This integration does the following:
+
+- Creates a new Hasura Cloud project which can serve as a unified
+  back-end for one or more front-end applications i.e. Vercel Projects
+  depending on the scope of the integration.
+
+- Configures necessary project settings i.e setting environment variables and exposing them on the client side.
+  (Check the [list](#vercel-environment-variables) of all environment variables set).
+
+  <Thumbnail
+    src="/img/graphql/cloud/integrations/vercel/hasura-vercel.png"
+    alt="Hasura Vercel Integration"
+    width="1146px"
+  />
+
+
+## Creating an Integration
+
+You can configure the [official Hasura integration](https://vercel.com/integrations/hasura-v1) with your Vercel account.
+
+<Thumbnail
+  src="/img/graphql/cloud/integrations/vercel/hasura-vercel-integration.png"
+  alt="Hasura Official Integration page"
+  width="1146px"
+/>
+
+
+### Step 0: Prerequisites
+
+This integration requires you to have a Vercel account along with existing Vercel applications.
+
+
+### Step 1: Initiate Integration
+
+- Navigate to the [official Hasura integration](https://vercel.com/integrations/hasura-v1) page and click on `Add Integration`.
+
+  <Thumbnail
+    src="/img/graphql/cloud/integrations/vercel/add-integration-button.png"
+    alt="Add Integration Button"
+    width="1146px"
+  />
+
+### Step 2: Select Vercel account
+
+- Select the account (personal or team) you want to install the integration on and click `Continue`.
+
+  <Thumbnail
+    src="/img/graphql/cloud/integrations/vercel/vercel-account-scope.png"
+    alt="Vercel Account Scope"
+    width="400px"
+  />
+
+
+### Step 3: Select Integration Scope
+
+- Select the integration scope.
+
+  | Scope             | Description                                        |
+  |-------------------|----------------------------------------------------|
+  | All Projects      | Configures all Vercel applications in the account. |
+  | Specific Projects | Configures only a subset of applications.          |
+
+  <Thumbnail
+    src="/img/graphql/cloud/integrations/vercel/selected-projects.png"
+    alt="Vercel selected projects"
+    width="400px"
+  />
+
+- Click on `Add Integration` and a new window should pop up for the further steps specific to Hasura Cloud.
+
+
+### Step 4: Configure Hasura Cloud
+
+- You'll be directed towards a Hasura Cloud signup or login page. This is skipped if you are already logged-in to Hasura Cloud.
+
+- Once you are logged in, a Hasura Cloud project is created for the integration and the required
+  [environment variables](#vercel-environment-variables) are set for each Vercel project in the scope.
+
+  <Thumbnail
+    src="/img/graphql/cloud/integrations/vercel/setup-progress.png"
+    alt="Setup Progress"
+    width="600px"
+  />
+
+- Click on the first link to navigate to your Hasura Cloud project Console to configure your GraphQL API and connect to a database.
+  Check out the section on [database setup](/graphql/cloud/projects/create.mdx#cloud-projects-db-setup) on how to do this.
+
+  <Thumbnail
+    src="/img/graphql/cloud/integrations/vercel/visit-console.png"
+    alt="Visit Console Button"
+    width="600px"
+  />
+
+- Click on `Install Integration` to install your integration.
+
+  <Thumbnail
+    src="/img/graphql/cloud/integrations/vercel/install-integration.png"
+    alt="Finish Setup Button"
+    width="600px"
+  />
+
+:::info Note
+
+Your integration will only be successfully configured upon clicking the
+`Install Integration` button.
+
+:::
+
+### Step 5: Check finished setup
+
+- The Integration is now complete. You'll be redirected to the Vercel Dashboard.
+
+  <Thumbnail
+    src="/img/graphql/cloud/integrations/vercel/integration-complete.png"
+    alt="Integration Complete"
+    width="1146px"
+  />
+
+- Click on `Configure` to navigate to Cloud Dashboard to see the latest project we created for you. This will be a project with the tag `Vercel` on it.
+
+  <Thumbnail
+    src="/img/graphql/cloud/integrations/vercel/vercel-tag-project.png"
+    alt="Integration Complete"
+    width="1146px"
+  />
+
+- To change the scope of you integration, you can click on `Manage Access` to add/remove vercel applications from the integration.
+  Check out the [Adding and removing projects from the Scope of Integration](#vercel-change-scope) section for more details.
+
+
+## Environment variables {#vercel-environment-variables}
+
+- List of Hasura Cloud environment variables configured by the integration for each Vercel application in the scope of the integration:
+
+  | Title                               | Description                                                       |
+  |-------------------------------------|-------------------------------------------------------------------|
+  | HASURA_PROJECT_ENDPOINT             | GraphQL API endpoint of the Hasura Cloud project.                 |
+  | NEXT_PUBLIC_HASURA_PROJECT_ENDPOINT | GraphQL API endpoint to be exposed on the Next.js browser client. |
+  | HASURA_ADMIN_SECRET                 | Admin secret key to access your GraphQL API.                      |
+
+  - You can check the environment variables configured by the integration for you in the respective Vercel Project's settings
+    on Vercel dashboard. These are set up for `Development`, `Preview` and `Production` environments.
+    Check the [Vercel docs](https://vercel.com/docs/concepts/projects/environment-variables) for environment variables for further reference.
+
+    <Thumbnail
+      src="/img/graphql/cloud/integrations/vercel/environment-variables.png"
+      alt="Environment variables"
+      width="1146px"
+    />
+
+
+:::info Note
+
+- If a [custom domain](/graphql/cloud/projects/domains.mdx) is added to the Hasura Cloud project, you'll have to set this custom value to
+  `HASURA_PROJECT_ENDPOINT` and `NEXT_HASURA_PROJECT_ENDPOINT` manually in the respective Vercel project's settings.
+- Similarly if the Hasura Cloud project's admin secret is changed, you will have to edit the `HASURA_ADMIN_SECRET` manually in the respective Vercel project's settings.
+
+:::
+
+
+## Adding and removing projects from the Scope of Integration {#vercel-change-scope}
+
+Once the integration is installed, you can change the scope of the
+integration.
+
+- Navigate to the installed integration page and click on `Manage Access`. This will show you the current status of the integration,
+  i.e the projects that are currently configured.
+
+  <Thumbnail
+    src="/img/graphql/cloud/integrations/vercel/manage-access-button.png"
+    alt="Manage Access Button"
+    width="1146px"
+  />
+
+- If the integration is installed for `All Projects`, you can change the scope to `Specific Projects` and select the projects from the
+  dropdown you want to keep the integration on. If installed for `Specific Projects`, you can add individual projects from the
+  dropdown or remove them from the list.
+
+  <Thumbnail
+    src="/img/graphql/cloud/integrations/vercel/manage-access-projects.png"
+    alt="Manage Access For Projects"
+    width="400px"
+  />
+
+
+- Click on `Save` to save the changes.
+
+:::info Note
+
+Hasura Cloud project's environment variables will be automatically set
+for the added projects and will be removed for the removed projects.
+
+:::
+
+## Removing an Integration
+
+- To remove the configured integration, navigate to the `Integrations` sections in Vercel Dashboard and spot the Hasura integration in the list.
+  Click on `Manage` to navigate to the integration page.
+
+  <Thumbnail
+    src="/img/graphql/cloud/integrations/vercel/integration-tab.png"
+    alt="Vercel Integration Tab"
+    width="1146px"
+  />
+
+
+- Scroll down to the bottom of the page and click on `Remove Integration`. Vercel will remove the integration along with
+  the set environment variables from the applications.
+
+  <Thumbnail
+    src="/img/graphql/cloud/integrations/vercel/remove-integration.png"
+    alt="Remove Vercel Integration"
+    width="1146px"
+  />
+
+Your Hasura Cloud project will not be affected.
+
+
+## Support
+
+File a support ticket by navigating to the [Help & Support](https://cloud.hasura.io/support/create-ticket) tab on the
+Hasura Cloud dashboard if you face any issues.

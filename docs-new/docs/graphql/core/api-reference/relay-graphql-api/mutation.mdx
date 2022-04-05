@@ -1,0 +1,52 @@
+---
+sidebar_label: Mutation
+sidebar_position: 2
+description: Hasura Relay GraphQL API mutations API reference
+keywords:
+  - hasura
+  - docs
+  - GraphQL Relay API
+  - API reference
+  - mutation
+---
+
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+
+# Relay API Reference - Mutation
+
+The Mutation API is similar to [GraphQL mutation](/graphql/core/api-reference/graphql-api/mutation.mdx)
+except that the `id` field in the table object resolves to Relay Node interface's `id`.
+
+**Example:**
+
+<GraphiQLIDE
+  query={`mutation insert_relay_author {
+  insert_author(
+    objects: {
+      name: "Chris"
+      username: "urschris"
+    }
+  ){
+    affected_rows
+    returning{
+      id
+      name
+      username
+    }
+  }
+}`}
+response={`{
+  "data": {
+    "insert_author": {
+      "affected_rows": 1,
+      "returning": [
+        {
+          "id": "WzEsICJwdWJsaWMiLCAiYXV0aG9yIiwgOF0=",
+          "name": "Chris",
+          "username": "urschris"
+        }
+      ]
+    }
+  }
+}`}
+/>

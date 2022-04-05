@@ -1,20 +1,19 @@
 import { CardedTable } from '@/new-components/CardedTable';
 import React, { ReactNode } from 'react';
 import { FaArrowRight } from 'react-icons/fa';
-import { RemoteRelationship } from '@/metadata/types';
+import { rsToDbRelDef, rsToRsRelDef } from '@/metadata/types';
+import { IndicatorCard } from '@/new-components/IndicatorCard';
 import ModifyActions from './components/ModifyActions';
 import NameColumnCell from './components/NameColumnCell';
 import RelationshipDestinationCell from './components/RelationshipDestinationCell';
 import SourceColumnCell from './components/SourceColumnCell';
-import RelationshipSourceColumnCell from './components/RelationshipSourceCell';
 import { RelationshipType } from './types';
-import { getRemoteRelationType } from './utils';
+import { getRemoteSchemaRelationType } from './utils';
+import FromRsCell from './components/FromRsCell';
 
-export const columns = ['NAME', 'SOURCE', 'TYPE', 'RELATIONSHIP', null];
-
-type TRemoteSchemaRel = { table_name: string } & RemoteRelationship;
+export const columns = ['NAME', 'TARGET', 'TYPE', 'RELATIONSHIP', null];
 export interface RelationshipsTableProps {
-  remoteSchemaRels: TRemoteSchemaRel[];
+  remoteSchemaRels: ({ rsName: string } & (rsToDbRelDef | rsToRsRelDef))[];
   remoteSchema: string;
   onEdit?: (relationship: RelationshipType) => void;
   onDelete?: (relationship: RelationshipType) => void;
@@ -30,46 +29,63 @@ export const RemoteSchemaRelationshipTable = ({
   onClick = () => {},
   showActionCell = true,
 }: RelationshipsTableProps) => {
-  let rowData: ReactNode[][] = [];
-  rowData = [
-    ...rowData,
-    ...remoteSchemaRels
-      .filter(x => x?.definition?.remote_schema === remoteSchema)
-      .map(i => {
-        const [name, sourceType, type] = getRemoteRelationType(i);
-        const value = [
-          <NameColumnCell relationship={i} onClick={onClick} />,
-          <SourceColumnCell {...{ type: sourceType, name }} />,
-          type,
-          <RelationshipSourceColumnCell
-            tableName={i?.table_name}
-            relationship={i}
-            sourceType={sourceType}
-          />,
-          <FaArrowRight className="fill-current text-sm text-muted" />,
-          <RelationshipDestinationCell
-            relationship={i}
-            sourceType={sourceType}
-          />,
-        ];
-        if (showActionCell) {
-          value.push(
-            <ModifyActions
-              onEdit={onEdit}
-              onDelete={onDelete}
+  const rowData: ReactNode[][] = [];
+
+  if (remoteSchemaRels) {
+    const remoteRelationsOnTheSelectedRS = remoteSchemaRels.filter(
+      x => x.rsName === remoteSchema
+    );
+    if (remoteRelationsOnTheSelectedRS.length)
+      remoteRelationsOnTheSelectedRS.forEach(remoteRel => {
+        const { type_name } = remoteRel;
+        remoteRel.relationships.forEach(i => {
+          const [name, sourceType, type] = getRemoteSchemaRelationType(i);
+          const leafs =
+            'to_source' in i.definition
+              ? Object.keys(i.definition.to_source.field_mapping)
+              : i.definition.to_remote_schema.lhs_fields;
+          const value = [
+            <NameColumnCell relationship={i} onClick={onClick} />,
+            <SourceColumnCell {...{ type: sourceType, name }} />,
+            type,
+            <FromRsCell rsName={type_name} leafs={leafs} />,
+            <FaArrowRight className="fill-current text-sm text-muted" />,
+
+            <RelationshipDestinationCell
               relationship={i}
-            />
-          );
-        }
-        return value;
-      }),
-  ];
+              sourceType={sourceType}
+            />,
+          ];
+          if (showActionCell) {
+            value.push(
+              <ModifyActions
+                onEdit={onEdit}
+                onDelete={onDelete}
+                relationship={i}
+              />
+            );
+          }
+
+          rowData.push(value);
+        });
+      });
+  }
+
+  if (rowData?.length)
+    return (
+      <CardedTable
+        columns={columns}
+        data={rowData}
+        showActionCell={showActionCell}
+        data-test="remote-schema-relationships-table"
+      />
+    );
   return (
-    <CardedTable
-      columns={columns}
-      data={rowData}
-      showActionCell={showActionCell}
-    />
+    <div className="py-1.5">
+      <IndicatorCard status="info">
+        No remote schema relationships found!
+      </IndicatorCard>
+    </div>
   );
 };
 

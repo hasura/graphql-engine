@@ -1,75 +1,85 @@
-module Hasura.RQL.WebhookTransformsSpec (spec) where
+module Hasura.RQL.WebhookTransformsSpec
+  ( spec,
+  )
+where
 
-import Data.Aeson
+-------------------------------------------------------------------------------
+
+import Data.Aeson (FromJSON, ToJSON, eitherDecode, encode, fromJSON, toJSON)
 import Data.CaseInsensitive qualified as CI
 import Data.List (nubBy)
 import Data.Set qualified as S
 import Hasura.Prelude
-import Hasura.RQL.DDL.Webhook.Transform
-import Hasura.RQL.DDL.Webhook.Transform.Body
-import Hasura.RQL.DDL.Webhook.Transform.Class
-import Hasura.RQL.DDL.Webhook.Transform.Headers
-import Hasura.RQL.DDL.Webhook.Transform.Method
-import Hasura.RQL.DDL.Webhook.Transform.QueryParams
-import Hasura.RQL.DDL.Webhook.Transform.Url
+import Hasura.RQL.DDL.Webhook.Transform (RequestFields (..), RequestTransformFns, WithOptional (..), withOptional)
+import Hasura.RQL.DDL.Webhook.Transform.Body (BodyTransformFn)
+import Hasura.RQL.DDL.Webhook.Transform.Body qualified as Body
+import Hasura.RQL.DDL.Webhook.Transform.Class (Template (..), TemplatingEngine (..), UnescapedTemplate (..))
+import Hasura.RQL.DDL.Webhook.Transform.Headers (HeadersTransformFn, TransformFn (..))
+import Hasura.RQL.DDL.Webhook.Transform.Headers qualified as Headers
+import Hasura.RQL.DDL.Webhook.Transform.Method (Method (..), MethodTransformFn)
+import Hasura.RQL.DDL.Webhook.Transform.Method qualified as Method
+import Hasura.RQL.DDL.Webhook.Transform.QueryParams (QueryParamsTransformFn, TransformFn (..))
+import Hasura.RQL.DDL.Webhook.Transform.QueryParams qualified as QueryParams
+import Hasura.RQL.DDL.Webhook.Transform.Url (UrlTransformFn)
+import Hasura.RQL.DDL.Webhook.Transform.Url qualified as Url
+import Hedgehog (Gen, MonadTest, forAll, tripping, (===))
 import Hedgehog.Gen qualified as Gen
 import Hedgehog.Range qualified as Range
-import Test.Hspec
-import Test.Hspec.Hedgehog
+import Test.Hspec (Spec, describe, it)
+import Test.Hspec.Hedgehog (hedgehog)
+
+-------------------------------------------------------------------------------
 
 spec :: Spec
-spec = do
-  it "Method RoundTrip" $
-    hedgehog $ forAll genMethod >>= trippingJSON
+spec = describe "WebhookTransform" do
+  it "Method RoundTrip" . hedgehog $
+    forAll genMethod >>= trippingJSON
 
-  it "StringTemplateText RoundTrip" $
-    hedgehog $ forAll genUnescapedTemplate >>= trippingJSON
+  it "StringTemplateText RoundTrip" . hedgehog $
+    forAll genUnescapedTemplate >>= trippingJSON
 
-  it "Url RoundTrip" $
-    hedgehog $ forAll genUrl >>= trippingJSON
+  it "Url RoundTrip" . hedgehog $
+    forAll genUrl >>= trippingJSON
 
-  it "Template RoundTrip" $
-    hedgehog $ forAll genTemplate >>= trippingJSON
+  it "Template RoundTrip" . hedgehog $
+    forAll genTemplate >>= trippingJSON
 
-  it "TemplateEngine RoundTrip" $
-    hedgehog $ forAll genTemplatingEngine >>= trippingJSON
+  it "TemplateEngine RoundTrip" . hedgehog $
+    forAll genTemplatingEngine >>= trippingJSON
 
-  it "TransformHeaders" $
-    hedgehog $ do
-      headers <- forAll genTransformHeaders
-      let sortH :: ReplaceHeaderFields -> ReplaceHeaderFields
-          sortH (ReplaceHeaderFields {..}) =
-            ReplaceHeaderFields (sort rhf_addHeaders) (sort rhf_removeHeaders)
-      let headersMaybe = eitherDecode $ encode headers
-      Right (sortH headers) === fmap sortH headersMaybe
+  it "TransformHeaders" . hedgehog $ do
+    headers <- forAll genTransformHeaders
+    let sortH (Headers.AddReplaceOrRemoveFields {..}) =
+          Headers.AddReplaceOrRemoveFields (sort addOrReplaceHeaders) (sort removeHeaders)
+    let headersMaybe = eitherDecode $ encode headers
+    Right (sortH headers) === fmap sortH headersMaybe
 
-  it "MetadataRequestTransform RoundTrip" $
-    hedgehog $ do
-      reqFields <- forAll genRequestTransformDefunc
-      let sortH :: WithOptional TransformFn Headers -> WithOptional TransformFn Headers
-          sortH (WithOptional Nothing) = WithOptional Nothing
-          sortH
-            (WithOptional (Just (HeadersTransform (ReplaceHeaders (ReplaceHeaderFields {..}))))) =
-              WithOptional $ Just $ HeadersTransform $ ReplaceHeaders $ ReplaceHeaderFields (sort rhf_addHeaders) (sort rhf_removeHeaders)
+  it "MetadataRequestTransform RoundTrip" . hedgehog $ do
+    reqFields <- forAll genRequestTransformDefunc
+    let sortH (WithOptional Nothing) = WithOptional Nothing
+        sortH
+          (WithOptional (Just (HeadersTransformFn_ (Headers.AddReplaceOrRemove (Headers.AddReplaceOrRemoveFields {..}))))) =
+            WithOptional . Just . HeadersTransformFn_ . Headers.AddReplaceOrRemove $
+              Headers.AddReplaceOrRemoveFields (sort addOrReplaceHeaders) (sort removeHeaders)
 
-      let sortQ :: WithOptional TransformFn QueryParams -> WithOptional TransformFn QueryParams
-          sortQ (WithOptional Nothing) = WithOptional Nothing
-          sortQ
-            (WithOptional (Just (QueryParamsTransform (QueryParamsTransformAction qs)))) =
-              WithOptional $ Just $ QueryParamsTransform $ QueryParamsTransformAction $ sortOn fst qs
-      let sortRF rf@RequestFields {requestHeaders, queryParams} =
-            rf {requestHeaders = sortH requestHeaders, queryParams = sortQ queryParams}
-      let reqFieldsMaybe = eitherDecode $ encode reqFields
-      Right (sortRF reqFields) === fmap sortRF reqFieldsMaybe
+    let sortQ (WithOptional Nothing) = WithOptional Nothing
+        sortQ
+          (WithOptional (Just (QueryParamsTransformFn_ (QueryParams.AddOrReplace qs)))) =
+            WithOptional . Just . QueryParamsTransformFn_ . QueryParams.AddOrReplace $
+              sortOn fst qs
+    let sortRF rf@RequestFields {requestHeaders, queryParams} =
+          rf {requestHeaders = sortH requestHeaders, queryParams = sortQ queryParams}
+    let reqFieldsMaybe = eitherDecode $ encode reqFields
+    Right (sortRF reqFields) === fmap sortRF reqFieldsMaybe
 
-trippingJSON :: (Show a, Eq a, ToJSON a, FromJSON a, MonadTest m) => a -> m ()
-trippingJSON val = tripping val (toJSON) (fromJSON)
+-------------------------------------------------------------------------------
+-- Generators
 
 genMethod :: Gen Method
 genMethod = (Method . CI.mk) <$> Gen.text (Range.constant 3 20) Gen.alphaNum
 
 genTemplatingEngine :: Gen TemplatingEngine
-genTemplatingEngine = Gen.enumBounded @_ @TemplatingEngine
+genTemplatingEngine = Gen.enumBounded
 
 -- NOTE: This generator is strictly useful for roundtrip aeson testing
 -- and does not produce valid template snippets.
@@ -81,7 +91,7 @@ genTemplate = Template . wrap <$> Gen.text (Range.constant 3 20) Gen.alphaNum
 genUnescapedTemplate :: Gen UnescapedTemplate
 genUnescapedTemplate = UnescapedTemplate <$> Gen.text (Range.constant 3 20) Gen.alphaNum
 
-genTransformHeaders :: Gen ReplaceHeaderFields
+genTransformHeaders :: Gen Headers.AddReplaceOrRemoveFields
 genTransformHeaders = do
   numHeaders <- Gen.integral $ Range.constant 1 20
 
@@ -92,8 +102,8 @@ genTransformHeaders = do
       genValues = S.toList <$> Gen.set (Range.singleton numHeaders) genHeaderValue
 
   removeHeaders <- Gen.list (Range.constant 1 10) genHeaderKey
-  addHeaders <- liftA2 zip genKeys genValues
-  pure $ ReplaceHeaderFields addHeaders removeHeaders
+  addOrReplaceHeaders <- liftA2 zip genKeys genValues
+  pure $ Headers.AddReplaceOrRemoveFields {addOrReplaceHeaders, removeHeaders}
 
 genQueryParams :: Gen [(UnescapedTemplate, Maybe UnescapedTemplate)]
 genQueryParams = do
@@ -110,20 +120,31 @@ genUrl = do
 
   pure $ UnescapedTemplate $ "http://www." <> host <> ".com"
 
-genRequestTransformDefunc :: Gen RequestTransformFn
+genRequestTransformDefunc :: Gen RequestTransformFns
 genRequestTransformDefunc = do
   method <- Gen.maybe genMethod
   -- NOTE: At the moment no need to generate valid urls or templates
   -- but such instances maybe useful in the future.
-  url <- Gen.maybe $ genUrl
-  body <- Gen.maybe $ genTemplate
-  queryParams <- Gen.maybe $ genQueryParams
-  headers <- Gen.maybe $ genTransformHeaders
+  url <- Gen.maybe genUrl
+  body <- Gen.maybe genTemplate
+  queryParams <- Gen.maybe genQueryParams
+  headers <- Gen.maybe genTransformHeaders
   pure
     RequestFields
-      { method = coerce $ fmap (MethodTransform . ReplaceMethod) method,
-        url = coerce $ fmap (UrlTransform . ModifyUrl) url,
-        body = coerce $ fmap (BodyTransform . ModifyBody) body,
-        queryParams = coerce $ fmap (QueryParamsTransform . QueryParamsTransformAction) queryParams,
-        requestHeaders = coerce $ fmap (HeadersTransform . ReplaceHeaders) headers -- HeaderTransform $ fmap (,engine) headers
+      { method = withOptional @MethodTransformFn (fmap Method.Replace method),
+        url = withOptional @UrlTransformFn (fmap Url.Modify url),
+        body = withOptional @BodyTransformFn (fmap Body.ModifyAsJSON body),
+        queryParams = withOptional @QueryParamsTransformFn (fmap QueryParams.AddOrReplace queryParams),
+        requestHeaders = withOptional @HeadersTransformFn (fmap Headers.AddReplaceOrRemove headers)
       }
+
+-------------------------------------------------------------------------------
+-- Helpers
+
+-- | TODO: Move this out to a common module!
+trippingJSON ::
+  forall a m.
+  (Show a, Eq a, ToJSON a, FromJSON a, MonadTest m) =>
+  a ->
+  m ()
+trippingJSON val = tripping val toJSON fromJSON

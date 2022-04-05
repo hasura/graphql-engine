@@ -1,0 +1,65 @@
+---
+description: Cloud maintenance mode
+keywords:
+  - hasura
+  - docs
+  - project
+  - maintenance
+  - maintenance mode
+sidebar_position: 14
+---
+
+import Thumbnail from "@site/src/components/Thumbnail";
+
+# Maintenance mode
+
+## Introduction
+
+When updates are being rolled out to your Hasura Cloud project which
+demand no interruptions to your instance's configuration, maintenance
+mode is activated for your project.
+
+:::info Note
+
+Currently, cloud maintenance mode will only be activated for your
+project while you are updating it to Hasura GraphQL Engine `v2.0`.
+
+:::
+
+:::info Note
+
+This is not to be confused with environment variable
+`HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE`. The two are different as the
+env var enables the server maintenance mode which disables metadata APIs
+(writes) on the project while the cloud maintenance mode does not. See
+below for actions disabled by the cloud maintenance mode.
+
+:::
+
+## Check if maintenance mode is activated
+
+Navigate to your project's settings page, you should see a top banner
+mentioning if your project is under maintenance.
+
+<Thumbnail
+  src="/img/graphql/cloud/projects/maintenance-mode.png"
+  alt="Project with maintenance mode activated"
+/>
+
+If you don't see such a banner, your project is not under maintenance
+mode.
+
+## Disabled actions when maintenance mode is activated
+
+All actions that update your project's configurations are not allowed
+when maintenance mode is activated. The following actions are
+disallowed:
+
+-  [Switching pricing plans](/graphql/cloud/projects/pricing.mdx)
+-  [Adding, updating and deleting an environment variable](/graphql/cloud/projects/env-vars.mdx)
+-  [Changing project region](/graphql/cloud/projects/regions.mdx)
+-  [Enabling and disabling Heroku database URL sync](/graphql/cloud/projects/heroku-url-sync.mdx)
+-  [Deleting project](/graphql/cloud/projects/delete.mdx)
+
+If you are trying to apply these changes when maintenance mode is
+activated, you will encounter an error.

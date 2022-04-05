@@ -13,6 +13,7 @@ import {
 import { FILTER_REMOTE_SCHEMAS } from './Actions';
 
 import { appPrefix } from './constants';
+import RelationshipsConnector from './Relationships';
 
 const filterItem = dispatch => {
   return (dataList, searchVal) => {
@@ -79,6 +80,10 @@ const getRemoteSchemaRouter = connect => {
         <Route
           path=":remoteSchemaName/permissions"
           component={permissionsConnector}
+        />
+        <Route
+          path=":remoteSchemaName/relationships"
+          component={RelationshipsConnector}
         />
       </Route>
     </Route>

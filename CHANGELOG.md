@@ -2,6 +2,17 @@
 
 ## Next release
 
+### Bug fixes and improvements
+
+- server: refactor GQL query static analysis and improve OpenAPI warning messages
+- server: Don't drop nested typed null fields in actions (fix #8237)
+- console: add support for setting aggregation query permissions for ms sql server
+- console: add RS-to-DB (only postgres & citus) relationships feature to remote schemas tab
+- cli: fix remote schema metadata formatting issues (#7608)
+- cli: fix query collections metadata formatting issues (#7616)
+
+## v2.5.0-beta.1
+
 ### Remote relationships from remote schemas
 
 This release adds three new metadata API commands:
@@ -52,36 +63,21 @@ the right-hand side for now.
 
 - cli: use indentation of 2 spaces in array elements of metadata YAML files
 
-Example:
-<table>
-<thead>
-  <tr>
-    <th>Old behaviour<pre> metadata/query_collections.yaml</pre> </th>
-    <th>New behaviour<pre> metadata/query_collections.yaml </pre> </th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td>
-      <pre>
-- name: allowed-queries
-  definition:
-    queries:
-    - name: getAlbums
-      query: |
-        query getAlbums {
-          albums {
-            id
-            title
-          }
-        }
-       </pre>
-    </td>
-    <td>
-      <pre>
-- name: allowed-queries
-  definition:
-    queries:
+  Example:
+  <table>
+  <thead>
+    <tr>
+      <th>Old behaviour<pre> metadata/query_collections.yaml</pre> </th>
+      <th>New behaviour<pre> metadata/query_collections.yaml </pre> </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <pre>
+  - name: allowed-queries
+    definition:
+      queries:
       - name: getAlbums
         query: |
           query getAlbums {
@@ -90,65 +86,79 @@ Example:
               title
             }
           }
-      </pre>
-    </td>
-  </tr>
-</tbody>
-</table>
+         </pre>
+      </td>
+      <td>
+        <pre>
+  - name: allowed-queries
+    definition:
+      queries:
+        - name: getAlbums
+          query: |
+            query getAlbums {
+              albums {
+                id
+                title
+              }
+            }
+        </pre>
+      </td>
+    </tr>
+  </tbody>
+  </table>
 
-This change is a result of fixing some inconsistencies and edge cases in writing array elements.
-`hasura metadata export` will write YAML files in this format going forward. Also, note that this is a backwards compatible change.
+  This change is a result of fixing some inconsistencies and edge cases in writing array elements.
+  `hasura metadata export` will write YAML files in this format going forward. Also, note that this is a backwards compatible change.
 
-- cli: fix ordering of elements in metadata files to match server metadata
+- cli: change ordering of elements in metadata files to match server metadata
 
-Example:
-<table>
-   <thead>
-      <tr>
-         <th>Server Metadata (JSON)</th>
-         <th>Old behaviour (YAML)</th>
-         <th>New Behaviour (YAML)</th>
-      </tr>
-   </thead>
-   <tbody>
-      <tr>
-         <td>
-            <pre>
-{
-  "function": {
-    "schema": "public",
-    "name": "search_albums"
+  Example:
+  <table>
+     <thead>
+        <tr>
+           <th>Server Metadata (JSON)</th>
+           <th>Old behaviour (YAML)</th>
+           <th>New Behaviour (YAML)</th>
+        </tr>
+     </thead>
+     <tbody>
+        <tr>
+           <td>
+              <pre>
+  {
+    "function": {
+      "schema": "public",
+      "name": "search_albums"
+    }
   }
-}
-       </pre>
-         </td>
-         <td>
-            <pre>
-function:
-  name: search_albums
-  schema: public
-      </pre>
-         </td>
-         <td>
-            <pre>
-function:
-  schema: public
-  name: search_albums
-      </pre>
-         </td>
-      </tr>
-   </tbody>
-</table>
+         </pre>
+           </td>
+           <td>
+              <pre>
+  function:
+    name: search_albums
+    schema: public
+        </pre>
+           </td>
+           <td>
+              <pre>
+  function:
+    schema: public
+    name: search_albums
+        </pre>
+           </td>
+        </tr>
+     </tbody>
+  </table>
 
 ### Bug fixes and improvements
 
-- server: Don't drop nested typed null fields in actions (fix #8237)
+- server: improve error messages in BigQuery upstream API exceptions
 - server: Fix regression in MSSQL subscriptions when results exceed 2048 characters (#8267)
 - server: refactor OpenAPI spec generation (for REST endpoints) and improve OpenAPI warnings
-- server: add jsonb to string cast support - postgres 
+- server: add jsonb to string cast support - postgres (#7818)
 - server: improve performance of fetching postgres catalog metadata for tables and functions
-- server: Queries present in query collections, such as allow-list, and rest-endpoints are now validated (against the schema)
-- server: Redesigns internal implementation of webhook transforms.
+- server: Queries present in query collections, such as allow-list and rest-endpoints, are now validated (fixes #7497)
 - server: improve SQL generation for BigQuery backend queries involving `Orderby`.
 - server: fix regression where remote relationships would get exposed over Relay, which is unsupported
 - server: add support for customising the GraphQL schema descriptions of table columns in metadata
@@ -156,12 +166,41 @@ function:
 - server: fix caching bug with session variables in remote joins
 - server: fix regression where JWKs are refreshed once per second when both must-revalidate and max-age are specified in the Cache-Control header (#8299)
 - server: respect custom field names in delete, insert and update mutations on SQL Server (#8314)
-- console: fixed an issue where editing both a column's name and its GraphQL field name at the same time caused an error
-- console: enable searching tables within a schema
-- console: fixed the ability to create updated_at and created_at in the modify page (#8239)
-- console: disable search indexing with HTML meta tag
-- cli: fix inherited roles metadata not being updated when dropping all roles (#7872)
+- console: enable searching tables within a schema in the sidebar
+- console: add support for setting comments on the custom root fields of tables/views
+- console: add feature flags section in settings
+- console: improved support for setting comments on computed fields
+- console: fix the ability to create updated_at and created_at in the modify page (#8239)
+- console: fix an issue where editing both a column's name and its GraphQL field name at the same time caused an error
+- console: fix redirect to metadata status page on inconsistent inherited role (#8343)
+- console: fix malformed request with REST live preview section (#8316)
 - cli: add support for customization field in sources metadata (#8292)
+- cli: fix inherited roles metadata not being updated when dropping all roles (#7872)
+- ci: ubuntu and centos flavoured graphql-engine images are now available
+
+## v2.4.0
+
+### Bug fixes and improvements
+
+- server: add custom function for case insensitive lookup in session variable in request transformation
+- server: add metadata inconsistency information in reload_metadata API call
+- server: Webhook Transforms can now delete request/response bodies explicitly.
+- server: Fix truncation of session variables with variable length column types in MSSQL (#8158)
+- server: improve performance of `replace_metadata` for large schemas
+- server: improve baseline memory consumption for typical workloads
+- server: fix parsing timestamp values in BigQuery backends (fix #8076)
+- server: add support for customising the GraphQL schema descriptions of table root fields
+- server: add a `request_headers` field to the `test_webhook_transform` API.
+- console: include cron trigger with include in metadata as false on cron trigger manage page
+- console: show an error notification if Hasura CLI migrations fail
+- console: fixed an issue where cron triggers were not removed from the list after deletion
+- console: only show tables from current schema in clone permissions section
+- console: provide checkbox to remove body in rest connectors
+- cli: fix metadata version being set to 3 when doing `hasura init --version 2` (#8148)
+
+## v2.4.0-beta.3
+
+- server: fix regression in MSSQL subscriptions when results exceed 2048 characters (#8267)
 
 ## v2.4.0-beta.2
 

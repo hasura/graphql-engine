@@ -225,7 +225,7 @@ setup tables (state, _) = do
 -- NOTE: Certain test modules may warrant having their own version.
 teardown :: HasCallStack => [Schema.Table] -> (State, ()) -> IO ()
 teardown tables (state, _) = do
-  for_ (reverse tables) $ \table ->
+  forFinally_ (reverse tables) $ \table ->
     finally
       (Schema.untrackRelationships Citus table state)
       ( finally

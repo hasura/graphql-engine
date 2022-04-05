@@ -10,55 +10,54 @@
   permissions:
     - role: user
       definition:
-        schema: |-
-          schema  { query: Query }
-
-          type Continent { code: ID!
-            countries: [Country!]!
-            name: String!
+        schema: |
+          type Continent {
+          	code: ID!
+          	countries: [Country!]!
+          	name: String!
           }
-
-          type Country { capital: String
-            code: ID!
-            continent: Continent!
-            currency: String
-            emoji: String!
-            emojiU: String!
-            languages: [Language!]!
-            name: String!
-            native: String!
-            phone: String!
-            states: [State!]!
+          type Country {
+          	capital: String
+          	code: ID!
+          	continent: Continent!
+          	currency: String
+          	emoji: String!
+          	emojiU: String!
+          	languages: [Language!]!
+          	name: String!
+          	native: String!
+          	phone: String!
+          	states: [State!]!
           }
-
-          type Language { code: ID!
-            name: String
-            native: String
-            rtl: Boolean!
+          input CountryFilterInput {
+          	code: StringQueryOperatorInput
+          	continent: StringQueryOperatorInput
+          	currency: StringQueryOperatorInput
           }
-
-          type Query { continent(code: ID!): Continent
-            countries(filter: CountryFilterInput): [Country!]!
-            languages(filter: LanguageFilterInput): [Language!]!
+          type Language {
+          	code: ID!
+          	name: String
+          	native: String
+          	rtl: Boolean!
           }
-
-          type State { code: String
-            country: Country!
-            name: String!
+          input LanguageFilterInput {
+          	code: StringQueryOperatorInput
           }
-
-          input CountryFilterInput {code: StringQueryOperatorInput
-            continent: StringQueryOperatorInput
-            currency: StringQueryOperatorInput
+          type Query {
+          	continent(code: ID!): Continent
+          	countries(filter: CountryFilterInput): [Country!]!
+          	languages(filter: LanguageFilterInput): [Language!]!
           }
-
-          input LanguageFilterInput {code: StringQueryOperatorInput
+          type State {
+          	code: String
+          	country: Country!
+          	name: String!
           }
-
-          input StringQueryOperatorInput {eq: String
-            glob: String
-            in: [String]
-            ne: String
-            nin: [String]
-            regex: String
+          input StringQueryOperatorInput {
+          	eq: String
+          	glob: String
+          	in: [String]
+          	ne: String
+          	nin: [String]
+          	regex: String
           }

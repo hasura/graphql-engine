@@ -3,219 +3,107 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { renderHook } from '@testing-library/react-hooks';
 import { wrapper } from '../../../hooks/__tests__/common/decorator';
-import { useGetAllRemoteSchemaRelationships } from '../hooks/useGetAllRemoteSchemaRelationships';
-
-let export_metadata_response_type = 'legacy_rs_relationships';
+import { useGetAllRemoteSchemaRelationships } from '../hooks/useMetadataRemoteSchemas';
 
 const export_metadata_mock_response: Record<string, any> = {
-  legacy_rs_relationships: {
-    resource_version: 100,
-    metadata: {
-      version: 3,
-      sources: [
-        {
-          name: 'default',
-          kind: 'postgres',
-          tables: [
-            {
-              table: {
-                schema: 'public',
-                name: 'table1',
-              },
-              remote_relationships: [
-                {
-                  definition: {
-                    remote_field: {
-                      countries: {
-                        arguments: {
-                          filter: {
-                            code: {
-                              eq: '$id',
-                            },
-                          },
-                        },
-                      },
-                    },
-                    hasura_fields: ['id'],
-                    remote_schema: 'Remote',
-                  },
-                  name: 'RSrelationship',
-                },
-              ],
+  resource_version: 100,
+  metadata: {
+    version: 3,
+    sources: [
+      {
+        name: 'default',
+        kind: 'postgres',
+        tables: [
+          {
+            table: {
+              schema: 'public',
+              name: 'remote_table',
             },
-            {
-              table: {
-                schema: 'public',
-                name: 'table2',
-              },
-              remote_relationships: [
-                {
-                  definition: {
-                    remote_field: {
-                      continents: {
-                        arguments: {
-                          filter: {
-                            code: {
-                              eq: '$id',
-                            },
-                          },
-                        },
-                      },
-                    },
-                    hasura_fields: ['id'],
-                    remote_schema: 'Remote',
-                  },
-                  name: 'rel2',
-                },
-              ],
-            },
-          ],
-          configuration: {},
-        },
-      ],
-      remote_schemas: [
-        {
-          name: 'Remote',
-          definition: {
-            url: 'https://countries.trevorblades.com/',
-            timeout_seconds: 60,
           },
-          comment: '',
-        },
-      ],
-    },
-  },
-  new_rs_relationships: {
-    resource_version: 100,
-    metadata: {
-      version: 3,
-      sources: [
-        {
-          name: 'default',
-          kind: 'postgres',
-          tables: [
-            {
-              table: {
-                schema: 'public',
-                name: 'table1',
-              },
-              remote_relationships: [
-                {
-                  definition: {
-                    to_remote_schema: {
-                      remote_field: {
-                        countries: {
-                          arguments: {
-                            filter: {
-                              code: {
-                                eq: '$id',
-                              },
-                            },
-                          },
-                        },
-                      },
-                      hasura_fields: ['id'],
-                      remote_schema: 'Remote',
-                    },
-                  },
-                  name: 'RSrelationship',
-                },
-              ],
+        ],
+        configuration: {
+          connection_info: {
+            use_prepared_statements: true,
+            database_url: {
+              from_env: 'HASURA_GRAPHQL_DATABASE_URL',
             },
-          ],
-          configuration: {},
-        },
-      ],
-      remote_schemas: [
-        {
-          name: 'Remote',
-          definition: {
-            url: 'https://countries.trevorblades.com/',
-            timeout_seconds: 60,
+            isolation_level: 'read-committed',
+            pool_settings: {
+              connection_lifetime: 600,
+              retries: 1,
+              idle_timeout: 180,
+              max_connections: 50,
+            },
           },
-          comment: '',
         },
-      ],
-    },
-  },
-  legacy_and_new_rs_relationships: {
-    resource_version: 100,
-    metadata: {
-      version: 3,
-      sources: [
-        {
-          name: 'default',
-          kind: 'postgres',
-          tables: [
-            {
-              table: {
-                schema: 'public',
-                name: 'table1',
-              },
-              remote_relationships: [
-                {
-                  definition: {
-                    to_remote_schema: {
-                      remote_field: {
-                        countries: {
-                          arguments: {
-                            filter: {
-                              code: {
-                                eq: '$id',
-                              },
-                            },
-                          },
-                        },
-                      },
-                      hasura_fields: ['id'],
-                      remote_schema: 'Remote',
+      },
+    ],
+    remote_schemas: [
+      {
+        name: 'destination_remote_schema',
+        definition: {
+          url: 'https://graphql-pokemon2.vercel.app/',
+          timeout_seconds: 60,
+        },
+        comment: '',
+      },
+      {
+        name: 'source_remote_schema',
+        definition: {
+          url: 'https://countries.trevorblades.com/',
+          timeout_seconds: 60,
+        },
+        comment: '',
+        remote_relationships: [
+          {
+            relationships: [
+              {
+                definition: {
+                  to_source: {
+                    relationship_type: 'object',
+                    source: 'default',
+                    table: 'remote_table',
+                    field_mapping: {
+                      code: 'id',
                     },
                   },
-                  name: 'RSrelationship',
                 },
-              ],
-            },
-            {
-              table: {
-                schema: 'public',
-                name: 'table2',
+                name: 'an_example_rs_to_db_relationship',
               },
-              remote_relationships: [
-                {
-                  definition: {
+              {
+                definition: {
+                  to_remote_schema: {
                     remote_field: {
-                      continents: {
-                        arguments: {
-                          filter: {
-                            code: {
-                              eq: '$id',
-                            },
-                          },
-                        },
+                      pokemons: {
+                        arguments: {},
                       },
                     },
-                    hasura_fields: ['id'],
-                    remote_schema: 'Remote',
+                    remote_schema: 'destination_remote_schema',
+                    lhs_fields: ['code'],
                   },
-                  name: 'rel2',
                 },
-              ],
-            },
-          ],
-          configuration: {},
-        },
-      ],
-      remote_schemas: [
-        {
-          name: 'Remote',
-          definition: {
-            url: 'https://countries.trevorblades.com/',
-            timeout_seconds: 60,
+                name: 'test_rel',
+              },
+              {
+                definition: {
+                  to_remote_schema: {
+                    remote_field: {
+                      pokemons: {
+                        arguments: {},
+                      },
+                    },
+                    remote_schema: 'destination_remote_schema',
+                    lhs_fields: ['code'],
+                  },
+                },
+                name: 'an_example_rs_to_rs_relationship',
+              },
+            ],
+            type_name: 'Country',
           },
-          comment: '',
-        },
-      ],
-    },
+        ],
+      },
+    ],
   },
 };
 
@@ -225,7 +113,7 @@ const server = setupServer(
       // Send a valid HTTP status code
       ctx.status(200),
       // And a response body, if necessary
-      ctx.json(export_metadata_mock_response[export_metadata_response_type])
+      ctx.json(export_metadata_mock_response)
     );
   })
 );
@@ -234,9 +122,7 @@ describe('The useGetAllRemoteRelationship hook', () => {
   beforeAll(() => server.listen());
   afterAll(() => server.close());
 
-  it('should work when metadata contains legacy rs relationships', async () => {
-    export_metadata_response_type = 'legacy_rs_relationships';
-
+  it('should return the collection of RS-to-X rels for all Remote schemas', async () => {
     const { result, waitFor } = renderHook(
       () => useGetAllRemoteSchemaRelationships(),
       {
@@ -256,163 +142,55 @@ describe('The useGetAllRemoteRelationship hook', () => {
     ).toMatchInlineSnapshot(`
       Array [
         Object {
-          "definition": Object {
-            "hasura_fields": Array [
-              "id",
-            ],
-            "remote_field": Object {
-              "countries": Object {
-                "arguments": Object {
-                  "filter": Object {
-                    "code": Object {
-                      "eq": "$id",
-                    },
+          "relationships": Array [
+            Object {
+              "definition": Object {
+                "to_source": Object {
+                  "field_mapping": Object {
+                    "code": "id",
                   },
+                  "relationship_type": "object",
+                  "source": "default",
+                  "table": "remote_table",
                 },
               },
+              "name": "an_example_rs_to_db_relationship",
             },
-            "remote_schema": "Remote",
-          },
-          "name": "RSrelationship",
-          "table_name": "table1",
-        },
-        Object {
-          "definition": Object {
-            "hasura_fields": Array [
-              "id",
-            ],
-            "remote_field": Object {
-              "continents": Object {
-                "arguments": Object {
-                  "filter": Object {
-                    "code": Object {
-                      "eq": "$id",
+            Object {
+              "definition": Object {
+                "to_remote_schema": Object {
+                  "lhs_fields": Array [
+                    "code",
+                  ],
+                  "remote_field": Object {
+                    "pokemons": Object {
+                      "arguments": Object {},
                     },
                   },
+                  "remote_schema": "destination_remote_schema",
                 },
               },
+              "name": "test_rel",
             },
-            "remote_schema": "Remote",
-          },
-          "name": "rel2",
-          "table_name": "table2",
-        },
-      ]
-    `);
-  });
-
-  it('should work when metadata contains new rs relationships', async () => {
-    export_metadata_response_type = 'new_rs_relationships';
-
-    const { result, waitFor } = renderHook(
-      () => useGetAllRemoteSchemaRelationships(),
-      {
-        wrapper,
-      }
-    );
-
-    await waitFor(() => result.current.isSuccess);
-
-    expect(
-      (result.current as UseQueryResult<Record<string, unknown>, Error>).status
-    ).toBe('success');
-
-    // if the data is correct. snapshot testing of the data
-    expect(
-      (result.current as UseQueryResult<Record<string, unknown>, Error>).data
-    ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "definition": Object {
-            "to_remote_schema": Object {
-              "hasura_fields": Array [
-                "id",
-              ],
-              "remote_field": Object {
-                "countries": Object {
-                  "arguments": Object {
-                    "filter": Object {
-                      "code": Object {
-                        "eq": "$id",
-                      },
+            Object {
+              "definition": Object {
+                "to_remote_schema": Object {
+                  "lhs_fields": Array [
+                    "code",
+                  ],
+                  "remote_field": Object {
+                    "pokemons": Object {
+                      "arguments": Object {},
                     },
                   },
+                  "remote_schema": "destination_remote_schema",
                 },
               },
-              "remote_schema": "Remote",
+              "name": "an_example_rs_to_rs_relationship",
             },
-          },
-          "name": "RSrelationship",
-          "table_name": "table1",
-        },
-      ]
-    `);
-  });
-
-  it('should work when metadata contains both legacy & new rs relationships', async () => {
-    export_metadata_response_type = 'legacy_and_new_rs_relationships';
-
-    const { result, waitFor } = renderHook(
-      () => useGetAllRemoteSchemaRelationships(),
-      {
-        wrapper,
-      }
-    );
-
-    await waitFor(() => result.current.isSuccess);
-
-    expect(
-      (result.current as UseQueryResult<Record<string, unknown>, Error>).status
-    ).toBe('success');
-
-    // if the data is correct. snapshot testing of the data
-    expect(
-      (result.current as UseQueryResult<Record<string, unknown>, Error>).data
-    ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "definition": Object {
-            "to_remote_schema": Object {
-              "hasura_fields": Array [
-                "id",
-              ],
-              "remote_field": Object {
-                "countries": Object {
-                  "arguments": Object {
-                    "filter": Object {
-                      "code": Object {
-                        "eq": "$id",
-                      },
-                    },
-                  },
-                },
-              },
-              "remote_schema": "Remote",
-            },
-          },
-          "name": "RSrelationship",
-          "table_name": "table1",
-        },
-        Object {
-          "definition": Object {
-            "hasura_fields": Array [
-              "id",
-            ],
-            "remote_field": Object {
-              "continents": Object {
-                "arguments": Object {
-                  "filter": Object {
-                    "code": Object {
-                      "eq": "$id",
-                    },
-                  },
-                },
-              },
-            },
-            "remote_schema": "Remote",
-          },
-          "name": "rel2",
-          "table_name": "table2",
+          ],
+          "rsName": "source_remote_schema",
+          "type_name": "Country",
         },
       ]
     `);

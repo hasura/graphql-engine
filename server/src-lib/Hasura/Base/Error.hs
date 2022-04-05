@@ -68,6 +68,7 @@ data Code
   | BadRequest
   | BigQueryError
   | Busy
+  | ConcurrentUpdate
   | CoercionError
   | Conflict
   | ConstraintError
@@ -113,6 +114,7 @@ instance ToJSON Code where
     BadRequest -> "bad-request"
     BigQueryError -> "bigquery-error"
     Busy -> "busy"
+    ConcurrentUpdate -> "concurrent-update"
     CoercionError -> "coercion-error"
     Conflict -> "conflict"
     ConstraintError -> "constraint-error"

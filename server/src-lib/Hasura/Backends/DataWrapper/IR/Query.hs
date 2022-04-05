@@ -10,6 +10,7 @@ where
 
 --------------------------------------------------------------------------------
 
+import Autodocodec.Extended (getValue)
 import Data.HashMap.Strict qualified as M
 import Hasura.Backends.DataWrapper.API qualified as API
 import Hasura.Backends.DataWrapper.IR.Column qualified as Column (Name)
@@ -46,7 +47,7 @@ instance From API.Query Query where
         limit = limit,
         offset = offset,
         where_ = fmap Witch.from where_,
-        orderBy = fmap Witch.from orderBy
+        orderBy = fmap Witch.from $ maybe [] toList orderBy
       }
 
 --------------------------------------------------------------------------------
@@ -63,8 +64,8 @@ data Field
   deriving stock (Data, Eq, Generic, Ord, Show)
 
 instance From API.Field Field where
-  from (API.ColumnField name) = Column $ ColumnContents $ Witch.from name
-  from (API.RelationshipField hm qu) =
+  from (API.ColumnField name) = Column $ ColumnContents $ Witch.from (getValue name)
+  from (API.RelationshipField (API.RelField hm qu)) =
     let joinCondition = M.mapKeys Witch.from $ fmap Witch.from hm
         query = Witch.from qu
      in Relationship $ RelationshipContents joinCondition query

@@ -1,0 +1,71 @@
+---
+description: A brief intro to RST vs MDX Guide format
+sidebar_label: Get Started
+sidebar_position: 1
+---
+
+# reStructured Text vs Markdown Guide
+
+Since we moved our docs from `reStructured` to `markdown`. This page will act as a reference guide for the syntactical differences of `rst` and `mdx` for authors who are comfortable with rst.
+
+This page will cover all the factors that require to comfortably write a doc page. If missed any, please let us know.
+
+Please read about the [doc page structure here](/page-structure.mdx).
+
+## Guide Format
+
+### Tabs
+Most of this guide will inculde tabs for syntactical examples wherever applicable.
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs>
+<TabItem value="sphinx" label="Sphinx - RST" default>
+
+Snippets in `RST` syntax will be shown in this tab.
+
+</TabItem>
+<TabItem value="docusaurus" label="Docusaurus - MDX">
+
+Snippets in `MDX` syntax will be shown in this tab.
+
+</TabItem>
+</Tabs>
+
+<br />
+
+### Normal Headings
+Whereever Tab system is quite difficult to understand/implement. The `Sphinx - RST` and `Docusaurus - MDX` will just be normal sections with headings in respective order.
+
+#### Sphinx - RST
+Snippets in `RST` syntax will be shown in this tab.
+
+#### Docusaurus - MDX
+Snippets in `MDX` syntax will be shown in this tab.
+
+<br />
+
+### Admonitions
+
+:::info
+
+Admonitions are used wherever applicable to provide reference / helpful links and info.
+
+:::
+
+<br />
+
+## Contents Covered
+Below are primary topics/syntaxes/extensions that are covered in this guide.
+
+- [Headings & Ids](/rst-vs-mdx-guide/headings.mdx)
+- [Metadata + Frontmatter](/rst-vs-mdx-guide/metadata.mdx)
+- [Table of Contents](/rst-vs-mdx-guide/table-of-contents.mdx)
+- [Links](/rst-vs-mdx-guide/links.mdx)
+- [Thumbnail](/rst-vs-mdx-guide/thumbnail.mdx)
+- [Notes / Admonitions](/rst-vs-mdx-guide/admonitions.mdx)
+- [Code Blocks with Line Highlighting](/rst-vs-mdx-guide/code-blocks.mdx)
+- [GraphiQL IDE](/rst-vs-mdx-guide/graphiql-ide.mdx)
+- [Tabs](/rst-vs-mdx-guide/tabs.mdx)
+- [List Tables](/rst-vs-mdx-guide/list-tables.mdx)

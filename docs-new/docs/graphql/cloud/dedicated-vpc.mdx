@@ -1,0 +1,150 @@
+---
+description: Dedicated VPC with VPC peering and private network access
+keywords:
+  - hasura
+  - cloud
+  - docs
+  - VPC
+  - VPC peering
+sidebar_position: 11
+---
+
+import Thumbnail from "@site/src/components/Thumbnail";
+
+# Dedicated VPC
+
+## Introduction
+
+Users can request a Dedicated VPC to be provisioned for them on Hasura Cloud so that they have better isolation in terms of their project placement and they can initiate VPC peering with their own networks for secure connectivity.
+
+:::info Note
+
+Dedicated VPC is only available as part of **Cloud Enterprise** plan. Peering requests are only available for **AWS** or services running on AWS. [Contact Sales](https://hasura.io/contact-us/) to know more.
+
+:::
+
+## Creating a VPC
+
+Once the feature is enabled for your account, you'll see a new tab on the dashboard called **VPCs**. All existing VPCs can be found here. You can also initiate a request to create a new VPC. To request a new VPC, click on the **Create New VPC** button on top. It'll open up a form with the following fields:
+
+<Thumbnail
+  src="/img/graphql/cloud/dedicated-vpc/view-vpc-list.png"
+  alt="VPC list"
+  width="1146px"
+/>
+
+Enter the following details:
+
+- **VPC Display Name**
+- **VPC CIDR block**: A valid private IPV4 CIDR block (it cannot be `10.2.0.0/16`, also it cannot conflict with your VPCs that you intend to peer with this VPC)
+- **VPC Region**: region where the VPC should be provisioned (note that projects will also be created in this region, within the VPC)
+
+Once you submit the request, the VPC will be shown as **Pending**. Hasura Cloud team may take 1-2 business days to complete your request. Once the VPC is provisioned, you will be able to see the VPC's details and create peering and projects.
+
+If the provisioning failed, you'll see the VPC in a **Failed** state. Reach out to support to resolve this.
+
+## Create projects within the VPC
+
+Once the VPC is provisioned, create a project by clicking on the **New Project** button in VPC details screen or get in touch with us to migrate your existing hasura project to the VPC.
+
+<Thumbnail
+  src="/img/graphql/cloud/dedicated-vpc/create-vpc-projects.png"
+  alt="Create VPC Project"
+  width="600px"
+/>
+
+All projects within a VPC is listed under **Projects**.
+
+<Thumbnail
+  src="/img/graphql/cloud/dedicated-vpc/vpc-projects-list.png"
+  alt="VPC Projects List"
+  width="900px"
+/>
+
+## VPC Peering
+
+Your Dedicated VPC can be peered with other networks that you own on AWS or managed services like Aiven or Timescale Cloud that run on AWS. It will enable private connectivity to your databases and other APIs from Hasura Cloud. You will not have to expose them publicly anymore.
+
+You can view all the request and active peerings in the **Peerings** tab.
+
+To create a new peering request, click on the **Initiate Peering Request** button.
+
+<Thumbnail
+  src="/img/graphql/cloud/dedicated-vpc/create-peering-request.png"
+  alt="Create Peering Request"
+  width="900px"
+/>
+
+There are two types of peering requests:
+
+- Hasura to Customer
+- Customer to Hasura
+
+### Hasura to Customer
+
+This is typically used if you want to connect to RDS or Action/Event Trigger webhooks within an AWS VPC that you own.
+
+<Thumbnail
+  src="/img/graphql/cloud/dedicated-vpc/hasura-to-customer-peering.png"
+  alt="Hasura to Customer"
+  width="600px"
+/>
+
+Fill in the form with the following details:
+
+- **Display Name**
+- **AWS Account ID**: Account ID for your AWS account which contains the VPC (typically a 12 digit number)
+- **AWS VPC ID**: ID of your AWS VPC that you want to peer with (starts with `vpc-`)
+- **AWS VPC CIDR**: CIDR of your AWS VPC (if you have more than one CIDR for the VPC, please contact us)
+- **Region**: AWS region where your VPC is provisioned
+
+Once you fill in these details and initiate the peering request, it will appear as **Request Pending**. Hasura Cloud team may take 1-2 business day to provision the peering request. Once it is provisioned, you will see that status is changed to **Action Required**.
+
+Accept the request on your AWS account to activate the peering connection. Once you do this, status will turn to **Active**. Note that it might take some time for the status to get updated on the dashboard.
+
+After accepting the peering request, you need to follow these steps to start using the private network:
+
+- Access the subnet associated with the resource that you want to connect to Hasura cloud
+  - Access the route table for this subnet
+  - Add a new entry for the Dedicated VPC CIDR with target as the VPC peering connection ID
+- Access the security group associated with the resource
+  - Add an inbound rule to allow required traffic (say port 5432) from Dedicated VPC CIDR
+
+Once this is done, you should be able to use private IP addresses and private DNS names as Database URLs or Webhook URLs.
+
+Reach out to support using the **Help & Support** tab on dashboard if you face any issues.
+
+If the provisioning failed, you'll see the status as **Failed**. Reach out to support to resolve this.
+
+### Customer to Hasura
+
+This mode can be used if you're using a managed 3rd party service like Aiven or Timescale Cloud and want to initiate a peering request towards Hasura Cloud.
+
+<Thumbnail
+  src="/img/graphql/cloud/dedicated-vpc/customer-to-hasura-peering.png"
+  alt="Customer to Hasura"
+  width="600px"
+/>
+
+This popup shows all the required info to create a peering request from the 3rd party service:
+
+- **AWS Account ID**: This is the account ID of Hasura Cloud's AWS account
+- **AWS VPC ID**: This is the ID for the Dedicated VPC that Hasura Cloud has provisioned for you on AWS
+- **AWS VPC CIDR**: CIDR of your Dedicated VPC
+- **AWS VPC Region**: Region where your VPC is provisioned
+
+Enter these details into the peering connection form of the 3rd party service. Once you do that, the 3rd party service will show similar details so that they can be entered into the form on Hasura Cloud Dashboard.
+
+:::info Note
+
+VPC CIDR on the 3rd party service could be any valid CIDR block other than `10.2.0.0/16` and the CIDR of your VPC on Hasura Cloud.
+
+:::
+
+Once you enter and initiate the peering request, you will see the peering as **Request Pending** on the dashboard. Hasura Cloud team may take 1-2 days to process the request. Once Hasura accepts the request, you will see that the peering is **Active**.
+
+Now you should be able to use private IP addresses and private DNS names as Database URLs or Webhook URLs.
+
+Reach out to support using the **Help & Support** tab on dashboard if you face any issues.
+
+If the provisioning failed, you'll see the status as **Failed**. Reach out to support to resolve this.

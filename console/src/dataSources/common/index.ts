@@ -11,6 +11,7 @@ import {
   Relationship,
   Table,
   NormalizedTable,
+  ComputedField,
 } from '../types';
 
 export type Operations = 'insert' | 'select' | 'update' | 'delete';
@@ -312,6 +313,40 @@ export const setTableCustomRootFieldName = (
   return newName;
 };
 
+export const getTableCustomRootFieldComment = (
+  rootFieldValue: Nullable<string> | CustomRootField
+): string | null => {
+  if (rootFieldValue) {
+    if (
+      typeof rootFieldValue === 'string' ||
+      rootFieldValue.comment === undefined
+    ) {
+      return null;
+    }
+
+    return rootFieldValue.comment;
+  }
+  return null;
+};
+
+export const setTableCustomRootFieldComment = (
+  existingRootFieldValue: Nullable<string> | CustomRootField,
+  newComment: string | null
+): Nullable<string> | CustomRootField => {
+  if (typeof existingRootFieldValue === 'string') {
+    return {
+      name: existingRootFieldValue,
+      comment: newComment,
+    };
+  } else if (typeof existingRootFieldValue === 'object') {
+    return {
+      ...existingRootFieldValue,
+      comment: newComment,
+    };
+  }
+  return { comment: newComment };
+};
+
 export const getTableColumnConfig = (table: NormalizedTable) =>
   table?.configuration?.column_config || {};
 
@@ -349,6 +384,10 @@ export const getTableCustomColumnNames = (table: Table) => {
 
 export const getTableCustomColumnName = (table: Table, columnName: string) =>
   table?.configuration?.column_config?.[columnName]?.custom_name;
+
+export const getComputedFieldComment = (
+  computedField: ComputedField
+): string | null => computedField.comment ?? null;
 
 export const findFKConstraint = (curTable: Table, column: string[]) => {
   const fkConstraints = curTable.foreign_key_constraints;

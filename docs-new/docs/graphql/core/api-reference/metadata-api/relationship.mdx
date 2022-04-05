@@ -1,0 +1,770 @@
+---
+sidebar_label: Relationships
+sidebar_position: 4
+description: Use relationships with the Hasura metadata API
+keywords:
+   - hasura
+   - docs
+   - metadata API
+   - API reference
+   - relationship
+---
+
+# Metadata API Reference: Relationships
+
+## Introduction
+
+When retrieving data from tables, it is very helpful if we can also
+fetch the related data alongside the columns. This is where
+relationships come in. They can be considered as pseudo columns for a
+table to access the related data.
+
+For a simple `article/author` schema, the following relationships exist:
+
+-   `author` of an `article`
+-   `articles` of an `author`
+
+There are two kinds of relationships:
+
+-   one-to-one or `object relationships` (e.g. `author`).
+-   one-to-many or `array relationships` (e.g. `articles`).
+
+The above represents the same table relationship from different
+perspectives: there is a single `author` for every `article`
+(one-to-one), but there may be multiple `articles` for every `author`
+(one-to-many).
+
+A table relationship may be one-to-one from both perspectives. For
+example, given tables `author` and `author_details`, if the
+`author_details` table has a primary key `author_id` which is a foreign
+key to the `author` table's primary key `id`. In this case there will be
+a single `author` for every `author_details` and a single `details` for
+every `author`
+
+:::tip Supported from
+
+The metadata API is supported for versions `v2.0.0` and above and
+replaces the older [schema/metadata API](/graphql/core/api-reference/schema-metadata-api/index.mdx).
+
+:::
+
+## pg_create_object_relationship {#metadata-pg-create-object-relationship}
+
+`create_object_relationship` is used to create an object relationship on
+a table. There cannot be an existing column or relationship with the
+same name.
+
+There are 3 ways in which you can create an object relationship.
+
+### 1. Using foreign key constraint on a column
+
+Create an `object relationship` `author` on `article` *table*, *using*
+the *foreign_key_constraint_on* the `author_id` column:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "pg_create_object_relationship",
+    "args": {
+        "table": "article",
+        "name": "author",
+        "source": "default",
+        "using": {
+            "foreign_key_constraint_on" : ["author_id"]
+        }
+    }
+}
+```
+
+:::info Note
+
+In the case that the key uses only a single column it is permissible to
+give just a string instead of a list, i.e.:
+`"foreign_key_constraint_on" : "author_id"`.
+
+:::
+
+### 2. Using foreign key constraint on a remote table
+
+Create an `object relationship` `details` on `author` *table*, *using*
+the *foreign_key_constraint_on* the `author_details` *table*'s
+`author_id` *column*:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "create_object_relationship",
+    "args": {
+        "table": "author",
+        "name": "details",
+        "using": {
+            "foreign_key_constraint_on" : {
+                "table": "author_details",
+                "columns": ["author_id"]
+            }
+        }
+    }
+}
+```
+
+:::caution Deprecation
+
+For compatibility with previous versions we also support the form of
+`foreign_key_constraint_on` with a `column`-field, e.g.:
+
+```json
+{
+  "foreign_key_constraint_on" : {
+    "table": "author_details",
+    "column": "author_id"
+  }
+}
+```
+
+This form is deprecated in favor of the more general `columns` field.
+
+:::
+
+:::tip Supported from
+
+Relationships via remote table are supported for versions
+`v2.0.0-alpha.3` and above.
+
+:::
+
+### 3. Manual configuration {#metadata-pg-manual-obj-relationship}
+
+This is an advanced feature which is mostly used to define relationships
+on or to views. We cannot rely on foreign key constraints as they are
+not valid to or from views. So, when using manual configuration, we have
+to specify the remote table and how columns in this table are mapped to
+the columns of the remote table.
+
+Let's say we have a view called `article_detail` which has three columns
+`article_id` and `view_count` and `average_rating`. We can now define an
+object relationship called `article_detail` on the `article` table as
+follows:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "pg_create_object_relationship",
+    "args": {
+        "table": "article",
+        "name": "article_detail",
+        "source": "default",
+        "using": {
+            "manual_configuration" : {
+                "remote_table" : "article_detail",
+                "column_mapping" : {
+                    "id" : "article_id"
+                }
+            }
+        }
+    }
+}
+```
+
+:::info Note
+
+It is easy to make mistakes while using `manual_configuration`. One
+simple check is to ensure that foreign key constraint semantics are
+valid on the columns being used in `column_mapping`. In the previous
+example, if it was allowed, a foreign key constraint could have been
+defined on `article` table's `id` column to `article_detail` view's
+`article_id` column.
+
+:::
+
+### Args syntax {#metadata-pg-create-object-relationship-syntax}
+
+| Key     | Required | Schema                                                                           | Description                                                    |
+|---------|----------|----------------------------------------------------------------------------------|----------------------------------------------------------------|
+| table   | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)               | Name of the table                                              |
+| name    | true     | [RelationshipName](/graphql/core/api-reference/syntax-defs.mdx#relationshipname) | Name of the new relationship                                   |
+| using   | true     | [ObjRelUsing](/graphql/core/api-reference/syntax-defs.mdx#objrelusing)           | Use one of the available ways to define an object relationship |
+| comment | false    | text                                                                             | comment                                                        |
+| source  | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)             | Name of the source database of the table (default: `default`)  |
+
+## pg_create_array_relationship {#metadata-pg-create-array-relationship}
+
+`create_array_relationship` is used to create an array relationship on a
+table. There cannot be an existing column or relationship with the same name.
+
+There are 2 ways in which you can create an array relationship.
+
+### 1. Using foreign key constraint on a column
+
+Create an `array relationship` `articles` on `author` *table*, *using*
+the *foreign_key_constraint_on* the `author_id` column of the `article`
+table:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "pg_create_array_relationship",
+    "args": {
+        "table": "author",
+        "name": "articles",
+        "source": "default",
+        "using": {
+            "foreign_key_constraint_on" : {
+                "table" : "article",
+                "columns" : ["author_id"]
+            }
+        }
+    }
+}
+```
+
+:::caution Deprecation
+
+For compatibility with previous version we also support the form of
+`foreign_key_constraint_on` with a `column`-field, e.g.:
+
+```json
+{
+  "foreign_key_constraint_on" : {
+    "table": "author_details",
+    "column": "author_id"
+  }
+}
+```
+
+This form is deprecated in favor of the more general `columns` field.
+
+:::
+
+### 2. Manual configuration
+
+This is an advanced feature which is mostly used to define relationships
+on or to views. We cannot rely on foreign key constraints as they are
+not valid to or from views. So, when using manual configuration, we have
+to specify the remote table and how columns in this table are mapped to
+the columns of the remote table.
+
+Let's say we have a view called `article_detail` which has four columns
+`author_id`, `article_id`, `view_count` and `average_rating`. We can now
+define an array relationship called `article_details` on the `author`
+table as follows:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "pg_create_array_relationship",
+    "args": {
+        "table": "author",
+        "name": "article_details",
+        "source": "default",
+        "using": {
+            "manual_configuration" : {
+                "remote_table" : "article_detail",
+                "column_mapping" : {
+                    "id" : "author_id"
+                }
+            }
+        }
+    }
+}
+```
+
+:::info Note
+
+It is easy to make mistakes while using `manual_configuration`. One
+simple check is to ensure that foreign key constraint semantics are
+valid on the columns being used in `column_mapping`. In the previous
+example, if it was allowed, a foreign key constraint could have been
+defined on the `author` table's `id` column to `article_detail` view's
+`author_id` column.
+
+:::
+
+### Args syntax {#metadata-pg-create-array-relationship-syntax}
+
+| Key     | Required | Schema                                                                           | Description                                                   |
+|---------|----------|----------------------------------------------------------------------------------|---------------------------------------------------------------|
+| table   | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)               | Name of the table                                             |
+| name    | true     | [RelationshipName](/graphql/core/api-reference/syntax-defs.mdx#relationshipname) | Name of the new relationship                                  |
+| using   | true     | [ArrRelUsing](/graphql/core/api-reference/syntax-defs.mdx#arrrelusing)           | Use one of the available ways to define an array relationship |
+| comment | false    | text                                                                             | comment                                                       |
+| source  | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)             | Name of the source database of the table (default: `default`) |
+
+## pg_drop_relationship {#metadata-pg-drop-relationship}
+
+`pg_drop_relationship` is used to drop a relationship (both object and
+array) on a table. If there are other objects dependent on this
+relationship like permissions and query templates, etc., the request
+will fail and report the dependencies unless `cascade` is set to `true`.
+If `cascade` is set to `true`, the dependent objects are also dropped.
+
+An example:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "pg_drop_relationship",
+    "args": {
+        "table": "article",
+        "source": "default",
+        "relationship": "article_detail"
+    }
+}
+```
+
+### Args syntax {#metadata-pg-drop-relationship-syntax}
+
+| Key          | Required | Schema                                                                            | Description                                                                       |
+|--------------|----------|-----------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
+| table        | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)                | Name of the table                                                                 |
+| relationship | true     | [RelationshipName](/graphql/core/api-reference/syntax-defs.mdx#relationshipname)  | Name of the relationship that needs to be dropped                                 |
+| cascade      | false    | Boolean                                                                           | When set to `true`, all the dependent items on this relationship are also dropped |
+| source       | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)              | Name of the source database of the table (default: `default`)                     |
+
+:::info Note
+
+Be careful when using `cascade`. First, try running the request without
+`cascade` or `cascade` set to `false`.
+
+:::
+
+## pg_set_relationship_comment {#metadata-pg-set-relationship-comment}
+
+`pg_set_relationship_comment` is used to set/update the comment on a
+relationship. Setting the comment to `null` removes it.
+
+An example:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "pg_set_relationship_comment",
+    "args": {
+        "table": "article",
+        "source": "default",
+        "name": "article_detail",
+        "comment" : "has extra information about an article like count etc."
+    }
+}
+```
+
+### Args syntax {#metadata-pg-set-relationship-comment-syntax}
+
+| Key          | Required | Schema                                                                              | Description                                                   |
+|--------------|----------|-------------------------------------------------------------------------------------|---------------------------------------------------------------|
+| table        | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)                  | Name of the table                                             |
+| relationship | true     | [RelationshipName](/graphql/core/api-reference/syntax-defs.mdx#relationshipname)    | The relationship                                              |
+| comment      | false    | Text                                                                                | Comment                                                       |
+| source       | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)                | Name of the source database of the table (default: `default`) |
+
+## pg_rename_relationship {#metadata-pg-rename-relationship}
+
+`pg_rename_relationship` is used to modify the name of an existing relationship.
+
+An example:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "pg_rename_relationship",
+    "args": {
+        "table": "article",
+        "name": "article_details",
+        "source": "default",
+        "new_name": "article_detail"
+    }
+}
+```
+
+### Args syntax {#metadata-pg-rename-relationship-syntax}
+
+| Key      | Required | Schema                                                                                  | Description                                                   |
+|----------|----------|-----------------------------------------------------------------------------------------|---------------------------------------------------------------|
+| table    | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)                      | Name of the table                                             |
+| name     | true     | [RelationshipName](/graphql/core/api-reference/syntax-defs.mdx#relationshipname)        | The relationship                                              |
+| new_name | true     | [RelationshipName](/graphql/core/api-reference/syntax-defs.mdx#relationshipname)        | New relationship name                                         |
+| source   | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)                    | Name of the source database of the table (default: `default`) |
+
+## mssql_create_object_relationship {#mssql-create-object-relationship}
+
+`create_object_relationship` is used to create an object relationship on
+a table. There cannot be an existing column or relationship with the
+same name.
+
+There are 3 ways in which you can create an object relationship.
+
+### 1. Using foreign key constraint on a column
+
+Create an `object relationship` `author` on `article` *table*, *using*
+the *foreign_key_constraint_on* the `author_id` column:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "mssql_create_object_relationship",
+    "args": {
+        "table": "article",
+        "name": "author",
+        "source": "default",
+        "using": {
+            "foreign_key_constraint_on" : ["author_id"]
+        }
+    }
+}
+```
+
+:::info Note
+
+In the case that the key uses only a single column it is permissible to
+give just a string instead of a list, i.e.:
+`"foreign_key_constraint_on" : "author_id"`.
+
+:::
+
+### 2. Using foreign key constraint on a remote table
+
+Create an `object relationship` `details` on `author` *table*, *using*
+the *foreign_key_constraint_on* the `author_details` *table*'s
+`author_id` *column*:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "create_object_relationship",
+    "args": {
+        "table": "author",
+        "name": "details",
+        "using": {
+            "foreign_key_constraint_on" : {
+                "table": "author_details",
+                "columns": ["author_id"]
+            }
+        }
+    }
+}
+```
+
+:::caution Deprecation
+
+For compatibility with previous versions we also support the form of
+`foreign_key_constraint_on` with a `column`-field, e.g.:
+
+```json
+{
+  "foreign_key_constraint_on" : {
+      "table": "author_details",
+      "column": "author_id"
+  }
+}
+```
+
+This form is deprecated in favor of the more general `columns` field.
+
+:::
+
+:::tip Supported from
+
+Relationships via remote table are supported for versions
+`v2.0.0-alpha.3` and above.
+
+:::
+
+### 3. Manual configuration {#mssql-manual-obj-relationship}
+
+This is an advanced feature which is mostly used to define relationships
+on or to views. We cannot rely on foreign key constraints as they are
+not valid to or from views. So, when using manual configuration, we have
+to specify the remote table and how columns in this table are mapped to
+the columns of the remote table.
+
+Let's say we have a view called `article_detail` which has three columns
+`article_id` and `view_count` and `average_rating`. We can now define an
+object relationship called `article_detail` on the `article` table as
+follows:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "mssql_create_object_relationship",
+    "args": {
+        "table": "article",
+        "name": "article_detail",
+        "source": "default",
+        "using": {
+            "manual_configuration" : {
+                "remote_table" : "article_detail",
+                "column_mapping" : {
+                    "id" : "article_id"
+                }
+            }
+        }
+    }
+}
+```
+
+:::info Note
+
+It is easy to make mistakes while using `manual_configuration`. One
+simple check is to ensure that foreign key constraint semantics are
+valid on the columns being used in `column_mapping`. In the previous
+example, if it was allowed, a foreign key constraint could have been
+defined on `article` table's `id` column to `article_detail` view's
+`article_id` column.
+
+:::
+
+### Args syntax {#mssql-create-object-relationship-syntax}
+
+| Key     | Required | Schema                                                                           | Description                                                    |
+|---------|----------|----------------------------------------------------------------------------------|----------------------------------------------------------------|
+| table   | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)               | Name of the table                                              |
+| name    | true     | [RelationshipName](/graphql/core/api-reference/syntax-defs.mdx#relationshipname) | Name of the new relationship                                   |
+| using   | true     | [ObjRelUsing](/graphql/core/api-reference/syntax-defs.mdx#objrelusing)           | Use one of the available ways to define an object relationship |
+| comment | false    | text                                                                             | comment                                                        |
+| source  | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)             | Name of the source database of the table (default: `default`)  |
+
+## mssql_create_array_relationship {#mssql-create-array-relationship}
+
+`create_array_relationship` is used to create an array relationship on a
+table. There cannot be an existing column or relationship with the same
+name.
+
+There are 2 ways in which you can create an array relationship.
+
+### 1. Using foreign key constraint on a column
+
+Create an `array relationship` `articles` on `author` *table*, *using*
+the *foreign_key_constraint_on* the `author_id` column of the `article`
+table:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "mssql_create_array_relationship",
+    "args": {
+        "table": "author",
+        "name": "articles",
+        "source": "default",
+        "using": {
+            "foreign_key_constraint_on" : {
+                "table" : "article",
+                "columns" : ["author_id"]
+            }
+        }
+    }
+}
+```
+
+:::caution Deprecation
+
+For compatibility with previous version we also support the form of
+`foreign_key_constraint_on` with a `column`-field, e.g.:
+
+```json
+{
+ "foreign_key_constraint_on" : {
+     "table": "author_details",
+     "column": "author_id"
+ }
+}
+```
+
+This form is deprecated in favor of the more general `columns` field.
+
+:::
+
+### 2. Manual configuration
+
+This is an advanced feature which is mostly used to define relationships
+on or to views. We cannot rely on foreign key constraints as they are
+not valid to or from views. So, when using manual configuration, we have
+to specify the remote table and how columns in this table are mapped to
+the columns of the remote table.
+
+Let's say we have a view called `article_detail` which has four columns
+`author_id`, `article_id`, `view_count` and `average_rating`. We can now
+define an array relationship called `article_details` on the `author`
+table as follows:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "mssql_create_array_relationship",
+    "args": {
+        "table": "author",
+        "name": "article_details",
+        "source": "default",
+        "using": {
+            "manual_configuration" : {
+                "remote_table" : "article_detail",
+                "column_mapping" : {
+                    "id" : "author_id"
+                }
+            }
+        }
+    }
+}
+```
+
+:::info Note
+
+It is easy to make mistakes while using `manual_configuration`. One
+simple check is to ensure that foreign key constraint semantics are
+valid on the columns being used in `column_mapping`. In the previous
+example, if it was allowed, a foreign key constraint could have been
+defined on the `author` table's `id` column to `article_detail` view's
+`author_id` column.
+
+:::
+
+### Args syntax {#mssql-create-array-relationship-syntax}
+
+| Key     | Required | Schema                                                                           | Description                                                   |
+|---------|----------|----------------------------------------------------------------------------------|---------------------------------------------------------------|
+| table   | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)               | Name of the table                                             |
+| name    | true     | [RelationshipName](/graphql/core/api-reference/syntax-defs.mdx#relationshipname) | Name of the new relationship                                  |
+| using   | true     | [ArrRelUsing](/graphql/core/api-reference/syntax-defs.mdx#arrrelusing)           | Use one of the available ways to define an array relationship |
+| comment | false    | text                                                                             | comment                                                       |
+| source  | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)             | Name of the source database of the table (default: `default`) |
+
+## mssql_drop_relationship {#mssql-drop-relationship}
+
+`mssql_drop_relationship` is used to drop a relationship (both object
+and array) on a table. If there are other objects dependent on this
+relationship like permissions and query templates, etc., the request
+will fail and report the dependencies unless `cascade` is set to `true`.
+If `cascade` is set to `true`, the dependent objects are also dropped.
+
+An example:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "mssql_drop_relationship",
+    "args": {
+        "table": "article",
+        "source": "default",
+        "relationship": "article_detail"
+    }
+}
+```
+
+### Args syntax {#mssql-drop-relationship-syntax}
+
+| Key          | Required | Schema                                                                              | Description                                                                       |
+|--------------|----------|-------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
+| table        | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)                  | Name of the table                                                                 |
+| relationship | true     | [RelationshipName](/graphql/core/api-reference/syntax-defs.mdx#relationshipname)    | Name of the relationship that needs to be dropped                                 |
+| cascade      | false    | Boolean                                                                             | When set to `true`, all the dependent items on this relationship are also dropped |
+| source       | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)                | Name of the source database of the table (default: `default`)                     |
+
+:::info Note
+
+Be careful when using `cascade`. First, try running the request without
+`cascade` or `cascade` set to `false`.
+
+:::
+
+## mssql_set_relationship_comment {#mssql-set-relationship-comment}
+
+`mssql_set_relationship_comment` is used to set/update the comment on a
+relationship. Setting the comment to `null` removes it.
+
+An example:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "mssql_set_relationship_comment",
+    "args": {
+        "table": "article",
+        "source": "default",
+        "name": "article_detail",
+        "comment" : "has extra information about an article like count etc."
+    }
+}
+```
+
+### Args syntax {#mssql-set-relationship-comment-syntax}
+
+| Key          | Required | Schema                                                                              | Description                                                   |
+|--------------|----------|-------------------------------------------------------------------------------------|---------------------------------------------------------------|
+| table        | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)                  | Name of the table                                             |
+| relationship | true     | [RelationshipName](/graphql/core/api-reference/syntax-defs.mdx#relationshipname)    | The relationship                                              |
+| comment      | false    | Text                                                                                | Comment                                                       |
+| source       | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)                | Name of the source database of the table (default: `default`) |
+
+## mssql_rename_relationship {#mssql-rename-relationship}
+
+`mssql_rename_relationship` is used to modify the name of an existing relationship.
+
+An example:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "mssql_rename_relationship",
+    "args": {
+        "table": "article",
+        "name": "article_details",
+        "source": "default",
+        "new_name": "article_detail"
+    }
+}
+```
+
+### Args syntax {#mssql-rename-relationship-syntax}
+
+| Key      | Required | Schema                                                                                  | Description                                                   |
+|----------|----------|-----------------------------------------------------------------------------------------|---------------------------------------------------------------|
+| table    | true     | [TableName](/graphql/core/api-reference/syntax-defs.mdx#tablename)                      | Name of the table                                             |
+| name     | true     | [RelationshipName](/graphql/core/api-reference/syntax-defs.mdx#relationshipname)        | The relationship                                              |
+| new_name | true     | [RelationshipName](/graphql/core/api-reference/syntax-defs.mdx#relationshipname)        | New relationship name                                         |
+| source   | false    | [SourceName](/graphql/core/api-reference/syntax-defs.mdx#sourcename)                    | Name of the source database of the table (default: `default`) |

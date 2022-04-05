@@ -1,0 +1,19 @@
+{
+    "query_collections": [
+      {
+        "name": "allowed-queries",
+        "definition": {
+          "queries": [
+            {
+              "name": "getCompanies",
+              "query": "query MyQuery {\n  company {\n    company_addresses {\n      address {\n        address_line_1\n        address_line_2\n        city\n        country\n        postal_code\n        state\n      }\n    }\n    id\n    name\n  }\n}"
+            },
+            {
+              "name": "addCompany",
+              "query": "mutation MyQuery {\n  insert_company(objects: {\n    company_addresses: {\n      data: {\n        id: \"94909f0b-e9db-4ce6-809b-0de59463caf1\",\n        address: {\n          data: {\n            address_line_1: \"16, swastik circle\", \n            address_line_2: \"\", \n            city: \"Ahmedabad\", \n            country: \"india\", \n            id: \"1354fd0e-cb95-49ae-97d4-9ebfa225e831\",\n            postal_code: \"312203\", \n            state: \"Gujarat\"\n          },\n          on_conflict: {constraint: address_pkey}\n        }\n      }\n    }, \n    name: \"cygnet\", \n    id: \"81c20bdf-fc22-473b-9ffb-173f4d6c6da2\"\n  }) {\n    affected_rows\n  }\n}"
+            }
+          ]
+        }
+      }
+    ]
+}

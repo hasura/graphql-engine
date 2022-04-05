@@ -1,15 +1,15 @@
 import React, { useMemo } from 'react';
-import 'antd/dist/antd.css';
+import 'antd/lib/tree/style/index.css';
 import { Tree as AntTree } from 'antd';
 import { GraphQLSchema } from 'graphql';
 import { EventDataNode } from 'antd/lib/tree';
 import {
   AllowedRootFields,
   AntdTreeNode,
-  HasuraColumn,
+  HasuraRsFields,
   RelationshipFields,
   TreeNode,
-} from './types';
+} from '../../types';
 import {
   buildTree,
   findRemoteField,
@@ -28,10 +28,7 @@ export interface RemoteSchemaTreeProps {
   setRelationshipFields: React.Dispatch<
     React.SetStateAction<RelationshipFields[]>
   >;
-  /**
-   * Columns array from the current table.
-   */
-  columns: HasuraColumn;
+  fields: HasuraRsFields;
 }
 
 export const RemoteSchemaTree = ({
@@ -39,18 +36,18 @@ export const RemoteSchemaTree = ({
   relationshipFields,
   rootFields,
   setRelationshipFields,
-  columns,
+  fields,
 }: RemoteSchemaTreeProps) => {
   const tree: TreeNode[] = useMemo(
     () =>
-      buildTree(
+      buildTree({
         schema,
         relationshipFields,
         setRelationshipFields,
-        columns,
-        rootFields
-      ),
-    [relationshipFields, schema, rootFields, columns]
+        fields,
+        rootFields,
+      }),
+    [relationshipFields, schema, rootFields, fields]
   );
 
   const expandedKeys = useMemo(() => getExpandedKeys(relationshipFields), [

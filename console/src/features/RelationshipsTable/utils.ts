@@ -16,8 +16,12 @@ export const getRemoteRelationType = (
     ];
   }
   if (relation?.definition?.to_remote_schema)
-    return [relation?.name, 'to_remote_schema', 'Remote Schema'];
-  return [relation?.name, 'remote_schema_legacy', 'Remote Schema'];
+    return [
+      relation?.source_name ?? relation?.remote_schema,
+      'to_remote_schema',
+      'Remote Schema',
+    ];
+  return [relation?.source_name, 'remote_schema_legacy', 'Remote Schema'];
 };
 
 export const getRemoteFieldPath = (
@@ -33,4 +37,26 @@ export const getRemoteFieldPath = (
     ];
   }
   return resultArray;
+};
+
+export const getRemoteSchemaRelationType = (
+  relation: RelationshipType
+): [
+  name: string,
+  sourceType: RelationshipSourceType,
+  type: 'Object' | 'Array' | 'Remote Source' | 'Remote Schema'
+] => {
+  if (relation?.definition?.to_source) {
+    return [
+      relation?.definition?.to_source.source,
+      'to_source',
+      relation?.definition?.to_source?.relationship_type,
+    ];
+  }
+
+  return [
+    relation?.definition?.to_remote_schema.remote_schema,
+    'to_remote_schema',
+    'Remote Schema',
+  ];
 };

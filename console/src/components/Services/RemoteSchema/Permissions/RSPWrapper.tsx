@@ -4,18 +4,8 @@ import { NotFoundError } from '../../../Error/PageNotFound';
 import { appPrefix } from '../constants';
 import styles from '../RemoteSchema.scss';
 import { RemoteSchema } from '../../../../metadata/types';
+import tabInfo from '../Edit/tabInfo';
 
-const tabInfo = {
-  details: {
-    display_text: 'Details',
-  },
-  modify: {
-    display_text: 'Modify',
-  },
-  permissions: {
-    display_text: 'Permissions',
-  },
-};
 export type RSPWrapperProps = {
   params: { remoteSchemaName: string };
   allRemoteSchemas?: RemoteSchema[];

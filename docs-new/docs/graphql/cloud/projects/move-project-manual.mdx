@@ -1,0 +1,95 @@
+---
+description: Moving existing project to a new project
+keywords:
+  - hasura
+  - docs
+  - project
+  - move
+  - transfer
+  - downgrade
+  - transfer region
+sidebar_position: 17
+---
+
+# Transfer existing Hasura Cloud project to a new project
+
+## Introduction
+
+To transfer a project you will have to create a new Hasura project and
+configure it with the same Hasura metadata and other configuration as in
+the previous project.
+
+The following is a guide to achieve this.
+
+## Step 1: Export metadata from existing project
+
+See [exporting metadata](/graphql/core/migrations/manage-metadata.mdx) to get a copy of the
+current Hasura metadata on your project.
+
+Do ensure no further changes are made to the Hasura metadata post this.
+
+## Step 2: Create a new Cloud project with the same configuration
+
+See `Step 1` of [creating projects](/graphql/cloud/projects/create.mdx) to create a new
+Hasura Cloud project.
+
+After project creation, update the Hasura Cloud configuration of the new
+project with the same configuration as the earlier project. i.e. add the
+same ENV vars, custom domains, collaborators, billing, etc.
+
+## Step 3: Apply the exported metadata to the new project
+
+See [applying metadata](/graphql/core/migrations/manage-metadata.mdx) to apply the earlier
+exported metadata to the new project.
+
+The new project should now be generating the same GraphQL API as the
+earlier project.
+
+## Step 4: Delete the earlier project
+
+See [deleting projects](/graphql/cloud/projects/delete.mdx) to delete the earlier project.
+
+## Optional steps
+
+-  If you are using Hasura migrations on your project, please mark all
+    existing migrations as applied on the new project using the
+    following Hasura CLI command:
+
+    ```bash
+    hasura migrate apply --skip-execution --endpoint <new-project-endpoint> --admin-secret <new-project-admin-secret> --all-databases
+    ```
+
+-  You can [rename](/graphql/cloud/projects/details.mdx#rename-project) your new project to the same name
+    as the earlier project if you wish.
+
+-  If you haven't renamed your new project or set up a
+    [custom domain](/graphql/cloud/projects/domains.mdx) for your project, you might
+    want to update any clients consuming the GraphQL API to point to the
+    new project's GraphQL endpoint.
+
+## Zero-downtime transfer
+
+To achieve a zero-downtime transfer, you will need to have a
+[custom domain](/graphql/cloud/projects/domains.mdx) attached to your Cloud project.
+Once the new project is set up identically as the old one, you can
+update the DNS entries for your custom domain to the new project to have
+a seamless transfer of traffic to the new project.
+
+If you simply want to avoid updating your clients with the new project's
+API endpoint, you can simply [rename](/graphql/cloud/projects/details.mdx#rename-project) your new project
+with the same name as the earlier project. This will cause a short
+downtime of your API after you delete your old project until you rename
+the new one.
+
+## Caveats
+
+You will lose the following data from your earlier project in the
+process:
+
+-  all existing scheduled events
+-  all existing async actions
+-  past invocation logs of cron triggers
+
+If you would like these to be transferred to the new project as well
+please get in touch with support regarding this before deleting the old
+project.

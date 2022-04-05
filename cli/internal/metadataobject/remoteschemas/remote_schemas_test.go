@@ -43,6 +43,16 @@ func TestRemoteSchemaConfig_Build(t *testing.T) {
 			"testdata/build_test/t2/want.golden.json",
 			false,
 		},
+		{
+			"t3",
+			"can build metadata json with multiline strings",
+			fields{
+				MetadataDir: "testdata/build_test/t3/metadata",
+				logger:      logrus.New(),
+			},
+			"testdata/build_test/t3/want.golden.json",
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -61,7 +71,7 @@ func TestRemoteSchemaConfig_Build(t *testing.T) {
 				assert.NoError(t, err)
 
 				// uncomment following lines to update golden file
-				//assert.NoError(t, ioutil.WriteFile(tt.wantGolden, jsonbs, os.ModePerm))
+				// assert.NoError(t, ioutil.WriteFile(tt.wantGolden, jsonbs, os.ModePerm))
 
 				wantbs, err := ioutil.ReadFile(tt.wantGolden)
 				assert.NoError(t, err)
@@ -170,6 +180,33 @@ func TestRemoteSchemaConfig_Export(t *testing.T) {
 			},
 			false,
 		},
+		{
+			"t4",
+			"can export remote schema with multiline strings - 2",
+			fields{
+				MetadataDir: "metadata",
+				logger:      logrus.New(),
+			},
+			args{
+				metadata: func() map[string]yaml.Node {
+					bs, err := ioutil.ReadFile("testdata/export_test/t4/metadata.json")
+					assert.NoError(t, err)
+					yamlbs, err := metadatautil.JSONToYAML(bs)
+					assert.NoError(t, err)
+					var v map[string]yaml.Node
+					assert.NoError(t, yaml.Unmarshal(yamlbs, &v))
+					return v
+				}(),
+			},
+			map[string][]byte{
+				"metadata/remote_schemas.yaml": func() []byte {
+					bs, err := ioutil.ReadFile("testdata/export_test/t4/want.remote_schemas.yaml")
+					assert.NoError(t, err)
+					return bs
+				}(),
+			},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -181,6 +218,7 @@ func TestRemoteSchemaConfig_Export(t *testing.T) {
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
+				assert.NoError(t, err)
 				for k, v := range got {
 					assert.Contains(t, tt.want, k)
 					// uncomment to update golden files

@@ -1,0 +1,581 @@
+---
+description: Model many-to-many relationships in Hasura
+keywords:
+  - hasura
+  - docs
+  - schema
+  - relationship
+  - many-to-many
+  - n-m
+sidebar_position: 4
+sidebar_label: Many-to-many relationship
+---
+
+import GraphiQLIDE from "@site/src/components/GraphiQLIDE"
+
+# Modelling many-to-many table relationships
+
+## Introduction
+
+A `many-to-many` relationship between two tables can be established by
+creating a table typically called as **bridge/junction/join table** and
+adding **foreign-key constraints** from it to the original tables.
+
+Say we have the following two tables in our database schema:
+
+```sql
+articles (
+  id SERIAL PRIMARY KEY,
+  title TEXT
+  ...
+)
+
+tags (
+  id SERIAL PRIMARY KEY,
+  tag_value TEXT
+  ...
+)
+```
+
+These two tables are related via a `many-to-many` relationship. i.e:
+
+-   an `article` can have many `tags`
+-   a `tag` has many `articles`
+
+## Step 1: Set up a table relationship in the database
+
+This `many-to-many` relationship can be established in the database by:
+
+1.  Creating a **bridge table** called `article_tag` with the following
+    structure:
+
+    ```sql
+    article_tag (
+      id SERIAL PRIMARY KEY
+      article_id INT
+      tag_id INT
+      UNIQUE (article_id, tag_id)
+      ...
+    )
+    ```
+
+:::info Note
+
+If you can have multiple rows linking the same `article` and `tag`
+in your model, you can skip the unique constraint on
+`(article_id, tag_id)`
+
+:::
+
+2.  Adding **foreign key constraints** in the `article_tag` table for:
+
+    -   the `articles` table using the `article_id` and `id` columns of
+        the tables respectively
+    -   the `tags` table using the `tag_id` and `id` columns of the
+        tables respectively
+
+The table `article_tag` sits between the two tables involved in the
+many-to-many relationship and captures possible permutations of their
+association via the foreign keys.
+
+## Step 2: Set up GraphQL relationships
+
+To access the nested objects via the GraphQL API,
+[create the following relationships](/graphql/core/databases/postgres/schema/table-relationships/create.mdx):
+
+-   Array relationship, `article_tags` from `articles` table using
+    `article_tag :: article_id -> id`
+-   Object relationship, `tag` from `article_tag` table using
+    `tag_id -> tags :: id`
+-   Array relationship, `tag_articles` from `tags` table using
+    `article_tag :: tag_id -> id`
+-   Object relationship, `article` from `article_tag` table using
+    `article_id -> articles :: id`
+
+## Query using many-to-many relationships
+
+We can now:
+
+-   fetch a list of `articles` with their `tags`:
+
+<GraphiQLIDE
+  query={
+ `query {
+  articles {
+    id
+    title
+    article_tags {
+      tag {
+        id
+        tag_value
+      }
+    }
+  }
+ }`}
+  response={
+ `{
+  "data": {
+    "articles": [
+      {
+        "id": 1,
+        "title": "sit amet",
+        "article_tags": [
+          {
+            "tag": {
+              "id": 1,
+              "tag_value": "mystery"
+            }
+          },
+          {
+            "tag": {
+              "id": 2,
+              "tag_value": "biography"
+            }
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "a nibh",
+        "article_tags": [
+          {
+            "tag": {
+              "id": 2,
+              "tag_value": "biography"
+            }
+          },
+          {
+            "tag": {
+              "id": 5,
+              "tag_value": "technology"
+            }
+          }
+        ]
+      }
+    ]
+  }
+ }`}
+/>
+
+-   fetch a list of `tags` with their `articles`:
+
+<GraphiQLIDE
+  query={
+ `query {
+  tags {
+    id
+    tag_value
+    tag_articles {
+      article {
+        id
+        title
+      }
+    }
+  }
+ }`}
+  response={
+ `{
+  "data": {
+    "tags": [
+      {
+        "id": 1,
+        "tag_value": "mystery",
+        "tag_articles": [
+          {
+            "article": {
+              "id": 1,
+              "title": "sit amet"
+            }
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "tag_value": "biography",
+        "tag_articles": [
+          {
+            "article": {
+              "id": 1,
+              "title": "sit amet"
+            }
+          },
+          {
+            "article": {
+              "id": 2,
+              "title": "a nibh"
+            }
+          }
+        ]
+      }
+    ]
+  }
+ }`}
+/>
+
+## Insert using many-to-many relationships
+
+We can now:
+
+-   insert an `article` with `tags` where the `tag` might already exist
+    (assume unique `value` for `tag`):
+
+<GraphiQLIDE
+  query={
+ `mutation insertArticleWithTags {
+  insert_article(objects: [
+    {
+      title: "Article 1",
+      content: "Article 1 content",
+      author_id: 1,
+      article_tags: {
+        data: [
+          {
+            tag: {
+              data: {
+                value: "Recipes"
+              },
+              on_conflict: {
+                constraint: tag_value_key,
+                update_columns: [value]
+              }
+            }
+          }
+          {
+            tag: {
+              data: {
+                value: "Cooking"
+              },
+              on_conflict: {
+                constraint: tag_value_key,
+                update_columns: [value]
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]) {
+    returning {
+      title
+      article_tags {
+        tag {
+          value
+        }
+      }
+    }
+  }
+ }`}
+  response={
+ `{
+  "data": {
+    "insert_article": {
+      "returning": [
+        {
+          "title": "Article 1",
+          "article_tags": [
+            {
+              "tag": {
+                "value": "Recipes"
+              }
+            },
+            {
+              "tag": {
+                "value": "Cooking"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+ }`}
+/>
+
+-   insert a `tag` with `articles` where the `tag` might already exist
+    (assume unique `value` for `tag`):
+
+<GraphiQLIDE
+  query={
+ `mutation insertTagWithArticles {
+  insert_tag(objects: [
+    {
+      value: "Recipes",
+      article_tags: {
+        data: [
+          {
+            article: {
+              data: {
+                title: "Article 1",
+                content: "Article 1 content",
+                author_id: 1
+              }
+            }
+          },
+          {
+            article: {
+              data: {
+                title: "Article 2",
+                content: "Article 2 content",
+                author_id: 1
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  on_conflict: {
+    constraint: tag_value_key,
+    update_columns: [value]
+  }
+  ) {
+    returning {
+      value
+      article_tags {
+        article {
+          title
+        }
+      }
+    }
+  }
+ }`}
+  response={
+ `{
+  "data": {
+    "insert_tag": {
+      "returning": [
+        {
+          "value": "Recipes",
+          "article_tags": [
+            {
+              "article": {
+                "title": "Article 1"
+              }
+            },
+            {
+              "article": {
+                "title": "Article 2"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+ }`}
+/>
+
+:::info Note
+
+You can avoid the `on_conflict` clause if you will never have conflicts.
+
+:::
+
+## Fetching relationship information
+
+The intermediate fields `article_tags` & `tag_articles` can be used to
+fetch extra information about the relationship. For example, you can
+have a column like `tagged_at` in the `article_tag` table which you can
+fetch as follows:
+
+<GraphiQLIDE
+  query={
+ `query {
+  articles {
+    id
+    title
+    article_tags {
+      tagged_at
+      tag {
+        id
+        tag_value
+      }
+    }
+  }
+ }`}
+  response={
+ `{
+  "data": {
+    "articles": [
+      {
+        "id": 1,
+        "title": "sit amet",
+        "article_tags": [
+          {
+            "tagged_at": "2018-11-19T18:01:17.292828+05:30",
+            "tag": {
+              "id": 1,
+              "tag_value": "mystery"
+            }
+          },
+          {
+            "tagged_at": "2018-11-18T18:01:17.292828+05:30",
+            "tag": {
+              "id": 3,
+              "tag_value": "romance"
+            }
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "a nibh",
+        "article_tags": [
+          {
+            "tagged_at": "2018-11-19T15:01:17.292828+05:30",
+            "tag": {
+              "id": 5,
+              "tag_value": "biography"
+            }
+          },
+          {
+            "tagged_at": "2018-11-16T14:01:17.292828+05:30",
+            "tag": {
+              "id": 3,
+              "tag_value": "romance"
+            }
+          }
+        ]
+      }
+    ]
+  }
+ }`}
+/>
+
+## Flattening a many-to-many relationship query
+
+In case you would like to flatten the above queries and avoid the
+intermediate fields `article_tags` & `tag_articles`, you can
+[create the following views](/graphql/core/databases/postgres/schema/views.mdx) additionally and then
+query using relationships created on these views:
+
+```sql
+CREATE VIEW article_tags_view AS
+  SELECT article_id, tags.*
+    FROM article_tag LEFT JOIN tags
+      ON article_tag.tag_id = tags.id
+
+CREATE VIEW tag_articles_view AS
+  SELECT tag_id, articles.*
+    FROM article_tag LEFT JOIN articles
+      ON article_tag.article_id = articles.id
+```
+
+Now [create the following relationships](/graphql/core/databases/postgres/schema/table-relationships/create.mdx):
+
+-   Array relationship, `tags` from the `articles` table using
+    `article_tags_view :: article_id -> id`
+-   Array relationship, `articles` from the `tags` table using
+    `tag_articles_view :: tag_id -> id`
+
+We can now:
+
+-   fetch articles with their tags without an intermediate field:
+
+<GraphiQLIDE
+  query={
+ `query {
+  articles {
+    id
+    title
+    tags {
+      id
+      tag_value
+    }
+  }
+ }`}
+  response={
+ `{
+  "data": {
+    "articles": [
+      {
+        "id": 1,
+        "title": "sit amet",
+        "tags": [
+          {
+            "id": 1,
+            "tag_value": "mystery"
+          },
+          {
+            "id": 3,
+            "tag_value": "romance"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "a nibh",
+        "tags": [
+          {
+            "id": 5,
+            "tag_value": "biography"
+          },
+          {
+            "id": 3,
+            "tag_value": "romance"
+          }
+        ]
+      }
+    ]
+  }
+ }`}
+/>
+
+- fetch tags with their articles without an intermediate field:
+
+<GraphiQLIDE
+  query={
+ `query {
+  tags {
+    id
+    tag_value
+    articles {
+      id
+      title
+    }
+  }
+ }`}
+  response={
+ `{
+  "data": {
+    "tags": [
+      {
+        "id": 1,
+        "tag_value": "mystery",
+        "articles": [
+          {
+            "id": 1,
+            "title": "sit amet"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "tag_value": "biography",
+        "articles": [
+          {
+            "id": 1,
+            "title": "sit amet"
+          },
+          {
+            "id": 2,
+            "title": "a nibh"
+          }
+        ]
+      }
+    ]
+  }
+ }`}
+/>
+
+:::caution Note
+
+**We do not recommend this** flattening pattern of modelling as this
+introduces an additional overhead of managing permissions and
+relationships on the newly created views. e.g. You cannot query for the
+author of the nested articles without setting up a new relationship to
+the `authors` table from the `tag_articles_view` view.
+
+In our opinion, the cons of this approach seem to outweigh the pros.
+
+:::

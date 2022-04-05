@@ -1,11 +1,13 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
+import { FaCircle } from 'react-icons/fa';
+
 import { useDebouncedEffect } from '@/hooks/useDebounceEffect';
 import {
   ArgValue,
   ArgValueKind,
-  HasuraColumn,
+  HasuraRsFields,
   RelationshipFields,
-} from '../types';
+} from '../../../types';
 import { defaultArgValue } from '../utils';
 
 export interface ArgValueFormProps {
@@ -15,14 +17,14 @@ export interface ArgValueFormProps {
     React.SetStateAction<RelationshipFields[]>
   >;
   argValue: ArgValue;
-  columns: HasuraColumn;
+  fields: HasuraRsFields;
 }
 
 const fieldStyle =
   'block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400';
 
 const argValueTypeOptions = [
-  { key: 'column', content: 'Source Column' },
+  { key: 'field', content: 'Source Field' },
   { key: 'static', content: 'Static Value' },
 ];
 
@@ -31,12 +33,8 @@ export const ArgValueForm = ({
   relationshipFields,
   setRelationshipFields,
   argValue,
-  columns,
+  fields,
 }: ArgValueFormProps) => {
-  const allColumns = useMemo(
-    () => [...(columns.columns ?? []), ...(columns.computedFields ?? [])],
-    [columns]
-  );
   const [localArgValue, setLocalArgValue] = useState(argValue);
 
   useEffect(() => {
@@ -106,7 +104,7 @@ export const ArgValueForm = ({
   return (
     <div
       onClick={e => e.stopPropagation()}
-      className="rounded bg-white shadow pt-xs pb-sm px-sm mb-sm border-l-2 border-yellow-400 w-full"
+      className="rounded bg-white shadow pt-xs pb-sm px-sm my-sm -ml-8 border-l-2 border-yellow-400 w-full"
     >
       <div className="grid grid-cols-2 gap-2">
         <div>
@@ -125,10 +123,11 @@ export const ArgValueForm = ({
           </select>
         </div>
         <div>
-          {localArgValue.kind === 'column' ? (
+          {localArgValue.kind === 'field' ? (
             <>
               <p className="mb-xs text-muted font-semibold">
-                <i className="fa fa-columns text-sm mr-xs" /> From Column
+                <FaCircle className="text-green-600 mr-2 mb-1" />
+                Source Field
               </p>
               <select
                 className={fieldStyle}
@@ -136,9 +135,9 @@ export const ArgValueForm = ({
                 onChange={changeInputColumnValue}
               >
                 <option value="" disabled>
-                  Select Column...
+                  Select Field...
                 </option>
-                {allColumns.map(option => (
+                {(fields ?? []).map(option => (
                   <option key={option} value={option}>
                     {option}
                   </option>

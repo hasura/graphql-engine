@@ -1,0 +1,70 @@
+---
+description: Deploy Hasura GraphQL engine on Google Cloud Platform with Kubernetes engine and Cloud SQL
+keywords:
+  - hasura
+  - docs
+  - guide
+  - deployment
+  - render
+  - postgresql
+sidebar_position: 9
+sidebar_label: Using Render (one-click)
+---
+
+import Thumbnail from "@site/src/components/Thumbnail";
+
+# Deploying Hasura GraphQL engine on Render
+
+## Introduction
+
+This guide shows how to deploy the Hasura GraphQL engine on [Render](https://render.com).
+
+## One-click Deploy on Render
+
+:::info Note
+
+Make sure to [create a free Render account](https://render.com/register)
+first.
+
+:::
+
+Once you're logged into your Render account, click the button below to
+deploy Hasura and a new managed PostgreSQL database wired up to your
+Hasura instance.
+
+[<img src="https://render.com/images/deploy-to-render-button.svg" className="no-shadow" width="200" alt="render_deploy_button" />](https://render.com/deploy?repo=https://github.com/render-examples/hasura-graphql)
+
+You will see the Hasura web service and PostgreSQL instance to be
+created:
+
+<Thumbnail
+  src="/img/graphql/core/deployment/deploy-to-render-hasura.png"
+  alt="Deploy To Render Hasura Page"
+/>
+
+That's it! Read on to configure your Hasura instance.
+
+## Access your Hasura Console
+
+Once **Deploy to Render** succeeds, you can click through to your Hasura
+service page on Render's dashboard.
+
+<Thumbnail
+  src="/img/graphql/core/deployment/deploy-to-render-hasura-header.png"
+  alt="Render Hasura Header"
+/>
+
+You can monitor the deployment of the Hasura web service from the
+**Logs** tab. Once the service is up, use the link on the service page
+to access your Hasura console:
+
+```bash
+https://<your-hasura-slug>.onrender.com/
+```
+
+You can create tables and test your GraphQL queries here.
+
+## References
+
+-   [Render Hasura GraphQL on GitHub](https://github.com/render-examples/hasura-graphql)
+-   [Render Docs](https://render.com/docs)

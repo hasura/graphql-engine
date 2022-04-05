@@ -1,0 +1,36 @@
+---
+description: Create a scheduled trigger with Hasura
+keywords:
+  - hasura
+  - docs
+  - scheduled trigger
+slug: index
+---
+
+import Thumbnail from "@site/src/components/Thumbnail";
+
+# Scheduled Triggers
+
+## Introduction
+
+Scheduled triggers are used to execute custom business logic at specific points in time.
+
+<Thumbnail
+  src="/img/graphql/core/scheduled-triggers/scheduled-trigger-arch.png"
+  alt="Hasura scheduled trigger architecture"
+  width="700px"
+  className="no-shadow"
+/>
+
+:::tip Supported from
+
+Scheduled triggers are supported from versions `v1.3.0` and above.
+
+:::
+
+## Types
+
+There are two types of timed events:
+
+- [Cron triggers](/graphql/core/scheduled-triggers/create-cron-trigger.mdx): based on a cron schedule.
+- [One-off scheduled events](/graphql/core/scheduled-triggers/create-one-off-scheduled-event.mdx): based on a fixed timestamp.

@@ -112,6 +112,40 @@ common common-exe
     -- workaround for limitations in monitoring tools than anything...
     "-with-rtsopts=-N -I0 -T -qn2 -kc8K --disable-delayed-os-memory-return"
 
+library gdw-api
+  import: common-all
+  hs-source-dirs:      src-gdw-api
+  build-depends:       aeson
+                     , autodocodec
+                     , autodocodec-openapi3
+                     , base
+                     , deepseq
+                     , hashable
+                     , lens
+                     , openapi3
+                     , scientific
+                     , servant
+                     , servant-client
+                     , servant-client-core
+                     , servant-openapi3
+                     , text
+                     , unordered-containers
+  if !flag(profiling)
+    -- ghc-heap-view can't be built with profiling
+    build-depends:     ghc-heap-view
+
+  exposed-modules:     Autodocodec.Extended
+                     , Hasura.Backends.DataWrapper.API
+                     , Hasura.Backends.DataWrapper.API.V0.API
+                     , Hasura.Backends.DataWrapper.API.V0.Column
+                     , Hasura.Backends.DataWrapper.API.V0.Expression
+                     , Hasura.Backends.DataWrapper.API.V0.OrderBy
+                     , Hasura.Backends.DataWrapper.API.V0.Query
+                     , Hasura.Backends.DataWrapper.API.V0.Scalar.Type
+                     , Hasura.Backends.DataWrapper.API.V0.Scalar.Value
+                     , Hasura.Backends.DataWrapper.API.V0.Schema
+                     , Hasura.Backends.DataWrapper.API.V0.Table
+
 library
   import: common-all
   hs-source-dirs:      src-lib
@@ -120,6 +154,8 @@ library
                      , aeson-casing
                      , attoparsec
                      , attoparsec-iso8601 >= 1.0
+                     , autodocodec
+                     , autodocodec-openapi3
                      , barbies
                      , base
                      , bytestring
@@ -131,6 +167,7 @@ library
                      , either
                      , exceptions
                      , fast-logger
+                     , gdw-api
                      , hashable
                      , hashable-time
                      , http-client-tls
@@ -162,6 +199,7 @@ library
                      , servant
                      , servant-client
                      , servant-client-core
+                     , servant-openapi3
                      , some
                      , split
                      , template-haskell
@@ -484,7 +522,6 @@ library
                      , Hasura.Backends.DataWrapper.Adapter.Metadata
                      , Hasura.Backends.DataWrapper.Adapter.Schema
                      , Hasura.Backends.DataWrapper.Adapter.Transport
-                     , Hasura.Backends.DataWrapper.Agent.Schema
                      , Hasura.Backends.DataWrapper.IR.Column
                      , Hasura.Backends.DataWrapper.IR.Expression
                      , Hasura.Backends.DataWrapper.IR.Function
@@ -496,15 +533,6 @@ library
                      , Hasura.Backends.DataWrapper.IR.Table
                      , Hasura.Backends.DataWrapper.Schema.Column
                      , Hasura.Backends.DataWrapper.Schema.Table
-                     , Hasura.Backends.DataWrapper.API
-                     , Hasura.Backends.DataWrapper.API.V0.API
-                     , Hasura.Backends.DataWrapper.API.V0.Column
-                     , Hasura.Backends.DataWrapper.API.V0.Expression
-                     , Hasura.Backends.DataWrapper.API.V0.OrderBy
-                     , Hasura.Backends.DataWrapper.API.V0.Query
-                     , Hasura.Backends.DataWrapper.API.V0.Scalar.Type
-                     , Hasura.Backends.DataWrapper.API.V0.Scalar.Value
-                     , Hasura.Backends.DataWrapper.API.V0.Table
 
                      -- Exposed for benchmark:
                      , Hasura.Cache.Bounded
@@ -785,49 +813,6 @@ executable graphql-engine
                    , unix
                    , ekg-core
 
-test-suite graphql-engine-integration-tests
-  import: common-all, common-exe
-  type: exitcode-stdio-1.0
-  build-tool-depends: hspec-discover:hspec-discover
-  build-depends:
-      graphql-engine
-    , base
-    , aeson
-    , aeson-qq
-    , bytestring
-    , ekg-core
-    , exceptions
-    , hedgehog
-    , hspec >=2.8.3 && <3
-    , hspec-core >=2.8.3 && <3
-    , hspec-discover >=2.8.3 && <3
-    , hspec-expectations
-    , hspec-wai
-    , hspec-wai-json
-    , http-types
-    , lens
-    , monad-control
-    , mtl
-    , optparse-applicative
-    , pg-client
-    , shakespeare
-    , template-haskell
-    , text
-    , time
-    , tmp-postgres
-    , transformers
-    , unordered-containers
-    , wai
-    , wai-extra
-  hs-source-dirs: tests/integration
-  main-is: Main.hs
-  other-modules:
-    Backend.Postgres
-    Hasura.Test.App
-    Hasura.Test.Requests
-    Tests.RemoteSourceSpec
-    Tests.RemoteSourceSql
-
 test-suite graphql-engine-tests
   import: common-all, common-exe
   type: exitcode-stdio-1.0
@@ -840,6 +825,7 @@ test-suite graphql-engine-tests
     , cron
     , dependent-map
     , dependent-sum
+    , gdw-api
     , graphql-engine
     , graphql-parser
     , hedgehog
@@ -862,6 +848,7 @@ test-suite graphql-engine-tests
     , mtl
     , natural-transformation >=0.4 && <0.5
     , network-uri
+    , openapi3
     , optparse-applicative
     , pg-client
     , process
@@ -895,6 +882,15 @@ test-suite graphql-engine-tests
     Data.TimeSpec
     Data.TrieSpec
     Database.MSSQL.TransactionSpec
+    Hasura.Backends.DataWrapper.API.V0Spec
+    Hasura.Backends.DataWrapper.API.V0.ColumnSpec
+    Hasura.Backends.DataWrapper.API.V0.ExpressionSpec
+    Hasura.Backends.DataWrapper.API.V0.OrderBySpec
+    Hasura.Backends.DataWrapper.API.V0.QuerySpec
+    Hasura.Backends.DataWrapper.API.V0.Scalar.TypeSpec
+    Hasura.Backends.DataWrapper.API.V0.Scalar.ValueSpec
+    Hasura.Backends.DataWrapper.API.V0.SchemaSpec
+    Hasura.Backends.DataWrapper.API.V0.TableSpec
     Hasura.Backends.MSSQL.ErrorSpec
     Hasura.Backends.MySQL.DataLoader.ExecuteTests
     Hasura.EventingSpec
@@ -922,6 +918,8 @@ test-suite graphql-engine-tests
     Hasura.SessionSpec
     Hasura.SQL.WKTSpec
     Network.HTTP.Client.TransformableSpec
+    Test.Aeson.Utils
+    Test.Autodocodec.Extended
     Test.QuickCheck.Extended
 
 test-suite tests-hspec
@@ -1060,3 +1058,4 @@ test-suite tests-hspec
     Test.ServiceLivenessSpec
     Test.ViewsSpec
     Test.WhereSpec
+    Test.RunSQLSpec

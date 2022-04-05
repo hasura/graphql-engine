@@ -1,8 +1,13 @@
 import { HasuraMetadataV3 } from '@/metadata/types';
+import { IntrospectionQuery } from 'graphql';
 
 export interface MetadataResponse {
   resource_version: number;
   metadata: HasuraMetadataV3;
+}
+
+export interface SchemaResponse {
+  data: IntrospectionQuery;
 }
 
 export const allowedMetadataTypesArr = [
@@ -25,6 +30,7 @@ export const allowedMetadataTypesArr = [
   'mssql_create_delete_permission',
   'mssql_drop_delete_permission',
   'mssql_set_permission_comment',
+  'create_remote_schema_remote_relationship',
   'bulk',
 ] as const;
 

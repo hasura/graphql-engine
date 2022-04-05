@@ -8,6 +8,7 @@ module Hasura.Backends.Postgres.SQL.Error
     _PGDataException,
     _PGIntegrityConstraintViolation,
     _PGSyntaxErrorOrAccessRuleViolation,
+    _PGTransactionRollback,
     pgErrorType,
     PGErrorCode (..),
     _PGErrorGeneric,
@@ -15,6 +16,7 @@ module Hasura.Backends.Postgres.SQL.Error
     PGDataException (..),
     PGIntegrityConstraintViolation (..),
     PGSyntaxErrorOrAccessRuleViolation (..),
+    PGTransactionRollback (..),
   )
 where
 
@@ -30,6 +32,7 @@ data PGErrorType
   = PGDataException !(Maybe (PGErrorCode PGDataException))
   | PGIntegrityConstraintViolation !(Maybe (PGErrorCode PGIntegrityConstraintViolation))
   | PGSyntaxErrorOrAccessRuleViolation !(Maybe (PGErrorCode PGSyntaxErrorOrAccessRuleViolation))
+  | PGTransactionRollback !(Maybe (PGErrorCode PGTransactionRollback))
   deriving (Show, Eq)
 
 data PGErrorCode a
@@ -60,11 +63,16 @@ data PGSyntaxErrorOrAccessRuleViolation
   | PGInvalidColumnReference
   deriving (Show, Eq)
 
+data PGTransactionRollback
+  = PGSerializationFailure
+  deriving (Show, Eq)
+
 $(makePrisms ''PGErrorType)
 $(makePrisms ''PGErrorCode)
 
 pgErrorType :: Q.PGStmtErrDetail -> Maybe PGErrorType
-pgErrorType errorDetails = parseTypes =<< Q.edStatusCode errorDetails
+pgErrorType errorDetails = do
+  parseTypes =<< Q.edStatusCode errorDetails
   where
     parseTypes fullCodeText =
       choice
@@ -85,6 +93,11 @@ pgErrorType errorDetails = parseTypes =<< Q.edStatusCode errorDetails
               code "505" PGUniqueViolation,
               code "514" PGCheckViolation,
               code "P01" PGExclusionViolation
+            ],
+          withClass
+            "40"
+            PGTransactionRollback
+            [ code "001" PGSerializationFailure
             ],
           withClass
             "42"

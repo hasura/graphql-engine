@@ -16,6 +16,7 @@ module Harness.GraphqlEngine
     postGraphql,
     postGraphqlWithHeaders,
     clearMetadata,
+    postV2Query,
 
     -- ** Misc.
     setSource,
@@ -85,8 +86,18 @@ post_ state path = void . withFrozenCallStack . postWithHeaders_ state path memp
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 postWithHeaders ::
   HasCallStack => State -> String -> Http.RequestHeaders -> Value -> IO Value
-postWithHeaders (getServer -> Server {urlPrefix, port}) path headers =
-  withFrozenCallStack . Http.postValue (urlPrefix ++ ":" ++ show port ++ path) headers
+postWithHeaders = withFrozenCallStack . postWithHeadersStatus 200
+
+-- | Post some JSON to graphql-engine, getting back more JSON.
+--
+-- Expecting non-200 status code; use @'postWithHeaders' if you want to test for
+-- success reponse.
+--
+-- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
+postWithHeadersStatus ::
+  HasCallStack => Int -> State -> String -> Http.RequestHeaders -> Value -> IO Value
+postWithHeadersStatus statusCode (getServer -> Server {urlPrefix, port}) path headers =
+  withFrozenCallStack . Http.postValueWithStatus statusCode (urlPrefix ++ ":" ++ show port ++ path) headers
 
 -- | Post some JSON to graphql-engine, getting back more JSON.
 --
@@ -142,6 +153,15 @@ postMetadata_ state = withFrozenCallStack $ post_ state "/v1/metadata"
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 clearMetadata :: HasCallStack => State -> IO ()
 clearMetadata s = withFrozenCallStack $ postMetadata_ s [yaml|{type: clear_metadata, args: {}}|]
+
+-- | Same as 'postWithHeadersStatus', but defaults to the @"/v2/query"@ endpoint
+--
+-- @headers@ are mostly irrelevant for the admin endpoint @v2/query@.
+--
+-- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
+postV2Query :: HasCallStack => Int -> State -> Value -> IO Value
+postV2Query statusCode state =
+  withFrozenCallStack $ postWithHeadersStatus statusCode state "/v2/query" mempty
 
 -------------------------------------------------------------------------------
 
