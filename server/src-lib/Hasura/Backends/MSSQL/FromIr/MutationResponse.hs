@@ -81,23 +81,24 @@ mkMutationOutputSelect stringifyNum withAlias = \case
 -- the returned value and if check constraint on any row is not met, the summed
 -- value will not equal to "0" (always > 1).
 --
---   <check_constraint_select> :=
---     SELECT
---       SUM(CASE WHEN <check_boolean_expression>
---           THEN 0
---           ELSE 1
---           END)
---     FROM [with_alias]
---
---   <mutation_output_select> :=
---     SELECT
---       (SELECT COUNT(*) FROM [with_alias]) AS [affected_rows],
---       (select_from_returning) AS [returning]
---     FOR JSON PATH, INCLUDE_NULL_VALUES, WITHOUT_ARRAY_WRAPPER
---
---   SELECT
---     (<mutation_output_select>) AS [mutation_response],
---     (<check_constraint_select>) AS [check_constraint_select]
+--  >   <check_constraint_select> :=
+--  >     SELECT SUM([check_sub_query].[check_evaluation])
+--  >     FROM
+--  >       ( SELECT
+--  >           (CASE WHEN <check_boolean_expression> THEN 0 ELSE 1 END) AS [check_evaluation]
+--  >         FROM
+--  >           [with_alias]
+--  >       ) AS [check_sub_query]
+--  >
+--  >   <mutation_output_select> :=
+--  >     SELECT
+--  >       (SELECT COUNT(*) FROM [with_alias]) AS [affected_rows],
+--  >       (select_from_returning) AS [returning]
+--  >     FOR JSON PATH, INCLUDE_NULL_VALUES, WITHOUT_ARRAY_WRAPPER
+--  >
+--  >   SELECT
+--  >     (<mutation_output_select>) AS [mutation_response],
+--  >     (<check_constraint_select>) AS [check_constraint_select]
 selectMutationOutputAndCheckCondition :: Text -> Select -> Expression -> Select
 selectMutationOutputAndCheckCondition alias mutationOutputSelect checkBoolExp =
   let mutationOutputProjection =
@@ -109,11 +110,26 @@ selectMutationOutputAndCheckCondition alias mutationOutputSelect checkBoolExp =
    in emptySelect {selectProjections = [mutationOutputProjection, checkConstraintProjection]}
   where
     checkConstraintSelect =
-      let zeroValue = ValueExpression $ ODBC.IntValue 0
-          oneValue = ValueExpression $ ODBC.IntValue 1
-          caseExpression = ConditionalExpression checkBoolExp zeroValue oneValue
-          sumAggregate = OpAggregate "SUM" [caseExpression]
+      let subQueryAlias = "check_sub_query"
+          checkEvaluationFieldName = "check_evaluation"
+          sumAggregate =
+            OpAggregate
+              "SUM"
+              [ ColumnExpression $
+                  FieldName
+                    { fieldNameEntity = subQueryAlias,
+                      fieldName = checkEvaluationFieldName
+                    }
+              ]
+          checkSubQuery =
+            let zeroValue = ValueExpression $ ODBC.IntValue 0
+                oneValue = ValueExpression $ ODBC.IntValue 1
+                caseExpression = ConditionalExpression checkBoolExp zeroValue oneValue
+             in emptySelect
+                  { selectProjections = [ExpressionProjection (Aliased caseExpression checkEvaluationFieldName)],
+                    selectFrom = Just $ TSQL.FromIdentifier alias
+                  }
        in emptySelect
             { selectProjections = [AggregateProjection (Aliased sumAggregate "check")],
-              selectFrom = Just $ TSQL.FromIdentifier alias
+              selectFrom = Just $ TSQL.FromSelect (Aliased checkSubQuery subQueryAlias)
             }

@@ -4,6 +4,7 @@
 
 ### Bug fixes and improvements
 
+- server: fix MSSQL insert mutation when relationships are used in check permissions (fix #8225)
 - server: refactor GQL query static analysis and improve OpenAPI warning messages
 - console: add support for setting aggregation query permissions for ms sql server
 - console: add RS-to-DB (only postgres & citus) relationships feature to remote schemas tab

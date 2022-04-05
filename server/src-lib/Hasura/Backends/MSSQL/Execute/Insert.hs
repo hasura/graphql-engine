@@ -123,8 +123,13 @@ executeInsert userInfo stringifyNum sourceConfig annInsert = do
 -- c. Evaluate the check constraint using @CASE@ expression. We use @SUM@ aggregation to check if any inserted row has failed the check constraint.
 --
 --   > <check_constraint_select> :=
---   >   SELECT SUM(CASE WHEN <check_boolean_expression> THEN 0 ELSE 1 END)
---   >   FROM [with_alias]
+--   >   SELECT SUM([check_sub_query].[check_evaluation])
+--   >   FROM
+--   >     ( SELECT
+--   >         (CASE WHEN <check_boolean_expression> THEN 0 ELSE 1 END) AS [check_evaluation]
+--   >       FROM
+--   >         [with_alias]
+--   >     ) AS [check_sub_query]
 --
 -- d. The final select statement look like
 --
