@@ -1,0 +1,13 @@
+description: Regression test for hasura/graphql-engine#7543 and hasura/graphql-engine#8200
+url: /v1/graphql
+status: 200
+response:
+  data:
+    jsonTest:
+      "foo\\": bar
+      "\"foo\"": bar
+query:
+  query: |
+    query {
+      jsonTest
+    }
