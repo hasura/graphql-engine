@@ -27573,7 +27573,7 @@ module Hasura.GraphQL.Execute.Common
 --   unnecessary. But getting this to either return a plan or parse was
 --   tricky and complicated.
 class Monad m => MonadGQLExecutionCheck m
-checkGQLExecution :: MonadGQLExecutionCheck m => UserInfo -> ([Header], IpAddress) -> Bool -> SchemaCache -> GQLReqUnparsed -> m (Either QErr GQLReqParsed)
+checkGQLExecution :: MonadGQLExecutionCheck m => UserInfo -> ([Header], IpAddress) -> Bool -> SchemaCache -> GQLReqUnparsed -> RequestId -> m (Either QErr GQLReqParsed)
 executeIntrospection :: MonadGQLExecutionCheck m => UserInfo -> Value -> SetGraphqlIntrospectionOptions -> m (Either QErr ExecutionStep)
 instance Hasura.GraphQL.Execute.Common.MonadGQLExecutionCheck m => Hasura.GraphQL.Execute.Common.MonadGQLExecutionCheck (Control.Monad.Trans.Except.ExceptT e m)
 instance Hasura.GraphQL.Execute.Common.MonadGQLExecutionCheck m => Hasura.GraphQL.Execute.Common.MonadGQLExecutionCheck (Control.Monad.Trans.Reader.ReaderT r m)
