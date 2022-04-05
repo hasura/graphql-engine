@@ -277,16 +277,13 @@ export const passWithUpdateRemoteSchema = () => {
     )}/modify`
   );
   cy.wait(3000);
-  cy.get(getElementFromAlias('remote-schema-edit-modify-btn'))
-    .should('exist')
-    .click();
   cy.get(getElementFromAlias('remote-schema-schema-name')).should(
     'have.attr',
     'disabled'
   );
   cy.get(getElementFromAlias('remote-schema-comment'))
     .clear()
-    .type("This is a new remote schema comment");
+    .type('This is a new remote schema comment');
 
   cy.get(getElementFromAlias('remote-schema-edit-save-btn')).click();
   cy.wait(5000);
@@ -298,6 +295,5 @@ export const passWithUpdateRemoteSchema = () => {
     'value',
     getRemoteSchemaName(3, testName)
   );
-  cy.get(getElementFromAlias('remote-schema-edit-modify-btn')).should('exist');
   cy.wait(7000);
 };

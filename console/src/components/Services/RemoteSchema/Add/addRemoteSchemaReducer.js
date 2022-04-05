@@ -416,7 +416,7 @@ const addRemoteSchemaReducer = (state = addState, action) => {
         customization: action.data.definition?.customization,
         editState: {
           ...state,
-          isModify: false,
+          isModify: true,
           originalName: action.data.name,
           originalHeaders: action.data.definition.headers || [],
           originalUrl: action.data.definition.url || null,
