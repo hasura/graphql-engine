@@ -11,14 +11,14 @@
     "generate": "nuxt generate"
   },
   "dependencies": {
-    "@nuxtjs/apollo": "^4.0.0-rc2.3",
-    "apollo-cache-inmemory": "^1.6.5",
-    "core-js": "^2.6.6",
-    "cross-env": "^6.0.3",
-    "graphql-tag": "^2.10.1",
-    "nuxt": "^2.11.0"
+    "@nuxtjs/apollo": "^4.0.1-rc.5",
+    "apollo-cache-inmemory": "^1.6.6",
+    "core-js": "^3.21.1",
+    "cross-env": "^7.0.3",
+    "graphql-tag": "^2.12.6",
+    "nuxt": "^2.15.8"
   },
   "devDependencies": {
-    "nodemon": "^2.0.2"
+    "nodemon": "^2.0.15"
   }
 }
