@@ -52,11 +52,10 @@ Hasura GraphQL engine uses the [GraphQL over WebSocket Protocol](https://github.
 by the [apollographql/subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws)
 library and the [GraphQL over WebSocket Protocol](https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md)
 by the [graphql-ws](https://github.com/enisdenjo/graphql-ws) library for
-sending and receiving events. The support for `graphql-ws` is currently
-considered as `BETA`. The GraphQL engine uses the
-`Sec-WebSocket-Protocol` header to determine the server Implementation
+sending and receiving events. The GraphQL engine uses the
+`Sec-WebSocket-Protocol` header to determine the communication protocol
 that'll be used. By default, the GraphQL engine will use the
-`apollographql/subscriptions-transport-ws` implementation.
+`apollographql/subscriptions-transport-ws` protocol.
 
 :::info Setting headers for subscriptions with Apollo client
 
