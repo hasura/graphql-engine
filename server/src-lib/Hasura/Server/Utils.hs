@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskellQuotes #-}
 
 module Hasura.Server.Utils
   ( APIVersion (..),
@@ -16,7 +16,6 @@ module Hasura.Server.Utils
     fmapL,
     generateFingerprint,
     getRequestHeader,
-    getValFromEnvOrScript,
     gzipHeader,
     httpExceptToJSON,
     isReqUserId,
@@ -51,12 +50,10 @@ import Data.ByteString.Base16 qualified as Base16
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
 import Data.Char
-import Data.FileEmbed (makeRelativeToProject)
 import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Text.Extended
-import Data.Text.IO qualified as TI
 import Data.Time
 import Data.UUID qualified as UUID
 import Data.UUID.V4 qualified as UUID
@@ -65,13 +62,9 @@ import Database.PG.Query qualified as Q
 import Hasura.Base.Instances ()
 import Hasura.Prelude
 import Language.Haskell.TH.Syntax (Q, TExp)
-import Language.Haskell.TH.Syntax qualified as TH
 import Network.HTTP.Client qualified as HC
 import Network.HTTP.Types qualified as HTTP
 import Network.Wreq qualified as Wreq
-import System.Environment
-import System.Exit
-import System.Process
 import Text.Regex.TDFA qualified as TDFA
 import Text.Regex.TDFA.ReadRegex qualified as TDFA
 import Text.Regex.TDFA.TDFA qualified as TDFA
@@ -127,13 +120,12 @@ parseStringAsBool t
         ++ show falseVals
         ++ ". All values are case insensitive"
 
--- Get an env var during compile time
-getValFromEnvOrScript :: String -> FilePath -> Q (TExp String)
-getValFromEnvOrScript var file = do
-  maybeVal <- TH.runIO $ lookupEnv var
-  case maybeVal of
-    Just val -> [||val||]
-    Nothing -> runScript file
+{- NOTE: Something like this is not safe in the presence of caching. The only
+    way for metaprogramming to depend on some external data and recompile
+    properly is via addDependentFile and to include that file in the
+    extra-source-files in the cabal file (see: https://github.com/haskell/cabal/issues/4746).
+    Leaving this here commented in order to document that fact and also in case
+    there's a way forward in the future.
 
 -- Run a shell script during compile time
 runScript :: FilePath -> Q (TExp String)
@@ -151,6 +143,7 @@ runScript file = do
         ++ " and with error : "
         ++ stdErr
   [||stdOut||]
+-}
 
 -- | Quotes a regex using Template Haskell so syntax errors can be reported at compile-time.
 quoteRegex :: TDFA.CompOption -> TDFA.ExecOption -> String -> Q (TExp TDFA.Regex)

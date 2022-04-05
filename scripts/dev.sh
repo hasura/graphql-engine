@@ -148,6 +148,12 @@ MODE="$1"
 PROJECT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd )"   # ... https://stackoverflow.com/a/246128/176841
 cd "$PROJECT_ROOT"
 
+# In CI we use the get version script to actually populate the version number
+# that will be compiled into the server. For local development we use this
+# magic number, which means we won't recompile unnecessarily. This number also
+# gets explicitly ignored in the version test in integration tests. 
+echo '12345' > "$PROJECT_ROOT/server/CURRENT_VERSION"
+
 # Use pyenv if available to set an appropriate python version that will work with pytests etc.
 if command -v pyenv >/dev/null; then
   # For now I guess use the greatest python3 >= 3.5
