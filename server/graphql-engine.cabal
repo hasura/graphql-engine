@@ -834,6 +834,7 @@ test-suite graphql-engine-tests
   type: exitcode-stdio-1.0
   build-depends:
       aeson
+    , async
     , base
     , bytestring
     , case-insensitive
@@ -898,6 +899,7 @@ test-suite graphql-engine-tests
     Data.TimeSpec
     Data.TrieSpec
     Database.MSSQL.TransactionSpec
+    Hasura.AppSpec
     Hasura.Backends.DataWrapper.API.V0Spec
     Hasura.Backends.DataWrapper.API.V0.ColumnSpec
     Hasura.Backends.DataWrapper.API.V0.ExpressionSpec
