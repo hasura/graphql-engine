@@ -30,6 +30,7 @@ module Hasura.App
     runHGEServer,
     setCatalogStateTx,
     shutdownGracefully,
+    waitForShutdown,
 
     -- * Exported for testing
     mkHGEServer,
@@ -504,7 +505,7 @@ newShutdownLatch = fmap ShutdownLatch C.newEmptyMVar
 
 -- | Block the current thread, waiting on the latch.
 waitForShutdown :: ShutdownLatch -> IO ()
-waitForShutdown = C.takeMVar . unShutdownLatch
+waitForShutdown = C.readMVar . unShutdownLatch
 
 -- | Initiate a graceful shutdown of the server associated with the provided
 -- latch.
