@@ -893,7 +893,7 @@ test-suite graphql-engine-tests
     Data.NonNegativeIntSpec
     Data.Parser.CacheControlSpec
     Data.Parser.JSONPathSpec
-    Data.Parser.URLTemplate
+    Data.Parser.URLTemplateSpec
     Data.Text.RawString
     Data.TimeSpec
     Data.TrieSpec

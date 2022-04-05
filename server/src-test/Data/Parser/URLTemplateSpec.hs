@@ -1,4 +1,4 @@
-module Data.Parser.URLTemplate (spec) where
+module Data.Parser.URLTemplateSpec (spec) where
 
 import Data.URL.Template
 import Hasura.Prelude

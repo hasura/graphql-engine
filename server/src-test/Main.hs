@@ -10,9 +10,10 @@ import Data.ByteString.Lazy.Char8 qualified as BL
 import Data.ByteString.Lazy.UTF8 qualified as LBS
 import Data.Environment qualified as Env
 import Data.HashMap.Strict.ExtendedSpec qualified as HashMapExtendedSpec
-import Data.NonNegativeIntSpec qualified as NonNegetiveIntSpec
+import Data.NonNegativeIntSpec qualified as NonNegativeIntSpec
 import Data.Parser.CacheControlSpec qualified as CacheControlParser
 import Data.Parser.JSONPathSpec qualified as JsonPath
+import Data.Parser.URLTemplateSpec qualified as URLTemplate
 import Data.Time.Clock (getCurrentTime)
 import Data.TimeSpec qualified as TimeSpec
 import Data.TrieSpec qualified as TrieSpec
@@ -54,6 +55,7 @@ import Hasura.Server.Migrate
 import Hasura.Server.MigrateSpec qualified as MigrateSpec
 import Hasura.Server.TelemetrySpec qualified as TelemetrySpec
 import Hasura.Server.Types
+import Hasura.SessionSpec qualified as SessionSpec
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Client.TLS qualified as HTTP
 import Network.HTTP.Client.TransformableSpec qualified as TransformableSpec
@@ -92,9 +94,10 @@ unitSpecs :: Spec
 unitSpecs = do
   describe "Control.Concurrent.ExtendedSpec" ConcurrentExtended.spec
   describe "Data.HashMap.Strict.ExtendedSpec" HashMapExtendedSpec.spec
-  describe "Data.NonNegativeInt" NonNegetiveIntSpec.spec
+  describe "Data.NonNegativeInt" NonNegativeIntSpec.spec
   describe "Data.Parser.CacheControl" CacheControlParser.spec
   describe "Data.Parser.JSONPath" JsonPath.spec
+  describe "Data.Parser.URLTemplate" URLTemplate.spec
   describe "Data.Time" TimeSpec.spec
   describe "Data.Trie" TrieSpec.spec
   describe "Hasura.Backends.DataWrapper.API.V0" DataWrapper.API.V0Spec.spec
@@ -114,6 +117,7 @@ unitSpecs = do
   describe "Hasura.RQL.Types.Table" TableSpec.spec
   describe "Hasura.RQL.WebhookTransformsSpec" WebhookTransformsSpec.spec
   describe "Hasura.SQL.WKT" WKTSpec.spec
+  describe "Hasura.Session" SessionSpec.spec
   describe "Hasura.Server.Auth" AuthSpec.spec
   describe "Hasura.Server.Auth.JWT" JWTSpec.spec
   describe "Hasura.Server.Telemetry" TelemetrySpec.spec
