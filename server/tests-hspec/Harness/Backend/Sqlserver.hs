@@ -150,7 +150,7 @@ mkReference Schema.Reference {referenceLocalColumn, referenceTargetTable, refere
       wrapIdentifier referenceLocalColumn,
       ")",
       "REFERENCES",
-      referenceTargetTable,
+      T.pack Constants.sqlserverDb <> "." <> referenceTargetTable,
       "(",
       wrapIdentifier referenceTargetColumn,
       ")",

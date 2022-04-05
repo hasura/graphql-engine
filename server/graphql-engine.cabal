@@ -1059,3 +1059,4 @@ test-suite tests-hspec
     Test.ViewsSpec
     Test.WhereSpec
     Test.RunSQLSpec
+    Test.InsertCheckPermissionSpec
