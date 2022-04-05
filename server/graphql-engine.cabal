@@ -10,6 +10,22 @@ maintainer:          vamshi@hasura.io
 copyright:           Hasura Inc.
 category:            Database
 build-type:          Simple
+extra-source-files:
+  -- We use TH to bake in the server’s version number at compile time. In order
+  -- for recompilation detection to work correctly (especially in the presence
+  -- of caching) we need to both communicate this data via a file (referenced in
+  -- TH with addDependentFile) /and/ add that file to this section of the cabal
+  -- file. See: https://github.com/haskell/cabal/issues/4746 
+  --
+  -- This file is intentionally .gitignore'd
+  CURRENT_VERSION
+  -- These are files referenced by functions from 'file-embed' which uses
+  -- addDependentFile internally and has the same issue as above:
+  src-rsr/mysql_table_metadata.sql
+  src-rsr/mssql_table_metadata.sql
+  src-rsr/catalog_versions.txt
+  src-rsr/catalog_version.txt
+
 
 source-repository head
   type:     git
