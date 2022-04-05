@@ -75,7 +75,7 @@ encJFromChar = EncJSON . BB.charUtf8
 {-# INLINE encJFromChar #-}
 
 encJFromText :: Text -> EncJSON
-encJFromText = encJFromBS . TE.encodeUtf8
+encJFromText = encJFromBuilder . TE.encodeUtf8Builder
 {-# INLINE encJFromText #-}
 
 encJFromList :: [EncJSON] -> EncJSON
