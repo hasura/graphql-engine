@@ -1044,7 +1044,7 @@ instance (Monad m) => ConsoleRenderer (PGMetadataStorageAppT m) where
     return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir
 
 instance (Monad m) => MonadGQLExecutionCheck (PGMetadataStorageAppT m) where
-  checkGQLExecution userInfo _ enableAL sc query = runExceptT $ do
+  checkGQLExecution userInfo _ enableAL sc query _ = runExceptT $ do
     req <- toParsed query
     checkQueryInAllowlist enableAL AllowlistModeGlobalOnly userInfo req sc
     return req

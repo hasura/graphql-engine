@@ -433,7 +433,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
         ExceptT (Either GQExecError QErr) (ExceptT () m) a
       runLimits = withErr Right $ runResourceLimits $ operationLimit userInfo (scApiLimits sc)
 
-  reqParsedE <- lift $ E.checkGQLExecution userInfo (reqHdrs, ipAddress) enableAL sc q
+  reqParsedE <- lift $ E.checkGQLExecution userInfo (reqHdrs, ipAddress) enableAL sc q requestId
   reqParsed <- onLeft reqParsedE (withComplete . preExecErr requestId)
   execPlanE <-
     runExceptT $

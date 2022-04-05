@@ -10,6 +10,7 @@ import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.Types
+import Hasura.Server.Types (RequestId)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Types qualified as HTTP
@@ -36,6 +37,7 @@ class Monad m => MonadGQLExecutionCheck m where
     SchemaCache ->
     -- | the unparsed GraphQL query string (and related values)
     GQLReqUnparsed ->
+    RequestId ->
     m (Either QErr GQLReqParsed)
 
   executeIntrospection ::
@@ -45,29 +47,29 @@ class Monad m => MonadGQLExecutionCheck m where
     m (Either QErr ExecutionStep)
 
 instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (ExceptT e m) where
-  checkGQLExecution ui det enableAL sc req =
-    lift $ checkGQLExecution ui det enableAL sc req
+  checkGQLExecution ui det enableAL sc req requestId =
+    lift $ checkGQLExecution ui det enableAL sc req requestId
 
   executeIntrospection userInfo introspectionQuery rolesDisabled =
     lift $ executeIntrospection userInfo introspectionQuery rolesDisabled
 
 instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (ReaderT r m) where
-  checkGQLExecution ui det enableAL sc req =
-    lift $ checkGQLExecution ui det enableAL sc req
+  checkGQLExecution ui det enableAL sc req requestId =
+    lift $ checkGQLExecution ui det enableAL sc req requestId
 
   executeIntrospection userInfo introspectionQuery rolesDisabled =
     lift $ executeIntrospection userInfo introspectionQuery rolesDisabled
 
 instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (Tracing.TraceT m) where
-  checkGQLExecution ui det enableAL sc req =
-    lift $ checkGQLExecution ui det enableAL sc req
+  checkGQLExecution ui det enableAL sc req requestId =
+    lift $ checkGQLExecution ui det enableAL sc req requestId
 
   executeIntrospection userInfo introspectionQuery rolesDisabled =
     lift $ executeIntrospection userInfo introspectionQuery rolesDisabled
 
 instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (MetadataStorageT m) where
-  checkGQLExecution ui det enableAL sc req =
-    lift $ checkGQLExecution ui det enableAL sc req
+  checkGQLExecution ui det enableAL sc req requestId =
+    lift $ checkGQLExecution ui det enableAL sc req requestId
 
   executeIntrospection userInfo introspectionQuery rolesDisabled =
     lift $ executeIntrospection userInfo introspectionQuery rolesDisabled
