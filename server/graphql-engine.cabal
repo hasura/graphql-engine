@@ -911,6 +911,12 @@ test-suite graphql-engine-tests
     Hasura.Backends.DataWrapper.API.V0.TableSpec
     Hasura.Backends.MSSQL.ErrorSpec
     Hasura.Backends.MySQL.DataLoader.ExecuteTests
+    Hasura.Backends.Postgres.RQLGenerator
+    Hasura.Backends.Postgres.RQLGenerator.GenAssociatedTypes
+    Hasura.Backends.Postgres.RQLGenerator.GenAnnSelectG
+    Hasura.Backends.Postgres.RQLGenerator.GenSelectArgsG
+    Hasura.Backends.Postgres.RQLGenerator.GenSelectFromG
+    Hasura.Backends.Postgres.RQLGenerator.GenTablePermG
     Hasura.EventingSpec
     Hasura.Generator.Common
     Hasura.GraphQL.NamespaceSpec
@@ -920,7 +926,6 @@ test-suite graphql-engine-tests
     Hasura.IncrementalSpec
     Hasura.QuickCheck.Instances
     Hasura.RQL.IR.Generator
-    Hasura.RQL.IR.Postgres
     Hasura.RQL.IR.SelectSpec
     Hasura.RQL.MetadataSpec
     Hasura.RQL.PermissionSpec
