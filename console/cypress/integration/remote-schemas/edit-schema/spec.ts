@@ -17,9 +17,6 @@ type CustomizationSettingsType = {
 export const modifyCustomization = (
   customizationSettings: CustomizationSettingsType | undefined
 ) => {
-  cy.get(getElementFromAlias('remote-schema-edit-modify-btn'))
-    .should('exist')
-    .click();
   cy.get(getElementFromAlias('remote-schema-customization-editor-expand-btn'))
     .should('exist')
     .click();

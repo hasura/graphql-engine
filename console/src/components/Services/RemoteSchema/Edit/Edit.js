@@ -122,12 +122,7 @@ class Edit extends React.Component {
       throw new NotFoundError();
     }
 
-    const {
-      isFetching,
-      isRequesting,
-      editState,
-      inconsistentObjects,
-    } = this.props;
+    const { isFetching, isRequesting, inconsistentObjects } = this.props;
     const { remoteSchemaName } = this.props.params;
 
     const inconsistencyDetails = inconsistentObjects.find(
@@ -140,21 +135,17 @@ class Edit extends React.Component {
       'This remote schema is in an inconsistent state. Please fix inconsistencies and reload metadata first';
 
     const generateMigrateBtns = () => {
-      return 'isModify' in editState && !editState.isModify ? (
+      return (
         <div className={styles.commonBtn}>
           <Button
             className={styles.button_mar_right}
             color="yellow"
             size="sm"
-            onClick={e => {
-              e.preventDefault();
-              this.modifyClick();
-            }}
-            data-test={'remote-schema-edit-modify-btn'}
-            disabled={isRequesting || inconsistencyDetails}
-            title={inconsistencyDetails ? fixInconsistencyMsg : ''}
+            type="submit"
+            disabled={isRequesting}
+            data-test={'remote-schema-edit-save-btn'}
           >
-            Modify
+            {isRequesting ? 'Saving' : 'Save'}
           </Button>
           <Button
             color="red"
@@ -177,31 +168,6 @@ class Edit extends React.Component {
               * {this.state.deleteConfirmationError}
             </span>
           ) : null}
-        </div>
-      ) : (
-        <div className={styles.commonBtn}>
-          <Button
-            className={styles.button_mar_right}
-            color="yellow"
-            size="sm"
-            type="submit"
-            disabled={isRequesting}
-            data-test={'remote-schema-edit-save-btn'}
-          >
-            {isRequesting ? 'Saving' : 'Save'}
-          </Button>
-          <Button
-            color="white"
-            size="sm"
-            onClick={e => {
-              e.preventDefault();
-              this.handleCancelModify();
-            }}
-            data-test={'remote-schema-edit-cancel-btn'}
-            disabled={isRequesting}
-          >
-            Cancel
-          </Button>
         </div>
       );
     };

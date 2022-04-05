@@ -7,6 +7,7 @@
 - server: refactor GQL query static analysis and improve OpenAPI warning messages
 - console: add support for setting aggregation query permissions for ms sql server
 - console: add RS-to-DB (only postgres & citus) relationships feature to remote schemas tab
+- console: remove need for clicking the Modify btn before editing a remote schema (#1193, #8262)
 - cli: fix remote schema metadata formatting issues (#7608)
 - cli: fix query collections metadata formatting issues (#7616)
 
