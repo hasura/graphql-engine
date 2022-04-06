@@ -15,6 +15,7 @@ import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.DDL.Network
+import Hasura.RQL.DDL.Permission.Internal (permissionIsDefined)
 import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.Types
 import Hasura.RQL.Types.Endpoint
@@ -153,9 +154,8 @@ pruneDanglingDependents cache =
                     Left $
                       "no foreign key constraint named " <> constraintName <<> " is "
                         <> "defined for table " <>> tableName
-                TOPerm roleName permType -> withPermType permType \accessor -> do
-                  let permLens = permAccToLens accessor
-                  unless (has (tiRolePermInfoMap . ix roleName . permLens . _Just) tableInfo) $
+                TOPerm roleName permType -> do
+                  unless (maybe False (permissionIsDefined permType) (tableInfo ^? (tiRolePermInfoMap . ix roleName))) $
                     Left $
                       "no " <> permTypeToCode permType <> " permission defined on table "
                         <> tableName <<> " for role " <>> roleName
@@ -248,8 +248,10 @@ deleteMetadataObject = \case
           MTOComputedField name -> tiCoreInfo . tciFieldInfoMap %~ M.delete (fromComputedField name)
           MTORemoteRelationship name -> tiCoreInfo . tciFieldInfoMap %~ M.delete (fromRemoteRelationship name)
           MTOTrigger name -> tiEventTriggerInfoMap %~ M.delete name
-          MTOPerm roleName permType -> withPermType permType \accessor ->
-            tiRolePermInfoMap . ix roleName . permAccToLens accessor .~ Nothing
+          MTOPerm roleName PTSelect -> tiRolePermInfoMap . ix roleName . permSel .~ Nothing
+          MTOPerm roleName PTInsert -> tiRolePermInfoMap . ix roleName . permIns .~ Nothing
+          MTOPerm roleName PTUpdate -> tiRolePermInfoMap . ix roleName . permUpd .~ Nothing
+          MTOPerm roleName PTDelete -> tiRolePermInfoMap . ix roleName . permDel .~ Nothing
 
     removeFromQueryCollections :: CollectionName -> ListedQuery -> QueryCollections -> QueryCollections
     removeFromQueryCollections cName lq qc =

@@ -77,7 +77,7 @@ convWildcard fieldInfoMap selPermInfo wildcard =
       let relName = riName relInfo
           relTab = riRTable relInfo
       relTabInfo <- fetchRelTabInfo relTab
-      mRelSelPerm <- askPermInfo' PASelect relTabInfo
+      mRelSelPerm <- askPermInfo permSel relTabInfo
 
       forM mRelSelPerm $ \relSelPermInfo -> do
         rExtCols <- convWildcard (_tciFieldInfoMap $ _tiCoreInfo relTabInfo) relSelPermInfo wc

@@ -14,7 +14,6 @@ module Hasura.RQL.Types.Table
     ForeignKey (..),
     ForeignKeyMetadata (..),
     InsPermInfo (..),
-    PermAccessor (..),
     PrimaryKey (..),
     RolePermInfo (..),
     RolePermInfoMap,
@@ -46,8 +45,6 @@ module Hasura.RQL.Types.Table
     getRemoteFieldInfoName,
     isMutable,
     mkAdminRolePermInfo,
-    permAccToLens,
-    permAccToType,
     permDel,
     permIns,
     permSel,
@@ -77,7 +74,6 @@ module Hasura.RQL.Types.Table
     tiEventTriggerInfoMap,
     tiName,
     tiRolePermInfoMap,
-    withPermType,
     _FIColumn,
     _FIComputedField,
     _FIRelationship,
@@ -108,7 +104,6 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
-import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.SQL.AnyBackend (runBackend)
@@ -901,30 +896,6 @@ getColumnInfoM ::
   TableInfo b -> FieldName -> Maybe (ColumnInfo b)
 getColumnInfoM tableInfo fieldName =
   (^? _FIColumn) =<< getFieldInfoM tableInfo fieldName
-
-data PermAccessor (b :: BackendType) a where
-  PAInsert :: PermAccessor b (InsPermInfo b)
-  PASelect :: PermAccessor b (SelPermInfo b)
-  PAUpdate :: PermAccessor b (UpdPermInfo b)
-  PADelete :: PermAccessor b (DelPermInfo b)
-
-permAccToLens :: PermAccessor b a -> Lens' (RolePermInfo b) (Maybe a)
-permAccToLens PAInsert = permIns
-permAccToLens PASelect = permSel
-permAccToLens PAUpdate = permUpd
-permAccToLens PADelete = permDel
-
-permAccToType :: PermAccessor b a -> PermType
-permAccToType PAInsert = PTInsert
-permAccToType PASelect = PTSelect
-permAccToType PAUpdate = PTUpdate
-permAccToType PADelete = PTDelete
-
-withPermType :: PermType -> (forall a. PermAccessor backend a -> b) -> b
-withPermType PTInsert f = f PAInsert
-withPermType PTSelect f = f PASelect
-withPermType PTUpdate f = f PAUpdate
-withPermType PTDelete f = f PADelete
 
 askFieldInfo ::
   (MonadError QErr m) =>

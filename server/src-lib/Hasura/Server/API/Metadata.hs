@@ -73,10 +73,10 @@ data RQLMetadataV1
   | RMCreateSelectPermission !(AnyBackend (CreatePerm SelPerm))
   | RMCreateUpdatePermission !(AnyBackend (CreatePerm UpdPerm))
   | RMCreateDeletePermission !(AnyBackend (CreatePerm DelPerm))
-  | RMDropInsertPermission !(AnyBackend (DropPerm InsPerm))
-  | RMDropSelectPermission !(AnyBackend (DropPerm SelPerm))
-  | RMDropUpdatePermission !(AnyBackend (DropPerm UpdPerm))
-  | RMDropDeletePermission !(AnyBackend (DropPerm DelPerm))
+  | RMDropInsertPermission !(AnyBackend DropPerm)
+  | RMDropSelectPermission !(AnyBackend DropPerm)
+  | RMDropUpdatePermission !(AnyBackend DropPerm)
+  | RMDropDeletePermission !(AnyBackend DropPerm)
   | RMSetPermissionComment !(AnyBackend SetPermComment)
   | -- Tables relationships
     RMCreateObjectRelationship !(AnyBackend CreateObjRel)
@@ -421,10 +421,10 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMCreateSelectPermission q -> dispatchMetadata runCreatePerm q
   RMCreateUpdatePermission q -> dispatchMetadata runCreatePerm q
   RMCreateDeletePermission q -> dispatchMetadata runCreatePerm q
-  RMDropInsertPermission q -> dispatchMetadata runDropPerm q
-  RMDropSelectPermission q -> dispatchMetadata runDropPerm q
-  RMDropUpdatePermission q -> dispatchMetadata runDropPerm q
-  RMDropDeletePermission q -> dispatchMetadata runDropPerm q
+  RMDropInsertPermission q -> dispatchMetadata (runDropPerm PTInsert) q
+  RMDropSelectPermission q -> dispatchMetadata (runDropPerm PTSelect) q
+  RMDropUpdatePermission q -> dispatchMetadata (runDropPerm PTUpdate) q
+  RMDropDeletePermission q -> dispatchMetadata (runDropPerm PTDelete) q
   RMSetPermissionComment q -> dispatchMetadata runSetPermComment q
   RMCreateObjectRelationship q -> dispatchMetadata (runCreateRelationship ObjRel . unCreateObjRel) q
   RMCreateArrayRelationship q -> dispatchMetadata (runCreateRelationship ArrRel . unCreateArrRel) q

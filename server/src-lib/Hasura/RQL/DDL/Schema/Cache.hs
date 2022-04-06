@@ -21,6 +21,7 @@ module Hasura.RQL.DDL.Schema.Cache
 where
 
 import Control.Arrow.Extended
+import Control.Arrow.Interpret
 import Control.Concurrent.Extended (forConcurrentlyEIO)
 import Control.Lens hiding ((.=))
 import Control.Monad.Trans.Control (MonadBaseControl)
@@ -752,7 +753,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                           traverseA
                             ( \(roleName, checkPermission) -> do
                                 let inconsistentRoleEntity = InconsistentRemoteSchemaPermission $ _rscName remoteSchemaCtx
-                                resolvedCheckPermission <- resolveCheckPermission -< (checkPermission, roleName, inconsistentRoleEntity)
+                                resolvedCheckPermission <- interpretWriter -< resolveCheckPermission checkPermission roleName inconsistentRoleEntity
                                 returnA -< (roleName, resolvedCheckPermission)
                             )
                           |) (M.toList allRolesUnresolvedPermissionsMap)

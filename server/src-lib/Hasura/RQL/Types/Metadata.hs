@@ -981,11 +981,11 @@ metadataToOrdJSON
             delPermDefToOrdJSON :: Backend b => DelPermDef b -> AO.Value
             delPermDefToOrdJSON = permDefToOrdJSON AO.toOrdered
 
-            permDefToOrdJSON :: (a -> AO.Value) -> PermDef a -> AO.Value
+            permDefToOrdJSON :: (a b -> AO.Value) -> PermDef b a -> AO.Value
             permDefToOrdJSON permToOrdJSON (PermDef role permission comment) =
               AO.object $
                 [ ("role", AO.toOrdered role),
-                  ("permission", permToOrdJSON permission)
+                  ("permission", permToOrdJSON (unPermDefPermission permission))
                 ]
                   <> catMaybes [maybeCommentToMaybeOrdPair comment]
 

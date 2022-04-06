@@ -153,7 +153,7 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName _ val oC mR
 
   -- Check if the role has insert permissions
   insPerm <- askInsPermInfo tableInfo
-  updPerm <- askPermInfo' PAUpdate tableInfo
+  updPerm <- askPermInfo permUpd tableInfo
 
   -- Check if all dependent headers are present
   validateHeaders $ ipiRequiredHeaders insPerm

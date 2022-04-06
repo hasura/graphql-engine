@@ -2,7 +2,7 @@ module Hasura.RQL.DML.Internal
   ( SessionVariableBuilder,
     askDelPermInfo,
     askInsPermInfo,
-    askPermInfo',
+    askPermInfo,
     askSelPermInfo,
     askUpdPermInfo,
     binRHSBuilder,
@@ -69,19 +69,19 @@ newtype DMLP1T m a = DMLP1T {unDMLP1T :: StateT (DS.Seq Q.PrepArg) m a}
 runDMLP1T :: DMLP1T m a -> m (a, DS.Seq Q.PrepArg)
 runDMLP1T = flip runStateT DS.empty . unDMLP1T
 
-askPermInfo' ::
+askPermInfo ::
   UserInfoM m =>
-  PermAccessor b c ->
+  Lens' (RolePermInfo b) (Maybe c) ->
   TableInfo b ->
   m (Maybe c)
-askPermInfo' pa tableInfo = do
+askPermInfo pa tableInfo = do
   role <- askCurRole
   return $ getPermInfoMaybe role pa tableInfo
 
 getPermInfoMaybe ::
-  RoleName -> PermAccessor b c -> TableInfo b -> Maybe c
+  RoleName -> Lens' (RolePermInfo b) (Maybe c) -> TableInfo b -> Maybe c
 getPermInfoMaybe role pa tableInfo =
-  getRolePermInfo role tableInfo >>= (^. permAccToLens pa)
+  getRolePermInfo role tableInfo >>= (^. pa)
 
 getRolePermInfo ::
   RoleName -> TableInfo b -> Maybe (RolePermInfo b)
@@ -91,23 +91,22 @@ getRolePermInfo role tableInfo
   | otherwise =
     M.lookup role (_tiRolePermInfoMap tableInfo)
 
-askPermInfo ::
+assertAskPermInfo ::
   (UserInfoM m, QErrM m, Backend b) =>
-  PermAccessor b c ->
+  PermType ->
+  Lens' (RolePermInfo b) (Maybe c) ->
   TableInfo b ->
   m c
-askPermInfo pa tableInfo = do
+assertAskPermInfo pt pa tableInfo = do
   roleName <- askCurRole
-  mPermInfo <- askPermInfo' pa tableInfo
+  mPermInfo <- askPermInfo pa tableInfo
   onNothing mPermInfo $
     throw400 PermissionDenied $
       mconcat
-        [ pt <> " on " <>> tableInfoName tableInfo,
+        [ permTypeToCode pt <> " on " <>> tableInfoName tableInfo,
           " for role " <>> roleName,
           " is not allowed. "
         ]
-  where
-    pt = permTypeToCode $ permAccToType pa
 
 isTabUpdatable :: RoleName -> TableInfo ('Postgres pgKind) -> Bool
 isTabUpdatable role ti
@@ -120,25 +119,25 @@ askInsPermInfo ::
   (UserInfoM m, QErrM m, Backend b) =>
   TableInfo b ->
   m (InsPermInfo b)
-askInsPermInfo = askPermInfo PAInsert
+askInsPermInfo = assertAskPermInfo PTInsert permIns
 
 askSelPermInfo ::
   (UserInfoM m, QErrM m, Backend b) =>
   TableInfo b ->
   m (SelPermInfo b)
-askSelPermInfo = askPermInfo PASelect
+askSelPermInfo = assertAskPermInfo PTSelect permSel
 
 askUpdPermInfo ::
   (UserInfoM m, QErrM m, Backend b) =>
   TableInfo b ->
   m (UpdPermInfo b)
-askUpdPermInfo = askPermInfo PAUpdate
+askUpdPermInfo = assertAskPermInfo PTUpdate permUpd
 
 askDelPermInfo ::
   (UserInfoM m, QErrM m, Backend b) =>
   TableInfo b ->
   m (DelPermInfo b)
-askDelPermInfo = askPermInfo PADelete
+askDelPermInfo = assertAskPermInfo PTDelete permDel
 
 verifyAsrns :: (MonadError QErr m) => [a -> m ()] -> [a] -> m ()
 verifyAsrns preds xs = indexedForM_ xs $ \a -> mapM_ ($ a) preds

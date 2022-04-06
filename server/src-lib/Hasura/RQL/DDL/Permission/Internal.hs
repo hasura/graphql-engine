@@ -1,6 +1,9 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Hasura.RQL.DDL.Permission.Internal
   ( CreatePerm (..),
     DropPerm (..),
+    permissionIsDefined,
     assertPermDefined,
     interpColSpec,
     getDepHeadersFromVal,
@@ -13,7 +16,6 @@ import Control.Lens hiding ((.=))
 import Data.Aeson.Types
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as Set
-import Data.Kind (Type)
 import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Backends.Postgres.Translate.BoolExp
@@ -30,21 +32,25 @@ interpColSpec _ (PCCols cols) = cols
 interpColSpec allColumns PCStar = allColumns
 
 permissionIsDefined ::
-  Maybe (RolePermInfo backend) -> PermAccessor backend a -> Bool
-permissionIsDefined rpi pa =
-  isJust $ join $ rpi ^? _Just . permAccToLens pa
+  PermType -> RolePermInfo backend -> Bool
+permissionIsDefined pt rpi = isJust
+  case pt of
+    PTSelect -> rpi ^. permSel $> ()
+    PTInsert -> rpi ^. permIns $> ()
+    PTUpdate -> rpi ^. permUpd $> ()
+    PTDelete -> rpi ^. permDel $> ()
 
 assertPermDefined ::
   (Backend backend, MonadError QErr m) =>
   RoleName ->
-  PermAccessor backend a ->
+  PermType ->
   TableInfo backend ->
   m ()
-assertPermDefined role pa tableInfo =
-  unless (permissionIsDefined rpi pa) $
+assertPermDefined role pt tableInfo =
+  unless (maybe False (permissionIsDefined pt) rpi) $
     throw400 PermissionDenied $
       mconcat
-        [ "'" <> tshow (permAccToType pa) <> "'",
+        [ "'" <> tshow pt <> "'",
           " permission on " <>> tableInfoName tableInfo,
           " for role " <>> role,
           " does not exist"
@@ -52,8 +58,9 @@ assertPermDefined role pa tableInfo =
   where
     rpi = M.lookup role $ _tiRolePermInfoMap tableInfo
 
-newtype CreatePerm a b = CreatePerm (WithTable b (PermDef (a b)))
-  deriving newtype (FromJSON)
+newtype CreatePerm a b = CreatePerm (WithTable b (PermDef b a))
+
+deriving instance (Backend b, FromJSON (PermDef b a)) => FromJSON (CreatePerm a b)
 
 data CreatePermP1Res a = CreatePermP1Res
   { cprInfo :: !a,
@@ -92,13 +99,13 @@ getDependentHeaders :: BoolExp b -> HashSet Text
 getDependentHeaders (BoolExp boolExp) =
   Set.fromList $ flip foldMap boolExp $ \(ColExp _ v) -> getDepHeadersFromVal v
 
-data DropPerm (a :: BackendType -> Type) b = DropPerm
+data DropPerm b = DropPerm
   { dipSource :: !SourceName,
     dipTable :: !(TableName b),
     dipRole :: !RoleName
   }
 
-instance (Backend b) => FromJSON (DropPerm a b) where
+instance (Backend b) => FromJSON (DropPerm b) where
   parseJSON = withObject "DropPerm" $ \o ->
     DropPerm
       <$> o .:? "source" .!= defaultSource

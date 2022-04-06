@@ -16,12 +16,14 @@ module Hasura.RQL.DDL.Permission
     DelPerm (..),
     DelPermDef,
     buildDelPermInfo,
-    IsPerm (..),
     DropPerm,
     runDropPerm,
     dropPermissionInMetadata,
     SetPermComment (..),
     runSetPermComment,
+    PermInfo,
+    buildPermInfo,
+    addPermissionToMetadata,
   )
 where
 
@@ -30,7 +32,6 @@ import Data.Aeson
 import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as HS
-import Data.Kind (Type)
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -96,38 +97,34 @@ procSetObj source tn fieldInfoMap mObj = do
 
     getDepReason = bool DRSessionVariable DROnType . isStaticValue
 
-class IsPerm a where
-  type PermInfo a = (r :: BackendType -> Type) | r -> a
+type family PermInfo perm where
+  PermInfo SelPerm = SelPermInfo
+  PermInfo InsPerm = InsPermInfo
+  PermInfo UpdPerm = UpdPermInfo
+  PermInfo DelPerm = DelPermInfo
 
-  permAccessor ::
-    (ToJSON (a b), BackendMetadata b) =>
-    PermAccessor b (PermInfo a b)
+addPermissionToMetadata ::
+  PermDef b a ->
+  TableMetadata b ->
+  TableMetadata b
+addPermissionToMetadata permDef = case _pdPermission permDef of
+  InsPerm' _ -> tmInsertPermissions %~ OMap.insert (_pdRole permDef) permDef
+  SelPerm' _ -> tmSelectPermissions %~ OMap.insert (_pdRole permDef) permDef
+  UpdPerm' _ -> tmUpdatePermissions %~ OMap.insert (_pdRole permDef) permDef
+  DelPerm' _ -> tmDeletePermissions %~ OMap.insert (_pdRole permDef) permDef
 
-  buildPermInfo ::
-    (ToJSON (a b), BackendMetadata b, QErrM m, TableCoreInfoRM b m) =>
-    SourceName ->
-    TableName b ->
-    FieldInfoMap (FieldInfo b) ->
-    PermDef (a b) ->
-    m (WithDeps (PermInfo a b))
-
-  getPermAcc1 ::
-    (ToJSON (a b), BackendMetadata b) =>
-    PermDef (a b) ->
-    PermAccessor b (PermInfo a b)
-  getPermAcc1 _ = permAccessor
-
-  getPermAcc2 ::
-    (ToJSON (a b), BackendMetadata b) =>
-    DropPerm a b ->
-    PermAccessor b (PermInfo a b)
-  getPermAcc2 _ = permAccessor
-
-  addPermToMetadata ::
-    (ToJSON (a b), BackendMetadata b) =>
-    PermDef (a b) ->
-    TableMetadata b ->
-    TableMetadata b
+buildPermInfo ::
+  (BackendMetadata b, QErrM m, TableCoreInfoRM b m) =>
+  SourceName ->
+  TableName b ->
+  FieldInfoMap (FieldInfo b) ->
+  PermDefPermission b perm ->
+  m (WithDeps (PermInfo perm b))
+buildPermInfo x1 x2 x3 = \case
+  SelPerm' p -> buildSelPermInfo x1 x2 x3 p
+  InsPerm' p -> buildInsPermInfo x1 x2 x3 p
+  UpdPerm' p -> buildUpdPermInfo x1 x2 x3 p
+  DelPerm' p -> buildDelPermInfo x1 x2 x3 p
 
 doesPermissionExistInMetadata ::
   forall b.
@@ -146,13 +143,12 @@ doesPermissionExistInMetadata tableMetadata roleName = \case
 
 runCreatePerm ::
   forall m b a.
-  (ToJSON (a b), IsPerm a, UserInfoM m, CacheRWM m, MonadError QErr m, MetadataM m, BackendMetadata b) =>
+  (UserInfoM m, CacheRWM m, MonadError QErr m, MetadataM m, BackendMetadata b) =>
   CreatePerm a b ->
   m EncJSON
 runCreatePerm (CreatePerm (WithTable source tableName permissionDefn)) = do
   tableMetadata <- askTableMetadata @b source tableName
-  let permAcc = getPermAcc1 permissionDefn
-      permissionType = permAccToType permAcc
+  let permissionType = reflectPermDefPermission (_pdPermission permissionDefn)
       ptText = permTypeToCode permissionType
       role = _pdRole permissionDefn
       metadataObject =
@@ -173,17 +169,17 @@ runCreatePerm (CreatePerm (WithTable source tableName permissionDefn)) = do
       ptText <> " permission already defined on table " <> tableName <<> " with role " <>> role
   buildSchemaCacheFor metadataObject $
     MetadataModifier $
-      tableMetadataSetter @b source tableName %~ addPermToMetadata permissionDefn
+      tableMetadataSetter @b source tableName %~ addPermissionToMetadata permissionDefn
   pure successMsg
 
 runDropPerm ::
-  forall b a m.
-  (ToJSON (a b), IsPerm a, UserInfoM m, CacheRWM m, MonadError QErr m, MetadataM m, BackendMetadata b) =>
-  DropPerm a b ->
+  forall b m.
+  (UserInfoM m, CacheRWM m, MonadError QErr m, MetadataM m, BackendMetadata b) =>
+  PermType ->
+  DropPerm b ->
   m EncJSON
-runDropPerm dp@(DropPerm source table role) = do
+runDropPerm permType (DropPerm source table role) = do
   tableMetadata <- askTableMetadata @b source table
-  let permType = permAccToType $ getPermAcc2 dp
   unless (doesPermissionExistInMetadata tableMetadata role permType) $ do
     let errMsg =
           mconcat
@@ -204,9 +200,9 @@ buildInsPermInfo ::
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
-  PermDef (InsPerm b) ->
+  InsPerm b ->
   m (WithDeps (InsPermInfo b))
-buildInsPermInfo source tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCols mBackendOnly) _) =
+buildInsPermInfo source tn fieldInfoMap (InsPerm checkCond set mCols mBackendOnly) =
   withPathK "permission" $ do
     (be, beDeps) <- withPathK "check" $ procBoolExp source tn fieldInfoMap checkCond
     (setColsSQL, setHdrs, setColDeps) <- procSetObj source tn fieldInfoMap set
@@ -235,14 +231,6 @@ buildInsPermInfo source tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCol
     allInsCols = map ciColumn $ filter (_cmIsInsertable . ciMutability) $ getCols fieldInfoMap
     insCols = interpColSpec allInsCols (fromMaybe PCStar mCols)
     relInInsErr = "Only table columns can have insert permissions defined, not relationships or other field types"
-
-instance IsPerm InsPerm where
-  type PermInfo InsPerm = InsPermInfo
-  permAccessor = PAInsert
-  buildPermInfo = buildInsPermInfo
-
-  addPermToMetadata permDef =
-    tmInsertPermissions %~ OMap.insert (_pdRole permDef) permDef
 
 buildSelPermInfo ::
   forall b m.
@@ -300,15 +288,6 @@ buildSelPermInfo source tn fieldInfoMap sp = withPathK "permission" $ do
     computedFields = spComputedFields sp
     autoInferredErr = "permissions for relationships are automatically inferred"
 
-instance IsPerm SelPerm where
-  type PermInfo SelPerm = SelPermInfo
-  permAccessor = PASelect
-  buildPermInfo source tn fieldInfoMap (PermDef _ a _) =
-    buildSelPermInfo source tn fieldInfoMap a
-
-  addPermToMetadata permDef =
-    tmSelectPermissions %~ OMap.insert (_pdRole permDef) permDef
-
 buildUpdPermInfo ::
   forall b m.
   (QErrM m, TableCoreInfoRM b m, BackendMetadata b) =>
@@ -352,15 +331,6 @@ buildUpdPermInfo source tn fieldInfoMap (UpdPerm colSpec set fltr check) = do
     updCols = interpColSpec allUpdCols colSpec
     relInUpdErr = "Only table columns can have update permissions defined, not relationships or other field types"
 
-instance IsPerm UpdPerm where
-  type PermInfo UpdPerm = UpdPermInfo
-  permAccessor = PAUpdate
-  buildPermInfo source tn fieldInfoMap (PermDef _ a _) =
-    buildUpdPermInfo source tn fieldInfoMap a
-
-  addPermToMetadata permDef =
-    tmUpdatePermissions %~ OMap.insert (_pdRole permDef) permDef
-
 buildDelPermInfo ::
   forall b m.
   (QErrM m, TableCoreInfoRM b m, BackendMetadata b) =>
@@ -376,15 +346,6 @@ buildDelPermInfo source tn fieldInfoMap (DelPerm fltr) = do
   let deps = mkParentDep @b source tn : beDeps
       depHeaders = getDependentHeaders fltr
   return (DelPermInfo tn be depHeaders, deps)
-
-instance IsPerm DelPerm where
-  type PermInfo DelPerm = DelPermInfo
-  permAccessor = PADelete
-  buildPermInfo source tn fieldInfoMap (PermDef _ a _) =
-    buildDelPermInfo source tn fieldInfoMap a
-
-  addPermToMetadata permDef =
-    tmDeletePermissions %~ OMap.insert (_pdRole permDef) permDef
 
 data SetPermComment b = SetPermComment
   { apSource :: !SourceName,
@@ -414,16 +375,16 @@ runSetPermComment (SetPermComment source table roleName permType comment) = do
   -- assert permission exists and return appropriate permission modifier
   permModifier <- case permType of
     PTInsert -> do
-      assertPermDefined roleName PAInsert tableInfo
+      assertPermDefined roleName PTInsert tableInfo
       pure $ tmInsertPermissions . ix roleName . pdComment .~ comment
     PTSelect -> do
-      assertPermDefined roleName PASelect tableInfo
+      assertPermDefined roleName PTSelect tableInfo
       pure $ tmSelectPermissions . ix roleName . pdComment .~ comment
     PTUpdate -> do
-      assertPermDefined roleName PAUpdate tableInfo
+      assertPermDefined roleName PTUpdate tableInfo
       pure $ tmUpdatePermissions . ix roleName . pdComment .~ comment
     PTDelete -> do
-      assertPermDefined roleName PADelete tableInfo
+      assertPermDefined roleName PTDelete tableInfo
       pure $ tmDeletePermissions . ix roleName . pdComment .~ comment
 
   let metadataObject =
