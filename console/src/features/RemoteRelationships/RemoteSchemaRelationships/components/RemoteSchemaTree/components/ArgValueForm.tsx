@@ -127,7 +127,7 @@ export const ArgValueForm = ({
             <>
               <p className="mb-xs text-muted font-semibold">
                 <FaCircle className="text-green-600 mr-2 mb-1" />
-                Source Field
+                From Field
               </p>
               <select
                 className={fieldStyle}

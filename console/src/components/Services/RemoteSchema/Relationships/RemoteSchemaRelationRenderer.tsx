@@ -9,7 +9,6 @@ import { RemoteSchemaToDbForm } from '@/features/RemoteRelationships/RemoteSchem
 type RemoteSchemaRelationRendererProp = {
   remoteSchemaName: string;
 };
-
 export const RemoteSchemaRelationRenderer = ({
   remoteSchemaName,
 }: RemoteSchemaRelationRendererProp) => {

@@ -21,7 +21,7 @@ const defaultValues = {
   remoteSchemaFrom: 'remoteSchema1',
   resultSetFrom: '',
   remoteSchemaTo: '',
-  resultSetTo: '',
+  resultSet: '',
 };
 
 export default {

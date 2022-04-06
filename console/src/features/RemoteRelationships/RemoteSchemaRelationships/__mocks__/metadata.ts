@@ -136,6 +136,24 @@ export const metadata = {
         },
         comment: '',
       },
+      {
+        name: 'remoteSchema3',
+        definition: {
+          url: 'https://some-graph-other-endpoint.com/api/graphql',
+          timeout_seconds: 60,
+          forward_client_headers: true,
+        },
+        comment: '',
+      },
+      {
+        name: 'countries',
+        definition: {
+          url: 'https://some-graph-other-endpoint.com/api/graphql',
+          timeout_seconds: 60,
+          forward_client_headers: true,
+        },
+        comment: '',
+      },
     ],
   },
 };
