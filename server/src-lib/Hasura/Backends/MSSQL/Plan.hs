@@ -5,6 +5,7 @@
 module Hasura.Backends.MSSQL.Plan
   ( PrepareState (..),
     planQuery,
+    planSourceRelationship,
     planSubscription,
     prepareValueQuery,
     resultAlias,
@@ -19,22 +20,25 @@ where
 -- , planSubscription
 -- ) where
 
+import Control.Applicative (Const (Const))
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy (toStrict)
 import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
+import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Text.Extended
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.FromIr
-import Hasura.Backends.MSSQL.FromIr.Query (fromQueryRootField)
+import Hasura.Backends.MSSQL.FromIr.Query (fromQueryRootField, fromSourceRelationship)
 import Hasura.Backends.MSSQL.Types.Internal
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser qualified as GraphQL
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Column qualified as RQL
+import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Session
@@ -50,7 +54,43 @@ planQuery ::
   m Select
 planQuery sessionVariables queryDB = do
   rootField <- traverse (prepareValueQuery sessionVariables) queryDB
-  runFromIr (fromQueryRootField rootField)
+  runIrWrappingRoot $ fromQueryRootField rootField
+
+-- | For more information, see the module/documentation of 'Hasura.GraphQL.Execute.RemoteJoin.Source'.
+planSourceRelationship ::
+  MonadError QErr m =>
+  SessionVariables ->
+  -- | List of json objects, each of which becomes a row of the table
+  NE.NonEmpty J.Object ->
+  -- | The above objects have this schema
+  HM.HashMap RQL.FieldName (ColumnName, ScalarType) ->
+  RQL.FieldName ->
+  (RQL.FieldName, SourceRelationshipSelection 'MSSQL Void GraphQL.UnpreparedValue) ->
+  m Select
+planSourceRelationship
+  sessionVariables
+  lhs
+  lhsSchema
+  argumentId
+  (relationshipName, sourceRelationshipRaw) = do
+    sourceRelationship <-
+      traverseSourceRelationshipSelection
+        (fmap Const . prepareValueQuery sessionVariables)
+        sourceRelationshipRaw
+    runIrWrappingRoot $
+      fromSourceRelationship
+        lhs
+        lhsSchema
+        argumentId
+        (relationshipName, sourceRelationship)
+
+runIrWrappingRoot ::
+  MonadError QErr m =>
+  FromIr Select ->
+  m Select
+runIrWrappingRoot selectAction = do
+  runFromIr selectAction
+    `onLeft` (throw400 NotSupported . tshow)
 
 -- | Prepare a value without any query planning; we just execute the
 -- query with the values embedded.

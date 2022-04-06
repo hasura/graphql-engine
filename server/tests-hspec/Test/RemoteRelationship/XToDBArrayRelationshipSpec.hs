@@ -17,7 +17,7 @@ import Control.Lens (findOf, has, only, (^?!))
 import Data.Aeson (Value)
 import Data.Aeson.Lens (key, values, _String)
 import Data.Char (isUpper, toLower)
-import Data.Foldable (for_, traverse_)
+import Data.Foldable (traverse_)
 import Data.Function ((&))
 import Data.List (intercalate, sortBy)
 import Data.List.Split (dropBlanks, keepDelimsL, split, whenElt)
@@ -29,6 +29,7 @@ import Data.Text (Text)
 import Data.Typeable (Typeable)
 import GHC.Generics (Generic)
 import Harness.Backend.Postgres qualified as Postgres
+import Harness.Backend.Sqlserver qualified as SQLServer
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (shouldBeYaml, shouldReturnYaml, yaml)
@@ -47,7 +48,7 @@ spec :: SpecWith State
 spec = Context.runWithLocalState contexts tests
   where
     lhsContexts = [lhsPostgres, lhsRemoteServer]
-    rhsContexts = [rhsPostgres]
+    rhsContexts = [rhsPostgres, rhsSQLServer]
     contexts = combine <$> lhsContexts <*> rhsContexts
 
 -- | Combines a lhs and a rhs.
@@ -141,10 +142,22 @@ rhsPostgres =
           }
    in (table, context)
 
-{-
-rhsMSSQL :: (Value, Context)
-rhsMSSQL = ([yaml|{"schema":"hasura", "name":"album"}|], Context "MSSQL" rhsMSSQLSetup rhsMSSQLTeardown)
--}
+rhsSQLServer :: RHSContext
+rhsSQLServer =
+  let table =
+        [yaml|
+      schema: hasura
+      name: album
+    |]
+      context =
+        Context
+          { name = Context.Backend Context.SQLServer,
+            mkLocalState = Context.noLocalState,
+            setup = rhsSQLServerSetup,
+            teardown = rhsSQLServerTeardown,
+            customOptions = Nothing
+          }
+   in (table, context)
 
 --------------------------------------------------------------------------------
 -- Schema
@@ -178,7 +191,8 @@ album =
     []
     [ [Schema.VInt 1, Schema.VStr "album1_artist1", Schema.VInt 1],
       [Schema.VInt 2, Schema.VStr "album2_artist1", Schema.VInt 1],
-      [Schema.VInt 3, Schema.VStr "album3_artist2", Schema.VInt 2]
+      [Schema.VInt 3, Schema.VStr "album3_artist1", Schema.VInt 1],
+      [Schema.VInt 4, Schema.VStr "album4_artist2", Schema.VInt 2]
     ]
 
 --------------------------------------------------------------------------------
@@ -493,12 +507,72 @@ args:
       filter:
         artist_id:
           _eq: x-hasura-artist-id
-      limit: 1
+      limit: 2
       allow_aggregations: true
   |]
 
 rhsPostgresTeardown :: (State, ()) -> IO ()
 rhsPostgresTeardown _ = Postgres.dropTable album
+
+--------------------------------------------------------------------------------
+-- RHS SQLServer
+
+rhsSQLServerSetup :: (State, ()) -> IO ()
+rhsSQLServerSetup (state, _) = do
+  let sourceName = "target"
+      sourceConfig = SQLServer.defaultSourceConfiguration
+      schemaName = Context.defaultSchema Context.SQLServer
+  -- Add remote source
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: mssql_add_source
+args:
+  name: *sourceName
+  configuration: *sourceConfig
+|]
+  -- setup tables only
+  SQLServer.createTable album
+  SQLServer.insertTable album
+  Schema.trackTable Context.SQLServer sourceName album state
+
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: bulk
+args:
+- type: mssql_create_select_permission
+  args:
+    source: *sourceName
+    role: role1
+    table:
+      schema: *schemaName
+      name: album
+    permission:
+      columns:
+        - title
+        - artist_id
+      filter:
+        artist_id:
+          _eq: x-hasura-artist-id
+- type: mssql_create_select_permission
+  args:
+    source: *sourceName
+    role: role2
+    table:
+      schema: *schemaName
+      name: album
+    permission:
+      columns: [id, title, artist_id]
+      filter:
+        artist_id:
+          _eq: x-hasura-artist-id
+      limit: 2
+      allow_aggregations: true
+  |]
+
+rhsSQLServerTeardown :: (State, ()) -> IO ()
+rhsSQLServerTeardown _ = SQLServer.dropTable album
 
 --------------------------------------------------------------------------------
 -- Tests
@@ -547,46 +621,6 @@ schemaTests _opts =
             }
           }
           |]
-        relationshipFieldArgsSchema =
-          [yaml|
-          - name: distinct_on
-            type:
-              kind: LIST
-              name: null
-              ofType:
-                kind: NON_NULL
-                name: null
-                ofType:
-                  kind: ENUM
-                  name: hasura_album_select_column
-                  ofType: null
-          - name: limit
-            type:
-              kind: SCALAR
-              name: Int
-              ofType: null
-          - name: offset
-            type:
-              kind: SCALAR
-              name: Int
-              ofType: null
-          - name: order_by
-            type:
-              kind: LIST
-              name: null
-              ofType:
-                kind: NON_NULL
-                name: null
-                ofType:
-                  kind: INPUT_OBJECT
-                  name: hasura_album_order_by
-                  ofType: null
-          - name: where
-            type:
-              kind: INPUT_OBJECT
-              name: hasura_album_bool_exp
-              ofType: null
-          |]
     introspectionResult <- GraphqlEngine.postGraphql state query
     let focusArtistFields =
           key "data"
@@ -605,13 +639,6 @@ schemaTests _opts =
               focusArtistFields
               (has $ key "name" . _String . only "albums_aggregate")
               introspectionResult
-
-    -- the schema of args should be same for both albums and albums_aggregate field
-    for_
-      [ albumsField ^?! key "args",
-        albumsAggregateField ^?! key "args"
-      ]
-      (`shouldBeYaml` relationshipFieldArgsSchema)
 
     -- check the return type of albums field
     shouldBeYaml
@@ -665,6 +692,7 @@ executionTests opts = describe "execution" do
                albums:
                - title: album1_artist1
                - title: album2_artist1
+               - title: album3_artist1
           |]
     shouldReturnYaml
       opts
@@ -750,6 +778,7 @@ executionTests opts = describe "execution" do
                albums:
                - title: album1_artist1
                - title: album2_artist1
+               - title: album3_artist1
              - name: artist_no_id
                albums: null
           |]
@@ -791,6 +820,7 @@ permissionTests opts = describe "permission" do
                albums:
                - title: album1_artist1
                - title: album2_artist1
+               - title: album3_artist1
              - name: artist2
                albums: []
              - name: artist_no_albums
@@ -921,6 +951,7 @@ permissionTests opts = describe "permission" do
              - name: artist1
                albums:
                - title: album1_artist1
+               - title: album2_artist1
           |]
     shouldReturnYaml
       opts
@@ -937,7 +968,7 @@ permissionTests opts = describe "permission" do
               where: {name: {_eq: "artist1"}}
             ) {
               name
-              albums (order_by: {id: asc} limit: 0){
+              albums (order_by: {id: asc} limit: 1){
                 title
               }
             }
@@ -948,7 +979,8 @@ permissionTests opts = describe "permission" do
           data:
             artist:
              - name: artist1
-               albums: []
+               albums:
+                 - title: album1_artist1
           |]
     shouldReturnYaml
       opts
@@ -978,6 +1010,7 @@ permissionTests opts = describe "permission" do
              - name: artist1
                albums:
                - title: album1_artist1
+               - title: album2_artist1
           |]
     shouldReturnYaml
       opts
@@ -1012,9 +1045,10 @@ permissionTests opts = describe "permission" do
              - name: artist1
                albums_aggregate:
                  aggregate:
-                   count: 2
+                   count: 3
                  nodes:
                  - title: album1_artist1
+                 - title: album2_artist1
           |]
     shouldReturnYaml
       opts
@@ -1031,7 +1065,7 @@ permissionTests opts = describe "permission" do
               where: {name: {_eq: "artist1"}}
             ) {
               name
-              albums_aggregate (limit: 1 order_by: {id: asc}){
+              albums_aggregate (limit: 2 order_by: {id: asc}){
                 aggregate {
                   count
                 }
@@ -1049,9 +1083,10 @@ permissionTests opts = describe "permission" do
              - name: artist1
                albums_aggregate:
                  aggregate:
-                   count: 1
+                   count: 2
                  nodes:
                  - title: album1_artist1
+                 - title: album2_artist1
           |]
     shouldReturnYaml
       opts

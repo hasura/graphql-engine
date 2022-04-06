@@ -122,6 +122,7 @@ module Hasura.RQL.IR.Select
     saOffset,
     saOrderBy,
     saWhere,
+    traverseSourceRelationshipSelection,
     _AFArrayRelation,
     _AFColumn,
     _AFComputedField,
@@ -510,6 +511,19 @@ mkAnnColumnFieldAsText ::
   AnnFieldG backend r v
 mkAnnColumnFieldAsText ci =
   AFColumn (AnnColumnField (ciColumn ci) (ciType ci) True Nothing Nothing)
+
+traverseSourceRelationshipSelection ::
+  (Applicative f, Backend backend) =>
+  (vf backend -> f (vg backend)) ->
+  SourceRelationshipSelection backend r vf ->
+  f (SourceRelationshipSelection backend r vg)
+traverseSourceRelationshipSelection f = \case
+  SourceRelationshipObject s ->
+    SourceRelationshipObject <$> traverse f s
+  SourceRelationshipArray s ->
+    SourceRelationshipArray <$> traverse f s
+  SourceRelationshipArrayAggregate s ->
+    SourceRelationshipArrayAggregate <$> traverse f s
 
 -- Aggregation fields
 

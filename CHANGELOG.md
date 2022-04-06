@@ -4,6 +4,7 @@
 
 ### Bug fixes and improvements
 
+- server: ms sql server can now be used in remote relationships
 - server: fix JSON key encoding issue for remote schemas (fixes #7543 and #8200)
 - server: fix MSSQL insert mutation when relationships are used in check permissions (fix #8225)
 - server: refactor GQL query static analysis and improve OpenAPI warning messages

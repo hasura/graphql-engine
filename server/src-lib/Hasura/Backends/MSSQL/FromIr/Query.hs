@@ -3,13 +3,22 @@
 -- | This module defines translation functions for queries which select data.
 -- Principally this includes translating the @query@ root field, but parts are
 -- also reused for serving the responses for mutations.
-module Hasura.Backends.MSSQL.FromIr.Query (fromQueryRootField, fromSelect) where
+module Hasura.Backends.MSSQL.FromIr.Query
+  ( fromQueryRootField,
+    fromSelect,
+    fromSourceRelationship,
+  )
+where
 
+import Control.Applicative (getConst)
 import Control.Monad.Validate
+import Data.Aeson.Extended qualified as J
 import Data.HashMap.Strict qualified as HM
+import Data.List.NonEmpty qualified as NE
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
 import Data.Proxy
+import Data.Text.NonEmpty (mkNonEmptyTextUnsafe)
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.FromIr
   ( Error (..),
@@ -64,6 +73,124 @@ fromSelect jsonAggSelect annSimpleSel =
                       }
                 ]
             }
+
+-- | Used in 'Hasura.Backends.MSSQL.Plan.planSourceRelationship', which is in
+-- turn used by to implement `mkDBRemoteRelationship' for 'BackendExecute'.
+-- For more information, see the module/documentation of 'Hasura.GraphQL.Execute.RemoteJoin.Source'.
+fromSourceRelationship ::
+  -- | List of json objects, each of which becomes a row of the table
+  NE.NonEmpty J.Object ->
+  -- | The above objects have this schema
+  HM.HashMap IR.FieldName (ColumnName, ScalarType) ->
+  IR.FieldName ->
+  (IR.FieldName, IR.SourceRelationshipSelection 'MSSQL Void (Const Expression)) ->
+  FromIr TSQL.Select
+fromSourceRelationship lhs lhsSchema argumentId relationshipField = do
+  (argumentIdQualified, fieldSource) <-
+    flip runReaderT (fromAlias selectFrom) $ do
+      argumentIdQualified <- fromColumn (coerceToColumn argumentId)
+      relationshipSource <-
+        fromRemoteRelationFieldsG
+          mempty
+          (fst <$> joinColumns)
+          relationshipField
+      pure (ColumnExpression argumentIdQualified, relationshipSource)
+  let selectProjections = [projectArgumentId argumentIdQualified, fieldSourceProjections fieldSource]
+  pure
+    Select
+      { selectWith = Nothing,
+        selectOrderBy = Nothing,
+        selectTop = NoTop,
+        selectProjections,
+        selectFrom = Just selectFrom,
+        selectJoins = mapMaybe fieldSourceJoin $ pure fieldSource,
+        selectWhere = mempty,
+        selectFor =
+          JsonFor ForJson {jsonCardinality = JsonArray, jsonRoot = NoRoot},
+        selectOffset = Nothing
+      }
+  where
+    projectArgumentId column =
+      ExpressionProjection $
+        Aliased
+          { aliasedThing = column,
+            aliasedAlias = IR.getFieldNameTxt argumentId
+          }
+    selectFrom =
+      FromOpenJson
+        Aliased
+          { aliasedThing =
+              OpenJson
+                { openJsonExpression =
+                    ValueExpression (ODBC.TextValue $ lbsToTxt $ J.encode lhs),
+                  openJsonWith =
+                    Just $
+                      toJsonFieldSpec argumentId IntegerType
+                        NE.:| map (uncurry toJsonFieldSpec . second snd) (HM.toList lhsSchema)
+                },
+            aliasedAlias = "lhs"
+          }
+
+    joinColumns = mapKeys coerceToColumn lhsSchema
+
+    coerceToColumn = ColumnName . IR.getFieldNameTxt
+
+    toJsonFieldSpec (IR.FieldName lhsFieldName) scalarType =
+      ScalarField scalarType DataLengthMax lhsFieldName (Just $ FieldPath RootPath lhsFieldName)
+
+-- | Build the 'FieldSource' for the relation field, depending on whether it's
+-- an object, array, or aggregate relationship.
+fromRemoteRelationFieldsG ::
+  Map TableName EntityAlias ->
+  HM.HashMap ColumnName ColumnName ->
+  (IR.FieldName, IR.SourceRelationshipSelection 'MSSQL Void (Const Expression)) ->
+  ReaderT EntityAlias FromIr FieldSource
+fromRemoteRelationFieldsG existingJoins joinColumns (IR.FieldName name, field) =
+  case field of
+    IR.SourceRelationshipObject selectionSet ->
+      fmap
+        ( \aliasedThing ->
+            JoinFieldSource JsonSingleton (Aliased {aliasedThing, aliasedAlias = name})
+        )
+        ( fromObjectRelationSelectG
+            existingJoins
+            ( withJoinColumns $
+                runIdentity $
+                  traverse (Identity . getConst) selectionSet
+            )
+        )
+    IR.SourceRelationshipArray selectionSet ->
+      fmap
+        ( \aliasedThing ->
+            JoinFieldSource JsonArray (Aliased {aliasedThing, aliasedAlias = name})
+        )
+        ( fromArraySelectG
+            ( IR.ASSimple $
+                withJoinColumns $
+                  runIdentity $
+                    traverse (Identity . getConst) selectionSet
+            )
+        )
+    IR.SourceRelationshipArrayAggregate selectionSet ->
+      fmap
+        ( \aliasedThing ->
+            JoinFieldSource JsonArray (Aliased {aliasedThing, aliasedAlias = name})
+        )
+        ( fromArraySelectG
+            ( IR.ASAggregate $
+                withJoinColumns $
+                  runIdentity $
+                    traverse (Identity . getConst) selectionSet
+            )
+        )
+  where
+    withJoinColumns ::
+      s -> IR.AnnRelationSelectG 'MSSQL s
+    withJoinColumns annotatedRelationship =
+      IR.AnnRelationSelectG
+        (IR.RelName $ mkNonEmptyTextUnsafe name)
+        joinColumns
+        annotatedRelationship
 
 -- | Top/root-level 'Select'. All descendent/sub-translations are collected to produce a root TSQL.Select.
 fromSelectRows :: IR.AnnSelectG 'MSSQL (IR.AnnFieldG 'MSSQL Void) Expression -> FromIr TSQL.Select

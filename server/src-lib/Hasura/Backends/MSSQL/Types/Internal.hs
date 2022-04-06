@@ -453,10 +453,9 @@ data OpenJson = OpenJson
   }
 
 data JsonFieldSpec
-  = IntField Text (Maybe JsonPath)
+  = ScalarField ScalarType DataLength Text (Maybe JsonPath)
   | JsonField Text (Maybe JsonPath)
   | StringField Text (Maybe JsonPath)
-  | UuidField Text (Maybe JsonPath)
 
 data Aliased a = Aliased
   { aliasedThing :: a,

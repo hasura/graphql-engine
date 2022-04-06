@@ -60,10 +60,6 @@ instance BackendExecute 'MSSQL where
   mkDBQueryExplain = msDBQueryExplain
   mkSubscriptionExplain = msDBSubscriptionExplain
 
-  -- NOTE: Currently unimplemented!.
-  --
-  -- This function is just a stub for future implementation; for now it just
-  -- throws a 500 error.
   mkDBRemoteRelationshipPlan =
     msDBRemoteRelationshipPlan
 
@@ -201,7 +197,7 @@ multiplexRootReselect variables rootReselect =
                       openJsonWith =
                         Just $
                           NE.fromList
-                            [ UuidField resultIdAlias (Just $ IndexPath RootPath 0),
+                            [ ScalarField GuidType DataLengthUnspecified resultIdAlias (Just $ IndexPath RootPath 0),
                               JsonField resultVarsAlias (Just $ IndexPath RootPath 1)
                             ]
                     },
@@ -416,5 +412,16 @@ msDBRemoteRelationshipPlan ::
   RQLTypes.FieldName ->
   (RQLTypes.FieldName, SourceRelationshipSelection 'MSSQL Void UnpreparedValue) ->
   m (DBStepInfo 'MSSQL)
-msDBRemoteRelationshipPlan _userInfo _sourceName _sourceConfig _lhs _lhsSchema _argumentId _relationship = do
-  throw500 "mkDBRemoteRelationshipPlan: SQL Server (MSSQL) does not currently support generalized joins."
+msDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship = do
+  statement <- planSourceRelationship (_uiSession userInfo) lhs lhsSchema argumentId relationship
+
+  let printer = fromSelect statement
+      queryString = ODBC.renderQuery $ toQueryPretty printer
+      odbcQuery = runSelectQuery printer
+
+  pure $ DBStepInfo @'MSSQL sourceName sourceConfig (Just queryString) odbcQuery
+  where
+    runSelectQuery :: Printer -> ExceptT QErr IO EncJSON
+    runSelectQuery queryPrinter = do
+      let queryTx = encJFromText <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler (toQueryFlat queryPrinter)
+      mssqlRunReadOnly (_mscExecCtx sourceConfig) queryTx
