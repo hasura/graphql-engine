@@ -3,19 +3,20 @@ import { useFormContext } from 'react-hook-form';
 import { FaPlug } from 'react-icons/fa';
 import { FiType } from 'react-icons/fi';
 import { Select } from '@/new-components/Form';
+import { RsToRsSchema } from '../../types';
 
 export interface RsSourceTypeSelectorProps {
   types: string[];
   sourceTypeKey: string;
 }
 
-export const remoteSchemaSelectorKey = 'source_remote_schema';
+export const remoteSchemaSelectorKey = 'sourceRemoteSchema';
 
 export const RsSourceTypeSelector = ({
   types,
   sourceTypeKey,
 }: RsSourceTypeSelectorProps) => {
-  const { watch } = useFormContext();
+  const { watch } = useFormContext<RsToRsSchema>();
   const remoteSchemaName = watch(remoteSchemaSelectorKey);
   const typeOptions = React.useMemo(
     () => types.map(t => ({ value: t, label: t })),
@@ -24,7 +25,7 @@ export const RsSourceTypeSelector = ({
   const schemaOptions = [{ value: remoteSchemaName, label: remoteSchemaName }];
 
   return (
-    <div className="bg-gray-50 col-span-5 rounded p-md border border-gray-300 border-l-4 border-l-green-600">
+    <div className="bg-gray-50 rounded p-md border border-gray-300 border-l-4 border-l-green-600 w-full h-full">
       <div className="mb-sm w-full">
         <Select
           label="Source Remote Schema"
@@ -41,8 +42,8 @@ export const RsSourceTypeSelector = ({
           name={sourceTypeKey}
           placeholder="Select a type"
           options={typeOptions}
-          dataTest="select-source-type"
           labelIcon={<FiType style={{ strokeWidth: 4.5 }} />}
+          dataTest="select-source-type"
         />
       </div>
     </div>

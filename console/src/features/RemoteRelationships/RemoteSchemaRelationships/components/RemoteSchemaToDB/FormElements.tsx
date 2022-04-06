@@ -116,10 +116,12 @@ export const FormElements = ({
       </div>
 
       <div className="grid grid-cols-12">
-        <RsSourceTypeSelector
-          types={remoteSchemaTypes.map(t => t.typeName)}
-          sourceTypeKey="typeName"
-        />
+        <div className="col-span-5">
+          <RsSourceTypeSelector
+            types={remoteSchemaTypes.map(t => t.typeName)}
+            sourceTypeKey="typeName"
+          />
+        </div>
 
         {/* horizontal connector line */}
         <div className="col-span-2 flex relative items-center justify-center w-full py-md">

@@ -24,6 +24,21 @@ export const handlers = (url = baseUrl) => [
     ) {
       return res(ctx.json(countries));
     }
+    if (
+      body.type === 'introspect_remote_schema' &&
+      body?.args?.name === 'remoteSchema3'
+    ) {
+      return res(ctx.json(schema));
+    }
+    if (body.type === 'create_remote_schema_remote_relationship') {
+      return res(ctx.json({ message: 'success' }));
+    }
+    if (
+      body.type === 'introspect_remote_schema' &&
+      body?.args?.name === 'countries'
+    ) {
+      return res(ctx.json(countries));
+    }
 
     if (body.type === 'export_metadata') {
       return res(ctx.json(metadata));

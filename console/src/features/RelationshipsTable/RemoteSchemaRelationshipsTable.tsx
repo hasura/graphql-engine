@@ -81,11 +81,12 @@ export const RemoteSchemaRelationshipTable = ({
       />
     );
   return (
-    <div className="py-1.5">
+    <>
       <IndicatorCard status="info">
         No remote schema relationships found!
       </IndicatorCard>
-    </div>
+      <br />
+    </>
   );
 };
 
