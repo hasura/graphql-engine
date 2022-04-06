@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.Types.Permission
   ( DelPerm (..),
@@ -16,6 +17,9 @@ module Hasura.RQL.Types.Permission
     pdPermission,
     pdRole,
     permTypeToCode,
+    PermDefPermission (..),
+    unPermDefPermission,
+    reflectPermDefPermission,
   )
 where
 
@@ -23,9 +27,10 @@ import Control.Lens (makeLenses)
 import Data.Aeson
 import Data.Aeson.TH
 import Data.Hashable
+import Data.Kind (Type)
 import Data.Text qualified as T
 import Database.PG.Query qualified as Q
-import Hasura.Incremental (Cacheable)
+import Hasura.Incremental (Cacheable (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
@@ -101,22 +106,77 @@ instance (Backend b) => ToJSON (PermColSpec b) where
   toJSON (PCCols cols) = toJSON cols
   toJSON PCStar = "*"
 
-data PermDef a = PermDef
+data PermDef (b :: BackendType) (perm :: BackendType -> Type) = PermDef
   { _pdRole :: !RoleName,
-    _pdPermission :: !a,
+    _pdPermission :: !(PermDefPermission b perm),
     _pdComment :: !(Maybe T.Text)
   }
   deriving (Show, Eq, Generic)
 
-instance (Cacheable a) => Cacheable (PermDef a)
+instance (Backend b, Cacheable (perm b)) => Cacheable (PermDef b perm)
 
-$(deriveFromJSON hasuraJSON {omitNothingFields = True} ''PermDef)
-$(makeLenses ''PermDef)
+-- | The permission data as it appears in a 'PermDef'.
+-- Since this type is a GADT it facilitates that values which are polymorphic
+-- may re-discover its specific type of permission by case analysis.
+--
+-- The fact that permission types are tracked in types are more accidental than
+-- intentional and something we want to move away from, see
+-- https://github.com/hasura/graphql-engine-mono/issues/4076.
+data PermDefPermission (b :: BackendType) (perm :: BackendType -> Type) where
+  SelPerm' :: SelPerm b -> PermDefPermission b SelPerm
+  InsPerm' :: InsPerm b -> PermDefPermission b InsPerm
+  UpdPerm' :: UpdPerm b -> PermDefPermission b UpdPerm
+  DelPerm' :: DelPerm b -> PermDefPermission b DelPerm
 
-instance (ToJSON a) => ToJSON (PermDef a) where
+instance Backend b => FromJSON (PermDefPermission b SelPerm) where
+  parseJSON = fmap SelPerm' . parseJSON
+
+instance Backend b => FromJSON (PermDefPermission b InsPerm) where
+  parseJSON = fmap InsPerm' . parseJSON
+
+instance Backend b => FromJSON (PermDefPermission b UpdPerm) where
+  parseJSON = fmap UpdPerm' . parseJSON
+
+instance Backend b => FromJSON (PermDefPermission b DelPerm) where
+  parseJSON = fmap DelPerm' . parseJSON
+
+instance Backend b => ToJSON (PermDefPermission b perm) where
+  toJSON = \case
+    SelPerm' p -> toJSON p
+    InsPerm' p -> toJSON p
+    UpdPerm' p -> toJSON p
+    DelPerm' p -> toJSON p
+
+deriving stock instance Backend b => Show (PermDefPermission b perm)
+
+deriving stock instance Backend b => Eq (PermDefPermission b perm)
+
+instance Backend b => Cacheable (PermDefPermission b perm) where
+  unchanged accesses (SelPerm' p1) (SelPerm' p2) = unchanged accesses p1 p2
+  unchanged accesses (InsPerm' p1) (InsPerm' p2) = unchanged accesses p1 p2
+  unchanged accesses (UpdPerm' p1) (UpdPerm' p2) = unchanged accesses p1 p2
+  unchanged accesses (DelPerm' p1) (DelPerm' p2) = unchanged accesses p1 p2
+
+-----------------------------
+
+unPermDefPermission :: PermDefPermission b perm -> perm b
+unPermDefPermission = \case
+  SelPerm' p -> p
+  InsPerm' p -> p
+  UpdPerm' p -> p
+  DelPerm' p -> p
+
+reflectPermDefPermission :: PermDefPermission b a -> PermType
+reflectPermDefPermission = \case
+  SelPerm' _ -> PTSelect
+  InsPerm' _ -> PTInsert
+  UpdPerm' _ -> PTUpdate
+  DelPerm' _ -> PTDelete
+
+instance (Backend b, ToJSON (perm b)) => ToJSON (PermDef b perm) where
   toJSON = object . toAesonPairs
 
-instance (ToJSON a) => ToAesonPairs (PermDef a) where
+instance Backend b => ToAesonPairs (PermDef b perm) where
   toAesonPairs (PermDef rn perm comment) =
     [ "role" .= rn,
       "permission" .= perm,
@@ -140,7 +200,7 @@ instance Backend b => FromJSON (InsPerm b) where
 instance Backend b => ToJSON (InsPerm b) where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
 
-type InsPermDef b = PermDef (InsPerm b)
+type InsPermDef b = PermDef b InsPerm
 
 -- Select constraint
 data SelPerm (b :: BackendType) = SelPerm
@@ -172,7 +232,7 @@ instance Backend b => FromJSON (SelPerm b) where
         <*> o .:? "allow_aggregations" .!= False
         <*> o .:? "computed_fields" .!= []
 
-type SelPermDef b = PermDef (SelPerm b)
+type SelPermDef b = PermDef b SelPerm
 
 -- Delete permission
 data DelPerm (b :: BackendType) = DelPerm
@@ -187,7 +247,7 @@ instance Backend b => FromJSON (DelPerm b) where
 instance Backend b => ToJSON (DelPerm b) where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
 
-type DelPermDef b = PermDef (DelPerm b)
+type DelPermDef b = PermDef b DelPerm
 
 -- Update constraint
 data UpdPerm (b :: BackendType) = UpdPerm
@@ -211,4 +271,23 @@ instance Backend b => FromJSON (UpdPerm b) where
 instance Backend b => ToJSON (UpdPerm b) where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
 
-type UpdPermDef b = PermDef (UpdPerm b)
+type UpdPermDef b = PermDef b UpdPerm
+
+-- The Expression-level TemplateHaskell splices below fail unless there is a
+-- declaration-level splice before to ensure phase separation.
+-- See https://gitlab.haskell.org/ghc/ghc/-/issues/9813
+$(return [])
+
+instance Backend b => FromJSON (PermDef b SelPerm) where
+  parseJSON = $(mkParseJSON hasuraJSON ''PermDef)
+
+instance Backend b => FromJSON (PermDef b InsPerm) where
+  parseJSON = $(mkParseJSON hasuraJSON ''PermDef)
+
+instance Backend b => FromJSON (PermDef b UpdPerm) where
+  parseJSON = $(mkParseJSON hasuraJSON ''PermDef)
+
+instance Backend b => FromJSON (PermDef b DelPerm) where
+  parseJSON = $(mkParseJSON hasuraJSON ''PermDef)
+
+$(makeLenses ''PermDef)
