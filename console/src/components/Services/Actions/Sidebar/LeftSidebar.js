@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router';
 
 import LeftSubSidebar from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
@@ -26,21 +26,16 @@ const LeftSidebar = ({
     );
   };
 
-  // TODO test search
-  let actionsList = [];
-  if (searchText) {
-    const secondaryResults = [];
-    actions.forEach(a => {
-      if (a.name.startsWith(searchText)) {
-        actionsList.push(a);
-      } else if (a.name.includes(searchText)) {
-        secondaryResults.push(a);
-      }
-    });
-    actionsList = [...actionsList, ...secondaryResults];
-  } else {
-    actionsList = [...actions];
-  }
+  const actionsList = useMemo(() => {
+    if (!searchText) return actions;
+
+    return actions.reduce((acc, action) => {
+      const idx = action.name.search(RegExp(searchText, 'i'));
+      if (idx === 0) return [action, ...acc];
+      if (idx > 0) return [...acc, action];
+      return acc;
+    }, []);
+  }, [searchText, actions]);
 
   const getActionIcon = action => {
     switch (action.definition.type) {
