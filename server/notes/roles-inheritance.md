@@ -1,6 +1,6 @@
-This note is in [Hasura.RQL.DDL.Schema.Cache](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache.hs#L84).
+This note is in [Hasura.RQL.DDL.Schema.Cache](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache.hs#L85).
 It is referenced at:
-  - line 91 of [Hasura.RQL.DDL.Schema.Cache.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache/Permission.hs#L91)
+  - line 92 of [Hasura.RQL.DDL.Schema.Cache.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache/Permission.hs#L92)
 
 # Roles Inheritance
 
