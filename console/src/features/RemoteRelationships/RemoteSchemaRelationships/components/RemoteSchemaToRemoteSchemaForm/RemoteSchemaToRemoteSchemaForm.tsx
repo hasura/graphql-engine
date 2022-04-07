@@ -3,16 +3,16 @@ import React from 'react';
 import { Form } from '@/new-components/Form';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { Button } from '@/new-components/Button';
-
-import { fireNotification } from '@/new-components/Notifications';
-import {
-  RemoteRelOption,
-  RemoteRelRadioCardPicker,
-} from '@/new-components/RemoteSchemaAndDbRadioCardPicker';
 import {
   allowedMetadataTypes,
   useMetadataMigration,
 } from '@/features/MetadataAPI';
+
+import { fireNotification } from '@/new-components/Notifications';
+import {
+  RemoteRelOption,
+  RelationshipTypeCardRadioGroup,
+} from './RelationshipTypeCardRadioGroup';
 
 import { FormElements } from './FormElements';
 import { generateLhsFields } from '../../utils';
@@ -101,7 +101,7 @@ export const RemoteSchemaToRemoteSchemaForm = (
 
           <hr />
 
-          <RemoteRelRadioCardPicker
+          <RelationshipTypeCardRadioGroup
             value="remoteSchema"
             onChange={relModeHandler}
           />
