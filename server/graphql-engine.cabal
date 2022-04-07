@@ -38,8 +38,9 @@ flag profiling
 
 -- A single flag to enable all optimization-related settings at once, for all
 -- hasura code.
--- We share this flag name across our .cabal projects so we can switch it on or
--- off for all of them at the top level of our cabal.project(.*) files
+--
+-- We share this flag name across our Haskell projects so we can switch it on or
+-- off for all of them at in our Cabal project files.
 flag optimize-hasura
   description: Compile hasura code with appropriate optimizations
   default: True

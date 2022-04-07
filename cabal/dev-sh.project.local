@@ -1,5 +1,5 @@
--- This is the local cabal configuration file used by the 'scripts/dev.sh'
--- development script, which uses `... --project-file=cabal.project.dev-sh`
+-- This is the local cabal configuration file used by the `scripts/dev.sh`
+-- development script, which uses `... --project-file=cabal/dev-sh.project`
 -- which in turn consults this file.
 --
 -- You can temporarily override values here rather than modifying 'dev.sh'
