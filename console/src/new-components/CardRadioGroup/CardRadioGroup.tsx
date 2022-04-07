@@ -44,10 +44,11 @@ export const CardRadioGroup = <T extends string = string>(
                 className="cursor-pointer rounded-full border shadow-sm border-gray-300 hover:border-gray-400 focus:ring-yellow-400"
                 onChange={() => onChange(iValue)}
                 checked={value === iValue}
+                data-test={`radio-select-${iValue}`}
               />
               <label
                 htmlFor={`radio-select-${iValue}`}
-                className="cursor-pointer ml-sm"
+                className="cursor-pointer ml-sm font-semibold"
               >
                 {title}
               </label>

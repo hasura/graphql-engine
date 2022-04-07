@@ -61,7 +61,6 @@ export const RemoteSchemaToRemoteSchemaForm = (
     const lhs_fields = generateLhsFields(
       values.resultSet as Record<string, unknown>
     );
-    // testing payload
     const requestBody = {
       type: 'create_remote_schema_remote_relationship' as allowedMetadataTypes,
       args: {
@@ -91,15 +90,15 @@ export const RemoteSchemaToRemoteSchemaForm = (
       onSubmit={submit}
     >
       {options => (
-        <div className="grid gap-4 border border-gray-300 rounded shadow-sm p-4 w-full">
-          <div className="flex items-center gap-4 w-full">
+        <div className="grid border border-gray-300 rounded shadow-sm p-4 w-full">
+          <div className="flex items-center gap-4 w-full mb-md">
             <Button type="button" size="sm" onClick={closeHandler}>
               Cancel
             </Button>
             <p className="font-semibold m-0">Create New Relationship</p>
           </div>
 
-          <hr />
+          <hr className="mb-md border-gray-300" />
 
           <RelationshipTypeCardRadioGroup
             value="remoteSchema"
@@ -116,6 +115,7 @@ export const RemoteSchemaToRemoteSchemaForm = (
               type="submit"
               isLoading={mutation.isLoading}
               loadingText="Creating relationship"
+              data-test="add-rs-relationship"
             >
               Add Relationship
             </Button>

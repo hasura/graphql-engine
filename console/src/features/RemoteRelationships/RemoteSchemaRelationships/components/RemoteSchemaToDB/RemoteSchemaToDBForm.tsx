@@ -9,17 +9,23 @@ import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { Button } from '@/new-components/Button';
 import { FormElements } from './FormElements';
 import { schema, Schema } from './schema';
+import {
+  RelationshipTypeCardRadioGroup,
+  RemoteRelOption,
+} from '../RemoteSchemaToRemoteSchemaForm/RelationshipTypeCardRadioGroup';
 
 export type RemoteSchemaToDbFormProps = {
   sourceRemoteSchema: string;
   closeHandler?: () => void;
   onSuccess?: () => void;
+  relModeHandler: (v: RemoteRelOption) => void;
 };
 
 export const RemoteSchemaToDbForm = ({
   sourceRemoteSchema,
   closeHandler,
   onSuccess,
+  relModeHandler,
 }: RemoteSchemaToDbFormProps) => {
   const mutation = useMetadataMigration({
     onSuccess: () => {
@@ -47,7 +53,7 @@ export const RemoteSchemaToDbForm = ({
     schema: '',
     table: '',
     typeName: '',
-    source_remote_schema: sourceRemoteSchema,
+    sourceRemoteSchema,
   };
 
   const submit = (values: Schema) => {
@@ -95,6 +101,14 @@ export const RemoteSchemaToDbForm = ({
                 Create New Relationship
               </span>
             </div>
+            <hr className="mb-md border-gray-300" />
+
+            {/* relationship meta */}
+            <RelationshipTypeCardRadioGroup
+              value="remoteDB"
+              onChange={relModeHandler}
+            />
+
             <FormElements sourceRemoteSchema={sourceRemoteSchema} />
             {/* submit */}
             <div>
