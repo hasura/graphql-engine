@@ -14,7 +14,7 @@
 </span><span id="line-14"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-15"></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.Backend.html#BackendTransport"><span class="hs-identifier hs-type">BackendTransport</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataWrapper"><span class="hs-identifier hs-type">DataWrapper</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-17"></span><span>  </span><span id="local-6989586621688337712"><span class="annot"><span class="annottext">runDBQuery :: RequestId
+</span><span id="line-17"></span><span>  </span><span id="local-6989586621688441568"><span class="annot"><span class="annottext">runDBQuery :: RequestId
 -&gt; GQLReqUnparsed
 -&gt; RootFieldAlias
 -&gt; UserInfo
@@ -37,7 +37,7 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;runDBQuery: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-19"></span><span>  </span><span id="local-6989586621688337710"><span class="annot"><span class="annottext">runDBQueryExplain :: DBStepInfo 'DataWrapper -&gt; m EncJSON
+</span><span id="line-19"></span><span>  </span><span id="local-6989586621688441566"><span class="annot"><span class="annottext">runDBQueryExplain :: DBStepInfo 'DataWrapper -&gt; m EncJSON
 </span><a href="Hasura.GraphQL.Transport.Backend.html#runDBQueryExplain"><span class="hs-identifier hs-var hs-var hs-var hs-var">runDBQueryExplain</span></a></span></span><span> </span><span class="annot"><span class="annottext">DBStepInfo 'DataWrapper
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-20"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m EncJSON
@@ -45,7 +45,7 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;runDBQueryExplain: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-21"></span><span>  </span><span id="local-6989586621688337708"><span class="annot"><span class="annottext">runDBMutation :: RequestId
+</span><span id="line-21"></span><span>  </span><span id="local-6989586621688441564"><span class="annot"><span class="annottext">runDBMutation :: RequestId
 -&gt; GQLReqUnparsed
 -&gt; RootFieldAlias
 -&gt; UserInfo
@@ -68,7 +68,50 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;runDBMutation: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-23"></span><span>  </span><span id="local-6989586621688337706"><span class="annot"><span class="annottext">runDBSubscription :: SourceConfig 'DataWrapper
+</span><span id="line-23"></span><span>  </span><span id="local-6989586621688441562"><span class="annot"><span class="annottext">runDBStreamingSubscription :: SourceConfig 'DataWrapper
+-&gt; MultiplexedQuery 'DataWrapper
+-&gt; [(CohortId, CohortVariables)]
+-&gt; m (DiffTime,
+      Either QErr [(CohortId, ByteString, CursorVariableValues)])
+</span><a href="Hasura.GraphQL.Transport.Backend.html#runDBStreamingSubscription"><span class="hs-identifier hs-var hs-var hs-var hs-var">runDBStreamingSubscription</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataWrapper
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">MultiplexedQuery 'DataWrapper
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">[(CohortId, CohortVariables)]
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><span class="annottext">IO
+  (DiffTime,
+   Either QErr [(CohortId, ByteString, CursorVariableValues)])
+-&gt; m (DiffTime,
+      Either QErr [(CohortId, ByteString, CursorVariableValues)])
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO
+   (DiffTime,
+    Either QErr [(CohortId, ByteString, CursorVariableValues)])
+ -&gt; m (DiffTime,
+       Either QErr [(CohortId, ByteString, CursorVariableValues)]))
+-&gt; (IOError
+    -&gt; IO
+         (DiffTime,
+          Either QErr [(CohortId, ByteString, CursorVariableValues)]))
+-&gt; IOError
+-&gt; m (DiffTime,
+      Either QErr [(CohortId, ByteString, CursorVariableValues)])
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">IOError
+-&gt; IO
+     (DiffTime,
+      Either QErr [(CohortId, ByteString, CursorVariableValues)])
+forall (m :: * -&gt; *) e a. (MonadThrow m, Exception e) =&gt; e -&gt; m a
+</span><span class="hs-identifier hs-var">throwIO</span></span><span> </span><span class="annot"><span class="annottext">(IOError
+ -&gt; m (DiffTime,
+       Either QErr [(CohortId, ByteString, CursorVariableValues)]))
+-&gt; IOError
+-&gt; m (DiffTime,
+      Either QErr [(CohortId, ByteString, CursorVariableValues)])
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; IOError
+</span><span class="hs-identifier hs-var">userError</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;runDBStreamingSubscription: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-25"></span><span>  </span><span id="local-6989586621688441557"><span class="annot"><span class="annottext">runDBSubscription :: SourceConfig 'DataWrapper
 -&gt; MultiplexedQuery 'DataWrapper
 -&gt; [(CohortId, CohortVariables)]
 -&gt; m (DiffTime, Either QErr [(CohortId, ByteString)])
@@ -76,7 +119,7 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">MultiplexedQuery 'DataWrapper
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">[(CohortId, CohortVariables)]
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-24"></span><span>    </span><span class="annot"><span class="annottext">IO (DiffTime, Either QErr [(CohortId, ByteString)])
+</span><span id="line-26"></span><span>    </span><span class="annot"><span class="annottext">IO (DiffTime, Either QErr [(CohortId, ByteString)])
 -&gt; m (DiffTime, Either QErr [(CohortId, ByteString)])
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (DiffTime, Either QErr [(CohortId, ByteString)])
@@ -93,4 +136,4 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; IOError
 </span><span class="hs-identifier hs-var">userError</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;runDBSubscription: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-25"></span></pre></body></html>
+</span><span id="line-27"></span></pre></body></html>

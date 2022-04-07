@@ -20,7 +20,7 @@
 </span><span id="line-20"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="MultiplexedQuery"><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#MultiplexedQuery"><span class="hs-identifier hs-var">MultiplexedQuery</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataWrapper"><span class="hs-identifier hs-type">DataWrapper</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span>
 </span><span id="line-21"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="ExecutionMonad"><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#ExecutionMonad"><span class="hs-identifier hs-var">ExecutionMonad</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataWrapper"><span class="hs-identifier hs-type">DataWrapper</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Tracing.html#TraceT"><span class="hs-identifier hs-type">Tracing.TraceT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span class="hs-special">)</span><span>
 </span><span id="line-22"></span><span>
-</span><span id="line-23"></span><span>  </span><span id="local-6989586621688337629"><span class="annot"><span class="annottext">mkDBQueryPlan :: UserInfo
+</span><span id="line-23"></span><span>  </span><span id="local-6989586621688441480"><span class="annot"><span class="annottext">mkDBQueryPlan :: UserInfo
 -&gt; SourceName
 -&gt; SourceConfig 'DataWrapper
 -&gt; QueryDB 'DataWrapper Void (UnpreparedValue 'DataWrapper)
@@ -35,7 +35,7 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;mkDBQueryPlan: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-25"></span><span>  </span><span id="local-6989586621688337627"><span class="annot"><span class="annottext">mkDBQueryExplain :: RootFieldAlias
+</span><span id="line-25"></span><span>  </span><span id="local-6989586621688441478"><span class="annot"><span class="annottext">mkDBQueryExplain :: RootFieldAlias
 -&gt; UserInfo
 -&gt; SourceName
 -&gt; SourceConfig 'DataWrapper
@@ -52,7 +52,7 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;mkDBQueryExplain: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-27"></span><span>  </span><span id="local-6989586621688337625"><span class="annot"><span class="annottext">mkDBMutationPlan :: UserInfo
+</span><span id="line-27"></span><span>  </span><span id="local-6989586621688441476"><span class="annot"><span class="annottext">mkDBMutationPlan :: UserInfo
 -&gt; StringifyNumbers
 -&gt; SourceName
 -&gt; SourceConfig 'DataWrapper
@@ -69,7 +69,7 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;mkDBMutationPlan: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-29"></span><span>  </span><span id="local-6989586621688337623"><span class="annot"><span class="annottext">mkDBSubscriptionPlan :: UserInfo
+</span><span id="line-29"></span><span>  </span><span id="local-6989586621688441474"><span class="annot"><span class="annottext">mkLiveQuerySubscriptionPlan :: UserInfo
 -&gt; SourceName
 -&gt; SourceConfig 'DataWrapper
 -&gt; Maybe Name
@@ -77,7 +77,7 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
      (QueryDB 'DataWrapper Void (UnpreparedValue 'DataWrapper))
 -&gt; m (SubscriptionQueryPlan
         'DataWrapper (MultiplexedQuery 'DataWrapper))
-</span><a href="Hasura.GraphQL.Execute.Backend.html#mkDBSubscriptionPlan"><span class="hs-identifier hs-var hs-var hs-var hs-var">mkDBSubscriptionPlan</span></a></span></span><span> </span><span class="annot"><span class="annottext">UserInfo
+</span><a href="Hasura.GraphQL.Execute.Backend.html#mkLiveQuerySubscriptionPlan"><span class="hs-identifier hs-var hs-var hs-var hs-var">mkLiveQuerySubscriptionPlan</span></a></span></span><span> </span><span class="annot"><span class="annottext">UserInfo
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataWrapper
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe Name
@@ -88,8 +88,26 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;mkDBSubscriptionPlan: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-31"></span><span>  </span><span id="local-6989586621688337621"><span class="annot"><span class="annottext">mkDBRemoteRelationshipPlan :: UserInfo
+</span><span class="hs-string">&quot;mkLiveQuerySubscriptionPlan: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-31"></span><span>  </span><span id="local-6989586621688441472"><span class="annot"><span class="annottext">mkDBStreamingSubscriptionPlan :: UserInfo
+-&gt; SourceName
+-&gt; SourceConfig 'DataWrapper
+-&gt; (RootFieldAlias,
+    QueryDB 'DataWrapper Void (UnpreparedValue 'DataWrapper))
+-&gt; m (SubscriptionQueryPlan
+        'DataWrapper (MultiplexedQuery 'DataWrapper))
+</span><a href="Hasura.GraphQL.Execute.Backend.html#mkDBStreamingSubscriptionPlan"><span class="hs-identifier hs-var hs-var hs-var hs-var">mkDBStreamingSubscriptionPlan</span></a></span></span><span> </span><span class="annot"><span class="annottext">UserInfo
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataWrapper
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">(RootFieldAlias,
+ QueryDB 'DataWrapper Void (UnpreparedValue 'DataWrapper))
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-32"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m (SubscriptionQueryPlan 'DataWrapper Void)
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;mkLiveQuerySubscriptionPlan: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-33"></span><span>  </span><span id="local-6989586621688441470"><span class="annot"><span class="annottext">mkDBRemoteRelationshipPlan :: UserInfo
 -&gt; SourceName
 -&gt; SourceConfig 'DataWrapper
 -&gt; NonEmpty Object
@@ -107,17 +125,17 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">(FieldName,
  SourceRelationshipSelection 'DataWrapper Void UnpreparedValue)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-32"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; m (DBStepInfo 'DataWrapper)
+</span><span id="line-34"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; m (DBStepInfo 'DataWrapper)
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;mkDBRemoteRelationshipPlan: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-33"></span><span>  </span><span id="local-6989586621688337619"><span class="annot"><span class="annottext">mkSubscriptionExplain :: SubscriptionQueryPlan 'DataWrapper (MultiplexedQuery 'DataWrapper)
+</span><span id="line-35"></span><span>  </span><span id="local-6989586621688441468"><span class="annot"><span class="annottext">mkSubscriptionExplain :: SubscriptionQueryPlan 'DataWrapper (MultiplexedQuery 'DataWrapper)
 -&gt; m SubscriptionQueryPlanExplanation
 </span><a href="Hasura.GraphQL.Execute.Backend.html#mkSubscriptionExplain"><span class="hs-identifier hs-var hs-var hs-var hs-var">mkSubscriptionExplain</span></a></span></span><span> </span><span class="annot"><span class="annottext">SubscriptionQueryPlan 'DataWrapper (MultiplexedQuery 'DataWrapper)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-34"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m SubscriptionQueryPlanExplanation
+</span><span id="line-36"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m SubscriptionQueryPlanExplanation
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;mkSubscriptionExplain: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-35"></span></pre></body></html>
+</span><span id="line-37"></span></pre></body></html>
