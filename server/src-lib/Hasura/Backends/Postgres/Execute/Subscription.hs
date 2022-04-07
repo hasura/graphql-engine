@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
--- | Postgres Execute LiveQuery
+-- | Postgres Execute subscription
 --
 -- Multiplex is an optimization which allows us to group similar queries into a
 -- single query, and routing the response rows afterwards. See
@@ -8,13 +8,15 @@
 -- for more details
 --
 -- See 'Hasura.Backends.Postgres.Instances.Execute'.
-module Hasura.Backends.Postgres.Execute.LiveQuery
+module Hasura.Backends.Postgres.Execute.Subscription
   ( MultiplexedQuery (..),
     QueryParametersInfo (..),
     mkMultiplexedQuery,
+    mkStreamingMultiplexedQuery,
     resolveMultiplexedValue,
     validateVariables,
     executeMultiplexedQuery,
+    executeStreamingMultiplexedQuery,
     executeQuery,
   )
 where
@@ -112,6 +114,7 @@ toSQLFromItem = flip \case
   QDBMultipleRows s -> S.mkSelFromItem $ DS.mkSQLSelect JASMultipleRows s
   QDBAggregation s -> S.mkSelFromItem $ DS.mkAggregateSelect s
   QDBConnection s -> S.mkSelectWithFromItem $ DS.mkConnectionSelect s
+  QDBStreamMultipleRows s -> S.mkSelFromItem $ DS.mkStreamSQLSelect s
 
 mkMultiplexedQuery ::
   ( Backend ('Postgres pgKind),
@@ -161,6 +164,59 @@ mkMultiplexedQuery rootFields =
       ]
 
     mkQualifiedIdentifier prefix = S.SEQIdentifier . S.QIdentifier (S.QualifiedIdentifier prefix Nothing) -- TODO fix this Nothing of course
+    aliasToIdentifier = Identifier . G.unName
+
+mkStreamingMultiplexedQuery ::
+  ( Backend ('Postgres pgKind),
+    DS.PostgresAnnotatedFieldJSON pgKind
+  ) =>
+  (G.Name, (QueryDB ('Postgres pgKind) Void S.SQLExp)) ->
+  MultiplexedQuery
+mkStreamingMultiplexedQuery (fieldAlias, resolvedAST) =
+  MultiplexedQuery . Q.fromBuilder . toSQL $
+    S.mkSelect
+      { S.selExtr =
+          -- SELECT _subs.result_id, _fld_resp.root, _fld_resp.cursor AS result
+          [ S.Extractor (mkQualifiedIdentifier (Identifier "_subs") (Identifier "result_id")) Nothing,
+            S.Extractor (mkQualifiedIdentifier (Identifier "_fld_resp") (Identifier "root")) (Just . S.Alias $ Identifier "result"),
+            S.Extractor (mkQualifiedIdentifier (Identifier "_fld_resp") (Identifier "cursor")) (Just . S.Alias $ Identifier "cursor")
+          ],
+        S.selFrom =
+          Just $
+            S.FromExp
+              [ S.FIJoin $
+                  S.JoinExpr subsInputFromItem S.LeftOuter responseLateralFromItem (S.JoinOn $ S.BELit True)
+              ]
+      }
+  where
+    -- FROM unnest($1::uuid[], $2::json[]) _subs (result_id, result_vars)
+    subsInputFromItem =
+      S.FIUnnest
+        [S.SEPrep 1 `S.SETyAnn` S.TypeAnn "uuid[]", S.SEPrep 2 `S.SETyAnn` S.TypeAnn "json[]"]
+        (S.Alias $ Identifier "_subs")
+        [S.SEIdentifier $ Identifier "result_id", S.SEIdentifier $ Identifier "result_vars"]
+
+    -- LEFT OUTER JOIN LATERAL ( ... ) _fld_resp
+    responseLateralFromItem = S.mkLateralFromItem selectRootFields (S.Alias $ Identifier "_fld_resp")
+    selectRootFields =
+      S.mkSelect
+        { S.selExtr = [(S.Extractor rootFieldJsonAggregate (Just . S.Alias $ Identifier "root")), cursorExtractor],
+          S.selFrom =
+            Just . S.FromExp $
+              pure $ toSQLFromItem (S.Alias $ aliasToIdentifier fieldAlias) resolvedAST
+        }
+
+    -- json_build_object('field1', field1.root, 'field2', field2.root, ...)
+    rootFieldJsonAggregate = S.SEFnApp "json_build_object" rootFieldJsonPair Nothing
+    rootFieldJsonPair =
+      [ S.SELit (G.unName fieldAlias),
+        mkQualifiedIdentifier (aliasToIdentifier fieldAlias) (Identifier "root")
+      ]
+
+    -- to_json("root"."cursor") AS "cursor"
+    cursorSQLExp = S.SEFnApp "to_json" [mkQualifiedIdentifier (aliasToIdentifier fieldAlias) (Identifier "cursor")] Nothing
+    cursorExtractor = S.Extractor cursorSQLExp (Just . S.Alias $ Identifier "cursor")
+    mkQualifiedIdentifier prefix = S.SEQIdentifier . S.QIdentifier (S.QualifiedIdentifier prefix Nothing)
     aliasToIdentifier = Identifier . G.unName
 
 -- | Resolves an 'GR.UnresolvedVal' by converting 'GR.UVPG' values to SQL
@@ -220,7 +276,16 @@ executeMultiplexedQuery ::
   m [(CohortId, B.ByteString)]
 executeMultiplexedQuery (MultiplexedQuery query) = executeQuery query
 
--- | Internal; used by both 'executeMultiplexedQuery' and 'pgDBSubscriptionExplain'.
+executeStreamingMultiplexedQuery ::
+  (MonadTx m) =>
+  MultiplexedQuery ->
+  [(CohortId, CohortVariables)] ->
+  m [(CohortId, B.ByteString, Q.AltJ CursorVariableValues)]
+executeStreamingMultiplexedQuery (MultiplexedQuery query) cohorts = do
+  executeQuery query cohorts
+
+-- | Internal; used by both 'executeMultiplexedQuery', 'executeStreamingMultiplexedQuery'
+-- and 'pgDBSubscriptionExplain'.
 executeQuery ::
   (MonadTx m, Q.FromRow a) =>
   Q.Query ->

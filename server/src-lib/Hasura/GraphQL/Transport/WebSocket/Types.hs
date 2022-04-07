@@ -3,9 +3,10 @@ module Hasura.GraphQL.Transport.WebSocket.Types
     WSConn,
     WSConnData (WSConnData, _wscOpMap, _wscUser),
     WSConnState (CSInitError, CSInitialised, CSNotInitialised),
-    WSServerEnv (WSServerEnv, _wseCorsPolicy, _wseHManager, _wseKeepAliveDelay, _wseLiveQMap, _wseLogger, _wseServer, _wseServerMetrics),
+    WSServerEnv (WSServerEnv, _wseCorsPolicy, _wseHManager, _wseKeepAliveDelay, _wseSubscriptionState, _wseLogger, _wseServer, _wseServerMetrics),
     WsClientState (WsClientState, wscsIpAddress, wscsReqHeaders, wscsTokenExpTime, wscsUserInfo),
     WsHeaders (WsHeaders, unWsHeaders),
+    SubscriberType (..),
   )
 where
 
@@ -70,7 +71,7 @@ data WSConnData = WSConnData
 
 data WSServerEnv = WSServerEnv
   { _wseLogger :: !(L.Logger L.Hasura),
-    _wseLiveQMap :: !ES.SubscriptionsState,
+    _wseSubscriptionState :: !ES.SubscriptionsState,
     -- | an action that always returns the latest version of the schema cache. See 'SchemaCacheRef'.
     _wseGCtxMap :: !(IO (SchemaCache, SchemaCacheVer)),
     _wseHManager :: !HTTP.Manager,
@@ -83,7 +84,12 @@ data WSServerEnv = WSServerEnv
     _wseServerMetrics :: !ServerMetrics
   }
 
-type OperationMap = STMMap.Map OperationId (ES.LiveQuerySubscriberDetails, Maybe OperationName)
+data SubscriberType
+  = LiveQuerySubscriber !ES.LiveQuerySubscriberDetails
+  | StreamingQuerySubscriber !ES.StreamingSubscriberDetails
+
+type OperationMap =
+  STMMap.Map OperationId (SubscriberType, Maybe OperationName)
 
 type WSServer = WS.WSServer WSConnData
 

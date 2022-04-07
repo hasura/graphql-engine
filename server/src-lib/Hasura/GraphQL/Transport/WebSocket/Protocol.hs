@@ -26,6 +26,9 @@ module Hasura.GraphQL.Transport.WebSocket.Protocol
     keepAliveMessage,
     showSubProtocol,
     toWSSubProtocol,
+
+    -- * exported for testing
+    unsafeMkOperationId,
   )
 where
 
@@ -62,6 +65,9 @@ toWSSubProtocol str = case str of
 -- This is set by the client when it connects to the server
 newtype OperationId = OperationId {unOperationId :: Text}
   deriving (Show, Eq, J.ToJSON, J.FromJSON, IsString, Hashable)
+
+unsafeMkOperationId :: Text -> OperationId
+unsafeMkOperationId = OperationId
 
 data ServerMsgType
   = -- specific to `Apollo` clients

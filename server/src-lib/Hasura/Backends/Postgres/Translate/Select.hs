@@ -31,10 +31,12 @@
 --       @MonadWriter JoinTree@, see 'withWriteJoinTree'
 module Hasura.Backends.Postgres.Translate.Select
   ( selectQuerySQL,
+    selectStreamQuerySQL,
     selectAggregateQuerySQL,
     connectionSelectQuerySQL,
     asSingleRowJsonResp,
     mkSQLSelect,
+    mkStreamSQLSelect,
     mkAggregateSelect,
     mkConnectionSelect,
     PostgresAnnotatedFieldJSON,
@@ -51,9 +53,11 @@ import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.IdentifierUniqueness
 import Hasura.Backends.Postgres.SQL.Types
+import Hasura.Backends.Postgres.SQL.Value (withConstructorFn)
 import Hasura.Backends.Postgres.Translate.BoolExp
 import Hasura.Backends.Postgres.Translate.Column (toJSONableExp)
 import Hasura.Backends.Postgres.Translate.Types
+import Hasura.Backends.Postgres.Types.Column (unsafePGColumnToBackend)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Schema.Common (currentNodeIdVersion, nodeIdVersionInt)
@@ -76,6 +80,14 @@ selectQuerySQL ::
   Q.Query
 selectQuerySQL jsonAggSelect sel =
   Q.fromBuilder $ toSQL $ mkSQLSelect jsonAggSelect sel
+
+selectStreamQuerySQL ::
+  forall pgKind.
+  (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) =>
+  AnnSimpleStreamSelect ('Postgres pgKind) ->
+  Q.Query
+selectStreamQuerySQL sel =
+  Q.fromBuilder $ toSQL $ mkStreamSQLSelect sel
 
 -- | Translates IR to Postgres queries for aggregated SELECTs.
 --
@@ -1395,6 +1407,86 @@ mkSQLSelect jsonAggSelect annSel =
     sourcePrefixes = SourcePrefixes rootFldIdentifier rootFldIdentifier
     rootFldName = FieldName "root"
     rootFldAls = S.Alias $ toIdentifier rootFldName
+
+mkStreamSQLSelect ::
+  forall pgKind.
+  ( Backend ('Postgres pgKind),
+    PostgresAnnotatedFieldJSON pgKind
+  ) =>
+  AnnSimpleStreamSelect ('Postgres pgKind) ->
+  S.Select
+mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) =
+  let cursorArg = _ssaCursorArg args
+      cursorColInfo = _sciColInfo cursorArg
+      annOrderbyCol = AOCColumn cursorColInfo
+      basicOrderType =
+        bool S.OTAsc S.OTDesc $ _sciOrdering cursorArg == CODescending
+      orderByItems =
+        nonEmpty $ pure $ OrderByItemG (Just basicOrderType) annOrderbyCol Nothing
+      cursorBoolExp =
+        let orderByOpExp = bool ALT AGT $ basicOrderType == S.OTAsc
+            sqlExp =
+              fromResVars
+                (CollectableTypeScalar $ unsafePGColumnToBackend $ cvType (_sciInitialValue cursorArg))
+                ["cursor", getPGColTxt $ ciColumn cursorColInfo]
+         in BoolFld $ AVColumn cursorColInfo [(orderByOpExp sqlExp)]
+
+      selectArgs =
+        noSelectArgs
+          { _saWhere =
+              Just $ maybe cursorBoolExp (andAnnBoolExps cursorBoolExp) $ _ssaWhere args,
+            _saOrderBy = orderByItems,
+            _saLimit = Just $ _ssaBatchSize args
+          }
+      sqlSelect = AnnSelectG fields from perm selectArgs strfyNum
+      permLimitSubQuery = PLSQNotRequired
+      ((selectSource, nodeExtractors), joinTree) =
+        runWriter $
+          flip runReaderT strfyNum $
+            processAnnSimpleSelect sourcePrefixes rootFldName permLimitSubQuery sqlSelect
+      selectNode = SelectNode nodeExtractors joinTree
+      topExtractor =
+        asJsonAggExtr JASMultipleRows rootFldAls permLimitSubQuery $
+          orderByForJsonAgg selectSource
+      cursorLatestValueExp :: S.SQLExp =
+        let pgColumn = ciColumn cursorColInfo
+            mkMaxOrMinSQLExp maxOrMin col =
+              S.SEFnApp maxOrMin [S.SEIdentifier col] Nothing
+            maxOrMinTxt = bool "MIN" "MAX" $ basicOrderType == S.OTAsc
+            -- text encoding the cursor value while it's fetched from the DB, because
+            -- we can then directly reuse this value, otherwise if this were json encoded
+            -- then we'd have to parse the value and then convert it into a text encoded value
+            colExp =
+              [ S.SELit (getPGColTxt pgColumn),
+                S.SETyAnn
+                  (mkMaxOrMinSQLExp maxOrMinTxt $ mkBaseTableColumnAlias rootFldIdentifier pgColumn)
+                  S.textTypeAnn
+              ]
+         in -- SELECT json_build_object ('col1', MAX(col1) :: text)
+
+            S.SEFnApp "json_build_object" colExp Nothing
+      cursorLatestValueExtractor = S.Extractor cursorLatestValueExp (Just $ S.Alias $ Identifier "cursor")
+      arrayNode = MultiRowSelectNode [topExtractor, cursorLatestValueExtractor] selectNode
+   in prefixNumToAliases $
+        generateSQLSelectFromArrayNode selectSource arrayNode $ S.BELit True
+  where
+    rootFldIdentifier = toIdentifier rootFldName
+    sourcePrefixes = SourcePrefixes rootFldIdentifier rootFldIdentifier
+    rootFldName = FieldName "root"
+    rootFldAls = S.Alias $ toIdentifier rootFldName
+
+    -- TODO: these functions also exist in `resolveMultiplexedValue`, de-duplicate these!
+    fromResVars pgType jPath =
+      addTypeAnnotation pgType $
+        S.SEOpApp
+          (S.SQLOp "#>>")
+          [ S.SEQIdentifier $ S.QIdentifier (S.QualifiedIdentifier (Identifier "_subs") Nothing) (Identifier "result_vars"),
+            S.SEArray $ map S.SELit jPath
+          ]
+    addTypeAnnotation pgType =
+      flip S.SETyAnn (S.mkTypeAnn pgType) . case pgType of
+        CollectableTypeScalar scalarType -> withConstructorFn scalarType
+        CollectableTypeArray _ -> id
 
 mkConnectionSelect ::
   forall pgKind.

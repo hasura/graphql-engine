@@ -106,6 +106,8 @@ class
     Show (XNodesAgg b),
     Eq (XRelay b),
     Show (XRelay b),
+    Eq (XStreamingSubscription b),
+    Show (XStreamingSubscription b),
     -- Intermediate Representations
     Functor (BackendUpdate b),
     Foldable (BackendUpdate b),
@@ -157,6 +159,8 @@ class
 
   -- | Extension to flag the availability of object and array relationships in inserts (aka nested inserts).
   type XNestedInserts b :: Type
+
+  type XStreamingSubscription b :: Type
 
   -- functions on types
   functionArgScalarType :: FunctionArgType b -> ScalarType b

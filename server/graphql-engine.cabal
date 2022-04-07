@@ -15,7 +15,7 @@ extra-source-files:
   -- for recompilation detection to work correctly (especially in the presence
   -- of caching) we need to both communicate this data via a file (referenced in
   -- TH with addDependentFile) /and/ add that file to this section of the cabal
-  -- file. See: https://github.com/haskell/cabal/issues/4746 
+  -- file. See: https://github.com/haskell/cabal/issues/4746
   --
   -- This file is intentionally .gitignore'd
   CURRENT_VERSION
@@ -481,7 +481,7 @@ library
                      , Hasura.Backends.Postgres.DDL.Source
                      , Hasura.Backends.Postgres.DDL.Source.Version
                      , Hasura.Backends.Postgres.DDL.Table
-                     , Hasura.Backends.Postgres.Execute.LiveQuery
+                     , Hasura.Backends.Postgres.Execute.Subscription
                      , Hasura.Backends.Postgres.Execute.Insert
                      , Hasura.Backends.Postgres.Execute.Mutation
                      , Hasura.Backends.Postgres.Execute.Prepare
@@ -723,8 +723,10 @@ library
                      , Hasura.GraphQL.Execute.Subscription.Poll
                      , Hasura.GraphQL.Execute.Subscription.Poll.Common
                      , Hasura.GraphQL.Execute.Subscription.Poll.LiveQuery
+                     , Hasura.GraphQL.Execute.Subscription.Poll.StreamingQuery
                      , Hasura.GraphQL.Execute.Subscription.State
                      , Hasura.GraphQL.Execute.Subscription.TMap
+                     , Hasura.GraphQL.Execute.Subscription.Types
                      , Hasura.GraphQL.Execute.Mutation
                      , Hasura.GraphQL.Execute.Remote
                      , Hasura.GraphQL.Execute.RemoteJoin
@@ -843,6 +845,7 @@ test-suite graphql-engine-tests
     , cron
     , dependent-map
     , dependent-sum
+    , ekg-core
     , gdw-api
     , graphql-engine
     , graphql-parser
@@ -855,12 +858,14 @@ test-suite graphql-engine-tests
     , http-client
     , http-client-tls
     , http-types
+    , immortal
     , insert-ordered-containers
     , jose
     , kan-extensions
     , lens
     , lens-aeson
     , lifted-base
+    , list-t
     , mmorph
     , monad-control
     , mtl
@@ -875,6 +880,7 @@ test-suite graphql-engine-tests
     , scientific
     , split
     , stm
+    , stm-containers
     , template-haskell
     , text
     , time
@@ -882,6 +888,7 @@ test-suite graphql-engine-tests
     , transformers-base
     , unordered-containers
     , utf8-string
+    , uuid
     , vector
     , yaml
     -- mssql support
@@ -925,6 +932,7 @@ test-suite graphql-engine-tests
     Hasura.GraphQL.Parser.TestUtils
     Hasura.GraphQL.Schema.RemoteTest
     Hasura.IncrementalSpec
+    Hasura.StreamingSubscriptionSpec
     Hasura.QuickCheck.Instances
     Hasura.RQL.IR.Generator
     Hasura.RQL.IR.SelectSpec

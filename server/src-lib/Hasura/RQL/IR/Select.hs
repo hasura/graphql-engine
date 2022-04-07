@@ -39,8 +39,11 @@ module Hasura.RQL.IR.Select
     AnnObjectSelectG (..),
     AnnRelationSelectG (..),
     AnnSelectG (..),
+    AnnSelectStreamG (..),
     AnnSimpleSelect,
     AnnSimpleSelectG,
+    AnnSimpleStreamSelect,
+    AnnSimpleStreamSelectG,
     AnnotatedAggregateOrderBy (..),
     AnnotatedOrderByElement (..),
     AnnotatedOrderByItem,
@@ -80,10 +83,13 @@ module Hasura.RQL.IR.Select
     RemoteSourceSelect (..),
     SelectArgs,
     SelectArgsG (..),
+    SelectStreamArgsG (..),
+    SelectStreamArgs,
     SelectFrom,
     SelectFromG (..),
     RemoteRelationshipSelect (..),
     SourceRelationshipSelection (..),
+    StreamCursorItem (..),
     TableAggregateField,
     TableAggregateFieldG (..),
     TableAggregateFields,
@@ -165,6 +171,7 @@ import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
+import Hasura.RQL.Types.Subscription
 import Hasura.SQL.Backend
 
 -- Root selection
@@ -174,6 +181,7 @@ data QueryDB (b :: BackendType) (r :: Type) v
   | QDBSingleRow (AnnSimpleSelectG b r v)
   | QDBAggregation (AnnAggregateSelectG b r v)
   | QDBConnection (ConnectionSelect b r v)
+  | QDBStreamMultipleRows (AnnSimpleStreamSelectG b r v)
   deriving stock (Generic, Functor, Foldable, Traversable)
 
 instance Backend b => Bifoldable (QueryDB b) where
@@ -182,6 +190,7 @@ instance Backend b => Bifoldable (QueryDB b) where
     QDBSingleRow annSel -> bifoldMapAnnSelectG f g annSel
     QDBAggregation annSel -> bifoldMapAnnSelectG f g annSel
     QDBConnection connSel -> bifoldMap f g connSel
+    QDBStreamMultipleRows annSel -> bifoldMapAnnSelectStreamG f g annSel
 
 -- Select
 
@@ -210,13 +219,54 @@ deriving stock instance
   ) =>
   Show (AnnSelectG b f v)
 
+-- | IR type representing nodes for streaming subscriptions
+data
+  AnnSelectStreamG
+    (b :: BackendType)
+    (f :: Type -> Type)
+    (v :: Type) = AnnSelectStreamG
+  { -- | type to indicate if streaming subscription has been enabled in the `BackendType`.
+    --   This type helps avoiding missing case match patterns for backends where it's disabled.
+    _assnXStreamingSubscription :: XStreamingSubscription b,
+    -- | output selection fields
+    _assnFields :: Fields (f v),
+    -- | table information to select from
+    _assnFrom :: SelectFromG b v,
+    -- | select permissions
+    _assnPerm :: TablePermG b v,
+    -- | streaming arguments
+    _assnArgs :: SelectStreamArgsG b v,
+    _assnStrfyNum :: StringifyNumbers
+  }
+  deriving (Functor, Foldable, Traversable)
+
+deriving instance
+  ( Backend b,
+    Eq (BooleanOperators b v),
+    Eq v,
+    Eq (f v)
+  ) =>
+  Eq (AnnSelectStreamG b f v)
+
+deriving instance
+  ( Backend b,
+    Show (BooleanOperators b v),
+    Show v,
+    Show (f v)
+  ) =>
+  Show (AnnSelectStreamG b f v)
+
 type AnnSimpleSelectG b r v = AnnSelectG b (AnnFieldG b r) v
 
 type AnnAggregateSelectG b r v = AnnSelectG b (TableAggregateFieldG b r) v
 
+type AnnSimpleStreamSelectG b r v = AnnSelectStreamG b (AnnFieldG b r) v
+
 type AnnSimpleSelect b = AnnSimpleSelectG b Void (SQLExpression b)
 
 type AnnAggregateSelect b = AnnAggregateSelectG b Void (SQLExpression b)
+
+type AnnSimpleStreamSelect b = AnnSimpleStreamSelectG b Void (SQLExpression b)
 
 -- | We can't write a Bifoldable instance for AnnSelectG because the types don't line up.
 -- Instead, we provide this function which can be used to help define Bifoldable instances of other types
@@ -227,6 +277,13 @@ bifoldMapAnnSelectG f g AnnSelectG {..} =
     <> foldMap g _asnFrom
     <> foldMap g _asnPerm
     <> foldMap g _asnArgs
+
+bifoldMapAnnSelectStreamG :: (Backend b, Bifoldable (f b), Monoid m) => (r -> m) -> (v -> m) -> AnnSelectStreamG b (f b r) v -> m
+bifoldMapAnnSelectStreamG f g AnnSelectStreamG {..} =
+  foldMap (foldMap $ bifoldMap f g) _assnFields
+    <> foldMap g _assnFrom
+    <> foldMap g _assnPerm
+    <> foldMap g _assnArgs
 
 -- Relay select
 
@@ -335,6 +392,33 @@ type SelectFrom b = SelectFromG b (SQLExpression b)
 
 -- Select arguments
 
+data SelectStreamArgsG (b :: BackendType) v = SelectStreamArgsG
+  { -- | optional filter to filter the stream results
+    _ssaWhere :: !(Maybe (AnnBoolExp b v)),
+    -- | maximum number of rows to be returned in a single fetch
+    _ssaBatchSize :: !Int,
+    -- | info related to the cursor column, a single item data type
+    --   currently because only single column cursors are supported
+    _ssaCursorArg :: !(StreamCursorItem b)
+  }
+  deriving (Generic, Functor, Foldable, Traversable)
+
+type SelectStreamArgs b = SelectStreamArgsG b (SQLExpression b)
+
+deriving instance
+  ( Backend b,
+    Eq (BooleanOperators b v),
+    Eq v
+  ) =>
+  Eq (SelectStreamArgsG b v)
+
+deriving instance
+  ( Backend b,
+    Show (BooleanOperators b v),
+    Show v
+  ) =>
+  Show (SelectStreamArgsG b v)
+
 data SelectArgsG (b :: BackendType) v = SelectArgs
   { _saWhere :: Maybe (AnnBoolExp b v),
     _saOrderBy :: Maybe (NE.NonEmpty (AnnotatedOrderByItemG b v)),
@@ -440,6 +524,21 @@ instance (Backend b) => Hashable (AnnotatedAggregateOrderBy b)
 type AnnotatedOrderByItemG b v = OrderByItemG b (AnnotatedOrderByElement b v)
 
 type AnnotatedOrderByItem b = AnnotatedOrderByItemG b (SQLExpression b)
+
+-- | Cursor for streaming subscription
+data StreamCursorItem (b :: BackendType) = StreamCursorItem
+  { -- | Specifies how the cursor item should be ordered
+    _sciOrdering :: !CursorOrdering,
+    -- | Column info of the cursor item
+    _sciColInfo :: !(ColumnInfo b),
+    -- | Initial value of the cursor item from where the streaming should start
+    _sciInitialValue :: !(ColumnValue b)
+  }
+  deriving (Generic)
+
+deriving instance (Backend b) => Eq (StreamCursorItem b)
+
+deriving instance (Backend b) => Show (StreamCursorItem b)
 
 -- Fields
 
