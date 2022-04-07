@@ -45,13 +45,13 @@ After making your changes
 
 ...and the server:
 
-    $ ln -s cabal.project.dev cabal.project.local
+    $ ln -s cabal/dev.project cabal.project.local
     $ cabal new-update
     $ cabal new-build graphql-engine
 
-To set up the project configuration to coincide with the testing scripts below, thus avoiding recompilation when testing locally, rather use `cabal.project.dev-sh.local` instead of `cabal.project.dev`:
+To set up the project configuration to coincide with the testing scripts below, thus avoiding recompilation when testing locally, rather use `cabal/dev-sh.project.local` instead of `cabal/dev.project`:
 
-    $ ln -s cabal.project.dev-sh.local cabal.project.local
+    $ ln -s cabal/dev-sh.project.local cabal.project.local
 
 ### IDE Support
 

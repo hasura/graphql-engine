@@ -51,7 +51,7 @@
     (cd tests-py/remote_schemas/nodejs && npm ci)
     ```
 
-5.  Add the C dependencies in the `cabal.project.dev-sh.local` and `cabal.project.local` files (according to where the dependencies were installed by homebrew):
+5.  Add the C dependencies in the `cabal/dev-sh.project.local` and `cabal.project.local` files (according to where the dependencies were installed by homebrew):
 
     ```sh
     package mysql
@@ -87,10 +87,10 @@
         /opt/homebrew/opt/openssl/lib
     ```
 
-    Note: If you don't have special requirements of a `cabal.project.local` you can just add a symbolic link to `cabal.project.dev-sh.local`:
+    Note: If you have not added any local project overrides in `cabal.project.local` you can just add a symbolic link to `cabal/dev-sh.project.local`:
 
     ```sh
-    ln -s cabal.project.dev-sh.local cabal.project.local
+    ln -s cabal/dev-sh.project.local cabal.project.local
     ```
 
 

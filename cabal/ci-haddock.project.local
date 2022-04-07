@@ -4,7 +4,7 @@
 --     Instead we make this a parallel job, but use a configuration with optimizations
 -- off so the haskell build will be relatively fast.
 
--- NOTE!: we want to make sure this matches cabal.project.ci.local, so we can re-use the
+-- NOTE!: we want to make sure this matches `ci.project.local`, so we can re-use the
 -- cached library dependencies and don't accidentally rebuild:
 package *
   ghc-options:

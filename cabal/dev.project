@@ -1,10 +1,11 @@
 -- A project configuration for general-purpose development: this builds documentation for
 -- dependencies and disables optimizations for graphql-engine to improve compilation times.
 --
--- To enable this, you can do:
---   $ ln -s cabal.project.dev cabal.project.local
--- Or, if you want to customize the configuration:
---   $ cp cabal.project.dev cabal.project.local
+-- From the project root, this configuration can be linked directly:
+--   $ ln -s cabal/dev.project cabal.project.local
+--
+-- ...or, it can be copied if you would like to customize any settings:
+--   $ cp cabal/cabal.project.dev cabal.project.local
 
 with-compiler: ghc-8.10.7
 
