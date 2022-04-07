@@ -95,7 +95,7 @@
 </span><span id="line-95"></span><span>    </span><span class="hs-comment">-- note that this does not need to contain multiple query hashes: it is possible</span><span>
 </span><span id="line-96"></span><span>    </span><span class="hs-comment">-- for a batch to contain only one request</span><span>
 </span><span id="line-97"></span><span>    </span><span id="PQHSetBatched"><span class="annot"><a href="Hasura.GraphQL.ParameterizedQueryHash.html#PQHSetBatched"><span class="hs-identifier hs-var">PQHSetBatched</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.ParameterizedQueryHash.html#ParameterizedQueryHash"><span class="hs-identifier hs-type">ParameterizedQueryHash</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-98"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688365318"><span id="local-6989586621688365320"><span id="local-6989586621688365322"><span class="annot"><span class="annottext">Int -&gt; ParameterizedQueryHashList -&gt; ShowS
+</span><span id="line-98"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688365360"><span id="local-6989586621688365362"><span id="local-6989586621688365364"><span class="annot"><span class="annottext">Int -&gt; ParameterizedQueryHashList -&gt; ShowS
 [ParameterizedQueryHashList] -&gt; ShowS
 ParameterizedQueryHashList -&gt; String
 (Int -&gt; ParameterizedQueryHashList -&gt; ShowS)
@@ -110,7 +110,7 @@ show :: ParameterizedQueryHashList -&gt; String
 $cshow :: ParameterizedQueryHashList -&gt; String
 showsPrec :: Int -&gt; ParameterizedQueryHashList -&gt; ShowS
 $cshowsPrec :: Int -&gt; ParameterizedQueryHashList -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688365313"><span id="local-6989586621688365315"><span class="annot"><span class="annottext">ParameterizedQueryHashList -&gt; ParameterizedQueryHashList -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688365355"><span id="local-6989586621688365357"><span class="annot"><span class="annottext">ParameterizedQueryHashList -&gt; ParameterizedQueryHashList -&gt; Bool
 (ParameterizedQueryHashList -&gt; ParameterizedQueryHashList -&gt; Bool)
 -&gt; (ParameterizedQueryHashList
     -&gt; ParameterizedQueryHashList -&gt; Bool)
@@ -145,26 +145,26 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-112"></span><span>    </span><span class="annot"><span class="annottext">ParameterizedQueryHashList
 </span><a href="Hasura.GraphQL.ParameterizedQueryHash.html#PQHSetEmpty"><span class="hs-identifier hs-var">PQHSetEmpty</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-113"></span><span>    </span><span class="hs-comment">-- when there's no batching of graphql queries, we log the parameterized query hash as a string</span><span>
-</span><span id="line-114"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.ParameterizedQueryHash.html#PQHSetSingleton"><span class="hs-identifier hs-type">PQHSetSingleton</span></a></span><span> </span><span id="local-6989586621688365309"><span class="annot"><span class="annottext">ParameterizedQueryHash
-</span><a href="#local-6989586621688365309"><span class="hs-identifier hs-var">queryHash</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-114"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.ParameterizedQueryHash.html#PQHSetSingleton"><span class="hs-identifier hs-type">PQHSetSingleton</span></a></span><span> </span><span id="local-6989586621688365351"><span class="annot"><span class="annottext">ParameterizedQueryHash
+</span><a href="#local-6989586621688365351"><span class="hs-identifier hs-var">queryHash</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-115"></span><span>      </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;parameterized_query_hash&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash
-</span><a href="#local-6989586621688365309"><span class="hs-identifier hs-var">queryHash</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621688365351"><span class="hs-identifier hs-var">queryHash</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-116"></span><span>    </span><span class="hs-comment">-- when there's a batch of graphql queries (even if the batch contains only one request),</span><span>
 </span><span id="line-117"></span><span>    </span><span class="hs-comment">-- we log the parameterized query hashes of every request in a list</span><span>
-</span><span id="line-118"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.ParameterizedQueryHash.html#PQHSetBatched"><span class="hs-identifier hs-type">PQHSetBatched</span></a></span><span> </span><span id="local-6989586621688365307"><span class="annot"><span class="annottext">[ParameterizedQueryHash]
-</span><a href="#local-6989586621688365307"><span class="hs-identifier hs-var">queryHashes</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-118"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.ParameterizedQueryHash.html#PQHSetBatched"><span class="hs-identifier hs-type">PQHSetBatched</span></a></span><span> </span><span id="local-6989586621688365349"><span class="annot"><span class="annottext">[ParameterizedQueryHash]
+</span><a href="#local-6989586621688365349"><span class="hs-identifier hs-var">queryHashes</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-119"></span><span>      </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;parameterized_query_hash&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[ParameterizedQueryHash] -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">[ParameterizedQueryHash]
-</span><a href="#local-6989586621688365307"><span class="hs-identifier hs-var">queryHashes</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621688365349"><span class="hs-identifier hs-var">queryHashes</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-120"></span><span>
 </span><span id="line-121"></span><span class="hs-keyword">newtype</span><span> </span><span id="ParameterizedQueryHash"><span class="annot"><a href="Hasura.GraphQL.ParameterizedQueryHash.html#ParameterizedQueryHash"><span class="hs-identifier hs-var">ParameterizedQueryHash</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ParameterizedQueryHash"><span class="annot"><a href="Hasura.GraphQL.ParameterizedQueryHash.html#ParameterizedQueryHash"><span class="hs-identifier hs-var">ParameterizedQueryHash</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unParamQueryHash"><span class="annot"><span class="annottext">ParameterizedQueryHash -&gt; ByteString
 </span><a href="Hasura.GraphQL.ParameterizedQueryHash.html#unParamQueryHash"><span class="hs-identifier hs-var hs-var">unParamQueryHash</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span class="hs-special">}</span><span>
-</span><span id="line-122"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688365300"><span id="local-6989586621688365302"><span id="local-6989586621688365304"><span class="annot"><span class="annottext">Int -&gt; ParameterizedQueryHash -&gt; ShowS
+</span><span id="line-122"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688365342"><span id="local-6989586621688365344"><span id="local-6989586621688365346"><span class="annot"><span class="annottext">Int -&gt; ParameterizedQueryHash -&gt; ShowS
 [ParameterizedQueryHash] -&gt; ShowS
 ParameterizedQueryHash -&gt; String
 (Int -&gt; ParameterizedQueryHash -&gt; ShowS)
@@ -179,7 +179,7 @@ show :: ParameterizedQueryHash -&gt; String
 $cshow :: ParameterizedQueryHash -&gt; String
 showsPrec :: Int -&gt; ParameterizedQueryHash -&gt; ShowS
 $cshowsPrec :: Int -&gt; ParameterizedQueryHash -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688365296"><span id="local-6989586621688365298"><span class="annot"><span class="annottext">ParameterizedQueryHash -&gt; ParameterizedQueryHash -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688365338"><span id="local-6989586621688365340"><span class="annot"><span class="annottext">ParameterizedQueryHash -&gt; ParameterizedQueryHash -&gt; Bool
 (ParameterizedQueryHash -&gt; ParameterizedQueryHash -&gt; Bool)
 -&gt; (ParameterizedQueryHash -&gt; ParameterizedQueryHash -&gt; Bool)
 -&gt; Eq ParameterizedQueryHash
@@ -190,9 +190,9 @@ $c/= :: ParameterizedQueryHash -&gt; ParameterizedQueryHash -&gt; Bool
 $c== :: ParameterizedQueryHash -&gt; ParameterizedQueryHash -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-123"></span><span>
-</span><span id="line-124"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688365289"><span id="local-6989586621688365291"><span id="local-6989586621688365293"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.ParameterizedQueryHash.html#ParameterizedQueryHash"><span class="hs-identifier hs-type">ParameterizedQueryHash</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-125"></span><span>  </span><span id="local-6989586621688365287"><span class="annot"><span class="annottext">toJSON :: ParameterizedQueryHash -&gt; Value
-</span><a href="#local-6989586621688365287"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><span id="line-124"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688365331"><span id="local-6989586621688365333"><span id="local-6989586621688365335"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.ParameterizedQueryHash.html#ParameterizedQueryHash"><span class="hs-identifier hs-type">ParameterizedQueryHash</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-125"></span><span>  </span><span id="local-6989586621688365329"><span class="annot"><span class="annottext">toJSON :: ParameterizedQueryHash -&gt; Value
+</span><a href="#local-6989586621688365329"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value)
 -&gt; (ParameterizedQueryHash -&gt; Text)
 -&gt; ParameterizedQueryHash
@@ -210,16 +210,16 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-127"></span><span class="annot"><a href="Hasura.GraphQL.ParameterizedQueryHash.html#normalizeSelectionSet"><span class="hs-identifier hs-type">normalizeSelectionSet</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.SelectionSet</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.NoFragments</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.SelectionSet</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.NoFragments</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span>
 </span><span id="line-128"></span><span id="normalizeSelectionSet"><span class="annot"><span class="annottext">normalizeSelectionSet :: SelectionSet NoFragments Variable -&gt; SelectionSet NoFragments Void
 </span><a href="Hasura.GraphQL.ParameterizedQueryHash.html#normalizeSelectionSet"><span class="hs-identifier hs-var hs-var">normalizeSelectionSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Selection NoFragments Variable -&gt; SelectionSet NoFragments Void
-</span><a href="#local-6989586621688365283"><span class="hs-identifier hs-var">normalizeSelection</span></a></span><span> </span><span class="annot"><span class="annottext">(Selection NoFragments Variable -&gt; SelectionSet NoFragments Void)
+</span><a href="#local-6989586621688365325"><span class="hs-identifier hs-var">normalizeSelection</span></a></span><span> </span><span class="annot"><span class="annottext">(Selection NoFragments Variable -&gt; SelectionSet NoFragments Void)
 -&gt; SelectionSet NoFragments Variable
 -&gt; SelectionSet NoFragments Void
 forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
 </span><span class="hs-operator hs-var">=&lt;&lt;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-129"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-130"></span><span>    </span><span class="annot"><a href="#local-6989586621688365283"><span class="hs-identifier hs-type">normalizeSelection</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Selection</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.NoFragments</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.SelectionSet</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.NoFragments</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span>
-</span><span id="line-131"></span><span>    </span><span id="local-6989586621688365283"><span class="annot"><span class="annottext">normalizeSelection :: Selection NoFragments Variable -&gt; SelectionSet NoFragments Void
-</span><a href="#local-6989586621688365283"><span class="hs-identifier hs-var hs-var">normalizeSelection</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.SelectionField</span></span><span> </span><span id="local-6989586621688365280"><span class="annot"><span class="annottext">Field NoFragments Variable
-</span><a href="#local-6989586621688365280"><span class="hs-identifier hs-var">fld</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Selection NoFragments Void -&gt; SelectionSet NoFragments Void
+</span><span id="line-130"></span><span>    </span><span class="annot"><a href="#local-6989586621688365325"><span class="hs-identifier hs-type">normalizeSelection</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Selection</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.NoFragments</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.SelectionSet</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.NoFragments</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span>
+</span><span id="line-131"></span><span>    </span><span id="local-6989586621688365325"><span class="annot"><span class="annottext">normalizeSelection :: Selection NoFragments Variable -&gt; SelectionSet NoFragments Void
+</span><a href="#local-6989586621688365325"><span class="hs-identifier hs-var hs-var">normalizeSelection</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.SelectionField</span></span><span> </span><span id="local-6989586621688365322"><span class="annot"><span class="annottext">Field NoFragments Variable
+</span><a href="#local-6989586621688365322"><span class="hs-identifier hs-var">fld</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Selection NoFragments Void -&gt; SelectionSet NoFragments Void
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Selection NoFragments Void -&gt; SelectionSet NoFragments Void)
 -&gt; Selection NoFragments Void -&gt; SelectionSet NoFragments Void
@@ -227,23 +227,23 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Field NoFragments Void -&gt; Selection NoFragments Void
 forall (frag :: * -&gt; *) var. Field frag var -&gt; Selection frag var
 </span><span class="hs-identifier hs-var">G.SelectionField</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field NoFragments Variable -&gt; Field NoFragments Void
-</span><a href="#local-6989586621688365279"><span class="hs-identifier hs-var">normalizeField</span></a></span><span> </span><span class="annot"><span class="annottext">Field NoFragments Variable
-</span><a href="#local-6989586621688365280"><span class="hs-identifier hs-var">fld</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-132"></span><span>    </span><span class="annot"><a href="#local-6989586621688365283"><span class="hs-identifier hs-var">normalizeSelection</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.SelectionInlineFragment</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.InlineFragment</span></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621688365321"><span class="hs-identifier hs-var">normalizeField</span></a></span><span> </span><span class="annot"><span class="annottext">Field NoFragments Variable
+</span><a href="#local-6989586621688365322"><span class="hs-identifier hs-var">fld</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-132"></span><span>    </span><span class="annot"><a href="#local-6989586621688365325"><span class="hs-identifier hs-var">normalizeSelection</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.SelectionInlineFragment</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.InlineFragment</span></span><span> </span><span class="annot"><span class="annottext">Maybe Name
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">[Directive Variable]
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688365276"><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
-</span><a href="#local-6989586621688365276"><span class="hs-identifier hs-var">selSet</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688365318"><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
+</span><a href="#local-6989586621688365318"><span class="hs-identifier hs-var">selSet</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-133"></span><span>      </span><span class="annot"><span class="annottext">SelectionSet NoFragments Variable -&gt; SelectionSet NoFragments Void
 </span><a href="Hasura.GraphQL.ParameterizedQueryHash.html#normalizeSelectionSet"><span class="hs-identifier hs-var">normalizeSelectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
-</span><a href="#local-6989586621688365276"><span class="hs-identifier hs-var">selSet</span></a></span><span>
+</span><a href="#local-6989586621688365318"><span class="hs-identifier hs-var">selSet</span></a></span><span>
 </span><span id="line-134"></span><span>
-</span><span id="line-135"></span><span>    </span><span id="local-6989586621688365279"><span class="annot"><span class="annottext">normalizeField :: Field NoFragments Variable -&gt; Field NoFragments Void
-</span><a href="#local-6989586621688365279"><span class="hs-identifier hs-var hs-var">normalizeField</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.Field</span></span><span> </span><span id="local-6989586621688365274"><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621688365274"><span class="hs-identifier hs-var">_alias</span></a></span></span><span> </span><span id="local-6989586621688365273"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688365273"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621688365272"><span class="annot"><span class="annottext">HashMap Name (Value Variable)
-</span><a href="#local-6989586621688365272"><span class="hs-identifier hs-var">args</span></a></span></span><span> </span><span id="local-6989586621688365271"><span class="annot"><span class="annottext">[Directive Variable]
-</span><a href="#local-6989586621688365271"><span class="hs-identifier hs-var">_directives</span></a></span></span><span> </span><span id="local-6989586621688365270"><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
-</span><a href="#local-6989586621688365270"><span class="hs-identifier hs-var">selSet</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-135"></span><span>    </span><span id="local-6989586621688365321"><span class="annot"><span class="annottext">normalizeField :: Field NoFragments Variable -&gt; Field NoFragments Void
+</span><a href="#local-6989586621688365321"><span class="hs-identifier hs-var hs-var">normalizeField</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.Field</span></span><span> </span><span id="local-6989586621688365316"><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621688365316"><span class="hs-identifier hs-var">_alias</span></a></span></span><span> </span><span id="local-6989586621688365315"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688365315"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621688365314"><span class="annot"><span class="annottext">HashMap Name (Value Variable)
+</span><a href="#local-6989586621688365314"><span class="hs-identifier hs-var">args</span></a></span></span><span> </span><span id="local-6989586621688365313"><span class="annot"><span class="annottext">[Directive Variable]
+</span><a href="#local-6989586621688365313"><span class="hs-identifier hs-var">_directives</span></a></span></span><span> </span><span id="local-6989586621688365312"><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
+</span><a href="#local-6989586621688365312"><span class="hs-identifier hs-var">selSet</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-136"></span><span>      </span><span class="annot"><span class="annottext">Maybe Name
 -&gt; Name
 -&gt; HashMap Name (Value Void)
@@ -260,23 +260,23 @@ Maybe Name
 </span><span class="hs-identifier hs-var">G.Field</span></span><span> </span><span class="annot"><span class="annottext">Maybe Name
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688365273"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Value Variable -&gt; Value Void)
+</span><a href="#local-6989586621688365315"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Value Variable -&gt; Value Void)
 -&gt; HashMap Name (Value Variable) -&gt; HashMap Name (Value Void)
 forall v1 v2 k. (v1 -&gt; v2) -&gt; HashMap k v1 -&gt; HashMap k v2
 </span><span class="hs-identifier hs-var">Map.map</span></span><span> </span><span class="annot"><span class="annottext">Value Variable -&gt; Value Void
-</span><a href="#local-6989586621688365268"><span class="hs-identifier hs-var">normalizeValue</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value Variable)
-</span><a href="#local-6989586621688365272"><span class="hs-identifier hs-var">args</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Directive Void]
+</span><a href="#local-6989586621688365310"><span class="hs-identifier hs-var">normalizeValue</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value Variable)
+</span><a href="#local-6989586621688365314"><span class="hs-identifier hs-var">args</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Directive Void]
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="annot"><span class="annottext">(SelectionSet NoFragments Void -&gt; Field NoFragments Void)
 -&gt; SelectionSet NoFragments Void -&gt; Field NoFragments Void
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Variable -&gt; SelectionSet NoFragments Void
 </span><a href="Hasura.GraphQL.ParameterizedQueryHash.html#normalizeSelectionSet"><span class="hs-identifier hs-var">normalizeSelectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
-</span><a href="#local-6989586621688365270"><span class="hs-identifier hs-var">selSet</span></a></span><span>
+</span><a href="#local-6989586621688365312"><span class="hs-identifier hs-var">selSet</span></a></span><span>
 </span><span id="line-137"></span><span>
-</span><span id="line-138"></span><span>    </span><span class="annot"><a href="#local-6989586621688365267"><span class="hs-identifier hs-type">normalizeConstValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Value</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Value</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span>
-</span><span id="line-139"></span><span>    </span><span id="local-6989586621688365267"><span class="annot"><span class="annottext">normalizeConstValue :: Value Void -&gt; Value Void
-</span><a href="#local-6989586621688365267"><span class="hs-identifier hs-var hs-var">normalizeConstValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-138"></span><span>    </span><span class="annot"><a href="#local-6989586621688365309"><span class="hs-identifier hs-type">normalizeConstValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Value</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Value</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span>
+</span><span id="line-139"></span><span>    </span><span id="local-6989586621688365309"><span class="annot"><span class="annottext">normalizeConstValue :: Value Void -&gt; Value Void
+</span><a href="#local-6989586621688365309"><span class="hs-identifier hs-var hs-var">normalizeConstValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-140"></span><span>      </span><span class="annot"><span class="annottext">Value Void
 </span><span class="hs-identifier hs-var">G.VNull</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void
 forall var. Value var
@@ -301,18 +301,18 @@ forall var. Value var
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void
 forall var. Value var
 </span><span class="hs-identifier hs-var">G.VNull</span></span><span>
-</span><span id="line-146"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VList</span></span><span> </span><span id="local-6989586621688365259"><span class="annot"><span class="annottext">[Value Void]
-</span><a href="#local-6989586621688365259"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Value Void] -&gt; Value Void
+</span><span id="line-146"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VList</span></span><span> </span><span id="local-6989586621688365301"><span class="annot"><span class="annottext">[Value Void]
+</span><a href="#local-6989586621688365301"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Value Void] -&gt; Value Void
 forall var. [Value var] -&gt; Value var
 </span><span class="hs-identifier hs-var">G.VList</span></span><span> </span><span class="annot"><span class="annottext">([Value Void] -&gt; Value Void) -&gt; [Value Void] -&gt; Value Void
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Value Void -&gt; Value Void) -&gt; [Value Void] -&gt; [Value Void]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; Value Void
-</span><a href="#local-6989586621688365267"><span class="hs-identifier hs-var">normalizeConstValue</span></a></span><span> </span><span class="annot"><span class="annottext">[Value Void]
-</span><a href="#local-6989586621688365259"><span class="hs-identifier hs-var">l</span></a></span><span>
-</span><span id="line-147"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VObject</span></span><span> </span><span id="local-6989586621688365257"><span class="annot"><span class="annottext">HashMap Name (Value Void)
-</span><a href="#local-6989586621688365257"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value Void) -&gt; Value Void
+</span><a href="#local-6989586621688365309"><span class="hs-identifier hs-var">normalizeConstValue</span></a></span><span> </span><span class="annot"><span class="annottext">[Value Void]
+</span><a href="#local-6989586621688365301"><span class="hs-identifier hs-var">l</span></a></span><span>
+</span><span id="line-147"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VObject</span></span><span> </span><span id="local-6989586621688365299"><span class="annot"><span class="annottext">HashMap Name (Value Void)
+</span><a href="#local-6989586621688365299"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value Void) -&gt; Value Void
 forall var. HashMap Name (Value var) -&gt; Value var
 </span><span class="hs-identifier hs-var">G.VObject</span></span><span> </span><span class="annot"><span class="annottext">(HashMap Name (Value Void) -&gt; Value Void)
 -&gt; HashMap Name (Value Void) -&gt; Value Void
@@ -321,12 +321,12 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; HashMap Name (Value Void) -&gt; HashMap Name (Value Void)
 forall v1 v2 k. (v1 -&gt; v2) -&gt; HashMap k v1 -&gt; HashMap k v2
 </span><span class="hs-identifier hs-var">Map.map</span></span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; Value Void
-</span><a href="#local-6989586621688365267"><span class="hs-identifier hs-var">normalizeConstValue</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value Void)
-</span><a href="#local-6989586621688365257"><span class="hs-identifier hs-var">obj</span></a></span><span>
+</span><a href="#local-6989586621688365309"><span class="hs-identifier hs-var">normalizeConstValue</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value Void)
+</span><a href="#local-6989586621688365299"><span class="hs-identifier hs-var">obj</span></a></span><span>
 </span><span id="line-148"></span><span>
-</span><span id="line-149"></span><span>    </span><span class="annot"><a href="#local-6989586621688365256"><span class="hs-identifier hs-type">jsonToNormalizedGQLVal</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Value</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span>
-</span><span id="line-150"></span><span>    </span><span id="local-6989586621688365256"><span class="annot"><span class="annottext">jsonToNormalizedGQLVal :: Value -&gt; Value Void
-</span><a href="#local-6989586621688365256"><span class="hs-identifier hs-var hs-var">jsonToNormalizedGQLVal</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-149"></span><span>    </span><span class="annot"><a href="#local-6989586621688365298"><span class="hs-identifier hs-type">jsonToNormalizedGQLVal</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Value</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span>
+</span><span id="line-150"></span><span>    </span><span id="local-6989586621688365298"><span class="annot"><span class="annottext">jsonToNormalizedGQLVal :: Value -&gt; Value Void
+</span><a href="#local-6989586621688365298"><span class="hs-identifier hs-var hs-var">jsonToNormalizedGQLVal</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-151"></span><span>      </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier hs-var">J.Null</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void
 forall var. Value var
@@ -343,20 +343,20 @@ forall var. Value var
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void
 forall var. Value var
 </span><span class="hs-identifier hs-var">G.VNull</span></span><span>
-</span><span id="line-155"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">J.Array</span></span><span> </span><span id="local-6989586621688365251"><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621688365251"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Value Void] -&gt; Value Void
+</span><span id="line-155"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">J.Array</span></span><span> </span><span id="local-6989586621688365293"><span class="annot"><span class="annottext">Array
+</span><a href="#local-6989586621688365293"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Value Void] -&gt; Value Void
 forall var. [Value var] -&gt; Value var
 </span><span class="hs-identifier hs-var">G.VList</span></span><span> </span><span class="annot"><span class="annottext">([Value Void] -&gt; Value Void) -&gt; [Value Void] -&gt; Value Void
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Value Void
-</span><a href="#local-6989586621688365256"><span class="hs-identifier hs-var">jsonToNormalizedGQLVal</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Value Void) -&gt; [Value] -&gt; [Value Void]
+</span><a href="#local-6989586621688365298"><span class="hs-identifier hs-var">jsonToNormalizedGQLVal</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Value Void) -&gt; [Value] -&gt; [Value Void]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Array -&gt; [Value]
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 </span><span class="hs-identifier hs-var">toList</span></span><span> </span><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621688365251"><span class="hs-identifier hs-var">l</span></a></span><span>
-</span><span id="line-156"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">J.Object</span></span><span> </span><span id="local-6989586621688365247"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688365247"><span class="hs-identifier hs-var">vals</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value Void) -&gt; Value Void
+</span><a href="#local-6989586621688365293"><span class="hs-identifier hs-var">l</span></a></span><span>
+</span><span id="line-156"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">J.Object</span></span><span> </span><span id="local-6989586621688365289"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688365289"><span class="hs-identifier hs-var">vals</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value Void) -&gt; Value Void
 forall var. HashMap Name (Value var) -&gt; Value var
 </span><span class="hs-identifier hs-var">G.VObject</span></span><span> </span><span class="annot"><span class="annottext">(HashMap Name (Value Void) -&gt; Value Void)
 -&gt; HashMap Name (Value Void) -&gt; Value Void
@@ -381,21 +381,21 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Object -&gt; [(Text, Value)]
 forall k v. HashMap k v -&gt; [(k, v)]
 </span><span class="hs-identifier hs-var">Map.toList</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688365247"><span class="hs-identifier hs-var">vals</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(((Text, Value) -&gt; (Name, Value Void)) -&gt; [(Name, Value Void)])
+</span><a href="#local-6989586621688365289"><span class="hs-identifier hs-var">vals</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(((Text, Value) -&gt; (Name, Value Void)) -&gt; [(Name, Value Void)])
 -&gt; ((Text, Value) -&gt; (Name, Value Void)) -&gt; [(Name, Value Void)]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621688365244"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688365244"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688365243"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621688365243"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621688365286"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688365286"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688365285"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688365285"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-160"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Name
 </span><span class="hs-identifier hs-var">G.unsafeMkName</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688365244"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Value Void
-</span><a href="#local-6989586621688365256"><span class="hs-identifier hs-var">jsonToNormalizedGQLVal</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621688365243"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688365286"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Value Void
+</span><a href="#local-6989586621688365298"><span class="hs-identifier hs-var">jsonToNormalizedGQLVal</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688365285"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-161"></span><span>
-</span><span id="line-162"></span><span>    </span><span class="annot"><a href="#local-6989586621688365268"><span class="hs-identifier hs-type">normalizeValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Value</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Value</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span>
-</span><span id="line-163"></span><span>    </span><span id="local-6989586621688365268"><span class="annot"><span class="annottext">normalizeValue :: Value Variable -&gt; Value Void
-</span><a href="#local-6989586621688365268"><span class="hs-identifier hs-var hs-var">normalizeValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-162"></span><span>    </span><span class="annot"><a href="#local-6989586621688365310"><span class="hs-identifier hs-type">normalizeValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Value</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Value</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span>
+</span><span id="line-163"></span><span>    </span><span id="local-6989586621688365310"><span class="annot"><span class="annottext">normalizeValue :: Value Variable -&gt; Value Void
+</span><a href="#local-6989586621688365310"><span class="hs-identifier hs-var hs-var">normalizeValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-164"></span><span>      </span><span class="annot"><span class="annottext">Value Variable
 </span><span class="hs-identifier hs-var">G.VNull</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void
 forall var. Value var
@@ -420,18 +420,18 @@ forall var. Value var
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void
 forall var. Value var
 </span><span class="hs-identifier hs-var">G.VNull</span></span><span>
-</span><span id="line-170"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VList</span></span><span> </span><span id="local-6989586621688365241"><span class="annot"><span class="annottext">[Value Variable]
-</span><a href="#local-6989586621688365241"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Value Void] -&gt; Value Void
+</span><span id="line-170"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VList</span></span><span> </span><span id="local-6989586621688365283"><span class="annot"><span class="annottext">[Value Variable]
+</span><a href="#local-6989586621688365283"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Value Void] -&gt; Value Void
 forall var. [Value var] -&gt; Value var
 </span><span class="hs-identifier hs-var">G.VList</span></span><span> </span><span class="annot"><span class="annottext">([Value Void] -&gt; Value Void) -&gt; [Value Void] -&gt; Value Void
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Value Variable -&gt; Value Void) -&gt; [Value Variable] -&gt; [Value Void]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Value Variable -&gt; Value Void
-</span><a href="#local-6989586621688365268"><span class="hs-identifier hs-var">normalizeValue</span></a></span><span> </span><span class="annot"><span class="annottext">[Value Variable]
-</span><a href="#local-6989586621688365241"><span class="hs-identifier hs-var">l</span></a></span><span>
-</span><span id="line-171"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VObject</span></span><span> </span><span id="local-6989586621688365240"><span class="annot"><span class="annottext">HashMap Name (Value Variable)
-</span><a href="#local-6989586621688365240"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value Void) -&gt; Value Void
+</span><a href="#local-6989586621688365310"><span class="hs-identifier hs-var">normalizeValue</span></a></span><span> </span><span class="annot"><span class="annottext">[Value Variable]
+</span><a href="#local-6989586621688365283"><span class="hs-identifier hs-var">l</span></a></span><span>
+</span><span id="line-171"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VObject</span></span><span> </span><span id="local-6989586621688365282"><span class="annot"><span class="annottext">HashMap Name (Value Variable)
+</span><a href="#local-6989586621688365282"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value Void) -&gt; Value Void
 forall var. HashMap Name (Value var) -&gt; Value var
 </span><span class="hs-identifier hs-var">G.VObject</span></span><span> </span><span class="annot"><span class="annottext">(HashMap Name (Value Void) -&gt; Value Void)
 -&gt; HashMap Name (Value Void) -&gt; Value Void
@@ -440,22 +440,22 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; HashMap Name (Value Variable) -&gt; HashMap Name (Value Void)
 forall v1 v2 k. (v1 -&gt; v2) -&gt; HashMap k v1 -&gt; HashMap k v2
 </span><span class="hs-identifier hs-var">Map.map</span></span><span> </span><span class="annot"><span class="annottext">Value Variable -&gt; Value Void
-</span><a href="#local-6989586621688365268"><span class="hs-identifier hs-var">normalizeValue</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value Variable)
-</span><a href="#local-6989586621688365240"><span class="hs-identifier hs-var">obj</span></a></span><span>
-</span><span id="line-172"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VVariable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span id="local-6989586621688365237"><span class="annot"><span class="annottext">VariableInfo
-</span><a href="#local-6989586621688365237"><span class="hs-identifier hs-var">_info</span></a></span></span><span> </span><span id="local-6989586621688365236"><span class="annot"><span class="annottext">GType
-</span><a href="#local-6989586621688365236"><span class="hs-identifier hs-var">_type</span></a></span></span><span> </span><span id="local-6989586621688365235"><span class="annot"><span class="annottext">InputValue Void
-</span><a href="#local-6989586621688365235"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621688365310"><span class="hs-identifier hs-var">normalizeValue</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value Variable)
+</span><a href="#local-6989586621688365282"><span class="hs-identifier hs-var">obj</span></a></span><span>
+</span><span id="line-172"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VVariable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span id="local-6989586621688365279"><span class="annot"><span class="annottext">VariableInfo
+</span><a href="#local-6989586621688365279"><span class="hs-identifier hs-var">_info</span></a></span></span><span> </span><span id="local-6989586621688365278"><span class="annot"><span class="annottext">GType
+</span><a href="#local-6989586621688365278"><span class="hs-identifier hs-var">_type</span></a></span></span><span> </span><span id="local-6989586621688365277"><span class="annot"><span class="annottext">InputValue Void
+</span><a href="#local-6989586621688365277"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-173"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">InputValue Void
-</span><a href="#local-6989586621688365235"><span class="hs-identifier hs-var">value</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-174"></span><span>          </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#GraphQLValue"><span class="hs-identifier hs-type">GraphQLValue</span></a></span><span> </span><span id="local-6989586621688365233"><span class="annot"><span class="annottext">Value Void
-</span><a href="#local-6989586621688365233"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; Value Void
-</span><a href="#local-6989586621688365267"><span class="hs-identifier hs-var">normalizeConstValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value Void
-</span><a href="#local-6989586621688365233"><span class="hs-identifier hs-var">val</span></a></span><span>
-</span><span id="line-175"></span><span>          </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#JSONValue"><span class="hs-identifier hs-type">JSONValue</span></a></span><span> </span><span id="local-6989586621688365231"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621688365231"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Value Void
-</span><a href="#local-6989586621688365256"><span class="hs-identifier hs-var">jsonToNormalizedGQLVal</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621688365231"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621688365277"><span class="hs-identifier hs-var">value</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-174"></span><span>          </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#GraphQLValue"><span class="hs-identifier hs-type">GraphQLValue</span></a></span><span> </span><span id="local-6989586621688365275"><span class="annot"><span class="annottext">Value Void
+</span><a href="#local-6989586621688365275"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; Value Void
+</span><a href="#local-6989586621688365309"><span class="hs-identifier hs-var">normalizeConstValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value Void
+</span><a href="#local-6989586621688365275"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><span id="line-175"></span><span>          </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#JSONValue"><span class="hs-identifier hs-type">JSONValue</span></a></span><span> </span><span id="local-6989586621688365273"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688365273"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Value Void
+</span><a href="#local-6989586621688365298"><span class="hs-identifier hs-var">jsonToNormalizedGQLVal</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688365273"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-176"></span><span>
 </span><span id="line-177"></span><span class="annot"><a href="Hasura.GraphQL.ParameterizedQueryHash.html#calculateParameterizedQueryHash"><span class="hs-identifier hs-type">calculateParameterizedQueryHash</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.SelectionSet</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.NoFragments</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.ParameterizedQueryHash.html#ParameterizedQueryHash"><span class="hs-identifier hs-type">ParameterizedQueryHash</span></a></span><span>
 </span><span id="line-178"></span><span id="calculateParameterizedQueryHash"><span class="annot"><span class="annottext">calculateParameterizedQueryHash :: SelectionSet NoFragments Variable -&gt; ParameterizedQueryHash
