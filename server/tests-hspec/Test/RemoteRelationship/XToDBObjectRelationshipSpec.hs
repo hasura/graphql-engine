@@ -44,7 +44,7 @@ import Prelude
 spec :: SpecWith State
 spec = Context.runWithLocalState contexts tests
   where
-    lhsContexts = [lhsPostgres, lhsRemoteServer]
+    lhsContexts = [lhsPostgres, lhsSQLServer, lhsRemoteServer]
     rhsContexts = [rhsPostgres, rhsSQLServer]
     contexts = combine <$> lhsContexts <*> rhsContexts
 
@@ -101,6 +101,16 @@ lhsPostgres tableName =
       mkLocalState = lhsPostgresMkLocalState,
       setup = lhsPostgresSetup tableName,
       teardown = lhsPostgresTeardown,
+      customOptions = Nothing
+    }
+
+lhsSQLServer :: LHSContext
+lhsSQLServer tableName =
+  Context
+    { name = Context.Backend Context.SQLServer,
+      mkLocalState = lhsSQLServerMkLocalState,
+      setup = lhsSQLServerSetup tableName,
+      teardown = lhsSQLServerTeardown,
       customOptions = Nothing
     }
 
@@ -263,6 +273,74 @@ args:
 
 lhsPostgresTeardown :: (State, Maybe Server) -> IO ()
 lhsPostgresTeardown _ = Postgres.dropTable track
+
+--------------------------------------------------------------------------------
+-- LHS SQLServer
+
+lhsSQLServerMkLocalState :: State -> IO (Maybe Server)
+lhsSQLServerMkLocalState _ = pure Nothing
+
+lhsSQLServerSetup :: Value -> (State, Maybe Server) -> IO ()
+lhsSQLServerSetup rhsTableName (state, _) = do
+  let sourceName = "source"
+      sourceConfig = SQLServer.defaultSourceConfiguration
+      schemaName = Context.defaultSchema Context.SQLServer
+  -- Add remote source
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: mssql_add_source
+args:
+  name: *sourceName
+  configuration: *sourceConfig
+|]
+  -- setup tables only
+  SQLServer.createTable track
+  SQLServer.insertTable track
+  Schema.trackTable Context.SQLServer sourceName track state
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: bulk
+args:
+- type: mssql_create_select_permission
+  args:
+    source: *sourceName
+    role: role1
+    table:
+      schema: *schemaName
+      name: track
+    permission:
+      columns: '*'
+      filter: {}
+- type: mssql_create_select_permission
+  args:
+    source: *sourceName
+    role: role2
+    table:
+      schema: *schemaName
+      name: track
+    permission:
+      columns: '*'
+      filter: {}
+- type: mssql_create_remote_relationship
+  args:
+    source: *sourceName
+    table:
+      schema: *schemaName
+      name: track
+    name: album
+    definition:
+      to_source:
+        source: target
+        table: *rhsTableName
+        relationship_type: object
+        field_mapping:
+          album_id: id
+  |]
+
+lhsSQLServerTeardown :: (State, Maybe Server) -> IO ()
+lhsSQLServerTeardown _ = SQLServer.dropTable track
 
 --------------------------------------------------------------------------------
 -- LHS Remote Server

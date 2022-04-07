@@ -47,7 +47,7 @@ import Prelude
 spec :: SpecWith State
 spec = Context.runWithLocalState contexts tests
   where
-    lhsContexts = [lhsPostgres, lhsRemoteServer]
+    lhsContexts = [lhsPostgres, lhsSQLServer, lhsRemoteServer]
     rhsContexts = [rhsPostgres, rhsSQLServer]
     contexts = combine <$> lhsContexts <*> rhsContexts
 
@@ -104,6 +104,16 @@ lhsPostgres tableName =
       mkLocalState = lhsPostgresMkLocalState,
       setup = lhsPostgresSetup tableName,
       teardown = lhsPostgresTeardown,
+      customOptions = Nothing
+    }
+
+lhsSQLServer :: LHSContext
+lhsSQLServer tableName =
+  Context
+    { name = Context.Backend Context.SQLServer,
+      mkLocalState = lhsSQLServerMkLocalState,
+      setup = lhsSQLServerSetup tableName,
+      teardown = lhsSQLServerTeardown,
       customOptions = Nothing
     }
 
@@ -174,8 +184,8 @@ artist =
     []
     [ [Schema.VInt 1, Schema.VStr "artist1"],
       [Schema.VInt 2, Schema.VStr "artist2"],
-      [Schema.VInt 3, Schema.VStr "artist_no_albums"],
-      [Schema.VNull, Schema.VStr "artist_no_id"]
+      [Schema.VInt 3, Schema.VStr "artist3_no_albums"],
+      [Schema.VNull, Schema.VStr "artist4_no_id"]
     ]
 
 -- | RHS
@@ -263,6 +273,75 @@ args:
 
 lhsPostgresTeardown :: (State, Maybe Server) -> IO ()
 lhsPostgresTeardown _ = Postgres.dropTable artist
+
+--------------------------------------------------------------------------------
+-- LHS SQLServer
+
+lhsSQLServerMkLocalState :: State -> IO (Maybe Server)
+lhsSQLServerMkLocalState _ = pure Nothing
+
+lhsSQLServerSetup :: Value -> (State, Maybe Server) -> IO ()
+lhsSQLServerSetup rhsTableName (state, _) = do
+  let sourceName = "source"
+      sourceConfig = SQLServer.defaultSourceConfiguration
+      schemaName = Context.defaultSchema Context.SQLServer
+  -- Add remote source
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: mssql_add_source
+args:
+  name: *sourceName
+  configuration: *sourceConfig
+|]
+  -- setup tables only
+  SQLServer.createTable artist
+  SQLServer.insertTable artist
+  Schema.trackTable Context.SQLServer sourceName artist state
+
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: bulk
+args:
+- type: mssql_create_select_permission
+  args:
+    source: *sourceName
+    role: role1
+    table:
+      schema: *schemaName
+      name: artist
+    permission:
+      columns: '*'
+      filter: {}
+- type: mssql_create_select_permission
+  args:
+    source: *sourceName
+    role: role2
+    table:
+      schema: *schemaName
+      name: artist
+    permission:
+      columns: '*'
+      filter: {}
+- type: mssql_create_remote_relationship
+  args:
+    source: *sourceName
+    table:
+      schema: *schemaName
+      name: artist
+    name: albums
+    definition:
+      to_source:
+        source: target
+        table: *rhsTableName
+        relationship_type: array
+        field_mapping:
+          id: artist_id
+  |]
+
+lhsSQLServerTeardown :: (State, Maybe Server) -> IO ()
+lhsSQLServerTeardown _ = SQLServer.dropTable artist
 
 --------------------------------------------------------------------------------
 -- LHS Remote Server
@@ -413,8 +492,8 @@ lhsRemoteServerMkLocalState _ = do
     artists =
       [ (Just 1, "artist1"),
         (Just 2, "artist2"),
-        (Just 3, "artist_no_albums"),
-        (Nothing, "artist_no_id")
+        (Just 3, "artist3_no_albums"),
+        (Nothing, "artist4_no_id")
       ]
     mkArtist (artistId, artistName) =
       HasuraArtist
@@ -704,7 +783,7 @@ executionTests opts = describe "execution" do
     let query =
           [graphql|
           query {
-            artist: hasura_artist(where: {name: {_eq: "artist_no_albums"}}) {
+            artist: hasura_artist(where: {name: {_eq: "artist3_no_albums"}}) {
               name
               albums {
                 title
@@ -716,7 +795,7 @@ executionTests opts = describe "execution" do
           [yaml|
           data:
             artist:
-             - name: artist_no_albums
+             - name: artist3_no_albums
                albums: []
           |]
     shouldReturnYaml
@@ -729,7 +808,7 @@ executionTests opts = describe "execution" do
     let query =
           [graphql|
           query {
-            artist: hasura_artist(where: {name: {_eq: "artist_no_id"}}) {
+            artist: hasura_artist(where: {name: {_eq: "artist4_no_id"}}) {
               name
               albums {
                 title
@@ -741,7 +820,7 @@ executionTests opts = describe "execution" do
           [yaml|
           data:
             artist:
-             - name: artist_no_id
+             - name: artist4_no_id
                albums: null
           |]
     shouldReturnYaml
@@ -758,10 +837,10 @@ executionTests opts = describe "execution" do
               where: {
                 _or: [
                   {name: {_eq: "artist1"}},
-                  {name: {_eq: "artist_no_id"}}
+                  {name: {_eq: "artist4_no_id"}}
                 ]
               },
-              order_by: [{id: asc}]
+              order_by: [{name: asc}]
             ) {
               name
               albums {
@@ -779,7 +858,7 @@ executionTests opts = describe "execution" do
                - title: album1_artist1
                - title: album2_artist1
                - title: album3_artist1
-             - name: artist_no_id
+             - name: artist4_no_id
                albums: null
           |]
     shouldReturnYaml
@@ -803,7 +882,7 @@ permissionTests opts = describe "permission" do
           [graphql|
           query {
             artist: hasura_artist(
-              order_by: [{id: asc}]
+              order_by: [{name: asc}]
             ) {
               name
               albums {
@@ -823,9 +902,9 @@ permissionTests opts = describe "permission" do
                - title: album3_artist1
              - name: artist2
                albums: []
-             - name: artist_no_albums
+             - name: artist3_no_albums
                albums: []
-             - name: artist_no_id
+             - name: artist4_no_id
                albums: null
           |]
     shouldReturnYaml

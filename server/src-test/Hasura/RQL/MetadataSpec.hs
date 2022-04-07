@@ -172,18 +172,16 @@ spec_RQLMetadataV1_examples = describe "RQLMetadataV1" do
       it ("parses a 'bigquery_" <> T.unpack action <> "_remote_relationship query") do
         decodesJSON @RQLMetadataV1 $ mk_bigquery_remote_relationship_argument action
 
+    for_ ["create", "update", "delete"] \action ->
+      it ("parses a 'mssql_" <> T.unpack action <> "_remote_relationship query") do
+        decodesJSON @RQLMetadataV1 $ mk_mssql_remote_relationship_argument action
+
   describe "Failure" do
     for_ ["create", "update"] \action ->
       it ("fails to parse a 'pg_" <> T.unpack action <> "_remote_relationship query using the 'old+new' schema") do
         rejectsJSON @RQLMetadataV1
           "expects exactly one of: to_source, to_remote_schema"
           $ mk_pg_remote_relationship_old_new_argument action
-
-    for_ ["create", "update", "delete"] \action ->
-      it ("fails to parse an 'mssql_" <> T.unpack action <> "_remote_relationship query") do
-        rejectsJSON @RQLMetadataV1
-          "unknown metadata command"
-          $ mk_mssql_remote_relationship_argument action
 
 -------------------------------------------------------------------------------
 -- Example YAML fragments for the metadata and query tests above.
