@@ -1,3 +1,5 @@
+# DATE VERSION: 2022-04-07
+# Modify the above date version (YYYY-MM-DD) if you want to rebuild the image for security updates
 FROM ubuntu:20.04
 
 # TARGETPLATFORM is automatically set up by docker buildx based on the platform we are targetting for
