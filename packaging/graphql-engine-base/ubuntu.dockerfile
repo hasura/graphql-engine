@@ -1,4 +1,4 @@
-# DATE VERSION: 2022-03-31
+# DATE VERSION: 2022-04-07
 # Modify the above date version (YYYY-MM-DD) if you want to rebuild the image for security updates
 FROM ubuntu:20.04
 
