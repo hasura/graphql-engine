@@ -23,6 +23,7 @@ export const RefRsSelector = ({ allRemoteSchemas }: RefRsSelectorProps) => {
           placeholder="Select a remote schema"
           options={rsOptions}
           labelIcon={<FaPlug />}
+          dataTest="select-ref-rs"
         />
       </div>
     </div>

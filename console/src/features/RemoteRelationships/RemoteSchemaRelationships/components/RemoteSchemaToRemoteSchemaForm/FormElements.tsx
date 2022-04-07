@@ -89,8 +89,8 @@ export const FormElements = ({
     isError,
   } = useLoadData(sourceRemoteSchema);
 
-  if (isLoading) {
-    return <div>Loading...</div>;
+  if (isLoading && !isError) {
+    return <IndicatorCard status="info">Loading...</IndicatorCard>;
   }
 
   if (isError || !remoteSchemaList || !sourceRemoteSchema) {
@@ -102,38 +102,42 @@ export const FormElements = ({
   }
 
   return (
-    <div className="w-full">
-      <div className="grid gap-4 w-full">
-        <InputField name="name" label="Name" placeholder="Relationship name" />
+    <>
+      <div className="w-full sm:w-6/12 my-md">
+        <InputField
+          name="name"
+          label="Name"
+          placeholder="Relationship name"
+          dataTest="rs-to-rs-rel-name"
+        />
+      </div>
 
-        <div className="grid grid-cols-12">
-          {/* select the source remote schema */}
-          <div className="col-span-5">
-            <RsSourceTypeSelector
-              types={remoteSchemaTypes.map(t => t.typeName)}
-              sourceTypeKey={rsSourceTypeKey}
-            />
-          </div>
+      <div className="grid grid-cols-12">
+        <div className="col-span-5">
+          <RsSourceTypeSelector
+            types={remoteSchemaTypes.map(t => t.typeName)}
+            sourceTypeKey={rsSourceTypeKey}
+          />
+        </div>
 
-          <LinkBlockHorizontal />
+        <LinkBlockHorizontal />
 
-          {/* select the reference remote schema */}
-          <div className="col-span-5">
-            <RefRsSelector allRemoteSchemas={remoteSchemaList} />
-          </div>
+        {/* select the reference remote schema */}
+        <div className="col-span-5">
+          <RefRsSelector allRemoteSchemas={remoteSchemaList} />
         </div>
       </div>
 
       <LinkBlockVertical title="Type Mapped To" />
 
       {/* relationship details */}
-      <div className="grid">
+      <div className="grid w-full pb-md">
         <RemoteSchemaWidget
           schemaName={refRemoteSchemaName}
           fields={fieldsForSelectedRsType}
           rootFields={['query', 'mutation']}
         />
       </div>
-    </div>
+    </>
   );
 };

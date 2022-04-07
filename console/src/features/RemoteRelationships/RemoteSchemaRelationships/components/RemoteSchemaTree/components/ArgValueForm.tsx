@@ -113,6 +113,7 @@ export const ArgValueForm = ({
             className={fieldStyle}
             value={localArgValue.kind}
             onChange={changeInputType}
+            data-test="select-argument"
           >
             <option disabled>Select an arugment...</option>
             {argValueTypeOptions.map(option => (
@@ -133,6 +134,7 @@ export const ArgValueForm = ({
                 className={fieldStyle}
                 value={localArgValue.value}
                 onChange={changeInputColumnValue}
+                data-test="selet-source-field"
               >
                 <option value="" disabled>
                   Select Field...
@@ -154,6 +156,7 @@ export const ArgValueForm = ({
                 className={fieldStyle}
                 value={localArgValue.value}
                 onChange={e => onValueChangeHandler(e.target.value)}
+                data-test="select-static-value"
               />
             </>
           )}
