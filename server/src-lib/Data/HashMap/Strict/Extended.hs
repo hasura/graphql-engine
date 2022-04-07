@@ -6,6 +6,7 @@ module Data.HashMap.Strict.Extended
     groupOnNE,
     differenceOn,
     lpadZip,
+    insertWithM,
     isInverseOf,
     unionWithM,
     unionsAll,
@@ -60,6 +61,20 @@ lpadZip left =
       This _ -> Nothing
       That b -> Just (Nothing, b)
       These a b -> Just (Just a, b)
+
+-- | Monadic version of https://hackage.haskell.org/package/unordered-containers-0.2.18.0/docs/Data-HashMap-Internal.html#v:insertWith
+insertWithM :: (Monad m, Hashable k, Eq k) => (v -> v -> m v) -> k -> v -> HashMap k v -> m (HashMap k v)
+insertWithM f k v m =
+  sequence $
+    M.insertWith
+      ( \a b -> do
+          x <- a
+          y <- b
+          f x y
+      )
+      k
+      (return v)
+      (return <$> m)
 
 -- | Determines whether the left-hand-side and the right-hand-side are inverses of each other.
 --

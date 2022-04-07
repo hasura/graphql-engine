@@ -736,6 +736,7 @@ mkWaiApp ::
   -- | set of the enabled 'API's
   S.HashSet API ->
   ES.LiveQueriesOptions ->
+  ES.StreamQueriesOptions ->
   ResponseInternalErrorsConfig ->
   Maybe ES.SubscriptionPostPollHook ->
   SchemaCacheRef ->
@@ -768,6 +769,7 @@ mkWaiApp
   instanceId
   apis
   lqOpts
+  streamQOpts
   responseErrorsConfig
   liveQueryHook
   schemaCacheRef
@@ -788,7 +790,7 @@ mkWaiApp
     let corsPolicy = mkDefaultCorsPolicy corsCfg
         postPollHook = fromMaybe (ES.defaultSubscriptionPostPollHook logger) liveQueryHook
 
-    subscriptionsState <- liftIO $ ES.initSubscriptionsState lqOpts postPollHook
+    subscriptionsState <- liftIO $ ES.initSubscriptionsState lqOpts streamQOpts postPollHook
     wsServerEnv <-
       WS.createWSServerEnv
         logger

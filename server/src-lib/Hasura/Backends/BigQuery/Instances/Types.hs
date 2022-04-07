@@ -29,6 +29,7 @@ instance Backend 'BigQuery where
   type SQLExpression 'BigQuery = BigQuery.Expression
   type SQLOperator 'BigQuery = BigQuery.Op
   type BooleanOperators 'BigQuery = BigQuery.BooleanOperators
+  type XStreamingSubscription 'BigQuery = XDisable
 
   type XComputedField 'BigQuery = XDisable
   type XRelay 'BigQuery = XDisable

@@ -34,6 +34,7 @@ instance Backend 'MySQL where
   type XNodesAgg 'MySQL = XEnable
   type ExtraTableMetadata 'MySQL = ()
   type XNestedInserts 'MySQL = XDisable
+  type XStreamingSubscription 'MySQL = XDisable
 
   functionArgScalarType :: FunctionArgType 'MySQL -> ScalarType 'MySQL
   functionArgScalarType = error "functionArgScalarType: not implemented yet"

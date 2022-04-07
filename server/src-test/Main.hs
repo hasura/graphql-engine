@@ -57,6 +57,7 @@ import Hasura.Server.MigrateSpec qualified as MigrateSpec
 import Hasura.Server.TelemetrySpec qualified as TelemetrySpec
 import Hasura.Server.Types
 import Hasura.SessionSpec qualified as SessionSpec
+import Hasura.StreamingSubscriptionSpec qualified as StreamingSubSpec
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Client.TLS qualified as HTTP
 import Network.HTTP.Client.TransformableSpec qualified as TransformableSpec
@@ -79,13 +80,14 @@ data TestSuite
   | MSSQLSuite
 
 main :: IO ()
-main =
+main = do
   parseArgs >>= \case
     AllSuites -> do
+      streamingSubSpec <- StreamingSubSpec.buildStreamingSubscriptionsSpec
       postgresSpecs <- buildPostgresSpecs
       mssqlSpecs <- buildMSSQLSpecs
-      runHspec [] (unitSpecs *> postgresSpecs *> mssqlSpecs)
-    SingleSuite hspecArgs suite ->
+      runHspec [] (unitSpecs *> postgresSpecs *> mssqlSpecs *> streamingSubSpec)
+    SingleSuite hspecArgs suite -> do
       runHspec hspecArgs =<< case suite of
         UnitSuite -> pure unitSpecs
         PostgresSuite -> buildPostgresSpecs
@@ -175,7 +177,14 @@ buildPostgresSpecs = do
             maintenanceMode = MaintenanceModeDisabled
             readOnlyMode = ReadOnlyModeDisabled
             serverConfigCtx =
-              ServerConfigCtx FunctionPermissionsInferred RemoteSchemaPermsDisabled sqlGenCtx maintenanceMode mempty EventingEnabled readOnlyMode
+              ServerConfigCtx
+                FunctionPermissionsInferred
+                RemoteSchemaPermsDisabled
+                sqlGenCtx
+                maintenanceMode
+                mempty
+                EventingEnabled
+                readOnlyMode
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver serverConfigCtx
             pgLogger = print
 
@@ -199,9 +208,13 @@ buildPostgresSpecs = do
         cacheRef <- newMVar schemaCache
         pure $ NT (run . flip MigrateSpec.runCacheRefT cacheRef . fmap fst . runMetadataT metadata)
 
-  pure $
-    beforeAll setupCacheRef $
-      describe "Hasura.Server.Migrate" $ MigrateSpec.spec sourceConfig pgContext pgConnInfo
+  streamingSubSpec <- StreamingSubSpec.buildStreamingSubscriptionsSpec
+
+  pure $ do
+    describe "Migrate spec" $
+      beforeAll setupCacheRef $
+        describe "Hasura.Server.Migrate" $ MigrateSpec.spec sourceConfig pgContext pgConnInfo
+    describe "Streaming subscription spec" $ streamingSubSpec
 
 parseArgs :: IO TestSuites
 parseArgs =

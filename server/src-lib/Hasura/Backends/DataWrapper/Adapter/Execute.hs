@@ -26,8 +26,10 @@ instance BackendExecute 'DataWrapper where
     throw400 NotSupported "mkDBQueryExplain: not implemented for GraphQL Data Wrappers."
   mkDBMutationPlan _ _ _ _ _ =
     throw400 NotSupported "mkDBMutationPlan: not implemented for GraphQL Data Wrappers."
-  mkDBSubscriptionPlan _ _ _ _ _ =
-    throw400 NotSupported "mkDBSubscriptionPlan: not implemented for GraphQL Data Wrappers."
+  mkLiveQuerySubscriptionPlan _ _ _ _ _ =
+    throw400 NotSupported "mkLiveQuerySubscriptionPlan: not implemented for GraphQL Data Wrappers."
+  mkDBStreamingSubscriptionPlan _ _ _ _ =
+    throw400 NotSupported "mkLiveQuerySubscriptionPlan: not implemented for GraphQL Data Wrappers."
   mkDBRemoteRelationshipPlan _ _ _ _ _ _ _ =
     throw500 "mkDBRemoteRelationshipPlan: not implemented for GraphQL Data Wrappers."
   mkSubscriptionExplain _ =

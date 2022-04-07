@@ -94,15 +94,20 @@ module Hasura.GraphQL.Execute.Subscription.Plan
     CohortIdArray (..),
     CohortVariablesArray (..),
     CohortVariables,
+    _cvCursorVariables,
     mkCohortVariables,
     ValidatedVariables (..),
     mkUnsafeValidateVariables,
+    modifyCursorCohortVariables,
     ValidatedQueryVariables,
     ValidatedSyntheticVariables,
+    ValidatedCursorVariables,
     SubscriptionQueryPlan (..),
     SubscriptionQueryPlanExplanation (..),
     ParameterizedSubscriptionQueryPlan (..),
+    CursorVariableValues (..),
     cvSessionVariables,
+    cvCursorVariables,
     cvQueryVariables,
     cvSyntheticVariables,
     unValidatedVariables,
@@ -157,6 +162,8 @@ type ValidatedQueryVariables = ValidatedVariables (Map.HashMap G.Name)
 
 type ValidatedSyntheticVariables = ValidatedVariables []
 
+type ValidatedCursorVariables = ValidatedVariables (Map.HashMap G.Name)
+
 mkUnsafeValidateVariables :: f TxtEncodedVal -> ValidatedVariables f
 mkUnsafeValidateVariables = ValidatedVariables
 
@@ -195,13 +202,26 @@ data CohortVariables = CohortVariables
     -- can still take advantage of the similarity between the two queries by
     -- multiplexing them together, so we replace them with references to synthetic
     -- variables.
-    _cvSyntheticVariables :: !ValidatedSyntheticVariables
+    _cvSyntheticVariables :: !ValidatedSyntheticVariables,
+    -- | Cursor variables contain the latest value of the cursor.
+    --   The value of the cursor variables are updated after every poll.
+    --   If the value has been changed - see [Streaming subscription polling].
+    --   Cursor variables are only used in the case of streaming subscriptions,
+    --   for live queries it will be empty.
+    _cvCursorVariables :: !ValidatedCursorVariables
   }
   deriving (Show, Eq, Generic)
 
 instance Hashable CohortVariables
 
 $(makeLenses 'CohortVariables)
+
+modifyCursorCohortVariables ::
+  ValidatedCursorVariables ->
+  CohortVariables ->
+  CohortVariables
+modifyCursorCohortVariables validatedCursorVariables cohortVariables =
+  cohortVariables {_cvCursorVariables = validatedCursorVariables}
 
 -- | Builds a cohort's variables by only using the session variables that
 -- are required for the subscription
@@ -210,6 +230,7 @@ mkCohortVariables ::
   SessionVariables ->
   ValidatedQueryVariables ->
   ValidatedSyntheticVariables ->
+  ValidatedCursorVariables ->
   CohortVariables
 mkCohortVariables requiredSessionVariables sessionVariableValues =
   CohortVariables $
@@ -218,11 +239,12 @@ mkCohortVariables requiredSessionVariables sessionVariableValues =
       sessionVariableValues
 
 instance J.ToJSON CohortVariables where
-  toJSON (CohortVariables sessionVars queryVars syntheticVars) =
+  toJSON (CohortVariables sessionVars queryVars syntheticVars cursorVars) =
     J.object
       [ "session" J..= sessionVars,
         "query" J..= queryVars,
-        "synthetic" J..= syntheticVars
+        "synthetic" J..= syntheticVars,
+        "cursor" J..= cursorVars
       ]
 
 -- These types exist only to use the Postgres array encoding.

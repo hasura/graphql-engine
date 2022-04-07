@@ -56,7 +56,8 @@ instance BackendExecute 'MSSQL where
 
   mkDBQueryPlan = msDBQueryPlan
   mkDBMutationPlan = msDBMutationPlan
-  mkDBSubscriptionPlan = msDBSubscriptionPlan
+  mkLiveQuerySubscriptionPlan = msDBLiveQuerySubscriptionPlan
+  mkDBStreamingSubscriptionPlan _ _ _ _ = throw500 "Streaming subscriptions are not supported for MS-SQL sources yet"
   mkDBQueryExplain = msDBQueryExplain
   mkSubscriptionExplain = msDBSubscriptionExplain
 
@@ -243,7 +244,7 @@ msDBMutationPlan userInfo stringifyNum sourceName sourceConfig mrf = do
 
 -- * Subscription
 
-msDBSubscriptionPlan ::
+msDBLiveQuerySubscriptionPlan ::
   forall m.
   ( MonadError QErr m,
     MonadIO m,
@@ -255,7 +256,7 @@ msDBSubscriptionPlan ::
   Maybe G.Name ->
   RootFieldMap (QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL)) ->
   m (SubscriptionQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL))
-msDBSubscriptionPlan UserInfo {_uiSession, _uiRole} _sourceName sourceConfig namespace rootFields = do
+msDBLiveQuerySubscriptionPlan UserInfo {_uiSession, _uiRole} _sourceName sourceConfig namespace rootFields = do
   (reselect, prepareState) <- planSubscription (OMap.mapKeys _rfaAlias rootFields) _uiSession
   cohortVariables <- prepareStateCohortVariables sourceConfig _uiSession prepareState
   let parameterizedPlan = ParameterizedSubscriptionQueryPlan _uiRole $ MultiplexedQuery' reselect
@@ -273,6 +274,7 @@ prepareStateCohortVariables sourceConfig session prepState = do
       session
       namedVars
       posVars
+      mempty
 
 -- | Ensure that the set of variables (with value instantiations) that occur in
 -- a (RQL) query produce a well-formed and executable (SQL) query when

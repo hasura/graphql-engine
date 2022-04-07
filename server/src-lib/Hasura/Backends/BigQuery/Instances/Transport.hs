@@ -29,6 +29,7 @@ instance BackendTransport 'BigQuery where
   runDBQueryExplain = runQueryExplain
   runDBMutation = runMutation
   runDBSubscription = error "Not supported."
+  runDBStreamingSubscription = error "Not supported"
 
 runQuery ::
   ( MonadIO m,

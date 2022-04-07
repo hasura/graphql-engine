@@ -57,6 +57,7 @@ instance Backend 'DataWrapper where
   type XRelay 'DataWrapper = XDisable
   type XNodesAgg 'DataWrapper = XDisable
   type XNestedInserts 'DataWrapper = XDisable
+  type XStreamingSubscription 'DataWrapper = XDisable
 
   functionArgScalarType :: FunctionArgType 'DataWrapper -> ScalarType 'DataWrapper
   functionArgScalarType = error "functionArgScalarType: not implemented for GraphQL Data Wrappers."

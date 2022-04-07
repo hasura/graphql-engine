@@ -35,7 +35,8 @@ instance BackendExecute 'MySQL where
   type ExecutionMonad 'MySQL = Tracing.TraceT (ExceptT QErr IO)
   mkDBQueryPlan = mysqlDBQueryPlan
   mkDBMutationPlan = error "mkDBMutationPlan: MySQL backend does not support this operation yet."
-  mkDBSubscriptionPlan _ _ _ _ = error "mkDBSubscriptionPlan: MySQL backend does not support this operation yet."
+  mkLiveQuerySubscriptionPlan _ _ _ _ = error "mkLiveQuerySubscriptionPlan: MySQL backend does not support this operation yet."
+  mkDBStreamingSubscriptionPlan _ _ _ _ = error "mkLiveQuerySubscriptionPlan: MySQL backend does not support this operation yet."
   mkDBQueryExplain = mysqlDBQueryExplain
   mkSubscriptionExplain _ = error "mkSubscriptionExplain: MySQL backend does not support this operation yet."
   mkDBRemoteRelationshipPlan = error "mkDBRemoteRelationshipPlan: MySQL does not support this operation yet."

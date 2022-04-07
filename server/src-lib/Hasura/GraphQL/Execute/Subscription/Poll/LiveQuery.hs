@@ -22,19 +22,21 @@ import Hasura.GraphQL.Execute.Subscription.Options
 import Hasura.GraphQL.Execute.Subscription.Poll.Common hiding (Cohort (..), CohortMap, CohortSnapshot (..))
 import Hasura.GraphQL.Execute.Subscription.Poll.Common qualified as C
 import Hasura.GraphQL.Execute.Subscription.TMap qualified as TMap
+import Hasura.GraphQL.Execute.Subscription.Types
 import Hasura.GraphQL.ParameterizedQueryHash (ParameterizedQueryHash)
 import Hasura.GraphQL.Transport.Backend
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common (SourceName, getNonNegativeInt)
+import Hasura.RQL.Types.Subscription (SubscriptionType (..))
 import Hasura.Session
 
 pushResultToCohort ::
   GQResult BS.ByteString ->
   Maybe ResponseHash ->
   SubscriptionMetadata ->
-  C.CohortSnapshot ->
+  CohortSnapshot 'LiveQuery ->
   -- | subscribers to which data has been pushed, subscribers which already
   -- have this data (this information is exposed by metrics reporting)
   IO ([SubscriberExecutionDetails], [SubscriberExecutionDetails])
@@ -75,7 +77,7 @@ pollLiveQuery ::
   RoleName ->
   ParameterizedQueryHash ->
   MultiplexedQuery b ->
-  C.CohortMap ->
+  CohortMap 'LiveQuery ->
   SubscriptionPostPollHook ->
   IO ()
 pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap postPollHook = do
@@ -142,7 +144,7 @@ pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQ
     SubscriptionsOptions batchSize _ = lqOpts
 
     getCohortSnapshot (cohortVars, handlerC) = do
-      let C.Cohort resId respRef curOpsTV newOpsTV = handlerC
+      let C.Cohort resId respRef curOpsTV newOpsTV () = handlerC
       curOpsL <- TMap.toList curOpsTV
       newOpsL <- TMap.toList newOpsTV
       forM_ newOpsL $ \(k, action) -> TMap.insert action k curOpsTV

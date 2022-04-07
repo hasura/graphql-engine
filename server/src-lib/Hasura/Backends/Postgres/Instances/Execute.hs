@@ -22,7 +22,6 @@ import Data.Sequence qualified as Seq
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection (runTx)
 import Hasura.Backends.Postgres.Execute.Insert (convertToSQLTransaction)
-import Hasura.Backends.Postgres.Execute.LiveQuery qualified as PGL
 import Hasura.Backends.Postgres.Execute.Mutation qualified as PGE
 import Hasura.Backends.Postgres.Execute.Prepare
   ( PlanningSt (..),
@@ -33,6 +32,7 @@ import Hasura.Backends.Postgres.Execute.Prepare
     resolveUnpreparedValue,
     withUserVars,
   )
+import Hasura.Backends.Postgres.Execute.Subscription qualified as PGL
 import Hasura.Backends.Postgres.Execute.Types (PGSourceConfig (..))
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types qualified as PG
@@ -81,7 +81,11 @@ import Hasura.RQL.Types
     getFieldNameTxt,
     liftTx,
   )
-import Hasura.RQL.Types.Column (ColumnType (..), ColumnValue (..))
+import Hasura.RQL.Types.Column
+  ( ColumnInfo (..),
+    ColumnType (..),
+    ColumnValue (..),
+  )
 import Hasura.RQL.Types.Common (StringifyNumbers)
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session (UserInfo (..))
@@ -105,7 +109,8 @@ instance
 
   mkDBQueryPlan = pgDBQueryPlan
   mkDBMutationPlan = pgDBMutationPlan
-  mkDBSubscriptionPlan = pgDBSubscriptionPlan
+  mkLiveQuerySubscriptionPlan = pgDBLiveQuerySubscriptionPlan
+  mkDBStreamingSubscriptionPlan = pgDBStreamingSubscriptionPlan
   mkDBQueryExplain = pgDBQueryExplain
   mkSubscriptionExplain = pgDBSubscriptionExplain
   mkDBRemoteRelationshipPlan = pgDBRemoteRelationshipPlan
@@ -287,7 +292,7 @@ pgDBMutationPlan userInfo stringifyNum sourceName sourceConfig mrf = do
 
 -- subscription
 
-pgDBSubscriptionPlan ::
+pgDBLiveQuerySubscriptionPlan ::
   forall pgKind m.
   ( MonadError QErr m,
     MonadIO m,
@@ -301,14 +306,14 @@ pgDBSubscriptionPlan ::
   Maybe G.Name ->
   RootFieldMap (QueryDB ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind))) ->
   m (SubscriptionQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)))
-pgDBSubscriptionPlan userInfo _sourceName sourceConfig namespace unpreparedAST = do
+pgDBLiveQuerySubscriptionPlan userInfo _sourceName sourceConfig namespace unpreparedAST = do
   (preparedAST, PGL.QueryParametersInfo {..}) <-
     flip runStateT mempty $
       for unpreparedAST $ traverse (PGL.resolveMultiplexedValue $ _uiSession userInfo)
-  mutationQueryTagsComment <- ask
+  subscriptionQueryTagsComment <- ask
   let multiplexedQuery = PGL.mkMultiplexedQuery $ OMap.mapKeys _rfaAlias preparedAST
       multiplexedQueryWithQueryTags =
-        multiplexedQuery {PGL.unMultiplexedQuery = appendSQLWithQueryTags (PGL.unMultiplexedQuery multiplexedQuery) mutationQueryTagsComment}
+        multiplexedQuery {PGL.unMultiplexedQuery = appendSQLWithQueryTags (PGL.unMultiplexedQuery multiplexedQuery) subscriptionQueryTagsComment}
       roleName = _uiRole userInfo
       parameterizedPlan = ParameterizedSubscriptionQueryPlan roleName multiplexedQueryWithQueryTags
 
@@ -325,8 +330,57 @@ pgDBSubscriptionPlan userInfo _sourceName sourceConfig namespace unpreparedAST =
           (_uiSession userInfo)
           validatedQueryVars
           validatedSyntheticVars
-
+          mempty -- live query subscriptions don't use the streaming cursor variables
   pure $ SubscriptionQueryPlan parameterizedPlan sourceConfig cohortVariables namespace
+
+pgDBStreamingSubscriptionPlan ::
+  forall pgKind m.
+  ( MonadError QErr m,
+    MonadIO m,
+    Backend ('Postgres pgKind),
+    PostgresAnnotatedFieldJSON pgKind,
+    MonadReader QueryTagsComment m
+  ) =>
+  UserInfo ->
+  SourceName ->
+  SourceConfig ('Postgres pgKind) ->
+  (RootFieldAlias, (QueryDB ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)))) ->
+  m (SubscriptionQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)))
+pgDBStreamingSubscriptionPlan userInfo _sourceName sourceConfig (rootFieldAlias, unpreparedAST) = do
+  (preparedAST, PGL.QueryParametersInfo {..}) <-
+    flip runStateT mempty $
+      traverse (PGL.resolveMultiplexedValue (_uiSession userInfo)) unpreparedAST
+  subscriptionQueryTagsComment <- ask
+  let multiplexedQuery = PGL.mkStreamingMultiplexedQuery (_rfaAlias rootFieldAlias, preparedAST)
+      multiplexedQueryWithQueryTags =
+        multiplexedQuery {PGL.unMultiplexedQuery = appendSQLWithQueryTags (PGL.unMultiplexedQuery multiplexedQuery) subscriptionQueryTagsComment}
+      roleName = _uiRole userInfo
+      parameterizedPlan = ParameterizedSubscriptionQueryPlan roleName multiplexedQueryWithQueryTags
+
+  -- We need to ensure that the values provided for variables are correct according to Postgres.
+  -- Without this check an invalid value for a variable for one instance of the subscription will
+  -- take down the entire multiplexed query.
+  validatedQueryVars <- PGL.validateVariables (_pscExecCtx sourceConfig) _qpiReusableVariableValues
+  validatedSyntheticVars <- PGL.validateVariables (_pscExecCtx sourceConfig) $ toList _qpiSyntheticVariableValues
+  validatedCursorVars <- PGL.validateVariables (_pscExecCtx sourceConfig) $ getCursorVars unpreparedAST
+
+  let cohortVariables =
+        mkCohortVariables
+          _qpiReferencedSessionVariables
+          (_uiSession userInfo)
+          validatedQueryVars
+          validatedSyntheticVars
+          validatedCursorVars
+
+  pure $ SubscriptionQueryPlan parameterizedPlan sourceConfig cohortVariables $ _rfaNamespace rootFieldAlias
+  where
+    getCursorVars qdb =
+      case qdb of
+        QDBStreamMultipleRows (IR.AnnSelectStreamG () _ _ _ args _) ->
+          let cursorArg = IR._ssaCursorArg args
+              colInfo = IR._sciColInfo cursorArg
+           in Map.singleton (ciName colInfo) (IR._sciInitialValue cursorArg)
+        _ -> mempty
 
 -- turn the current plan into a transaction
 mkCurPlanTx ::
@@ -354,6 +408,7 @@ irToRootFieldPlan prepped = \case
   QDBSingleRow s -> mkPreparedSql (DS.selectQuerySQL JASSingleObject) s
   QDBAggregation s -> mkPreparedSql DS.selectAggregateQuerySQL s
   QDBConnection s -> mkPreparedSql DS.connectionSelectQuerySQL s
+  QDBStreamMultipleRows s -> mkPreparedSql DS.selectStreamQuerySQL s
   where
     mkPreparedSql :: (t -> Q.Query) -> t -> PreparedSql
     mkPreparedSql f simpleSel =

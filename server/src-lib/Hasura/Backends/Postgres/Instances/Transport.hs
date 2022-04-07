@@ -16,7 +16,7 @@ import Data.ByteString qualified as B
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text.Extended
 import Database.PG.Query qualified as Q
-import Hasura.Backends.Postgres.Execute.LiveQuery qualified as PGL
+import Hasura.Backends.Postgres.Execute.Subscription qualified as PGL
 import Hasura.Backends.Postgres.Instances.Execute qualified as EQ
 import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Backends.Postgres.Translate.Select (PostgresAnnotatedFieldJSON)
@@ -50,6 +50,7 @@ instance
   runDBQuery = runPGQuery
   runDBMutation = runPGMutation
   runDBSubscription = runPGSubscription
+  runDBStreamingSubscription = runPGStreamingSubscription
   runDBQueryExplain = runPGQueryExplain
 
 runPGQuery ::
@@ -115,6 +116,18 @@ runPGSubscription sourceConfig query variables =
     runExceptT $
       runQueryTx (_pscExecCtx sourceConfig) $
         PGL.executeMultiplexedQuery query variables
+
+runPGStreamingSubscription ::
+  MonadIO m =>
+  SourceConfig ('Postgres pgKind) ->
+  MultiplexedQuery ('Postgres pgKind) ->
+  [(CohortId, CohortVariables)] ->
+  m (DiffTime, Either QErr [(CohortId, B.ByteString, CursorVariableValues)])
+runPGStreamingSubscription sourceConfig query variables =
+  withElapsedTime $
+    runExceptT $ do
+      res <- runQueryTx (_pscExecCtx sourceConfig) $ PGL.executeStreamingMultiplexedQuery query variables
+      pure $ res <&> (\(cohortId, cohortRes, cursorVariableVals) -> (cohortId, cohortRes, Q.getAltJ cursorVariableVals))
 
 runPGQueryExplain ::
   forall pgKind m.

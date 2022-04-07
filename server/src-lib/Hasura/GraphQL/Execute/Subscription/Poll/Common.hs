@@ -16,6 +16,7 @@ module Hasura.GraphQL.Execute.Subscription.Poll.Common
     -- * Cohorts
     Cohort (..),
     CohortSnapshot (..),
+    CursorVariableValues (..),
     CohortId,
     newCohortId,
     CohortVariables,
@@ -130,7 +131,7 @@ type SubscriberMap = TMap.TMap SubscriberId Subscriber
 -- therefore a single row in the query result).
 --
 -- See also 'CohortMap'.
-data Cohort = Cohort
+data Cohort streamCursorVars = Cohort
   { -- | a unique identifier used to identify the cohort in the generated query
     _cCohortId :: !CohortId,
     -- | a hash of the previous query result, if any, used to determine if we need to push an updated
@@ -141,7 +142,10 @@ data Cohort = Cohort
     _cExistingSubscribers :: !SubscriberMap,
     -- | subscribers we haven’t yet pushed any results to; we push results to them regardless if the
     -- result changed, then merge them in the map of existing subscribers
-    _cNewSubscribers :: !SubscriberMap
+    _cNewSubscribers :: !SubscriberMap,
+    -- | a mutable type which holds the latest value of the subscription stream cursor. In case
+    --   of live query subscription, this field is ignored by setting `streamCursorVars` to `()`
+    _cStreamCursorVariables :: !streamCursorVars
   }
 
 -- | The @BatchId@ is a number based ID to uniquely identify a batch in a single poll and
@@ -177,9 +181,9 @@ type CohortKey = CohortVariables
 
 -- | This has the invariant, maintained in 'removeLiveQuery', that it contains
 -- no 'Cohort' with zero total (existing + new) subscribers.
-type CohortMap = TMap.TMap CohortKey Cohort
+type CohortMap streamCursor = TMap.TMap CohortKey (Cohort streamCursor)
 
-dumpCohortMap :: CohortMap -> IO J.Value
+dumpCohortMap :: CohortMap streamCursor -> IO J.Value
 dumpCohortMap cohortMap = do
   cohorts <- STM.atomically $ TMap.toList cohortMap
   fmap J.toJSON . forM cohorts $ \(variableValues, cohort) -> do
@@ -190,7 +194,7 @@ dumpCohortMap cohortMap = do
           "cohort" J..= cohortJ
         ]
   where
-    dumpCohort (Cohort respId respTV curOps newOps) =
+    dumpCohort (Cohort respId respTV curOps newOps _) =
       STM.atomically $ do
         prevResHash <- STM.readTVar respTV
         curOpIds <- TMap.toList curOps
@@ -220,8 +224,8 @@ data CohortSnapshot = CohortSnapshot
 -- In SQL, an 'Poller' corresponds to a single, multiplexed query, though in
 -- practice, 'Poller's with large numbers of 'Cohort's are batched into
 -- multiple concurrent queries for performance reasons.
-data Poller = Poller
-  { _pCohorts :: !CohortMap,
+data Poller streamCursor = Poller
+  { _pCohorts :: !(CohortMap streamCursor),
     -- | This is in a separate 'STM.TMVar' because it’s important that we are
     -- able to construct 'Poller' values in 'STM.STM' --- we need the insertion
     -- into the 'PollerMap' to be atomic to ensure that we don’t accidentally
@@ -262,12 +266,12 @@ instance J.ToJSON PollerKey where
         "query" J..= query
       ]
 
-type PollerMap = STMMap.Map PollerKey Poller
+type PollerMap streamCursor = STMMap.Map PollerKey (Poller streamCursor)
 
-dumpPollerMap :: Bool -> PollerMap -> IO J.Value
-dumpPollerMap extended lqMap =
+dumpPollerMap :: Bool -> PollerMap streamCursor -> IO J.Value
+dumpPollerMap extended pollerMap =
   fmap J.toJSON $ do
-    entries <- STM.atomically $ ListT.toList $ STMMap.listT lqMap
+    entries <- STM.atomically $ ListT.toList $ STMMap.listT pollerMap
     forM entries $ \(PollerKey source role query, Poller cohortsMap ioState) -> do
       PollerIOState threadId pollerId <- STM.atomically $ STM.readTMVar ioState
       cohortsJ <-

@@ -28,6 +28,9 @@ module Hasura.GraphQL.Transport.WebSocket.Server
     onConnInitErrorText,
     sendMsg,
     shutdown,
+
+    -- * exported for testing
+    mkUnsafeWSId,
   )
 where
 
@@ -63,6 +66,9 @@ import System.IO.Error qualified as E
 
 newtype WSId = WSId {unWSId :: UUID.UUID}
   deriving (Show, Eq, Hashable)
+
+mkUnsafeWSId :: UUID.UUID -> WSId
+mkUnsafeWSId = WSId
 
 instance J.ToJSON WSId where
   toJSON (WSId uuid) =

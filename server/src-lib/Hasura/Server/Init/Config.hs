@@ -163,6 +163,9 @@ data RawServeOptions impl = RawServeOptions
     rsoEnabledAPIs :: Maybe [API],
     rsoMxRefetchInt :: Maybe ES.RefetchInterval,
     rsoMxBatchSize :: Maybe ES.BatchSize,
+    -- we have different config options for livequery and streaming subscriptions
+    rsoStreamingMxRefetchInt :: Maybe ES.RefetchInterval,
+    rsoStreamingMxBatchSize :: Maybe ES.BatchSize,
     rsoEnableAllowlist :: Bool,
     rsoEnabledLogTypes :: Maybe [L.EngineLogType impl],
     rsoLogLevel :: Maybe L.LogLevel,
@@ -233,6 +236,7 @@ data ServeOptions impl = ServeOptions
     soDangerousBooleanCollapse :: Bool,
     soEnabledAPIs :: Set.HashSet API,
     soLiveQueryOpts :: ES.LiveQueriesOptions,
+    soStreamingQueryOpts :: ES.StreamQueriesOptions,
     soEnableAllowlist :: Bool,
     soEnabledLogTypes :: Set.HashSet (L.EngineLogType impl),
     soLogLevel :: L.LogLevel,

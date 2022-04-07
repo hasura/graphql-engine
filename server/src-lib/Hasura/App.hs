@@ -692,6 +692,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
           _scInstanceId
           soEnabledAPIs
           soLiveQueryOpts
+          soStreamingQueryOpts
           soResponseInternalErrorsConfig
           postPollHook
           _scSchemaCacheRef

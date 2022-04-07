@@ -235,6 +235,7 @@ serveOptions =
       soDangerousBooleanCollapse = False,
       soEnabledAPIs = testSuiteEnabledApis,
       soLiveQueryOpts = ES.mkSubscriptionsOptions Nothing Nothing,
+      soStreamingQueryOpts = ES.mkSubscriptionsOptions Nothing Nothing,
       soEnableAllowlist = False,
       soEnabledLogTypes = Set.fromList L.userAllowedLogTypes,
       soLogLevel = fromMaybe (L.LevelOther "test-suite") engineLogLevel,

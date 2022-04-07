@@ -25,6 +25,7 @@ instance BackendTransport 'MySQL where
   runDBQueryExplain = runQueryExplain
   runDBMutation = error "runDBMutation: MySQL backend does not support this operation yet."
   runDBSubscription = error "runDBSubscription: MySQL backend does not support this operation yet."
+  runDBStreamingSubscription = error "runDBStreamingSubscription: MySQL backend does not support this operation yet"
 
 runQuery ::
   ( MonadIO m,

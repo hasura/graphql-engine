@@ -20,5 +20,7 @@ instance BackendTransport 'DataWrapper where
     throw400 NotSupported "runDBQueryExplain: not implemented for GraphQL Data Wrappers."
   runDBMutation _ _ _ _ _ _ _ _ =
     throw400 NotSupported "runDBMutation: not implemented for GraphQL Data Wrappers."
+  runDBStreamingSubscription _ _ _ =
+    liftIO . throwIO $ userError "runDBStreamingSubscription: not implemented for GraphQL Data Wrappers."
   runDBSubscription _ _ _ =
     liftIO . throwIO $ userError "runDBSubscription: not implemented for GraphQL Data Wrappers."

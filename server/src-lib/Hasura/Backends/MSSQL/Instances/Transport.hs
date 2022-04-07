@@ -7,6 +7,7 @@
 -- and so on.
 module Hasura.Backends.MSSQL.Instances.Transport () where
 
+import Control.Exception.Safe (throwIO)
 import Data.Aeson qualified as J
 import Data.ByteString qualified as B
 import Data.String (fromString)
@@ -38,6 +39,8 @@ instance BackendTransport 'MSSQL where
   runDBQueryExplain = runQueryExplain
   runDBMutation = runMutation
   runDBSubscription = runSubscription
+  runDBStreamingSubscription _ _ _ =
+    liftIO . throwIO $ userError "runDBSubscription: not implemented for MS-SQL sources."
 
 newtype CohortResult = CohortResult (CohortId, Text)
 

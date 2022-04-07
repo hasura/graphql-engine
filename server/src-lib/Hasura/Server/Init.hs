@@ -206,6 +206,7 @@ mkServeOptions rso = do
     Set.fromList . fromMaybe defaultEnabledAPIs
       <$> withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
   lqOpts <- mkLQOpts
+  streamQOpts <- mkStreamQueryOpts
   enableAL <- withEnvBool (rsoEnableAllowlist rso) $ fst enableAllowlistEnv
   enabledLogs <-
     maybe L.defaultEnabledLogTypes Set.fromList
@@ -286,6 +287,7 @@ mkServeOptions rso = do
       dangerousBooleanCollapse
       enabledAPIs
       lqOpts
+      streamQOpts
       enableAL
       enabledLogs
       serverLogLevel
@@ -362,9 +364,14 @@ mkServeOptions rso = do
         _ -> corsCfg
 
     mkLQOpts = do
-      mxRefetchIntM <- withEnv (rsoMxRefetchInt rso) $ fst mxRefetchDelayEnv
-      mxBatchSizeM <- withEnv (rsoMxBatchSize rso) $ fst mxBatchSizeEnv
-      return $ ES.mkSubscriptionsOptions mxBatchSizeM mxRefetchIntM
+      refetchInterval <- withEnv (rsoMxRefetchInt rso) $ fst mkLiveQueryRefetchDelayEnv
+      batchSize <- withEnv (rsoMxBatchSize rso) $ fst mkLiveQueryBatchSizeEnv
+      return $ ES.mkSubscriptionsOptions batchSize refetchInterval
+
+    mkStreamQueryOpts = do
+      refetchInterval <- withEnv (rsoStreamingMxRefetchInt rso) $ fst mkStreamingQueryRefetchDelayEnv
+      batchSize <- withEnv (rsoStreamingMxBatchSize rso) $ fst mkStreamingQueryBatchSizeEnv
+      return $ ES.mkSubscriptionsOptions batchSize refetchInterval
 
 mkExamplesDoc :: [[String]] -> PP.Doc
 mkExamplesDoc exampleLines =
@@ -1125,7 +1132,7 @@ parseMxRefetchInt =
       (eitherReader fromEnv)
       ( long "live-queries-multiplexed-refetch-interval"
           <> metavar "<INTERVAL(ms)>"
-          <> help (snd mxRefetchDelayEnv)
+          <> help (snd mkLiveQueryRefetchDelayEnv)
       )
 
 parseMxBatchSize :: Parser (Maybe ES.BatchSize)
@@ -1135,7 +1142,27 @@ parseMxBatchSize =
       (eitherReader fromEnv)
       ( long "live-queries-multiplexed-batch-size"
           <> metavar "BATCH_SIZE"
-          <> help (snd mxBatchSizeEnv)
+          <> help (snd mkLiveQueryBatchSizeEnv)
+      )
+
+parseStreamingMxRefetchInt :: Parser (Maybe ES.RefetchInterval)
+parseStreamingMxRefetchInt =
+  optional $
+    option
+      (eitherReader fromEnv)
+      ( long "streaming-queries-multiplexed-refetch-interval"
+          <> metavar "<INTERVAL(ms)>"
+          <> help (snd mkStreamingQueryRefetchDelayEnv)
+      )
+
+parseStreamingMxBatchSize :: Parser (Maybe ES.BatchSize)
+parseStreamingMxBatchSize =
+  optional $
+    option
+      (eitherReader fromEnv)
+      ( long "streaming-queries-multiplexed-batch-size"
+          <> metavar "BATCH_SIZE"
+          <> help (snd mkStreamingQueryBatchSizeEnv)
       )
 
 parseEnableAllowlist :: Parser Bool
@@ -1241,16 +1268,30 @@ parseSchemaPollInterval =
           <> help (snd schemaPollIntervalEnv)
       )
 
-mxRefetchDelayEnv :: (String, String)
-mxRefetchDelayEnv =
+mkLiveQueryRefetchDelayEnv :: (String, String)
+mkLiveQueryRefetchDelayEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL",
     "results will only be sent once in this interval (in milliseconds) for "
       <> "live queries which can be multiplexed. Default: 1000 (1sec)"
   )
 
-mxBatchSizeEnv :: (String, String)
-mxBatchSizeEnv =
+mkLiveQueryBatchSizeEnv :: (String, String)
+mkLiveQueryBatchSizeEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE",
+    "multiplexed live queries are split into batches of the specified "
+      <> "size. Default 100. "
+  )
+
+mkStreamingQueryRefetchDelayEnv :: (String, String)
+mkStreamingQueryRefetchDelayEnv =
+  ( "HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_REFETCH_INTERVAL",
+    "results will only be sent once in this interval (in milliseconds) for "
+      <> "streaming queries which can be multiplexed. Default: 1000 (1sec)"
+  )
+
+mkStreamingQueryBatchSizeEnv :: (String, String)
+mkStreamingQueryBatchSizeEnv =
+  ( "HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_BATCH_SIZE",
     "multiplexed live queries are split into batches of the specified "
       <> "size. Default 100. "
   )
@@ -1409,6 +1450,8 @@ serveOptionsParser =
     <*> parseEnabledAPIs
     <*> parseMxRefetchInt
     <*> parseMxBatchSize
+    <*> parseStreamingMxRefetchInt
+    <*> parseStreamingMxBatchSize
     <*> parseEnableAllowlist
     <*> parseEnabledLogs
     <*> parseLogLevel
