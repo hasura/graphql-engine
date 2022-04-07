@@ -34,7 +34,7 @@ fields it has. In the GraphQL SDL, we might represent it like this:
 ```graphql
 type UserInfo {
   accessToken: String!
-  userId: Int!
+  userId: uuid!
 }
 ```
 
@@ -51,7 +51,7 @@ For example, you can define a type like the following:
 ```graphql
 type UserInfo {
   accessToken: String!
-  userId: Int!
+  userId: uuid!
   user: UserObj!
 }
 
@@ -87,7 +87,7 @@ Custom object types can be connected to the rest of the graph by setting up
 ```graphql
 type UserInfo {
   accessToken: String!
-  userId: Int!
+  userId: uuid!
 }
 ```
 
@@ -112,7 +112,7 @@ The object type will now be modified as:
 ```graphql {4,5}
 type UserInfo {
   accessToken: String!
-  userId: Int!
+  userId: uuid!
   loggedInUser: user
   userOrders: [order]
 }
@@ -136,7 +136,7 @@ types:
     ```graphql
     type UserInfo {
       accessToken: String!
-      userId: Int!
+      userId: uuid!
       user: UserObj!
     }
 
