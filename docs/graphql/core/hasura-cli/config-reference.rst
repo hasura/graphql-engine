@@ -209,11 +209,11 @@ The configuration can also be set in the form of environment variables:
      - ``api_paths.version``
      - Version API endpoint. More details at :ref:`version_api`.
 
-   * - ``HASURA_GRAPHQL_METADATA_DIRECTORY``
+   * - ``HASURA_GRAPHQL_METADATA_DIR``
      - ``metadata_directory``
      - Defines the directory where the metadata files were stored.
 
-   * - ``HASURA_GRAPHQL_MIGRATIONS_DIRECTORY``
+   * - ``HASURA_GRAPHQL_MIGRATIONS_DIR``
      - ``migrations_directory``
      - Defines the directory where the migration files were stored.
 
