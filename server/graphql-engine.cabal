@@ -185,6 +185,7 @@ library
                      , exceptions
                      , fast-logger
                      , gdw-api
+                     , free
                      , hashable
                      , hashable-time
                      , http-client-tls
@@ -539,6 +540,8 @@ library
                      , Hasura.Backends.DataWrapper.Adapter.Metadata
                      , Hasura.Backends.DataWrapper.Adapter.Schema
                      , Hasura.Backends.DataWrapper.Adapter.Transport
+                     , Hasura.Backends.DataWrapper.Adapter.Types
+                     , Hasura.Backends.DataWrapper.Agent.Client
                      , Hasura.Backends.DataWrapper.IR.Column
                      , Hasura.Backends.DataWrapper.IR.Expression
                      , Hasura.Backends.DataWrapper.IR.Function
@@ -548,6 +551,7 @@ library
                      , Hasura.Backends.DataWrapper.IR.Scalar.Type
                      , Hasura.Backends.DataWrapper.IR.Scalar.Value
                      , Hasura.Backends.DataWrapper.IR.Table
+                     , Hasura.Backends.DataWrapper.Plan
                      , Hasura.Backends.DataWrapper.Schema.Column
                      , Hasura.Backends.DataWrapper.Schema.Table
 
@@ -847,6 +851,7 @@ test-suite graphql-engine-tests
     , dependent-sum
     , ekg-core
     , gdw-api
+    , free
     , graphql-engine
     , graphql-parser
     , hedgehog
@@ -917,6 +922,12 @@ test-suite graphql-engine-tests
     Hasura.Backends.DataWrapper.API.V0.Scalar.ValueSpec
     Hasura.Backends.DataWrapper.API.V0.SchemaSpec
     Hasura.Backends.DataWrapper.API.V0.TableSpec
+    Hasura.Backends.DataWrapper.RQLGenerator
+    Hasura.Backends.DataWrapper.RQLGenerator.GenAnnSelectG
+    Hasura.Backends.DataWrapper.RQLGenerator.GenCommon
+    Hasura.Backends.DataWrapper.RQLGenerator.GenTablePermG
+    Hasura.Backends.DataWrapper.RQLGenerator.GenSelectArgsG
+    Hasura.Backends.DataWrapper.RQLGenerator.GenSelectFromG
     Hasura.Backends.MSSQL.ErrorSpec
     Hasura.Backends.MySQL.DataLoader.ExecuteTests
     Hasura.Backends.Postgres.RQLGenerator

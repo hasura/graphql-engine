@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
-
 -- | This module provides generators for the IR query selection type.
 --
 -- The generators in this module generally take the low-level Backend-specific
@@ -7,14 +5,19 @@
 -- This is different from lifting the constructor because we distribute these
 -- low-level generators through.
 module Hasura.RQL.IR.Generator
-  ( genFields,
-    genAnnBoolExp,
+  ( genAnnBoolExp,
     genAnnBoolExpFld,
     genAnnotatedOrderByItemG,
     genAnnotatedOrderByElement,
-    genFunctionArgsExpG,
+    genAnnotatedAggregateOrderBy,
     genArgumentExp,
+    genColumnInfo,
+    genFields,
+    genFunctionArgsExpG,
     genIdentifier,
+    genInsertOrder,
+    genRelName,
+    genRelType,
   )
 where
 
@@ -25,10 +28,6 @@ import Hasura.RQL.IR.Select
 import Hasura.RQL.Types
 import Hedgehog
 import Hedgehog.Gen
-import Hedgehog.Range (linear)
-
-smallRange :: Integral a => Range a
-smallRange = linear 0 8
 
 -- | Generate a list of pairs of field names and 'a's.
 --
@@ -43,8 +42,8 @@ genFunctionArgsExpG ::
   m (FunctionArgsExpG a)
 genFunctionArgsExpG genA =
   FunctionArgsExp
-    <$> list smallRange genA
-    <*> genHashMap (genArbitraryUnicodeText smallRange) genA smallRange
+    <$> list defaultRange genA
+    <*> genHashMap (genArbitraryUnicodeText defaultRange) genA defaultRange
 
 genArgumentExp :: MonadGen m => m a -> m (ArgumentExp a)
 genArgumentExp genA = choice [tableRow, session, input]
@@ -78,8 +77,8 @@ genAnnBoolExp
       [boolFld]
       [boolAnd, boolOr, boolNot, boolExists]
     where
-      boolAnd = BoolAnd <$> list smallRange (genAnnBoolExp aGen tableGen)
-      boolOr = BoolOr <$> list smallRange (genAnnBoolExp aGen tableGen)
+      boolAnd = BoolAnd <$> list defaultRange (genAnnBoolExp aGen tableGen)
+      boolOr = BoolOr <$> list defaultRange (genAnnBoolExp aGen tableGen)
       boolNot = BoolNot <$> genAnnBoolExp aGen tableGen
       boolExists = BoolExists <$> genGExists aGen tableGen
       boolFld = BoolFld <$> aGen
@@ -115,7 +114,7 @@ genAnnBoolExpFld
             genTableName
             genScalarType
           <*> list
-            smallRange
+            defaultRange
             ( genOpExpG
                 genTableName
                 genColumn
@@ -159,13 +158,13 @@ genRelInfo genTableName genColumn =
   RelInfo
     <$> genRelName
     <*> genRelType
-    <*> genHashMap genColumn genColumn smallRange
+    <*> genHashMap genColumn genColumn defaultRange
     <*> genTableName
     <*> bool_
     <*> genInsertOrder
 
 genRelName :: MonadGen m => m RelName
-genRelName = RelName <$> genNonEmptyText smallRange
+genRelName = RelName <$> genNonEmptyText defaultRange
 
 genRelType :: MonadGen m => m RelType
 genRelType = element [ObjRel, ArrRel]
@@ -234,7 +233,7 @@ genComputedFieldBoolExp
     choice
       [ CFBEScalar
           <$> list
-            smallRange
+            defaultRange
             ( genOpExpG
                 genTableName
                 genColumn
@@ -258,7 +257,7 @@ genComputedFieldBoolExp
       ]
 
 genComputedFieldName :: MonadGen m => m ComputedFieldName
-genComputedFieldName = ComputedFieldName <$> genNonEmptyText smallRange
+genComputedFieldName = ComputedFieldName <$> genNonEmptyText defaultRange
 
 genSessionArgumentPresence :: MonadGen m => m a -> m (SessionArgumentPresence a)
 genSessionArgumentPresence genA =
@@ -306,7 +305,7 @@ genOpExpG genTableName genColumn genScalarType genBooleanOperators genA =
       ACast
         <$> genHashMap
           genScalarType
-          ( list smallRange $
+          ( list defaultRange $
               genOpExpG
                 genTableName
                 genColumn
@@ -314,7 +313,7 @@ genOpExpG genTableName genColumn genScalarType genBooleanOperators genA =
                 genBooleanOperators
                 genA
           )
-          smallRange
+          defaultRange
     aeq = AEQ <$> bool_ <*> genA
     ane = ANE <$> bool_ <*> genA
     ain = AIN <$> genA
@@ -360,13 +359,13 @@ genEnumReference genTableName =
     <*> genHashMap
       genEnumValue
       genEnumValueInfo
-      smallRange
+      defaultRange
 
 genEnumValue :: MonadGen m => m EnumValue
-genEnumValue = EnumValue <$> genGName smallRange
+genEnumValue = EnumValue <$> genGName defaultRange
 
 genEnumValueInfo :: MonadGen m => m EnumValueInfo
-genEnumValueInfo = EnumValueInfo <$> maybe (genArbitraryUnicodeText smallRange)
+genEnumValueInfo = EnumValueInfo <$> maybe (genArbitraryUnicodeText defaultRange)
 
 genColumnInfo ::
   MonadGen m =>
@@ -380,11 +379,11 @@ genColumnInfo
   genScalarType =
     ColumnInfo
       <$> genColumn
-      <*> genGName smallRange
-      <*> integral smallRange
+      <*> genGName defaultRange
+      <*> integral defaultRange
       <*> genColumnType genTableName genScalarType
       <*> bool_
-      <*> maybe (genDescription smallRange)
+      <*> maybe (genDescription defaultRange)
       <*> genColumnMutability
 
 genColumnMutability :: MonadGen m => m ColumnMutability
@@ -501,7 +500,7 @@ genAnnotatedAggregateOrderBy
     choice
       [ pure AAOCount,
         AAOOp
-          <$> genArbitraryUnicodeText smallRange
+          <$> genArbitraryUnicodeText defaultRange
           <*> genColumnInfo
             genColumn
             genTableName
@@ -589,4 +588,4 @@ genComputedFieldOrderByElement
       ]
 
 genIdentifier :: MonadGen m => m FIIdentifier
-genIdentifier = Hasura.RQL.IR.Select.FIIdentifier <$> genArbitraryUnicodeText smallRange
+genIdentifier = Hasura.RQL.IR.Select.FIIdentifier <$> genArbitraryUnicodeText defaultRange
