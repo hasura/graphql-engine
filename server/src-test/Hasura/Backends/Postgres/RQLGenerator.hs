@@ -1,4 +1,3 @@
---
 module Hasura.Backends.Postgres.RQLGenerator
   ( module M,
   )

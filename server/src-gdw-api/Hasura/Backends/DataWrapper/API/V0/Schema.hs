@@ -2,13 +2,14 @@
 
 module Hasura.Backends.DataWrapper.API.V0.Schema
   ( SchemaResponse (..),
+    QueryResponse (..),
     Capabilities (..),
   )
 where
 
 import Autodocodec
 import Control.DeepSeq (NFData)
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson (FromJSON, Object, ToJSON)
 import Data.Data (Data)
 import Data.Hashable (Hashable)
 import Data.OpenApi (ToSchema)
@@ -50,3 +51,12 @@ instance HasCodec Capabilities where
   codec =
     object "Capabilities" $
       Capabilities <$> requiredField "relationships" "Does the agent support relationships?" .= dcRelationships
+
+--------------------------------------------------------------------------------
+-- Query Response
+
+-- | The resolved query response provided by the 'POST /query'
+-- endpoint encoded as 'J.Value'.
+newtype QueryResponse = QueryResponse {getQueryResponse :: [Object]}
+  deriving newtype (Eq, Ord, Show, NFData)
+  deriving (ToJSON, FromJSON, ToSchema) via Autodocodec [Object]

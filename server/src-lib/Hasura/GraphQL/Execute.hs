@@ -67,6 +67,7 @@ data ExecutionCtx = ExecutionCtx
     _ecxReadOnlyMode :: ReadOnlyMode
   }
 
+-- | Construct a single step of an execution plan.
 getExecPlanPartial ::
   (MonadError QErr m) =>
   UserInfo ->
@@ -292,6 +293,8 @@ checkQueryInAllowlist allowlistEnabled allowlistMode userInfo req schemaCache =
       let msg = "query is not in any of the allowlists"
        in e {qeInternal = Just $ ExtraInternal $ J.object ["message" J..= J.String msg]}
 
+-- | Construct a 'ResolvedExecutionPlan' from a 'GQLReqParsed' and a
+-- bunch of metadata.
 getResolvedExecPlan ::
   forall m.
   ( MonadError QErr m,
@@ -328,10 +331,12 @@ getResolvedExecPlan
   reqHeaders
   (reqUnparsed, reqParsed)
   reqId = do
+    -- 1. Construct the first step of the execution plan.
     (gCtx, queryParts) <- getExecPlanPartial userInfo sc queryType reqParsed
 
     let maybeOperationName = (Just <$> _unOperationName) =<< _grOperationName reqParsed
 
+    -- 2. Construct the full 'ResolvedExecutionPlan' from the 'queryParts :: SingleOperation'.
     (parameterizedQueryHash, resolvedExecPlan) <-
       case queryParts of
         G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives inlinedSelSet -> do

@@ -52,6 +52,7 @@ parseGraphQLQuery gqlContext varDefs varValsM directives fields = do
   parsedQuery <- (gqlQueryParser gqlContext >>> (`onLeft` reportParseErrors)) resolvedSelSet
   pure (parsedQuery, resolvedDirectives, resolvedSelSet)
 
+-- | Construct an 'ExecutionPlan' from a 'G.SelectionSet'.
 convertQuerySelSet ::
   forall m.
   ( MonadError QErr m,
@@ -87,20 +88,18 @@ convertQuerySelSet
   introspectionDisabledRoles
   reqId
   maybeOperationName = do
-    -- Parse the GraphQL query into the RQL AST
+    -- 1. Parse the GraphQL query into the 'RootFieldMap' and a 'SelectionSet'
     (unpreparedQueries, normalizedDirectives, normalizedSelectionSet) <-
       parseGraphQLQuery gqlContext varDefs (GH._grVariables gqlUnparsed) directives fields
 
-    -- Transform the query plans into an execution plan
-    let usrVars = _uiSession userInfo
-
-    -- Process directives on the query
+    -- 2. Parse directives on the query
     dirMap <-
       (`onLeft` reportParseErrors)
         =<< runParseT (parseDirectives customDirectives (G.DLExecutable G.EDLQUERY) normalizedDirectives)
 
     let parameterizedQueryHash = calculateParameterizedQueryHash normalizedSelectionSet
 
+    -- 3. Transform the 'RootFieldMap' into an execution plan
     executionPlan <- flip OMap.traverseWithKey unpreparedQueries $ \rootFieldName rootFieldUnpreparedValue -> do
       case rootFieldUnpreparedValue of
         RFDB sourceName exists ->
@@ -119,7 +118,7 @@ convertQuerySelSet
         RFAction action -> do
           let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionQuery action
           (actionExecution, actionName, fch) <- pure $ case noRelsDBAST of
-            AQQuery s -> (AEPSync $ resolveActionExecution env logger userInfo s (ActionExecContext manager reqHeaders usrVars) (Just (GH._grQuery gqlUnparsed)), _aaeName s, _aaeForwardClientHeaders s)
+            AQQuery s -> (AEPSync $ resolveActionExecution env logger userInfo s (ActionExecContext manager reqHeaders (_uiSession userInfo)) (Just (GH._grQuery gqlUnparsed)), _aaeName s, _aaeForwardClientHeaders s)
             AQAsync s -> (AEPAsyncQuery $ AsyncActionQueryExecutionPlan (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s, _aaaqName s, _aaaqForwardClientHeaders s)
           pure $ ExecStepAction actionExecution (ActionsInfo actionName fch) remoteJoins
         RFRaw r -> flip onLeft throwError =<< executeIntrospection userInfo r introspectionDisabledRoles

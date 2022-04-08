@@ -34,3 +34,10 @@ instance From API.Value Value where
     API.Number x -> Number x
     API.Boolean p -> Boolean p
     API.Null -> Null
+
+instance From Value API.Value where
+  from = \case
+    String txt -> API.String txt
+    Number x -> API.Number x
+    Boolean p -> API.Boolean p
+    Null -> API.Null

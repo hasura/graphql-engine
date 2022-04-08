@@ -19,21 +19,7 @@ import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Backends.Postgres.SQL.Types qualified as PGTypes
 import Hasura.Backends.Postgres.Types.BoolExp qualified as B
 import Hasura.Generator.Common (defaultRange, genArbitraryUnicodeText)
-import Hasura.RQL.IR.BoolExp
-  ( DWithinGeogOp (DWithinGeogOp),
-    DWithinGeomOp (DWithinGeomOp),
-    STIntersectsGeomminNband (STIntersectsGeomminNband),
-    STIntersectsNbandGeommin (STIntersectsNbandGeommin),
-  )
-import Hasura.RQL.IR.Select ()
-import Hasura.RQL.Types.Backend
-  ( BooleanOperators,
-    Column,
-    FunctionName,
-    ScalarType,
-    TableName,
-    XComputedField,
-  )
+import Hasura.RQL.Types (BooleanOperators, Column, DWithinGeogOp (DWithinGeogOp), DWithinGeomOp (DWithinGeomOp), FunctionName, STIntersectsGeomminNband (STIntersectsGeomminNband), STIntersectsNbandGeommin (STIntersectsNbandGeommin), ScalarType, TableName, XComputedField)
 import Hasura.SQL.Backend (BackendType (..), PostgresKind (..))
 import Hedgehog (MonadGen)
 import Hedgehog.Gen qualified as Gen
