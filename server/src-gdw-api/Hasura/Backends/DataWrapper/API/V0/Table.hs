@@ -48,7 +48,7 @@ instance HasCodec TableInfo where
   codec =
     object "TableInfo" $
       TableInfo
-        <$> requiredField "table_name" "The name of the table" .= dtiName
+        <$> requiredField "name" "The name of the table" .= dtiName
         <*> requiredField "columns" "The columns of the table" .= dtiColumns
         <*> optionalFieldOrNull "primary_key" "The primary key of the table" .= dtiPrimaryKey
         <*> optionalFieldOrNull "description" "Description of the table" .= dtiDescription
