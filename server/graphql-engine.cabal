@@ -1103,3 +1103,48 @@ test-suite tests-hspec
     Test.WhereSpec
     Test.RunSQLSpec
     Test.InsertCheckPermissionSpec
+
+test-suite tests-gdw-api
+  import: common-all, common-exe
+  type: exitcode-stdio-1.0
+  build-depends:
+    , aeson
+    , autodocodec
+    , autodocodec-openapi3
+    , base
+    , bytestring
+    , deepseq
+    , file-embed
+    , gdw-api
+    , hashable
+    , hspec
+    , hspec-core
+    , hspec-expectations-pretty-diff
+    , http-client
+    , lens
+    , lens-aeson
+    , mtl
+    , network-uri
+    , openapi3
+    , optparse-applicative
+    , scientific
+    , servant
+    , servant-client
+    , servant-client-core
+    , servant-openapi3
+    , text
+    , unordered-containers
+    , vector
+  hs-source-dirs: tests-gdw-api
+  -- Turning off optimizations is intentional; tests aren't
+  -- performance sensitive and waiting for compilation is a problem.
+  ghc-options: -Wall -O0 -threaded
+  main-is: Main.hs
+  other-modules:
+      Command
+    , Paths_graphql_engine
+    , Test.Data
+    , Test.QuerySpec
+    , Test.QuerySpec.BasicSpec
+    , Test.QuerySpec.RelationshipsSpec
+    , Test.SchemaSpec

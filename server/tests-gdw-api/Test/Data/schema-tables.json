@@ -1,0 +1,46 @@
+[
+  {
+    "name": "artists",
+    "primary_key": "id",
+    "description": "Collection of artists of music",
+    "columns": [
+      {
+        "name": "id",
+        "type": "number",
+        "nullable": false,
+        "description": "Artist primary key identifier"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "nullable": false,
+        "description": "The name of the artist"
+      }
+    ]
+  },
+  {
+    "name": "albums",
+    "primary_key": "id",
+    "description": "Collection of music albums created by artists",
+    "columns": [
+      {
+        "name": "id",
+        "type": "number",
+        "nullable": false,
+        "description": "Album primary key identifier"
+      },
+      {
+        "name": "title",
+        "type": "string",
+        "nullable": false,
+        "description": "The title of the album"
+      },
+      {
+        "name": "artist_id",
+        "type": "number",
+        "nullable": false,
+        "description": "The ID of the artist that created this album"
+      }
+    ]
+  }
+]

@@ -5,6 +5,8 @@ module Hasura.Backends.DataWrapper.API
     SchemaApi,
     QueryApi,
     openApiSchema,
+    Routes (..),
+    apiClient,
   )
 where
 
@@ -13,6 +15,7 @@ import Data.OpenApi (OpenApi)
 import Hasura.Backends.DataWrapper.API.V0.API as V0
 import Servant.API
 import Servant.API.Generic
+import Servant.Client (Client, ClientM, client)
 import Servant.OpenApi
 
 --------------------------------------------------------------------------------
@@ -42,3 +45,7 @@ type Api = SchemaApi :<|> QueryApi
 -- | Provide an OpenApi 3.0 schema for the API
 openApiSchema :: OpenApi
 openApiSchema = toOpenApi (Proxy :: Proxy Api)
+
+apiClient :: Client ClientM (NamedRoutes Routes)
+apiClient =
+  client (Proxy @(NamedRoutes Routes))

@@ -62,7 +62,7 @@ instance HasCodec Query where
 --------------------------------------------------------------------------------
 
 data RelField = RelField
-  { fieldMapping :: M.HashMap PrimaryKey ForeignKey,
+  { columnMapping :: M.HashMap PrimaryKey ForeignKey,
     query :: Query
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
@@ -70,7 +70,7 @@ data RelField = RelField
 instance HasObjectCodec RelField where
   objectCodec =
     RelField
-      <$> requiredField "field_mapping" "Mapping from local fields to remote fields" .= fieldMapping
+      <$> requiredField "column_mapping" "Mapping from local fields to remote fields" .= columnMapping
       <*> requiredField "query" "Relationship query" .= query
 
 --------------------------------------------------------------------------------

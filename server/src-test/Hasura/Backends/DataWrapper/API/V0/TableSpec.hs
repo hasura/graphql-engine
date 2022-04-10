@@ -24,7 +24,7 @@ spec = do
       testToFromJSONToSchema
         (TableInfo (TableName "my_table_name") [] Nothing Nothing)
         [aesonQQ|
-          { "table_name": "my_table_name",
+          { "name": "my_table_name",
             "columns": []
           }
         |]
@@ -37,7 +37,7 @@ spec = do
             (Just "my description")
         )
         [aesonQQ|
-          { "table_name": "my_table_name",
+          { "name": "my_table_name",
             "columns": [{"name": "id", "type": "string", "nullable": false}],
             "primary_key": "id",
             "description": "my description"
