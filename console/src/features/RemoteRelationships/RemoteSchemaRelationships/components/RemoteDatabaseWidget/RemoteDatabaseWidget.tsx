@@ -20,7 +20,7 @@ const useLoadData = (sources?: MetadataDataSource[]) => {
   const sourceOptions = React.useMemo(() => {
     return (
       sources
-        ?.filter(s => !['bigquery', 'mssql'].includes(s.kind))
+        ?.filter(s => !['bigquery'].includes(s.kind))
         .map(({ name }) => ({ value: name, label: name })) || []
     );
   }, [sources]);
