@@ -4,6 +4,7 @@
 
 ### Bug fixes and improvements
 
+- server: fix inserting values into columns with case sensitive enum types for Postgres/Citus backends (fix #4014)
 - server: remote relationships can be defined _on_ and _to_ SQLServer tables
 - server: fix JSON key encoding issue for remote schemas (fixes #7543 and #8200)
 - server: fix MSSQL insert mutation when relationships are used in check permissions (fix #8225)
