@@ -11,6 +11,7 @@ const defaultValues = {
   database: '',
   schema: '',
   table: '',
+  driver: '',
 };
 
 export default {

@@ -53,6 +53,7 @@ export const RemoteSchemaToDbForm = ({
     schema: '',
     table: '',
     typeName: '',
+    driver: '',
     sourceRemoteSchema,
   };
 
@@ -74,7 +75,10 @@ export const RemoteSchemaToDbForm = ({
         definition: {
           to_source: {
             source: values.database,
-            table: { schema: values.schema, name: values.table },
+            table:
+              values.driver === 'bigquery'
+                ? { dataset: values.schema, name: values.table }
+                : { schema: values.schema, name: values.table },
             relationship_type: values.relationshipType,
             field_mapping,
           },

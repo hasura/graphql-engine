@@ -14,6 +14,7 @@ export const schema = z.object({
   ),
   typeName: z.string().min(1, { message: 'Type is required!' }),
   sourceRemoteSchema: z.string(),
+  driver: z.string(),
 });
 
 export type Schema = z.infer<typeof schema>;
