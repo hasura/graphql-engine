@@ -72,24 +72,23 @@ Here is a sample row from the telemetry database:
 
 ### Console
 
-The console is a React-Redux app. Redux action names along with
+The Console collects runtime errors along with
 anonymized route names are sent without any identifiable information or
 payload. The console also records the UUID of the server/CLI that it is
 connected to.
 
-Here is a sample:
+Sample data:
 
 ```json
 {
-  "id": 902,
-  "timestamp": "2019-01-21T10:00:23.849202+00:00",
+  "server_version": "2.0.0",
+  "event_type": "Main/RUN_TIME_ERROR",
   "url": "/data/schema/SCHEMA_NAME/tables/TABLE_NAME/modify",
-  "event_type": "ModifyTable/RESET",
-  "console_mode": "server",
-  "server_uuid": "79485a57-fca5-40f3-a31b-78c0d211314b",
-  "server_version": "v1.0.0-alpha36",
-  "cli_uuid": null
-}
+  "console_mode": "cli",
+  "cli_uuid": "0e4e2e9b-7fc9-44b8-9d5c-955673e20e0b",
+  "server_uuid": "015a8f49-2fbd-4c41-8066-23f48d9c620a",
+  "data": { message: "Uncaught TypeError: something is not a function", stack: [" at main.js:1:3"] },
+  }
 ```
 
 Please note that `TABLE_NAME` and `SCHEMA_NAME` are not placeholders.

@@ -1,10 +1,8 @@
-import { Middleware } from 'redux';
 import endpoints from '../Endpoints';
 import globals from '../Globals';
-import { filterEventsBlockList, sanitiseUrl } from './filters';
+import { sanitiseUrl } from './filters';
 import { RUN_TIME_ERROR } from '../components/Main/Actions';
 import { REDUX_LOCATION_CHANGE_ACTION_TYPE } from '../constants';
-import { GetReduxState } from '../types';
 
 interface TelemetryGlobals {
   serverVersion: string;
@@ -79,40 +77,6 @@ const sendEvent = (payload: TelemetryPayload) => {
   }
 };
 
-export const trackReduxAction = (
-  action: TelemetryAction,
-  getState: GetReduxState
-) => {
-  const actionType = action.type;
-  // filter events
-  if (!filterEventsBlockList.includes(actionType)) {
-    const serverVersion = getState().main.serverVersion;
-    const url = sanitiseUrl(window.location.pathname);
-
-    const reqBody: TelemetryPayload = {
-      server_version: serverVersion,
-      event_type: actionType,
-      url,
-      console_mode: globals.consoleMode,
-      cli_uuid: globals.cliUUID,
-      server_uuid: getState().telemetry.hasura_uuid,
-    };
-
-    if (action.type === REDUX_LOCATION_CHANGE_ACTION_TYPE) {
-      // capture page views
-      const payload = action.payload;
-      reqBody.url = sanitiseUrl(payload.pathname);
-    }
-
-    if (action.type === RUN_TIME_ERROR) {
-      reqBody.data = action.data;
-    }
-
-    // Send the data
-    sendEvent(reqBody);
-  }
-};
-
 export const trackRuntimeError = (
   telemeteryGlobals: TelemetryGlobals,
   error: Error
@@ -127,19 +91,4 @@ export const trackRuntimeError = (
     data: { message: error.message, stack: error.stack },
   };
   sendEvent(reqBody);
-};
-
-export const telemetryMiddleware: Middleware = ({
-  getState,
-}) => next => action => {
-  // Call the next dispatch method in the middleware chain.
-  const returnValue = next(action);
-
-  // check if analytics tracking is enabled
-  if (globals.enableTelemetry) {
-    trackReduxAction(action, getState);
-  }
-  // This will likely be the action itself, unless
-  // a middleware further in chain changed it.
-  return returnValue;
 };

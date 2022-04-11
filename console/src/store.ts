@@ -5,7 +5,6 @@ import { browserHistory } from 'react-router';
 // Since we only use it in dev, this warning doesn't make sense.
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { configureStore } from '@reduxjs/toolkit';
-import { telemetryMiddleware } from './telemetry';
 import reducer from './reducer';
 
 export const store = configureStore({
@@ -19,7 +18,7 @@ export const store = configureStore({
       // Remove this line when you want to
       // See https://redux.js.org/style-guide/style-guide#do-not-mutate-state
       immutableCheck: false,
-    }).concat([routerMiddleware(browserHistory), telemetryMiddleware]);
+    }).concat([routerMiddleware(browserHistory)]);
   },
 
   // Enable redux browser devtools
