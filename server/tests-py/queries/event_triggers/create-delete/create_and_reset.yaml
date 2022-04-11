@@ -38,18 +38,15 @@
     type: clear_metadata
     args: {}
 
-- description: ensure the event was archived
+- description: ensure that the event_log table is deleted
   url: /v1/query
   status: 200
   response:
     result_type: TuplesOk
     result:
-    - - trigger_name
-      - archived
-    - - t1_1
-      - t
+    - - exists
+    - - f
   query:
     type: run_sql
     args:
-      sql: select trigger_name, archived from hdb_catalog.event_log order by created_at
-        asc limit 1
+      sql: SELECT EXISTS (SELECT * FROM information_schema.tables WHERE table_schema = 'hdb_catalog' and table_name = 'event_log');

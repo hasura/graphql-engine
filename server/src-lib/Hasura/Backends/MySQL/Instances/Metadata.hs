@@ -16,4 +16,4 @@ instance BackendMetadata 'MySQL where
   buildFunctionInfo = error "buildFunctionInfo: MySQL backend does not support this operation yet."
   updateColumnInEventTrigger = error "updateColumnInEventTrigger: MySQL backend does not support this operation yet."
   parseCollectableType = error "parseCollectableType: MySQL backend does not support this operation yet."
-  postDropSourceHook = error "postDropSourceHook: MySQL backend does not support this operation yet."
+  postDropSourceHook = MySQL.postDropSourceHook

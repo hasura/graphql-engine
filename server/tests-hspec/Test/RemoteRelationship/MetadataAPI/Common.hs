@@ -1,17 +1,39 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE QuasiQuotes #-}
 
--- | Tests for remote relationships to remote schemas. Remote relationships are
--- relationships that are not local to a given source or remote schema, and are
--- handled by the engine itself.
+-- | This file contains all the contexts for setting up remote relationships between
+-- different kinds of sources.
+-- Currently remote relationships are possible between:
+--  1. Two Postgres Sources
+--  2. (Postgres - Remote Schema), here a PG source has remote relationship with a
+--     remote schema
+--  3. (Remote Schema - Postgres), here a remote schema has remote relationship with a
+--     PG source.
+--  4. (Remote Schema - Remote Schema), here a remote schema has a remote relationship
+--     with another remote schema
 --
--- All tests use the same GraphQL syntax, and the only difference is in the
--- setup: for each left-hand side source we support we do a custom setup and run
--- the tests.
-module Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec
-  ( spec,
+-- A Remote relationship has two entities: LHS (left hand side) and RHS (right hand
+-- side). Think of them as a mathematical equation: LHS = RHS i.e a LHS entity
+-- depends on RHS entity.
+-- In terms of remote relationship:
+--    A source present on LHS has a remote relationship with the source on RHS. That
+--    means, the source on LHS depends on RHS. This is the reason why in the setup of
+--    tests - we first setup the RHS and then setup the LHS. And we do the reverse in
+--    teardown.
+--
+-- The RHS source in the below tests have the source name as "target"
+-- The LHS source in the below tests have the source name as "source"
+module Test.RemoteRelationship.MetadataAPI.Common
+  ( dbTodbRemoteRelationshipContext,
+    dbToRemoteSchemaRemoteRelationshipContext,
+    remoteSchemaToDBRemoteRelationshipContext,
+    remoteSchemaToremoteSchemaRemoteRelationshipContext,
+    LocalTestState (..),
   )
 where
+
+--------------------------------------------------------------------------------
+-- Debugging
 
 import Data.Char (isUpper, toLower)
 import Data.Foldable (traverse_)
@@ -25,82 +47,99 @@ import Data.Text (Text)
 import Data.Typeable (Typeable)
 import GHC.Generics (Generic)
 import Harness.Backend.Postgres qualified as Postgres
-import Harness.Backend.Sqlserver qualified as SQLServer
 import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
+import Harness.Quoter.Yaml (yaml)
 import Harness.RemoteServer qualified as RemoteServer
 import Harness.State (Server, State, stopServer)
 import Harness.Test.Context (Context (..))
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema qualified as Schema
-import Test.Hspec (SpecWith, describe, it)
 import Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith State
-spec = Context.runWithLocalState contexts tests
-  where
-    contexts = map mkContext [lhsPostgres, lhsSQLServer, lhsRemoteServer]
-    lhsPostgres =
-      Context
-        { name = Context.Backend Context.Postgres,
-          mkLocalState = lhsPostgresMkLocalState,
-          setup = lhsPostgresSetup,
-          teardown = lhsPostgresTeardown,
-          customOptions = Nothing
-        }
-    lhsSQLServer =
-      Context
-        { name = Context.Backend Context.SQLServer,
-          mkLocalState = lhsSQLServerMkLocalState,
-          setup = lhsSQLServerSetup,
-          teardown = lhsSQLServerTeardown,
-          customOptions = Nothing
-        }
-    lhsRemoteServer =
-      Context
-        { name = Context.RemoteGraphQLServer,
-          mkLocalState = lhsRemoteServerMkLocalState,
-          setup = lhsRemoteServerSetup,
-          teardown = lhsRemoteServerTeardown,
-          customOptions = Nothing
-        }
-
--- | Uses a given RHS context to create a combined context.
-mkContext :: Context (Maybe Server) -> Context LocalTestState
-mkContext lhs =
-  Context
-    { name = lhsName,
-      mkLocalState = \state -> do
-        rhsServer <- rhsRemoteServerMkLocalState state
-        lhsServer <- lhsMkLocalState state
-        pure $ LocalTestState lhsServer rhsServer,
-      setup = \(state, LocalTestState lhsServer rhsServer) -> do
-        rhsRemoteSchemaSetup (state, rhsServer)
-        lhsSetup (state, lhsServer),
-      teardown = \(state, LocalTestState lhsServer rhsServer) -> do
-        lhsTeardown (state, lhsServer)
-        rhsRemoteSchemaTeardown (state, rhsServer)
-        GraphqlEngine.clearMetadata state,
-      customOptions = lhsOptions
-    }
-  where
-    Context
-      { name = lhsName,
-        mkLocalState = lhsMkLocalState,
-        setup = lhsSetup,
-        teardown = lhsTeardown,
-        customOptions = lhsOptions
-      } = lhs
-
--- | Local test state.
 data LocalTestState = LocalTestState
   { _lhsServer :: Maybe Server,
-    _rhsServer :: Server
+    _rhsServer :: Maybe Server
   }
+
+dbTodbRemoteRelationshipContext :: Context LocalTestState
+dbTodbRemoteRelationshipContext =
+  Context
+    { name = Context.Combine (Context.Backend Context.Postgres) (Context.Backend Context.Postgres),
+      mkLocalState = \_state ->
+        pure $ LocalTestState Nothing Nothing,
+      setup = \(state, _) -> do
+        GraphqlEngine.clearMetadata state
+        rhsPostgresSetup state
+        lhsPostgresSetup (state, Nothing)
+        createSourceRemoteRelationship state,
+      teardown = \(state, _) -> do
+        GraphqlEngine.clearMetadata state
+        lhsPostgresTeardown
+        rhsPostgresTeardown
+        pure (),
+      customOptions = Nothing
+    }
+
+dbToRemoteSchemaRemoteRelationshipContext :: Context LocalTestState
+dbToRemoteSchemaRemoteRelationshipContext =
+  Context
+    { name = Context.Combine (Context.Backend Context.Postgres) Context.RemoteGraphQLServer,
+      mkLocalState = \state -> do
+        rhsServer <- rhsRemoteServerMkLocalState state
+        pure $ LocalTestState Nothing rhsServer,
+      setup = \(state, LocalTestState _ rhsSever) -> do
+        GraphqlEngine.clearMetadata state
+        rhsRemoteServerSetup (state, rhsSever)
+        lhsPostgresSetup (state, Nothing)
+        createRemoteSchemaRemoteRelationship state,
+      teardown = \(state, LocalTestState _ rhsSever) -> do
+        GraphqlEngine.clearMetadata state
+        lhsPostgresTeardown
+        rhsRemoteServerTeardown (state, rhsSever),
+      customOptions = Nothing
+    }
+
+remoteSchemaToDBRemoteRelationshipContext :: Context LocalTestState
+remoteSchemaToDBRemoteRelationshipContext =
+  Context
+    { name = Context.Combine Context.RemoteGraphQLServer (Context.Backend Context.Postgres),
+      mkLocalState = \state -> do
+        lhsServer <- lhsRemoteServerMkLocalState state
+        pure $ LocalTestState lhsServer Nothing,
+      setup = \(state, LocalTestState lhsServer _) -> do
+        GraphqlEngine.clearMetadata state
+        rhsPostgresSetup state
+        lhsRemoteServerSetup (state, lhsServer)
+        addRStoDBRelationship state,
+      teardown = \(state, LocalTestState lhsServer _) -> do
+        GraphqlEngine.clearMetadata state
+        lhsRemoteServerTeardown (state, lhsServer)
+        rhsPostgresTeardown,
+      customOptions = Nothing
+    }
+
+remoteSchemaToremoteSchemaRemoteRelationshipContext :: Context LocalTestState
+remoteSchemaToremoteSchemaRemoteRelationshipContext =
+  Context
+    { name = Context.Combine Context.RemoteGraphQLServer Context.RemoteGraphQLServer,
+      mkLocalState = \state -> do
+        lhsServer <- lhsRemoteServerMkLocalState state
+        rhsServer <- rhsRemoteServerMkLocalState state
+        pure $ LocalTestState lhsServer rhsServer,
+      setup = \(state, LocalTestState lhsServer rhsServer) -> do
+        GraphqlEngine.clearMetadata state
+        rhsRemoteServerSetup (state, rhsServer)
+        lhsRemoteServerSetup (state, lhsServer)
+        addRStoRSRelationship state,
+      teardown = \(state, LocalTestState lhsServer rhsServer) -> do
+        GraphqlEngine.clearMetadata state
+        lhsRemoteServerTeardown (state, lhsServer)
+        rhsRemoteServerTeardown (state, rhsServer),
+      customOptions = Nothing
+    }
 
 --------------------------------------------------------------------------------
 -- Schema
@@ -126,19 +165,51 @@ track =
       [Schema.VInt 8, Schema.VStr "track_no_album", Schema.VNull]
     ]
 
--- RHS schema is defined by the @gqlDocument@
+-- | RHS
+albumTable :: Schema.Table
+albumTable =
+  Schema.Table
+    "album"
+    [ Schema.column "id" Schema.TInt,
+      Schema.column "title" Schema.TStr,
+      Schema.columnNull "artist_id" Schema.TInt
+    ]
+    ["id"]
+    []
+    [ [Schema.VInt 1, Schema.VStr "album1_artist1", Schema.VInt 1],
+      [Schema.VInt 2, Schema.VStr "album2_artist1", Schema.VInt 1],
+      [Schema.VInt 3, Schema.VStr "album3_artist2", Schema.VInt 2]
+    ]
 
 --------------------------------------------------------------------------------
--- LHS Postgres
+-- DB to DB Postgres Remote relationship
 
-lhsPostgresMkLocalState :: State -> IO (Maybe Server)
-lhsPostgresMkLocalState _ = pure Nothing
+-- | RHS Postgres Setup
+rhsPostgresSetup :: State -> IO ()
+rhsPostgresSetup state = do
+  let sourceName = "target"
+      sourceConfig = Postgres.defaultSourceConfiguration
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: pg_add_source
+args:
+  name: *sourceName
+  configuration: *sourceConfig
+|]
+  -- setup tables only
+  Postgres.createTable albumTable
+  Postgres.insertTable albumTable
+  Schema.trackTable Context.Postgres sourceName albumTable state
 
+rhsPostgresTeardown :: IO ()
+rhsPostgresTeardown = Postgres.dropTable albumTable
+
+-- | LHS Postgres Setup
 lhsPostgresSetup :: (State, Maybe Server) -> IO ()
 lhsPostgresSetup (state, _) = do
   let sourceName = "source"
       sourceConfig = Postgres.defaultSourceConfiguration
-      schemaName = Context.defaultSchema Context.Postgres
   -- Add remote source
   GraphqlEngine.postMetadata_
     state
@@ -152,6 +223,45 @@ args:
   Postgres.createTable track
   Postgres.insertTable track
   Schema.trackTable Context.Postgres sourceName track state
+
+createSourceRemoteRelationship :: State -> IO ()
+createSourceRemoteRelationship state = do
+  let schemaName = Context.defaultSchema Context.Postgres
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: bulk
+args:
+- type: pg_create_remote_relationship
+  args:
+    source: source
+    table:
+      schema: *schemaName
+      name: track
+    name: albums
+    definition:
+      to_source:
+        source: target
+        table: 
+          schema: hasura
+          name: album
+        relationship_type: object
+        field_mapping:
+          id: artist_id
+  |]
+
+lhsPostgresTeardown :: IO ()
+lhsPostgresTeardown = Postgres.dropTable track
+
+--------------------------------------------------------------------------------
+-- DB to Remote Schema Remote relationship
+
+-- Here the RHS is remote schema because a postgres source has a remote reltionship
+-- with it and hence depends on it.
+
+createRemoteSchemaRemoteRelationship :: State -> IO ()
+createRemoteSchemaRemoteRelationship state = do
+  let schemaName = Context.defaultSchema Context.Postgres
   GraphqlEngine.postMetadata_
     state
     [yaml|
@@ -174,47 +284,47 @@ args:
               album_id: $album_id
   |]
 
-lhsPostgresTeardown :: (State, Maybe Server) -> IO ()
-lhsPostgresTeardown (state, _) = do
-  let sourceName = "source"
-  Schema.untrackTable Context.Postgres sourceName track state
-  Postgres.dropTable track
-
 --------------------------------------------------------------------------------
--- LHS SQLServer
+-- Remote Schema to DB Remote relationship
 
-lhsSQLServerMkLocalState :: State -> IO (Maybe Server)
-lhsSQLServerMkLocalState _ = pure Nothing
-
-lhsSQLServerSetup :: (State, Maybe Server) -> IO ()
-lhsSQLServerSetup (state, _) = do
-  let sourceName = "source"
-      sourceConfig = SQLServer.defaultSourceConfiguration
-      schemaName = Context.defaultSchema Context.SQLServer
-  -- Add remote source
-  GraphqlEngine.postMetadata_
-    state
-    [yaml|
-type: mssql_add_source
-args:
-  name: *sourceName
-  configuration: *sourceConfig
-|]
-  -- setup tables only
-  SQLServer.createTable track
-  SQLServer.insertTable track
-  Schema.trackTable Context.SQLServer sourceName track state
+-- | LHS Remote Server
+addRStoDBRelationship :: State -> IO ()
+addRStoDBRelationship state =
   GraphqlEngine.postMetadata_
     state
     [yaml|
 type: bulk
 args:
-- type: mssql_create_remote_relationship
+- type: create_remote_schema_remote_relationship
   args:
-    source: source
-    table:
-      schema: *schemaName
-      name: track
+    remote_schema: source
+    type_name: hasura_track
+    name: album
+    definition:
+      to_source:
+        source: target
+        table:
+          schema: hasura
+          name: album
+        relationship_type: object
+        field_mapping:
+          album_id: id
+      |]
+
+--------------------------------------------------------------------------------
+-- Remote Schema to Remote Schema Remote relationship
+
+addRStoRSRelationship :: State -> IO ()
+addRStoRSRelationship state =
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: bulk
+args:
+- type: create_remote_schema_remote_relationship
+  args:
+    remote_schema: source
+    type_name: hasura_track
     name: album
     definition:
       to_remote_schema:
@@ -224,15 +334,64 @@ args:
           album:
             arguments:
               album_id: $album_id
-  |]
-
-lhsSQLServerTeardown :: (State, Maybe Server) -> IO ()
-lhsSQLServerTeardown (state, _) = do
-  let sourceName = "source"
-  Schema.untrackTable Context.SQLServer sourceName track state
-  SQLServer.dropTable track
+      |]
 
 --------------------------------------------------------------------------------
+-- Remote server
+
+-- | RHS Remote server
+[gqlDocument|
+
+type Album {
+  id: Int!
+  title: String!
+  artist_id: Int
+}
+
+type Query {
+  album(album_id: Int!): Album
+}
+
+|]
+
+rhsRemoteServerMkLocalState :: State -> IO (Maybe Server)
+rhsRemoteServerMkLocalState _ = do
+  server <-
+    RemoteServer.run $
+      RemoteServer.generateQueryInterpreter (Query {album})
+  pure $ Just server
+  where
+    albums =
+      [ (1, ("album1_artist1", Just 1)),
+        (2, ("album2_artist1", Just 1)),
+        (3, ("album3_artist2", Just 2))
+      ]
+    album (Arg albumId) = pure $ mkAlbum albumId <$> lookup albumId albums
+    mkAlbum albumId (title, artist_id) =
+      Album
+        { id = pure albumId,
+          title = pure title,
+          artist_id = pure artist_id
+        }
+
+rhsRemoteServerSetup :: (State, Maybe Server) -> IO ()
+rhsRemoteServerSetup (state, maybeRemoteServer) = case maybeRemoteServer of
+  Nothing -> error "RHS remote server local state did not succesfully create a server"
+  Just remoteServer -> do
+    let remoteSchemaEndpoint = GraphqlEngine.serverUrl remoteServer ++ "/graphql"
+    GraphqlEngine.postMetadata_
+      state
+      [yaml|
+  type: add_remote_schema
+  args:
+    name: target
+    definition:
+      url: *remoteSchemaEndpoint
+    |]
+
+rhsRemoteServerTeardown :: (State, Maybe Server) -> IO ()
+rhsRemoteServerTeardown (_, maybeServer) = traverse_ stopServer maybeServer
+
 -- LHS Remote Server
 
 -- | To circumvent Morpheus' default behaviour, which is to capitalize type
@@ -408,7 +567,7 @@ lhsRemoteServerMkLocalState _ = do
 
 lhsRemoteServerSetup :: (State, Maybe Server) -> IO ()
 lhsRemoteServerSetup (state, maybeRemoteServer) = case maybeRemoteServer of
-  Nothing -> error "XToDBObjectRelationshipSpec: remote server local state did not succesfully create a server"
+  Nothing -> error "LHS remote server local state did not succesfully create a server"
   Just remoteServer -> do
     let remoteSchemaEndpoint = GraphqlEngine.serverUrl remoteServer ++ "/graphql"
     GraphqlEngine.postMetadata_
@@ -421,224 +580,7 @@ args:
     name: source
     definition:
       url: *remoteSchemaEndpoint
-- type: create_remote_schema_remote_relationship
-  args:
-    remote_schema: source
-    type_name: hasura_track
-    name: album
-    definition:
-      to_remote_schema:
-        remote_schema: target
-        lhs_fields: [album_id]
-        remote_field:
-          album:
-            arguments:
-              album_id: $album_id
       |]
 
 lhsRemoteServerTeardown :: (State, Maybe Server) -> IO ()
 lhsRemoteServerTeardown (_, maybeServer) = traverse_ stopServer maybeServer
-
---------------------------------------------------------------------------------
--- RHS Remote Server
-
-[gqlDocument|
-
-type Album {
-  id: Int!
-  title: String!
-  artist_id: Int
-}
-
-type Query {
-  album(album_id: Int!): Album
-}
-
-|]
-
-rhsRemoteServerMkLocalState :: State -> IO Server
-rhsRemoteServerMkLocalState _ =
-  RemoteServer.run $
-    RemoteServer.generateQueryInterpreter (Query {album})
-  where
-    albums =
-      [ (1, ("album1_artist1", Just 1)),
-        (2, ("album2_artist1", Just 1)),
-        (3, ("album3_artist2", Just 2))
-      ]
-    album (Arg albumId) = pure $ mkAlbum albumId <$> lookup albumId albums
-    mkAlbum albumId (title, artist_id) =
-      Album
-        { id = pure albumId,
-          title = pure title,
-          artist_id = pure artist_id
-        }
-
-rhsRemoteSchemaSetup :: (State, Server) -> IO ()
-rhsRemoteSchemaSetup (state, remoteServer) = do
-  let remoteSchemaEndpoint = GraphqlEngine.serverUrl remoteServer ++ "/graphql"
-  GraphqlEngine.postMetadata_
-    state
-    [yaml|
-type: add_remote_schema
-args:
-  name: target
-  definition:
-    url: *remoteSchemaEndpoint
-  |]
-
-rhsRemoteSchemaTeardown :: (State, Server) -> IO ()
-rhsRemoteSchemaTeardown (_, server) = stopServer server
-
---------------------------------------------------------------------------------
--- Tests
-
-tests :: Context.Options -> SpecWith (State, LocalTestState)
-tests opts = describe "remote-schema-relationship" do
-  schemaTests opts
-  executionTests opts
-
--- | Basic queries using *-to-DB joins
-executionTests :: Context.Options -> SpecWith (State, LocalTestState)
-executionTests opts = describe "execution" do
-  -- fetches the relationship data
-  it "related-data" \(state, _) -> do
-    let query =
-          [graphql|
-          query {
-            track: hasura_track(where: {title: {_eq: "track1_album1"}}) {
-              title
-              album {
-                title
-              }
-            }
-          }
-          |]
-        expectedResponse =
-          [yaml|
-          data:
-            track:
-             - title: "track1_album1"
-               album:
-                 title: album1_artist1
-          |]
-    shouldReturnYaml
-      opts
-      (GraphqlEngine.postGraphql state query)
-      expectedResponse
-
-  -- when any of the join columns are null, the relationship should be null
-  it "related-data-null" \(state, _) -> do
-    let query =
-          [graphql|
-          query {
-            track: hasura_track(where: {title: {_eq: "track_no_album"}}) {
-              title
-              album {
-                title
-              }
-            }
-          }
-          |]
-        expectedResponse =
-          [yaml|
-          data:
-            track:
-             - title: "track_no_album"
-               album: null
-          |]
-    shouldReturnYaml
-      opts
-      (GraphqlEngine.postGraphql state query)
-      expectedResponse
-
-  -- when the lhs response has both null and non-null values for join columns
-  it "related-data-non-null-and-null" \(state, _) -> do
-    let query =
-          [graphql|
-          query {
-            track: hasura_track(
-              where: {
-                _or: [
-                  {title: {_eq: "track1_album1"}},
-                  {title: {_eq: "track_no_album"}}
-                ]
-              },
-              order_by: [{id: asc}]
-            ) {
-              title
-              album {
-                title
-              }
-            }
-          }
-          |]
-        expectedResponse =
-          [yaml|
-          data:
-            track:
-             - title: "track1_album1"
-               album:
-                 title: album1_artist1
-             - title: "track_no_album"
-               album: null
-          |]
-    shouldReturnYaml
-      opts
-      (GraphqlEngine.postGraphql state query)
-      expectedResponse
-
-schemaTests :: Context.Options -> SpecWith (State, LocalTestState)
-schemaTests opts =
-  -- we use an introspection query to check:
-  -- 1. a field 'album' is added to the track table
-  -- 1. track's where clause does not have 'album' field
-  -- 2. track's order_by clause does nat have 'album' field
-  it "graphql-schema" \(state, _) -> do
-    let query =
-          [graphql|
-          query {
-            track_fields: __type(name: "hasura_track") {
-              fields {
-                name
-              }
-            }
-            track_where_exp_fields: __type(name: "hasura_track_bool_exp") {
-              inputFields {
-                name
-              }
-            }
-            track_order_by_exp_fields: __type(name: "hasura_track_order_by") {
-              inputFields {
-                name
-              }
-            }
-          }
-          |]
-        expectedResponse =
-          [yaml|
-          data:
-            track_fields:
-              fields:
-              - name: album
-              - name: album_id
-              - name: id
-              - name: title
-            track_where_exp_fields:
-              inputFields:
-              - name: _and
-              - name: _not
-              - name: _or
-              - name: album_id
-              - name: id
-              - name: title
-            track_order_by_exp_fields:
-              inputFields:
-              - name: album_id
-              - name: id
-              - name: title
-          |]
-    shouldReturnYaml
-      opts
-      (GraphqlEngine.postGraphql state query)
-      expectedResponse

@@ -1,0 +1,135 @@
+- description: PG add source
+  url: /v1/metadata
+  status: 200
+  query:
+    type: pg_add_source
+    args:
+      name: postgres
+      configuration:
+        connection_info:
+          database_url:
+              from_env: HASURA_GRAPHQL_PG_SOURCE_URL_2
+          pool_settings:
+            max_connections: 50
+            idle_timeout: 180
+
+- description: Create the schema for database
+  url: /v2/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      source: postgres
+      sql: |
+        drop schema if exists hge_tests cascade; create schema hge_tests;
+        
+        create table hge_tests.test_t1(
+            c1 int,
+            c2 text
+        );
+
+- description: create an event trigger and then reset metadata
+  url: /v1/metadata
+  status: 200
+  query:
+    type: bulk
+    args:
+    - type: pg_track_table
+      args:
+        source: postgres
+        table:
+          schema: hge_tests
+          name: test_t1
+    - type: pg_create_event_trigger
+      args:
+        source: postgres
+        name: t1_1
+        table:
+          schema: hge_tests
+          name: test_t1
+        insert:
+          columns: '*'
+        update:
+          columns: '*'
+        delete:
+          columns: '*'
+        webhook: http://127.0.0.1:5592
+
+- description: insert values
+  url: /v1/query
+  status: 200
+  query:
+    type: insert
+    args:
+      source: postgres
+      table:
+        schema: hge_tests
+        name: test_t1
+      objects:
+      - c1: 1
+        c2: world
+      returning: []
+
+- description: Clear metadata
+  url: /v1/metadata
+  status: 200
+  query:
+    type: clear_metadata
+    args: {}
+
+- description: PG add source
+  url: /v1/metadata
+  status: 200
+  query:
+    type: pg_add_source
+    args:
+      name: postgres
+      configuration:
+        connection_info:
+          database_url:
+              from_env: HASURA_GRAPHQL_PG_SOURCE_URL_2
+          pool_settings:
+            max_connections: 50
+            idle_timeout: 180
+
+- description: Track Table so that we can execute SQL against the MSSQL Source
+  url: /v1/metadata
+  status: 200
+  query:
+    type: pg_track_table
+    args:
+      source: postgres
+      table:
+        schema: hge_tests
+        name: test_t1
+
+- description: ensure that the event_log table is deleted
+  url: /v2/query
+  status: 200
+  response:
+    result_type: TuplesOk
+    result:
+    - - exists
+    - - f
+  query:
+    type: run_sql
+    args:
+      source: postgres
+      sql: SELECT EXISTS (SELECT * FROM information_schema.tables WHERE table_schema = 'hdb_catalog' and table_name = 'event_log');
+
+- description: Clean up the database
+  url: /v2/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      source: postgres
+      sql: drop table hge_tests.test_t1
+
+- description: Cleaning up Database - Drop the source
+  url: /v1/metadata
+  status: 200
+  query:
+    type: pg_drop_source
+    args:
+      name: postgres

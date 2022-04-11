@@ -11,6 +11,8 @@ module Harness.GraphqlEngine
     postWithHeaders,
     postWithHeaders_,
     postMetadata_,
+    postMetadata,
+    exportMetadata,
     postGraphqlYaml,
     postGraphqlYamlWithHeaders,
     postGraphql,
@@ -148,11 +150,17 @@ postGraphqlWithHeaders state headers value =
 postMetadata_ :: HasCallStack => State -> Value -> IO ()
 postMetadata_ state = withFrozenCallStack $ post_ state "/v1/metadata"
 
+postMetadata :: HasCallStack => State -> Value -> IO Value
+postMetadata state = withFrozenCallStack $ post state "/v1/metadata"
+
 -- | Resets metadata, removing all sources or remote schemas.
 --
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 clearMetadata :: HasCallStack => State -> IO ()
 clearMetadata s = withFrozenCallStack $ postMetadata_ s [yaml|{type: clear_metadata, args: {}}|]
+
+exportMetadata :: HasCallStack => State -> IO Value
+exportMetadata s = withFrozenCallStack $ postMetadata s [yaml|{type: export_metadata, args: {}}|]
 
 -- | Same as 'postWithHeadersStatus', but defaults to the @"/v2/query"@ endpoint
 --

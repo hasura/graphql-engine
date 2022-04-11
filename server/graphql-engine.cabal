@@ -1093,6 +1093,10 @@ test-suite tests-hspec
     Test.ObjectRelationshipsLimitSpec
     Test.ObjectRelationshipsSpec
     Test.OrderingSpec
+    Test.RemoteRelationship.MetadataAPI.Common
+    Test.RemoteRelationship.MetadataAPI.ClearMetadataSpec
+    Test.RemoteRelationship.MetadataAPI.DropSource.DBtoDBRelationshipSpec
+    Test.RemoteRelationship.MetadataAPI.DropSource.RSToDBRelationshipSpec
     Test.RemoteRelationship.FromRemoteSchemaSpec
     Test.RemoteRelationship.XToDBArrayRelationshipSpec
     Test.RemoteRelationship.XToDBObjectRelationshipSpec

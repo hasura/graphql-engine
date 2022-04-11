@@ -18,6 +18,7 @@ module Hasura.RQL.DDL.Metadata
 where
 
 import Control.Lens ((.~), (^.), (^?))
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Aeson.Ordered qualified as AO
 import Data.Attoparsec.Text qualified as AT
@@ -55,6 +56,7 @@ import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.DDL.RemoteSchema
 import Hasura.RQL.DDL.ScheduledTrigger
 import Hasura.RQL.DDL.Schema
+import Hasura.RQL.DDL.Schema.Source
 import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.DDL.Webhook.Transform.Class (mkReqTransformCtx)
 import Hasura.RQL.Types
@@ -65,10 +67,13 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Network.HTTP.Client.Transformable qualified as HTTP
 
 runClearMetadata ::
-  ( MonadIO m,
+  forall m r.
+  ( QErrM m,
+    MonadIO m,
     CacheRWM m,
     MetadataM m,
     MonadMetadataStorageQueryAPI m,
+    MonadBaseControl IO m,
     MonadReader r m,
     Has (HL.Logger HL.Hasura) r
   ) =>
@@ -76,6 +81,17 @@ runClearMetadata ::
   m EncJSON
 runClearMetadata _ = do
   metadata <- getMetadata
+  -- Clean up all sources, drop hdb_catalog schema from source
+  for_ (OMap.toList $ _metaSources metadata) $ \(sourceName, backendSourceMetadata) ->
+    AB.dispatchAnyBackend @BackendMetadata backendSourceMetadata \(_sourceMetadata :: SourceMetadata b) -> do
+      sourceInfo <- askSourceInfo @b sourceName
+      -- We do not bother dropping all dependencies on the source, because the
+      -- metadata is going to be replaced with an empty metadata. And dropping the
+      -- depdencies would lead to rebuilding of schema cache which is of no use here
+      -- since we do not use the rebuilt schema cache. Hence, we only clean up the
+      -- 'hdb_catalog' tables from the source.
+      runPostDropSourceHook sourceName sourceInfo
+
   -- We can infer whether the server is started with `--database-url` option
   -- (or corresponding env variable) by checking the existence of @'defaultSource'
   -- in current metadata.
@@ -310,8 +326,6 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
                               ]
                         dropDanglingSQLTrigger @b sourceConfig retainedNewTriggerName (Set.fromList $ catMaybes droppedOps)
       where
-        getTriggersMap = OMap.unions . map _tmEventTriggers . OMap.elems . _smTables
-
         dispatch = AB.dispatchAnyBackend @BackendEventTrigger
 
         compose ::

@@ -4,6 +4,7 @@
 
 ### Bug fixes and improvements
 
+- server: `clear_metadata` correctly archives the event triggers and the drop source API drops the indirect dependencies created by remote relationships when the dependent source is dropped.
 - server: fix inserting values into columns with case sensitive enum types for Postgres/Citus backends (fix #4014)
 - server: remote relationships can be defined _on_ and _to_ SQLServer tables
 - server: fix JSON key encoding issue for remote schemas (fixes #7543 and #8200)

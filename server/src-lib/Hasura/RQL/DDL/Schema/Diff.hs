@@ -6,7 +6,7 @@ module Hasura.RQL.DDL.Schema.Diff
     ComputedFieldMeta (..),
     getTablesDiff,
     processTablesDiff,
-    getIndirectDependencies,
+    getIndirectDependenciesFromTableDiff,
     getFunctionsDiff,
     getOverloadedFunctions,
   )
@@ -211,13 +211,13 @@ getTablesDiff oldMeta newMeta =
       flip map (getOverlapWith (_ptmiOid . tmInfo) oldMeta newMeta) $ \(oldtm, newtm) ->
         (tmTable oldtm, getTableDiff oldtm newtm)
 
-getIndirectDependencies ::
+getIndirectDependenciesFromTableDiff ::
   forall b m.
   (QErrM m, CacheRM m, Backend b) =>
   SourceName ->
   TablesDiff b ->
   m [SchemaObjId]
-getIndirectDependencies source tablesDiff = do
+getIndirectDependenciesFromTableDiff source tablesDiff = do
   sc <- askSchemaCache
   let tableIds = SOSourceObj source . AB.mkAnyBackend . SOITable @b <$> droppedTables
       tableDropDeps = concatMap (getDependentObjs sc) tableIds

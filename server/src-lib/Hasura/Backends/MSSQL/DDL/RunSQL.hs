@@ -105,7 +105,7 @@ runSQL mssqlRunSQL@MSSQLRunSQL {..} = do
           tablesDiff = getTablesDiff trackedTablesMeta postActionTablesMeta
 
       -- Get indirect dependencies
-      indirectDeps <- getIndirectDependencies _mrsSource tablesDiff
+      indirectDeps <- getIndirectDependenciesFromTableDiff _mrsSource tablesDiff
       -- Report indirect dependencies, if any, when cascade is not set
       when (indirectDeps /= [] && not _mrsCascade) $ reportDependentObjectsExist indirectDeps
 
