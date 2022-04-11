@@ -1,5 +1,7 @@
+export { availableFeatureFlagIds } from './availableFeatureFlags';
+export { FeatureFlagFloatingButton } from './components/FeatureFlagFloatingButton';
 export { FeatureFlags } from './components/FeatureFlags';
-export { FeatureFlagType, FeatureFlagSections, FeatureFlagId } from './types';
-export { useFeatureFlags } from './hooks/useFeatureFlags';
 export { FeatureFlagToast } from './components/FeatureFlagToast';
-export { avaiableFeatureFlagIds } from './availableFeatureFlags';
+export { useFeatureFlags } from './hooks/useFeatureFlags';
+export { useIsFeatureFlagEnabled } from './hooks/useIsFeatureFlagEnabled';
+export { FeatureFlagId, FeatureFlagSections, FeatureFlagType } from './types';

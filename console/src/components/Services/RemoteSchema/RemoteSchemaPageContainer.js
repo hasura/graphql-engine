@@ -1,11 +1,14 @@
+import {
+  availableFeatureFlagIds,
+  FeatureFlagToast,
+} from '@/features/FeatureFlags';
+import PropTypes from 'prop-types';
 import React from 'react';
 import { Link } from 'react-router';
-import PropTypes from 'prop-types';
-
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
-import RemoteSchemaSubSidebar from './RemoteSchemaSubSidebar';
 import styles from '../../Common/TableCommon/Table.scss';
+import RemoteSchemaSubSidebar from './RemoteSchemaSubSidebar';
 
 class RemoteSchemaPageContainer extends React.Component {
   render() {
@@ -36,9 +39,14 @@ class RemoteSchemaPageContainer extends React.Component {
     const leftContainer = <LeftContainer>{sidebarContent}</LeftContainer>;
 
     return (
-      <PageContainer helmet={helmet} leftContainer={leftContainer}>
-        {children}
-      </PageContainer>
+      <>
+        <PageContainer helmet={helmet} leftContainer={leftContainer}>
+          {children}
+        </PageContainer>
+        <FeatureFlagToast
+          flagId={availableFeatureFlagIds.remoteSchemaRelationshipsId}
+        />
+      </>
     );
   }
 }

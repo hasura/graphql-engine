@@ -1,7 +1,6 @@
 import React from 'react';
-import CommonTabLayout from '@/components/Common/Layout/CommonTabLayout/CommonTabLayout';
+import { Tabs } from '../Common/Tabs';
 import { appPrefix } from '../constants';
-import tabInfo from '../Edit/tabInfo';
 import styles from '../RemoteSchema.scss';
 import { RemoteSchemaRelationRenderer } from './RemoteSchemaRelationRenderer';
 
@@ -31,11 +30,10 @@ const RelationshipsConnector = (props: Props) => {
 
   return (
     <>
-      <CommonTabLayout
+      <Tabs
         appPrefix={appPrefix}
         currentTab="relationships"
         heading={remoteSchemaName}
-        tabsInfo={tabInfo}
         breadCrumbs={breadCrumbs}
         baseUrl={`${appPrefix}/manage/${remoteSchemaName}`}
         showLoader={false}
