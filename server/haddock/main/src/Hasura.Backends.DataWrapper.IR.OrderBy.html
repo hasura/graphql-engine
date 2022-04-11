@@ -27,13 +27,13 @@
 </span><span id="line-27"></span><span class="hs-comment">-- cf. https://www.postgresql.org/docs/13/queries-order.html</span><span>
 </span><span id="line-28"></span><span class="hs-comment">--</span><span>
 </span><span id="line-29"></span><span class="hs-comment">-- NOTE: The 'ToJSON' instance is only intended for logging purposes.</span><span>
-</span><span id="line-30"></span><span id="local-6989586621688398028"><span id="local-6989586621688398029"></span></span><span class="hs-keyword">data</span><span> </span><span id="OrderBy"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.OrderBy.html#OrderBy"><span class="hs-identifier hs-var">OrderBy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="OrderBy"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.OrderBy.html#OrderBy"><span class="hs-identifier hs-var">OrderBy</span></a></span></span><span>
+</span><span id="line-30"></span><span id="local-6989586621688402734"><span id="local-6989586621688402735"></span></span><span class="hs-keyword">data</span><span> </span><span id="OrderBy"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.OrderBy.html#OrderBy"><span class="hs-identifier hs-var">OrderBy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="OrderBy"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.OrderBy.html#OrderBy"><span class="hs-identifier hs-var">OrderBy</span></a></span></span><span>
 </span><span id="line-31"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="column"><span class="annot"><span class="annottext">OrderBy -&gt; Name
 </span><a href="Hasura.Backends.DataWrapper.IR.OrderBy.html#column"><span class="hs-identifier hs-var hs-var">column</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.Column.html#Name"><span class="hs-identifier hs-type">Column.Name</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-32"></span><span>    </span><span id="ordering"><span class="annot"><span class="annottext">OrderBy -&gt; OrderType
 </span><a href="Hasura.Backends.DataWrapper.IR.OrderBy.html#ordering"><span class="hs-identifier hs-var hs-var">ordering</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.OrderBy.html#OrderType"><span class="hs-identifier hs-type">OrderType</span></a></span><span>
 </span><span id="line-33"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-34"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cOrderBy"><span id="%24tOrderBy"><span id="local-6989586621688397996"><span id="local-6989586621688397998"><span id="local-6989586621688398000"><span id="local-6989586621688398002"><span id="local-6989586621688398004"><span id="local-6989586621688398006"><span id="local-6989586621688398008"><span id="local-6989586621688398010"><span id="local-6989586621688398012"><span id="local-6989586621688398014"><span id="local-6989586621688398016"><span id="local-6989586621688398018"><span id="local-6989586621688398020"><span id="local-6989586621688398022"><span class="annot"><span class="annottext">Typeable OrderBy
+</span><span id="line-34"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cOrderBy"><span id="%24tOrderBy"><span id="local-6989586621688402702"><span id="local-6989586621688402704"><span id="local-6989586621688402706"><span id="local-6989586621688402708"><span id="local-6989586621688402710"><span id="local-6989586621688402712"><span id="local-6989586621688402714"><span id="local-6989586621688402716"><span id="local-6989586621688402718"><span id="local-6989586621688402720"><span id="local-6989586621688402722"><span id="local-6989586621688402724"><span id="local-6989586621688402726"><span id="local-6989586621688402728"><span class="annot"><span class="annottext">Typeable OrderBy
 DataType
 Constr
 Typeable OrderBy
@@ -189,7 +189,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; OrderBy -&gt; c OrderBy
 $cp1Data :: Typeable OrderBy
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688397989"><span id="local-6989586621688397991"><span class="annot"><span class="annottext">OrderBy -&gt; OrderBy -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688402695"><span id="local-6989586621688402697"><span class="annot"><span class="annottext">OrderBy -&gt; OrderBy -&gt; Bool
 (OrderBy -&gt; OrderBy -&gt; Bool)
 -&gt; (OrderBy -&gt; OrderBy -&gt; Bool) -&gt; Eq OrderBy
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -205,7 +205,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep OrderBy x -&gt; OrderBy
 $cfrom :: forall x. OrderBy -&gt; Rep OrderBy x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688397970"><span id="local-6989586621688397972"><span id="local-6989586621688397974"><span id="local-6989586621688397976"><span id="local-6989586621688397978"><span id="local-6989586621688397980"><span id="local-6989586621688397982"><span class="annot"><span class="annottext">Eq OrderBy
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688402676"><span id="local-6989586621688402678"><span id="local-6989586621688402680"><span id="local-6989586621688402682"><span id="local-6989586621688402684"><span id="local-6989586621688402686"><span id="local-6989586621688402688"><span class="annot"><span class="annottext">Eq OrderBy
 Eq OrderBy
 -&gt; (OrderBy -&gt; OrderBy -&gt; Ordering)
 -&gt; (OrderBy -&gt; OrderBy -&gt; Bool)
@@ -243,7 +243,7 @@ $c&lt; :: OrderBy -&gt; OrderBy -&gt; Bool
 compare :: OrderBy -&gt; OrderBy -&gt; Ordering
 $ccompare :: OrderBy -&gt; OrderBy -&gt; Ordering
 $cp1Ord :: Eq OrderBy
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688397963"><span id="local-6989586621688397965"><span id="local-6989586621688397967"><span class="annot"><span class="annottext">Int -&gt; OrderBy -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688402669"><span id="local-6989586621688402671"><span id="local-6989586621688402673"><span class="annot"><span class="annottext">Int -&gt; OrderBy -&gt; ShowS
 [OrderBy] -&gt; ShowS
 OrderBy -&gt; String
 (Int -&gt; OrderBy -&gt; ShowS)
@@ -257,7 +257,7 @@ $cshow :: OrderBy -&gt; String
 showsPrec :: Int -&gt; OrderBy -&gt; ShowS
 $cshowsPrec :: Int -&gt; OrderBy -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-35"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688397959"><span class="annot"><span class="annottext">Eq OrderBy
+</span><span id="line-35"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688402665"><span class="annot"><span class="annottext">Eq OrderBy
 Eq OrderBy
 -&gt; (Accesses -&gt; OrderBy -&gt; OrderBy -&gt; Bool) -&gt; Cacheable OrderBy
 Accesses -&gt; OrderBy -&gt; OrderBy -&gt; Bool
@@ -265,7 +265,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; OrderBy -&gt; OrderBy -&gt; Bool
 $cunchanged :: Accesses -&gt; OrderBy -&gt; OrderBy -&gt; Bool
 $cp1Cacheable :: Eq OrderBy
-</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688397954"><span id="local-6989586621688397956"><span class="annot"><span class="annottext">Int -&gt; OrderBy -&gt; Int
+</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688402660"><span id="local-6989586621688402662"><span class="annot"><span class="annottext">Int -&gt; OrderBy -&gt; Int
 OrderBy -&gt; Int
 (Int -&gt; OrderBy -&gt; Int) -&gt; (OrderBy -&gt; Int) -&gt; Hashable OrderBy
 forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -273,15 +273,15 @@ hash :: OrderBy -&gt; Int
 $chash :: OrderBy -&gt; Int
 hashWithSalt :: Int -&gt; OrderBy -&gt; Int
 $chashWithSalt :: Int -&gt; OrderBy -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688397951"><span class="annot"><span class="annottext">OrderBy -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688402657"><span class="annot"><span class="annottext">OrderBy -&gt; ()
 (OrderBy -&gt; ()) -&gt; NFData OrderBy
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: OrderBy -&gt; ()
 $crnf :: OrderBy -&gt; ()
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-36"></span><span>
-</span><span id="line-37"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688397943"><span id="local-6989586621688397945"><span id="local-6989586621688397947"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.OrderBy.html#OrderBy"><span class="hs-identifier hs-type">OrderBy</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-38"></span><span>  </span><span id="local-6989586621688397941"><span class="annot"><span class="annottext">toJSON :: OrderBy -&gt; Value
+</span><span id="line-37"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688402649"><span id="local-6989586621688402651"><span id="local-6989586621688402653"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.OrderBy.html#OrderBy"><span class="hs-identifier hs-type">OrderBy</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-38"></span><span>  </span><span id="local-6989586621688402647"><span class="annot"><span class="annottext">toJSON :: OrderBy -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; OrderBy -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
@@ -290,11 +290,11 @@ Options -&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.defaultOptions</span></span><span>
 </span><span id="line-39"></span><span>
 </span><span id="line-40"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">From</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/gdw-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.OrderBy</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.OrderBy.html#OrderBy"><span class="hs-identifier hs-type">OrderBy</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-41"></span><span>  </span><span id="local-6989586621688397935"><span class="annot"><span class="annottext">from :: OrderBy -&gt; OrderBy
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/gdw-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.OrderBy</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688397932"><span class="annot"><span class="annottext">ColumnName
+</span><span id="line-41"></span><span>  </span><span id="local-6989586621688402641"><span class="annot"><span class="annottext">from :: OrderBy -&gt; OrderBy
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/gdw-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.OrderBy</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688402638"><span class="annot"><span class="annottext">ColumnName
 column :: OrderBy -&gt; ColumnName
 column :: ColumnName
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/gdw-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var hs-var">column</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688397930"><span class="annot"><span class="annottext">OrderType
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/gdw-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var hs-var">column</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688402636"><span class="annot"><span class="annottext">OrderType
 ordering :: OrderBy -&gt; OrderType
 ordering :: OrderType
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/gdw-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var hs-var">ordering</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
@@ -302,28 +302,28 @@ ordering :: OrderType
 </span><a href="Hasura.Backends.DataWrapper.IR.OrderBy.html#OrderBy"><span class="hs-identifier hs-var">OrderBy</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnName -&gt; Name
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">ColumnName
-</span><a href="#local-6989586621688397932"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OrderType -&gt; OrderType
+</span><a href="#local-6989586621688402638"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OrderType -&gt; OrderType
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">OrderType
-</span><a href="#local-6989586621688397930"><span class="hs-identifier hs-var">ordering</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688402636"><span class="hs-identifier hs-var">ordering</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-43"></span><span>
 </span><span id="line-44"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.OrderBy.html#OrderBy"><span class="hs-identifier hs-type">OrderBy</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/gdw-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.OrderBy</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-45"></span><span>  </span><span id="local-6989586621688397927"><span class="annot"><span class="annottext">from :: OrderBy -&gt; OrderBy
-</span><a href="#local-6989586621688397927"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.OrderBy.html#OrderBy"><span class="hs-identifier hs-type">OrderBy</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688397926"><span class="annot"><span class="annottext">Name
+</span><span id="line-45"></span><span>  </span><span id="local-6989586621688402633"><span class="annot"><span class="annottext">from :: OrderBy -&gt; OrderBy
+</span><a href="#local-6989586621688402633"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.OrderBy.html#OrderBy"><span class="hs-identifier hs-type">OrderBy</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688402632"><span class="annot"><span class="annottext">Name
 column :: Name
 column :: OrderBy -&gt; Name
-</span><a href="#local-6989586621688397926"><span class="hs-identifier hs-var hs-var">column</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688397925"><span class="annot"><span class="annottext">OrderType
+</span><a href="#local-6989586621688402632"><span class="hs-identifier hs-var hs-var">column</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688402631"><span class="annot"><span class="annottext">OrderType
 ordering :: OrderType
 ordering :: OrderBy -&gt; OrderType
-</span><a href="#local-6989586621688397925"><span class="hs-identifier hs-var hs-var">ordering</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621688402631"><span class="hs-identifier hs-var hs-var">ordering</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-46"></span><span>    </span><span class="annot"><span class="annottext">ColumnName -&gt; OrderType -&gt; OrderBy
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/gdw-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.OrderBy</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; ColumnName
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688397926"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OrderType -&gt; OrderType
+</span><a href="#local-6989586621688402632"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OrderType -&gt; OrderType
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">OrderType
-</span><a href="#local-6989586621688397925"><span class="hs-identifier hs-var">ordering</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688402631"><span class="hs-identifier hs-var">ordering</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-47"></span><span>
 </span><span id="line-48"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-49"></span><span>
@@ -332,10 +332,10 @@ forall source target. From source target =&gt; source -&gt; target
 </span><span id="line-52"></span><span class="hs-comment">-- cf. https://www.postgresql.org/docs/13/queries-order.html</span><span>
 </span><span id="line-53"></span><span class="hs-comment">--</span><span>
 </span><span id="line-54"></span><span class="hs-comment">-- NOTE: The 'ToJSON' instance is only intended for logging purposes.</span><span>
-</span><span id="line-55"></span><span id="local-6989586621688397923"><span id="local-6989586621688397924"></span></span><span class="hs-keyword">data</span><span> </span><span id="OrderType"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.OrderBy.html#OrderType"><span class="hs-identifier hs-var">OrderType</span></a></span></span><span>
+</span><span id="line-55"></span><span id="local-6989586621688402629"><span id="local-6989586621688402630"></span></span><span class="hs-keyword">data</span><span> </span><span id="OrderType"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.OrderBy.html#OrderType"><span class="hs-identifier hs-var">OrderType</span></a></span></span><span>
 </span><span id="line-56"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Ascending"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.OrderBy.html#Ascending"><span class="hs-identifier hs-var">Ascending</span></a></span></span><span>
 </span><span id="line-57"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Descending"><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.OrderBy.html#Descending"><span class="hs-identifier hs-var">Descending</span></a></span></span><span>
-</span><span id="line-58"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cDescending"><span id="%24cAscending"><span id="%24tOrderType"><span id="local-6989586621688397892"><span id="local-6989586621688397894"><span id="local-6989586621688397896"><span id="local-6989586621688397898"><span id="local-6989586621688397900"><span id="local-6989586621688397902"><span id="local-6989586621688397904"><span id="local-6989586621688397906"><span id="local-6989586621688397908"><span id="local-6989586621688397910"><span id="local-6989586621688397912"><span id="local-6989586621688397914"><span id="local-6989586621688397916"><span id="local-6989586621688397918"><span class="annot"><span class="annottext">Typeable OrderType
+</span><span id="line-58"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cDescending"><span id="%24cAscending"><span id="%24tOrderType"><span id="local-6989586621688402598"><span id="local-6989586621688402600"><span id="local-6989586621688402602"><span id="local-6989586621688402604"><span id="local-6989586621688402606"><span id="local-6989586621688402608"><span id="local-6989586621688402610"><span id="local-6989586621688402612"><span id="local-6989586621688402614"><span id="local-6989586621688402616"><span id="local-6989586621688402618"><span id="local-6989586621688402620"><span id="local-6989586621688402622"><span id="local-6989586621688402624"><span class="annot"><span class="annottext">Typeable OrderType
 DataType
 Constr
 Typeable OrderType
@@ -493,7 +493,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; OrderType -&gt; c OrderType
 $cp1Data :: Typeable OrderType
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688397885"><span id="local-6989586621688397887"><span class="annot"><span class="annottext">OrderType -&gt; OrderType -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688402591"><span id="local-6989586621688402593"><span class="annot"><span class="annottext">OrderType -&gt; OrderType -&gt; Bool
 (OrderType -&gt; OrderType -&gt; Bool)
 -&gt; (OrderType -&gt; OrderType -&gt; Bool) -&gt; Eq OrderType
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -509,7 +509,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep OrderType x -&gt; OrderType
 $cfrom :: forall x. OrderType -&gt; Rep OrderType x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688397868"><span id="local-6989586621688397870"><span id="local-6989586621688397872"><span id="local-6989586621688397874"><span id="local-6989586621688397876"><span id="local-6989586621688397878"><span id="local-6989586621688397880"><span class="annot"><span class="annottext">Eq OrderType
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688402574"><span id="local-6989586621688402576"><span id="local-6989586621688402578"><span id="local-6989586621688402580"><span id="local-6989586621688402582"><span id="local-6989586621688402584"><span id="local-6989586621688402586"><span class="annot"><span class="annottext">Eq OrderType
 Eq OrderType
 -&gt; (OrderType -&gt; OrderType -&gt; Ordering)
 -&gt; (OrderType -&gt; OrderType -&gt; Bool)
@@ -547,7 +547,7 @@ $c&lt; :: OrderType -&gt; OrderType -&gt; Bool
 compare :: OrderType -&gt; OrderType -&gt; Ordering
 $ccompare :: OrderType -&gt; OrderType -&gt; Ordering
 $cp1Ord :: Eq OrderType
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688397862"><span id="local-6989586621688397864"><span id="local-6989586621688397866"><span class="annot"><span class="annottext">Int -&gt; OrderType -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688402568"><span id="local-6989586621688402570"><span id="local-6989586621688402572"><span class="annot"><span class="annottext">Int -&gt; OrderType -&gt; ShowS
 [OrderType] -&gt; ShowS
 OrderType -&gt; String
 (Int -&gt; OrderType -&gt; ShowS)
@@ -563,7 +563,7 @@ $cshow :: OrderType -&gt; String
 showsPrec :: Int -&gt; OrderType -&gt; ShowS
 $cshowsPrec :: Int -&gt; OrderType -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-59"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688397859"><span class="annot"><span class="annottext">Eq OrderType
+</span><span id="line-59"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688402565"><span class="annot"><span class="annottext">Eq OrderType
 Eq OrderType
 -&gt; (Accesses -&gt; OrderType -&gt; OrderType -&gt; Bool)
 -&gt; Cacheable OrderType
@@ -572,7 +572,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; OrderType -&gt; OrderType -&gt; Bool
 $cunchanged :: Accesses -&gt; OrderType -&gt; OrderType -&gt; Bool
 $cp1Cacheable :: Eq OrderType
-</span><a href="#local-6989586621688397859"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688397855"><span id="local-6989586621688397857"><span class="annot"><span class="annottext">Int -&gt; OrderType -&gt; Int
+</span><a href="#local-6989586621688402565"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688402561"><span id="local-6989586621688402563"><span class="annot"><span class="annottext">Int -&gt; OrderType -&gt; Int
 OrderType -&gt; Int
 (Int -&gt; OrderType -&gt; Int)
 -&gt; (OrderType -&gt; Int) -&gt; Hashable OrderType
@@ -581,16 +581,16 @@ hash :: OrderType -&gt; Int
 $chash :: OrderType -&gt; Int
 hashWithSalt :: Int -&gt; OrderType -&gt; Int
 $chashWithSalt :: Int -&gt; OrderType -&gt; Int
-</span><a href="#local-6989586621688397855"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688397853"><span class="annot"><span class="annottext">OrderType -&gt; ()
+</span><a href="#local-6989586621688402561"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688402559"><span class="annot"><span class="annottext">OrderType -&gt; ()
 (OrderType -&gt; ()) -&gt; NFData OrderType
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: OrderType -&gt; ()
 $crnf :: OrderType -&gt; ()
-</span><a href="#local-6989586621688397853"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688402559"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-60"></span><span>
-</span><span id="line-61"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688397846"><span id="local-6989586621688397848"><span id="local-6989586621688397850"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.OrderBy.html#OrderType"><span class="hs-identifier hs-type">OrderType</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-62"></span><span>  </span><span id="local-6989586621688397845"><span class="annot"><span class="annottext">toJSON :: OrderType -&gt; Value
-</span><a href="#local-6989586621688397845"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; OrderType -&gt; Value
+</span><span id="line-61"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688402552"><span id="local-6989586621688402554"><span id="local-6989586621688402556"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.OrderBy.html#OrderType"><span class="hs-identifier hs-type">OrderType</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-62"></span><span>  </span><span id="local-6989586621688402551"><span class="annot"><span class="annottext">toJSON :: OrderType -&gt; Value
+</span><a href="#local-6989586621688402551"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; OrderType -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
@@ -598,8 +598,8 @@ Options -&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.defaultOptions</span></span><span>
 </span><span id="line-63"></span><span>
 </span><span id="line-64"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">From</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/gdw-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.OrderType</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.OrderBy.html#OrderType"><span class="hs-identifier hs-type">OrderType</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-65"></span><span>  </span><span id="local-6989586621688397843"><span class="annot"><span class="annottext">from :: OrderType -&gt; OrderType
-</span><a href="#local-6989586621688397843"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">OrderType
+</span><span id="line-65"></span><span>  </span><span id="local-6989586621688402549"><span class="annot"><span class="annottext">from :: OrderType -&gt; OrderType
+</span><a href="#local-6989586621688402549"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">OrderType
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/gdw-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.Ascending</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OrderType
 </span><a href="Hasura.Backends.DataWrapper.IR.OrderBy.html#Ascending"><span class="hs-identifier hs-var">Ascending</span></a></span><span>
 </span><span id="line-66"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">OrderType
@@ -607,8 +607,8 @@ Options -&gt; a -&gt; Value
 </span><a href="Hasura.Backends.DataWrapper.IR.OrderBy.html#Ascending"><span class="hs-identifier hs-var">Ascending</span></a></span><span>
 </span><span id="line-67"></span><span>
 </span><span id="line-68"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.IR.OrderBy.html#OrderType"><span class="hs-identifier hs-type">OrderType</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/gdw-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.OrderType</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-69"></span><span>  </span><span id="local-6989586621688397839"><span class="annot"><span class="annottext">from :: OrderType -&gt; OrderType
-</span><a href="#local-6989586621688397839"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">OrderType
+</span><span id="line-69"></span><span>  </span><span id="local-6989586621688402545"><span class="annot"><span class="annottext">from :: OrderType -&gt; OrderType
+</span><a href="#local-6989586621688402545"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">OrderType
 </span><a href="Hasura.Backends.DataWrapper.IR.OrderBy.html#Ascending"><span class="hs-identifier hs-var">Ascending</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OrderType
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/gdw-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.Ascending</span></a></span><span>
 </span><span id="line-70"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">OrderType

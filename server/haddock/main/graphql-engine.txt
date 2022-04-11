@@ -26222,6 +26222,19 @@ buildHttpLogMetadata :: forall m. HttpLog m => ParameterizedQueryHashList -> Req
 -- | synonym for clarity, writing `emptyHttpLogMetadata <tt>m` instead of
 --   `def </tt>(HttpLogMetadata m)`
 emptyHttpLogMetadata :: forall m. HttpLog m => HttpLogMetadata m
+data MetadataQueryLoggingMode
+MetadataQueryLoggingEnabled :: MetadataQueryLoggingMode
+MetadataQueryLoggingDisabled :: MetadataQueryLoggingMode
+
+-- | Setting used to control the information in logs
+data LoggingSettings
+LoggingSettings :: HashSet (EngineLogType Hasura) -> MetadataQueryLoggingMode -> LoggingSettings
+
+-- | this is only required for the short-term fix in
+--   <a>https://github.com/hasura/graphql-engine-mono/issues/1770</a> See
+--   Note [Disable query printing when query-log is disabled]
+[_lsEnabledLogTypes] :: LoggingSettings -> HashSet (EngineLogType Hasura)
+[_lsMetadataQueryLoggingMode] :: LoggingSettings -> MetadataQueryLoggingMode
 class Monad m => HttpLog m where {
     
     -- | Extra http-log metadata that we attach when operating in <tt>m</tt>.
@@ -26229,8 +26242,8 @@ class Monad m => HttpLog m where {
 }
 emptyExtraHttpLogMetadata :: HttpLog m => ExtraHttpLogMetadata m
 buildExtraHttpLogMetadata :: HttpLog m => ParameterizedQueryHashList -> ExtraHttpLogMetadata m
-logHttpError :: HttpLog m => Logger Hasura -> HashSet (EngineLogType Hasura) -> Maybe UserInfo -> RequestId -> Request -> (ByteString, Maybe Value) -> QErr -> [Header] -> m ()
-logHttpSuccess :: HttpLog m => Logger Hasura -> HashSet (EngineLogType Hasura) -> Maybe UserInfo -> RequestId -> Request -> (ByteString, Maybe Value) -> ByteString -> ByteString -> Maybe (DiffTime, DiffTime) -> Maybe CompressionType -> [Header] -> HttpLogMetadata m -> m ()
+logHttpError :: HttpLog m => Logger Hasura -> LoggingSettings -> Maybe UserInfo -> RequestId -> Request -> (ByteString, Maybe Value) -> QErr -> [Header] -> m ()
+logHttpSuccess :: HttpLog m => Logger Hasura -> LoggingSettings -> Maybe UserInfo -> RequestId -> Request -> (ByteString, Maybe Value) -> ByteString -> ByteString -> Maybe (DiffTime, DiffTime) -> Maybe CompressionType -> [Header] -> HttpLogMetadata m -> m ()
 
 -- | Log information about the HTTP request
 data HttpInfoLog
@@ -26288,8 +26301,11 @@ HttpLogContext :: !HttpInfoLog -> !OperationLog -> !RequestId -> !Maybe (NonEmpt
 [hlcOperation] :: HttpLogContext -> !OperationLog
 [hlcRequestId] :: HttpLogContext -> !RequestId
 [hlcBatchedOperations] :: HttpLogContext -> !Maybe (NonEmpty BatchOperationLog)
-mkHttpAccessLogContext :: Maybe UserInfo -> HashSet (EngineLogType Hasura) -> RequestId -> Request -> (ByteString, Maybe Value) -> ByteString -> Maybe (DiffTime, DiffTime) -> Maybe CompressionType -> [Header] -> RequestMode -> Maybe (GQLBatchedReqs GQLBatchQueryOperationLog) -> HttpLogContext
-mkHttpErrorLogContext :: Maybe UserInfo -> HashSet (EngineLogType Hasura) -> RequestId -> Request -> (ByteString, Maybe Value) -> QErr -> Maybe (DiffTime, DiffTime) -> Maybe CompressionType -> [Header] -> HttpLogContext
+
+-- | Check if the <tt>query</tt> field should be included in the http-log
+isQueryIncludedInLogs :: Text -> LoggingSettings -> Bool
+mkHttpAccessLogContext :: Maybe UserInfo -> LoggingSettings -> RequestId -> Request -> (ByteString, Maybe Value) -> ByteString -> Maybe (DiffTime, DiffTime) -> Maybe CompressionType -> [Header] -> RequestMode -> Maybe (GQLBatchedReqs GQLBatchQueryOperationLog) -> HttpLogContext
+mkHttpErrorLogContext :: Maybe UserInfo -> LoggingSettings -> RequestId -> Request -> (ByteString, Maybe Value) -> QErr -> Maybe (DiffTime, DiffTime) -> Maybe CompressionType -> [Header] -> HttpLogContext
 data HttpLogLine
 HttpLogLine :: !LogLevel -> !HttpLogContext -> HttpLogLine
 [_hlLogLevel] :: HttpLogLine -> !LogLevel
@@ -26318,6 +26334,10 @@ instance GHC.Classes.Eq Hasura.Server.Logging.RequestMode
 instance GHC.Show.Show Hasura.Server.Logging.RequestMode
 instance GHC.Classes.Eq Hasura.Server.Logging.CommonHttpLogMetadata
 instance GHC.Show.Show Hasura.Server.Logging.CommonHttpLogMetadata
+instance GHC.Classes.Eq Hasura.Server.Logging.MetadataQueryLoggingMode
+instance GHC.Show.Show Hasura.Server.Logging.MetadataQueryLoggingMode
+instance GHC.Classes.Eq Hasura.Server.Logging.LoggingSettings
+instance GHC.Show.Show Hasura.Server.Logging.LoggingSettings
 instance GHC.Classes.Eq Hasura.Server.Logging.HttpInfoLog
 instance GHC.Show.Show Hasura.Server.Logging.HttpInfoLog
 instance GHC.Classes.Eq Hasura.Server.Logging.OperationLog
@@ -26326,6 +26346,8 @@ instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Logging.HttpInfoLog
 instance Hasura.Server.Logging.HttpLog m => Hasura.Server.Logging.HttpLog (Hasura.Tracing.TraceT m)
 instance Hasura.Server.Logging.HttpLog m => Hasura.Server.Logging.HttpLog (Control.Monad.Trans.Reader.ReaderT r m)
 instance Hasura.Server.Logging.HttpLog m => Hasura.Server.Logging.HttpLog (Hasura.Metadata.Class.MetadataStorageT m)
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Logging.MetadataQueryLoggingMode
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Logging.MetadataQueryLoggingMode
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Logging.RequestMode
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Logging.GQLBatchQueryOperationLog
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Logging.GQLQueryOperationErrorLog
@@ -26584,7 +26606,7 @@ PGDUMP :: API
 DEVELOPER :: API
 CONFIG :: API
 data RawServeOptions impl
-RawServeOptions :: Maybe Int -> Maybe HostPreference -> RawConnParams -> Maybe TxIsolation -> Maybe AdminSecretHash -> RawAuthHook -> Maybe JWTConfig -> Maybe RoleName -> Maybe CorsConfig -> Bool -> Maybe Text -> Maybe Bool -> Bool -> Bool -> Maybe Bool -> Maybe [API] -> Maybe RefetchInterval -> Maybe BatchSize -> Maybe RefetchInterval -> Maybe BatchSize -> Bool -> Maybe [EngineLogType impl] -> Maybe LogLevel -> Bool -> Maybe Bool -> Maybe Int -> Maybe Milliseconds -> Maybe Milliseconds -> Bool -> Bool -> Bool -> Maybe Int -> Maybe Bool -> Bool -> Maybe Milliseconds -> Maybe [ExperimentalFeature] -> Maybe NonNegativeInt -> Maybe Seconds -> Maybe Int -> RawServeOptions impl
+RawServeOptions :: Maybe Int -> Maybe HostPreference -> RawConnParams -> Maybe TxIsolation -> Maybe AdminSecretHash -> RawAuthHook -> Maybe JWTConfig -> Maybe RoleName -> Maybe CorsConfig -> Bool -> Maybe Text -> Maybe Bool -> Bool -> Bool -> Maybe Bool -> Maybe [API] -> Maybe RefetchInterval -> Maybe BatchSize -> Maybe RefetchInterval -> Maybe BatchSize -> Bool -> Maybe [EngineLogType impl] -> Maybe LogLevel -> Bool -> Maybe Bool -> Maybe Int -> Maybe Milliseconds -> Maybe Milliseconds -> Bool -> Bool -> Bool -> Maybe Int -> Maybe Bool -> Bool -> Maybe Milliseconds -> Maybe [ExperimentalFeature] -> Maybe NonNegativeInt -> Maybe Seconds -> Maybe Int -> Bool -> RawServeOptions impl
 [rsoPort] :: RawServeOptions impl -> Maybe Int
 [rsoHost] :: RawServeOptions impl -> Maybe HostPreference
 [rsoConnParams] :: RawServeOptions impl -> RawConnParams
@@ -26624,6 +26646,7 @@ RawServeOptions :: Maybe Int -> Maybe HostPreference -> RawConnParams -> Maybe T
 [rsoEventsFetchBatchSize] :: RawServeOptions impl -> Maybe NonNegativeInt
 [rsoGracefulShutdownTimeout] :: RawServeOptions impl -> Maybe Seconds
 [rsoWebSocketConnectionInitTimeout] :: RawServeOptions impl -> Maybe Int
+[rsoEnableMetadataQueryLoggingEnv] :: RawServeOptions impl -> Bool
 
 -- | @<a>ResponseInternalErrorsConfig</a> represents the encoding of the
 --   internal errors in the response to the client. See the github comment
@@ -26643,7 +26666,7 @@ WSConnectionInitTimeout :: Seconds -> WSConnectionInitTimeout
 [unWSConnectionInitTimeout] :: WSConnectionInitTimeout -> Seconds
 defaultWSConnectionInitTimeout :: WSConnectionInitTimeout
 data ServeOptions impl
-ServeOptions :: Int -> HostPreference -> ConnParams -> TxIsolation -> HashSet AdminSecretHash -> Maybe AuthHook -> [JWTConfig] -> Maybe RoleName -> CorsConfig -> Bool -> Maybe Text -> Bool -> StringifyNumbers -> Bool -> HashSet API -> LiveQueriesOptions -> StreamQueriesOptions -> Bool -> HashSet (EngineLogType impl) -> LogLevel -> ResponseInternalErrorsConfig -> Maybe Int -> Maybe Milliseconds -> OptionalInterval -> Bool -> RemoteSchemaPermsCtx -> ConnectionOptions -> KeepAliveDelay -> FunctionPermissionsCtx -> MaintenanceMode -> OptionalInterval -> HashSet ExperimentalFeature -> NonNegativeInt -> Bool -> Seconds -> WSConnectionInitTimeout -> EventingMode -> ReadOnlyMode -> ServeOptions impl
+ServeOptions :: Int -> HostPreference -> ConnParams -> TxIsolation -> HashSet AdminSecretHash -> Maybe AuthHook -> [JWTConfig] -> Maybe RoleName -> CorsConfig -> Bool -> Maybe Text -> Bool -> StringifyNumbers -> Bool -> HashSet API -> LiveQueriesOptions -> StreamQueriesOptions -> Bool -> HashSet (EngineLogType impl) -> LogLevel -> ResponseInternalErrorsConfig -> Maybe Int -> Maybe Milliseconds -> OptionalInterval -> Bool -> RemoteSchemaPermsCtx -> ConnectionOptions -> KeepAliveDelay -> FunctionPermissionsCtx -> MaintenanceMode -> OptionalInterval -> HashSet ExperimentalFeature -> NonNegativeInt -> Bool -> Seconds -> WSConnectionInitTimeout -> EventingMode -> ReadOnlyMode -> MetadataQueryLoggingMode -> ServeOptions impl
 [soPort] :: ServeOptions impl -> Int
 [soHost] :: ServeOptions impl -> HostPreference
 [soConnParams] :: ServeOptions impl -> ConnParams
@@ -26682,6 +26705,7 @@ ServeOptions :: Int -> HostPreference -> ConnParams -> TxIsolation -> HashSet Ad
 [soWebsocketConnectionInitTimeout] :: ServeOptions impl -> WSConnectionInitTimeout
 [soEventingMode] :: ServeOptions impl -> EventingMode
 [soReadOnlyMode] :: ServeOptions impl -> ReadOnlyMode
+[soEnableMetadataQueryLogging] :: ServeOptions impl -> MetadataQueryLoggingMode
 data DowngradeOptions
 DowngradeOptions :: !Text -> !Bool -> DowngradeOptions
 [dgoTargetVersion] :: DowngradeOptions -> !Text
@@ -26871,6 +26895,7 @@ inferFunctionPermsEnv :: (String, String)
 maintenanceModeEnv :: (String, String)
 schemaPollIntervalEnv :: (String, String)
 adminInternalErrorsEnv :: (String, String)
+enableMetadataQueryLoggingEnv :: (String, String)
 parsePostgresConnInfo :: Parser (PostgresConnInfo (Maybe PostgresRawConnInfo))
 parseDatabaseUrl :: Parser (Maybe URLTemplate)
 parseRawConnDetails :: Parser (Maybe PostgresRawConnDetails)
@@ -26911,6 +26936,7 @@ parseEnableRemoteSchemaPerms :: Parser Bool
 parseInferFunctionPerms :: Parser (Maybe Bool)
 parseEnableMaintenanceMode :: Parser Bool
 parseSchemaPollInterval :: Parser (Maybe Milliseconds)
+parseEnableMetadataQueryLogging :: Parser Bool
 mkLiveQueryRefetchDelayEnv :: (String, String)
 mkLiveQueryBatchSizeEnv :: (String, String)
 mkStreamingQueryRefetchDelayEnv :: (String, String)
@@ -28357,7 +28383,7 @@ runWebSockets :: ConnectionOptions -> RequestHead -> IpAddress -> (IpAddress -> 
 
 module Hasura.Server.App
 data ServerCtx
-ServerCtx :: !Logger Hasura -> !SchemaCacheRef -> !AuthMode -> !Manager -> !SQLGenCtx -> !HashSet API -> !InstanceId -> !SubscriptionsState -> !Bool -> !Store EmptyMetrics -> !ResponseInternalErrorsConfig -> !Environment -> !RemoteSchemaPermsCtx -> !FunctionPermissionsCtx -> !MaintenanceMode -> !HashSet ExperimentalFeature -> !HashSet (EngineLogType Hasura) -> !EventingMode -> !ReadOnlyMode -> ServerCtx
+ServerCtx :: !Logger Hasura -> !SchemaCacheRef -> !AuthMode -> !Manager -> !SQLGenCtx -> !HashSet API -> !InstanceId -> !SubscriptionsState -> !Bool -> !Store EmptyMetrics -> !ResponseInternalErrorsConfig -> !Environment -> !RemoteSchemaPermsCtx -> !FunctionPermissionsCtx -> !MaintenanceMode -> !HashSet ExperimentalFeature -> !LoggingSettings -> !EventingMode -> !ReadOnlyMode -> ServerCtx
 [scLogger] :: ServerCtx -> !Logger Hasura
 [scCacheRef] :: ServerCtx -> !SchemaCacheRef
 [scAuthMode] :: ServerCtx -> !AuthMode
@@ -28374,10 +28400,7 @@ ServerCtx :: !Logger Hasura -> !SchemaCacheRef -> !AuthMode -> !Manager -> !SQLG
 [scFunctionPermsCtx] :: ServerCtx -> !FunctionPermissionsCtx
 [scEnableMaintenanceMode] :: ServerCtx -> !MaintenanceMode
 [scExperimentalFeatures] :: ServerCtx -> !HashSet ExperimentalFeature
-
--- | this is only required for the short-term fix in
---   <a>https://github.com/hasura/graphql-engine-mono/issues/1770</a>
-[scEnabledLogTypes] :: ServerCtx -> !HashSet (EngineLogType Hasura)
+[scLoggingSettings] :: ServerCtx -> !LoggingSettings
 [scEventingMode] :: ServerCtx -> !EventingMode
 [scEnableReadOnlyMode] :: ServerCtx -> !ReadOnlyMode
 data HandlerCtx
@@ -28442,7 +28465,7 @@ v1GQHandler :: (MonadIO m, MonadBaseControl IO m, MonadGQLExecutionCheck m, Mona
 v1GQRelayHandler :: (MonadIO m, MonadBaseControl IO m, MonadGQLExecutionCheck m, MonadQueryLog m, MonadTrace m, HttpLog m, MonadExecuteQuery m, MonadError QErr m, MonadReader HandlerCtx m, MonadMetadataStorage (MetadataStorageT m), MonadQueryTags m, HasResourceLimits m) => GQLBatchedReqs (GQLReq GQLQueryText) -> m (HttpLogMetadata m, HttpResponse EncJSON)
 gqlExplainHandler :: forall m. (MonadIO m, MonadBaseControl IO m, MonadError QErr m, MonadReader HandlerCtx m, MonadMetadataStorage (MetadataStorageT m), MonadQueryTags m) => GQLExplain -> m (HttpResponse EncJSON)
 v1Alpha1PGDumpHandler :: (MonadIO m, MonadError QErr m, MonadReader HandlerCtx m) => PGDumpReqBody -> m APIResp
-consoleAssetsHandler :: (MonadIO m, HttpLog m) => Logger Hasura -> HashSet (EngineLogType Hasura) -> Text -> FilePath -> ActionT m ()
+consoleAssetsHandler :: (MonadIO m, HttpLog m) => Logger Hasura -> LoggingSettings -> Text -> FilePath -> ActionT m ()
 class (Monad m) => ConsoleRenderer m
 renderConsole :: ConsoleRenderer m => Text -> AuthMode -> Bool -> Maybe Text -> m (Either String Text)
 renderHtmlTemplate :: Template -> Value -> Either String Text
@@ -28455,9 +28478,9 @@ HasuraApp :: !Application -> !SchemaCacheRef -> !AsyncActionSubscriptionState ->
 [_hapSchemaRef] :: HasuraApp -> !SchemaCacheRef
 [_hapAsyncActionSubscriptionState] :: HasuraApp -> !AsyncActionSubscriptionState
 [_hapShutdownWsServer] :: HasuraApp -> !IO ()
-mkWaiApp :: forall m. (MonadIO m, MonadStateless IO m, Forall (Pure m), ConsoleRenderer m, HttpLog m, UserAuthentication (TraceT m), MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, HasReporter m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorage (MetadataStorageT m), MonadResolveSource m, MonadQueryTags m) => (ServerCtx -> SpockT m ()) -> Environment -> Logger Hasura -> SQLGenCtx -> Bool -> Manager -> AuthMode -> CorsConfig -> Bool -> Maybe Text -> Bool -> InstanceId -> HashSet API -> LiveQueriesOptions -> StreamQueriesOptions -> ResponseInternalErrorsConfig -> Maybe SubscriptionPostPollHook -> SchemaCacheRef -> Store EmptyMetrics -> ServerMetrics -> RemoteSchemaPermsCtx -> FunctionPermissionsCtx -> ConnectionOptions -> KeepAliveDelay -> MaintenanceMode -> EventingMode -> ReadOnlyMode -> HashSet ExperimentalFeature -> HashSet (EngineLogType Hasura) -> WSConnectionInitTimeout -> m HasuraApp
+mkWaiApp :: forall m. (MonadIO m, MonadStateless IO m, Forall (Pure m), ConsoleRenderer m, HttpLog m, UserAuthentication (TraceT m), MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, HasReporter m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorage (MetadataStorageT m), MonadResolveSource m, MonadQueryTags m) => (ServerCtx -> SpockT m ()) -> Environment -> Logger Hasura -> SQLGenCtx -> Bool -> Manager -> AuthMode -> CorsConfig -> Bool -> Maybe Text -> Bool -> InstanceId -> HashSet API -> LiveQueriesOptions -> StreamQueriesOptions -> ResponseInternalErrorsConfig -> Maybe SubscriptionPostPollHook -> SchemaCacheRef -> Store EmptyMetrics -> ServerMetrics -> RemoteSchemaPermsCtx -> FunctionPermissionsCtx -> ConnectionOptions -> KeepAliveDelay -> MaintenanceMode -> EventingMode -> ReadOnlyMode -> HashSet ExperimentalFeature -> HashSet (EngineLogType Hasura) -> WSConnectionInitTimeout -> MetadataQueryLoggingMode -> m HasuraApp
 httpApp :: forall m. (MonadIO m, MonadBaseControl IO m, ConsoleRenderer m, HttpLog m, UserAuthentication (TraceT m), MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, HasReporter m, MonadExecuteQuery m, MonadMetadataStorage (MetadataStorageT m), HasResourceLimits m, MonadResolveSource m, MonadQueryTags m) => (ServerCtx -> SpockT m ()) -> CorsConfig -> ServerCtx -> Bool -> Maybe Text -> Bool -> SpockT m ()
-raiseGenericApiError :: (MonadIO m, HttpLog m) => Logger Hasura -> HashSet (EngineLogType Hasura) -> [Header] -> QErr -> ActionT m ()
+raiseGenericApiError :: (MonadIO m, HttpLog m) => Logger Hasura -> LoggingSettings -> [Header] -> QErr -> ActionT m ()
 instance Hasura.Server.App.ConsoleRenderer m => Hasura.Server.App.ConsoleRenderer (Hasura.Tracing.TraceT m)
 instance Hasura.Server.App.MonadMetadataApiAuthorization m => Hasura.Server.App.MonadMetadataApiAuthorization (Control.Monad.Trans.Reader.ReaderT r m)
 instance Hasura.Server.App.MonadMetadataApiAuthorization m => Hasura.Server.App.MonadMetadataApiAuthorization (Hasura.Metadata.Class.MetadataStorageT m)

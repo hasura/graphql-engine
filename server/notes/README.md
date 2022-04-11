@@ -48,4 +48,5 @@
   - [Function Permissions](function-permissions.md)
   - [ReadOnly Mode](readonly-mode.md)
   - [Disable query printing when query-log is disabled](disable-query-printing-when-querylog-is-disabled.md)
+  - [Disable query printing for metadata queries](disable-query-printing-for-metadata-queries.md)
   - [Schema Cache Sync](schema-cache-sync.md)
