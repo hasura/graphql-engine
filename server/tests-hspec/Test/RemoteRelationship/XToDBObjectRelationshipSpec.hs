@@ -64,9 +64,10 @@ combine lhs (tableName, rhs) =
         GraphqlEngine.clearMetadata state
         rhsSetup (state, ())
         lhsSetup (state, localState),
-      teardown = \state@(globalState, _) -> do
+      teardown = \state@(globalState, _localState) -> do
         lhsTeardown state
-        rhsTeardown (globalState, ()),
+        rhsTeardown (globalState, ())
+        GraphqlEngine.clearMetadata globalState,
       customOptions =
         Context.combineOptions lhsOptions rhsOptions
     }

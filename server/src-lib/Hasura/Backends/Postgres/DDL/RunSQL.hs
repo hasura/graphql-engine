@@ -33,6 +33,7 @@ import Hasura.Backends.Postgres.DDL.Source
 import Hasura.Backends.Postgres.SQL.Types hiding (FunctionName, TableName)
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.GraphQL.Schema.Common (purgeDependencies)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Diff
@@ -319,7 +320,7 @@ runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cas
         -- Update metadata with schema change caused by @'tx'
         metadataUpdater <- execWriterT do
           -- Collect indirect dependencies of altered tables
-          tableIndirectDeps <- getIndirectDependencies source tablesDiff
+          tableIndirectDeps <- getIndirectDependenciesFromTableDiff source tablesDiff
 
           -- If table indirect dependencies exist and cascading is not enabled then report an exception
           when (tableIndirectDeps /= [] && not cascadeDependencies) $ reportDependentObjectsExist tableIndirectDeps
@@ -361,18 +362,6 @@ runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cas
         when (newTy == FTVOLATILE) $
           throw400 NotSupported $
             "type of function " <> qf <<> " is altered to \"VOLATILE\" which is not supported now"
-
-    purgeDependencies ::
-      MonadError QErr n =>
-      [SchemaObjId] ->
-      WriterT MetadataModifier n ()
-    purgeDependencies deps =
-      for_ deps \case
-        SOSourceObj sourceName objectID -> do
-          AB.dispatchAnyBackend @BackendMetadata objectID $ purgeDependentObject sourceName >=> tell
-        _ ->
-          -- Ignore non-source dependencies
-          pure ()
 
     purgeFunctionsFromMetadata ::
       Monad n =>

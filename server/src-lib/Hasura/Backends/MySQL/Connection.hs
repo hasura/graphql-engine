@@ -2,6 +2,7 @@ module Hasura.Backends.MySQL.Connection
   ( runJSONPathQuery,
     resolveSourceConfig,
     resolveDatabaseMetadata,
+    postDropSourceHook,
     fetchAllRows,
     runQueryYieldingRows,
     withMySQLPool,
@@ -64,6 +65,15 @@ resolveDatabaseMetadata sc@SourceConfig {..} sourceCustomization =
   runExceptT $ do
     metadata <- liftIO $ withResource scConnectionPool (getMetadata scConfig)
     pure $ ResolvedSource sc sourceCustomization metadata mempty mempty
+
+postDropSourceHook ::
+  (MonadIO m) =>
+  SourceConfig ->
+  m ()
+postDropSourceHook _ =
+  -- As of now, we do not add any Hasura related stuff to source DB hence
+  -- no need to clean things up.
+  pure ()
 
 parseFieldResult :: Field -> Maybe ByteString -> Value
 parseFieldResult f@Field {..} mBs =

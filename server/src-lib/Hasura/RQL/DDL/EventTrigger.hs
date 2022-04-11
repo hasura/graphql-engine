@@ -14,6 +14,8 @@ module Hasura.RQL.DDL.EventTrigger
     getHeaderInfosFromConf,
     getWebhookInfoFromConf,
     buildEventTriggerInfo,
+    getTriggerNames,
+    getTriggersMap,
     cetqSource,
     cetqName,
     cetqTable,
@@ -399,3 +401,13 @@ getTrigDefDeps source tableName (TriggerOpsDef mIns mUpd mDel _) =
     getColsFromSub sc = case sc of
       SubCStar -> []
       SubCArray cols -> cols
+
+getTriggersMap ::
+  SourceMetadata b ->
+  InsOrdHashMap TriggerName (EventTriggerConf b)
+getTriggersMap = OMap.unions . map _tmEventTriggers . OMap.elems . _smTables
+
+getTriggerNames ::
+  SourceMetadata b ->
+  Set.HashSet TriggerName
+getTriggerNames = Set.fromList . OMap.keys . getTriggersMap
