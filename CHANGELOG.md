@@ -15,6 +15,7 @@
 - console: remove need for clicking the Modify btn before editing a remote schema (#1193, #8262)
 - console: integrate the RS-to-RS form into Remote Schema Relationship tab
 - console: enable mssql server as an option in RS-to-DB and DB-to-DB remote joins
+- console: enable bigquery as an option in RS-to-DB remote joins
 - cli: fix remote schema metadata formatting issues (#7608)
 - cli: fix query collections metadata formatting issues (#7616)
 - docs: support for `graphql-ws` is considered GA
