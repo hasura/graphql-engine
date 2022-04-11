@@ -59,6 +59,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types
 import Hasura.Server.Auth
 import Hasura.Server.Cors
+import Hasura.Server.Logging
 import Hasura.Server.Types
 import Hasura.Server.Utils
 import Hasura.Session
@@ -184,7 +185,8 @@ data RawServeOptions impl = RawServeOptions
     rsoExperimentalFeatures :: Maybe [ExperimentalFeature],
     rsoEventsFetchBatchSize :: Maybe NonNegativeInt,
     rsoGracefulShutdownTimeout :: Maybe Seconds,
-    rsoWebSocketConnectionInitTimeout :: Maybe Int
+    rsoWebSocketConnectionInitTimeout :: Maybe Int,
+    rsoEnableMetadataQueryLoggingEnv :: Bool
     -- see Note [Experimental features]
   }
 
@@ -257,7 +259,8 @@ data ServeOptions impl = ServeOptions
     soGracefulShutdownTimeout :: Seconds,
     soWebsocketConnectionInitTimeout :: WSConnectionInitTimeout,
     soEventingMode :: EventingMode,
-    soReadOnlyMode :: ReadOnlyMode
+    soReadOnlyMode :: ReadOnlyMode,
+    soEnableMetadataQueryLogging :: MetadataQueryLoggingMode
   }
 
 data DowngradeOptions = DowngradeOptions

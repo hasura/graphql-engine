@@ -70,7 +70,7 @@ class TestLogging():
                 'args': {
                         "table": {
                             "name": "hdb_function",
-                            "schema": "hdb_catalog"
+                            "schema": "hdb_catalog" 
                         },
                         "columns": ["function_name", "function_schema", "is_system_defined"],
                         "where": { "function_schema": "public" }
@@ -204,7 +204,9 @@ class TestLogging():
         assert 'error' in http_logs[0]['detail']['operation']
         assert http_logs[0]['detail']['operation']['error']['code'] == 'access-denied'
         assert http_logs[0]['detail']['operation'].get('query') is None
-        assert http_logs[0]['detail']['operation']['raw_query'] is not None
+        # By default, 'raw_query' field is ignored for metadata queries. To allow
+        # logging this field use the flag HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING
+        assert http_logs[0]['detail']['operation'].get('raw_query') is None
 
 
 class TestWebsocketLogging():
