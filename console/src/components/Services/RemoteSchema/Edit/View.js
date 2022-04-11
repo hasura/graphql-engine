@@ -1,20 +1,19 @@
 import React from 'react';
-import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
-import tabInfo from './tabInfo';
 import { push } from 'react-router-redux';
-import {
-  fetchRemoteSchema,
-  RESET,
-  getHeaderEvents,
-} from '../Add/addRemoteSchemaReducer';
-import { VIEW_REMOTE_SCHEMA } from '../Actions';
-import ReloadRemoteSchema from '../../Settings/MetadataOptions/ReloadRemoteSchema';
-import { appPrefix } from '../constants';
 import globals from '../../../../Globals';
-import styles from '../RemoteSchema.scss';
+import { getRemoteSchemasSelector } from '../../../../metadata/selector';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import WarningSymbol from '../../../Common/WarningSymbol/WarningSymbol';
-import { getRemoteSchemasSelector } from '../../../../metadata/selector';
+import ReloadRemoteSchema from '../../Settings/MetadataOptions/ReloadRemoteSchema';
+import { VIEW_REMOTE_SCHEMA } from '../Actions';
+import {
+  fetchRemoteSchema,
+  getHeaderEvents,
+  RESET,
+} from '../Add/addRemoteSchemaReducer';
+import { Tabs } from '../Common/Tabs';
+import { appPrefix } from '../constants';
+import styles from '../RemoteSchema.scss';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -131,13 +130,6 @@ class ViewStitchedSchema extends React.Component {
       });
     }
 
-    let tabInfoCopy = tabInfo;
-
-    if (readOnlyMode) {
-      const { modify, ...rest } = tabInfoCopy;
-      tabInfoCopy = rest;
-    }
-
     const inconsistencyDetails = inconsistentObjects.find(
       inconObj =>
         inconObj.type === 'remote_schema' &&
@@ -148,11 +140,10 @@ class ViewStitchedSchema extends React.Component {
       <div
         className={styles.view_stitch_schema_wrapper + ' ' + styles.addWrapper}
       >
-        <CommonTabLayout
+        <Tabs
           appPrefix={appPrefix}
           currentTab="details"
           heading={remoteSchemaName}
-          tabsInfo={tabInfoCopy}
           breadCrumbs={breadCrumbs}
           baseUrl={`${appPrefix}/manage/${remoteSchemaName}`}
         />

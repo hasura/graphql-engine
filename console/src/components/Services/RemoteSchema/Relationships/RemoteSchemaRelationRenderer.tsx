@@ -1,18 +1,24 @@
-import React, { useState } from 'react';
+import {
+  availableFeatureFlagIds,
+  FeatureFlagFloatingButton,
+  useIsFeatureFlagEnabled,
+} from '@/features/FeatureFlags';
 import { useGetAllRemoteSchemaRelationships } from '@/features/MetadataAPI';
 import { RemoteSchemaRelationshipTable } from '@/features/RelationshipsTable';
-import { Button } from '@/new-components/Button';
-import { RiAddCircleFill } from 'react-icons/ri';
 import {
-  RemoteSchemaToRemoteSchemaForm,
   RemoteRelOption,
   RemoteSchemaToDbForm,
+  RemoteSchemaToRemoteSchemaForm,
 } from '@/features/RemoteRelationships';
+import { Button } from '@/new-components/Button';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
+import React, { useState } from 'react';
+import { RiAddCircleFill } from 'react-icons/ri';
 
 type RemoteSchemaRelationRendererProp = {
   remoteSchemaName: string;
 };
+
 export const RemoteSchemaRelationRenderer = ({
   remoteSchemaName,
 }: RemoteSchemaRelationRendererProp) => {
@@ -23,16 +29,36 @@ export const RemoteSchemaRelationRenderer = ({
   } = useGetAllRemoteSchemaRelationships();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formState, setFormState] = useState<RemoteRelOption>('remoteSchema');
+  const {
+    enabled: ffEnabled,
+    isLoading: ffIsLoading,
+  } = useIsFeatureFlagEnabled(
+    availableFeatureFlagIds.remoteSchemaRelationshipsId
+  );
+
+  if (isLoading || ffIsLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (ffEnabled === undefined)
+    return <div>Remote schema relationships are not yet enabled.</div>;
+
+  if (ffEnabled === false)
+    return (
+      <div>
+        Remote schema relationships are not enabled. To enable them, visit the
+        Feature Flag section in Settings.
+      </div>
+    );
 
   if (isError) {
     return <div>Error in fetching remote schema relationships.</div>;
   }
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <>
+      <FeatureFlagFloatingButton />
+
       {remoteSchemaRels?.length ? (
         <RemoteSchemaRelationshipTable
           remoteSchemaRels={remoteSchemaRels}

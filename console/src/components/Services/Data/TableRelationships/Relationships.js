@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
+
 import {
   FeatureFlagToast,
   useFeatureFlags,
-  avaiableFeatureFlagIds,
+  availableFeatureFlagIds,
 } from '@/features/FeatureFlags';
 import { DatabaseRelationshipsTab } from '@/features/DatabaseRelationshipsTab';
 import TableHeader from '../TableCommon/TableHeader';
@@ -354,7 +355,7 @@ const Relationships = ({
     featureFlagsData?.length > 0 &&
     featureFlagsData.find(
       featureFlag =>
-        featureFlag.id === avaiableFeatureFlagIds.relationshipTabTablesId
+        featureFlag.id === availableFeatureFlagIds.relationshipTabTablesId
     )?.state?.enabled;
 
   if (newRelationshipsTabIsEnabled) {
@@ -551,7 +552,7 @@ const Relationships = ({
         </div>
       </RightContainer>
       <FeatureFlagToast
-        flagId={avaiableFeatureFlagIds.relationshipTabTablesId}
+        flagId={availableFeatureFlagIds.relationshipTabTablesId}
       />
     </>
   );

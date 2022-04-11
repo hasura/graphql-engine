@@ -12,8 +12,6 @@ import {
 import { VIEW_REMOTE_SCHEMA } from '../Actions';
 import { push } from 'react-router-redux';
 import Helmet from 'react-helmet';
-import tabInfo from './tabInfo';
-import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import Button from '../../../Common/Button/Button';
 
 import { appPrefix, pageTitle } from '../constants';
@@ -24,9 +22,9 @@ import globals from '../../../../Globals';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import styles from '../RemoteSchema.scss';
 import { getRemoteSchemasSelector } from '../../../../metadata/selector';
+import { Tabs } from '../Common/Tabs';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
-
 class Edit extends React.Component {
   constructor() {
     super();
@@ -206,11 +204,10 @@ class Edit extends React.Component {
         <Helmet
           title={`Edit ${pageTitle} - ${remoteSchemaName} - ${pageTitle}s | Hasura`}
         />
-        <CommonTabLayout
+        <Tabs
           appPrefix={appPrefix}
           currentTab="modify"
           heading={remoteSchemaName}
-          tabsInfo={tabInfo}
           breadCrumbs={breadCrumbs}
           baseUrl={`${appPrefix}/manage/${remoteSchemaName}`}
           showLoader={isFetching}

@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import {
   FeatureFlagToast,
   useFeatureFlags,
-  avaiableFeatureFlagIds,
+  availableFeatureFlagIds,
 } from '@/features/FeatureFlags';
 import { DatabaseRelationshipsTab } from '@/features/DatabaseRelationshipsTab';
 import TableHeader from '../TableCommon/TableHeader';
@@ -62,7 +62,7 @@ const RelationshipsView = ({
     featureFlagsData?.length > 0 &&
     featureFlagsData.find(
       featureFlag =>
-        featureFlag.id === avaiableFeatureFlagIds.relationshipTabTablesId
+        featureFlag.id === availableFeatureFlagIds.relationshipTabTablesId
     )?.state?.enabled;
 
   if (newRelationshipsTabIsEnabled) {
@@ -210,7 +210,7 @@ const RelationshipsView = ({
         </div>
       </RightContainer>
       <FeatureFlagToast
-        flagId={avaiableFeatureFlagIds.relationshipTabTablesId}
+        flagId={availableFeatureFlagIds.relationshipTabTablesId}
       />
     </>
   );
