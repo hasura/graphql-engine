@@ -1,7 +1,7 @@
-This note is in [Hasura.Backends.Postgres.DDL.RunSQL](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/DDL/RunSQL.hs#L106).
+This note is in [Hasura.Backends.Postgres.DDL.RunSQL](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/DDL/RunSQL.hs#L107).
 It is referenced at:
-  - line 85 of [Hasura.Backends.Postgres.DDL.RunSQL](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/DDL/RunSQL.hs#L85)
-  - line 179 of [Hasura.Backends.Postgres.DDL.RunSQL](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/DDL/RunSQL.hs#L179)
+  - line 86 of [Hasura.Backends.Postgres.DDL.RunSQL](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/DDL/RunSQL.hs#L86)
+  - line 180 of [Hasura.Backends.Postgres.DDL.RunSQL](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/DDL/RunSQL.hs#L180)
 
 # Checking metadata consistency in run_sql
 
