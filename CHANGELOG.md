@@ -2,8 +2,14 @@
 
 ## Next release
 
+### Breaking changes
+
+- The `query` and `raw-query` field from http-logs for metadata requests are removed by default. Use
+  `HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING` to renable those fields.
+
 ### Bug fixes and improvements
 
+- server: remove 'query' and 'raw-query' field from logs for metadata queries by default. Use `HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING` to renable those fields. 
 - server: `clear_metadata` correctly archives the event triggers and the drop source API drops the indirect dependencies created by remote relationships when the dependent source is dropped.
 - server: fix inserting values into columns with case sensitive enum types for Postgres/Citus backends (fix #4014)
 - server: remote relationships can be defined _on_ and _to_ SQLServer tables

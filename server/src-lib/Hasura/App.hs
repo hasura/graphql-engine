@@ -708,6 +708,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
           soExperimentalFeatures
           _scEnabledLogTypes
           soWebsocketConnectionInitTimeout
+          soEnableMetadataQueryLogging
 
   let serverConfigCtx =
         ServerConfigCtx
@@ -1003,15 +1004,15 @@ instance (MonadIO m) => HttpLog (PGMetadataStorageAppT m) where
 
   buildExtraHttpLogMetadata _ = ()
 
-  logHttpError logger enabledLogTypes userInfoM reqId waiReq req qErr headers =
+  logHttpError logger loggingSettings userInfoM reqId waiReq req qErr headers =
     unLogger logger $
       mkHttpLog $
-        mkHttpErrorLogContext userInfoM enabledLogTypes reqId waiReq req qErr Nothing Nothing headers
+        mkHttpErrorLogContext userInfoM loggingSettings reqId waiReq req qErr Nothing Nothing headers
 
-  logHttpSuccess logger enabledLogTypes userInfoM reqId waiReq reqBody _response compressedResponse qTime cType headers (CommonHttpLogMetadata rb batchQueryOpLogs, ()) =
+  logHttpSuccess logger loggingSettings userInfoM reqId waiReq reqBody _response compressedResponse qTime cType headers (CommonHttpLogMetadata rb batchQueryOpLogs, ()) =
     unLogger logger $
       mkHttpLog $
-        mkHttpAccessLogContext userInfoM enabledLogTypes reqId waiReq reqBody compressedResponse qTime cType headers rb batchQueryOpLogs
+        mkHttpAccessLogContext userInfoM loggingSettings reqId waiReq reqBody compressedResponse qTime cType headers rb batchQueryOpLogs
 
 instance (Monad m) => MonadExecuteQuery (PGMetadataStorageAppT m) where
   cacheLookup _ _ _ _ = pure ([], Nothing)
