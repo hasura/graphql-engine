@@ -20,7 +20,6 @@ import Hasura.RQL.Types.Common (Comment (..))
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Function
 import Hasura.SQL.Backend
-import Hasura.SQL.Types
 import Hasura.Server.Utils
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -61,7 +60,7 @@ showError qf = \case
   CFVEInvalidSessionArgument (ISANotJSON functionArg) ->
     showFunctionSessionArgument functionArg <> " is not of type JSON"
   CFVENotBaseReturnType scalarType ->
-    "the function " <> qf <<> " returning type " <> toSQLTxt scalarType
+    "the function " <> qf <<> " returning type " <> pgScalarTypeToText scalarType
       <> " is not a BASE type"
   CFVEReturnTableNotFound table ->
     "the function " <> qf <<> " returning set of table " <> table

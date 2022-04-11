@@ -1103,6 +1103,7 @@ test-suite tests-hspec
     Test.WhereSpec
     Test.RunSQLSpec
     Test.InsertCheckPermissionSpec
+    Test.InsertEnumColumnSpec
 
 test-suite tests-gdw-api
   import: common-all, common-exe

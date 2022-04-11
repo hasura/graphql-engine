@@ -37,6 +37,7 @@ module Hasura.Backends.Postgres.SQL.Types
     qualifiedObjectToName,
     PGScalarType (..),
     textToPGScalarType,
+    pgScalarTypeToText,
     PGTypeKind (..),
     QualifiedPGType (..),
     isBaseType,
@@ -317,6 +318,7 @@ data PGScalarType
   | PGLtxtquery
   | PGUnknown !Text
   | PGCompositeScalar !Text
+  | PGEnumScalar !Text
   deriving (Show, Eq, Ord, Generic, Data)
 
 instance NFData PGScalarType
@@ -325,46 +327,55 @@ instance Hashable PGScalarType
 
 instance Cacheable PGScalarType
 
+pgScalarTypeToText :: PGScalarType -> Text
+pgScalarTypeToText = \case
+  PGSmallInt -> "smallint"
+  PGInteger -> "integer"
+  PGBigInt -> "bigint"
+  PGSerial -> "serial"
+  PGBigSerial -> "bigserial"
+  PGFloat -> "real"
+  PGDouble -> "float8"
+  PGNumeric -> "numeric"
+  PGMoney -> "money"
+  PGBoolean -> "boolean"
+  PGChar -> "bpchar"
+  PGVarchar -> "varchar"
+  PGText -> "text"
+  PGCitext -> "citext"
+  PGDate -> "date"
+  PGTimeStamp -> "timestamp"
+  PGTimeStampTZ -> "timestamptz"
+  PGTimeTZ -> "timetz"
+  PGJSON -> "json"
+  PGJSONB -> "jsonb"
+  PGGeometry -> "geometry"
+  PGGeography -> "geography"
+  PGRaster -> "raster"
+  PGUUID -> "uuid"
+  PGLtree -> "ltree"
+  PGLquery -> "lquery"
+  PGLtxtquery -> "ltxtquery"
+  PGUnknown t -> t
+  PGCompositeScalar t -> t
+  PGEnumScalar t -> t
+
 instance ToSQL PGScalarType where
-  toSQL = \case
-    PGSmallInt -> "smallint"
-    PGInteger -> "integer"
-    PGBigInt -> "bigint"
-    PGSerial -> "serial"
-    PGBigSerial -> "bigserial"
-    PGFloat -> "real"
-    PGDouble -> "float8"
-    PGNumeric -> "numeric"
-    PGMoney -> "money"
-    PGBoolean -> "boolean"
-    PGChar -> "bpchar"
-    PGVarchar -> "varchar"
-    PGText -> "text"
-    PGCitext -> "citext"
-    PGDate -> "date"
-    PGTimeStamp -> "timestamp"
-    PGTimeStampTZ -> "timestamptz"
-    PGTimeTZ -> "timetz"
-    PGJSON -> "json"
-    PGJSONB -> "jsonb"
-    PGGeometry -> "geometry"
-    PGGeography -> "geography"
-    PGRaster -> "raster"
-    PGUUID -> "uuid"
-    PGLtree -> "ltree"
-    PGLquery -> "lquery"
-    PGLtxtquery -> "ltxtquery"
-    PGUnknown t -> TB.text t
-    PGCompositeScalar t -> TB.text t
+  toSQL =
+    TB.text . \case
+      -- Format enum type names as identifiers to preserve case sensitivity
+      -- https://github.com/hasura/graphql-engine/issues/4014
+      PGEnumScalar t -> pgFmtIdentifier t
+      scalarType -> pgScalarTypeToText scalarType
 
 instance ToJSON PGScalarType where
-  toJSON = String . toSQLTxt
+  toJSON = String . pgScalarTypeToText
 
 instance ToJSONKey PGScalarType where
-  toJSONKey = toJSONKeyText toSQLTxt
+  toJSONKey = toJSONKeyText pgScalarTypeToText
 
 instance ToTxt PGScalarType where
-  toTxt = toSQLTxt
+  toTxt = pgScalarTypeToText
 
 textToPGScalarType :: Text -> PGScalarType
 textToPGScalarType t = fromMaybe (PGUnknown t) (lookup t pgScalarTranslations)
@@ -418,7 +429,15 @@ pgScalarTranslations =
 
 instance FromJSON PGScalarType where
   parseJSON (String t) = return $ textToPGScalarType t
-  parseJSON _ = fail "Expecting a string for PGScalarType"
+  parseJSON (Object o) = do
+    typeType <- o .: "type"
+    typeName <- o .: "name"
+    pure $
+      case typeType of
+        PGKindEnum -> PGEnumScalar typeName
+        PGKindComposite -> PGCompositeScalar typeName
+        _ -> textToPGScalarType typeName
+  parseJSON _ = fail "Expecting a string or object for PGScalarType"
 
 isNumType :: PGScalarType -> Bool
 isNumType PGInteger = True
@@ -528,7 +547,7 @@ isBaseType (QualifiedPGType _ n ty) =
 
 typeToTable :: QualifiedPGType -> QualifiedTable
 typeToTable (QualifiedPGType sch n _) =
-  QualifiedObject sch $ TableName $ toSQLTxt n
+  QualifiedObject sch $ TableName $ pgScalarTypeToText n
 
 mkFunctionArgScalarType :: QualifiedPGType -> PGScalarType
 mkFunctionArgScalarType (QualifiedPGType _schema name type') =
@@ -582,7 +601,7 @@ mkScalarTypeName (PGCompositeScalar compositeScalarType) =
           <> "valid GraphQL identifier"
       )
 mkScalarTypeName scalarType =
-  G.mkName (toSQLTxt scalarType)
+  G.mkName (pgScalarTypeToText scalarType)
     `onNothing` throw400
       ValidationFailed
       ( "cannot use SQL type " <> scalarType <<> " in the GraphQL schema because its name is not a "

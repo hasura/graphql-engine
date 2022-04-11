@@ -210,6 +210,8 @@ parsePGValue ty val = case (ty, val) of
         fail $ "A string is expected for type: " ++ T.unpack tyName
       PGCompositeScalar tyName ->
         fail $ "A string is expected for type: " ++ T.unpack tyName
+      PGEnumScalar tyName ->
+        fail $ "A string is expected for type: " ++ T.unpack tyName
 
 txtEncodedVal :: PGScalarValue -> TxtEncodedVal
 txtEncodedVal = \case
@@ -284,8 +286,9 @@ pgTypeOid = \case
   PGLtree -> PTI.text
   PGLquery -> PTI.text
   PGLtxtquery -> PTI.text
-  (PGUnknown _) -> PTI.auto
+  PGUnknown _ -> PTI.auto
   PGCompositeScalar _ -> PTI.auto
+  PGEnumScalar _ -> PTI.auto
 
 binEncoder :: PGScalarValue -> Q.PrepArg
 binEncoder = \case
