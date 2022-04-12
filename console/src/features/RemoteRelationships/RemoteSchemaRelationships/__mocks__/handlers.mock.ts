@@ -20,6 +20,13 @@ export const handlers = (url = baseUrl) => [
 
     if (
       body.type === 'introspect_remote_schema' &&
+      body?.args?.name === 'with_default_values'
+    ) {
+      return res(ctx.json(schema));
+    }
+
+    if (
+      body.type === 'introspect_remote_schema' &&
       body?.args?.name === 'remoteSchema2'
     ) {
       return res(ctx.json(countries));
