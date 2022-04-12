@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaCircle } from 'react-icons/fa';
+import { GraphQLType } from 'graphql';
 
 import { useDebouncedEffect } from '@/hooks/useDebounceEffect';
 import {
@@ -9,7 +10,10 @@ import {
   RelationshipFields,
 } from '../../../types';
 import { defaultArgValue } from '../utils';
+import StaticArgValue from './StaticArgValue';
 
+const fieldStyle =
+  'block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400';
 export interface ArgValueFormProps {
   argKey: string;
   relationshipFields: RelationshipFields[];
@@ -18,10 +22,8 @@ export interface ArgValueFormProps {
   >;
   argValue: ArgValue;
   fields: HasuraRsFields;
+  argType: GraphQLType;
 }
-
-const fieldStyle =
-  'block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400';
 
 const argValueTypeOptions = [
   { key: 'field', content: 'Source Field' },
@@ -34,6 +36,7 @@ export const ArgValueForm = ({
   setRelationshipFields,
   argValue,
   fields,
+  argType,
 }: ArgValueFormProps) => {
   const [localArgValue, setLocalArgValue] = useState(argValue);
 
@@ -97,7 +100,7 @@ export const ArgValueForm = ({
     );
   };
 
-  const onValueChangeHandler = (value: string) => {
+  const onValueChangeHandler = (value: string | number | boolean) => {
     setLocalArgValue({ ...localArgValue, value });
   };
 
@@ -132,7 +135,7 @@ export const ArgValueForm = ({
               </p>
               <select
                 className={fieldStyle}
-                value={localArgValue.value}
+                value={localArgValue.value as string | number}
                 onChange={changeInputColumnValue}
                 data-test="selet-source-field"
               >
@@ -149,14 +152,11 @@ export const ArgValueForm = ({
           ) : (
             <>
               <p className="mb-xs text-muted font-semibold">Static Value</p>
-              <input
-                type="text"
-                name="argValue"
-                id="argValue"
-                className={fieldStyle}
-                value={localArgValue.value}
-                onChange={e => onValueChangeHandler(e.target.value)}
+              <StaticArgValue
                 data-test="select-static-value"
+                argType={argType}
+                localArgValue={localArgValue}
+                onValueChangeHandler={onValueChangeHandler}
               />
             </>
           )}

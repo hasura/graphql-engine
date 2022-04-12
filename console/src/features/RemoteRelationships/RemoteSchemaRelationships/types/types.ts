@@ -8,7 +8,7 @@ export type ArgValueKind = 'field' | 'static';
 
 export type ArgValue = {
   kind: ArgValueKind;
-  value: string;
+  value: string | number | boolean;
   type: string;
 };
 

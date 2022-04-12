@@ -1,4 +1,5 @@
 import React from 'react';
+import { GraphQLType } from 'graphql';
 import { ArgValueForm } from './ArgValueForm';
 import { RelationshipFields, ArgValue, HasuraRsFields } from '../../../types';
 
@@ -12,6 +13,7 @@ type ArgFieldTitleProps = {
   showForm: boolean;
   argValue: ArgValue;
   fields: HasuraRsFields;
+  argType: GraphQLType;
 };
 
 const titleStyles =
@@ -25,6 +27,7 @@ export const ArgFieldTitle = ({
   showForm,
   argValue,
   fields,
+  argType,
 }: ArgFieldTitleProps) => {
   return showForm ? (
     <>
@@ -35,6 +38,7 @@ export const ArgFieldTitle = ({
         setRelationshipFields={setRelationshipFields}
         argValue={argValue}
         fields={fields}
+        argType={argType}
       />
     </>
   ) : (
