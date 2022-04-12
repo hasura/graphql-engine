@@ -14,6 +14,7 @@ export {
   useListRemoteSchemas,
   useRemoteSchema,
   useGetAllRemoteSchemaRelationships,
+  useGetRemoteSchemaRelationship,
 } from './hooks/useMetadataRemoteSchemas';
 
 // we probably need to remove all usages that directly use the useMetadata and use only the exported functions

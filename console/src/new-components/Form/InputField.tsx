@@ -69,7 +69,8 @@ export const InputField = ({
             }
           )}
           placeholder={placeholder}
-          {...register(name, { disabled })}
+          {...register(name)}
+          disabled={disabled}
         />
         {iconPosition === 'end' && icon ? (
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">

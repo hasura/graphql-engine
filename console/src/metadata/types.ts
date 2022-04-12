@@ -588,12 +588,13 @@ export interface rsToDbRelDef {
   relationships: {
     definition: {
       to_source: {
-        table: string;
+        table: QualifiedTable;
         source: string;
-        relationship_type: string;
+        relationship_type: 'array' | 'object';
         field_mapping: Record<string, unknown>;
       };
     };
+    name: string;
   }[];
   type_name: string;
 }
@@ -607,6 +608,7 @@ export interface rsToRsRelDef {
         remote_schema: string;
       };
     };
+    name: string;
   }[];
   type_name: string;
 }
