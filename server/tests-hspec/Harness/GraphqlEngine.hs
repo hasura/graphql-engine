@@ -16,6 +16,7 @@ module Harness.GraphqlEngine
     postGraphqlYaml,
     postGraphqlYamlWithHeaders,
     postGraphql,
+    postGraphqlWithPair,
     postGraphqlWithHeaders,
     clearMetadata,
     postV2Query,
@@ -38,6 +39,7 @@ where
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Monad.Trans.Managed (ManagedT (..), lowerManagedT)
 import Data.Aeson (Value, object, (.=))
+import Data.Aeson.Types (Pair)
 import Data.Environment qualified as Env
 import Data.Text qualified as T
 import Data.Time (getCurrentTime)
@@ -133,6 +135,12 @@ postGraphqlYamlWithHeaders state headers =
 postGraphql :: HasCallStack => State -> Value -> IO Value
 postGraphql state value =
   withFrozenCallStack $ postGraphqlYaml state (object ["query" .= value])
+
+-- | Same as postGraphql but accepts a list of 'Pair' to pass
+-- additional parameters to the endpoint.
+postGraphqlWithPair :: HasCallStack => State -> Value -> [Pair] -> IO Value
+postGraphqlWithPair state value pair =
+  withFrozenCallStack $ postGraphqlYaml state (object $ ["query" .= value] <> pair)
 
 -- | Same as 'postGraphqlYamlWithHeaders', but adds the @{query:..}@ wrapper.
 --

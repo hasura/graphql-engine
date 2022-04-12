@@ -9,6 +9,10 @@ import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
 import Harness.State (State)
 import Harness.Test.Context qualified as Context
+import Harness.Test.Schema
+  ( BackendScalarType (..),
+    defaultBackendScalarType,
+  )
 import Harness.Test.Schema qualified as Schema
 import Test.Hspec (SpecWith, it)
 import Prelude
@@ -40,7 +44,13 @@ author :: Schema.Table
 author =
   Schema.Table
     "author"
-    [ Schema.column "uuid" Schema.TVarchar50,
+    [ Schema.column
+        "uuid"
+        ( Schema.TCustomType
+            defaultBackendScalarType
+              { bstMssql = Just "VARCHAR(50)"
+              }
+        ),
       Schema.column "name" Schema.TStr
     ]
     ["uuid"]
