@@ -27,8 +27,10 @@ const App = ({
   telemetry,
 }) => {
   React.useEffect(() => {
-    const className = document.getElementById('content').className;
-    document.getElementById('content').className = className + ' show';
+    const content = document.getElementById('content')
+    if (content.className != null && content.className.indexOf('visible') === -1) {
+      content.classList.add('visible')
+    }
     document.getElementById('loading').style.display = 'none';
   }, []);
   const telemetryShown = React.useRef(false);
@@ -52,7 +54,7 @@ const App = ({
   if (connectionFailed) {
     connectionFailMsg = (
       <div
-        className={`${styles.alertDanger} ${styles.remove_margin_bottom} alert alert-danger `}
+        className={`${styles.alertDanger} ${styles.remove_margin_bottom} alert alert-danger`}
       >
         <strong>
           Hasura console is not able to reach your Hasura GraphQL engine
@@ -67,19 +69,17 @@ const App = ({
     <GlobalContext.Provider value={globals}>
       <ThemeProvider theme={theme}>
         <ErrorBoundary metadata={metadata} dispatch={dispatch}>
-          <div>
-            {connectionFailMsg}
-            {ongoingRequest && (
-              <ProgressBar
-                percent={percent}
-                autoIncrement={true} // eslint-disable-line react/jsx-boolean-value
-                intervalTime={intervalTime}
-                spinner={false}
-              />
-            )}
-            <div>{children}</div>
-            <Notifications notifications={notifications} />
-          </div>
+          {connectionFailMsg}
+          {ongoingRequest && (
+            <ProgressBar
+              percent={percent}
+              autoIncrement={true} // eslint-disable-line react/jsx-boolean-value
+              intervalTime={intervalTime}
+              spinner={false}
+            />
+          )}
+          {children}
+          <Notifications notifications={notifications} />
         </ErrorBoundary>
       </ThemeProvider>
     </GlobalContext.Provider>

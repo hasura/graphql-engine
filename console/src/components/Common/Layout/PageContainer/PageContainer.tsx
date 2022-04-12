@@ -1,26 +1,32 @@
 import React from 'react';
 import Helmet from 'react-helmet';
-import styles from '../../Common.scss';
+import styles from '../../Common.scss'
 
 interface PageContainerProps extends React.ComponentProps<'div'> {
-  helmet: string;
+  title: string;
   leftContainer: React.ReactNode;
 }
 
 const PageContainer: React.FC<PageContainerProps> = ({
-  helmet,
+  title,
   leftContainer,
   children,
 }) => {
   return (
     <>
-      <Helmet title={helmet} />
+      <Helmet title={title} />
       <div
-        className={`${styles.wd20} ${styles.align_left} ${styles.height100}`}
+        id="left"
+        className={`${styles.pageSidebar} bg-white text-gray-800 border-r`}
       >
         {leftContainer}
       </div>
-      <div className={styles.wd80}>{children}</div>
+      <div
+        id="right"
+        className="flex pl-[250px]"
+      >
+        {children}
+      </div>
     </>
   );
 };

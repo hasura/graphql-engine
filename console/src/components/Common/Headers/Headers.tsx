@@ -57,7 +57,7 @@ const Headers: React.FC<HeadersListProps> = ({
 
         return (
           <div
-            className={`${styles.display_flex} ${styles.add_mar_bottom_mid}`}
+            className={`flex ${styles.add_mar_bottom_mid}`}
             key={i.toString()}
           >
             <input

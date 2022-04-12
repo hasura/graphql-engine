@@ -622,15 +622,11 @@
 }
 
 .main {
-  padding: 0;
-  // width: 100vw;
+  padding: 54px 0 0 0;
   min-width: $minContainerWidth;
   background-color: #f8fafb;
-  clear: both;
   font-family: 'Gudea';
-  // color: #767E93;
   color: #4d4d4d;
-  padding-top: 54px;
 }
 
 .mainCollapsed {
@@ -781,7 +777,6 @@
     font-size: 16px;
     padding-top: 10px;
     color: #272b36;
-    height: calc(100vh - 260px);
     overflow-y: auto;
 
     ol li {
@@ -1345,7 +1340,6 @@
   text-transform: none;
   overflow: hidden;
   height: auto;
-  max-height: calc(100vh - 112px);
   &:hover {
     overflow-y: scroll;
   }

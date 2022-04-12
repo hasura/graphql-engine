@@ -236,66 +236,41 @@ const DataSubSidebar = props => {
         setTreeViewItems(newItems);
       }
     );
-  }, [sources.length, tables, functions, enums, schemaList, currentTable]);
+  }, [sources.length, tables, functions, enums, schemaList, currentTable, allSourcesSchemas, sources, dispatch, getItems, isFetching, preLoadState]);
 
   const databasesCount = treeViewItems?.length || 0;
 
   return (
-    <div className={`${styles.subSidebarList} ${styles.padd_top_small}`}>
-      <div className={styles.sidebarHeadingWrapper}>
-        <div
-          className={`col-xs-8 ${styles.sidebarHeading} ${styles.padd_left_remove}`}
-        >
-          <div
-            className={`${styles.padd_top_small} ${styles.inline_display} ${styles.display_flex} ${styles.align_items_center}`}
-          >
-            <div>Databases ({databasesCount})</div>
-            {schemaLoading ||
-            databaseLoading ||
-            sidebarLoadingState ||
-            isFetching ? (
-              <div className={styles.inline_display}>
-                <Spinner className={styles.spinner} />
-              </div>
+    <>
+      <div className='flex justify-between mb-5'>
+        <div className="flex-grow whitespace-nowrap">
+          <span>Databases ({databasesCount})</span>
+          {schemaLoading || databaseLoading || sidebarLoadingState || isFetching
+            ? (
+              <Spinner className={styles.spinner} />
             ) : (
               <i
                 className={`fa fa-check-circle ${styles.padd_left_sm} ${styles.color_green}`}
                 aria-hidden="true"
               />
             )}
-          </div>
         </div>
+
         {migrationMode && (
-          <div
-            className={`col-xs-4 text-center ${styles.padd_left_remove} ${styles.sidebarCreateTable}`}
-          >
-            <Link className={styles.padd_remove_full} to={manageDatabasesRoute}>
-              <Button
-                size="xs"
-                color="white"
-                data-test="sidebar-manage-database"
-              >
-                Manage
-              </Button>
-            </Link>
-          </div>
+          <Link to={manageDatabasesRoute}>
+            <Button
+              size="xs"
+              color="white"
+              data-test="sidebar-manage-database"
+            >
+              Manage
+            </Button>
+          </Link>
         )}
       </div>
-      <ul className={styles.subSidebarListUL} data-test="table-links">
-        <div
-          style={
-            // // block sidebar interaction during data fetch
-            // schemaLoading ||
-            // databaseLoading ||
-            // sidebarLoadingState ||
-            // isFetching ?
-            //   {
-            //     pointerEvents: 'none',
-            //     cursor: 'progress',
-            //   } :
-            { pointerEvents: 'auto' }
-          }
-        >
+
+      <div className={styles.subSidebarListUL} data-test="table-links">
+        <div style={{ pointerEvents: 'auto' }}>
           <TreeView
             items={treeViewItems}
             onDatabaseChange={onDatabaseChange}
@@ -308,8 +283,8 @@ const DataSubSidebar = props => {
             preLoadState={preLoadState}
           />
         </div>
-      </ul>
-    </div>
+      </div>
+    </>
   );
 };
 

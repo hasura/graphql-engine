@@ -129,7 +129,7 @@ const Container: React.FC<Props> = props => {
   const leftContainer = <LeftContainer>{sidebarContent}</LeftContainer>;
 
   return (
-    <PageContainer helmet={helmetTitle} leftContainer={leftContainer}>
+    <PageContainer title={helmetTitle} leftContainer={leftContainer}>
       {children}
     </PageContainer>
   );

@@ -36,7 +36,7 @@ class RemoteSchemaPageContainer extends React.Component {
     const leftContainer = <LeftContainer>{sidebarContent}</LeftContainer>;
 
     return (
-      <PageContainer helmet={helmet} leftContainer={leftContainer}>
+      <PageContainer title={helmet} leftContainer={leftContainer}>
         {children}
       </PageContainer>
     );

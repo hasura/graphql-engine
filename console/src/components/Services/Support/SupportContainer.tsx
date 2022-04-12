@@ -22,7 +22,7 @@ const LeftBar = () => (
 
 export const SupportContainer: React.FC = ({ children }) => {
   return (
-    <PageContainer helmet={helmetTitle} leftContainer={<LeftBar />}>
+    <PageContainer title={helmetTitle} leftContainer={<LeftBar />}>
       <RightContainer>{children}</RightContainer>
     </PageContainer>
   );

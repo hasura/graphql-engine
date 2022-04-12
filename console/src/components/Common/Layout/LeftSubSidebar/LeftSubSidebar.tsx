@@ -31,16 +31,12 @@ const LeftSubSidebar: React.FC<Props> = props => {
 
     if (showAddBtn) {
       addButton = (
-        <div
-          className={`col-xs-4 text-center ${styles.padd_left_remove} ${styles.sidebarCreateTable}`}
-        >
-          <Link className={styles.padd_remove_full} to={addLink}>
-            <Button size="xs" color="white" data-test={addTestString}>
-              {addLabel}
-            </Button>
-          </Link>
-        </div>
-      );
+        <Link to={addLink}>
+          <Button size="xs" color="white" data-test={addTestString}>
+            {addLabel}
+          </Button>
+        </Link>
+      )
     }
 
     return addButton;
@@ -58,19 +54,15 @@ const LeftSubSidebar: React.FC<Props> = props => {
           </div>
         )}
       </div>
-      <div>
-        <div className={styles.sidebarHeadingWrapper}>
-          <div
-            className={`col-xs-8 ${styles.sidebarHeading} ${styles.padd_left_remove}`}
-          >
-            {heading}
-          </div>
-          {getAddButton()}
+      <div className='flex justify-between'>
+        <div className={styles.sidebarHeading}>
+          {heading}
         </div>
-        <ul className={styles.subSidebarListUL} data-test={childListTestString}>
-          {children}
-        </ul>
+        {getAddButton()}
       </div>
+      <ul className={styles.subSidebarListUL} data-test={childListTestString}>
+        {children}
+      </ul>
     </div>
   );
 };

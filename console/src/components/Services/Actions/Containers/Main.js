@@ -18,7 +18,6 @@ class Container extends React.Component {
     const sidebarContent = (
       <ul>
         <li
-          role="presentation"
           className={
             currentLocation.includes('actions/manage') ? styles.active : ''
           }
@@ -29,7 +28,6 @@ class Container extends React.Component {
           <LeftSidebar appPrefix={appPrefix} {...this.props} />
         </li>
         <li
-          role="presentation"
           className={
             currentLocation.includes('actions/types') ? styles.active : ''
           }
@@ -46,7 +44,7 @@ class Container extends React.Component {
     const leftContainer = <LeftContainer>{sidebarContent}</LeftContainer>;
 
     return (
-      <PageContainer helmet={helmet} leftContainer={leftContainer}>
+      <PageContainer title={helmet} leftContainer={leftContainer}>
         {children}
       </PageContainer>
     );

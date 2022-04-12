@@ -3,6 +3,9 @@
 @import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,900');
 
 body {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
   background-color: #f8fafb;
 }
 
@@ -80,63 +83,60 @@ table tbody tr th {
 }
 
 .pageSidebar {
-  height: calc(100vh - 54px);
-  overflow: auto;
-  // background: #444;
-  // color: $navbar-inverse-color;
-  color: #333;
-  border: 1px solid #e5e5e5;
-  border-bottom: 0px;
-  // background-color: #F8F8F8;
-  background-color: #fff;
-
-  /*
-  a,a:visited {
-    color: $navbar-inverse-link-color;
-  }
-
-  a:hover {
-    color: $navbar-inverse-link-hover-color;
-  }
-  */
+  position: fixed;
+  height: calc(100vh - 52px); /* the logo */
+  width: 20%;
+  min-width: 240px;
 
   hr {
     margin: 0;
   }
 
-  ul {
+  > ul {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
     list-style-type: none;
-    -webkit-padding-start: 0px;
-    -moz-padding-start: 0px;
 
-    li {
-      transition: color 0.5s;
-      font-size: 16px;
-      border-bottom: 1px solid #e6e6e6;
+    > li {
+      display: flex;
+      flex-direction: column;
+
       padding: 0px 0px;
-      // border-left: 5px solid transparent;
+      border-bottom: 1px solid #e6e6e6;
+
+      transition: color 0.5s;
+
+      font-size: 1.2em;
 
       a,
       .dbSelect {
         color: #767e93;
-        background-color: #f0f0f0;
-        width: 100%;
         word-wrap: break-word;
-        padding: 15px 0 15px 20px;
         display: block;
       }
+    }
+
+    > li:first-child {
+      flex: 1 1 auto;
+      overflow: hidden;
+    }
+
+    .moduleLink {
+      background-color: #f0f0f0;
+      padding: 15px 0 15px 20px;
+      width: 100%;
     }
 
     .linkBorder {
       border-bottom: 1px solid #e6e6e6;
     }
 
-    li:last-child {
+    > li:last-child {
       border-bottom: 0px;
     }
 
     .active {
-      // border-left: 5px solid #FFC627;
       font-weight: bold;
       color: #333;
       text-decoration: none;
@@ -148,12 +148,6 @@ table tbody tr th {
         display: inline-block;
       }
     }
-  }
-}
-
-.sidebarCreateTable {
-  a {
-    background-color: transparent !important;
   }
 }
 
@@ -273,18 +267,16 @@ table tbody tr th {
   width: 16%;
 }
 
+
+.wd20 {
+  flex: 20%;
+}
 .wd80 {
-  width: 80%;
-  display: inline-block;
+  flex: 80%;
 }
 
 .wd63 {
   width: 62%;
-  display: inline-block;
-}
-
-.wd20 {
-  width: 20%;
   display: inline-block;
 }
 

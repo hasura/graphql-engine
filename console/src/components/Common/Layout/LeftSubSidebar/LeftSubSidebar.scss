@@ -20,23 +20,10 @@
 }
 
 .sidebar {
-  height: calc(100vh - 26px);
   overflow: auto;
-  // background: #444;
-  // color: $navbar-inverse-color;
   color: #333;
   border: 1px solid #e5e5e5;
   background-color: #f8f8f8;
-
-  /*
-  a,a:visited {
-    color: $navbar-inverse-link-color;
-  }
-
-  a:hover {
-    color: $navbar-inverse-link-hover-color;
-  }
-  */
 
   hr {
     margin: 0;
@@ -51,17 +38,6 @@
     li {
       padding: 7px 0;
       transition: color 0.5s;
-
-      /*
-      a,a:visited {
-        color: $navbar-inverse-link-color;
-      }
-
-      a:hover {
-        color: $navbar-inverse-link-hover-color;
-      }
-      */
-
       a {
         color: #767e93;
         word-wrap: break-word;
@@ -70,7 +46,6 @@
 
     li:hover {
       padding: 7px 0;
-      // color: $navbar-inverse-link-hover-color;
       transition: color 0.5s;
       cursor: pointer;
     }
@@ -116,21 +91,15 @@
 }
 
 .subSidebarList {
-  // max-height: 300px;
-  // overflow-y: auto;
   overflow: auto;
-  padding-left: 20px;
-  max-height: calc(100vh - 275px);
   border-bottom: 1px solid #e6e6e6;
 }
 
 .subSidebarListUL {
-  padding-left: 5px;
-  padding-bottom: 10px;
-
   li {
-    border-bottom: 0px !important;
-    padding: 4px 0 !important;
+    white-space: nowrap;
+    border-bottom: 0px;
+    padding: 4px 0;
 
     .tableFunctionDivider {
       margin-top: 5px;
@@ -139,11 +108,9 @@
     }
 
     a {
-      background: transparent !important;
-      padding: 5px 0px !important;
-      font-weight: 400 !important;
-      padding-left: 5px !important;
-      display: initial !important;
+      background: transparent;
+      padding: 5px 0px 5px 5px;
+      font-weight: 400;
 
       .tableIcon,
       .functionIcon {
@@ -159,29 +126,15 @@
   }
 
   .noChildren {
-    font-weight: 400 !important;
-    padding-bottom: 10px !important;
-    color: #767e93 !important;
+    font-weight: 400;
+    padding-bottom: 10px;
+    color: #767e93;
   }
-
-  li:first-child {
-    padding-top: 15px !important;
-  }
-}
-
-.reducedChildPadding {
-  li:first-child {
-    padding-top: 5px !important;
-  }
-}
-
-.sidebarTablePadding {
-  padding-left: 10px !important;
 }
 
 .activeLink {
   a {
-    color: #fd9540 !important;
+    color: #fd9540;
   }
 }
 
@@ -206,11 +159,6 @@
   i {
     margin-right: 4px;
     font-size: 14px;
-  }
-
-  li {
-    font-size: 14px !important;
-    padding-left: 10px !important;
   }
 }
 .title::before {

@@ -23,17 +23,17 @@ const Container: React.FC<ContainerProps> = ({
   children,
   metadata,
 }) => {
-  const helmet = 'Settings | Hasura';
-
-  const sidebar = <Sidebar location={location} metadata={metadata} />;
-
   const childrenWithProps = React.Children.map(
     children,
     (child: React.ReactElement<{ metadata: Metadata }>) =>
       React.cloneElement(child, { metadata })
   );
+
   return (
-    <PageContainer helmet={helmet} leftContainer={sidebar}>
+    <PageContainer
+      title='Settings | Hasura'
+      leftContainer={<Sidebar location={location} metadata={metadata} />}
+    >
       {childrenWithProps}
     </PageContainer>
   );

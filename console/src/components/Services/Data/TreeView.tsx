@@ -85,7 +85,6 @@ const LeafItemsView: React.FC<LeafItemsViewProps> = ({
   return (
     <>
       <div
-        className={styles.sidebarTablePadding}
         onClick={() => {
           setIsOpen(prev => !prev);
         }}
@@ -197,7 +196,6 @@ const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
           setActiveSchema(encodeURIComponent(item.name));
         }}
         role="button"
-        className={styles.padd_bottom_small}
         style={showActiveStyle ? activeStyle : {}}
       >
         <span
@@ -214,16 +212,14 @@ const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
         !(databaseLoading || schemaLoading) ? (
           item.children?.length ? (
             <>
-              <div className="my-1 px-sm">
-                <input
-                  type="text"
-                  onChange={onSearchChange}
-                  className="form-control"
-                  placeholder={`Search tables in ${item.name}....`}
-                  data-test="search-tables"
-                />
-              </div>
-              <ul className={styles.reducedChildPadding}>
+              <input
+                type="text"
+                onChange={onSearchChange}
+                className="form-control"
+                placeholder={`Search tables in ${item.name}....`}
+                data-test="search-tables"
+              />
+              <ul>
                 {itemSearchResults.map((child, key) => (
                   <li key={key}>
                     <LeafItemsView
@@ -246,12 +242,10 @@ const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
             </li>
           )
         ) : (
-          <span
-            className={`${styles.sidebarTablePadding} ${styles.padd_bottom_small}`}
-          >
+          <div>
             <i className="fa fa-table" />
             <span className={styles.loaderBar} />
-          </span>
+          </div>
         )
       ) : null}
     </>
@@ -294,7 +288,7 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
   };
 
   return (
-    <div className={styles.padd_bottom_small}>
+    <div>
       <div
         onClick={() => {
           setActiveDataSource(item.name);
@@ -303,7 +297,6 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
           setActiveDataSource(item.name);
         }}
         role="button"
-        className={styles.padd_bottom_small}
       >
         <span
           className={
@@ -334,7 +327,7 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
       {databaseLoading && isActive ? (
         <li>
           <span
-            className={`${styles.title} ${styles.titleClosed} ${styles.padd_bottom_small}`}
+            className={`${styles.title} ${styles.titleClosed}`}
           >
             <i className="fa fa-folder" />
             <span className={styles.loaderBar} />
@@ -374,18 +367,16 @@ const TreeView: React.FC<TreeViewProps> = ({
   if (items.length === 0) {
     return preLoadState ? (
       <div className={styles.treeNav}>
-        <span className={`${styles.title} ${styles.padd_bottom_small}`}>
+        <span className={`${styles.title}`}>
           <i className="fa fa-database" />
         </span>
         <span className={styles.loaderBar} />
         <li>
-          <span className={`${styles.title} ${styles.padd_bottom_small}`}>
+          <span className={`${styles.title}`}>
             <i className="fa fa-folder" />
             <span className={styles.loaderBar} />
-            <ul className={styles.reducedChildPadding}>
-              <li
-                className={`${styles.sidebarTablePadding} ${styles.add_mar_left_mid}`}
-              >
+            <ul>
+              <li>
                 <i className="fa fa-table" />
                 <span className={styles.loaderBar} />
               </li>

@@ -1,7 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 import React from 'react';
 import { Link, RouteComponentProps } from 'react-router';
-import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import CheckIcon from '../../Common/Icons/Check';
 import CrossIcon from '../../Common/Icons/Cross';
 import globals from '../../../Globals';
@@ -122,31 +121,29 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
     title: 'Feature Flags',
   });
 
-  const currentLocation = location.pathname;
-
-  const sections: JSX.Element[] = [];
-
-  sectionsData.forEach(section => {
-    sections.push(
-      <li
-        role="presentation"
-        key={section.key}
-        className={currentLocation.includes(section.link) ? styles.active : ''}
-      >
-        <Link
-          className={styles.linkBorder}
-          to={section.link}
-          data-test={section.dataTestVal}
-        >
-          {section.title}
-        </Link>
-      </li>
-    );
-  });
-
-  const content = <ul>{sections}</ul>;
-
-  return <LeftContainer>{content}</LeftContainer>;
+  return (
+    <aside
+      id='sidebar'
+      className='flex'
+    >
+      <ul>
+        {sectionsData.map(section => (
+          <li
+            key={section.key}
+            className={location.pathname.includes(section.link) ? styles.active : ''}
+          >
+            <Link
+              className={styles.linkBorder}
+              to={section.link}
+              data-test={section.dataTestVal}
+            >
+              {section.title}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </aside>
+  )
 };
 
 export default Sidebar;

@@ -601,7 +601,7 @@ class ApiRequest extends Component {
       switch (this.props.bodyType) {
         case 'graphql':
           return (
-            <div className={styles.apiRequestBody}>
+            <div className={'flex flex-1 pt-4'}>
               <GraphiQLWrapper
                 mode={mode}
                 data={this.props}
@@ -792,7 +792,7 @@ class ApiRequest extends Component {
 
     return (
       <div
-        className={`${styles.apiRequestWrapper} ${styles.height100} ${styles.flexColumn}`}
+        className={'flex-col flex flex-1'}
       >
         {getGraphQLEndpointBar()}
         {getHeaderTable()}
