@@ -9,13 +9,14 @@
 
 ### Bug fixes and improvements
 
-- server: remove 'query' and 'raw-query' field from logs for metadata queries by default. Use `HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING` to renable those fields. 
+- server: remove 'query' and 'raw-query' field from logs for metadata queries by default. Use `HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING` to renable those fields.
 - server: `clear_metadata` correctly archives the event triggers and the drop source API drops the indirect dependencies created by remote relationships when the dependent source is dropped.
 - server: fix inserting values into columns with case sensitive enum types for Postgres/Citus backends (fix #4014)
 - server: remote relationships can be defined _on_ and _to_ SQLServer tables
 - server: fix JSON key encoding issue for remote schemas (fixes #7543 and #8200)
 - server: fix MSSQL insert mutation when relationships are used in check permissions (fix #8225)
 - server: refactor GQL query static analysis and improve OpenAPI warning messages
+- server: avoid a resource leak when connecting to Postgres fails
 - console: add support for setting aggregation query permissions for ms sql server
 - console: add RS-to-DB (only postgres & citus) relationships feature to remote schemas tab
 - console: remove need for clicking the Modify btn before editing a remote schema (#1193, #8262)
