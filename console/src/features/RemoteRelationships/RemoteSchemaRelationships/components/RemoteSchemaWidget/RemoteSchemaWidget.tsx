@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { FaPlug } from 'react-icons/fa';
 
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { useRemoteSchema } from '@/features/MetadataAPI';
@@ -16,6 +15,7 @@ import {
   HasuraRsFields,
   AllowedRootFields,
   RelationshipFields,
+  RsToRsSchema,
 } from '../../types';
 
 export interface RemoteSchemaWidgetProps {
@@ -37,28 +37,27 @@ const resultSet = 'resultSet';
 export const RemoteSchemaWidget = ({
   schemaName,
   fields,
-  serverRelationship,
   rootFields = ['query'],
 }: RemoteSchemaWidgetProps) => {
   const { fetchSchema, data, isLoading, isError } = useRemoteSchema();
 
-  const { setValue, watch } = useFormContext();
+  const { setValue, watch } = useFormContext<RsToRsSchema>();
   const resultSetValue = watch(resultSet);
+  const relationship = watch('relationship');
 
   const [relationshipFields, setRelationshipFields] = useState<
     RelationshipFields[]
   >([]);
 
   useEffect(() => {
-    if (serverRelationship) {
-      setRelationshipFields(parseServerRelationship(serverRelationship));
+    if (relationship) {
+      setRelationshipFields(parseServerRelationship(relationship));
     }
-  }, [serverRelationship, setValue]);
+  }, [relationship, setValue]);
 
   useEffect(() => {
     const value = buildServerRemoteFieldObject(relationshipFields);
-    const jsonValue = JSON.stringify(value ?? '');
-    setValue('resultSet', jsonValue);
+    setValue('resultSet', value);
   }, [relationshipFields, setValue]);
 
   useEffect(() => {
@@ -75,7 +74,7 @@ export const RemoteSchemaWidget = ({
           <input
             type="text"
             className="mt-xs block h-input w-full shadow-sm rounded cursor-not-allowed bg-gray-100 border border-gray-300"
-            value={resultSetValue}
+            value={JSON.stringify(resultSetValue ?? {})}
             disabled
           />
         </label>
@@ -84,22 +83,15 @@ export const RemoteSchemaWidget = ({
 
       {isLoading && <div>Loading...</div>}
 
-      <div className="py-2 px-1 rounded-md border border-gray-300 bg-white">
-        <p className="flex gap-2 items-center font-semibold p-2 m-0">
-          <FaPlug />
-          {schemaName}
-        </p>
-
-        {data && (
-          <RemoteSchemaTree
-            schema={data}
-            relationshipFields={relationshipFields}
-            setRelationshipFields={setRelationshipFields}
-            fields={fields}
-            rootFields={rootFields}
-          />
-        )}
-      </div>
+      {data && (
+        <RemoteSchemaTree
+          schema={data}
+          relationshipFields={relationshipFields}
+          setRelationshipFields={setRelationshipFields}
+          fields={fields}
+          rootFields={rootFields}
+        />
+      )}
 
       {isError && (
         <IndicatorCard status="negative">

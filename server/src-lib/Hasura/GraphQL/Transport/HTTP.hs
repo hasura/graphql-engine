@@ -310,14 +310,15 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   (totalTime, (response, parameterizedQueryHash)) <- withElapsedTime $ do
     E.ExecutionCtx _ sqlGenCtx sc scVer httpManager enableAL readOnlyMode <- ask
 
-    -- run system authorization on the GraphQL API
+    -- 1. Run system authorization on the 'reqUnparsed :: GQLReqUnparsed' query.
     reqParsed <-
-      E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed
+      E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed reqId
         >>= flip onLeft throwError
 
     operationLimit <- askGraphqlOperationLimit
     let runLimits = runResourceLimits $ operationLimit userInfo (scApiLimits sc)
 
+    -- 2. Construct an execution plan from 'reqParsed :: GQLParsed'.
     (parameterizedQueryHash, execPlan) <-
       E.getResolvedExecPlan
         env
@@ -333,12 +334,14 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         (reqUnparsed, reqParsed)
         reqId
 
+    -- 3. Execute the execution plan producing a 'AnnotatedResponse'.
     response <- executePlan httpManager reqParsed runLimits execPlan
     return (response, parameterizedQueryHash)
 
   recordTimings totalTime response
   let requestSize = LBS.length $ J.encode reqUnparsed
       responseSize = LBS.length $ encJToLBS $ snd $ _hrBody $ arResponse $ response
+  -- 4. Return the response along with logging metadata.
   return
     ( GQLQueryOperationSuccessLog reqUnparsed totalTime responseSize requestSize parameterizedQueryHash,
       arResponse response
@@ -357,9 +360,13 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
       m AnnotatedResponse
     executePlan httpManager reqParsed runLimits execPlan = case execPlan of
       E.QueryExecutionPlan queryPlans asts dirMap -> trace "Query" $ do
+        -- Attempt to lookup a cached response in the query cache.
+        -- 'keyedLookup' is a monadic action possibly returning a cache hit.
+        -- 'keyedStore' is a function to write a new response to the cache.
         let (keyedLookup, keyedStore) = cacheAccess reqParsed queryPlans asts dirMap
         (cachingHeaders, cachedValue) <- keyedLookup
         case fmap decodeGQResp cachedValue of
+          -- If we get a cache hit, annotate the response with metadata and return it.
           Just cachedResponseData -> do
             logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindCached
             pure $
@@ -369,10 +376,14 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                   arLocality = Telem.Local,
                   arResponse = HttpResponse cachedResponseData cachingHeaders
                 }
+          -- If we get a cache miss, we must run the query against the graphql engine.
           Nothing -> runLimits $ do
+            -- 1. 'traverse' the 'ExecutionPlan' executing every step.
             conclusion <- runExceptT $ forWithKey queryPlans $ executeQueryStep httpManager
+            -- 2. Construct an 'AnnotatedResponse' from the results of all steps in the 'ExecutionPlan'.
             result <- buildResponseFromParts Telem.Query conclusion cachingHeaders
             let response@(HttpResponse responseData _) = arResponse result
+            -- 3. Cache the 'AnnotatedResponse'.
             cacheStoreRes <- keyedStore (snd responseData)
             let headers = case cacheStoreRes of
                   -- Note: Warning header format: "Warning: <warn-code> <warn-agent> <warn-text> [warn-date]"
@@ -381,7 +392,8 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
                   (Left CacheStoreLimitReached) -> [("warning", "199 - cache-store-size-limit-exceeded")]
                   (Left CacheStoreNotEnoughCapacity) -> [("warning", "199 - cache-store-capacity-exceeded")]
                   (Left (CacheStoreBackendError _)) -> [("warning", "199 - cache-store-error")]
-             in pure $ result {arResponse = addHttpResponseHeaders headers response}
+             in -- 4. Return the response.
+                pure $ result {arResponse = addHttpResponseHeaders headers response}
       E.MutationExecutionPlan mutationPlans -> runLimits $ do
         {- Note [Backwards-compatible transaction optimisation]
 

@@ -25,6 +25,7 @@ import Data.Text (Text)
 import Data.Typeable (Typeable)
 import GHC.Generics (Generic)
 import Harness.Backend.Postgres qualified as Postgres
+import Harness.Backend.Sqlserver qualified as SQLServer
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
@@ -42,13 +43,21 @@ import Prelude
 spec :: SpecWith State
 spec = Context.runWithLocalState contexts tests
   where
-    contexts = map mkContext [lhsPostgres, lhsRemoteServer]
+    contexts = map mkContext [lhsPostgres, lhsSQLServer, lhsRemoteServer]
     lhsPostgres =
       Context
         { name = Context.Backend Context.Postgres,
           mkLocalState = lhsPostgresMkLocalState,
           setup = lhsPostgresSetup,
           teardown = lhsPostgresTeardown,
+          customOptions = Nothing
+        }
+    lhsSQLServer =
+      Context
+        { name = Context.Backend Context.SQLServer,
+          mkLocalState = lhsSQLServerMkLocalState,
+          setup = lhsSQLServerSetup,
+          teardown = lhsSQLServerTeardown,
           customOptions = Nothing
         }
     lhsRemoteServer =
@@ -70,12 +79,12 @@ mkContext lhs =
         lhsServer <- lhsMkLocalState state
         pure $ LocalTestState lhsServer rhsServer,
       setup = \(state, LocalTestState lhsServer rhsServer) -> do
-        GraphqlEngine.clearMetadata state
         rhsRemoteSchemaSetup (state, rhsServer)
         lhsSetup (state, lhsServer),
       teardown = \(state, LocalTestState lhsServer rhsServer) -> do
         lhsTeardown (state, lhsServer)
-        rhsRemoteSchemaTeardown (state, rhsServer),
+        rhsRemoteSchemaTeardown (state, rhsServer)
+        GraphqlEngine.clearMetadata state,
       customOptions = lhsOptions
     }
   where
@@ -170,6 +179,58 @@ lhsPostgresTeardown (state, _) = do
   let sourceName = "source"
   Schema.untrackTable Context.Postgres sourceName track state
   Postgres.dropTable track
+
+--------------------------------------------------------------------------------
+-- LHS SQLServer
+
+lhsSQLServerMkLocalState :: State -> IO (Maybe Server)
+lhsSQLServerMkLocalState _ = pure Nothing
+
+lhsSQLServerSetup :: (State, Maybe Server) -> IO ()
+lhsSQLServerSetup (state, _) = do
+  let sourceName = "source"
+      sourceConfig = SQLServer.defaultSourceConfiguration
+      schemaName = Context.defaultSchema Context.SQLServer
+  -- Add remote source
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: mssql_add_source
+args:
+  name: *sourceName
+  configuration: *sourceConfig
+|]
+  -- setup tables only
+  SQLServer.createTable track
+  SQLServer.insertTable track
+  Schema.trackTable Context.SQLServer sourceName track state
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: bulk
+args:
+- type: mssql_create_remote_relationship
+  args:
+    source: source
+    table:
+      schema: *schemaName
+      name: track
+    name: album
+    definition:
+      to_remote_schema:
+        remote_schema: target
+        lhs_fields: [album_id]
+        remote_field:
+          album:
+            arguments:
+              album_id: $album_id
+  |]
+
+lhsSQLServerTeardown :: (State, Maybe Server) -> IO ()
+lhsSQLServerTeardown (state, _) = do
+  let sourceName = "source"
+  Schema.untrackTable Context.SQLServer sourceName track state
+  SQLServer.dropTable track
 
 --------------------------------------------------------------------------------
 -- LHS Remote Server

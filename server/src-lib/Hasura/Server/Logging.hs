@@ -26,6 +26,8 @@ module Hasura.Server.Logging
     HttpLogMetadata,
     buildHttpLogMetadata,
     emptyHttpLogMetadata,
+    MetadataQueryLoggingMode (..),
+    LoggingSettings (..),
   )
 where
 
@@ -221,11 +223,48 @@ buildHttpLogMetadata paramQueryHashList requestMode batchQueryOperationLog =
 emptyHttpLogMetadata :: forall m. HttpLog m => HttpLogMetadata m
 emptyHttpLogMetadata = (CommonHttpLogMetadata RequestModeNonBatchable Nothing, emptyExtraHttpLogMetadata @m)
 
+-- See Note [Disable query printing for metadata queries]
+data MetadataQueryLoggingMode = MetadataQueryLoggingEnabled | MetadataQueryLoggingDisabled
+  deriving (Show, Eq)
+
+instance FromJSON MetadataQueryLoggingMode where
+  parseJSON =
+    withBool "MetadataQueryLoggingMode" $
+      pure . bool MetadataQueryLoggingDisabled MetadataQueryLoggingEnabled
+
+instance ToJSON MetadataQueryLoggingMode where
+  toJSON = \case
+    MetadataQueryLoggingEnabled -> Bool True
+    MetadataQueryLoggingDisabled -> Bool False
+
+-- | Setting used to control the information in logs
+data LoggingSettings = LoggingSettings
+  { -- | this is only required for the short-term fix in https://github.com/hasura/graphql-engine-mono/issues/1770
+    -- See Note [Disable query printing when query-log is disabled]
+    _lsEnabledLogTypes :: HashSet (EngineLogType Hasura),
+    -- See Note [Disable query printing for metadata queries]
+    _lsMetadataQueryLoggingMode :: MetadataQueryLoggingMode
+  }
+  deriving (Show, Eq)
+
 {- Note [Disable query printing when query-log is disabled]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 As a temporary hack (as per https://github.com/hasura/graphql-engine-mono/issues/1770),
 we want to print the graphql query string in `http-log` or `websocket-log` only
 when `query-log` is enabled.
+-}
+
+{- Note [Disable query printing for metadata queries]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The 'olQuery' in the 'OperationLog' logs the actual query that is sent over HTTP.
+This can lead to security issues, since the request sent in metadata queries may
+include sensitive information such as DB URLS. Thus it is important that we hide
+these sensitive information for the metadata URL.
+
+As a temporary hotfix (ref: https://github.com/hasura/graphql-engine-mono/issues/3937),
+If the URL path of HTTP requests is for a metadata operation and the
+HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING envirnoment variables is not set, then
+we disable the 'query' field in HTTP logs.
 -}
 
 class Monad m => HttpLog m where
@@ -239,8 +278,8 @@ class Monad m => HttpLog m where
   logHttpError ::
     -- | the logger
     Logger Hasura ->
-    -- | this is only required for the short-term fix in https://github.com/hasura/graphql-engine-mono/issues/1770
-    HashSet (EngineLogType Hasura) ->
+    -- | setting used to control the information in logs
+    LoggingSettings ->
     -- | user info may or may not be present (error can happen during user resolution)
     Maybe UserInfo ->
     -- | request id of the request
@@ -258,8 +297,8 @@ class Monad m => HttpLog m where
   logHttpSuccess ::
     -- | the logger
     Logger Hasura ->
-    -- | this is only required for the short-term fix in https://github.com/hasura/graphql-engine-mono/issues/1770
-    HashSet (EngineLogType Hasura) ->
+    -- | setting used to control the information in logs
+    LoggingSettings ->
     -- | user info may or may not be present (error can happen during user resolution)
     Maybe UserInfo ->
     -- | request id of the request
@@ -395,10 +434,23 @@ data HttpLogContext = HttpLogContext
 
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''HttpLogContext)
 
+-- | Check if the 'query' field should be included in the http-log
+isQueryIncludedInLogs :: Text -> LoggingSettings -> Bool
+isQueryIncludedInLogs urlPath LoggingSettings {..}
+  -- See Note [Disable query printing for metadata queries]
+  | isQueryLogEnabled && isMetadataRequest = _lsMetadataQueryLoggingMode == MetadataQueryLoggingEnabled
+  -- See Note [Disable query printing when query-log is disabled]
+  | isQueryLogEnabled = True
+  | otherwise = False
+  where
+    isQueryLogEnabled = Set.member ELTQueryLog _lsEnabledLogTypes
+    metadataUrlPaths = ["/v1/metadata", "/v1/query"]
+    isMetadataRequest = urlPath `elem` metadataUrlPaths
+
 mkHttpAccessLogContext ::
   -- | Maybe because it may not have been resolved
   Maybe UserInfo ->
-  HashSet (EngineLogType Hasura) ->
+  LoggingSettings ->
   RequestId ->
   Wai.Request ->
   (BL.ByteString, Maybe Value) ->
@@ -409,7 +461,7 @@ mkHttpAccessLogContext ::
   RequestMode ->
   Maybe (GH.GQLBatchedReqs GQLBatchQueryOperationLog) ->
   HttpLogContext
-mkHttpAccessLogContext userInfoM enabledLogTypes reqId req (_, parsedReq) res mTiming compressTypeM headers batching queryLogMetadata =
+mkHttpAccessLogContext userInfoM loggingSettings reqId req (_, parsedReq) res mTiming compressTypeM headers batching queryLogMetadata =
   let http =
         HttpInfoLog
           { hlStatus = status,
@@ -428,8 +480,7 @@ mkHttpAccessLogContext userInfoM enabledLogTypes reqId req (_, parsedReq) res mT
             olRequestReadTime = Seconds . fst <$> mTiming,
             olQueryExecutionTime = Seconds . snd <$> mTiming,
             olRequestMode = batching,
-            -- See Note [Disable query printing when query-log is disabled]
-            olQuery = bool Nothing parsedReq $ Set.member ELTQueryLog enabledLogTypes,
+            olQuery = if (isQueryIncludedInLogs (hlPath http) loggingSettings) then parsedReq else Nothing,
             olRawQuery = Nothing,
             olError = Nothing
           }
@@ -440,19 +491,18 @@ mkHttpAccessLogContext userInfoM enabledLogTypes reqId req (_, parsedReq) res mT
                   GH.GQLBatchedReqs opLogs ->
                     NE.nonEmpty $
                       map
-                        ( \opLog ->
-                            case opLog of
-                              GQLQueryOperationSuccess (GQLQueryOperationSuccessLog {..}) ->
-                                BatchOperationSuccess $
-                                  BatchOperationSuccessLog
-                                    ((bool Nothing (Just $ toJSON gqolQuery)) $ Set.member ELTQueryLog enabledLogTypes)
-                                    gqolResponseSize
-                                    (convertDuration gqolQueryExecutionTime)
-                              GQLQueryOperationError (GQLQueryOperationErrorLog {..}) ->
-                                BatchOperationError $
-                                  BatchOperationErrorLog
-                                    (bool Nothing (Just $ toJSON gqelQuery) $ Set.member ELTQueryLog enabledLogTypes)
-                                    gqelError
+                        ( \case
+                            GQLQueryOperationSuccess (GQLQueryOperationSuccessLog {..}) ->
+                              BatchOperationSuccess $
+                                BatchOperationSuccessLog
+                                  (if (isQueryIncludedInLogs (hlPath http) loggingSettings) then parsedReq else Nothing)
+                                  gqolResponseSize
+                                  (convertDuration gqolQueryExecutionTime)
+                            GQLQueryOperationError (GQLQueryOperationErrorLog {..}) ->
+                              BatchOperationError $
+                                BatchOperationErrorLog
+                                  (if (isQueryIncludedInLogs (hlPath http) loggingSettings) then parsedReq else Nothing)
+                                  gqelError
                         )
                         opLogs
               )
@@ -464,7 +514,7 @@ mkHttpAccessLogContext userInfoM enabledLogTypes reqId req (_, parsedReq) res mT
 mkHttpErrorLogContext ::
   -- | Maybe because it may not have been resolved
   Maybe UserInfo ->
-  HashSet (EngineLogType Hasura) ->
+  LoggingSettings ->
   RequestId ->
   Wai.Request ->
   (BL.ByteString, Maybe Value) ->
@@ -473,7 +523,7 @@ mkHttpErrorLogContext ::
   Maybe CompressionType ->
   [HTTP.Header] ->
   HttpLogContext
-mkHttpErrorLogContext userInfoM enabledLogTypes reqId waiReq (reqBody, parsedReq) err mTiming compressTypeM headers =
+mkHttpErrorLogContext userInfoM loggingSettings reqId waiReq (reqBody, parsedReq) err mTiming compressTypeM headers =
   let http =
         HttpInfoLog
           { hlStatus = qeStatus err,
@@ -491,16 +541,15 @@ mkHttpErrorLogContext userInfoM enabledLogTypes reqId waiReq (reqBody, parsedReq
             olResponseSize = Just $ BL.length $ encode err,
             olRequestReadTime = Seconds . fst <$> mTiming,
             olQueryExecutionTime = Seconds . snd <$> mTiming,
-            olQuery = reqToLog parsedReq,
+            olQuery = if (isQueryIncludedInLogs (hlPath http) loggingSettings) then parsedReq else Nothing,
             -- if parsedReq is Nothing, add the raw query
             olRawQuery = maybe (reqToLog $ Just $ bsToTxt $ BL.toStrict reqBody) (const Nothing) parsedReq,
             olError = Just err,
             olRequestMode = RequestModeError
           }
 
-      -- See Note [Disable query printing when query-log is disabled]
       reqToLog :: Maybe a -> Maybe a
-      reqToLog req = bool Nothing req $ Set.member ELTQueryLog enabledLogTypes
+      reqToLog req = if (isQueryIncludedInLogs (hlPath http) loggingSettings) then req else Nothing
    in HttpLogContext http op reqId Nothing -- Batched operation logs are always reported in logHttpSuccess even if there are errors
 
 data HttpLogLine = HttpLogLine

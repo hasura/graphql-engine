@@ -72,6 +72,8 @@ getRemoteJoinsQueryDB =
       QDBAggregation <$> transformAggregateSelect s
     QDBConnection s ->
       QDBConnection <$> transformConnectionSelect s
+    QDBStreamMultipleRows s ->
+      QDBStreamMultipleRows <$> transformStreamSelect s
 
 -- | Collects remote joins from the a 'MutationDB' if any, and transforms the
 -- selection to add new join fields where those occured.
@@ -205,6 +207,15 @@ transformSelect ::
   AnnSimpleSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
   Collector (AnnSimpleSelectG b Void (UnpreparedValue b))
 transformSelect = traverseOf asnFields transformAnnFields
+
+transformStreamSelect ::
+  Backend b =>
+  AnnSimpleStreamSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
+  Collector (AnnSimpleStreamSelectG b Void (UnpreparedValue b))
+transformStreamSelect select@AnnSelectStreamG {_assnFields = fields} = do
+  -- Transform selects in array, object and computed fields
+  transformedFields <- transformAnnFields fields
+  pure select {_assnFields = transformedFields}
 
 transformAggregateSelect ::
   Backend b =>

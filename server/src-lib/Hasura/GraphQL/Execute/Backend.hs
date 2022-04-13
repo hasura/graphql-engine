@@ -86,7 +86,7 @@ class
     SourceConfig b ->
     MutationDB b Void (UnpreparedValue b) ->
     m (DBStepInfo b)
-  mkDBSubscriptionPlan ::
+  mkLiveQuerySubscriptionPlan ::
     forall m.
     ( MonadError QErr m,
       MonadIO m,
@@ -98,6 +98,18 @@ class
     SourceConfig b ->
     Maybe G.Name ->
     RootFieldMap (QueryDB b Void (UnpreparedValue b)) ->
+    m (SubscriptionQueryPlan b (MultiplexedQuery b))
+  mkDBStreamingSubscriptionPlan ::
+    forall m.
+    ( MonadError QErr m,
+      MonadIO m,
+      MonadBaseControl IO m,
+      MonadReader QueryTagsComment m
+    ) =>
+    UserInfo ->
+    SourceName ->
+    SourceConfig b ->
+    (RootFieldAlias, (QueryDB b Void (UnpreparedValue b))) ->
     m (SubscriptionQueryPlan b (MultiplexedQuery b))
   mkDBQueryExplain ::
     forall m.

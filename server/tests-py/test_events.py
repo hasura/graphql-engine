@@ -85,6 +85,16 @@ class TestCreateAndDelete:
     def dir(cls):
         return 'queries/event_triggers/create-delete'
 
+@usefixtures("per_method_tests_db_state")
+class TestCreateAndResetNonDefaultSource:
+
+    def test_create_reset_non_default_source(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/create_and_reset_non_default_source.yaml")
+
+    @classmethod
+    def dir(cls):
+        return 'queries/event_triggers/create_and_reset_non_default'
+
 # Generates a backlog of events, then:
 # - checks that we're processing with the concurrency and backpressure
 #   characteristics we expect

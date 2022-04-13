@@ -5,6 +5,7 @@ module Hasura.GraphQL.Execute.Subscription.Poll
     PollerId (..),
     PollerIOState (..),
     pollLiveQuery,
+    pollStreamingQuery,
     PollerKey (..),
     PollerMap,
     dumpPollerMap,
@@ -43,3 +44,4 @@ where
 
 import Hasura.GraphQL.Execute.Subscription.Poll.Common
 import Hasura.GraphQL.Execute.Subscription.Poll.LiveQuery
+import Hasura.GraphQL.Execute.Subscription.Poll.StreamingQuery

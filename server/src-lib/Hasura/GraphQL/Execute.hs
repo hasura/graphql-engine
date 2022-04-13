@@ -12,9 +12,11 @@ module Hasura.GraphQL.Execute
     checkQueryInAllowlist,
     MultiplexedSubscriptionQueryPlan (..),
     SubscriptionQueryPlan (..),
+    SourceSubscription (..),
   )
 where
 
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Containers.ListUtils (nubOrd)
 import Data.Environment qualified as Env
@@ -65,6 +67,7 @@ data ExecutionCtx = ExecutionCtx
     _ecxReadOnlyMode :: ReadOnlyMode
   }
 
+-- | Construct a single step of an execution plan.
 getExecPlanPartial ::
   (MonadError QErr m) =>
   UserInfo ->
@@ -110,6 +113,10 @@ newtype MultiplexedSubscriptionQueryPlan (b :: BackendType)
 
 newtype SubscriptionQueryPlan = SubscriptionQueryPlan (AB.AnyBackend MultiplexedSubscriptionQueryPlan)
 
+data SourceSubscription
+  = SSLivequery !(HashSet ActionId) !(ActionLogResponseMap -> ExceptT QErr IO (SourceName, SubscriptionQueryPlan))
+  | SSStreaming !RootFieldAlias !(SourceName, SubscriptionQueryPlan)
+
 -- | The comprehensive subscription plan. We only support either
 -- 1. Fields with only async action queries with no associated relationships
 --    or
@@ -117,75 +124,109 @@ newtype SubscriptionQueryPlan = SubscriptionQueryPlan (AB.AnyBackend Multiplexed
 --    action query fields whose relationships are defined to tables in the source
 data SubscriptionExecution
   = SEAsyncActionsWithNoRelationships !(RootFieldMap (ActionId, ActionLogResponse -> Either QErr EncJSON))
-  | SEOnSourceDB
-      !(HashSet ActionId)
-      !(ActionLogResponseMap -> ExceptT QErr IO (SourceName, SubscriptionQueryPlan))
+  | SEOnSourceDB !SourceSubscription
 
 buildSubscriptionPlan ::
   forall m.
-  (MonadError QErr m, EB.MonadQueryTags m) =>
+  (MonadError QErr m, EB.MonadQueryTags m, MonadIO m, MonadBaseControl IO m) =>
   UserInfo ->
   RootFieldMap (IR.QueryRootField UnpreparedValue) ->
   ParameterizedQueryHash ->
   m SubscriptionExecution
 buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
-  (onSourceFields, noRelationActionFields) <- foldlM go (mempty, mempty) (OMap.toList rootFields)
+  ((liveQueryOnSourceFields, noRelationActionFields), streamingFields) <- foldlM go ((mempty, mempty), mempty) (OMap.toList rootFields)
 
   if
-      | null onSourceFields -> do
+      | null liveQueryOnSourceFields && null streamingFields ->
         pure $ SEAsyncActionsWithNoRelationships noRelationActionFields
       | null noRelationActionFields -> do
-        let allActionIds = HS.fromList $ map fst $ lefts $ toList onSourceFields
-        pure $
-          SEOnSourceDB allActionIds $ \actionLogMap -> do
-            sourceSubFields <- for onSourceFields $ \case
-              Right x -> pure x
-              Left (actionId, (srcConfig, dbExecution)) -> do
-                let sourceName = EA._aaqseSource dbExecution
-                actionLogResponse <-
-                  Map.lookup actionId actionLogMap
-                    `onNothing` throw500 "unexpected: cannot lookup action_id in the map"
-                let selectAST = EA._aaqseSelectBuilder dbExecution $ actionLogResponse
-                    queryDB = case EA._aaqseJsonAggSelect dbExecution of
-                      JASMultipleRows -> IR.QDBMultipleRows selectAST
-                      JASSingleObject -> IR.QDBSingleRow selectAST
-                pure $ (sourceName, AB.mkAnyBackend $ IR.SourceConfigWith srcConfig Nothing (IR.QDBR queryDB))
+        if
+            | null liveQueryOnSourceFields -> do
+              case OMap.toList streamingFields of
+                [] -> throw500 "empty selset for subscription"
+                [(rootFieldName, (sourceName, exists))] -> do
+                  subscriptionPlan <- AB.dispatchAnyBackend @EB.BackendExecute
+                    exists
+                    \(IR.SourceConfigWith sourceConfig queryTagsConfig (IR.QDBR qdb) :: IR.SourceConfigWith db b) -> do
+                      let subscriptionQueryTagsAttributes = encodeQueryTags $ QTLiveQuery $ LivequeryMetadata rootFieldName parameterizedQueryHash
+                          queryTagsComment = Tagged.untag $ EB.createQueryTags @m subscriptionQueryTagsAttributes queryTagsConfig
+                      SubscriptionQueryPlan . AB.mkAnyBackend . MultiplexedSubscriptionQueryPlan
+                        <$> runReaderT
+                          ( EB.mkDBStreamingSubscriptionPlan
+                              userInfo
+                              sourceName
+                              sourceConfig
+                              (rootFieldName, qdb)
+                          )
+                          queryTagsComment
+                  pure $
+                    SEOnSourceDB $
+                      SSStreaming rootFieldName $ (sourceName, subscriptionPlan)
+                _ -> throw400 NotSupported "exactly one root field is allowed for streaming subscriptions"
+            | null streamingFields -> do
+              let allActionIds = HS.fromList $ map fst $ lefts $ toList liveQueryOnSourceFields
+              pure $
+                SEOnSourceDB $
+                  SSLivequery allActionIds $ \actionLogMap -> do
+                    sourceSubFields <- for liveQueryOnSourceFields $ \case
+                      Right x -> pure x
+                      Left (actionId, (srcConfig, dbExecution)) -> do
+                        let sourceName = EA._aaqseSource dbExecution
+                        actionLogResponse <-
+                          Map.lookup actionId actionLogMap
+                            `onNothing` throw500 "unexpected: cannot lookup action_id in the map"
+                        let selectAST = EA._aaqseSelectBuilder dbExecution $ actionLogResponse
+                            queryDB = case EA._aaqseJsonAggSelect dbExecution of
+                              JASMultipleRows -> IR.QDBMultipleRows selectAST
+                              JASSingleObject -> IR.QDBSingleRow selectAST
+                        pure $ (sourceName, AB.mkAnyBackend $ IR.SourceConfigWith srcConfig Nothing (IR.QDBR queryDB))
 
-            case OMap.toList sourceSubFields of
-              [] -> throw500 "empty selset for subscription"
-              ((rootFieldName, sub) : _) -> buildAction sub sourceSubFields rootFieldName
+                    case OMap.toList sourceSubFields of
+                      [] -> throw500 "empty selset for subscription"
+                      ((rootFieldName, sub) : _) -> buildAction sub sourceSubFields rootFieldName
+            | otherwise -> throw400 NotSupported "streaming and livequery subscriptions cannot be executed in the same subscription"
       | otherwise ->
         throw400
           NotSupported
           "async action queries with no relationships aren't expected to mix with normal source database queries"
   where
     go ::
-      ( RootFieldMap
-          ( Either
-              (ActionId, (PGSourceConfig, EA.AsyncActionQuerySourceExecution (UnpreparedValue ('Postgres 'Vanilla))))
-              (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void UnpreparedValue)))
-          ),
-        RootFieldMap (ActionId, ActionLogResponse -> Either QErr EncJSON)
-      ) ->
-      (RootFieldAlias, IR.QueryRootField UnpreparedValue) ->
-      m
-        ( RootFieldMap
+      ( ( RootFieldMap
             ( Either
                 (ActionId, (PGSourceConfig, EA.AsyncActionQuerySourceExecution (UnpreparedValue ('Postgres 'Vanilla))))
                 (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void UnpreparedValue)))
             ),
           RootFieldMap (ActionId, ActionLogResponse -> Either QErr EncJSON)
+        ),
+        RootFieldMap (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void UnpreparedValue)))
+      ) ->
+      (RootFieldAlias, IR.QueryRootField UnpreparedValue) ->
+      m
+        ( ( RootFieldMap
+              ( Either
+                  (ActionId, (PGSourceConfig, EA.AsyncActionQuerySourceExecution (UnpreparedValue ('Postgres 'Vanilla))))
+                  (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void UnpreparedValue)))
+              ),
+            RootFieldMap (ActionId, ActionLogResponse -> Either QErr EncJSON)
+          ),
+          RootFieldMap (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void UnpreparedValue)))
         )
-    go accFields (gName, field) = case field of
+    go (accLiveQueryFields, accStreamingFields) (gName, field) = case field of
       IR.RFRemote _ -> throw400 NotSupported "subscription to remote server is not supported"
       IR.RFRaw _ -> throw400 NotSupported "Introspection not supported over subscriptions"
       IR.RFDB src e -> do
+        let subscriptionType =
+              case AB.unpackAnyBackend @('Postgres 'Vanilla) e of
+                Just (IR.SourceConfigWith _ _ (IR.QDBR (IR.QDBStreamMultipleRows _))) -> Streaming
+                _ -> LiveQuery
         newQDB <- AB.traverseBackend @EB.BackendExecute e \(IR.SourceConfigWith srcConfig queryTagsConfig (IR.QDBR qdb)) -> do
           let (newQDB, remoteJoins) = RJ.getRemoteJoinsQueryDB qdb
           unless (isNothing remoteJoins) $
             throw400 NotSupported "Remote relationships are not allowed in subscriptions"
           pure $ IR.SourceConfigWith srcConfig queryTagsConfig (IR.QDBR newQDB)
-        pure $ first (OMap.insert gName (Right (src, newQDB))) accFields
+        case subscriptionType of
+          Streaming -> pure (accLiveQueryFields, OMap.insert gName (src, newQDB) accStreamingFields)
+          LiveQuery -> pure $ (first (OMap.insert gName (Right (src, newQDB))) accLiveQueryFields, accStreamingFields)
       IR.RFAction action -> do
         let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionQuery action
         unless (isNothing remoteJoins) $
@@ -195,9 +236,9 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
             let actionId = _aaaqActionId q
             case EA.resolveAsyncActionQuery userInfo q of
               EA.AAQENoRelationships respMaker ->
-                pure $ second (OMap.insert gName (actionId, respMaker)) accFields
+                pure $ (second (OMap.insert gName (actionId, respMaker)) accLiveQueryFields, accStreamingFields)
               EA.AAQEOnSourceDB srcConfig dbExecution ->
-                pure $ first (OMap.insert gName (Left (actionId, (srcConfig, dbExecution)))) accFields
+                pure $ (first (OMap.insert gName (Left (actionId, (srcConfig, dbExecution)))) accLiveQueryFields, accStreamingFields)
           IR.AQQuery _ -> throw400 NotSupported "query actions cannot be run as a subscription"
 
     buildAction ::
@@ -207,15 +248,15 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
       RootFieldAlias ->
       ExceptT QErr IO (SourceName, SubscriptionQueryPlan)
     buildAction (sourceName, exists) allFields rootFieldName = do
-      lqp <- AB.dispatchAnyBackend @EB.BackendExecute
+      subscriptionPlan <- AB.dispatchAnyBackend @EB.BackendExecute
         exists
         \(IR.SourceConfigWith sourceConfig queryTagsConfig _ :: IR.SourceConfigWith db b) -> do
           qdbs <- traverse (checkField @b sourceName) allFields
           let subscriptionQueryTagsAttributes = encodeQueryTags $ QTLiveQuery $ LivequeryMetadata rootFieldName parameterizedQueryHash
           let queryTagsComment = Tagged.untag $ EB.createQueryTags @m subscriptionQueryTagsAttributes queryTagsConfig
           SubscriptionQueryPlan . AB.mkAnyBackend . MultiplexedSubscriptionQueryPlan
-            <$> runReaderT (EB.mkDBSubscriptionPlan userInfo sourceName sourceConfig (_rfaNamespace rootFieldName) qdbs) queryTagsComment
-      pure (sourceName, lqp)
+            <$> runReaderT (EB.mkLiveQuerySubscriptionPlan userInfo sourceName sourceConfig (_rfaNamespace rootFieldName) qdbs) queryTagsComment
+      pure (sourceName, subscriptionPlan)
 
     checkField ::
       forall b m1.
@@ -252,11 +293,14 @@ checkQueryInAllowlist allowlistEnabled allowlistMode userInfo req schemaCache =
       let msg = "query is not in any of the allowlists"
        in e {qeInternal = Just $ ExtraInternal $ J.object ["message" J..= J.String msg]}
 
+-- | Construct a 'ResolvedExecutionPlan' from a 'GQLReqParsed' and a
+-- bunch of metadata.
 getResolvedExecPlan ::
   forall m.
   ( MonadError QErr m,
     MonadMetadataStorage (MetadataStorageT m),
     MonadIO m,
+    MonadBaseControl IO m,
     Tracing.MonadTrace m,
     EC.MonadGQLExecutionCheck m,
     EB.MonadQueryTags m
@@ -287,10 +331,12 @@ getResolvedExecPlan
   reqHeaders
   (reqUnparsed, reqParsed)
   reqId = do
+    -- 1. Construct the first step of the execution plan.
     (gCtx, queryParts) <- getExecPlanPartial userInfo sc queryType reqParsed
 
     let maybeOperationName = (Just <$> _unOperationName) =<< _grOperationName reqParsed
 
+    -- 2. Construct the full 'ResolvedExecutionPlan' from the 'queryParts :: SingleOperation'.
     (parameterizedQueryHash, resolvedExecPlan) <-
       case queryParts of
         G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives inlinedSelSet -> do

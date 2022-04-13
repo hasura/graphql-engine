@@ -75,10 +75,10 @@ data RQLQueryV1
   | RQCreateSelectPermission !(CreatePerm SelPerm ('Postgres 'Vanilla))
   | RQCreateUpdatePermission !(CreatePerm UpdPerm ('Postgres 'Vanilla))
   | RQCreateDeletePermission !(CreatePerm DelPerm ('Postgres 'Vanilla))
-  | RQDropInsertPermission !(DropPerm InsPerm ('Postgres 'Vanilla))
-  | RQDropSelectPermission !(DropPerm SelPerm ('Postgres 'Vanilla))
-  | RQDropUpdatePermission !(DropPerm UpdPerm ('Postgres 'Vanilla))
-  | RQDropDeletePermission !(DropPerm DelPerm ('Postgres 'Vanilla))
+  | RQDropInsertPermission !(DropPerm ('Postgres 'Vanilla))
+  | RQDropSelectPermission !(DropPerm ('Postgres 'Vanilla))
+  | RQDropUpdatePermission !(DropPerm ('Postgres 'Vanilla))
+  | RQDropDeletePermission !(DropPerm ('Postgres 'Vanilla))
   | RQSetPermissionComment !(SetPermComment ('Postgres 'Vanilla))
   | RQGetInconsistentMetadata !GetInconsistentMetadata
   | RQDropInconsistentMetadata !DropInconsistentMetadata
@@ -404,10 +404,10 @@ runQueryM env rq = withPathK "args" $ case rq of
       RQCreateSelectPermission q -> runCreatePerm q
       RQCreateUpdatePermission q -> runCreatePerm q
       RQCreateDeletePermission q -> runCreatePerm q
-      RQDropInsertPermission q -> runDropPerm q
-      RQDropSelectPermission q -> runDropPerm q
-      RQDropUpdatePermission q -> runDropPerm q
-      RQDropDeletePermission q -> runDropPerm q
+      RQDropInsertPermission q -> runDropPerm PTInsert q
+      RQDropSelectPermission q -> runDropPerm PTSelect q
+      RQDropUpdatePermission q -> runDropPerm PTUpdate q
+      RQDropDeletePermission q -> runDropPerm PTDelete q
       RQSetPermissionComment q -> runSetPermComment q
       RQGetInconsistentMetadata q -> runGetInconsistentMetadata q
       RQDropInconsistentMetadata q -> runDropInconsistentMetadata q

@@ -225,6 +225,15 @@ class TestRemoteSchemaBasic:
         assert st_code == 200, resp
 
     @pytest.mark.allow_server_upgrade_test
+    def test_json_scalar_dict(self, hge_ctx):
+        q = mk_add_remote_q('my remote', 'http://localhost:5000/json-scalar-graphql')
+        st_code, resp = hge_ctx.v1q(q)
+        assert st_code == 200, resp
+        check_query_f(hge_ctx, self.dir + '/json_scalar.yaml')
+        st_code, resp = hge_ctx.v1q(mk_delete_remote_q('my remote'))
+        assert st_code == 200, resp
+
+    @pytest.mark.allow_server_upgrade_test
     def test_add_remote_schema_with_interfaces(self, hge_ctx):
         """add a remote schema with interfaces in it"""
         q = mk_add_remote_q('my remote interface one', 'http://localhost:5000/character-iface-graphql')

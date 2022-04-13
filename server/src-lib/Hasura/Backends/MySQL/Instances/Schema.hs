@@ -4,7 +4,6 @@
 
 module Hasura.Backends.MySQL.Instances.Schema () where
 
-import Data.Aeson qualified as J
 import Data.ByteString (ByteString)
 import Data.Has
 import Data.HashMap.Strict qualified as HM
@@ -183,11 +182,10 @@ columnParser' columnType (G.Nullability isNullable) =
                 valueToJSON (P.toGraphQLType schemaType)
                   >=> either (parseErrorWith ParseFailed . qeError) pure . (MySQL.parseScalarValue scalarType)
             }
-    ColumnEnumReference (EnumReference tableName enumValues) ->
+    ColumnEnumReference enumRef@(EnumReference _ enumValues _) ->
       case nonEmpty (HM.toList enumValues) of
         Just enumValuesList -> do
-          tableGQLName <- tableGraphQLName @'MySQL tableName `onLeft` throwError
-          enumName <- P.mkTypename $ tableGQLName <> $$(G.litName "_enum")
+          enumName <- mkEnumTypeName enumRef
           pure $ possiblyNullable MySQL.VarChar $ P.enum enumName Nothing (mkEnumValue <$> enumValuesList)
         Nothing -> throw400 ValidationFailed "empty enum values"
   where
@@ -200,14 +198,6 @@ columnParser' columnType (G.Nullability isNullable) =
       ( P.Definition value (G.Description <$> description) P.EnumValueInfo,
         MySQL.VarcharValue $ G.unName value
       )
-    throughJSON scalarName =
-      let schemaType = P.TNamed P.NonNullable $ P.Definition scalarName Nothing P.TIScalar
-       in Parser
-            { pType = schemaType,
-              pParser =
-                valueToJSON (P.toGraphQLType schemaType)
-                  >=> either (parseErrorWith ParseFailed . qeError) pure . runAesonParser J.parseJSON
-            }
 
 jsonPathArg' ::
   MonadParse n =>

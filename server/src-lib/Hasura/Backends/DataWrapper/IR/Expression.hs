@@ -128,6 +128,20 @@ instance From API.Expression Expression where
     API.NotEqual (ValueWrapper2 expr1 expr2) -> NotEqual (from expr1) (from expr2)
     API.ApplyOperator (ValueWrapper3 op expr1 expr2) -> ApplyOperator (from op) (from expr1) (from expr2)
 
+instance From Expression API.Expression where
+  from = \case
+    Literal value -> API.Literal $ ValueWrapper $ from value
+    In expr values -> API.In (ValueWrapper2 (from expr) (map from . S.toList $ values))
+    And exprs -> API.And (ValueWrapper (map from exprs))
+    Or exprs -> API.Or (ValueWrapper (map from exprs))
+    Not expr -> API.Not (ValueWrapper (from expr))
+    IsNull expr -> API.IsNull (ValueWrapper (from expr))
+    IsNotNull expr -> API.IsNotNull (ValueWrapper (from expr))
+    Column name -> API.Column (ValueWrapper (from name))
+    Equal expr1 expr2 -> API.Equal (ValueWrapper2 (from expr1) (from expr2))
+    NotEqual expr1 expr2 -> API.NotEqual (ValueWrapper2 (from expr1) (from expr2))
+    ApplyOperator op expr1 expr2 -> API.ApplyOperator (ValueWrapper3 (from op) (from expr1) (from expr2))
+
 --------------------------------------------------------------------------------
 
 -- | Operators which are typically applied to two 'Expression's (via the
@@ -152,3 +166,9 @@ instance From API.Operator Operator where
   from API.LessThanOrEqual = LessThanOrEqual
   from API.GreaterThan = GreaterThan
   from API.GreaterThanOrEqual = GreaterThanOrEqual
+
+instance From Operator API.Operator where
+  from LessThan = API.LessThan
+  from LessThanOrEqual = API.LessThanOrEqual
+  from GreaterThan = API.GreaterThan
+  from GreaterThanOrEqual = API.GreaterThanOrEqual

@@ -4,14 +4,69 @@
 
 ### Bug fixes and improvements
 
-- server: refactor GQL query static analysis and improve OpenAPI warning messages
+- server: fix parsing remote relationship json definition from 1.x server catalog on migration (fix #7906)
 - server: Don't drop nested typed null fields in actions (fix #8237)
-- console: add support for setting aggregation query permissions for ms sql server
-- console: add RS-to-DB (only postgres & citus) relationships feature to remote schemas tab
+- 
+## v2.6.0-beta.1
+
+### Breaking changes
+
+- The `query` and `raw-query` field from http-logs for metadata requests are removed by default. Use
+  `HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING` to renable those fields.
+- server: Fix BigQuery overflow issue when using Decimal/NUMERIC data
+  type. The Hasura Graphql Engine renders the column value as string instead
+  of numeric value to avoid precision loss. If your endpoint was
+  returning this result:
+
+``` json
+{
+  "data": {
+    "hasura_author": [
+      {
+        "name": "Author 3",
+        "tax_id": 44403
+      }
+    ]
+  }
+}
+```
+
+It would now instead return this:
+
+``` json
+{
+  "data": {
+    "hasura_author": [
+      {
+        "name": "Author 3",
+        "tax_id": "44403"
+      }
+    ]
+  }
+}
+```
+
+Note that the column type of `tax_id` is Decimal and in the second
+case it is represented as string.
+
+### Bug fixes and improvements
+
+- server: remove 'query' and 'raw-query' field from logs for metadata queries by default. Use `HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING` to renable those fields.
+- server: `clear_metadata` now correctly archives event triggers and the drop source API drops indirect dependencies created by remote relationships when the dependent source is dropped.
+- server: fix inserting values into columns with case sensitive enum types for PostgreSQL/Citus backends (fix #4014)
+- server: remote relationships can be defined _on_ and _to_ Microsoft SQL Server tables
+- server: fix issues with JSON key encoding for remote schemas (fixes #7543 and #8200)
+- server: fix Microsoft SQL Server insert mutation when relationships are used in check permissions (fix #8225)
+- server: refactor GraphQL query static analysis and improve OpenAPI warning messages
+- server: avoid a resource leak when connecting to PostgreSQL fails
+- console: add support for setting aggregation query permissions for Microsoft SQL Server
+- console: add support for RS-to-DB and RS-to-RS joins to Remote Schemas tab
+- console: removed the need for clicking the Modify btn before editing a remote schema (#1193, #8262)
 - cli: fix remote schema metadata formatting issues (#7608)
 - cli: fix query collections metadata formatting issues (#7616)
+- docs: support for `graphql-ws` is considered GA
 
-## v2.5.0-beta.1
+## v2.5.0
 
 ### Remote relationships from remote schemas
 
@@ -174,6 +229,7 @@ the right-hand side for now.
 - console: fix an issue where editing both a column's name and its GraphQL field name at the same time caused an error
 - console: fix redirect to metadata status page on inconsistent inherited role (#8343)
 - console: fix malformed request with REST live preview section (#8316)
+- console: fixed actions search to be case-insensitive
 - cli: add support for customization field in sources metadata (#8292)
 - cli: fix inherited roles metadata not being updated when dropping all roles (#7872)
 - ci: ubuntu and centos flavoured graphql-engine images are now available

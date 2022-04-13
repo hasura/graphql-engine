@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
-import 'antd/lib/tree/style/index.css';
 import { Tree as AntTree } from 'antd';
 import { GraphQLSchema } from 'graphql';
 import { EventDataNode } from 'antd/lib/tree';
+import './index.css';
 import {
   AllowedRootFields,
   AntdTreeNode,

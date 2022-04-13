@@ -1,6 +1,7 @@
 module Hasura.GraphQL.Execute.Subscription.Options
   ( SubscriptionsOptions (..),
     LiveQueriesOptions,
+    StreamQueriesOptions,
     BatchSize,
     unBatchSize,
     RefetchInterval,
@@ -22,6 +23,8 @@ data SubscriptionsOptions = SubscriptionsOptions
   deriving (Show, Eq)
 
 type LiveQueriesOptions = SubscriptionsOptions
+
+type StreamQueriesOptions = SubscriptionsOptions
 
 mkSubscriptionsOptions :: Maybe BatchSize -> Maybe RefetchInterval -> SubscriptionsOptions
 mkSubscriptionsOptions batchSize refetchInterval =

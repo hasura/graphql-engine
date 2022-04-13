@@ -1,21 +1,21 @@
 # gridsome-postgres-graphql
 
-Boilerplate to get started with Gridsome, Hasura GraphQL engine as CMS and postgres as database using the awesome plugin [source-graphql](https://github.com/gridsome/gridsome/tree/master/packages/source-graphql).
+Boilerplate to get started with Gridsome, Hasura GraphQL Engine and PostgreSQL. It uses the Hasura GraphQL Engine as a CMS, PostgreSQL as a database and the [source-graphql](https://github.com/gridsome/gridsome/tree/master/packages/source-graphql) plugin.
 
 [![Edit gridsome-postgres-graphql](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/github/hasura/graphql-engine/tree/master/community/sample-apps/gridsome-postgres-graphql?fontsize=14)
 
 ![Gridsome Postgres GraphQL](https://graphql-engine-cdn.hasura.io/assets/gridsome-postgres-graphql/gridsome-postgres-graphql.png)
 
-# Tutorial
+# Tutorial Steps
 
-- Deploy GraphQL Engine on Hasura Cloud and setup PostgreSQL via Heroku:
+- Deploy the GraphQL Engine on Hasura Cloud and setup PostgreSQL via Heroku:
   
   [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/signup)
 - Get the Hasura app URL (say `gridsome-graphql.hasura.app`)
-- Create `author` table:
+- Create the `author` table:
   
-  Open Hasura console: visit https://gridsome-graphql.hasura.app on a browser  
-  Navigate to `Data` section in the top nav bar and create a table as follows:
+  Open the Hasura console: visit https://gridsome-graphql.hasura.app in a browser
+  Navigate to the `Data` section in the top nav bar and create a table as follows:
 
   ![Create author table](../gatsby-postgres-graphql/assets/add_table.jpg)
 
@@ -27,36 +27,34 @@ Boilerplate to get started with Gridsome, Hasura GraphQL engine as CMS and postg
 
   ![Insert data into author table](../gatsby-postgres-graphql/assets/browse_rows.jpg)
 
-- Similarly, create an article table with the following data model:
-table: `article`
-columns: `id`, `title`, `content`, `author_id` (foreign key to `author` table's `id`) and `created_at`
+- Similarly, create an `article` table with the following columns: `id`, `title`, `content`, `author_id` (foreign key to `author` table's `id`) and `created_at`
 
   ![Create foreign key for author_id column to author's id](../react-static-graphql/assets/author_fk.png)
 
-- Now create a relationship from article table to author table by going to the Relationships tab.
+- Now create a relationship from the `article` table to the `author` table by going to the "Relationships" tab.
 
-- Install Gridsome CLI tool if you don't have
+- Install the Gridsome CLI:
 
 `npm install --global @gridsome/cli`
 
-- Create a Gridsome project
+- Create a Gridsome project:
 
 `gridsome create my-gridsome-site`
 
-- Go to your project directory
+- Go to your project directory:
 
 `cd my-gridsome-site`
 
-- Install node modules:
+- Install the dependencies:
   ```bash
   yarn install
   ```
-  or npm
+  or
   ```bash
   npm install
   ```
 
-- Configure Gridsome to use `source-graphql` plugin and a connection GraphQL url to stitch the schema. Open the file `gridsome.config.js` and modify the plugin section to configure the GraphQL Endpoint.
+- Configure Gridsome to use the `source-graphql` plugin and then configure the GraphQL connection. Open the file `gridsome.config.js` and add the following code:
 
 ```js
 {
@@ -64,7 +62,7 @@ columns: `id`, `title`, `content`, `author_id` (foreign key to `author` table's 
     {
       use: '@gridsome/source-graphql',
       options: {
-        url: 'https://gridsome-graphql.hasura.app/v1/graphql',
+        url: '<your-app-url>/v1/graphql',
         fieldName: 'hasura',
         headers: {
           // Authorization: `Bearer ${process.env.AUTH_TOKEN}`,
@@ -75,7 +73,7 @@ columns: `id`, `title`, `content`, `author_id` (foreign key to `author` table's 
 }
 ```
 
-- Make a GraphQL query from your component
+- Create the `Articles.vue` file in the "pages" folder. After that, write the following code:
 
 ```js
 <template>
@@ -119,4 +117,3 @@ query {
 # Contributing
 
 Checkout the [contributing guide](../../../CONTRIBUTING.md#community-content) for more details.
-

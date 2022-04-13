@@ -297,6 +297,20 @@ buildRelayRoleContext options sources allActionInfos customTypes role = do
     queryParserBackend <-
       queryWithIntrospectionHelper queryPGFields mutationParserBackend subscriptionParser
 
+    -- In order to catch errors early, we attempt to generate the data
+    -- required for introspection, which ends up doing a few correctness
+    -- checks in the GraphQL schema.
+    void $
+      buildIntrospectionSchema
+        (P.parserType queryParserBackend)
+        (P.parserType <$> mutationParserBackend)
+        (P.parserType <$> subscriptionParser)
+    void $
+      buildIntrospectionSchema
+        (P.parserType queryParserFrontend)
+        (P.parserType <$> mutationParserFrontend)
+        (P.parserType <$> subscriptionParser)
+
     let frontendContext =
           GQLContext (finalizeParser queryParserFrontend) (finalizeParser <$> mutationParserFrontend)
         backendContext =
@@ -391,6 +405,11 @@ unauthenticatedContext allRemotes remoteSchemaPermsCtx = do
         P.safeSelectionSet mutationRoot (Just $ G.Description "mutation root") mutationFields
           <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
     queryParser <- queryWithIntrospectionHelper queryFields mutationParser Nothing
+    void $
+      buildIntrospectionSchema
+        (P.parserType queryParser)
+        (P.parserType <$> mutationParser)
+        Nothing
     pure (GQLContext (finalizeParser queryParser) (finalizeParser <$> mutationParser), remoteErrors)
 
 -------------------------------------------------------------------------------

@@ -38,7 +38,7 @@ spec = do
         (RelationshipField $ RelField fieldMapping query)
         [aesonQQ|
         { "type": "relationship",
-          "field_mapping": {"id": "my_foreign_id"},
+          "column_mapping": {"id": "my_foreign_id"},
           "query": {"fields": {}, "from": "my_table_name"}
         }
       |]

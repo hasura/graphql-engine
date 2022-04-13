@@ -53,7 +53,7 @@ LEFT JOIN LATERAL
   ( SELECT jsonb_agg(jsonb_build_object(
       'name', "column".attname,
       'position', "column".attnum,
-      'type', coalesce(base_type.typname, "type".typname),
+      'type', json_build_object('name', coalesce(base_type.typname, "type".typname), 'type', "type".typtype),
       'is_nullable', NOT "column".attnotnull,
       'description', pg_catalog.col_description("table".oid, "column".attnum),
       'mutability', jsonb_build_object(

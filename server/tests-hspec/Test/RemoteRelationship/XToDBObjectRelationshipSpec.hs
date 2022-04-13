@@ -26,6 +26,7 @@ import Data.Text (Text)
 import Data.Typeable (Typeable)
 import GHC.Generics
 import Harness.Backend.Postgres qualified as Postgres
+import Harness.Backend.Sqlserver qualified as SQLServer
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
@@ -43,8 +44,8 @@ import Prelude
 spec :: SpecWith State
 spec = Context.runWithLocalState contexts tests
   where
-    lhsContexts = [lhsPostgres, lhsRemoteServer]
-    rhsContexts = [rhsPostgres]
+    lhsContexts = [lhsPostgres, lhsSQLServer, lhsRemoteServer]
+    rhsContexts = [rhsPostgres, rhsSQLServer]
     contexts = combine <$> lhsContexts <*> rhsContexts
 
 -- | Combines a lhs and a rhs.
@@ -63,9 +64,10 @@ combine lhs (tableName, rhs) =
         GraphqlEngine.clearMetadata state
         rhsSetup (state, ())
         lhsSetup (state, localState),
-      teardown = \state@(globalState, _) -> do
+      teardown = \state@(globalState, _localState) -> do
         lhsTeardown state
-        rhsTeardown (globalState, ()),
+        rhsTeardown (globalState, ())
+        GraphqlEngine.clearMetadata globalState,
       customOptions =
         Context.combineOptions lhsOptions rhsOptions
     }
@@ -100,6 +102,16 @@ lhsPostgres tableName =
       mkLocalState = lhsPostgresMkLocalState,
       setup = lhsPostgresSetup tableName,
       teardown = lhsPostgresTeardown,
+      customOptions = Nothing
+    }
+
+lhsSQLServer :: LHSContext
+lhsSQLServer tableName =
+  Context
+    { name = Context.Backend Context.SQLServer,
+      mkLocalState = lhsSQLServerMkLocalState,
+      setup = lhsSQLServerSetup tableName,
+      teardown = lhsSQLServerTeardown,
       customOptions = Nothing
     }
 
@@ -138,10 +150,22 @@ rhsPostgres =
           }
    in (table, context)
 
-{-
-rhsMSSQL :: (Value, Context)
-rhsMSSQL = ([yaml|{"schema":"hasura", "name":"album"}|], Context "MSSQL" rhsMSSQLSetup rhsMSSQLTeardown)
--}
+rhsSQLServer :: RHSContext
+rhsSQLServer =
+  let table =
+        [yaml|
+      schema: hasura
+      name: album
+    |]
+      context =
+        Context
+          { name = Context.Backend Context.SQLServer,
+            mkLocalState = Context.noLocalState,
+            setup = rhsSQLServerSetup,
+            teardown = rhsSQLServerTeardown,
+            customOptions = Nothing
+          }
+   in (table, context)
 
 --------------------------------------------------------------------------------
 -- Schema
@@ -250,6 +274,74 @@ args:
 
 lhsPostgresTeardown :: (State, Maybe Server) -> IO ()
 lhsPostgresTeardown _ = Postgres.dropTable track
+
+--------------------------------------------------------------------------------
+-- LHS SQLServer
+
+lhsSQLServerMkLocalState :: State -> IO (Maybe Server)
+lhsSQLServerMkLocalState _ = pure Nothing
+
+lhsSQLServerSetup :: Value -> (State, Maybe Server) -> IO ()
+lhsSQLServerSetup rhsTableName (state, _) = do
+  let sourceName = "source"
+      sourceConfig = SQLServer.defaultSourceConfiguration
+      schemaName = Context.defaultSchema Context.SQLServer
+  -- Add remote source
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: mssql_add_source
+args:
+  name: *sourceName
+  configuration: *sourceConfig
+|]
+  -- setup tables only
+  SQLServer.createTable track
+  SQLServer.insertTable track
+  Schema.trackTable Context.SQLServer sourceName track state
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: bulk
+args:
+- type: mssql_create_select_permission
+  args:
+    source: *sourceName
+    role: role1
+    table:
+      schema: *schemaName
+      name: track
+    permission:
+      columns: '*'
+      filter: {}
+- type: mssql_create_select_permission
+  args:
+    source: *sourceName
+    role: role2
+    table:
+      schema: *schemaName
+      name: track
+    permission:
+      columns: '*'
+      filter: {}
+- type: mssql_create_remote_relationship
+  args:
+    source: *sourceName
+    table:
+      schema: *schemaName
+      name: track
+    name: album
+    definition:
+      to_source:
+        source: target
+        table: *rhsTableName
+        relationship_type: object
+        field_mapping:
+          album_id: id
+  |]
+
+lhsSQLServerTeardown :: (State, Maybe Server) -> IO ()
+lhsSQLServerTeardown _ = SQLServer.dropTable track
 
 --------------------------------------------------------------------------------
 -- LHS Remote Server
@@ -513,6 +605,66 @@ args:
 
 rhsPostgresTeardown :: (State, ()) -> IO ()
 rhsPostgresTeardown _ = Postgres.dropTable album
+
+--------------------------------------------------------------------------------
+-- RHS SQLServer
+
+rhsSQLServerSetup :: (State, ()) -> IO ()
+rhsSQLServerSetup (state, _) = do
+  let sourceName = "target"
+      sourceConfig = SQLServer.defaultSourceConfiguration
+      schemaName = Context.defaultSchema Context.SQLServer
+  -- Add remote source
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: mssql_add_source
+args:
+  name: *sourceName
+  configuration: *sourceConfig
+|]
+  -- setup tables only
+  SQLServer.createTable album
+  SQLServer.insertTable album
+  Schema.trackTable Context.SQLServer sourceName album state
+
+  GraphqlEngine.postMetadata_
+    state
+    [yaml|
+type: bulk
+args:
+- type: mssql_create_select_permission
+  args:
+    source: *sourceName
+    role: role1
+    table:
+      schema: *schemaName
+      name: album
+    permission:
+      columns:
+        - title
+        - artist_id
+      filter:
+        artist_id:
+          _eq: x-hasura-artist-id
+- type: mssql_create_select_permission
+  args:
+    source: *sourceName
+    role: role2
+    table:
+      schema: *schemaName
+      name: album
+    permission:
+      columns: [id, title, artist_id]
+      filter:
+        artist_id:
+          _eq: x-hasura-artist-id
+      limit: 1
+      allow_aggregations: true
+  |]
+
+rhsSQLServerTeardown :: (State, ()) -> IO ()
+rhsSQLServerTeardown _ = SQLServer.dropTable album
 
 --------------------------------------------------------------------------------
 -- Tests

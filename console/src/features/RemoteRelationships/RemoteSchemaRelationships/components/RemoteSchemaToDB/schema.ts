@@ -13,7 +13,8 @@ export const schema = z.object({
     })
   ),
   typeName: z.string().min(1, { message: 'Type is required!' }),
-  source_remote_schema: z.string(),
+  sourceRemoteSchema: z.string(),
+  driver: z.string(),
 });
 
 export type Schema = z.infer<typeof schema>;

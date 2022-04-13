@@ -30,6 +30,11 @@ module Hasura.GraphQL.Schema.Common
     takeValidTables,
     textToName,
     RemoteSchemaParser (..),
+    getIndirectDependencies,
+    purgeDependencies,
+    dropRemoteSchemaRemoteRelationshipInMetadata,
+    mkEnumTypeName,
+    addEnumSuffix,
   )
 where
 
@@ -51,6 +56,7 @@ import Hasura.RQL.IR.RemoteSchema qualified as IR
 import Hasura.RQL.IR.Root qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types
+import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session (RoleName)
 import Language.GraphQL.Draft.Syntax as G
 
@@ -233,3 +239,70 @@ optionalFieldParser ::
   m (Maybe (P.FieldParser n a)) ->
   m (Maybe (P.FieldParser n b))
 optionalFieldParser = fmap . fmap . fmap
+
+-- | Builds the type name for referenced enum tables.
+mkEnumTypeName :: forall b m r. (Backend b, MonadReader r m, Has MkTypename r, MonadError QErr m) => EnumReference b -> m G.Name
+mkEnumTypeName (EnumReference enumTableName _ enumTableCustomName) = do
+  enumTableGQLName <- tableGraphQLName @b enumTableName `onLeft` throwError
+  addEnumSuffix enumTableGQLName enumTableCustomName
+
+addEnumSuffix :: (MonadReader r m, Has MkTypename r) => G.Name -> Maybe G.Name -> m G.Name
+addEnumSuffix enumTableGQLName enumTableCustomName = P.mkTypename $ (fromMaybe enumTableGQLName enumTableCustomName) <> $$(G.litName "_enum")
+
+-- | Return the indirect dependencies on a source.
+-- We return a [SchemaObjId] instead of [SourceObjId], because the latter has no
+-- reference to the source. Due to which we won't be able to drop the dependencies of
+-- a different source.
+--
+-- For eg:
+-- Say we have two sources: "source1" and "source2".
+-- "source1" has a remote relationship with "source2". So when "source2" is dropped,
+-- the remote relationship from "source1" also has to be dropped. If we were to only
+-- pass the 'SourceObjId', we wouldn't have know which source that pertains to. Hence
+-- we'll not be able to drop the remote relationship. That's why we return the
+-- [SchemaObjId] so that, we can drop the 'SourceObjId' from the correct source.
+getIndirectDependencies ::
+  forall m.
+  (QErrM m, CacheRM m) =>
+  SourceName ->
+  m [SchemaObjId]
+getIndirectDependencies sourceName = do
+  schemaCache <- askSchemaCache
+  -- (Direct + Indirect dependencies)
+  let allDependecies = getDependentObjs schemaCache (SOSource sourceName)
+  pure $ filter isIndirectDep allDependecies
+  where
+    isIndirectDep :: SchemaObjId -> Bool
+    isIndirectDep (SOSourceObj sn _)
+      -- If the dependency is in another source, then it is an indirect dependency
+      | sn /= sourceName = True
+      | otherwise = False
+    -- If a relationship in a remote schema depends on this source, then we have to
+    -- remove the relationship from remote schema.
+    isIndirectDep (SORemoteSchemaRemoteRelationship {}) = True
+    -- Ignore non source dependencies
+    isIndirectDep _ = False
+
+purgeDependencies ::
+  MonadError QErr m =>
+  [SchemaObjId] ->
+  WriterT MetadataModifier m ()
+purgeDependencies deps =
+  for_ deps \case
+    SOSourceObj sourceName objectID -> do
+      AB.dispatchAnyBackend @BackendMetadata objectID $ purgeDependentObject sourceName >=> tell
+    SORemoteSchemaRemoteRelationship remoteSchemaName typeName relationshipName -> do
+      tell $ dropRemoteSchemaRemoteRelationshipInMetadata remoteSchemaName typeName relationshipName
+    _ ->
+      -- Ignore non-source dependencies
+      pure ()
+
+dropRemoteSchemaRemoteRelationshipInMetadata :: RemoteSchemaName -> G.Name -> RelName -> MetadataModifier
+dropRemoteSchemaRemoteRelationshipInMetadata remoteSchemaName typeName relationshipName =
+  MetadataModifier $
+    metaRemoteSchemas
+      . ix remoteSchemaName
+      . rsmRemoteRelationships
+      . ix typeName
+      . rstrsRelationships
+      %~ OMap.delete relationshipName

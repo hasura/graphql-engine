@@ -10,6 +10,22 @@ maintainer:          vamshi@hasura.io
 copyright:           Hasura Inc.
 category:            Database
 build-type:          Simple
+extra-source-files:
+  -- We use TH to bake in the server’s version number at compile time. In order
+  -- for recompilation detection to work correctly (especially in the presence
+  -- of caching) we need to both communicate this data via a file (referenced in
+  -- TH with addDependentFile) /and/ add that file to this section of the cabal
+  -- file. See: https://github.com/haskell/cabal/issues/4746
+  --
+  -- This file is intentionally .gitignore'd
+  CURRENT_VERSION
+  -- These are files referenced by functions from 'file-embed' which uses
+  -- addDependentFile internally and has the same issue as above:
+  src-rsr/mysql_table_metadata.sql
+  src-rsr/mssql_table_metadata.sql
+  src-rsr/catalog_versions.txt
+  src-rsr/catalog_version.txt
+
 
 source-repository head
   type:     git
@@ -22,8 +38,9 @@ flag profiling
 
 -- A single flag to enable all optimization-related settings at once, for all
 -- hasura code.
--- We share this flag name across our .cabal projects so we can switch it on or
--- off for all of them at the top level of our cabal.project(.*) files
+--
+-- We share this flag name across our Haskell projects so we can switch it on or
+-- off for all of them at in our Cabal project files.
 flag optimize-hasura
   description: Compile hasura code with appropriate optimizations
   default: True
@@ -168,6 +185,7 @@ library
                      , exceptions
                      , fast-logger
                      , gdw-api
+                     , free
                      , hashable
                      , hashable-time
                      , http-client-tls
@@ -464,7 +482,7 @@ library
                      , Hasura.Backends.Postgres.DDL.Source
                      , Hasura.Backends.Postgres.DDL.Source.Version
                      , Hasura.Backends.Postgres.DDL.Table
-                     , Hasura.Backends.Postgres.Execute.LiveQuery
+                     , Hasura.Backends.Postgres.Execute.Subscription
                      , Hasura.Backends.Postgres.Execute.Insert
                      , Hasura.Backends.Postgres.Execute.Mutation
                      , Hasura.Backends.Postgres.Execute.Prepare
@@ -522,6 +540,8 @@ library
                      , Hasura.Backends.DataWrapper.Adapter.Metadata
                      , Hasura.Backends.DataWrapper.Adapter.Schema
                      , Hasura.Backends.DataWrapper.Adapter.Transport
+                     , Hasura.Backends.DataWrapper.Adapter.Types
+                     , Hasura.Backends.DataWrapper.Agent.Client
                      , Hasura.Backends.DataWrapper.IR.Column
                      , Hasura.Backends.DataWrapper.IR.Expression
                      , Hasura.Backends.DataWrapper.IR.Function
@@ -531,6 +551,7 @@ library
                      , Hasura.Backends.DataWrapper.IR.Scalar.Type
                      , Hasura.Backends.DataWrapper.IR.Scalar.Value
                      , Hasura.Backends.DataWrapper.IR.Table
+                     , Hasura.Backends.DataWrapper.Plan
                      , Hasura.Backends.DataWrapper.Schema.Column
                      , Hasura.Backends.DataWrapper.Schema.Table
 
@@ -706,8 +727,10 @@ library
                      , Hasura.GraphQL.Execute.Subscription.Poll
                      , Hasura.GraphQL.Execute.Subscription.Poll.Common
                      , Hasura.GraphQL.Execute.Subscription.Poll.LiveQuery
+                     , Hasura.GraphQL.Execute.Subscription.Poll.StreamingQuery
                      , Hasura.GraphQL.Execute.Subscription.State
                      , Hasura.GraphQL.Execute.Subscription.TMap
+                     , Hasura.GraphQL.Execute.Subscription.Types
                      , Hasura.GraphQL.Execute.Mutation
                      , Hasura.GraphQL.Execute.Remote
                      , Hasura.GraphQL.Execute.RemoteJoin
@@ -818,6 +841,7 @@ test-suite graphql-engine-tests
   type: exitcode-stdio-1.0
   build-depends:
       aeson
+    , async
     , base
     , bytestring
     , case-insensitive
@@ -825,7 +849,9 @@ test-suite graphql-engine-tests
     , cron
     , dependent-map
     , dependent-sum
+    , ekg-core
     , gdw-api
+    , free
     , graphql-engine
     , graphql-parser
     , hedgehog
@@ -837,12 +863,14 @@ test-suite graphql-engine-tests
     , http-client
     , http-client-tls
     , http-types
+    , immortal
     , insert-ordered-containers
     , jose
     , kan-extensions
     , lens
     , lens-aeson
     , lifted-base
+    , list-t
     , mmorph
     , monad-control
     , mtl
@@ -857,6 +885,7 @@ test-suite graphql-engine-tests
     , scientific
     , split
     , stm
+    , stm-containers
     , template-haskell
     , text
     , time
@@ -864,6 +893,7 @@ test-suite graphql-engine-tests
     , transformers-base
     , unordered-containers
     , utf8-string
+    , uuid
     , vector
     , yaml
     -- mssql support
@@ -877,11 +907,12 @@ test-suite graphql-engine-tests
     Data.NonNegativeIntSpec
     Data.Parser.CacheControlSpec
     Data.Parser.JSONPathSpec
-    Data.Parser.URLTemplate
+    Data.Parser.URLTemplateSpec
     Data.Text.RawString
     Data.TimeSpec
     Data.TrieSpec
     Database.MSSQL.TransactionSpec
+    Hasura.AppSpec
     Hasura.Backends.DataWrapper.API.V0Spec
     Hasura.Backends.DataWrapper.API.V0.ColumnSpec
     Hasura.Backends.DataWrapper.API.V0.ExpressionSpec
@@ -891,8 +922,20 @@ test-suite graphql-engine-tests
     Hasura.Backends.DataWrapper.API.V0.Scalar.ValueSpec
     Hasura.Backends.DataWrapper.API.V0.SchemaSpec
     Hasura.Backends.DataWrapper.API.V0.TableSpec
+    Hasura.Backends.DataWrapper.RQLGenerator
+    Hasura.Backends.DataWrapper.RQLGenerator.GenAnnSelectG
+    Hasura.Backends.DataWrapper.RQLGenerator.GenCommon
+    Hasura.Backends.DataWrapper.RQLGenerator.GenTablePermG
+    Hasura.Backends.DataWrapper.RQLGenerator.GenSelectArgsG
+    Hasura.Backends.DataWrapper.RQLGenerator.GenSelectFromG
     Hasura.Backends.MSSQL.ErrorSpec
     Hasura.Backends.MySQL.DataLoader.ExecuteTests
+    Hasura.Backends.Postgres.RQLGenerator
+    Hasura.Backends.Postgres.RQLGenerator.GenAssociatedTypes
+    Hasura.Backends.Postgres.RQLGenerator.GenAnnSelectG
+    Hasura.Backends.Postgres.RQLGenerator.GenSelectArgsG
+    Hasura.Backends.Postgres.RQLGenerator.GenSelectFromG
+    Hasura.Backends.Postgres.RQLGenerator.GenTablePermG
     Hasura.EventingSpec
     Hasura.Generator.Common
     Hasura.GraphQL.NamespaceSpec
@@ -900,9 +943,9 @@ test-suite graphql-engine-tests
     Hasura.GraphQL.Parser.TestUtils
     Hasura.GraphQL.Schema.RemoteTest
     Hasura.IncrementalSpec
+    Hasura.StreamingSubscriptionSpec
     Hasura.QuickCheck.Instances
     Hasura.RQL.IR.Generator
-    Hasura.RQL.IR.Postgres
     Hasura.RQL.IR.SelectSpec
     Hasura.RQL.MetadataSpec
     Hasura.RQL.PermissionSpec
@@ -1050,12 +1093,64 @@ test-suite tests-hspec
     Test.ObjectRelationshipsLimitSpec
     Test.ObjectRelationshipsSpec
     Test.OrderingSpec
+    Test.RemoteRelationship.MetadataAPI.Common
+    Test.RemoteRelationship.MetadataAPI.ClearMetadataSpec
+    Test.RemoteRelationship.MetadataAPI.DropSource.DBtoDBRelationshipSpec
+    Test.RemoteRelationship.MetadataAPI.DropSource.RSToDBRelationshipSpec
     Test.RemoteRelationship.FromRemoteSchemaSpec
     Test.RemoteRelationship.XToDBArrayRelationshipSpec
     Test.RemoteRelationship.XToDBObjectRelationshipSpec
     Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec
     Test.RequestHeadersSpec
+    Test.SerializationSpec
     Test.ServiceLivenessSpec
     Test.ViewsSpec
     Test.WhereSpec
     Test.RunSQLSpec
+    Test.InsertCheckPermissionSpec
+    Test.InsertEnumColumnSpec
+
+test-suite tests-gdw-api
+  import: common-all, common-exe
+  type: exitcode-stdio-1.0
+  build-depends:
+    , aeson
+    , autodocodec
+    , autodocodec-openapi3
+    , base
+    , bytestring
+    , deepseq
+    , file-embed
+    , gdw-api
+    , hashable
+    , hspec
+    , hspec-core
+    , hspec-expectations-pretty-diff
+    , http-client
+    , lens
+    , lens-aeson
+    , mtl
+    , network-uri
+    , openapi3
+    , optparse-applicative
+    , scientific
+    , servant
+    , servant-client
+    , servant-client-core
+    , servant-openapi3
+    , text
+    , unordered-containers
+    , vector
+  hs-source-dirs: tests-gdw-api
+  -- Turning off optimizations is intentional; tests aren't
+  -- performance sensitive and waiting for compilation is a problem.
+  ghc-options: -Wall -O0 -threaded
+  main-is: Main.hs
+  other-modules:
+      Command
+    , Paths_graphql_engine
+    , Test.Data
+    , Test.QuerySpec
+    , Test.QuerySpec.BasicSpec
+    , Test.QuerySpec.RelationshipsSpec
+    , Test.SchemaSpec

@@ -48,3 +48,9 @@ instance From API.Type Type where
     API.StringTy -> String
     API.NumberTy -> Number
     API.BoolTy -> Bool
+
+instance From Type API.Type where
+  from = \case
+    String -> API.StringTy
+    Number -> API.NumberTy
+    Bool -> API.BoolTy

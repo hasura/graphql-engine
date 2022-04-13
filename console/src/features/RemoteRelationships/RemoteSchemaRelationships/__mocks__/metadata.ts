@@ -136,6 +136,54 @@ export const metadata = {
         },
         comment: '',
       },
+      {
+        name: 'with_default_values',
+        definition: {
+          url: 'https://some-graph-other-endpoint.com/api/graphql',
+          timeout_seconds: 60,
+          forward_client_headers: true,
+        },
+        comment: '',
+        remote_relationships: [
+          {
+            relationships: [
+              {
+                definition: {
+                  to_source: {
+                    relationship_type: 'object',
+                    source: 'default',
+                    table: {
+                      schema: 'public',
+                      name: 'resident',
+                    },
+                    field_mapping: {
+                      name: 'Title',
+                    },
+                  },
+                },
+                name: 'testRemoteRelationship',
+              },
+              {
+                definition: {
+                  to_remote_schema: {
+                    remote_field: {
+                      country: {
+                        arguments: {
+                          code: '$code',
+                        },
+                      },
+                    },
+                    remote_schema: 'source_remote_schema',
+                    lhs_fields: ['code'],
+                  },
+                },
+                name: 'an_example_rs_to_rs_relationship',
+              },
+            ],
+            type_name: 'Country',
+          },
+        ],
+      },
     ],
   },
 };

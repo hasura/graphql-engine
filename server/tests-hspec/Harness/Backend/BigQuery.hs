@@ -6,9 +6,11 @@
 -- | BigQuery helpers.
 module Harness.Backend.BigQuery
   ( run_,
+    runSql_,
     getServiceAccount,
     getProjectId,
     createTable,
+    defaultSourceMetadata,
     insertTable,
     trackTable,
     dropTable,
@@ -18,24 +20,29 @@ module Harness.Backend.BigQuery
   )
 where
 
+import Control.Monad (void)
+import Data.Aeson (Value)
 import Data.Bool (bool)
 import Data.Foldable (for_)
 import Data.String
-import Data.Text (Text)
+import Data.Text (Text, pack, replace)
 import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated)
+import Data.Time (defaultTimeLocale, formatTime)
+import GHC.Stack
 import Harness.Constants as Constants
 import Harness.Env
-import Harness.Exceptions (HasCallStack, forFinally_)
+import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.State (State)
 import Harness.Test.Context (BackendType (BigQuery), defaultBackendTypeString, defaultSource)
+import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..), formatBackendScalarValue)
 import Harness.Test.Schema qualified as Schema
 import Hasura.Backends.BigQuery.Connection (initConnection)
 import Hasura.Backends.BigQuery.Execute qualified as Execute
 import Hasura.Backends.BigQuery.Source (ServiceAccount)
-import Hasura.Prelude (onLeft)
+import Hasura.Prelude (onLeft, tshow)
 import Prelude
 
 getServiceAccount :: HasCallStack => IO ServiceAccount
@@ -51,6 +58,31 @@ run_ serviceAccount projectId query = do
   conn <- initConnection serviceAccount projectId Nothing
   res <- Execute.executeBigQuery conn Execute.BigQuery {Execute.query = fromString query, Execute.parameters = mempty}
   res `onLeft` (`bigQueryError` query)
+
+runSql_ :: HasCallStack => String -> IO ()
+runSql_ query = do
+  serviceAccount <- getServiceAccount
+  projectId <- getProjectId
+  catch
+    ( bracket
+        (initConnection serviceAccount projectId Nothing)
+        (const (pure ()))
+        (\conn -> void $ handleResult <$> (Execute.executeBigQuery conn Execute.BigQuery {Execute.query = fromString query, Execute.parameters = mempty}))
+    )
+    ( \(e :: SomeException) ->
+        error
+          ( unlines
+              [ "BigQuery error:",
+                show e,
+                "SQL was:",
+                query
+              ]
+          )
+    )
+  where
+    handleResult :: Either Execute.ExecuteProblem () -> IO ()
+    handleResult (Left _) = throwString "Error handling bigquery"
+    handleResult (Right ()) = pure ()
 
 bigQueryError :: HasCallStack => Execute.ExecuteProblem -> String -> IO ()
 bigQueryError e query =
@@ -89,7 +121,7 @@ scalarType = \case
   Schema.TStr -> "STRING"
   Schema.TUTCTime -> "DATETIME"
   Schema.TBool -> "BIT"
-  t -> error $ "Unexpected scalar type used for BigQuery: " <> show t
+  Schema.TCustomType txt -> Schema.getBackendScalarType txt bstBigQuery
 
 mkColumn :: Schema.Column -> Text
 mkColumn Schema.Column {columnName, columnType, columnNullable, columnDefault} =
@@ -122,11 +154,21 @@ insertTable Schema.Table {tableName, tableColumns, tableData}
             ";"
           ]
 
+-- | 'ScalarValue' serializer for BigQuery
+serialize :: ScalarValue -> Text
+serialize = \case
+  VInt i -> tshow i
+  VStr s -> "'" <> replace "'" "\'" s <> "'"
+  VUTCTime t -> pack $ formatTime defaultTimeLocale "'%F %T'" t
+  VBool b -> tshow @Int $ if b then 1 else 0
+  VNull -> "NULL"
+  VCustomValue bsv -> "'" <> formatBackendScalarValue bsv bsvBigQuery <> "'"
+
 mkRow :: [Schema.ScalarValue] -> Text
 mkRow row =
   T.unwords
     [ "(",
-      commaSeparated $ Schema.serialize <$> row,
+      commaSeparated $ serialize <$> row,
       ")"
     ]
 
@@ -177,6 +219,29 @@ args:
   table:
     dataset: *datasetName
     name: *tableName
+|]
+
+-- | Metadata source information for the default BigQuery instance
+defaultSourceMetadata :: IO Value
+defaultSourceMetadata = do
+  let dataset = Constants.bigqueryDataset
+      source = defaultSource BigQuery
+      backendType = defaultBackendTypeString BigQuery
+  serviceAccount <- getServiceAccount
+  projectId <- getProjectId
+  pure $
+    [yaml|
+type: replace_metadata
+args:
+  version: 3
+  sources:
+  - name: *source
+    kind: *backendType
+    tables: []
+    configuration:
+      service_account: *serviceAccount
+      project_id: *projectId
+      datasets: [*dataset]
 |]
 
 -- | Setup the schema in the most expected way.

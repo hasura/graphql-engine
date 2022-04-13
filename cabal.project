@@ -1,15 +1,17 @@
 -- Global project configuration.
 --
--- This file can be overridden with cabal.project.local (see e.g. cabal.project.dev)
+-- This file can be overridden with cabal.project.local (see e.g. cabal/dev.project)
 --
--- If you need to switch between several local configurations you can also
--- create a symlink to this file with a different name, e.g.:
---     $ ln -s cabal.project cabal.project.myconfig
---     $ ln -s cabal.project.freeze cabal.project.myconfig.freeze
+-- If you need to switch between several local configurations you can also create a
+-- symbolic link to this file in the project root directory; e.g.:
+--     $ ln -s cabal.project myconfig.project
+--     $ ln -s cabal.project.freeze myconfig.project.freeze
+--
 -- ...and then create a new set of overrides in:
---     cabal.project.myconfig.local
+--     myconfig.project.local
+--
 -- ...and then invoke cabal with
---     $ cabal new-build --project-file=cabal.project.myconfig
+--     $ cabal new-build --project-file=myconfig.project
 --
 -- See: https://www.haskell.org/cabal/users-guide/nix-local-build.html#configuring-builds-with-cabal-project
 
@@ -49,12 +51,12 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/hasura/pg-client-hs.git
-  tag: f28738e18b7038627fb59b93dbc67929fe427c57
+  tag: b20352ff42ac0d65592057138e247eb728fa80c0
 
 source-repository-package
   type: git
   location: https://github.com/hasura/graphql-parser-hs.git
-  tag: c311bc15b8d8cef28a846d1d81b0bcc1d59bd956
+  tag: bf54018cd0948c14e651ad2d14238e8f42c333ee
 
 source-repository-package
   type: git
@@ -64,7 +66,7 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/hasura/pool.git
-  tag: bc4c3f739a8fb8ec4444336a34662895831c9acf
+  tag: 427c8f47b5a0de858780b0a9522ad953197b1658
 
 source-repository-package
   type: git

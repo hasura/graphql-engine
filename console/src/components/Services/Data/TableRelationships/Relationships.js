@@ -1,5 +1,12 @@
 import React, { useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
+
+import {
+  FeatureFlagToast,
+  useFeatureFlags,
+  availableFeatureFlagIds,
+} from '@/features/FeatureFlags';
+import { DatabaseRelationshipsTab } from '@/features/DatabaseRelationshipsTab';
 import TableHeader from '../TableCommon/TableHeader';
 import {
   addNewRelClicked,
@@ -325,6 +332,9 @@ const Relationships = ({
     t => t.table_name === tableName && t.table_schema === currentSchema
   );
 
+  const featureFlagsResult = useFeatureFlags();
+  const { data: featureFlagsData } = featureFlagsResult;
+
   if (!isFeatureSupported('tables.relationships.enabled')) {
     return (
       <FeatureDisabled
@@ -338,6 +348,23 @@ const Relationships = ({
   if (!tableSchema && isFeatureSupported('tables.relationships.enabled')) {
     // throw a 404 exception
     throw new NotFoundError();
+  }
+
+  const newRelationshipsTabIsEnabled =
+    featureFlagsData &&
+    featureFlagsData?.length > 0 &&
+    featureFlagsData.find(
+      featureFlag =>
+        featureFlag.id === availableFeatureFlagIds.relationshipTabTablesId
+    )?.state?.enabled;
+
+  if (newRelationshipsTabIsEnabled) {
+    return (
+      <DatabaseRelationshipsTab
+        tableSchema={tableSchema}
+        currentSource={currentSource}
+      />
+    );
   }
 
   let alert = null;
@@ -472,57 +499,62 @@ const Relationships = ({
     ) ?? [];
 
   return (
-    <RightContainer>
-      <div className={`${styles.container} container-fluid`}>
-        <TableHeader
-          dispatch={dispatch}
-          table={tableSchema}
-          source={currentSource}
-          tabName="relationships"
-          migrationMode={migrationMode}
-        />
-        <br />
-        <div className={`${styles.padd_left_remove} container-fluid`}>
-          <div
-            className={`${styles.padd_left_remove} col-xs-10 col-md-10 ${styles.add_mar_bottom}`}
-          >
-            <h4 className={styles.subheading_text}>
-              Table Relationships
-              <ToolTip message={'Relationships to tables / views'} />
-              &nbsp;
-              <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
-            </h4>
-            {addedRelationshipsView}
-            {getAddRelSection()}
-          </div>
-          {isFeatureSupported(
-            'tables.relationships.remoteDbRelationships.hostSource'
-          ) ? (
+    <>
+      <RightContainer>
+        <div className={`${styles.container} container-fluid`}>
+          <TableHeader
+            dispatch={dispatch}
+            table={tableSchema}
+            source={currentSource}
+            tabName="relationships"
+            migrationMode={migrationMode}
+          />
+          <br />
+          <div className={`${styles.padd_left_remove} container-fluid`}>
             <div
               className={`${styles.padd_left_remove} col-xs-10 col-md-10 ${styles.add_mar_bottom}`}
             >
-              <RemoteDbRelationships
-                tableSchema={tableSchema}
-                reduxDispatch={dispatch}
-                currentSource={currentSource}
-              />
+              <h4 className={styles.subheading_text}>
+                Table Relationships
+                <ToolTip message={'Relationships to tables / views'} />
+                &nbsp;
+                <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
+              </h4>
+              {addedRelationshipsView}
+              {getAddRelSection()}
             </div>
-          ) : null}
-          {isFeatureSupported('tables.relationships.remoteRelationships') ? (
-            <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
-              <RemoteRelationships
-                relationships={existingRemoteRelationships}
-                reduxDispatch={dispatch}
-                table={tableSchema}
-                allFunctions={allFunctions}
-                remoteSchemas={remoteSchemas}
-              />
-            </div>
-          ) : null}
+            {isFeatureSupported(
+              'tables.relationships.remoteDbRelationships.hostSource'
+            ) ? (
+              <div
+                className={`${styles.padd_left_remove} col-xs-10 col-md-10 ${styles.add_mar_bottom}`}
+              >
+                <RemoteDbRelationships
+                  tableSchema={tableSchema}
+                  reduxDispatch={dispatch}
+                  currentSource={currentSource}
+                />
+              </div>
+            ) : null}
+            {isFeatureSupported('tables.relationships.remoteRelationships') ? (
+              <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
+                <RemoteRelationships
+                  relationships={existingRemoteRelationships}
+                  reduxDispatch={dispatch}
+                  table={tableSchema}
+                  allFunctions={allFunctions}
+                  remoteSchemas={remoteSchemas}
+                />
+              </div>
+            ) : null}
+          </div>
+          <div className={`${styles.fixed} hidden`}>{alert}</div>
         </div>
-        <div className={`${styles.fixed} hidden`}>{alert}</div>
-      </div>
-    </RightContainer>
+      </RightContainer>
+      <FeatureFlagToast
+        flagId={availableFeatureFlagIds.relationshipTabTablesId}
+      />
+    </>
   );
 };
 

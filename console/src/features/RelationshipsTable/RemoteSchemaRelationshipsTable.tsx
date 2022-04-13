@@ -15,10 +15,16 @@ export const columns = ['NAME', 'TARGET', 'TYPE', 'RELATIONSHIP', null];
 export interface RelationshipsTableProps {
   remoteSchemaRels: ({ rsName: string } & (rsToDbRelDef | rsToRsRelDef))[];
   remoteSchema: string;
-  onEdit?: (relationship: RelationshipType) => void;
-  onDelete?: (relationship: RelationshipType) => void;
+  onEdit?: ({ relationshipName, rsType }: ExistingRelationshipMeta) => void;
+  onDelete?: ({ relationshipName, rsType }: ExistingRelationshipMeta) => void;
   onClick?: (relationship: RelationshipType) => void;
   showActionCell?: boolean;
+}
+
+export interface ExistingRelationshipMeta {
+  relationshipName?: string;
+  rsType?: string;
+  relationshipType?: string;
 }
 
 export const RemoteSchemaRelationshipTable = ({
@@ -26,7 +32,6 @@ export const RemoteSchemaRelationshipTable = ({
   remoteSchema,
   onEdit = () => {},
   onDelete = () => {},
-  onClick = () => {},
   showActionCell = true,
 }: RelationshipsTableProps) => {
   const rowData: ReactNode[][] = [];
@@ -38,30 +43,59 @@ export const RemoteSchemaRelationshipTable = ({
     if (remoteRelationsOnTheSelectedRS.length)
       remoteRelationsOnTheSelectedRS.forEach(remoteRel => {
         const { type_name } = remoteRel;
-        remoteRel.relationships.forEach(i => {
-          const [name, sourceType, type] = getRemoteSchemaRelationType(i);
+
+        remoteRel.relationships.forEach(relationship => {
+          const [name, sourceType, type] = getRemoteSchemaRelationType(
+            relationship
+          );
+          const relType =
+            'to_source' in relationship.definition
+              ? 'to_source'
+              : 'to_remote_schema';
           const leafs =
-            'to_source' in i.definition
-              ? Object.keys(i.definition.to_source.field_mapping)
-              : i.definition.to_remote_schema.lhs_fields;
+            'to_source' in relationship.definition
+              ? Object.keys(relationship.definition.to_source.field_mapping)
+              : relationship.definition.to_remote_schema.lhs_fields;
           const value = [
-            <NameColumnCell relationship={i} onClick={onClick} />,
+            <NameColumnCell
+              relationship={relationship}
+              onClick={() => {
+                onEdit({
+                  relationshipName: relationship.name,
+                  rsType: type_name,
+                  relationshipType:
+                    relType === 'to_source' ? 'remoteDB' : 'remoteSchema',
+                });
+              }}
+            />,
             <SourceColumnCell {...{ type: sourceType, name }} />,
             type,
             <FromRsCell rsName={type_name} leafs={leafs} />,
             <FaArrowRight className="fill-current text-sm text-muted" />,
 
             <RelationshipDestinationCell
-              relationship={i}
+              relationship={relationship}
               sourceType={sourceType}
             />,
           ];
-          if (showActionCell) {
+          if (showActionCell && relType === 'to_source') {
             value.push(
               <ModifyActions
-                onEdit={onEdit}
-                onDelete={onDelete}
-                relationship={i}
+                onEdit={() =>
+                  onEdit({
+                    relationshipName: relationship.name,
+                    rsType: type_name,
+                    relationshipType:
+                      relType === 'to_source' ? 'remoteDB' : 'remoteSchema',
+                  })
+                }
+                onDelete={() =>
+                  onDelete({
+                    relationshipName: relationship.name,
+                    rsType: type_name,
+                  })
+                }
+                relationship={relationship}
               />
             );
           }
@@ -81,11 +115,12 @@ export const RemoteSchemaRelationshipTable = ({
       />
     );
   return (
-    <div className="py-1.5">
+    <>
       <IndicatorCard status="info">
         No remote schema relationships found!
       </IndicatorCard>
-    </div>
+      <br />
+    </>
   );
 };
 

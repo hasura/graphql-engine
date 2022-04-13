@@ -56,14 +56,11 @@ instance BackendExecute 'MSSQL where
 
   mkDBQueryPlan = msDBQueryPlan
   mkDBMutationPlan = msDBMutationPlan
-  mkDBSubscriptionPlan = msDBSubscriptionPlan
+  mkLiveQuerySubscriptionPlan = msDBLiveQuerySubscriptionPlan
+  mkDBStreamingSubscriptionPlan _ _ _ _ = throw500 "Streaming subscriptions are not supported for MS-SQL sources yet"
   mkDBQueryExplain = msDBQueryExplain
   mkSubscriptionExplain = msDBSubscriptionExplain
 
-  -- NOTE: Currently unimplemented!.
-  --
-  -- This function is just a stub for future implementation; for now it just
-  -- throws a 500 error.
   mkDBRemoteRelationshipPlan =
     msDBRemoteRelationshipPlan
 
@@ -201,7 +198,7 @@ multiplexRootReselect variables rootReselect =
                       openJsonWith =
                         Just $
                           NE.fromList
-                            [ UuidField resultIdAlias (Just $ IndexPath RootPath 0),
+                            [ ScalarField GuidType DataLengthUnspecified resultIdAlias (Just $ IndexPath RootPath 0),
                               JsonField resultVarsAlias (Just $ IndexPath RootPath 1)
                             ]
                     },
@@ -247,7 +244,7 @@ msDBMutationPlan userInfo stringifyNum sourceName sourceConfig mrf = do
 
 -- * Subscription
 
-msDBSubscriptionPlan ::
+msDBLiveQuerySubscriptionPlan ::
   forall m.
   ( MonadError QErr m,
     MonadIO m,
@@ -259,7 +256,7 @@ msDBSubscriptionPlan ::
   Maybe G.Name ->
   RootFieldMap (QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL)) ->
   m (SubscriptionQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL))
-msDBSubscriptionPlan UserInfo {_uiSession, _uiRole} _sourceName sourceConfig namespace rootFields = do
+msDBLiveQuerySubscriptionPlan UserInfo {_uiSession, _uiRole} _sourceName sourceConfig namespace rootFields = do
   (reselect, prepareState) <- planSubscription (OMap.mapKeys _rfaAlias rootFields) _uiSession
   cohortVariables <- prepareStateCohortVariables sourceConfig _uiSession prepareState
   let parameterizedPlan = ParameterizedSubscriptionQueryPlan _uiRole $ MultiplexedQuery' reselect
@@ -277,6 +274,7 @@ prepareStateCohortVariables sourceConfig session prepState = do
       session
       namedVars
       posVars
+      mempty
 
 -- | Ensure that the set of variables (with value instantiations) that occur in
 -- a (RQL) query produce a well-formed and executable (SQL) query when
@@ -416,5 +414,16 @@ msDBRemoteRelationshipPlan ::
   RQLTypes.FieldName ->
   (RQLTypes.FieldName, SourceRelationshipSelection 'MSSQL Void UnpreparedValue) ->
   m (DBStepInfo 'MSSQL)
-msDBRemoteRelationshipPlan _userInfo _sourceName _sourceConfig _lhs _lhsSchema _argumentId _relationship = do
-  throw500 "mkDBRemoteRelationshipPlan: SQL Server (MSSQL) does not currently support generalized joins."
+msDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship = do
+  statement <- planSourceRelationship (_uiSession userInfo) lhs lhsSchema argumentId relationship
+
+  let printer = fromSelect statement
+      queryString = ODBC.renderQuery $ toQueryPretty printer
+      odbcQuery = runSelectQuery printer
+
+  pure $ DBStepInfo @'MSSQL sourceName sourceConfig (Just queryString) odbcQuery
+  where
+    runSelectQuery :: Printer -> ExceptT QErr IO EncJSON
+    runSelectQuery queryPrinter = do
+      let queryTx = encJFromText <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler (toQueryFlat queryPrinter)
+      mssqlRunReadOnly (_mscExecCtx sourceConfig) queryTx

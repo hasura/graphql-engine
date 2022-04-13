@@ -7,7 +7,7 @@ module Harness.Test.BackendType
   )
 where
 
-import Harness.Constants qualified as Constants (bigqueryDataset, citusDb, mysqlDb, postgresDb)
+import Harness.Constants qualified as Constants (bigqueryDataset, citusDb, mysqlDb, postgresDb, sqlserverDb)
 import Prelude
 
 -- | A supported backend type.
@@ -42,6 +42,6 @@ defaultSchema :: BackendType -> String
 defaultSchema = \case
   Postgres -> Constants.postgresDb
   MySQL -> Constants.mysqlDb
-  SQLServer -> Constants.mysqlDb
+  SQLServer -> Constants.sqlserverDb
   BigQuery -> Constants.bigqueryDataset
   Citus -> Constants.citusDb

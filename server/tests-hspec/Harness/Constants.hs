@@ -59,6 +59,7 @@ import Hasura.Server.Init
     ServeOptions (..),
   )
 import Hasura.Server.Init qualified as Init
+import Hasura.Server.Logging (MetadataQueryLoggingMode (MetadataQueryLoggingDisabled))
 import Hasura.Server.Types
   ( EventingMode (EventingEnabled),
     MaintenanceMode (MaintenanceModeDisabled),
@@ -235,6 +236,7 @@ serveOptions =
       soDangerousBooleanCollapse = False,
       soEnabledAPIs = testSuiteEnabledApis,
       soLiveQueryOpts = ES.mkSubscriptionsOptions Nothing Nothing,
+      soStreamingQueryOpts = ES.mkSubscriptionsOptions Nothing Nothing,
       soEnableAllowlist = False,
       soEnabledLogTypes = Set.fromList L.userAllowedLogTypes,
       soLogLevel = fromMaybe (L.LevelOther "test-suite") engineLogLevel,
@@ -256,7 +258,8 @@ serveOptions =
       soGracefulShutdownTimeout = 0, -- Don't wait to shutdown.
       soWebsocketConnectionInitTimeout = Init.defaultWSConnectionInitTimeout,
       soEventingMode = EventingEnabled,
-      soReadOnlyMode = ReadOnlyModeDisabled
+      soReadOnlyMode = ReadOnlyModeDisabled,
+      soEnableMetadataQueryLogging = MetadataQueryLoggingDisabled
     }
 
 -- | What log level should be used by the engine; this is not exported, and

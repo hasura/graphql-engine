@@ -11,9 +11,12 @@ module Harness.GraphqlEngine
     postWithHeaders,
     postWithHeaders_,
     postMetadata_,
+    postMetadata,
+    exportMetadata,
     postGraphqlYaml,
     postGraphqlYamlWithHeaders,
     postGraphql,
+    postGraphqlWithPair,
     postGraphqlWithHeaders,
     clearMetadata,
     postV2Query,
@@ -36,6 +39,7 @@ where
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Monad.Trans.Managed (ManagedT (..), lowerManagedT)
 import Data.Aeson (Value, object, (.=))
+import Data.Aeson.Types (Pair)
 import Data.Environment qualified as Env
 import Data.Text qualified as T
 import Data.Time (getCurrentTime)
@@ -132,6 +136,12 @@ postGraphql :: HasCallStack => State -> Value -> IO Value
 postGraphql state value =
   withFrozenCallStack $ postGraphqlYaml state (object ["query" .= value])
 
+-- | Same as postGraphql but accepts a list of 'Pair' to pass
+-- additional parameters to the endpoint.
+postGraphqlWithPair :: HasCallStack => State -> Value -> [Pair] -> IO Value
+postGraphqlWithPair state value pair =
+  withFrozenCallStack $ postGraphqlYaml state (object $ ["query" .= value] <> pair)
+
 -- | Same as 'postGraphqlYamlWithHeaders', but adds the @{query:..}@ wrapper.
 --
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
@@ -148,11 +158,17 @@ postGraphqlWithHeaders state headers value =
 postMetadata_ :: HasCallStack => State -> Value -> IO ()
 postMetadata_ state = withFrozenCallStack $ post_ state "/v1/metadata"
 
+postMetadata :: HasCallStack => State -> Value -> IO Value
+postMetadata state = withFrozenCallStack $ post state "/v1/metadata"
+
 -- | Resets metadata, removing all sources or remote schemas.
 --
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 clearMetadata :: HasCallStack => State -> IO ()
 clearMetadata s = withFrozenCallStack $ postMetadata_ s [yaml|{type: clear_metadata, args: {}}|]
+
+exportMetadata :: HasCallStack => State -> IO Value
+exportMetadata s = withFrozenCallStack $ postMetadata s [yaml|{type: export_metadata, args: {}}|]
 
 -- | Same as 'postWithHeadersStatus', but defaults to the @"/v2/query"@ endpoint
 --

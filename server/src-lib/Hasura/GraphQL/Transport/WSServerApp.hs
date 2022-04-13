@@ -88,7 +88,7 @@ createWSServerApp env enabledLogTypes authMode serverEnv connInitTimeout = \ !ip
 
     onCloseHandler conn = mask_ do
       liftIO $ EKG.Gauge.dec $ smWebsocketConnections serverMetrics
-      onClose logger serverMetrics (_wseLiveQMap serverEnv) conn
+      onClose logger serverMetrics (_wseSubscriptionState serverEnv) conn
 
 stopWSServerApp :: WSServerEnv -> IO ()
 stopWSServerApp wsEnv = WS.shutdown (_wseServer wsEnv)

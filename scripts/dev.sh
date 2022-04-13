@@ -10,8 +10,8 @@ shopt -s globstar
 #    document describing how to do various dev tasks (or worse yet, not writing
 #    one), make it runnable
 #
-# This makes use of 'cabal.project.dev-sh*' files when building. See
-# 'cabal.project.dev-sh.local'.
+# This makes use of 'cabal/dev-sh.project' files when building.
+# See 'cabal/dev-sh.project.local' for details.
 #
 # The configuration for the containers of each backend is stored in
 # separate files, see files in 'scripts/containers'
@@ -148,6 +148,12 @@ MODE="$1"
 PROJECT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd )"   # ... https://stackoverflow.com/a/246128/176841
 cd "$PROJECT_ROOT"
 
+# In CI we use the get version script to actually populate the version number
+# that will be compiled into the server. For local development we use this
+# magic number, which means we won't recompile unnecessarily. This number also
+# gets explicitly ignored in the version test in integration tests. 
+echo '12345' > "$PROJECT_ROOT/server/CURRENT_VERSION"
+
 # Use pyenv if available to set an appropriate python version that will work with pytests etc.
 if command -v pyenv >/dev/null; then
   # For now I guess use the greatest python3 >= 3.5
@@ -273,8 +279,10 @@ if [ "$MODE" = "graphql-engine" ]; then
     echo
     # Generate coverage, which can be useful for debugging or understanding
     if command -v hpc >/dev/null && command -v jq >/dev/null ; then
-      # Get the appropriate mix dir (the newest one). This way this hopefully
-      # works when cabal.project.dev-sh.local is edited to turn on optimizations.
+      # Get the appropriate mix dir (the newest one); this way this hopefully
+      # works when 'cabal/dev-sh.project.local' is edited to turn on
+      # optimizations.
+      #
       # See also: https://hackage.haskell.org/package/cabal-plan
       distdir=$(cat dist-newstyle/cache/plan.json | jq -r '."install-plan"[] | select(."id" == "graphql-engine-1.0.0-inplace")? | ."dist-dir"')
       hpcdir="$distdir/hpc/dyn/mix/graphql-engine-1.0.0"
@@ -315,17 +323,17 @@ if [ "$MODE" = "graphql-engine" ]; then
   echo_pretty "    $ $0 postgres"
   echo_pretty ""
 
-  RUN_INVOCATION=(cabal new-run --project-file=cabal.project.dev-sh --RTS --
+  RUN_INVOCATION=(cabal new-run --project-file=cabal/dev-sh.project --RTS --
     exe:graphql-engine +RTS -N -T -s -RTS serve
     --enable-console --console-assets-dir "$PROJECT_ROOT/console/static/dist"
     )
 
   echo_pretty 'About to do:'
-  echo_pretty '    $ cabal new-build --project-file=cabal.project.dev-sh exe:graphql-engine'
+  echo_pretty '    $ cabal new-build --project-file=cabal/dev-sh.project exe:graphql-engine'
   echo_pretty "    $ ${RUN_INVOCATION[*]}"
   echo_pretty ''
 
-  cabal new-build --project-file=cabal.project.dev-sh exe:graphql-engine
+  cabal new-build --project-file=cabal/dev-sh.project exe:graphql-engine
 
   # We assume a PG is *already running*, and therefore bypass the
   # cleanup mechanism previously set.
@@ -471,8 +479,11 @@ elif [ "$MODE" = "test" ]; then
     # Formerly this was a `cabal build` but mixing cabal build and cabal run
     # seems to conflict now, causing re-linking, haddock runs, etc. Instead do a
     # `graphql-engine version` to trigger build
-    cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine \
-        --metadata-database-url="$PG_DB_URL" version
+    cabal run \
+      --project-file=cabal/dev-sh.project \
+      -- exe:graphql-engine \
+        --metadata-database-url="$PG_DB_URL" \
+        version
     start_dbs
   fi
 
@@ -486,7 +497,10 @@ elif [ "$MODE" = "test" ]; then
     echo "${UNIT_TEST_ARGS[@]}"
     HASURA_GRAPHQL_DATABASE_URL="$PG_DB_URL" \
       HASURA_MSSQL_CONN_STR="$MSSQL_CONN_STR" \
-      cabal new-run --project-file=cabal.project.dev-sh test:graphql-engine-tests -- "${UNIT_TEST_ARGS[@]}"
+      cabal run \
+        --project-file=cabal/dev-sh.project \
+        test:graphql-engine-tests \
+        -- "${UNIT_TEST_ARGS[@]}"
   fi
 
   if [ "$RUN_HLINT" = true ]; then
@@ -511,11 +525,13 @@ elif [ "$MODE" = "test" ]; then
 
     # Using --metadata-database-url flag to test multiple backends
     #       HASURA_GRAPHQL_PG_SOURCE_URL_* For a couple multi-source pytests:
-    cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine \
-      --metadata-database-url="$PG_DB_URL" serve \
-      --stringify-numeric-types \
-      --enable-console \
-      --console-assets-dir ../console/static/dist \
+    cabal new-run \
+      --project-file=cabal/dev-sh.project \
+      -- exe:graphql-engine \
+        --metadata-database-url="$PG_DB_URL" serve \
+        --stringify-numeric-types \
+        --enable-console \
+        --console-assets-dir ../console/static/dist \
       &> "$GRAPHQL_ENGINE_TEST_LOG" & GRAPHQL_ENGINE_PID=$!
 
     echo -n "Waiting for graphql-engine"

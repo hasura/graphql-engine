@@ -29,6 +29,12 @@ func ApplyOnDatabaseName(databaseName string) ProjectMigrationApplierOption {
 	}
 }
 
+func ApplyWithSkipExecution() ProjectMigrationApplierOption {
+	return func(p *projectMigrationsApplier) {
+		p.opts.SkipExecution = true
+	}
+}
+
 type MigrationDirection string
 
 const MigrationDirectionUp MigrationDirection = "up"

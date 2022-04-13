@@ -6,6 +6,7 @@ import {
   FeatureFlagDefinition,
   FeatureFlagState,
 } from '../types';
+import { availableFeatureFlags } from '../availableFeatureFlags';
 
 const getFeatureFlagStore = async (): Promise<FeatureFlagState[]> => {
   const flagsFromLocalStorageAsString = getLSItem(LS_KEYS.featureFlag) ?? '';
@@ -21,7 +22,7 @@ const getFeatureFlagStore = async (): Promise<FeatureFlagState[]> => {
 
 // Async here to act as a placeholder when we will have an API
 const getAvailableFeatureFlags = async (): Promise<FeatureFlagDefinition[]> => {
-  return [];
+  return availableFeatureFlags;
 };
 
 export const mergeFlagWithState = (

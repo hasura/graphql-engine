@@ -87,6 +87,7 @@ instance
   type XRelay ('Postgres pgKind) = XEnable
   type XNodesAgg ('Postgres pgKind) = XEnable
   type XNestedInserts ('Postgres pgKind) = XEnable
+  type XStreamingSubscription ('Postgres pgKind) = XEnable
 
   functionArgScalarType = PG.mkFunctionArgScalarType
   isComparableType = PG.isComparableType

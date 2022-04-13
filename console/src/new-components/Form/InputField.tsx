@@ -56,7 +56,7 @@ export const InputField = ({
           aria-label={wrapperProps.label}
           data-test={dataTest}
           className={clsx(
-            'block w-full max-w-xl h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400',
+            'block w-full max-w-xl h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400 placeholder-gray-500',
             maybeError
               ? 'border-red-600 hover:border-red-700 placeholder-red-600 '
               : 'border-gray-300 placeholder-gray-600',
@@ -69,7 +69,8 @@ export const InputField = ({
             }
           )}
           placeholder={placeholder}
-          {...register(name, { disabled })}
+          {...register(name)}
+          disabled={disabled}
         />
         {iconPosition === 'end' && icon ? (
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">

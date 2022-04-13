@@ -10,9 +10,10 @@ import Data.ByteString.Lazy.Char8 qualified as BL
 import Data.ByteString.Lazy.UTF8 qualified as LBS
 import Data.Environment qualified as Env
 import Data.HashMap.Strict.ExtendedSpec qualified as HashMapExtendedSpec
-import Data.NonNegativeIntSpec qualified as NonNegetiveIntSpec
+import Data.NonNegativeIntSpec qualified as NonNegativeIntSpec
 import Data.Parser.CacheControlSpec qualified as CacheControlParser
 import Data.Parser.JSONPathSpec qualified as JsonPath
+import Data.Parser.URLTemplateSpec qualified as URLTemplate
 import Data.Time.Clock (getCurrentTime)
 import Data.TimeSpec qualified as TimeSpec
 import Data.TrieSpec qualified as TrieSpec
@@ -24,6 +25,7 @@ import Hasura.App
     mkMSSQLSourceResolver,
     mkPgSourceResolver,
   )
+import Hasura.AppSpec qualified as AppSpec
 import Hasura.Backends.DataWrapper.API.V0Spec qualified as DataWrapper.API.V0Spec
 import Hasura.Backends.MSSQL.ErrorSpec qualified as MSSQLErrorSpec
 import Hasura.Backends.MySQL.DataLoader.ExecuteTests qualified as MySQLDataLoader
@@ -54,6 +56,8 @@ import Hasura.Server.Migrate
 import Hasura.Server.MigrateSpec qualified as MigrateSpec
 import Hasura.Server.TelemetrySpec qualified as TelemetrySpec
 import Hasura.Server.Types
+import Hasura.SessionSpec qualified as SessionSpec
+import Hasura.StreamingSubscriptionSpec qualified as StreamingSubSpec
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Client.TLS qualified as HTTP
 import Network.HTTP.Client.TransformableSpec qualified as TransformableSpec
@@ -76,13 +80,14 @@ data TestSuite
   | MSSQLSuite
 
 main :: IO ()
-main =
+main = do
   parseArgs >>= \case
     AllSuites -> do
+      streamingSubSpec <- StreamingSubSpec.buildStreamingSubscriptionsSpec
       postgresSpecs <- buildPostgresSpecs
       mssqlSpecs <- buildMSSQLSpecs
-      runHspec [] (unitSpecs *> postgresSpecs *> mssqlSpecs)
-    SingleSuite hspecArgs suite ->
+      runHspec [] (unitSpecs *> postgresSpecs *> mssqlSpecs *> streamingSubSpec)
+    SingleSuite hspecArgs suite -> do
       runHspec hspecArgs =<< case suite of
         UnitSuite -> pure unitSpecs
         PostgresSuite -> buildPostgresSpecs
@@ -92,11 +97,13 @@ unitSpecs :: Spec
 unitSpecs = do
   describe "Control.Concurrent.ExtendedSpec" ConcurrentExtended.spec
   describe "Data.HashMap.Strict.ExtendedSpec" HashMapExtendedSpec.spec
-  describe "Data.NonNegativeInt" NonNegetiveIntSpec.spec
+  describe "Data.NonNegativeInt" NonNegativeIntSpec.spec
   describe "Data.Parser.CacheControl" CacheControlParser.spec
   describe "Data.Parser.JSONPath" JsonPath.spec
+  describe "Data.Parser.URLTemplate" URLTemplate.spec
   describe "Data.Time" TimeSpec.spec
   describe "Data.Trie" TrieSpec.spec
+  describe "Hasura.App" AppSpec.spec
   describe "Hasura.Backends.DataWrapper.API.V0" DataWrapper.API.V0Spec.spec
   describe "Hasura.Backends.MSSQL.ErrorSpec" MSSQLErrorSpec.spec
   describe "Hasura.Backends.MySQL.DataLoader.ExecuteTests" MySQLDataLoader.spec
@@ -114,6 +121,7 @@ unitSpecs = do
   describe "Hasura.RQL.Types.Table" TableSpec.spec
   describe "Hasura.RQL.WebhookTransformsSpec" WebhookTransformsSpec.spec
   describe "Hasura.SQL.WKT" WKTSpec.spec
+  describe "Hasura.Session" SessionSpec.spec
   describe "Hasura.Server.Auth" AuthSpec.spec
   describe "Hasura.Server.Auth.JWT" JWTSpec.spec
   describe "Hasura.Server.Telemetry" TelemetrySpec.spec
@@ -169,7 +177,14 @@ buildPostgresSpecs = do
             maintenanceMode = MaintenanceModeDisabled
             readOnlyMode = ReadOnlyModeDisabled
             serverConfigCtx =
-              ServerConfigCtx FunctionPermissionsInferred RemoteSchemaPermsDisabled sqlGenCtx maintenanceMode mempty EventingEnabled readOnlyMode
+              ServerConfigCtx
+                FunctionPermissionsInferred
+                RemoteSchemaPermsDisabled
+                sqlGenCtx
+                maintenanceMode
+                mempty
+                EventingEnabled
+                readOnlyMode
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver serverConfigCtx
             pgLogger = print
 
@@ -193,9 +208,13 @@ buildPostgresSpecs = do
         cacheRef <- newMVar schemaCache
         pure $ NT (run . flip MigrateSpec.runCacheRefT cacheRef . fmap fst . runMetadataT metadata)
 
-  pure $
-    beforeAll setupCacheRef $
-      describe "Hasura.Server.Migrate" $ MigrateSpec.spec sourceConfig pgContext pgConnInfo
+  streamingSubSpec <- StreamingSubSpec.buildStreamingSubscriptionsSpec
+
+  pure $ do
+    describe "Migrate spec" $
+      beforeAll setupCacheRef $
+        describe "Hasura.Server.Migrate" $ MigrateSpec.spec sourceConfig pgContext pgConnInfo
+    describe "Streaming subscription spec" $ streamingSubSpec
 
 parseArgs :: IO TestSuites
 parseArgs =

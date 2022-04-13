@@ -37,7 +37,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Context
 import Hasura.GraphQL.Namespace
-import Hasura.GraphQL.Schema.Common (textToName)
+import Hasura.GraphQL.Schema.Common (purgeDependencies, textToName)
 import Hasura.Incremental qualified as Inc
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache.Common
@@ -343,27 +343,32 @@ unTrackExistingTableOrViewP2 (UntrackTable source qtn cascade) = withNewInconsis
           sc
           (SOSourceObj source $ AB.mkAnyBackend $ SOITable @b qtn)
       indirectDeps = mapMaybe getIndirectDep allDeps
+
   -- Report bach with an error if cascade is not set
   when (indirectDeps /= [] && not cascade) $
-    reportDependentObjectsExist (map (SOSourceObj source . AB.mkAnyBackend) indirectDeps)
+    reportDependentObjectsExist indirectDeps
   -- Purge all the dependents from state
   metadataModifier <- execWriterT do
-    mapM_ (purgeDependentObject source >=> tell) indirectDeps
+    purgeDependencies indirectDeps
     tell $ dropTableInMetadata @b source qtn
   -- delete the table and its direct dependencies
   withNewInconsistentObjsCheck $ buildSchemaCache metadataModifier
   pure successMsg
   where
-    getIndirectDep :: SchemaObjId -> Maybe (SourceObjId b)
+    getIndirectDep :: SchemaObjId -> Maybe SchemaObjId
     getIndirectDep = \case
-      SOSourceObj s exists ->
+      sourceObj@(SOSourceObj s exists) ->
         -- If the dependency is to any other source, it automatically is an
         -- indirect dependency, hence the cast is safe here. However, we don't
         -- have these cross source dependencies yet
-        AB.unpackAnyBackend exists >>= \case
-          v@(SOITableObj dtn _) ->
-            if not (s == source && qtn == dtn) then Just v else Nothing
-          v -> Just v
+        AB.unpackAnyBackend @b exists >>= \case
+          (SOITableObj dtn _) ->
+            if not (s == source && qtn == dtn) then Just sourceObj else Nothing
+          _ -> Just sourceObj
+      -- A remote schema can have a remote relationship with a table. So when a
+      -- table is dropped, the remote relationship in remote schema also needs to
+      -- be removed.
+      sourceObj@(SORemoteSchemaRemoteRelationship _ _ _) -> Just sourceObj
       _ -> Nothing
 
 runUntrackTableQ ::
@@ -410,7 +415,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
       |) (withSourceInKey source $ Map.groupOnNE _tbiName tableBuildInputs)
   let rawTableCache = removeSourceInKey $ Map.catMaybes rawTableInfos
       enumTables = flip Map.mapMaybe rawTableCache \rawTableInfo ->
-        (,) <$> _tciPrimaryKey rawTableInfo <*> _tciEnumValues rawTableInfo
+        (,,) <$> _tciPrimaryKey rawTableInfo <*> pure (_tciCustomConfig rawTableInfo) <*> _tciEnumValues rawTableInfo
   tableInfos <-
     (|
       Inc.keyed
@@ -500,7 +505,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
       ErrorA
         QErr
         arr
-        ( Map.HashMap (TableName b) (PrimaryKey b (Column b), EnumValues),
+        ( Map.HashMap (TableName b) (PrimaryKey b (Column b), TableConfig b, EnumValues),
           TableCoreInfoG b (RawColumnInfo b) (Column b)
         )
         (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))

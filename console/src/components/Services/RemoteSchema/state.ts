@@ -27,7 +27,7 @@ const addState: AddState = {
   ...asyncState,
   editState: {
     id: -1,
-    isModify: false,
+    isModify: true,
     originalName: '',
     originalHeaders: [],
     originalUrl: '',

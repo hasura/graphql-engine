@@ -825,6 +825,27 @@ class MessagesGraphQL(RequestHandler):
         res = messages_schema.execute(request.json['query'])
         return mkJSONResp(res)
 
+class Json(graphene.types.Scalar):
+    serialize = lambda x: x
+
+class JsonQuery(graphene.ObjectType):
+    json_test = graphene.Field(Json)
+
+    def resolve_json_test(self, info):
+        return {"foo\\":"bar","\"foo\"":"bar"}
+
+json_schema = graphene.Schema(query=JsonQuery)
+
+class JsonScalarGraphQL(RequestHandler):
+    def get(self, request):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+
+    def post(self, request):
+        if not request.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = json_schema.execute(request.json['query'])
+        return mkJSONResp(res)
+
 handlers = MkHandlers({
     '/hello': HelloWorldHandler,
     '/hello-graphql': HelloGraphQL,
@@ -850,6 +871,7 @@ handlers = MkHandlers({
     '/header-graphql': HeaderTestGraphQL,
     '/messages-graphql' : MessagesGraphQL,
     '/auth-graphql': SampleAuthGraphQL,
+    '/json-scalar-graphql': JsonScalarGraphQL,
     '/big': BigGraphQL
 })
 

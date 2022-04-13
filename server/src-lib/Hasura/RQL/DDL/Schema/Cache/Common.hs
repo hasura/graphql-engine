@@ -118,7 +118,11 @@ data TablePermissionInputs b = TablePermissionInputs
     _tpiUpdate :: ![UpdPermDef b],
     _tpiDelete :: ![DelPermDef b]
   }
-  deriving (Show, Eq, Generic)
+  deriving (Generic)
+
+deriving instance (Backend b, Show (TableName b)) => Show (TablePermissionInputs b)
+
+deriving instance (Backend b, Eq (TableName b)) => Eq (TablePermissionInputs b)
 
 instance (Backend b) => Inc.Cacheable (TablePermissionInputs b)
 

@@ -129,9 +129,8 @@ saveMetadataToHdbTables
             addActionPermissionToCatalog createActionPermission
     where
       processPerms tableName perms = indexedForM_ perms $ \perm -> do
-        let pt = permAccToType @('Postgres 'Vanilla) $ getPermAcc1 perm
         systemDefined <- askSystemDefined
-        liftTx $ addPermissionToCatalog pt tableName perm systemDefined
+        liftTx $ addPermissionToCatalog tableName perm systemDefined
 
 saveTableToCatalog ::
   (MonadTx m, HasSystemDefined m) => QualifiedTable -> Bool -> TableConfig ('Postgres 'Vanilla) -> m ()
@@ -330,13 +329,12 @@ addActionPermissionToCatalog CreateActionPermission {..} = do
       True
 
 addPermissionToCatalog ::
-  (ToJSON a, MonadTx m) =>
-  PermType ->
+  (MonadTx m, Backend b) =>
   QualifiedTable ->
-  PermDef a ->
+  PermDef b a ->
   SystemDefined ->
   m ()
-addPermissionToCatalog pt (QualifiedObject sn tn) (PermDef rn qdef mComment) systemDefined =
+addPermissionToCatalog (QualifiedObject sn tn) (PermDef rn qdef mComment) systemDefined =
   liftTx $
     Q.unitQE
       defaultTxErrorHandler
@@ -346,7 +344,7 @@ addPermissionToCatalog pt (QualifiedObject sn tn) (PermDef rn qdef mComment) sys
                (table_schema, table_name, role_name, perm_type, perm_def, comment, is_system_defined)
            VALUES ($1, $2, $3, $4, $5 :: jsonb, $6, $7)
                 |]
-      (sn, tn, rn, permTypeToCode pt, Q.AltJ qdef, mComment, systemDefined)
+      (sn, tn, rn, permTypeToCode (reflectPermDefPermission qdef), Q.AltJ qdef, mComment, systemDefined)
       True
 
 addCronTriggerToCatalog :: (MonadTx m) => CronTriggerMetadata -> m ()
@@ -404,7 +402,10 @@ fetchMetadataFromHdbTables = liftTx do
   computedFields <- fetchComputedFields
 
   -- Fetch all remote relationships
-  remoteRelationships <- Q.catchE defaultTxErrorHandler fetchRemoteRelationships
+  remoteRelationshipsRaw <- Q.catchE defaultTxErrorHandler fetchRemoteRelationships
+  remoteRelationships <- for remoteRelationshipsRaw $ \(table, relationshipName, definitionValue) -> do
+    definition <- runAesonParser (parseRemoteRelationshipDefinition RRPLegacy) definitionValue
+    pure $ (table, RemoteRelationship relationshipName definition)
 
   let (_, fullTableMetaMap) = flip runState tableMetaMap $ do
         modMetaMap tmObjectRelationships _rdName objRelDefs
@@ -673,7 +674,8 @@ fetchMetadataFromHdbTables = liftTx do
       pure $
         flip map r $ \(schema, table, name, Q.AltJ definition) ->
           ( QualifiedObject schema table,
-            RemoteRelationship name $ RelationshipToSchema RRFOldDBToRemoteSchema definition
+            name,
+            definition
           )
 
 addCronTriggerForeignKeyConstraint :: MonadTx m => m ()

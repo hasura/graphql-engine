@@ -5,6 +5,7 @@ module Hasura.Backends.DataWrapper.Adapter.Backend () where
 --------------------------------------------------------------------------------
 
 import Data.Aeson qualified as J (Value)
+import Hasura.Backends.DataWrapper.Adapter.Types qualified as Adapter
 import Hasura.Backends.DataWrapper.IR.Column qualified as Column (Name)
 import Hasura.Backends.DataWrapper.IR.Expression (Expression, Operator)
 import Hasura.Backends.DataWrapper.IR.Function qualified as Function (Name)
@@ -34,7 +35,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 type Unimplemented = ()
 
 instance Backend 'DataWrapper where
-  type SourceConfig 'DataWrapper = Unimplemented
+  type SourceConfig 'DataWrapper = Adapter.SourceConfig
   type SourceConnConfiguration 'DataWrapper = Unimplemented
 
   type TableName 'DataWrapper = Table.Name
@@ -57,6 +58,7 @@ instance Backend 'DataWrapper where
   type XRelay 'DataWrapper = XDisable
   type XNodesAgg 'DataWrapper = XDisable
   type XNestedInserts 'DataWrapper = XDisable
+  type XStreamingSubscription 'DataWrapper = XDisable
 
   functionArgScalarType :: FunctionArgType 'DataWrapper -> ScalarType 'DataWrapper
   functionArgScalarType = error "functionArgScalarType: not implemented for GraphQL Data Wrappers."

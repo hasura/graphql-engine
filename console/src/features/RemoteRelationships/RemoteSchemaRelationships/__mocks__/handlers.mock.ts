@@ -20,7 +20,29 @@ export const handlers = (url = baseUrl) => [
 
     if (
       body.type === 'introspect_remote_schema' &&
+      body?.args?.name === 'with_default_values'
+    ) {
+      return res(ctx.json(schema));
+    }
+
+    if (
+      body.type === 'introspect_remote_schema' &&
       body?.args?.name === 'remoteSchema2'
+    ) {
+      return res(ctx.json(countries));
+    }
+    if (
+      body.type === 'introspect_remote_schema' &&
+      body?.args?.name === 'remoteSchema3'
+    ) {
+      return res(ctx.json(schema));
+    }
+    if (body.type === 'create_remote_schema_remote_relationship') {
+      return res(ctx.json({ message: 'success' }));
+    }
+    if (
+      body.type === 'introspect_remote_schema' &&
+      body?.args?.name === 'countries'
     ) {
       return res(ctx.json(countries));
     }

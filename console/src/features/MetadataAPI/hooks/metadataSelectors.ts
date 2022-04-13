@@ -80,6 +80,14 @@ export namespace MetadataSelector {
     return allRemoteSchemaRelationships;
   };
 
+  export const getRemoteSchemaRelationship = (sourceRemoteSchema: string) => (
+    m: MetadataResponse
+  ) => {
+    return m?.metadata?.remote_schemas?.find(
+      rs => rs.name === sourceRemoteSchema
+    );
+  };
+
   export const getTables = (dataSource: string) => (m: MetadataResponse) => {
     const sources = getDataSourceMetadata(dataSource)(m);
     return sources?.tables ?? [];

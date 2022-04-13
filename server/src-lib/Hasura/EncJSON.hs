@@ -19,6 +19,7 @@ module Hasura.EncJSON
 where
 
 import Data.Aeson qualified as J
+import Data.Aeson.Encoding qualified as J
 import Data.Aeson.Ordered qualified as JO
 import Data.ByteString qualified as B
 import Data.ByteString.Builder qualified as BB
@@ -33,7 +34,9 @@ import Hasura.Prelude
 -- TODO (from master): can be improved with gadts capturing bytestring, lazybytestring
 -- and builder
 newtype EncJSON = EncJSON {unEncJSON :: BB.Builder}
-  deriving (Semigroup, Monoid, IsString)
+
+(<.>) :: EncJSON -> EncJSON -> EncJSON
+EncJSON a <.> EncJSON b = EncJSON (a <> b)
 
 instance Show EncJSON where
   showsPrec d x =
@@ -75,32 +78,32 @@ encJFromChar = EncJSON . BB.charUtf8
 {-# INLINE encJFromChar #-}
 
 encJFromText :: Text -> EncJSON
-encJFromText = encJFromBS . TE.encodeUtf8
+encJFromText = encJFromBuilder . TE.encodeUtf8Builder
 {-# INLINE encJFromText #-}
 
 encJFromList :: [EncJSON] -> EncJSON
 encJFromList = \case
-  [] -> "[]"
+  [] -> encJFromBuilder "[]"
   x : xs ->
     encJFromChar '['
-      <> x
-      <> foldr go (encJFromChar ']') xs
+      <.> x
+      <.> foldr go (encJFromChar ']') xs
     where
-      go v b = encJFromChar ',' <> v <> b
+      go v b = encJFromChar ',' <.> v <.> b
 
 -- from association list
 encJFromAssocList :: [(Text, EncJSON)] -> EncJSON
 encJFromAssocList = \case
-  [] -> "{}"
+  [] -> encJFromBuilder "{}"
   x : xs ->
     encJFromChar '{'
-      <> builder' x
-      <> foldr go (encJFromChar '}') xs
+      <.> builder' x
+      <.> foldr go (encJFromChar '}') xs
   where
-    go v b = encJFromChar ',' <> builder' v <> b
+    go v b = encJFromChar ',' <.> builder' v <.> b
     -- builds "key":value from (key,value)
     builder' (t, v) =
-      encJFromChar '"' <> encJFromText t <> encJFromText "\":" <> v
+      encJFromBuilder (J.fromEncoding (J.text t)) <.> encJFromBuilder ":" <.> v
 
 encJFromInsOrdHashMap :: InsOrdHashMap Text EncJSON -> EncJSON
 encJFromInsOrdHashMap = encJFromAssocList . OMap.toList

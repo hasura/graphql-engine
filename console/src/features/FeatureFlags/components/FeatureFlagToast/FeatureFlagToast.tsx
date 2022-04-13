@@ -1,4 +1,5 @@
 import React from 'react';
+import { useDispatch } from 'react-redux';
 import { useFeatureFlagDismiss } from '../../hooks/useFeatureFlagDismiss';
 import { useFeatureFlags } from '../../hooks/useFeatureFlags';
 import { FeatureFlagDefinition, FeatureFlagId } from '../../types';
@@ -10,6 +11,7 @@ interface FeatureFlagToastProps {
 }
 
 export const FeatureFlagToast = (props: FeatureFlagToastProps) => {
+  const dispatch = useDispatch();
   const { flagId, additionalFlags } = props;
   const [dismissed, setDismissed] = React.useState(false);
   const { isError, isLoading, data } = useFeatureFlags(additionalFlags);
@@ -20,7 +22,8 @@ export const FeatureFlagToast = (props: FeatureFlagToastProps) => {
     isLoading ||
     dismissed ||
     !featureFlag ||
-    featureFlag?.state.dismissed
+    featureFlag.state.dismissed ||
+    featureFlag.state.enabled
   )
     return null;
   return (
@@ -32,7 +35,7 @@ export const FeatureFlagToast = (props: FeatureFlagToastProps) => {
       </div>
       <div
         className="flex p-4 cursor-pointer items-center justify-between"
-        onClick={() => _push('/settings/feature-flags')}
+        onClick={() => dispatch(_push('/settings/feature-flags'))}
       >
         Try out the new feature before it gets to general availability.
         <i className="fa fa-chevron-right ml-2" aria-hidden="true" />
