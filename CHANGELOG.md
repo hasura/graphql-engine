@@ -23,11 +23,12 @@
 - console: integrate the RS-to-RS form into Remote Schema Relationship tab
 - console: enable mssql server as an option in RS-to-DB and DB-to-DB remote joins
 - console: enable bigquery as an option in RS-to-DB remote joins
+- console: add feature flag to toggle remote schemas relationship tab
 - console: enable edit/delete functionality fo RS-to-DB remote joins
+- console: allow user to create mssql-to-RS and bigquery-to-RS relationships
 - cli: fix remote schema metadata formatting issues (#7608)
 - cli: fix query collections metadata formatting issues (#7616)
 - docs: support for `graphql-ws` is considered GA
-- console: add feature flag to toggle remote schemas relationship tab
 
 ## v2.5.0-beta.1
 
