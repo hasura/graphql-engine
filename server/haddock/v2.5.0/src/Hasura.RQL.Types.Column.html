@@ -1,0 +1,992 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="%24con2tag_Ejjj7mqPQ188MC2YKBe8Fw"></span><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.Types.Column</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier">ColumnType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#_ColumnScalar"><span class="hs-identifier">_ColumnScalar</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#_ColumnEnumReference"><span class="hs-identifier">_ColumnEnumReference</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#isScalarColumnWhere"><span class="hs-identifier">isScalarColumnWhere</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ValueParser"><span class="hs-identifier">ValueParser</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#onlyNumCols"><span class="hs-identifier">onlyNumCols</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#isNumCol"><span class="hs-identifier">isNumCol</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#onlyComparableCols"><span class="hs-identifier">onlyComparableCols</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#parseScalarValueColumnType"><span class="hs-identifier">parseScalarValueColumnType</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#parseScalarValuesColumnType"><span class="hs-identifier">parseScalarValuesColumnType</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier">ColumnValue</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnMutability"><span class="hs-identifier">ColumnMutability</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier">ColumnInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier">RawColumnInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#PrimaryKeyColumns"><span class="hs-identifier">PrimaryKeyColumns</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#getColInfos"><span class="hs-identifier">getColInfos</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumReference"><span class="hs-identifier">EnumReference</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValues"><span class="hs-identifier">EnumValues</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValue"><span class="hs-identifier">EnumValue</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValueInfo"><span class="hs-identifier">EnumValueInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#fromCol"><span class="hs-identifier">fromCol</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-26"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValues"><span class="hs-identifier">ColumnValues</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnReference"><span class="hs-identifier">ColumnReference</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#columnReferenceType"><span class="hs-identifier">columnReferenceType</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens.TH</span></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.TH</span></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">M</span></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.html"><span class="hs-identifier">Hasura.Incremental</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier">Cacheable</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span>
+</span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html"><span class="hs-identifier">Hasura.RQL.Types.ComputedField</span></a></span><span>
+</span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
+</span><span id="line-44"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Types.html"><span class="hs-identifier">Hasura.SQL.Types</span></a></span><span>
+</span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span class="hs-keyword">newtype</span><span> </span><span id="EnumValue"><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValue"><span class="hs-identifier hs-var">EnumValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EnumValue"><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValue"><span class="hs-identifier hs-var">EnumValue</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getEnumValue"><span class="annot"><span class="annottext">EnumValue -&gt; Name
+</span><a href="Hasura.RQL.Types.Column.html#getEnumValue"><span class="hs-identifier hs-var hs-var">getEnumValue</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">}</span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688296485"><span id="local-6989586621688296487"><span id="local-6989586621688296489"><span class="annot"><span class="annottext">Int -&gt; EnumValue -&gt; ShowS
+[EnumValue] -&gt; ShowS
+EnumValue -&gt; String
+(Int -&gt; EnumValue -&gt; ShowS)
+-&gt; (EnumValue -&gt; String)
+-&gt; ([EnumValue] -&gt; ShowS)
+-&gt; Show EnumValue
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [EnumValue] -&gt; ShowS
+$cshowList :: [EnumValue] -&gt; ShowS
+show :: EnumValue -&gt; String
+$cshow :: EnumValue -&gt; String
+showsPrec :: Int -&gt; EnumValue -&gt; ShowS
+$cshowsPrec :: Int -&gt; EnumValue -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688296480"><span id="local-6989586621688296482"><span class="annot"><span class="annottext">EnumValue -&gt; EnumValue -&gt; Bool
+(EnumValue -&gt; EnumValue -&gt; Bool)
+-&gt; (EnumValue -&gt; EnumValue -&gt; Bool) -&gt; Eq EnumValue
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: EnumValue -&gt; EnumValue -&gt; Bool
+$c/= :: EnumValue -&gt; EnumValue -&gt; Bool
+== :: EnumValue -&gt; EnumValue -&gt; Bool
+$c== :: EnumValue -&gt; EnumValue -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688296464"><span id="local-6989586621688296466"><span id="local-6989586621688296468"><span id="local-6989586621688296470"><span id="local-6989586621688296472"><span id="local-6989586621688296474"><span id="local-6989586621688296476"><span class="annot"><span class="annottext">Eq EnumValue
+Eq EnumValue
+-&gt; (EnumValue -&gt; EnumValue -&gt; Ordering)
+-&gt; (EnumValue -&gt; EnumValue -&gt; Bool)
+-&gt; (EnumValue -&gt; EnumValue -&gt; Bool)
+-&gt; (EnumValue -&gt; EnumValue -&gt; Bool)
+-&gt; (EnumValue -&gt; EnumValue -&gt; Bool)
+-&gt; (EnumValue -&gt; EnumValue -&gt; EnumValue)
+-&gt; (EnumValue -&gt; EnumValue -&gt; EnumValue)
+-&gt; Ord EnumValue
+EnumValue -&gt; EnumValue -&gt; Bool
+EnumValue -&gt; EnumValue -&gt; Ordering
+EnumValue -&gt; EnumValue -&gt; EnumValue
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: EnumValue -&gt; EnumValue -&gt; EnumValue
+$cmin :: EnumValue -&gt; EnumValue -&gt; EnumValue
+max :: EnumValue -&gt; EnumValue -&gt; EnumValue
+$cmax :: EnumValue -&gt; EnumValue -&gt; EnumValue
+&gt;= :: EnumValue -&gt; EnumValue -&gt; Bool
+$c&gt;= :: EnumValue -&gt; EnumValue -&gt; Bool
+&gt; :: EnumValue -&gt; EnumValue -&gt; Bool
+$c&gt; :: EnumValue -&gt; EnumValue -&gt; Bool
+&lt;= :: EnumValue -&gt; EnumValue -&gt; Bool
+$c&lt;= :: EnumValue -&gt; EnumValue -&gt; Bool
+&lt; :: EnumValue -&gt; EnumValue -&gt; Bool
+$c&lt; :: EnumValue -&gt; EnumValue -&gt; Bool
+compare :: EnumValue -&gt; EnumValue -&gt; Ordering
+$ccompare :: EnumValue -&gt; EnumValue -&gt; Ordering
+$cp1Ord :: Eq EnumValue
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688296461"><span class="annot"><span class="annottext">EnumValue -&gt; ()
+(EnumValue -&gt; ()) -&gt; NFData EnumValue
+forall a. (a -&gt; ()) -&gt; NFData a
+rnf :: EnumValue -&gt; ()
+$crnf :: EnumValue -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688296456"><span id="local-6989586621688296458"><span class="annot"><span class="annottext">Int -&gt; EnumValue -&gt; Int
+EnumValue -&gt; Int
+(Int -&gt; EnumValue -&gt; Int)
+-&gt; (EnumValue -&gt; Int) -&gt; Hashable EnumValue
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: EnumValue -&gt; Int
+$chash :: EnumValue -&gt; Int
+hashWithSalt :: Int -&gt; EnumValue -&gt; Int
+$chashWithSalt :: Int -&gt; EnumValue -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688296447"><span id="local-6989586621688296449"><span id="local-6989586621688296451"><span id="local-6989586621688296453"><span class="annot"><span class="annottext">[EnumValue] -&gt; Encoding
+[EnumValue] -&gt; Value
+EnumValue -&gt; Encoding
+EnumValue -&gt; Value
+(EnumValue -&gt; Value)
+-&gt; (EnumValue -&gt; Encoding)
+-&gt; ([EnumValue] -&gt; Value)
+-&gt; ([EnumValue] -&gt; Encoding)
+-&gt; ToJSON EnumValue
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [EnumValue] -&gt; Encoding
+$ctoEncodingList :: [EnumValue] -&gt; Encoding
+toJSONList :: [EnumValue] -&gt; Value
+$ctoJSONList :: [EnumValue] -&gt; Value
+toEncoding :: EnumValue -&gt; Encoding
+$ctoEncoding :: EnumValue -&gt; Encoding
+toJSON :: EnumValue -&gt; Value
+$ctoJSON :: EnumValue -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688296442"><span id="local-6989586621688296444"><span class="annot"><span class="annottext">ToJSONKeyFunction [EnumValue]
+ToJSONKeyFunction EnumValue
+ToJSONKeyFunction EnumValue
+-&gt; ToJSONKeyFunction [EnumValue] -&gt; ToJSONKey EnumValue
+forall a.
+ToJSONKeyFunction a -&gt; ToJSONKeyFunction [a] -&gt; ToJSONKey a
+toJSONKeyList :: ToJSONKeyFunction [EnumValue]
+$ctoJSONKeyList :: ToJSONKeyFunction [EnumValue]
+toJSONKey :: ToJSONKeyFunction EnumValue
+$ctoJSONKey :: ToJSONKeyFunction EnumValue
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688296437"><span id="local-6989586621688296439"><span class="annot"><span class="annottext">Value -&gt; Parser [EnumValue]
+Value -&gt; Parser EnumValue
+(Value -&gt; Parser EnumValue)
+-&gt; (Value -&gt; Parser [EnumValue]) -&gt; FromJSON EnumValue
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [EnumValue]
+$cparseJSONList :: Value -&gt; Parser [EnumValue]
+parseJSON :: Value -&gt; Parser EnumValue
+$cparseJSON :: Value -&gt; Parser EnumValue
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688296432"><span id="local-6989586621688296434"><span class="annot"><span class="annottext">FromJSONKeyFunction [EnumValue]
+FromJSONKeyFunction EnumValue
+FromJSONKeyFunction EnumValue
+-&gt; FromJSONKeyFunction [EnumValue] -&gt; FromJSONKey EnumValue
+forall a.
+FromJSONKeyFunction a -&gt; FromJSONKeyFunction [a] -&gt; FromJSONKey a
+fromJSONKeyList :: FromJSONKeyFunction [EnumValue]
+$cfromJSONKeyList :: FromJSONKeyFunction [EnumValue]
+fromJSONKey :: FromJSONKeyFunction EnumValue
+$cfromJSONKey :: FromJSONKeyFunction EnumValue
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688296428"><span class="annot"><span class="annottext">Eq EnumValue
+Eq EnumValue
+-&gt; (Accesses -&gt; EnumValue -&gt; EnumValue -&gt; Bool)
+-&gt; Cacheable EnumValue
+Accesses -&gt; EnumValue -&gt; EnumValue -&gt; Bool
+forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
+unchanged :: Accesses -&gt; EnumValue -&gt; EnumValue -&gt; Bool
+$cunchanged :: Accesses -&gt; EnumValue -&gt; EnumValue -&gt; Bool
+$cp1Cacheable :: Eq EnumValue
+</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span class="hs-keyword">newtype</span><span> </span><span id="EnumValueInfo"><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValueInfo"><span class="hs-identifier hs-var">EnumValueInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EnumValueInfo"><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValueInfo"><span class="hs-identifier hs-var">EnumValueInfo</span></a></span></span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="evComment"><span class="annot"><span class="annottext">EnumValueInfo -&gt; Maybe Text
+</span><a href="Hasura.RQL.Types.Column.html#evComment"><span class="hs-identifier hs-var hs-var">evComment</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-52"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688296419"><span id="local-6989586621688296421"><span id="local-6989586621688296423"><span class="annot"><span class="annottext">Int -&gt; EnumValueInfo -&gt; ShowS
+[EnumValueInfo] -&gt; ShowS
+EnumValueInfo -&gt; String
+(Int -&gt; EnumValueInfo -&gt; ShowS)
+-&gt; (EnumValueInfo -&gt; String)
+-&gt; ([EnumValueInfo] -&gt; ShowS)
+-&gt; Show EnumValueInfo
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [EnumValueInfo] -&gt; ShowS
+$cshowList :: [EnumValueInfo] -&gt; ShowS
+show :: EnumValueInfo -&gt; String
+$cshow :: EnumValueInfo -&gt; String
+showsPrec :: Int -&gt; EnumValueInfo -&gt; ShowS
+$cshowsPrec :: Int -&gt; EnumValueInfo -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688296415"><span id="local-6989586621688296417"><span class="annot"><span class="annottext">EnumValueInfo -&gt; EnumValueInfo -&gt; Bool
+(EnumValueInfo -&gt; EnumValueInfo -&gt; Bool)
+-&gt; (EnumValueInfo -&gt; EnumValueInfo -&gt; Bool) -&gt; Eq EnumValueInfo
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: EnumValueInfo -&gt; EnumValueInfo -&gt; Bool
+$c/= :: EnumValueInfo -&gt; EnumValueInfo -&gt; Bool
+== :: EnumValueInfo -&gt; EnumValueInfo -&gt; Bool
+$c== :: EnumValueInfo -&gt; EnumValueInfo -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688296400"><span id="local-6989586621688296402"><span id="local-6989586621688296404"><span id="local-6989586621688296406"><span id="local-6989586621688296408"><span id="local-6989586621688296410"><span id="local-6989586621688296412"><span class="annot"><span class="annottext">Eq EnumValueInfo
+Eq EnumValueInfo
+-&gt; (EnumValueInfo -&gt; EnumValueInfo -&gt; Ordering)
+-&gt; (EnumValueInfo -&gt; EnumValueInfo -&gt; Bool)
+-&gt; (EnumValueInfo -&gt; EnumValueInfo -&gt; Bool)
+-&gt; (EnumValueInfo -&gt; EnumValueInfo -&gt; Bool)
+-&gt; (EnumValueInfo -&gt; EnumValueInfo -&gt; Bool)
+-&gt; (EnumValueInfo -&gt; EnumValueInfo -&gt; EnumValueInfo)
+-&gt; (EnumValueInfo -&gt; EnumValueInfo -&gt; EnumValueInfo)
+-&gt; Ord EnumValueInfo
+EnumValueInfo -&gt; EnumValueInfo -&gt; Bool
+EnumValueInfo -&gt; EnumValueInfo -&gt; Ordering
+EnumValueInfo -&gt; EnumValueInfo -&gt; EnumValueInfo
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: EnumValueInfo -&gt; EnumValueInfo -&gt; EnumValueInfo
+$cmin :: EnumValueInfo -&gt; EnumValueInfo -&gt; EnumValueInfo
+max :: EnumValueInfo -&gt; EnumValueInfo -&gt; EnumValueInfo
+$cmax :: EnumValueInfo -&gt; EnumValueInfo -&gt; EnumValueInfo
+&gt;= :: EnumValueInfo -&gt; EnumValueInfo -&gt; Bool
+$c&gt;= :: EnumValueInfo -&gt; EnumValueInfo -&gt; Bool
+&gt; :: EnumValueInfo -&gt; EnumValueInfo -&gt; Bool
+$c&gt; :: EnumValueInfo -&gt; EnumValueInfo -&gt; Bool
+&lt;= :: EnumValueInfo -&gt; EnumValueInfo -&gt; Bool
+$c&lt;= :: EnumValueInfo -&gt; EnumValueInfo -&gt; Bool
+&lt; :: EnumValueInfo -&gt; EnumValueInfo -&gt; Bool
+$c&lt; :: EnumValueInfo -&gt; EnumValueInfo -&gt; Bool
+compare :: EnumValueInfo -&gt; EnumValueInfo -&gt; Ordering
+$ccompare :: EnumValueInfo -&gt; EnumValueInfo -&gt; Ordering
+$cp1Ord :: Eq EnumValueInfo
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688296398"><span class="annot"><span class="annottext">EnumValueInfo -&gt; ()
+(EnumValueInfo -&gt; ()) -&gt; NFData EnumValueInfo
+forall a. (a -&gt; ()) -&gt; NFData a
+rnf :: EnumValueInfo -&gt; ()
+$crnf :: EnumValueInfo -&gt; ()
+</span><a href="#local-6989586621688296398"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688296394"><span id="local-6989586621688296396"><span class="annot"><span class="annottext">Int -&gt; EnumValueInfo -&gt; Int
+EnumValueInfo -&gt; Int
+(Int -&gt; EnumValueInfo -&gt; Int)
+-&gt; (EnumValueInfo -&gt; Int) -&gt; Hashable EnumValueInfo
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: EnumValueInfo -&gt; Int
+$chash :: EnumValueInfo -&gt; Int
+hashWithSalt :: Int -&gt; EnumValueInfo -&gt; Int
+$chashWithSalt :: Int -&gt; EnumValueInfo -&gt; Int
+</span><a href="#local-6989586621688296394"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688296391"><span class="annot"><span class="annottext">Eq EnumValueInfo
+Eq EnumValueInfo
+-&gt; (Accesses -&gt; EnumValueInfo -&gt; EnumValueInfo -&gt; Bool)
+-&gt; Cacheable EnumValueInfo
+Accesses -&gt; EnumValueInfo -&gt; EnumValueInfo -&gt; Bool
+forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
+unchanged :: Accesses -&gt; EnumValueInfo -&gt; EnumValueInfo -&gt; Bool
+$cunchanged :: Accesses -&gt; EnumValueInfo -&gt; EnumValueInfo -&gt; Bool
+$cp1Cacheable :: Eq EnumValueInfo
+</span><a href="#local-6989586621688296391"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span class="hs-special">$(</span><span id="local-6989586621688296379"><span id="local-6989586621688296381"><span id="local-6989586621688296383"><span id="local-6989586621688296385"><span id="local-6989586621688296387"><span id="local-6989586621688296389"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">EnumValueInfo</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span class="hs-keyword">type</span><span> </span><span id="EnumValues"><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValues"><span class="hs-identifier hs-var">EnumValues</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">M.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValue"><span class="hs-identifier hs-type">EnumValue</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValueInfo"><span class="hs-identifier hs-type">EnumValueInfo</span></a></span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span class="hs-comment">-- | Represents a reference to an &#8220;enum table,&#8221; a single-column Postgres table that is referenced</span><span>
+</span><span id="line-60"></span><span class="hs-comment">-- via foreign key.</span><span>
+</span><span id="line-61"></span><span id="local-6989586621688296374"><span id="local-6989586621688296375"></span></span><span class="hs-keyword">data</span><span> </span><span id="EnumReference"><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumReference"><span class="hs-identifier hs-var">EnumReference</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688296373"><span class="annot"><a href="#local-6989586621688296373"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EnumReference"><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumReference"><span class="hs-identifier hs-var">EnumReference</span></a></span></span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="erTable"><span class="annot"><span class="annottext">EnumReference b -&gt; TableName b
+</span><a href="Hasura.RQL.Types.Column.html#erTable"><span class="hs-identifier hs-var hs-var">erTable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296373"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-63"></span><span>    </span><span id="erValues"><span class="annot"><span class="annottext">EnumReference b -&gt; EnumValues
+</span><a href="Hasura.RQL.Types.Column.html#erValues"><span class="hs-identifier hs-var hs-var">erValues</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValues"><span class="hs-identifier hs-type">EnumValues</span></a></span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-65"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x. EnumReference b -&gt; Rep (EnumReference b) x)
+-&gt; (forall x. Rep (EnumReference b) x -&gt; EnumReference b)
+-&gt; Generic (EnumReference b)
+forall x. Rep (EnumReference b) x -&gt; EnumReference b
+forall x. EnumReference b -&gt; Rep (EnumReference b) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x.
+Rep (EnumReference b) x -&gt; EnumReference b
+forall (b :: BackendType) x.
+EnumReference b -&gt; Rep (EnumReference b) x
+$cto :: forall (b :: BackendType) x.
+Rep (EnumReference b) x -&gt; EnumReference b
+$cfrom :: forall (b :: BackendType) x.
+EnumReference b -&gt; Rep (EnumReference b) x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-66"></span><span>
+</span><span id="line-67"></span><span id="local-6989586621688296360"><span id="local-6989586621688296362"><span id="local-6989586621688296364"><span id="local-6989586621688296366"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296366"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumReference"><span class="hs-identifier hs-type">EnumReference</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296366"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-68"></span><span>
+</span><span id="line-69"></span><span id="local-6989586621688296355"><span id="local-6989586621688296357"><span id="local-6989586621688296359"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296359"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumReference"><span class="hs-identifier hs-type">EnumReference</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296359"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-70"></span><span>
+</span><span id="line-71"></span><span id="local-6989586621688296339"><span id="local-6989586621688296341"><span id="local-6989586621688296343"><span id="local-6989586621688296345"><span id="local-6989586621688296347"><span id="local-6989586621688296349"><span id="local-6989586621688296351"><span id="local-6989586621688296354"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296354"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumReference"><span class="hs-identifier hs-type">EnumReference</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296354"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-72"></span><span>
+</span><span id="line-73"></span><span id="local-6989586621688296338"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688296336"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296338"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumReference"><span class="hs-identifier hs-type">EnumReference</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296338"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span id="local-6989586621688296335"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688296331"><span id="local-6989586621688296333"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296335"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumReference"><span class="hs-identifier hs-type">EnumReference</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296335"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-76"></span><span>
+</span><span id="line-77"></span><span id="local-6989586621688296330"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688296327"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296330"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumReference"><span class="hs-identifier hs-type">EnumReference</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296330"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-78"></span><span>
+</span><span id="line-79"></span><span id="local-6989586621688296326"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688296323"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296326"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumReference"><span class="hs-identifier hs-type">EnumReference</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296326"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-80"></span><span>  </span><span id="local-6989586621688296322"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (EnumReference b)
+</span><a href="#local-6989586621688296322"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser (EnumReference b)
+forall a.
+(Generic a, GFromJSON Zero (Rep a)) =&gt;
+Options -&gt; Value -&gt; Parser a
+</span><span class="hs-identifier hs-var">genericParseJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span></span><span>
+</span><span id="line-81"></span><span>
+</span><span id="line-82"></span><span id="local-6989586621688296319"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688296312"><span id="local-6989586621688296314"><span id="local-6989586621688296316"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296319"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumReference"><span class="hs-identifier hs-type">EnumReference</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296319"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-83"></span><span>  </span><span id="local-6989586621688296311"><span class="annot"><span class="annottext">toJSON :: EnumReference b -&gt; Value
+</span><a href="#local-6989586621688296311"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; EnumReference b -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">genericToJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span></span><span>
+</span><span id="line-84"></span><span>
+</span><span id="line-85"></span><span class="hs-comment">-- | The type we use for columns, which are currently always &#8220;scalars&#8221; (though</span><span>
+</span><span id="line-86"></span><span class="hs-comment">-- see the note about 'CollectableType'). Unlike 'ScalarType', which represents</span><span>
+</span><span id="line-87"></span><span class="hs-comment">-- a type that a backend knows about, this type characterizes distinctions we</span><span>
+</span><span id="line-88"></span><span class="hs-comment">-- make but the backend doesn&#8217;t.</span><span>
+</span><span id="line-89"></span><span id="local-6989586621688296308"><span id="local-6989586621688296309"></span></span><span class="hs-keyword">data</span><span> </span><span id="ColumnType"><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-var">ColumnType</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688296509"><span class="annot"><a href="#local-6989586621688296509"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-90"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | Ordinary Postgres columns.</span><span>
+</span><span id="line-91"></span><span>    </span><span id="ColumnScalar"><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnScalar"><span class="hs-identifier hs-var">ColumnScalar</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296509"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-92"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | Columns that reference enum tables (see &quot;Hasura.RQL.Schema.Enum&quot;). This is not actually a</span><span>
+</span><span id="line-93"></span><span>    </span><span class="hs-comment">-- distinct type from the perspective of Postgres (at the time of this writing, we ensure they</span><span>
+</span><span id="line-94"></span><span>    </span><span class="hs-comment">-- always have type @text@), but we really want to distinguish this case, since we treat it</span><span>
+</span><span id="line-95"></span><span>    </span><span class="hs-comment">-- /completely/ differently in the GraphQL schema.</span><span>
+</span><span id="line-96"></span><span>    </span><span id="ColumnEnumReference"><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnEnumReference"><span class="hs-identifier hs-var">ColumnEnumReference</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumReference"><span class="hs-identifier hs-type">EnumReference</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296509"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-97"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688296300"><span id="local-6989586621688296302"><span id="local-6989586621688296304"><span class="annot"><span class="annottext">Int -&gt; ColumnType b -&gt; ShowS
+[ColumnType b] -&gt; ShowS
+ColumnType b -&gt; String
+(Int -&gt; ColumnType b -&gt; ShowS)
+-&gt; (ColumnType b -&gt; String)
+-&gt; ([ColumnType b] -&gt; ShowS)
+-&gt; Show (ColumnType b)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+forall (b :: BackendType).
+Backend b =&gt;
+Int -&gt; ColumnType b -&gt; ShowS
+forall (b :: BackendType). Backend b =&gt; [ColumnType b] -&gt; ShowS
+forall (b :: BackendType). Backend b =&gt; ColumnType b -&gt; String
+showList :: [ColumnType b] -&gt; ShowS
+$cshowList :: forall (b :: BackendType). Backend b =&gt; [ColumnType b] -&gt; ShowS
+show :: ColumnType b -&gt; String
+$cshow :: forall (b :: BackendType). Backend b =&gt; ColumnType b -&gt; String
+showsPrec :: Int -&gt; ColumnType b -&gt; ShowS
+$cshowsPrec :: forall (b :: BackendType).
+Backend b =&gt;
+Int -&gt; ColumnType b -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688296296"><span id="local-6989586621688296298"><span class="annot"><span class="annottext">ColumnType b -&gt; ColumnType b -&gt; Bool
+(ColumnType b -&gt; ColumnType b -&gt; Bool)
+-&gt; (ColumnType b -&gt; ColumnType b -&gt; Bool) -&gt; Eq (ColumnType b)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+forall (b :: BackendType).
+Backend b =&gt;
+ColumnType b -&gt; ColumnType b -&gt; Bool
+/= :: ColumnType b -&gt; ColumnType b -&gt; Bool
+$c/= :: forall (b :: BackendType).
+Backend b =&gt;
+ColumnType b -&gt; ColumnType b -&gt; Bool
+== :: ColumnType b -&gt; ColumnType b -&gt; Bool
+$c== :: forall (b :: BackendType).
+Backend b =&gt;
+ColumnType b -&gt; ColumnType b -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688296281"><span id="local-6989586621688296283"><span id="local-6989586621688296285"><span id="local-6989586621688296287"><span id="local-6989586621688296289"><span id="local-6989586621688296291"><span id="local-6989586621688296293"><span class="annot"><span class="annottext">Eq (ColumnType b)
+Eq (ColumnType b)
+-&gt; (ColumnType b -&gt; ColumnType b -&gt; Ordering)
+-&gt; (ColumnType b -&gt; ColumnType b -&gt; Bool)
+-&gt; (ColumnType b -&gt; ColumnType b -&gt; Bool)
+-&gt; (ColumnType b -&gt; ColumnType b -&gt; Bool)
+-&gt; (ColumnType b -&gt; ColumnType b -&gt; Bool)
+-&gt; (ColumnType b -&gt; ColumnType b -&gt; ColumnType b)
+-&gt; (ColumnType b -&gt; ColumnType b -&gt; ColumnType b)
+-&gt; Ord (ColumnType b)
+ColumnType b -&gt; ColumnType b -&gt; Bool
+ColumnType b -&gt; ColumnType b -&gt; Ordering
+ColumnType b -&gt; ColumnType b -&gt; ColumnType b
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+forall (b :: BackendType). Backend b =&gt; Eq (ColumnType b)
+forall (b :: BackendType).
+Backend b =&gt;
+ColumnType b -&gt; ColumnType b -&gt; Bool
+forall (b :: BackendType).
+Backend b =&gt;
+ColumnType b -&gt; ColumnType b -&gt; Ordering
+forall (b :: BackendType).
+Backend b =&gt;
+ColumnType b -&gt; ColumnType b -&gt; ColumnType b
+min :: ColumnType b -&gt; ColumnType b -&gt; ColumnType b
+$cmin :: forall (b :: BackendType).
+Backend b =&gt;
+ColumnType b -&gt; ColumnType b -&gt; ColumnType b
+max :: ColumnType b -&gt; ColumnType b -&gt; ColumnType b
+$cmax :: forall (b :: BackendType).
+Backend b =&gt;
+ColumnType b -&gt; ColumnType b -&gt; ColumnType b
+&gt;= :: ColumnType b -&gt; ColumnType b -&gt; Bool
+$c&gt;= :: forall (b :: BackendType).
+Backend b =&gt;
+ColumnType b -&gt; ColumnType b -&gt; Bool
+&gt; :: ColumnType b -&gt; ColumnType b -&gt; Bool
+$c&gt; :: forall (b :: BackendType).
+Backend b =&gt;
+ColumnType b -&gt; ColumnType b -&gt; Bool
+&lt;= :: ColumnType b -&gt; ColumnType b -&gt; Bool
+$c&lt;= :: forall (b :: BackendType).
+Backend b =&gt;
+ColumnType b -&gt; ColumnType b -&gt; Bool
+&lt; :: ColumnType b -&gt; ColumnType b -&gt; Bool
+$c&lt; :: forall (b :: BackendType).
+Backend b =&gt;
+ColumnType b -&gt; ColumnType b -&gt; Bool
+compare :: ColumnType b -&gt; ColumnType b -&gt; Ordering
+$ccompare :: forall (b :: BackendType).
+Backend b =&gt;
+ColumnType b -&gt; ColumnType b -&gt; Ordering
+$cp1Ord :: forall (b :: BackendType). Backend b =&gt; Eq (ColumnType b)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. ColumnType b -&gt; Rep (ColumnType b) x)
+-&gt; (forall x. Rep (ColumnType b) x -&gt; ColumnType b)
+-&gt; Generic (ColumnType b)
+forall x. Rep (ColumnType b) x -&gt; ColumnType b
+forall x. ColumnType b -&gt; Rep (ColumnType b) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x. Rep (ColumnType b) x -&gt; ColumnType b
+forall (b :: BackendType) x. ColumnType b -&gt; Rep (ColumnType b) x
+$cto :: forall (b :: BackendType) x. Rep (ColumnType b) x -&gt; ColumnType b
+$cfrom :: forall (b :: BackendType) x. ColumnType b -&gt; Rep (ColumnType b) x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-98"></span><span>
+</span><span id="line-99"></span><span id="local-6989586621688296278"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688296276"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296278"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296278"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-100"></span><span>
+</span><span id="line-101"></span><span id="local-6989586621688296275"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688296271"><span id="local-6989586621688296273"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296275"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296275"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-102"></span><span>
+</span><span id="line-103"></span><span id="local-6989586621688296270"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688296267"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296270"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296270"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-104"></span><span>
+</span><span id="line-105"></span><span id="local-6989586621688296266"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688296259"><span id="local-6989586621688296261"><span id="local-6989586621688296263"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296266"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296266"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-106"></span><span>  </span><span id="local-6989586621688296258"><span class="annot"><span class="annottext">toJSON :: ColumnType b -&gt; Value
+</span><a href="#local-6989586621688296258"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; ColumnType b -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">genericToJSON</span></span><span> </span><span class="annot"><span class="annottext">(Options -&gt; ColumnType b -&gt; Value)
+-&gt; Options -&gt; ColumnType b -&gt; Value
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Options
+</span><span class="hs-identifier hs-var">defaultOptions</span></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">constructorTagModifier :: ShowS
+</span><a href="#local-6989586621688296256"><span class="hs-identifier hs-var">constructorTagModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; ShowS
+forall a. Int -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">drop</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">6</span></span><span class="hs-special">}</span></span><span>
+</span><span id="line-107"></span><span>
+</span><span id="line-108"></span><span class="hs-special">$(</span><span id="_ColumnEnumReference"><span id="_ColumnScalar"><span id="local-6989586621688296509"><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ColumnType</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-109"></span><span>
+</span><span id="line-110"></span><span id="local-6989586621688296254"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296254"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">ToTxt</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296254"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-111"></span><span>  </span><span id="local-6989586621688296251"><span class="annot"><span class="annottext">toTxt :: ColumnType b -&gt; Text
+</span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-112"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnScalar"><span class="hs-identifier hs-type">ColumnScalar</span></a></span><span> </span><span id="local-6989586621688296249"><span class="annot"><span class="annottext">ScalarType b
+</span><a href="#local-6989586621688296249"><span class="hs-identifier hs-var">scalar</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType b -&gt; Text
+forall a. ToTxt a =&gt; a -&gt; Text
+</span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType b
+</span><a href="#local-6989586621688296249"><span class="hs-identifier hs-var">scalar</span></a></span><span>
+</span><span id="line-113"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnEnumReference"><span class="hs-identifier hs-type">ColumnEnumReference</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumReference"><span class="hs-identifier hs-type">EnumReference</span></a></span><span> </span><span id="local-6989586621688296248"><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621688296248"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span class="annot"><span class="annottext">EnumValues
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TableName b -&gt; Text
+forall a. ToTxt a =&gt; a -&gt; Text
+</span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621688296248"><span class="hs-identifier hs-var">tableName</span></a></span></span><span>
+</span><span id="line-114"></span><span>
+</span><span id="line-115"></span><span class="hs-comment">-- | A parser to parse a json value with enforcing column type</span><span>
+</span><span id="line-116"></span><span class="hs-keyword">type</span><span> </span><span id="ValueParser"><span class="annot"><a href="Hasura.RQL.Types.Column.html#ValueParser"><span class="hs-identifier hs-var">ValueParser</span></a></span></span><span> </span><span id="local-6989586621688296247"><span class="annot"><a href="#local-6989586621688296247"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621688296246"><span class="annot"><a href="#local-6989586621688296246"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688296245"><span class="annot"><a href="#local-6989586621688296245"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-117"></span><span>  </span><span class="annot"><a href="Hasura.SQL.Types.html#CollectableType"><span class="hs-identifier hs-type">CollectableType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296247"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688296246"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296245"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-118"></span><span>
+</span><span id="line-119"></span><span class="hs-keyword">data</span><span> </span><span id="ColumnValue"><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-var">ColumnValue</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688296243"><span class="annot"><a href="#local-6989586621688296243"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ColumnValue"><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-var">ColumnValue</span></a></span></span><span>
+</span><span id="line-120"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="cvType"><span class="annot"><span class="annottext">ColumnValue b -&gt; ColumnType b
+</span><a href="Hasura.RQL.Types.Column.html#cvType"><span class="hs-identifier hs-var hs-var">cvType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296243"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-121"></span><span>    </span><span id="cvValue"><span class="annot"><span class="annottext">ColumnValue b -&gt; ScalarValue b
+</span><a href="Hasura.RQL.Types.Column.html#cvValue"><span class="hs-identifier hs-var hs-var">cvValue</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarValue"><span class="hs-identifier hs-type">ScalarValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296243"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-122"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-123"></span><span>
+</span><span id="line-124"></span><span id="local-6989586621688296235"><span id="local-6989586621688296237"><span id="local-6989586621688296239"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296239"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarValue"><span class="hs-identifier hs-type">ScalarValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296239"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">ColumnValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296239"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-125"></span><span>
+</span><span id="line-126"></span><span id="local-6989586621688296228"><span id="local-6989586621688296230"><span id="local-6989586621688296232"><span id="local-6989586621688296234"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296234"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarValue"><span class="hs-identifier hs-type">ScalarValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296234"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">ColumnValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296234"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-127"></span><span>
+</span><span id="line-128"></span><span id="local-6989586621688296524"><span class="annot"><a href="Hasura.RQL.Types.Column.html#isScalarColumnWhere"><span class="hs-identifier hs-type">isScalarColumnWhere</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296524"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296524"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span></span><span>
+</span><span id="line-129"></span><span id="isScalarColumnWhere"><span class="annot"><span class="annottext">isScalarColumnWhere :: (ScalarType b -&gt; Bool) -&gt; ColumnType b -&gt; Bool
+</span><a href="Hasura.RQL.Types.Column.html#isScalarColumnWhere"><span class="hs-identifier hs-var hs-var">isScalarColumnWhere</span></a></span></span><span> </span><span id="local-6989586621688296227"><span class="annot"><span class="annottext">ScalarType b -&gt; Bool
+</span><a href="#local-6989586621688296227"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-130"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnScalar"><span class="hs-identifier hs-type">ColumnScalar</span></a></span><span> </span><span id="local-6989586621688296226"><span class="annot"><span class="annottext">ScalarType b
+</span><a href="#local-6989586621688296226"><span class="hs-identifier hs-var">scalar</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType b -&gt; Bool
+</span><a href="#local-6989586621688296227"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType b
+</span><a href="#local-6989586621688296226"><span class="hs-identifier hs-var">scalar</span></a></span><span>
+</span><span id="line-131"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnEnumReference"><span class="hs-identifier hs-type">ColumnEnumReference</span></a></span><span> </span><span class="annot"><span class="annottext">EnumReference b
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-132"></span><span>
+</span><span id="line-133"></span><span class="hs-comment">-- | Note: Unconditionally accepts null values and returns 'PGNull'.</span><span>
+</span><span id="line-134"></span><span class="annot"><a href="Hasura.RQL.Types.Column.html#parseScalarValueColumnType"><span class="hs-identifier hs-type">parseScalarValueColumnType</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-135"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688296569"><span class="annot"><a href="#local-6989586621688296569"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688296568"><span class="annot"><a href="#local-6989586621688296568"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-136"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296569"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296568"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-137"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296568"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-138"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-139"></span><span>  </span><span class="annot"><a href="#local-6989586621688296569"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarValue"><span class="hs-identifier hs-type">ScalarValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296568"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-140"></span><span id="parseScalarValueColumnType"><span class="annot"><span class="annottext">parseScalarValueColumnType :: ColumnType b -&gt; Value -&gt; m (ScalarValue b)
+</span><a href="Hasura.RQL.Types.Column.html#parseScalarValueColumnType"><span class="hs-identifier hs-var hs-var">parseScalarValueColumnType</span></a></span></span><span> </span><span id="local-6989586621688296225"><span class="annot"><span class="annottext">ColumnType b
+</span><a href="#local-6989586621688296225"><span class="hs-identifier hs-var">columnType</span></a></span></span><span> </span><span id="local-6989586621688296224"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688296224"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ColumnType b
+</span><a href="#local-6989586621688296225"><span class="hs-identifier hs-var">columnType</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-141"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnScalar"><span class="hs-identifier hs-type">ColumnScalar</span></a></span><span> </span><span id="local-6989586621688296223"><span class="annot"><span class="annottext">ScalarType b
+</span><a href="#local-6989586621688296223"><span class="hs-identifier hs-var">scalarType</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Either QErr (ScalarValue b) -&gt; m (ScalarValue b)
+forall e (m :: * -&gt; *) a. MonadError e m =&gt; Either e a -&gt; m a
+</span><span class="hs-identifier hs-var">liftEither</span></span><span> </span><span class="annot"><span class="annottext">(Either QErr (ScalarValue b) -&gt; m (ScalarValue b))
+-&gt; Either QErr (ScalarValue b) -&gt; m (ScalarValue b)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ScalarType b -&gt; Value -&gt; Either QErr (ScalarValue b)
+forall (b :: BackendType).
+Backend b =&gt;
+ScalarType b -&gt; Value -&gt; Either QErr (ScalarValue b)
+</span><a href="Hasura.RQL.Types.Backend.html#parseScalarValue"><span class="hs-identifier hs-var">parseScalarValue</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688296568"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType b
+</span><a href="#local-6989586621688296223"><span class="hs-identifier hs-var">scalarType</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688296224"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><span id="line-142"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnEnumReference"><span class="hs-identifier hs-type">ColumnEnumReference</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumReference"><span class="hs-identifier hs-type">EnumReference</span></a></span><span> </span><span id="local-6989586621688296220"><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621688296220"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span id="local-6989586621688296219"><span class="annot"><span class="annottext">EnumValues
+</span><a href="#local-6989586621688296219"><span class="hs-identifier hs-var">enumValues</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-143"></span><span>    </span><span class="hs-comment">-- maybe (pure $ PGNull PGText) parseEnumValue =&lt;&lt; decodeValue value</span><span>
+</span><span id="line-144"></span><span>    </span><span class="annot"><span class="annottext">Maybe Name -&gt; m (ScalarValue b)
+</span><a href="#local-6989586621688296218"><span class="hs-identifier hs-var">parseEnumValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe Name -&gt; m (ScalarValue b))
+-&gt; m (Maybe Name) -&gt; m (ScalarValue b)
+forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
+</span><span class="hs-operator hs-var">=&lt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; m (Maybe Name)
+forall a (m :: * -&gt; *). (FromJSON a, QErrM m) =&gt; Value -&gt; m a
+</span><a href="Hasura.Base.Error.html#decodeValue"><span class="hs-identifier hs-var">decodeValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688296224"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><span id="line-145"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-146"></span><span>      </span><span class="annot"><a href="#local-6989586621688296218"><span class="hs-identifier hs-type">parseEnumValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688296569"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarValue"><span class="hs-identifier hs-type">ScalarValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296568"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-147"></span><span>      </span><span id="local-6989586621688296218"><span class="annot"><span class="annottext">parseEnumValue :: Maybe Name -&gt; m (ScalarValue b)
+</span><a href="#local-6989586621688296218"><span class="hs-identifier hs-var hs-var">parseEnumValue</span></a></span></span><span> </span><span id="local-6989586621688296215"><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621688296215"><span class="hs-identifier hs-var">enumValueName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-148"></span><span>        </span><span class="annot"><span class="annottext">Maybe Name -&gt; (Name -&gt; m ()) -&gt; m ()
+forall (m :: * -&gt; *) a.
+Applicative m =&gt;
+Maybe a -&gt; (a -&gt; m ()) -&gt; m ()
+</span><a href="Hasura.Prelude.html#onJust"><span class="hs-identifier hs-var">onJust</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621688296215"><span class="hs-identifier hs-var">enumValueName</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688296213"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688296213"><span class="hs-identifier hs-var">evn</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-149"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688296212"><span class="annot"><span class="annottext">enums :: [Name]
+</span><a href="#local-6989586621688296212"><span class="hs-identifier hs-var hs-var">enums</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(EnumValue -&gt; Name) -&gt; [EnumValue] -&gt; [Name]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">EnumValue -&gt; Name
+</span><a href="Hasura.RQL.Types.Column.html#getEnumValue"><span class="hs-identifier hs-var hs-var">getEnumValue</span></a></span><span> </span><span class="annot"><span class="annottext">([EnumValue] -&gt; [Name]) -&gt; [EnumValue] -&gt; [Name]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">EnumValues -&gt; [EnumValue]
+forall k v. HashMap k v -&gt; [k]
+</span><span class="hs-identifier hs-var">M.keys</span></span><span> </span><span class="annot"><span class="annottext">EnumValues
+</span><a href="#local-6989586621688296219"><span class="hs-identifier hs-var">enumValues</span></a></span><span>
+</span><span id="line-150"></span><span>          </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688296213"><span class="hs-identifier hs-var">evn</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; [Name] -&gt; Bool
+forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
+</span><span class="hs-operator hs-var">`elem`</span></span><span> </span><span class="annot"><span class="annottext">[Name]
+</span><a href="#local-6989586621688296212"><span class="hs-identifier hs-var">enums</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-151"></span><span>            </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="Hasura.Base.Error.html#UnexpectedPayload"><span class="hs-identifier hs-var">UnexpectedPayload</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; m ()) -&gt; Text -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-152"></span><span>              </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;expected one of the values &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Name] -&gt; Text
+forall t (f :: * -&gt; *). (ToTxt t, Foldable f) =&gt; f t -&gt; Text
+</span><a href="Data.Text.Extended.html#dquoteList"><span class="hs-identifier hs-var">dquoteList</span></a></span><span> </span><span class="annot"><span class="annottext">[Name]
+</span><a href="#local-6989586621688296212"><span class="hs-identifier hs-var">enums</span></a></span><span>
+</span><span id="line-153"></span><span>                </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; for type &quot;</span></span><span>
+</span><span id="line-154"></span><span>                </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">TableName b -&gt; Text
+forall (b :: BackendType). Backend b =&gt; TableName b -&gt; Text
+</span><a href="Hasura.RQL.Types.Backend.html#snakeCaseTableName"><span class="hs-identifier hs-var">snakeCaseTableName</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688296568"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621688296220"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;, given &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Name -&gt; Text
+forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
+</span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688296213"><span class="hs-identifier hs-var">evn</span></a></span><span>
+</span><span id="line-155"></span><span>        </span><span class="annot"><span class="annottext">ScalarValue b -&gt; m (ScalarValue b)
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(ScalarValue b -&gt; m (ScalarValue b))
+-&gt; ScalarValue b -&gt; m (ScalarValue b)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Backend b =&gt; Maybe Text -&gt; ScalarValue b
+forall (b :: BackendType). Backend b =&gt; Maybe Text -&gt; ScalarValue b
+</span><a href="Hasura.RQL.Types.Backend.html#textToScalarValue"><span class="hs-identifier hs-var">textToScalarValue</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688296568"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe Text -&gt; ScalarValue b) -&gt; Maybe Text -&gt; ScalarValue b
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
+</span><span class="hs-identifier hs-var hs-var">G.unName</span></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Text) -&gt; Maybe Name -&gt; Maybe Text
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621688296215"><span class="hs-identifier hs-var">enumValueName</span></a></span><span>
+</span><span id="line-156"></span><span>
+</span><span id="line-157"></span><span id="local-6989586621688296198"><span id="local-6989586621688296199"><span class="annot"><a href="Hasura.RQL.Types.Column.html#parseScalarValuesColumnType"><span class="hs-identifier hs-type">parseScalarValuesColumnType</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-158"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296199"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296198"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-159"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296198"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-160"></span><span>  </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-161"></span><span>  </span><span class="annot"><a href="#local-6989586621688296199"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarValue"><span class="hs-identifier hs-type">ScalarValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296198"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span></span></span><span>
+</span><span id="line-162"></span><span id="parseScalarValuesColumnType"><span class="annot"><span class="annottext">parseScalarValuesColumnType :: ColumnType b -&gt; [Value] -&gt; m [ScalarValue b]
+</span><a href="Hasura.RQL.Types.Column.html#parseScalarValuesColumnType"><span class="hs-identifier hs-var hs-var">parseScalarValuesColumnType</span></a></span></span><span> </span><span id="local-6989586621688296197"><span class="annot"><span class="annottext">ColumnType b
+</span><a href="#local-6989586621688296197"><span class="hs-identifier hs-var">columnType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-163"></span><span>  </span><span class="annot"><span class="annottext">(Value -&gt; m (ScalarValue b)) -&gt; [Value] -&gt; m [ScalarValue b]
+forall (m :: * -&gt; *) a b. QErrM m =&gt; (a -&gt; m b) -&gt; [a] -&gt; m [b]
+</span><a href="Hasura.Base.Error.html#indexedMapM"><span class="hs-identifier hs-var">indexedMapM</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnType b -&gt; Value -&gt; m (ScalarValue b)
+forall (m :: * -&gt; *) (b :: BackendType).
+(MonadError QErr m, Backend b) =&gt;
+ColumnType b -&gt; Value -&gt; m (ScalarValue b)
+</span><a href="Hasura.RQL.Types.Column.html#parseScalarValueColumnType"><span class="hs-identifier hs-var">parseScalarValueColumnType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType b
+</span><a href="#local-6989586621688296197"><span class="hs-identifier hs-var">columnType</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-164"></span><span>
+</span><span id="line-165"></span><span class="hs-comment">-- | &#8220;Raw&#8221; column info, as stored in the catalog (but not in the schema cache). Instead of</span><span>
+</span><span id="line-166"></span><span class="hs-comment">-- containing a 'PGColumnType', it only contains a 'PGScalarType', which is combined with the</span><span>
+</span><span id="line-167"></span><span class="hs-comment">-- 'pcirReferences' field and other table data to eventually resolve the type to a 'PGColumnType'.</span><span>
+</span><span id="line-168"></span><span id="local-6989586621688296194"><span id="local-6989586621688296195"></span></span><span class="hs-keyword">data</span><span> </span><span id="RawColumnInfo"><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-var">RawColumnInfo</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688296193"><span class="annot"><a href="#local-6989586621688296193"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RawColumnInfo"><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-var">RawColumnInfo</span></a></span></span><span>
+</span><span id="line-169"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="rciName"><span class="annot"><span class="annottext">RawColumnInfo b -&gt; Column b
+</span><a href="Hasura.RQL.Types.Column.html#rciName"><span class="hs-identifier hs-var hs-var">rciName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296193"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-170"></span><span>    </span><span class="hs-comment">-- | The &#8220;ordinal position&#8221; of the column according to Postgres. Numbering starts at 1 and</span><span>
+</span><span id="line-171"></span><span>    </span><span class="hs-comment">-- increases. Dropping a column does /not/ cause the columns to be renumbered, so a column can be</span><span>
+</span><span id="line-172"></span><span>    </span><span class="hs-comment">-- consistently identified by its position.</span><span>
+</span><span id="line-173"></span><span>    </span><span id="rciPosition"><span class="annot"><span class="annottext">RawColumnInfo b -&gt; Int
+</span><a href="Hasura.RQL.Types.Column.html#rciPosition"><span class="hs-identifier hs-var hs-var">rciPosition</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-174"></span><span>    </span><span id="rciType"><span class="annot"><span class="annottext">RawColumnInfo b -&gt; ScalarType b
+</span><a href="Hasura.RQL.Types.Column.html#rciType"><span class="hs-identifier hs-var hs-var">rciType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296193"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-175"></span><span>    </span><span id="rciIsNullable"><span class="annot"><span class="annottext">RawColumnInfo b -&gt; Bool
+</span><a href="Hasura.RQL.Types.Column.html#rciIsNullable"><span class="hs-identifier hs-var hs-var">rciIsNullable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
+</span><span id="line-176"></span><span>    </span><span id="rciDescription"><span class="annot"><span class="annottext">RawColumnInfo b -&gt; Maybe Description
+</span><a href="Hasura.RQL.Types.Column.html#rciDescription"><span class="hs-identifier hs-var hs-var">rciDescription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Description</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-177"></span><span>    </span><span id="rciMutability"><span class="annot"><span class="annottext">RawColumnInfo b -&gt; ColumnMutability
+</span><a href="Hasura.RQL.Types.Column.html#rciMutability"><span class="hs-identifier hs-var hs-var">rciMutability</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnMutability"><span class="hs-identifier hs-type">ColumnMutability</span></a></span><span>
+</span><span id="line-178"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-179"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x. RawColumnInfo b -&gt; Rep (RawColumnInfo b) x)
+-&gt; (forall x. Rep (RawColumnInfo b) x -&gt; RawColumnInfo b)
+-&gt; Generic (RawColumnInfo b)
+forall x. Rep (RawColumnInfo b) x -&gt; RawColumnInfo b
+forall x. RawColumnInfo b -&gt; Rep (RawColumnInfo b) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x.
+Rep (RawColumnInfo b) x -&gt; RawColumnInfo b
+forall (b :: BackendType) x.
+RawColumnInfo b -&gt; Rep (RawColumnInfo b) x
+$cto :: forall (b :: BackendType) x.
+Rep (RawColumnInfo b) x -&gt; RawColumnInfo b
+$cfrom :: forall (b :: BackendType) x.
+RawColumnInfo b -&gt; Rep (RawColumnInfo b) x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-180"></span><span>
+</span><span id="line-181"></span><span id="local-6989586621688296179"><span id="local-6989586621688296181"><span id="local-6989586621688296183"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296183"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-type">RawColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296183"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-182"></span><span>
+</span><span id="line-183"></span><span id="local-6989586621688296172"><span id="local-6989586621688296174"><span id="local-6989586621688296176"><span id="local-6989586621688296178"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296178"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-type">RawColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296178"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-184"></span><span>
+</span><span id="line-185"></span><span id="local-6989586621688296171"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688296169"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296171"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-type">RawColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296171"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-186"></span><span>
+</span><span id="line-187"></span><span id="local-6989586621688296168"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688296165"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296168"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-type">RawColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296168"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-188"></span><span>
+</span><span id="line-189"></span><span id="local-6989586621688296164"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688296157"><span id="local-6989586621688296159"><span id="local-6989586621688296161"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296164"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-type">RawColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296164"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-190"></span><span>  </span><span id="local-6989586621688296156"><span class="annot"><span class="annottext">toJSON :: RawColumnInfo b -&gt; Value
+</span><a href="#local-6989586621688296156"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; RawColumnInfo b -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">genericToJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span></span><span>
+</span><span id="line-191"></span><span>
+</span><span id="line-192"></span><span id="local-6989586621688296155"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688296152"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296155"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-type">RawColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296155"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-193"></span><span>  </span><span id="local-6989586621688296151"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (RawColumnInfo b)
+</span><a href="#local-6989586621688296151"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser (RawColumnInfo b)
+forall a.
+(Generic a, GFromJSON Zero (Rep a)) =&gt;
+Options -&gt; Value -&gt; Parser a
+</span><span class="hs-identifier hs-var">genericParseJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span></span><span>
+</span><span id="line-194"></span><span>
+</span><span id="line-195"></span><span class="hs-comment">-- | Indicates whether a column may participate in certain mutations.</span><span>
+</span><span id="line-196"></span><span class="hs-comment">--</span><span>
+</span><span id="line-197"></span><span class="hs-comment">-- For example, identity columns may sometimes be insertable but rarely</span><span>
+</span><span id="line-198"></span><span class="hs-comment">-- updatable, depending on the backend and how they're declared.</span><span>
+</span><span id="line-199"></span><span class="hs-comment">--</span><span>
+</span><span id="line-200"></span><span class="hs-comment">-- This guides the schema parsers such that they only generate fields for</span><span>
+</span><span id="line-201"></span><span class="hs-comment">-- columns where they're valid without having to model the exact circumstances</span><span>
+</span><span id="line-202"></span><span class="hs-comment">-- which cause a column to appear or not.</span><span>
+</span><span id="line-203"></span><span class="hs-comment">--</span><span>
+</span><span id="line-204"></span><span class="hs-comment">-- See &lt;https://github.com/hasura/graphql-engine/blob/master/rfcs/column-mutability.md&gt;.</span><span>
+</span><span id="line-205"></span><span id="local-6989586621688296149"><span id="local-6989586621688296150"></span></span><span class="hs-keyword">data</span><span> </span><span id="ColumnMutability"><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnMutability"><span class="hs-identifier hs-var">ColumnMutability</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ColumnMutability"><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnMutability"><span class="hs-identifier hs-var">ColumnMutability</span></a></span></span><span>
+</span><span id="line-206"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_cmIsInsertable"><span class="annot"><span class="annottext">ColumnMutability -&gt; Bool
+</span><a href="Hasura.RQL.Types.Column.html#_cmIsInsertable"><span class="hs-identifier hs-var hs-var">_cmIsInsertable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
+</span><span id="line-207"></span><span>    </span><span id="_cmIsUpdatable"><span class="annot"><span class="annottext">ColumnMutability -&gt; Bool
+</span><a href="Hasura.RQL.Types.Column.html#_cmIsUpdatable"><span class="hs-identifier hs-var hs-var">_cmIsUpdatable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-208"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-209"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688296142"><span id="local-6989586621688296144"><span class="annot"><span class="annottext">ColumnMutability -&gt; ColumnMutability -&gt; Bool
+(ColumnMutability -&gt; ColumnMutability -&gt; Bool)
+-&gt; (ColumnMutability -&gt; ColumnMutability -&gt; Bool)
+-&gt; Eq ColumnMutability
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ColumnMutability -&gt; ColumnMutability -&gt; Bool
+$c/= :: ColumnMutability -&gt; ColumnMutability -&gt; Bool
+== :: ColumnMutability -&gt; ColumnMutability -&gt; Bool
+$c== :: ColumnMutability -&gt; ColumnMutability -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. ColumnMutability -&gt; Rep ColumnMutability x)
+-&gt; (forall x. Rep ColumnMutability x -&gt; ColumnMutability)
+-&gt; Generic ColumnMutability
+forall x. Rep ColumnMutability x -&gt; ColumnMutability
+forall x. ColumnMutability -&gt; Rep ColumnMutability x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep ColumnMutability x -&gt; ColumnMutability
+$cfrom :: forall x. ColumnMutability -&gt; Rep ColumnMutability x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688296134"><span id="local-6989586621688296136"><span id="local-6989586621688296138"><span class="annot"><span class="annottext">Int -&gt; ColumnMutability -&gt; ShowS
+[ColumnMutability] -&gt; ShowS
+ColumnMutability -&gt; String
+(Int -&gt; ColumnMutability -&gt; ShowS)
+-&gt; (ColumnMutability -&gt; String)
+-&gt; ([ColumnMutability] -&gt; ShowS)
+-&gt; Show ColumnMutability
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ColumnMutability] -&gt; ShowS
+$cshowList :: [ColumnMutability] -&gt; ShowS
+show :: ColumnMutability -&gt; String
+$cshow :: ColumnMutability -&gt; String
+showsPrec :: Int -&gt; ColumnMutability -&gt; ShowS
+$cshowsPrec :: Int -&gt; ColumnMutability -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-210"></span><span>
+</span><span id="line-211"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688296131"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnMutability"><span class="hs-identifier hs-type">ColumnMutability</span></a></span></span><span>
+</span><span id="line-212"></span><span>
+</span><span id="line-213"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688296129"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnMutability"><span class="hs-identifier hs-type">ColumnMutability</span></a></span></span><span>
+</span><span id="line-214"></span><span>
+</span><span id="line-215"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688296125"><span id="local-6989586621688296127"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnMutability"><span class="hs-identifier hs-type">ColumnMutability</span></a></span></span></span><span>
+</span><span id="line-216"></span><span>
+</span><span id="line-217"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688296122"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnMutability"><span class="hs-identifier hs-type">ColumnMutability</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-218"></span><span>  </span><span id="local-6989586621688296121"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ColumnMutability
+</span><a href="#local-6989586621688296121"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser ColumnMutability
+forall a.
+(Generic a, GFromJSON Zero (Rep a)) =&gt;
+Options -&gt; Value -&gt; Parser a
+</span><span class="hs-identifier hs-var">genericParseJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-219"></span><span>
+</span><span id="line-220"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688296115"><span id="local-6989586621688296117"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnMutability"><span class="hs-identifier hs-type">ColumnMutability</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-221"></span><span>  </span><span id="local-6989586621688296114"><span class="annot"><span class="annottext">toJSON :: ColumnMutability -&gt; Value
+</span><a href="#local-6989586621688296114"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; ColumnMutability -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">genericToJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-222"></span><span>  </span><span id="local-6989586621688296113"><span class="annot"><span class="annottext">toEncoding :: ColumnMutability -&gt; Encoding
+</span><a href="#local-6989586621688296113"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; ColumnMutability -&gt; Encoding
+forall a.
+(Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Encoding
+</span><span class="hs-identifier hs-var">genericToEncoding</span></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-223"></span><span>
+</span><span id="line-224"></span><span class="hs-comment">-- | &#8220;Resolved&#8221; column info, produced from a 'RawColumnInfo' value that has been combined with</span><span>
+</span><span id="line-225"></span><span class="hs-comment">-- other schema information to produce a 'PGColumnType'.</span><span>
+</span><span id="line-226"></span><span id="local-6989586621688296110"><span id="local-6989586621688296111"></span></span><span class="hs-keyword">data</span><span> </span><span id="ColumnInfo"><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-var">ColumnInfo</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688296520"><span class="annot"><a href="#local-6989586621688296520"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ColumnInfo"><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-var">ColumnInfo</span></a></span></span><span>
+</span><span id="line-227"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="ciColumn"><span class="annot"><span class="annottext">ColumnInfo b -&gt; Column b
+</span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var hs-var">ciColumn</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296520"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-228"></span><span>    </span><span class="hs-comment">-- | field name exposed in GraphQL interface</span><span>
+</span><span id="line-229"></span><span>    </span><span id="ciName"><span class="annot"><span class="annottext">ColumnInfo b -&gt; Name
+</span><a href="Hasura.RQL.Types.Column.html#ciName"><span class="hs-identifier hs-var hs-var">ciName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">,</span><span>
+</span><span id="line-230"></span><span>    </span><span id="ciPosition"><span class="annot"><span class="annottext">ColumnInfo b -&gt; Int
+</span><a href="Hasura.RQL.Types.Column.html#ciPosition"><span class="hs-identifier hs-var hs-var">ciPosition</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-231"></span><span>    </span><span id="ciType"><span class="annot"><span class="annottext">ColumnInfo b -&gt; ColumnType b
+</span><a href="Hasura.RQL.Types.Column.html#ciType"><span class="hs-identifier hs-var hs-var">ciType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296520"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-232"></span><span>    </span><span id="ciIsNullable"><span class="annot"><span class="annottext">ColumnInfo b -&gt; Bool
+</span><a href="Hasura.RQL.Types.Column.html#ciIsNullable"><span class="hs-identifier hs-var hs-var">ciIsNullable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
+</span><span id="line-233"></span><span>    </span><span id="ciDescription"><span class="annot"><span class="annottext">ColumnInfo b -&gt; Maybe Description
+</span><a href="Hasura.RQL.Types.Column.html#ciDescription"><span class="hs-identifier hs-var hs-var">ciDescription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Description</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-234"></span><span>    </span><span id="ciMutability"><span class="annot"><span class="annottext">ColumnInfo b -&gt; ColumnMutability
+</span><a href="Hasura.RQL.Types.Column.html#ciMutability"><span class="hs-identifier hs-var hs-var">ciMutability</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnMutability"><span class="hs-identifier hs-type">ColumnMutability</span></a></span><span>
+</span><span id="line-235"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-236"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x. ColumnInfo b -&gt; Rep (ColumnInfo b) x)
+-&gt; (forall x. Rep (ColumnInfo b) x -&gt; ColumnInfo b)
+-&gt; Generic (ColumnInfo b)
+forall x. Rep (ColumnInfo b) x -&gt; ColumnInfo b
+forall x. ColumnInfo b -&gt; Rep (ColumnInfo b) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x. Rep (ColumnInfo b) x -&gt; ColumnInfo b
+forall (b :: BackendType) x. ColumnInfo b -&gt; Rep (ColumnInfo b) x
+$cto :: forall (b :: BackendType) x. Rep (ColumnInfo b) x -&gt; ColumnInfo b
+$cfrom :: forall (b :: BackendType) x. ColumnInfo b -&gt; Rep (ColumnInfo b) x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-237"></span><span>
+</span><span id="line-238"></span><span id="local-6989586621688296095"><span id="local-6989586621688296097"><span id="local-6989586621688296099"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296099"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296099"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-239"></span><span>
+</span><span id="line-240"></span><span id="local-6989586621688296088"><span id="local-6989586621688296090"><span id="local-6989586621688296092"><span id="local-6989586621688296094"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296094"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296094"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-241"></span><span>
+</span><span id="line-242"></span><span id="local-6989586621688296087"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688296084"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296087"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296087"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-243"></span><span>
+</span><span id="line-244"></span><span id="local-6989586621688296083"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688296081"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296083"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296083"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-245"></span><span>
+</span><span id="line-246"></span><span id="local-6989586621688296080"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688296076"><span id="local-6989586621688296078"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296080"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296080"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-247"></span><span>
+</span><span id="line-248"></span><span id="local-6989586621688296075"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688296069"><span id="local-6989586621688296071"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296075"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296075"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-249"></span><span>  </span><span id="local-6989586621688296068"><span class="annot"><span class="annottext">toJSON :: ColumnInfo b -&gt; Value
+</span><a href="#local-6989586621688296068"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; ColumnInfo b -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">genericToJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-250"></span><span>  </span><span id="local-6989586621688296067"><span class="annot"><span class="annottext">toEncoding :: ColumnInfo b -&gt; Encoding
+</span><a href="#local-6989586621688296067"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; ColumnInfo b -&gt; Encoding
+forall a.
+(Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Encoding
+</span><span class="hs-identifier hs-var">genericToEncoding</span></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span></span><span>
+</span><span id="line-251"></span><span>
+</span><span id="line-252"></span><span class="hs-keyword">type</span><span> </span><span id="PrimaryKeyColumns"><span class="annot"><a href="Hasura.RQL.Types.Column.html#PrimaryKeyColumns"><span class="hs-identifier hs-var">PrimaryKeyColumns</span></a></span></span><span> </span><span id="local-6989586621688296066"><span class="annot"><a href="#local-6989586621688296066"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Data.Sequence.NonEmpty.html#NESeq"><span class="hs-identifier hs-type">NESeq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296066"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-253"></span><span>
+</span><span id="line-254"></span><span class="annot"><a href="Hasura.RQL.Types.Column.html#onlyNumCols"><span class="hs-identifier hs-type">onlyNumCols</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688296064"><span class="annot"><a href="#local-6989586621688296064"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296064"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296064"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296064"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-255"></span><span id="onlyNumCols"><span class="annot"><span class="annottext">onlyNumCols :: [ColumnInfo b] -&gt; [ColumnInfo b]
+</span><a href="Hasura.RQL.Types.Column.html#onlyNumCols"><span class="hs-identifier hs-var hs-var">onlyNumCols</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ColumnInfo b -&gt; Bool) -&gt; [ColumnInfo b] -&gt; [ColumnInfo b]
+forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b -&gt; Bool
+forall (b :: BackendType). Backend b =&gt; ColumnInfo b -&gt; Bool
+</span><a href="Hasura.RQL.Types.Column.html#isNumCol"><span class="hs-identifier hs-var">isNumCol</span></a></span><span>
+</span><span id="line-256"></span><span>
+</span><span id="line-257"></span><span class="annot"><a href="Hasura.RQL.Types.Column.html#isNumCol"><span class="hs-identifier hs-type">isNumCol</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688296526"><span class="annot"><a href="#local-6989586621688296526"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296526"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296526"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-258"></span><span id="isNumCol"><span class="annot"><span class="annottext">isNumCol :: ColumnInfo b -&gt; Bool
+</span><a href="Hasura.RQL.Types.Column.html#isNumCol"><span class="hs-identifier hs-var hs-var">isNumCol</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ScalarType b -&gt; Bool) -&gt; ColumnType b -&gt; Bool
+forall (b :: BackendType).
+(ScalarType b -&gt; Bool) -&gt; ColumnType b -&gt; Bool
+</span><a href="Hasura.RQL.Types.Column.html#isScalarColumnWhere"><span class="hs-identifier hs-var">isScalarColumnWhere</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Backend b =&gt; ScalarType b -&gt; Bool
+forall (b :: BackendType). Backend b =&gt; ScalarType b -&gt; Bool
+</span><a href="Hasura.RQL.Types.Backend.html#isNumType"><span class="hs-identifier hs-var">isNumType</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688296526"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(ColumnType b -&gt; Bool)
+-&gt; (ColumnInfo b -&gt; ColumnType b) -&gt; ColumnInfo b -&gt; Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b -&gt; ColumnType b
+forall (b :: BackendType). ColumnInfo b -&gt; ColumnType b
+</span><a href="Hasura.RQL.Types.Column.html#ciType"><span class="hs-identifier hs-var hs-var">ciType</span></a></span><span>
+</span><span id="line-259"></span><span>
+</span><span id="line-260"></span><span class="annot"><a href="Hasura.RQL.Types.Column.html#onlyComparableCols"><span class="hs-identifier hs-type">onlyComparableCols</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688296061"><span class="annot"><a href="#local-6989586621688296061"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296061"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296061"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296061"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-261"></span><span id="onlyComparableCols"><span class="annot"><span class="annottext">onlyComparableCols :: [ColumnInfo b] -&gt; [ColumnInfo b]
+</span><a href="Hasura.RQL.Types.Column.html#onlyComparableCols"><span class="hs-identifier hs-var hs-var">onlyComparableCols</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ColumnInfo b -&gt; Bool) -&gt; [ColumnInfo b] -&gt; [ColumnInfo b]
+forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(ScalarType b -&gt; Bool) -&gt; ColumnType b -&gt; Bool
+forall (b :: BackendType).
+(ScalarType b -&gt; Bool) -&gt; ColumnType b -&gt; Bool
+</span><a href="Hasura.RQL.Types.Column.html#isScalarColumnWhere"><span class="hs-identifier hs-var">isScalarColumnWhere</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Backend b =&gt; ScalarType b -&gt; Bool
+forall (b :: BackendType). Backend b =&gt; ScalarType b -&gt; Bool
+</span><a href="Hasura.RQL.Types.Backend.html#isComparableType"><span class="hs-identifier hs-var">isComparableType</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688296061"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(ColumnType b -&gt; Bool)
+-&gt; (ColumnInfo b -&gt; ColumnType b) -&gt; ColumnInfo b -&gt; Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b -&gt; ColumnType b
+forall (b :: BackendType). ColumnInfo b -&gt; ColumnType b
+</span><a href="Hasura.RQL.Types.Column.html#ciType"><span class="hs-identifier hs-var hs-var">ciType</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-262"></span><span>
+</span><span id="line-263"></span><span id="local-6989586621688296059"><span class="annot"><a href="Hasura.RQL.Types.Column.html#getColInfos"><span class="hs-identifier hs-type">getColInfos</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296059"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296059"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296059"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296059"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span></span><span>
+</span><span id="line-264"></span><span id="getColInfos"><span class="annot"><span class="annottext">getColInfos :: [Column b] -&gt; [ColumnInfo b] -&gt; [ColumnInfo b]
+</span><a href="Hasura.RQL.Types.Column.html#getColInfos"><span class="hs-identifier hs-var hs-var">getColInfos</span></a></span></span><span> </span><span id="local-6989586621688296058"><span class="annot"><span class="annottext">[Column b]
+</span><a href="#local-6989586621688296058"><span class="hs-identifier hs-var">cols</span></a></span></span><span> </span><span id="local-6989586621688296057"><span class="annot"><span class="annottext">[ColumnInfo b]
+</span><a href="#local-6989586621688296057"><span class="hs-identifier hs-var">allColInfos</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-265"></span><span>  </span><span class="annot"><span class="annottext">((ColumnInfo b -&gt; Bool) -&gt; [ColumnInfo b] -&gt; [ColumnInfo b])
+-&gt; [ColumnInfo b] -&gt; (ColumnInfo b -&gt; Bool) -&gt; [ColumnInfo b]
+forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">(ColumnInfo b -&gt; Bool) -&gt; [ColumnInfo b] -&gt; [ColumnInfo b]
+forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="annot"><span class="annottext">[ColumnInfo b]
+</span><a href="#local-6989586621688296057"><span class="hs-identifier hs-var">allColInfos</span></a></span><span> </span><span class="annot"><span class="annottext">((ColumnInfo b -&gt; Bool) -&gt; [ColumnInfo b])
+-&gt; (ColumnInfo b -&gt; Bool) -&gt; [ColumnInfo b]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688296055"><span class="annot"><span class="annottext">ColumnInfo b
+</span><a href="#local-6989586621688296055"><span class="hs-identifier hs-var">ci</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ColumnInfo b -&gt; Column b
+forall (b :: BackendType). ColumnInfo b -&gt; Column b
+</span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var hs-var">ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
+</span><a href="#local-6989586621688296055"><span class="hs-identifier hs-var">ci</span></a></span><span> </span><span class="annot"><span class="annottext">Column b -&gt; [Column b] -&gt; Bool
+forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
+</span><span class="hs-operator hs-var">`elem`</span></span><span> </span><span class="annot"><span class="annottext">[Column b]
+</span><a href="#local-6989586621688296058"><span class="hs-identifier hs-var">cols</span></a></span><span>
+</span><span id="line-266"></span><span>
+</span><span id="line-267"></span><span id="local-6989586621688296054"><span class="annot"><a href="Hasura.RQL.Types.Column.html#fromCol"><span class="hs-identifier hs-type">fromCol</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296054"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296054"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span></span><span>
+</span><span id="line-268"></span><span id="fromCol"><span class="annot"><span class="annottext">fromCol :: Column b -&gt; FieldName
+</span><a href="Hasura.RQL.Types.Column.html#fromCol"><span class="hs-identifier hs-var hs-var">fromCol</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; FieldName
+</span><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-var">FieldName</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; FieldName) -&gt; (Column b -&gt; Text) -&gt; Column b -&gt; FieldName
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Column b -&gt; Text
+forall a. ToTxt a =&gt; a -&gt; Text
+</span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span>
+</span><span id="line-269"></span><span>
+</span><span id="line-270"></span><span class="hs-keyword">type</span><span> </span><span id="ColumnValues"><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValues"><span class="hs-identifier hs-var">ColumnValues</span></a></span></span><span> </span><span id="local-6989586621688296052"><span class="annot"><a href="#local-6989586621688296052"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621688296051"><span class="annot"><a href="#local-6989586621688296051"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296052"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688296051"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-271"></span><span>
+</span><span id="line-272"></span><span class="hs-comment">-- | Represents a reference to a source column, possibly casted an arbitrary</span><span>
+</span><span id="line-273"></span><span class="hs-comment">-- number of times. Used within 'parseBoolExpOperations' for bookkeeping.</span><span>
+</span><span id="line-274"></span><span class="hs-keyword">data</span><span> </span><span id="ColumnReference"><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnReference"><span class="hs-identifier hs-var">ColumnReference</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688296050"><span class="annot"><a href="#local-6989586621688296050"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-275"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="ColumnReferenceColumn"><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnReferenceColumn"><span class="hs-identifier hs-var">ColumnReferenceColumn</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296050"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-276"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ColumnReferenceComputedField"><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnReferenceComputedField"><span class="hs-identifier hs-var">ColumnReferenceComputedField</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldName"><span class="hs-identifier hs-type">ComputedFieldName</span></a></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296050"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-277"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ColumnReferenceCast"><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnReferenceCast"><span class="hs-identifier hs-var">ColumnReferenceCast</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnReference"><span class="hs-identifier hs-type">ColumnReference</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296050"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296050"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-278"></span><span>
+</span><span id="line-279"></span><span id="local-6989586621688296046"><span class="annot"><a href="Hasura.RQL.Types.Column.html#columnReferenceType"><span class="hs-identifier hs-type">columnReferenceType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnReference"><span class="hs-identifier hs-type">ColumnReference</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296046"><span class="hs-identifier hs-type">backend</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296046"><span class="hs-identifier hs-type">backend</span></a></span></span><span>
+</span><span id="line-280"></span><span id="columnReferenceType"><span class="annot"><span class="annottext">columnReferenceType :: ColumnReference backend -&gt; ColumnType backend
+</span><a href="Hasura.RQL.Types.Column.html#columnReferenceType"><span class="hs-identifier hs-var hs-var">columnReferenceType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-281"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnReferenceColumn"><span class="hs-identifier hs-type">ColumnReferenceColumn</span></a></span><span> </span><span id="local-6989586621688296045"><span class="annot"><span class="annottext">ColumnInfo backend
+</span><a href="#local-6989586621688296045"><span class="hs-identifier hs-var">column</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ColumnInfo backend -&gt; ColumnType backend
+forall (b :: BackendType). ColumnInfo b -&gt; ColumnType b
+</span><a href="Hasura.RQL.Types.Column.html#ciType"><span class="hs-identifier hs-var hs-var">ciType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo backend
+</span><a href="#local-6989586621688296045"><span class="hs-identifier hs-var">column</span></a></span><span>
+</span><span id="line-282"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnReferenceComputedField"><span class="hs-identifier hs-type">ColumnReferenceComputedField</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688296044"><span class="annot"><span class="annottext">ScalarType backend
+</span><a href="#local-6989586621688296044"><span class="hs-identifier hs-var">scalarType</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType backend -&gt; ColumnType backend
+forall (b :: BackendType). ScalarType b -&gt; ColumnType b
+</span><a href="Hasura.RQL.Types.Column.html#ColumnScalar"><span class="hs-identifier hs-var">ColumnScalar</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType backend
+</span><a href="#local-6989586621688296044"><span class="hs-identifier hs-var">scalarType</span></a></span><span>
+</span><span id="line-283"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnReferenceCast"><span class="hs-identifier hs-type">ColumnReferenceCast</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnReference backend
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688296043"><span class="annot"><span class="annottext">ColumnType backend
+</span><a href="#local-6989586621688296043"><span class="hs-identifier hs-var">targetType</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ColumnType backend
+</span><a href="#local-6989586621688296043"><span class="hs-identifier hs-var">targetType</span></a></span><span>
+</span><span id="line-284"></span><span>
+</span><span id="line-285"></span><span id="local-6989586621688296042"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296042"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">ToTxt</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnReference"><span class="hs-identifier hs-type">ColumnReference</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688296042"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-286"></span><span>  </span><span id="local-6989586621688296040"><span class="annot"><span class="annottext">toTxt :: ColumnReference b -&gt; Text
+</span><a href="#local-6989586621688296040"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-287"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnReferenceColumn"><span class="hs-identifier hs-type">ColumnReferenceColumn</span></a></span><span> </span><span id="local-6989586621688296039"><span class="annot"><span class="annottext">ColumnInfo b
+</span><a href="#local-6989586621688296039"><span class="hs-identifier hs-var">column</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Column b -&gt; Text
+forall a. ToTxt a =&gt; a -&gt; Text
+</span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">(Column b -&gt; Text) -&gt; Column b -&gt; Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b -&gt; Column b
+forall (b :: BackendType). ColumnInfo b -&gt; Column b
+</span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var hs-var">ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
+</span><a href="#local-6989586621688296039"><span class="hs-identifier hs-var">column</span></a></span><span>
+</span><span id="line-288"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnReferenceComputedField"><span class="hs-identifier hs-type">ColumnReferenceComputedField</span></a></span><span> </span><span id="local-6989586621688296038"><span class="annot"><span class="annottext">ComputedFieldName
+</span><a href="#local-6989586621688296038"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="annot"><span class="annottext">ScalarType b
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ComputedFieldName -&gt; Text
+forall a. ToTxt a =&gt; a -&gt; Text
+</span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
+</span><a href="#local-6989586621688296038"><span class="hs-identifier hs-var">name</span></a></span><span>
+</span><span id="line-289"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnReferenceCast"><span class="hs-identifier hs-type">ColumnReferenceCast</span></a></span><span> </span><span id="local-6989586621688296037"><span class="annot"><span class="annottext">ColumnReference b
+</span><a href="#local-6989586621688296037"><span class="hs-identifier hs-var">reference</span></a></span></span><span> </span><span id="local-6989586621688296036"><span class="annot"><span class="annottext">ColumnType b
+</span><a href="#local-6989586621688296036"><span class="hs-identifier hs-var">targetType</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-290"></span><span>      </span><span class="annot"><span class="annottext">ColumnReference b -&gt; Text
+forall a. ToTxt a =&gt; a -&gt; Text
+</span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnReference b
+</span><a href="#local-6989586621688296037"><span class="hs-identifier hs-var">reference</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;::&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ColumnType b -&gt; Text
+forall a. ToTxt a =&gt; a -&gt; Text
+</span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType b
+</span><a href="#local-6989586621688296036"><span class="hs-identifier hs-var">targetType</span></a></span></span><span>
+</span><span id="line-291"></span></pre></body></html>

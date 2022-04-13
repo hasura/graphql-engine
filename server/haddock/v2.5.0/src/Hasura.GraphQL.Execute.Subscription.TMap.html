@@ -1,0 +1,241 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.GraphQL.Execute.Subscription.TMap</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#TMap"><span class="hs-identifier">TMap</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#new"><span class="hs-identifier">new</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#reset"><span class="hs-identifier">reset</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#null"><span class="hs-identifier">null</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#lookup"><span class="hs-identifier">lookup</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#insert"><span class="hs-identifier">insert</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#delete"><span class="hs-identifier">delete</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#toList"><span class="hs-identifier">toList</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#replace"><span class="hs-identifier">replace</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#union"><span class="hs-identifier">union</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#filterWithKey"><span class="hs-identifier">filterWithKey</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#getMap"><span class="hs-identifier">getMap</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Concurrent.STM</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">lookup</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">null</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">toList</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">union</span></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-comment">-- | A coarse-grained transactional map implemented by simply wrapping a 'Map.HashMap' in a 'TVar'.</span><span>
+</span><span id="line-22"></span><span class="hs-comment">-- Compared to &quot;StmContainers.Map&quot;, this provides much faster iteration over the elements at the</span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- cost of significantly increased contention on writes.</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">newtype</span><span> </span><span id="TMap"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#TMap"><span class="hs-identifier hs-var">TMap</span></a></span></span><span> </span><span id="local-6989586621688265650"><span class="annot"><a href="#local-6989586621688265650"><span class="hs-identifier hs-type">k</span></a></span></span><span> </span><span id="local-6989586621688265649"><span class="annot"><a href="#local-6989586621688265649"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TMap"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#TMap"><span class="hs-identifier hs-var">TMap</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unTMap"><span class="annot"><span class="annottext">TMap k v -&gt; TVar (HashMap k v)
+</span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#unTMap"><span class="hs-identifier hs-var hs-var">unTMap</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TVar</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Map.HashMap</span></span><span> </span><span class="annot"><a href="#local-6989586621688265650"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265649"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">}</span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span id="local-6989586621688265571"><span id="local-6989586621688265572"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#new"><span class="hs-identifier hs-type">new</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">STM</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#TMap"><span class="hs-identifier hs-type">TMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265572"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265571"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-27"></span><span id="new"><span class="annot"><span class="annottext">new :: STM (TMap k v)
+</span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#new"><span class="hs-identifier hs-var hs-var">new</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TVar (HashMap k v) -&gt; TMap k v
+forall k v. TVar (HashMap k v) -&gt; TMap k v
+</span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#TMap"><span class="hs-identifier hs-var">TMap</span></a></span><span> </span><span class="annot"><span class="annottext">(TVar (HashMap k v) -&gt; TMap k v)
+-&gt; STM (TVar (HashMap k v)) -&gt; STM (TMap k v)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">HashMap k v -&gt; STM (TVar (HashMap k v))
+forall a. a -&gt; STM (TVar a)
+</span><span class="hs-identifier hs-var">newTVar</span></span><span> </span><span class="annot"><span class="annottext">HashMap k v
+forall k v. HashMap k v
+</span><span class="hs-identifier hs-var">Map.empty</span></span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span id="local-6989586621688265566"><span id="local-6989586621688265567"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#reset"><span class="hs-identifier hs-type">reset</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#TMap"><span class="hs-identifier hs-type">TMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265567"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265566"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">STM</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-30"></span><span id="reset"><span class="annot"><span class="annottext">reset :: TMap k v -&gt; STM ()
+</span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#reset"><span class="hs-identifier hs-var hs-var">reset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(TVar (HashMap k v) -&gt; HashMap k v -&gt; STM ())
+-&gt; HashMap k v -&gt; TVar (HashMap k v) -&gt; STM ()
+forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">TVar (HashMap k v) -&gt; HashMap k v -&gt; STM ()
+forall a. TVar a -&gt; a -&gt; STM ()
+</span><span class="hs-identifier hs-var">writeTVar</span></span><span> </span><span class="annot"><span class="annottext">HashMap k v
+forall k v. HashMap k v
+</span><span class="hs-identifier hs-var">Map.empty</span></span><span> </span><span class="annot"><span class="annottext">(TVar (HashMap k v) -&gt; STM ())
+-&gt; (TMap k v -&gt; TVar (HashMap k v)) -&gt; TMap k v -&gt; STM ()
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">TMap k v -&gt; TVar (HashMap k v)
+forall k v. TMap k v -&gt; TVar (HashMap k v)
+</span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#unTMap"><span class="hs-identifier hs-var hs-var">unTMap</span></a></span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span id="local-6989586621688265561"><span id="local-6989586621688265562"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#null"><span class="hs-identifier hs-type">null</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#TMap"><span class="hs-identifier hs-type">TMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265562"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265561"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">STM</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span></span></span><span>
+</span><span id="line-33"></span><span id="null"><span class="annot"><span class="annottext">null :: TMap k v -&gt; STM Bool
+</span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#null"><span class="hs-identifier hs-var hs-var">null</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(HashMap k v -&gt; Bool) -&gt; STM (HashMap k v) -&gt; STM Bool
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">HashMap k v -&gt; Bool
+forall k v. HashMap k v -&gt; Bool
+</span><span class="hs-identifier hs-var">Map.null</span></span><span> </span><span class="annot"><span class="annottext">(STM (HashMap k v) -&gt; STM Bool)
+-&gt; (TMap k v -&gt; STM (HashMap k v)) -&gt; TMap k v -&gt; STM Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">TVar (HashMap k v) -&gt; STM (HashMap k v)
+forall a. TVar a -&gt; STM a
+</span><span class="hs-identifier hs-var">readTVar</span></span><span> </span><span class="annot"><span class="annottext">(TVar (HashMap k v) -&gt; STM (HashMap k v))
+-&gt; (TMap k v -&gt; TVar (HashMap k v))
+-&gt; TMap k v
+-&gt; STM (HashMap k v)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">TMap k v -&gt; TVar (HashMap k v)
+forall k v. TMap k v -&gt; TVar (HashMap k v)
+</span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#unTMap"><span class="hs-identifier hs-var hs-var">unTMap</span></a></span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span id="local-6989586621688265557"><span id="local-6989586621688265558"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#lookup"><span class="hs-identifier hs-type">lookup</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621688265558"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621688265558"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688265558"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#TMap"><span class="hs-identifier hs-type">TMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265558"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265557"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">STM</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621688265557"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-36"></span><span id="lookup"><span class="annot"><span class="annottext">lookup :: k -&gt; TMap k v -&gt; STM (Maybe v)
+</span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#lookup"><span class="hs-identifier hs-var hs-var">lookup</span></a></span></span><span> </span><span id="local-6989586621688265556"><span class="annot"><span class="annottext">k
+</span><a href="#local-6989586621688265556"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(HashMap k v -&gt; Maybe v) -&gt; STM (HashMap k v) -&gt; STM (Maybe v)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">k -&gt; HashMap k v -&gt; Maybe v
+forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
+</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">k
+</span><a href="#local-6989586621688265556"><span class="hs-identifier hs-var">k</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(STM (HashMap k v) -&gt; STM (Maybe v))
+-&gt; (TMap k v -&gt; STM (HashMap k v)) -&gt; TMap k v -&gt; STM (Maybe v)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">TVar (HashMap k v) -&gt; STM (HashMap k v)
+forall a. TVar a -&gt; STM a
+</span><span class="hs-identifier hs-var">readTVar</span></span><span> </span><span class="annot"><span class="annottext">(TVar (HashMap k v) -&gt; STM (HashMap k v))
+-&gt; (TMap k v -&gt; TVar (HashMap k v))
+-&gt; TMap k v
+-&gt; STM (HashMap k v)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">TMap k v -&gt; TVar (HashMap k v)
+forall k v. TMap k v -&gt; TVar (HashMap k v)
+</span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#unTMap"><span class="hs-identifier hs-var hs-var">unTMap</span></a></span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span id="local-6989586621688265553"><span id="local-6989586621688265554"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#insert"><span class="hs-identifier hs-type">insert</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621688265554"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621688265554"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688265553"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688265554"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#TMap"><span class="hs-identifier hs-type">TMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265554"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265553"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">STM</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-39"></span><span id="insert"><span class="annot"><span class="annottext">insert :: v -&gt; k -&gt; TMap k v -&gt; STM ()
+</span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#insert"><span class="hs-identifier hs-var hs-var">insert</span></a></span></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621688265552"><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621688265552"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span id="local-6989586621688265551"><span class="annot"><span class="annottext">k
+</span><a href="#local-6989586621688265551"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span id="local-6989586621688265550"><span class="annot"><span class="annottext">TMap k v
+</span><a href="#local-6989586621688265550"><span class="hs-identifier hs-var">mapTv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TVar (HashMap k v) -&gt; (HashMap k v -&gt; HashMap k v) -&gt; STM ()
+forall a. TVar a -&gt; (a -&gt; a) -&gt; STM ()
+</span><span class="hs-identifier hs-var">modifyTVar'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TMap k v -&gt; TVar (HashMap k v)
+forall k v. TMap k v -&gt; TVar (HashMap k v)
+</span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#unTMap"><span class="hs-identifier hs-var hs-var">unTMap</span></a></span><span> </span><span class="annot"><span class="annottext">TMap k v
+</span><a href="#local-6989586621688265550"><span class="hs-identifier hs-var">mapTv</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((HashMap k v -&gt; HashMap k v) -&gt; STM ())
+-&gt; (HashMap k v -&gt; HashMap k v) -&gt; STM ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">k -&gt; v -&gt; HashMap k v -&gt; HashMap k v
+forall k v.
+(Eq k, Hashable k) =&gt;
+k -&gt; v -&gt; HashMap k v -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">Map.insert</span></span><span> </span><span class="annot"><span class="annottext">k
+</span><a href="#local-6989586621688265551"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621688265552"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span id="local-6989586621688265546"><span id="local-6989586621688265547"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#delete"><span class="hs-identifier hs-type">delete</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621688265547"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621688265547"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688265547"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#TMap"><span class="hs-identifier hs-type">TMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265547"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265546"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">STM</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-42"></span><span id="delete"><span class="annot"><span class="annottext">delete :: k -&gt; TMap k v -&gt; STM ()
+</span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#delete"><span class="hs-identifier hs-var hs-var">delete</span></a></span></span><span> </span><span id="local-6989586621688265545"><span class="annot"><span class="annottext">k
+</span><a href="#local-6989586621688265545"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span id="local-6989586621688265544"><span class="annot"><span class="annottext">TMap k v
+</span><a href="#local-6989586621688265544"><span class="hs-identifier hs-var">mapTv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TVar (HashMap k v) -&gt; (HashMap k v -&gt; HashMap k v) -&gt; STM ()
+forall a. TVar a -&gt; (a -&gt; a) -&gt; STM ()
+</span><span class="hs-identifier hs-var">modifyTVar'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TMap k v -&gt; TVar (HashMap k v)
+forall k v. TMap k v -&gt; TVar (HashMap k v)
+</span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#unTMap"><span class="hs-identifier hs-var hs-var">unTMap</span></a></span><span> </span><span class="annot"><span class="annottext">TMap k v
+</span><a href="#local-6989586621688265544"><span class="hs-identifier hs-var">mapTv</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((HashMap k v -&gt; HashMap k v) -&gt; STM ())
+-&gt; (HashMap k v -&gt; HashMap k v) -&gt; STM ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">k -&gt; HashMap k v -&gt; HashMap k v
+forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">Map.delete</span></span><span> </span><span class="annot"><span class="annottext">k
+</span><a href="#local-6989586621688265545"><span class="hs-identifier hs-var">k</span></a></span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span id="local-6989586621688265541"><span id="local-6989586621688265542"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#toList"><span class="hs-identifier hs-type">toList</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#TMap"><span class="hs-identifier hs-type">TMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265542"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265541"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">STM</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688265542"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621688265541"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span></span></span><span>
+</span><span id="line-45"></span><span id="toList"><span class="annot"><span class="annottext">toList :: TMap k v -&gt; STM [(k, v)]
+</span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#toList"><span class="hs-identifier hs-var hs-var">toList</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(HashMap k v -&gt; [(k, v)]) -&gt; STM (HashMap k v) -&gt; STM [(k, v)]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">HashMap k v -&gt; [(k, v)]
+forall k v. HashMap k v -&gt; [(k, v)]
+</span><span class="hs-identifier hs-var">Map.toList</span></span><span> </span><span class="annot"><span class="annottext">(STM (HashMap k v) -&gt; STM [(k, v)])
+-&gt; (TMap k v -&gt; STM (HashMap k v)) -&gt; TMap k v -&gt; STM [(k, v)]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">TVar (HashMap k v) -&gt; STM (HashMap k v)
+forall a. TVar a -&gt; STM a
+</span><span class="hs-identifier hs-var">readTVar</span></span><span> </span><span class="annot"><span class="annottext">(TVar (HashMap k v) -&gt; STM (HashMap k v))
+-&gt; (TMap k v -&gt; TVar (HashMap k v))
+-&gt; TMap k v
+-&gt; STM (HashMap k v)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">TMap k v -&gt; TVar (HashMap k v)
+forall k v. TMap k v -&gt; TVar (HashMap k v)
+</span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#unTMap"><span class="hs-identifier hs-var hs-var">unTMap</span></a></span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span id="local-6989586621688265538"><span id="local-6989586621688265539"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#filterWithKey"><span class="hs-identifier hs-type">filterWithKey</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688265539"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688265538"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#TMap"><span class="hs-identifier hs-type">TMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265539"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265538"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">STM</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-48"></span><span id="filterWithKey"><span class="annot"><span class="annottext">filterWithKey :: (k -&gt; v -&gt; Bool) -&gt; TMap k v -&gt; STM ()
+</span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#filterWithKey"><span class="hs-identifier hs-var hs-var">filterWithKey</span></a></span></span><span> </span><span id="local-6989586621688265537"><span class="annot"><span class="annottext">k -&gt; v -&gt; Bool
+</span><a href="#local-6989586621688265537"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621688265536"><span class="annot"><span class="annottext">TMap k v
+</span><a href="#local-6989586621688265536"><span class="hs-identifier hs-var">mapTV</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TVar (HashMap k v) -&gt; (HashMap k v -&gt; HashMap k v) -&gt; STM ()
+forall a. TVar a -&gt; (a -&gt; a) -&gt; STM ()
+</span><span class="hs-identifier hs-var">modifyTVar'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TMap k v -&gt; TVar (HashMap k v)
+forall k v. TMap k v -&gt; TVar (HashMap k v)
+</span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#unTMap"><span class="hs-identifier hs-var hs-var">unTMap</span></a></span><span> </span><span class="annot"><span class="annottext">TMap k v
+</span><a href="#local-6989586621688265536"><span class="hs-identifier hs-var">mapTV</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((HashMap k v -&gt; HashMap k v) -&gt; STM ())
+-&gt; (HashMap k v -&gt; HashMap k v) -&gt; STM ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(k -&gt; v -&gt; Bool) -&gt; HashMap k v -&gt; HashMap k v
+forall k v. (k -&gt; v -&gt; Bool) -&gt; HashMap k v -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">Map.filterWithKey</span></span><span> </span><span class="annot"><span class="annottext">k -&gt; v -&gt; Bool
+</span><a href="#local-6989586621688265537"><span class="hs-identifier hs-var">f</span></a></span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span id="local-6989586621688265533"><span id="local-6989586621688265534"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#replace"><span class="hs-identifier hs-type">replace</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#TMap"><span class="hs-identifier hs-type">TMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265534"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265533"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Map.HashMap</span></span><span> </span><span class="annot"><a href="#local-6989586621688265534"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265533"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">STM</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-51"></span><span id="replace"><span class="annot"><span class="annottext">replace :: TMap k v -&gt; HashMap k v -&gt; STM ()
+</span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#replace"><span class="hs-identifier hs-var hs-var">replace</span></a></span></span><span> </span><span id="local-6989586621688265532"><span class="annot"><span class="annottext">TMap k v
+</span><a href="#local-6989586621688265532"><span class="hs-identifier hs-var">mapTV</span></a></span></span><span> </span><span id="local-6989586621688265531"><span class="annot"><span class="annottext">HashMap k v
+</span><a href="#local-6989586621688265531"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">STM (HashMap k v) -&gt; STM ()
+forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
+</span><span class="hs-identifier hs-var">void</span></span><span> </span><span class="annot"><span class="annottext">(STM (HashMap k v) -&gt; STM ()) -&gt; STM (HashMap k v) -&gt; STM ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TVar (HashMap k v) -&gt; HashMap k v -&gt; STM (HashMap k v)
+forall a. TVar a -&gt; a -&gt; STM a
+</span><span class="hs-identifier hs-var">swapTVar</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TMap k v -&gt; TVar (HashMap k v)
+forall k v. TMap k v -&gt; TVar (HashMap k v)
+</span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#unTMap"><span class="hs-identifier hs-var hs-var">unTMap</span></a></span><span> </span><span class="annot"><span class="annottext">TMap k v
+</span><a href="#local-6989586621688265532"><span class="hs-identifier hs-var">mapTV</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashMap k v
+</span><a href="#local-6989586621688265531"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span id="local-6989586621688265527"><span id="local-6989586621688265528"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#union"><span class="hs-identifier hs-type">union</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621688265528"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621688265528"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#TMap"><span class="hs-identifier hs-type">TMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265528"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265527"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#TMap"><span class="hs-identifier hs-type">TMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265528"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265527"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">STM</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#TMap"><span class="hs-identifier hs-type">TMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265528"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265527"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-54"></span><span id="union"><span class="annot"><span class="annottext">union :: TMap k v -&gt; TMap k v -&gt; STM (TMap k v)
+</span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#union"><span class="hs-identifier hs-var hs-var">union</span></a></span></span><span> </span><span id="local-6989586621688265526"><span class="annot"><span class="annottext">TMap k v
+</span><a href="#local-6989586621688265526"><span class="hs-identifier hs-var">mapA</span></a></span></span><span> </span><span id="local-6989586621688265525"><span class="annot"><span class="annottext">TMap k v
+</span><a href="#local-6989586621688265525"><span class="hs-identifier hs-var">mapB</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-55"></span><span>  </span><span id="local-6989586621688265524"><span class="annot"><span class="annottext">HashMap k v
+</span><a href="#local-6989586621688265524"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TVar (HashMap k v) -&gt; STM (HashMap k v)
+forall a. TVar a -&gt; STM a
+</span><span class="hs-identifier hs-var">readTVar</span></span><span> </span><span class="annot"><span class="annottext">(TVar (HashMap k v) -&gt; STM (HashMap k v))
+-&gt; TVar (HashMap k v) -&gt; STM (HashMap k v)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TMap k v -&gt; TVar (HashMap k v)
+forall k v. TMap k v -&gt; TVar (HashMap k v)
+</span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#unTMap"><span class="hs-identifier hs-var hs-var">unTMap</span></a></span><span> </span><span class="annot"><span class="annottext">TMap k v
+</span><a href="#local-6989586621688265526"><span class="hs-identifier hs-var">mapA</span></a></span><span>
+</span><span id="line-56"></span><span>  </span><span id="local-6989586621688265523"><span class="annot"><span class="annottext">HashMap k v
+</span><a href="#local-6989586621688265523"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TVar (HashMap k v) -&gt; STM (HashMap k v)
+forall a. TVar a -&gt; STM a
+</span><span class="hs-identifier hs-var">readTVar</span></span><span> </span><span class="annot"><span class="annottext">(TVar (HashMap k v) -&gt; STM (HashMap k v))
+-&gt; TVar (HashMap k v) -&gt; STM (HashMap k v)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TMap k v -&gt; TVar (HashMap k v)
+forall k v. TMap k v -&gt; TVar (HashMap k v)
+</span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#unTMap"><span class="hs-identifier hs-var hs-var">unTMap</span></a></span><span> </span><span class="annot"><span class="annottext">TMap k v
+</span><a href="#local-6989586621688265525"><span class="hs-identifier hs-var">mapB</span></a></span><span>
+</span><span id="line-57"></span><span>  </span><span class="annot"><span class="annottext">TVar (HashMap k v) -&gt; TMap k v
+forall k v. TVar (HashMap k v) -&gt; TMap k v
+</span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#TMap"><span class="hs-identifier hs-var">TMap</span></a></span><span> </span><span class="annot"><span class="annottext">(TVar (HashMap k v) -&gt; TMap k v)
+-&gt; STM (TVar (HashMap k v)) -&gt; STM (TMap k v)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">HashMap k v -&gt; STM (TVar (HashMap k v))
+forall a. a -&gt; STM (TVar a)
+</span><span class="hs-identifier hs-var">newTVar</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap k v -&gt; HashMap k v -&gt; HashMap k v
+forall k v.
+(Eq k, Hashable k) =&gt;
+HashMap k v -&gt; HashMap k v -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">Map.union</span></span><span> </span><span class="annot"><span class="annottext">HashMap k v
+</span><a href="#local-6989586621688265524"><span class="hs-identifier hs-var">l</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap k v
+</span><a href="#local-6989586621688265523"><span class="hs-identifier hs-var">r</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span id="local-6989586621688265520"><span id="local-6989586621688265521"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#getMap"><span class="hs-identifier hs-type">getMap</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#TMap"><span class="hs-identifier hs-type">TMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265521"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265520"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">STM</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Map.HashMap</span></span><span> </span><span class="annot"><a href="#local-6989586621688265521"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688265520"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-60"></span><span id="getMap"><span class="annot"><span class="annottext">getMap :: TMap k v -&gt; STM (HashMap k v)
+</span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#getMap"><span class="hs-identifier hs-var hs-var">getMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TVar (HashMap k v) -&gt; STM (HashMap k v)
+forall a. TVar a -&gt; STM a
+</span><span class="hs-identifier hs-var">readTVar</span></span><span> </span><span class="annot"><span class="annottext">(TVar (HashMap k v) -&gt; STM (HashMap k v))
+-&gt; (TMap k v -&gt; TVar (HashMap k v))
+-&gt; TMap k v
+-&gt; STM (HashMap k v)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">TMap k v -&gt; TVar (HashMap k v)
+forall k v. TMap k v -&gt; TVar (HashMap k v)
+</span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#unTMap"><span class="hs-identifier hs-var hs-var">unTMap</span></a></span><span>
+</span><span id="line-61"></span></pre></body></html>
