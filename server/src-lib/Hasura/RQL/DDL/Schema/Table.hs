@@ -415,7 +415,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
       |) (withSourceInKey source $ Map.groupOnNE _tbiName tableBuildInputs)
   let rawTableCache = removeSourceInKey $ Map.catMaybes rawTableInfos
       enumTables = flip Map.mapMaybe rawTableCache \rawTableInfo ->
-        (,) <$> _tciPrimaryKey rawTableInfo <*> _tciEnumValues rawTableInfo
+        (,,) <$> _tciPrimaryKey rawTableInfo <*> pure (_tciCustomConfig rawTableInfo) <*> _tciEnumValues rawTableInfo
   tableInfos <-
     (|
       Inc.keyed
@@ -505,7 +505,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
       ErrorA
         QErr
         arr
-        ( Map.HashMap (TableName b) (PrimaryKey b (Column b), EnumValues),
+        ( Map.HashMap (TableName b) (PrimaryKey b (Column b), TableConfig b, EnumValues),
           TableCoreInfoG b (RawColumnInfo b) (Column b)
         )
         (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))

@@ -360,6 +360,10 @@ genEnumReference genTableName =
       genEnumValue
       genEnumValueInfo
       defaultRange
+    <*> maybe
+      ( genGName
+          defaultRange
+      )
 
 genEnumValue :: MonadGen m => m EnumValue
 genEnumValue = EnumValue <$> genGName defaultRange
