@@ -1,7 +1,6 @@
 # Contributing
 
-Hasura GraphQL engine docs are built using [Sphinx](http://www.sphinx-doc.org/en/master/).
-Sphinx files are written using the [RST markup language](http://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html).
+Hasura GraphQL engine docs are built using [Docusaurus 2](https://docusaurus.io/) and are written in MDX.
 
 ## Docs issues in the repo
 
@@ -23,8 +22,8 @@ community [Discord](https://discord.gg/vBPpJkS).
 
 ## Setup requirements
 
-- [Python 3](https://www.python.org/downloads/)
-- [Pip for Python 3](https://pip.pypa.io/en/stable/installing/)
+- [Node](https://nodejs.org/)
+- [Yarn](https://yarnpkg.com/getting-started)
 
 ## Steps for contributing
 
@@ -41,30 +40,24 @@ We use the [fork-and-branch git workflow](https://blog.scottlowe.org/2015/01/27/
   ```
 - Install dependencies:
   ```
-  pip3 install -r requirements.txt
+  yarn install
   ```
-- For development, live reload and auto build while you're editing and saving
-  files:
+- For development, live reload and auto build while you're editing and saving files:
   ```bash
-  make livehtml
+  yarn start
   ```
 - Make the required changes.
-- (Optional) Build docs to produce HTML files and verify:
+- (Optional) Build docs to produce build files and verify:
     ```bash
-    ENV=<development|production> make html-images
+    yarn build
     ```
-    - The generated docs are in `_build/html`. 
+    - The generated docs are in `build`.
     - View the built files by running a webserver:
         ```bash
-        cd _build/html && http-server
+        yarn serve
         ```
-        or
 
-        ```bash
-        cd _build/html && python3 -m http.server 8080
-        ```        
-- Commit the changes. Follow the common guidelines for commit messages at the 
-[main contributing guide](../CONTRIBUTING.md#common-guidelines).
+- Commit the changes. Follow the common guidelines for commit messages at the [main contributing guide](../CONTRIBUTING.md#common-guidelines).
 - Push the changes to your fork and submit a pull request.
 
 ### Changelog 
@@ -87,9 +80,11 @@ For small changes (such as fixes, adding examples, UI changes etc.), the `no-cha
 ### Style guide
 Please follow our [guide on how to write docs pages](https://github.com/hasura/graphql-engine/wiki/How-to-write-docs-pages) in order to keep the structure and style of our docs consistent.
 
+<!-- TODO: REMOVE THIS fter updating above linked wiki file -->
+[Page Structure](./wiki/page-structure.mdx)
+
 ### Pre-commit checks
-- Just before committing your changes, delete your local `_build` folder completely and then build docs again. Scan 
-the output and look for any syntax warnings (e.g. title underline too short, could not lex literal block, etc.). 
+- Just before committing your changes, delete your local `build` folder completely and then build docs again. Scan the output and look for any syntax warnings (e.g. title underline too short, could not lex literal block, etc.).
 Ideally there should not be any syntax warnings that are being thrown.
 
 ## Notes
