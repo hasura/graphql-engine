@@ -690,6 +690,9 @@ class TestSetTableIsEnum:
 
     def test_relationship_with_inconsistent_enum_table(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/relationship_with_inconsistent_enum_table.yaml')
+    
+    def test_custom_enum_table_name(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/custom_enum_table_name.yaml')
 
 # regression test for issue #3759
 @usefixtures('per_method_tests_db_state')
