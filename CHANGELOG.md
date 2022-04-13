@@ -3,6 +3,7 @@
 ## Next release
 
 ### Bug fixes and improvements
+- server: fix parsing remote relationship json definition from 1.x server catalog on migration (fix #7906)
 
 - server: update pg_dump to be compatible with postgres 14 (#7676)
 - console: add remote database relationships for views
