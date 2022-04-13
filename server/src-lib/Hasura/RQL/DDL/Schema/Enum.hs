@@ -31,7 +31,7 @@ import Hasura.RQL.Types.Table
 resolveEnumReferences ::
   forall b.
   Backend b =>
-  HashMap (TableName b) (PrimaryKey b (Column b), EnumValues) ->
+  HashMap (TableName b) (PrimaryKey b (Column b), TableConfig b, EnumValues) ->
   HashSet (ForeignKey b) ->
   HashMap (Column b) (NonEmpty (EnumReference b))
 resolveEnumReferences enumTables =
@@ -40,6 +40,8 @@ resolveEnumReferences enumTables =
     resolveEnumReference :: ForeignKey b -> Maybe (Column b, EnumReference b)
     resolveEnumReference foreignKey = do
       [(localColumn, foreignColumn)] <- pure $ M.toList (_fkColumnMapping @b foreignKey)
-      (primaryKey, enumValues) <- M.lookup (_fkForeignTable foreignKey) enumTables
+      let foreignKeyTableName = _fkForeignTable foreignKey
+      (primaryKey, tConfig, enumValues) <- M.lookup foreignKeyTableName enumTables
+      let tableCustomName = _tcCustomName tConfig
       guard (_pkColumns primaryKey == foreignColumn NESeq.:<|| Seq.Empty)
-      pure (localColumn, EnumReference (_fkForeignTable foreignKey) enumValues)
+      pure (localColumn, EnumReference foreignKeyTableName enumValues tableCustomName)

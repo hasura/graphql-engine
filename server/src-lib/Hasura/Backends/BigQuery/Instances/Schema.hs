@@ -170,11 +170,10 @@ bqColumnParser columnType (G.Nullability isNullable) =
       BigQuery.TimestampScalarType ->
         pure $ possiblyNullable scalarType $ BigQuery.TimestampValue . BigQuery.Timestamp <$> stringBased $$(G.litName "Timestamp")
       ty -> throwError $ internalError $ T.pack $ "Type currently unsupported for BigQuery: " ++ show ty
-    ColumnEnumReference (EnumReference tableName enumValues) ->
+    ColumnEnumReference enumRef@(EnumReference _ enumValues _) ->
       case nonEmpty (Map.toList enumValues) of
         Just enumValuesList -> do
-          tableGQLName <- tableGraphQLName @'BigQuery tableName `onLeft` throwError
-          enumName <- P.mkTypename $ tableGQLName <> $$(G.litName "_enum")
+          enumName <- mkEnumTypeName enumRef
           pure $ possiblyNullable BigQuery.StringScalarType $ P.enum enumName Nothing (mkEnumValue <$> enumValuesList)
         Nothing -> throw400 ValidationFailed "empty enum values"
   where

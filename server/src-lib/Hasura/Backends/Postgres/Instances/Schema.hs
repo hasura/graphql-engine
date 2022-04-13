@@ -268,10 +268,11 @@ columnParser columnType (G.Nullability isNullable) =
                     runAesonParser (parsePGValue scalarType) value
                       `onLeft` (parseErrorWith ParseFailed . qeError)
             }
-    ColumnEnumReference (EnumReference tableName enumValues) ->
+    ColumnEnumReference (EnumReference tableName enumValues tableCustomName) ->
       case nonEmpty (Map.toList enumValues) of
         Just enumValuesList -> do
-          name <- qualifiedObjectToName tableName <&> (<> $$(G.litName "_enum")) >>= P.mkTypename
+          tableGQLName <- qualifiedObjectToName tableName
+          name <- addEnumSuffix tableGQLName tableCustomName
           pure $ possiblyNullable PGText $ P.enum name Nothing (mkEnumValue <$> enumValuesList)
         Nothing -> throw400 ValidationFailed "empty enum values"
   where

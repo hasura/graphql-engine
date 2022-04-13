@@ -33,6 +33,8 @@ module Hasura.GraphQL.Schema.Common
     getIndirectDependencies,
     purgeDependencies,
     dropRemoteSchemaRemoteRelationshipInMetadata,
+    mkEnumTypeName,
+    addEnumSuffix,
   )
 where
 
@@ -238,6 +240,15 @@ optionalFieldParser ::
   m (Maybe (P.FieldParser n b))
 optionalFieldParser = fmap . fmap . fmap
 
+-- | Builds the type name for referenced enum tables.
+mkEnumTypeName :: forall b m r. (Backend b, MonadReader r m, Has MkTypename r, MonadError QErr m) => EnumReference b -> m G.Name
+mkEnumTypeName (EnumReference enumTableName _ enumTableCustomName) = do
+  enumTableGQLName <- tableGraphQLName @b enumTableName `onLeft` throwError
+  addEnumSuffix enumTableGQLName enumTableCustomName
+
+addEnumSuffix :: (MonadReader r m, Has MkTypename r) => G.Name -> Maybe G.Name -> m G.Name
+addEnumSuffix enumTableGQLName enumTableCustomName = P.mkTypename $ (fromMaybe enumTableGQLName enumTableCustomName) <> $$(G.litName "_enum")
+
 -- | Return the indirect dependencies on a source.
 -- We return a [SchemaObjId] instead of [SourceObjId], because the latter has no
 -- reference to the source. Due to which we won't be able to drop the dependencies of
@@ -264,11 +275,11 @@ getIndirectDependencies sourceName = do
     isIndirectDep :: SchemaObjId -> Bool
     isIndirectDep (SOSourceObj sn _)
       -- If the dependency is in another source, then it is an indirect dependency
-      | not (sn == sourceName) = True
+      | sn /= sourceName = True
       | otherwise = False
     -- If a relationship in a remote schema depends on this source, then we have to
     -- remove the relationship from remote schema.
-    isIndirectDep (SORemoteSchemaRemoteRelationship _ _ _) = True
+    isIndirectDep (SORemoteSchemaRemoteRelationship {}) = True
     -- Ignore non source dependencies
     isIndirectDep _ = False
 

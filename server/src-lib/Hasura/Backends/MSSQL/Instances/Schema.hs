@@ -265,11 +265,10 @@ msColumnParser columnType (G.Nullability isNullable) =
                   valueToJSON (P.toGraphQLType schemaType)
                     >=> either (parseErrorWith ParseFailed . qeError) pure . (MSSQL.parseScalarValue scalarType)
               }
-    ColumnEnumReference (EnumReference tableName enumValues) ->
+    ColumnEnumReference enumRef@(EnumReference _ enumValues _) ->
       case nonEmpty (Map.toList enumValues) of
         Just enumValuesList -> do
-          tableGQLName <- tableGraphQLName @'MSSQL tableName `onLeft` throwError
-          enumName <- P.mkTypename $ tableGQLName <> $$(G.litName "_enum")
+          enumName <- mkEnumTypeName enumRef
           pure $ possiblyNullable MSSQL.VarcharType $ P.enum enumName Nothing (mkEnumValue <$> enumValuesList)
         Nothing -> throw400 ValidationFailed "empty enum values"
   where
