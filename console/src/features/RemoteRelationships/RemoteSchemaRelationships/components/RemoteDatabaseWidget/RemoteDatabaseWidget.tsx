@@ -93,7 +93,7 @@ export const RemoteDatabaseWidget = () => {
       </div>
       <div className="mb-sm">
         <Select
-          label={`Reference ${driver === 'bigquery' ? 'dataset' : 'schema'}`}
+          label={`Reference ${driver === 'bigquery' ? 'Dataset' : 'Schema'}`}
           name="schema"
           placeholder={`Select a ${
             driver === 'bigquery' ? 'dataset' : 'schema'

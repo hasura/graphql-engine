@@ -70,3 +70,13 @@ PrimaryWithTest.play = async ({ canvasElement }) => {
   userEvent.selectOptions(referenceSchema, 'remoteSchema2');
   userEvent.click(submitButton);
 };
+
+export const WithExistingRelationship: Story<RemoteSchemaToRemoteSchemaFormProps> = args => (
+  <RemoteSchemaToRemoteSchemaForm {...args} />
+);
+WithExistingRelationship.args = {
+  ...Primary.args,
+  sourceRemoteSchema: 'with_default_values',
+  typeName: 'Country',
+  existingRelationshipName: 'an_example_rs_to_rs_relationship',
+};
