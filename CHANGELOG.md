@@ -11,6 +11,41 @@
 
 - The `query` and `raw-query` field from http-logs for metadata requests are removed by default. Use
   `HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING` to renable those fields.
+- server: Fix BigQuery overflow issue when using Decimal/NUMERIC data
+  type. The Hasura Graphql Engine renders the column value as string instead
+  of numeric value to avoid precision loss. If your endpoint was
+  returning this result:
+
+``` json
+{
+  "data": {
+    "hasura_author": [
+      {
+        "name": "Author 3",
+        "tax_id": 44403
+      }
+    ]
+  }
+}
+```
+
+It would now instead return this:
+
+``` json
+{
+  "data": {
+    "hasura_author": [
+      {
+        "name": "Author 3",
+        "tax_id": "44403"
+      }
+    ]
+  }
+}
+```
+
+Note that the column type of `tax_id` is Decimal and in the second
+case it is represented as string.
 
 ### Bug fixes and improvements
 
