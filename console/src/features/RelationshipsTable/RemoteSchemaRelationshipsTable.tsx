@@ -60,14 +60,12 @@ export const RemoteSchemaRelationshipTable = ({
             <NameColumnCell
               relationship={relationship}
               onClick={() => {
-                if (relType === 'to_source') {
-                  onEdit({
-                    relationshipName: relationship.name,
-                    rsType: type_name,
-                    relationshipType:
-                      relType === 'to_source' ? 'remoteDB' : 'remoteSchema',
-                  });
-                }
+                onEdit({
+                  relationshipName: relationship.name,
+                  rsType: type_name,
+                  relationshipType:
+                    relType === 'to_source' ? 'remoteDB' : 'remoteSchema',
+                });
               }}
             />,
             <SourceColumnCell {...{ type: sourceType, name }} />,

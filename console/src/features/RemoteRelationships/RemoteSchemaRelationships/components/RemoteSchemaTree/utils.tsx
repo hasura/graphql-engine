@@ -558,7 +558,8 @@ const serialiseRemoteField = (
 export const parseServerRelationship = (
   serverRelationship: RemoteRelationship
 ): RelationshipFields[] => {
-  const remoteFields = serverRelationship?.definition?.remote_field;
+  const remoteFields =
+    serverRelationship?.definition?.to_remote_schema.remote_field;
   if (!remoteFields || isEmpty(remoteFields)) {
     return [];
   }

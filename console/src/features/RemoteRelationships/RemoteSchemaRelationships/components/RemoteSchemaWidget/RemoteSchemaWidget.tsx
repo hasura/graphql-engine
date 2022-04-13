@@ -37,23 +37,23 @@ const resultSet = 'resultSet';
 export const RemoteSchemaWidget = ({
   schemaName,
   fields,
-  serverRelationship,
   rootFields = ['query'],
 }: RemoteSchemaWidgetProps) => {
   const { fetchSchema, data, isLoading, isError } = useRemoteSchema();
 
   const { setValue, watch } = useFormContext<RsToRsSchema>();
   const resultSetValue = watch(resultSet);
+  const relationship = watch('relationship');
 
   const [relationshipFields, setRelationshipFields] = useState<
     RelationshipFields[]
   >([]);
 
   useEffect(() => {
-    if (serverRelationship) {
-      setRelationshipFields(parseServerRelationship(serverRelationship));
+    if (relationship) {
+      setRelationshipFields(parseServerRelationship(relationship));
     }
-  }, [serverRelationship, setValue]);
+  }, [relationship, setValue]);
 
   useEffect(() => {
     const value = buildServerRemoteFieldObject(relationshipFields);

@@ -163,6 +163,22 @@ export const metadata = {
                 },
                 name: 'testRemoteRelationship',
               },
+              {
+                definition: {
+                  to_remote_schema: {
+                    remote_field: {
+                      country: {
+                        arguments: {
+                          code: '$code',
+                        },
+                      },
+                    },
+                    remote_schema: 'source_remote_schema',
+                    lhs_fields: ['code'],
+                  },
+                },
+                name: 'an_example_rs_to_rs_relationship',
+              },
             ],
             type_name: 'Country',
           },

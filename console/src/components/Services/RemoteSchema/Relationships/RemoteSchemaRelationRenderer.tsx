@@ -148,7 +148,10 @@ export const RemoteSchemaRelationRenderer = ({
         formState === 'remoteSchema' ? (
           <RemoteSchemaToRemoteSchemaForm
             sourceRemoteSchema={remoteSchemaName}
+            existingRelationshipName={existingRelationship.relationshipName}
+            typeName={existingRelationship.rsType}
             closeHandler={() => setIsFormOpen(!isFormOpen)}
+            onSuccess={() => setIsFormOpen(false)}
             relModeHandler={setFormState}
           />
         ) : (

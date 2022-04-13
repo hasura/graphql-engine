@@ -9,6 +9,7 @@ export const rsToRsFormSchema = z.object({
     .string()
     .min(1, { message: 'Related remote schema is required' }),
   resultSet: z.any(),
+  relationship: z.any(),
 });
 
 export type RsToRsSchema = z.infer<typeof rsToRsFormSchema>;

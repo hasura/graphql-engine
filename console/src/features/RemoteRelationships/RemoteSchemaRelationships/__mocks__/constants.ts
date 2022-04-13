@@ -1,4 +1,4 @@
-import { RelationshipFields, RemoteRelationship } from '../types';
+import { RelationshipFields } from '../types';
 
 export const customer_columns = [
   'id',
@@ -9,7 +9,7 @@ export const customer_columns = [
   'country',
 ];
 
-export const remote_rel_definition: RemoteRelationship = {
+export const remote_rel_definition: any = {
   definition: {
     remote_field: {
       testUser_aggregate: {
