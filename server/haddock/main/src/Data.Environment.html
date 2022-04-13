@@ -16,7 +16,7 @@
 </span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">System.Environment</span></span><span> </span><span class="hs-keyword">qualified</span><span>
 </span><span id="line-17"></span><span>
 </span><span id="line-18"></span><span class="hs-comment">-- | Server process environment variables</span><span>
-</span><span id="line-19"></span><span id="local-6989586621688361378"><span id="local-6989586621688361379"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="Environment"><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-var">Environment</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Environment"><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-var">Environment</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">M.Map</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688361373"><span id="local-6989586621688361375"><span class="annot"><span class="annottext">Environment -&gt; Environment -&gt; Bool
+</span><span id="line-19"></span><span id="local-6989586621688363421"><span id="local-6989586621688363422"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="Environment"><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-var">Environment</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Environment"><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-var">Environment</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">M.Map</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688363416"><span id="local-6989586621688363418"><span class="annot"><span class="annottext">Environment -&gt; Environment -&gt; Bool
 (Environment -&gt; Environment -&gt; Bool)
 -&gt; (Environment -&gt; Environment -&gt; Bool) -&gt; Eq Environment
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -24,7 +24,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: Environment -&gt; Environment -&gt; Bool
 == :: Environment -&gt; Environment -&gt; Bool
 $c== :: Environment -&gt; Environment -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688361366"><span id="local-6989586621688361368"><span id="local-6989586621688361370"><span class="annot"><span class="annottext">Int -&gt; Environment -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688363409"><span id="local-6989586621688363411"><span id="local-6989586621688363413"><span class="annot"><span class="annottext">Int -&gt; Environment -&gt; ShowS
 [Environment] -&gt; ShowS
 Environment -&gt; String
 (Int -&gt; Environment -&gt; ShowS)
@@ -48,7 +48,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Environment x -&gt; Environment
 $cfrom :: forall x. Environment -&gt; Rep Environment x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688361354"><span id="local-6989586621688361356"><span id="local-6989586621688361358"><span id="local-6989586621688361360"><span class="annot"><span class="annottext">[Environment] -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688363397"><span id="local-6989586621688363399"><span id="local-6989586621688363401"><span id="local-6989586621688363403"><span class="annot"><span class="annottext">[Environment] -&gt; Encoding
 [Environment] -&gt; Value
 Environment -&gt; Encoding
 Environment -&gt; Value
@@ -71,7 +71,7 @@ toEncoding :: Environment -&gt; Encoding
 $ctoEncoding :: Environment -&gt; Encoding
 toJSON :: Environment -&gt; Value
 $ctoJSON :: Environment -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688361347"><span id="local-6989586621688361349"><span id="local-6989586621688361351"><span class="annot"><span class="annottext">b -&gt; Environment -&gt; Environment
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688363390"><span id="local-6989586621688363392"><span id="local-6989586621688363394"><span class="annot"><span class="annottext">b -&gt; Environment -&gt; Environment
 NonEmpty Environment -&gt; Environment
 Environment -&gt; Environment -&gt; Environment
 (Environment -&gt; Environment -&gt; Environment)
@@ -90,7 +90,7 @@ sconcat :: NonEmpty Environment -&gt; Environment
 $csconcat :: NonEmpty Environment -&gt; Environment
 &lt;&gt; :: Environment -&gt; Environment -&gt; Environment
 $c&lt;&gt; :: Environment -&gt; Environment -&gt; Environment
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Semigroup</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688361339"><span id="local-6989586621688361341"><span id="local-6989586621688361343"><span class="annot"><span class="annottext">Semigroup Environment
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Semigroup</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688363382"><span id="local-6989586621688363384"><span id="local-6989586621688363386"><span class="annot"><span class="annottext">Semigroup Environment
 Environment
 Semigroup Environment
 -&gt; Environment
@@ -110,7 +110,7 @@ $cmempty :: Environment
 $cp1Monoid :: Semigroup Environment
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monoid</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-20"></span><span>
-</span><span id="line-21"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688361334"><span id="local-6989586621688361336"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Environment</span></a></span></span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688363377"><span id="local-6989586621688363379"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Environment</span></a></span></span></span><span>
 </span><span id="line-22"></span><span>
 </span><span id="line-23"></span><span class="annot"><a href="Data.Environment.html#getEnvironment"><span class="hs-identifier hs-type">getEnvironment</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Environment</span></a></span><span>
 </span><span id="line-24"></span><span id="getEnvironment"><span class="annot"><span class="annottext">getEnvironment :: IO Environment
@@ -149,26 +149,26 @@ forall k a. Map k a
 </span><span id="line-34"></span><span>
 </span><span id="line-35"></span><span class="annot"><a href="Data.Environment.html#lookupEnv"><span class="hs-identifier hs-type">lookupEnv</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
 </span><span id="line-36"></span><span id="lookupEnv"><span class="annot"><span class="annottext">lookupEnv :: Environment -&gt; String -&gt; Maybe String
-</span><a href="Data.Environment.html#lookupEnv"><span class="hs-identifier hs-var hs-var">lookupEnv</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Environment</span></a></span><span> </span><span id="local-6989586621688361326"><span class="annot"><span class="annottext">Map String String
-</span><a href="#local-6989586621688361326"><span class="hs-identifier hs-var">es</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688361325"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688361325"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Map String String -&gt; Maybe String
+</span><a href="Data.Environment.html#lookupEnv"><span class="hs-identifier hs-var hs-var">lookupEnv</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Environment</span></a></span><span> </span><span id="local-6989586621688363369"><span class="annot"><span class="annottext">Map String String
+</span><a href="#local-6989586621688363369"><span class="hs-identifier hs-var">es</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688363368"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688363368"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Map String String -&gt; Maybe String
 forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">M.lookup</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688361325"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">Map String String
-</span><a href="#local-6989586621688361326"><span class="hs-identifier hs-var">es</span></a></span><span>
+</span><a href="#local-6989586621688363368"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">Map String String
+</span><a href="#local-6989586621688363369"><span class="hs-identifier hs-var">es</span></a></span><span>
 </span><span id="line-37"></span><span>
 </span><span id="line-38"></span><span class="annot"><a href="Data.Environment.html#toList"><span class="hs-identifier hs-type">toList</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-39"></span><span id="toList"><span class="annot"><span class="annottext">toList :: Environment -&gt; [(String, String)]
-</span><a href="Data.Environment.html#toList"><span class="hs-identifier hs-var hs-var">toList</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Environment</span></a></span><span> </span><span id="local-6989586621688361323"><span class="annot"><span class="annottext">Map String String
-</span><a href="#local-6989586621688361323"><span class="hs-identifier hs-var">e</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Map String String -&gt; [(String, String)]
+</span><a href="Data.Environment.html#toList"><span class="hs-identifier hs-var hs-var">toList</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Environment</span></a></span><span> </span><span id="local-6989586621688363366"><span class="annot"><span class="annottext">Map String String
+</span><a href="#local-6989586621688363366"><span class="hs-identifier hs-var">e</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Map String String -&gt; [(String, String)]
 forall k a. Map k a -&gt; [(k, a)]
 </span><span class="hs-identifier hs-var">M.toList</span></span><span> </span><span class="annot"><span class="annottext">Map String String
-</span><a href="#local-6989586621688361323"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><a href="#local-6989586621688363366"><span class="hs-identifier hs-var">e</span></a></span><span>
 </span><span id="line-40"></span><span>
 </span><span id="line-41"></span><span class="annot"><a href="Data.Environment.html#redactEnv"><span class="hs-identifier hs-type">redactEnv</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Environment</span></a></span><span>
 </span><span id="line-42"></span><span id="redactEnv"><span class="annot"><span class="annottext">redactEnv :: Environment -&gt; Environment
-</span><a href="Data.Environment.html#redactEnv"><span class="hs-identifier hs-var hs-var">redactEnv</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Environment</span></a></span><span> </span><span id="local-6989586621688361321"><span class="annot"><span class="annottext">Map String String
-</span><a href="#local-6989586621688361321"><span class="hs-identifier hs-var">e</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Map String String -&gt; Environment
+</span><a href="Data.Environment.html#redactEnv"><span class="hs-identifier hs-var hs-var">redactEnv</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Environment</span></a></span><span> </span><span id="local-6989586621688363364"><span class="annot"><span class="annottext">Map String String
+</span><a href="#local-6989586621688363364"><span class="hs-identifier hs-var">e</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Map String String -&gt; Environment
 </span><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-var">Environment</span></a></span><span> </span><span class="annot"><span class="annottext">(Map String String -&gt; Environment)
 -&gt; Map String String -&gt; Environment
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -178,5 +178,5 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 forall a b. a -&gt; b -&gt; a
 </span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;******&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Map String String
-</span><a href="#local-6989586621688361321"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><a href="#local-6989586621688363364"><span class="hs-identifier hs-var">e</span></a></span><span>
 </span><span id="line-43"></span></pre></body></html>
