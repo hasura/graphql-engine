@@ -27,7 +27,7 @@ const config = {
         docs: {
           routeBasePath: "/",
           sidebarPath: require.resolve('./sidebars.js'),
-          editUrl: ({ docPath }) => `https://github.com/hasura/graphql-engine/edit/master/docs-new/docs/${docPath}`,
+          editUrl: ({ docPath }) => `https://github.com/hasura/graphql-engine/edit/master/docs/docs/${docPath}`,
           docItemComponent: require.resolve('./src/components/CustomDocItem/index.tsx'),
           exclude: ['**/*.wip'],
           breadcrumbs: true,
@@ -57,7 +57,7 @@ const config = {
         id: 'wiki',
         path: 'wiki',
         routeBasePath: "wiki",
-        editUrl: ({ docPath }) => `https://github.com/hasura/graphql-engine/edit/master/docs-new/docs/${docPath}`,
+        editUrl: ({ docPath }) => `https://github.com/hasura/graphql-engine/edit/master/docs/docs/${docPath}`,
         editCurrentVersion: true,
         docItemComponent: require.resolve('./src/components/CustomDocItem/CustomDocItemWiki.tsx'),
         // disableVersioning: true,

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Run this from root of repo - graphql-engine-mono
-# ./docs-new/scripts/pandoc-auto-transform.sh "docs-new/docs"
+# ./docs/scripts/pandoc-auto-transform.sh "docs/docs"
 
 # Make sure globstar is enabled
 # shopt -s globstar
@@ -18,17 +18,17 @@
 # tree -f
 
 # run on only one file
-# ./docs-new/scripts/pandoc-auto-transform.sh "graphql/core/actions/create.rst"
-# pandoc "docs/$1" -f rst -t gfm -s -o "docs-new/docs/${1%}.txt";
+# ./docs/scripts/pandoc-auto-transform.sh "graphql/core/actions/create.rst"
+# pandoc "docs/$1" -f rst -t gfm -s -o "docs/docs/${1%}.txt";
 
 # run on list of files
 # Ref: https://stackoverflow.com/a/424142/10208226 to get list of changed files in a commit
 # git diff-tree --no-commit-id --name-only -r 90c8f75
-# ./docs-new/scripts/pandoc-auto-transform.sh
+# ./docs/scripts/pandoc-auto-transform.sh
 # files=( "graphql/core/databases/ms-sql-server/index.rst" "graphql/core/databases/ms-sql-server/mutations/index.rst" "graphql/core/databases/ms-sql-server/mutations/insert.rst" "graphql/core/databases/ms-sql-server/mutations/upsert.rst" "graphql/core/databases/postgres/mutations/upsert.rst" )
 # for f in "${files[@]}"; do
-#     mkdir -pv -- "docs/${f%/*}" && touch -- "docs-new/docs/${f%}.txt";
-#     pandoc "docs/$f" -f rst -t gfm -s -o "docs-new/docs/${f%}.txt";
+#     mkdir -pv -- "docs/${f%/*}" && touch -- "docs/docs/${f%}.txt";
+#     pandoc "docs/$f" -f rst -t gfm -s -o "docs/docs/${f%}.txt";
 # done
 
   # mkdir -pv -- "$1/${f%/*}" && touch -- "$1/${f%}.txt";

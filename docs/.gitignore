@@ -1,59 +1,20 @@
-sample.py
-sample.json
-*.sw*
-*.pyc
-# sphinx build folder
-_build
+# Dependencies
+/node_modules
 
-# for folks using pipenv
-Pipfile
-Pipfile.lock
+# Production
+/build
 
-# Compiled source #
-###################
+# Generated files
+.docusaurus
+.cache-loader
+
+# Misc
 .DS_Store
-*.com
-*.class
-*.dll
-*.exe
-*.o
-*.so
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# Packages #
-############
-# it's better to unpack these files and commit the raw source
-# git has its own built in compression methods
-*.7z
-*.dmg
-*.gz
-*.iso
-*.jar
-*.rar
-*.tar
-*.zip
-
-# Logs and databases #
-######################
-*.log
-*.sqlite
-
-# OS generated files #
-######################
-.DS_Store?
-ehthumbs.db
-Icon?
-Thumbs.db
-
-# Editor backup files #
-#######################
-*~
-
-# Virtual Environment
-venv
-.venv
-myenv
-env
-
-# Jetbrains folder
-.idea
-.vscode
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
