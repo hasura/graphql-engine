@@ -623,3 +623,266 @@ func TestProjectMigrate_Status_ConfigV3(t *testing.T) {
 		})
 	}
 }
+
+func TestProjectMigrate_SkipExecution_Configv3(t *testing.T) {
+	port, teardown := testutil.StartHasuraWithMetadataDatabase(t, testutil.HasuraDockerImage)
+	hasuraEndpoint := fmt.Sprintf("%s:%s", testutil.BaseURL, port)
+	connectionStringSource1, teardownPG1 := testutil.StartPGContainer(t)
+	testutil.AddPGSourceToHasura(t, hasuraEndpoint, connectionStringSource1, "s1")
+	defer func() {
+		teardownPG1()
+		teardown()
+	}()
+	hgeEndpoint := fmt.Sprintf("http://localhost:%s", port)
+	p, err := NewProjectMigrate("testdata/projectv3", WithAdminSecret(testutil.TestAdminSecret), WithEndpoint(hgeEndpoint))
+	require.NoError(t, err)
+	_, err = p.Apply(ApplyOnAllDatabases())
+	require.NoError(t, err)
+
+	type args struct {
+		opts []ProjectMigrationApplierOption
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			"mark migration as unapplied",
+			args{
+				opts: []ProjectMigrationApplierOption{
+					ApplyOnDatabaseName("s1"), ApplyVersion("1623841477474", MigrationDirectionDown), ApplyWithSkipExecution(),
+				},
+			},
+			`
+				[
+					{
+						"databaseName": "s1",
+						"status": {
+							"migrations": [
+								1623841477474,
+								1623841485323,
+								1623841492743,
+								1623841500466,
+								1623841510619
+							],
+							"status": {
+								"1623841477474": {
+									"database_status": false,
+									"source_status": true
+								},
+								"1623841485323": {
+									"database_status": true,
+									"source_status": true
+								},
+								"1623841492743": {
+									"database_status": true,
+									"source_status": true
+								},
+								"1623841500466": {
+									"database_status": true,
+									"source_status": true
+								},
+								"1623841510619": {
+									"database_status": true,
+									"source_status": true
+								}
+							}
+						}
+					}
+				]
+				`,
+		},
+		{
+			"mark migration as applied",
+			args{
+				opts: []ProjectMigrationApplierOption{
+					ApplyOnDatabaseName("s1"), ApplyVersion("1623841477474", MigrationDirectionUp), ApplyWithSkipExecution(),
+				},
+			},
+			`
+				[
+					{
+						"databaseName": "s1",
+						"status": {
+							"migrations": [
+								1623841477474,
+								1623841485323,
+								1623841492743,
+								1623841500466,
+								1623841510619
+							],
+							"status": {
+								"1623841477474": {
+									"database_status": true,
+									"source_status": true
+								},
+								"1623841485323": {
+									"database_status": true,
+									"source_status": true
+								},
+								"1623841492743": {
+									"database_status": true,
+									"source_status": true
+								},
+								"1623841500466": {
+									"database_status": true,
+									"source_status": true
+								},
+								"1623841510619": {
+									"database_status": true,
+									"source_status": true
+								}
+							}
+						}
+					}
+				]
+			`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p1, err := NewProjectMigrate("testdata/projectv3", WithAdminSecret(testutil.TestAdminSecret), WithEndpoint(hgeEndpoint))
+			require.NoError(t, err)
+			_, err = p1.Apply(tt.args.opts...)
+			require.NoError(t, err)
+
+			status, err := p.StatusJSON()
+			assert.NoError(t, err)
+			statusJsonb, err := ioutil.ReadAll(status)
+			assert.NoError(t, err)
+
+			assert.JSONEq(t, tt.want, string(statusJsonb))
+		})
+	}
+}
+
+func TestProjectMigrate_SkipExecution_Configv2(t *testing.T) {
+	port, teardown := testutil.StartHasura(t, testutil.HasuraDockerImage)
+	defer teardown()
+	hgeEndpoint := fmt.Sprintf("http://localhost:%s", port)
+
+	p, err := NewProjectMigrate("testdata/projectv2", WithAdminSecret(testutil.TestAdminSecret), WithEndpoint(hgeEndpoint))
+	require.NoError(t, err)
+	_, err = p.Apply(ApplyOnAllDatabases())
+	require.NoError(t, err)
+
+	type args struct {
+		opts []ProjectMigrationApplierOption
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			"mark migration as unapplied",
+			args{
+				opts: []ProjectMigrationApplierOption{
+					ApplyVersion("1623842054907", MigrationDirectionDown), ApplyWithSkipExecution(),
+				},
+			},
+			`
+			[
+				{
+					"databaseName": "default",
+					"status": {
+						"migrations": [
+							1623842054907,
+							1623842062104,
+							1623842069725,
+							1623842076537,
+							1623842087940
+						],
+						"status": {
+							"1623842054907": {
+								"database_status": false,
+								"source_status": true
+							},
+							"1623842062104": {
+								"database_status": true,
+								"source_status": true
+							},
+							"1623842069725": {
+								"database_status": true,
+								"source_status": true
+							},
+							"1623842076537": {
+								"database_status": true,
+								"source_status": true
+							},
+							"1623842087940": {
+								"database_status": true,
+								"source_status": true
+							}
+						}
+					}
+				}
+			]
+			`,
+		},
+		{
+			"mark migration as applied",
+			args{
+				opts: []ProjectMigrationApplierOption{
+					ApplyVersion("1623842054907", MigrationDirectionUp), ApplyWithSkipExecution(),
+				},
+			},
+			`
+			[
+				{
+					"databaseName": "default",
+					"status": {
+						"migrations": [
+							1623842054907,
+							1623842062104,
+							1623842069725,
+							1623842076537,
+							1623842087940
+						],
+						"status": {
+							"1623842054907": {
+								"database_status": true,
+								"source_status": true
+							},
+							"1623842062104": {
+								"database_status": true,
+								"source_status": true
+							},
+							"1623842069725": {
+								"database_status": true,
+								"source_status": true
+							},
+							"1623842076537": {
+								"database_status": true,
+								"source_status": true
+							},
+							"1623842087940": {
+								"database_status": true,
+								"source_status": true
+							}
+						}
+					}
+				}
+			]
+			`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p1, err := NewProjectMigrate("testdata/projectv2", WithAdminSecret(testutil.TestAdminSecret), WithEndpoint(hgeEndpoint))
+			require.NoError(t, err)
+			_, err = p1.Apply(tt.args.opts...)
+			require.NoError(t, err)
+
+			status, err := p1.StatusJSON()
+			assert.NoError(t, err)
+			statusJsonb, err := ioutil.ReadAll(status)
+			assert.NoError(t, err)
+
+			assert.JSONEq(t, tt.want, string(statusJsonb))
+		})
+	}
+}

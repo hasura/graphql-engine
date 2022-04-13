@@ -12,7 +12,12 @@ import {
   isListType,
   isNonNullType,
 } from 'graphql';
-import { isEmpty, isFloat, isNumber } from '@/components/Common/utils/jsUtils';
+import {
+  isEmpty,
+  isFloat,
+  isJsonString,
+  isNumber,
+} from '@/components/Common/utils/jsUtils';
 import {
   AllowedRootFields,
   ArgValue,
@@ -151,6 +156,7 @@ const buildArgElement = ({
         fields={fieldOptions}
         showForm={isActive && checkable}
         argValue={argValue || defaultArgValue}
+        argType={argType}
       />
     ),
     key: argKey,
@@ -383,7 +389,12 @@ const getRemoteFieldObject = (
 
       // if leaf, push arg value
       if (ukSplit[i][depth + 1] === '__argVal') {
-        obj[uniqueField] = ukSplit[i][depth + 2];
+        const value = ukSplit[i][depth + 2];
+        if (value.startsWith('__SCALAR__'))
+          obj[uniqueField] = isJsonString(value.substring(10))
+            ? JSON.parse(value.substring(10))
+            : '';
+        else obj[uniqueField] = value;
       } else {
         obj[uniqueField] = {
           ...getRemoteFieldObject(newUkSplit, depth + 1, maxDepth),
@@ -547,7 +558,8 @@ const serialiseRemoteField = (
 export const parseServerRelationship = (
   serverRelationship: RemoteRelationship
 ): RelationshipFields[] => {
-  const remoteFields = serverRelationship?.definition?.remote_field;
+  const remoteFields =
+    serverRelationship?.definition?.to_remote_schema.remote_field;
   if (!remoteFields || isEmpty(remoteFields)) {
     return [];
   }

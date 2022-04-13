@@ -19,10 +19,18 @@ const useLoadData = (sources?: MetadataDataSource[]) => {
   const driver = source?.kind;
 
   useEffect(() => {
-    setValue('schema', '');
-    setValue('table', '');
+    const isSchemaPresentInSource = source?.tables.find(
+      (x: any) =>
+        x.table[driver === 'bigquery' ? 'dataset' : 'schema'] === schemaName
+    );
+
+    if (!isSchemaPresentInSource) {
+      setValue('schema', '');
+      setValue('table', '');
+    }
+
     setValue('driver', driver);
-  }, [sourceName]);
+  }, [sourceName, driver, setValue]);
 
   const sourceOptions = React.useMemo(() => {
     return sources?.map(({ name }) => ({ value: name, label: name })) || [];
@@ -85,7 +93,7 @@ export const RemoteDatabaseWidget = () => {
       </div>
       <div className="mb-sm">
         <Select
-          label={`Reference ${driver === 'bigquery' ? 'dataset' : 'schema'}`}
+          label={`Reference ${driver === 'bigquery' ? 'Dataset' : 'Schema'}`}
           name="schema"
           placeholder={`Select a ${
             driver === 'bigquery' ? 'dataset' : 'schema'
