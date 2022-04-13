@@ -25,8 +25,8 @@ export const availableFeatureFlags: FeatureFlagDefinition[] = [
     title: 'Relationship tab UI for Remote schema',
     description: 'Try out the Relationship tab of Remote Schemas.',
     section: 'remote schemas',
-    status: 'alpha',
-    defaultValue: false,
+    status: 'stable',
+    defaultValue: true,
     discussionUrl: '',
   },
 ];

@@ -18,6 +18,7 @@ import {
 } from '../../../../Common/utils/jsUtils';
 import { getUnderlyingType } from '../../../../../shared/utils/graphqlSchemaUtils';
 import { QualifiedTable } from '../../../../../metadata/types';
+import { currentDriver } from '../../../../../dataSources';
 
 export type ArgValueKind = 'column' | 'static';
 export type ArgValue = {
@@ -332,7 +333,6 @@ export const getRemoteRelPayload = (
     });
     return Object.keys(obj).length ? obj : undefined;
   };
-
   return {
     name: relationship.name,
     remote_schema: relationship.remoteSchema,
@@ -340,8 +340,11 @@ export const getRemoteRelPayload = (
     hasura_fields: hasuraFields
       .map(f => f.substr(1))
       .filter((v, i, s) => s.indexOf(v) === i),
-    table: relationship.table,
-  };
+    table:
+      currentDriver === 'bigquery'
+        ? { dataset: relationship.table.schema, name: relationship.table.name }
+        : relationship.table,
+  } as any;
 };
 
 const isFieldChecked = (

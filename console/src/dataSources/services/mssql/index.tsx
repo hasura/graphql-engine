@@ -175,7 +175,7 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
         hostSource: true,
         referenceSource: true,
       },
-      remoteRelationships: false,
+      remoteRelationships: true,
     },
     permissions: {
       enabled: true,

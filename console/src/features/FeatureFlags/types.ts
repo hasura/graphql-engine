@@ -7,7 +7,11 @@ export type FeatureFlagSections =
   | 'monitoring'
   | 'settings';
 
-export type FeatureFlagStatus = 'alpha' | 'beta' | 'release candidate';
+export type FeatureFlagStatus =
+  | 'alpha'
+  | 'beta'
+  | 'release candidate'
+  | 'stable';
 
 export type FeatureFlagId = string;
 

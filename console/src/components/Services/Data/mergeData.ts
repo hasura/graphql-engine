@@ -117,6 +117,7 @@ export const mergeDataMssql = (
   let primaryKeys: Table['primary_key'][] = [];
   let uniqueKeys: Table['unique_constraints'] = [];
   let checkConstraints: MSSqlCheckConstraint[] = [];
+
   data[0].result.slice(1).forEach(row => {
     try {
       tables.push({
@@ -323,6 +324,15 @@ export const mergeDataMssql = (
       })
     );
 
+    const remoteRelationships: Table['remote_relationships'] = (
+      metadataTable?.remote_relationships || []
+    ).map(({ definition, name }) => ({
+      remote_relationship_name: name,
+      table_name: table.table_name,
+      table_schema: table.table_schema,
+      definition,
+    }));
+
     const mergedInfo = {
       table_schema: table.table_schema,
       table_name: table.table_name,
@@ -343,7 +353,7 @@ export const mergeDataMssql = (
       foreign_key_constraints: fkConstraints,
       opp_foreign_key_constraints: refFkConstraints,
       view_info: null,
-      remote_relationships: [],
+      remote_relationships: remoteRelationships,
       is_enum: false,
       configuration: metadataTable?.configuration as Table['configuration'],
       computed_fields: [],
@@ -618,6 +628,15 @@ export const mergeDataBigQuery = (
         table_schema: table.table_schema,
       })
     );
+    console.log(metadataTable);
+    const remoteRelationships: Table['remote_relationships'] = (
+      metadataTable?.remote_relationships ?? []
+    ).map(({ definition, name }) => ({
+      remote_relationship_name: name,
+      table_name: table.table_name,
+      table_schema: table.table_schema,
+      definition,
+    }));
 
     const mergedInfo = {
       table_schema: table.table_schema,
@@ -639,7 +658,7 @@ export const mergeDataBigQuery = (
       foreign_key_constraints: [] as Table['foreign_key_constraints'],
       opp_foreign_key_constraints: [] as Table['foreign_key_constraints'],
       view_info: null,
-      remote_relationships: [],
+      remote_relationships: remoteRelationships,
       is_enum: false,
       configuration: undefined,
       computed_fields: [],
