@@ -15,6 +15,7 @@ module Hasura.GraphQL.Parser.Internal.Scalars
     jsonb,
     nonNegativeInt,
     bigInt,
+    scientific,
     -- internal
     unsafeRawScalar,
     jsonScalar,
@@ -24,6 +25,8 @@ where
 import Data.Aeson qualified as A
 import Data.Aeson.Types qualified as A
 import Data.Int (Int32, Int64)
+import Data.Scientific (Scientific)
+import Data.Scientific qualified as S
 import Data.Text.Read (decimal)
 import Data.UUID qualified as UUID
 import Hasura.Backends.Postgres.SQL.Value
@@ -116,6 +119,17 @@ bigInt = mkScalar intScalar Nothing \case
     | Right (i, "") <- decimal s ->
       pure i
   v -> typeMismatch intScalar "a 32-bit integer, or a 64-bit integer represented as a string" v
+
+-- | Parser for 'Scientific'. Certain backends like BigQuery support
+-- Decimal/BigDecimal and need an arbitrary precision number.
+scientific :: MonadParse m => Parser 'Both m Scientific
+scientific = mkScalar name Nothing \case
+  GraphQLValue (VFloat f) -> pure f
+  GraphQLValue (VInt i) -> pure $ S.scientific i 0
+  JSONValue (A.Number n) -> pure n
+  v -> typeMismatch name "Decimal represented as a string" v
+  where
+    name = $$(litName "decimal")
 
 --------------------------------------------------------------------------------
 -- Internal tools
