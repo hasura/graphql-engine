@@ -2,6 +2,10 @@
 
 ## Next release
 
+### Bug fixes and improvements
+
+## v2.6.0-beta.1
+
 ### Breaking changes
 
 - The `query` and `raw-query` field from http-logs for metadata requests are removed by default. Use
@@ -10,27 +14,21 @@
 ### Bug fixes and improvements
 
 - server: remove 'query' and 'raw-query' field from logs for metadata queries by default. Use `HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING` to renable those fields.
-- server: `clear_metadata` correctly archives the event triggers and the drop source API drops the indirect dependencies created by remote relationships when the dependent source is dropped.
-- server: fix inserting values into columns with case sensitive enum types for Postgres/Citus backends (fix #4014)
-- server: remote relationships can be defined _on_ and _to_ SQLServer tables
-- server: fix JSON key encoding issue for remote schemas (fixes #7543 and #8200)
-- server: fix MSSQL insert mutation when relationships are used in check permissions (fix #8225)
-- server: refactor GQL query static analysis and improve OpenAPI warning messages
-- server: avoid a resource leak when connecting to Postgres fails
-- console: add support for setting aggregation query permissions for ms sql server
-- console: add RS-to-DB (only postgres & citus) relationships feature to remote schemas tab
-- console: remove need for clicking the Modify btn before editing a remote schema (#1193, #8262)
-- console: integrate the RS-to-RS form into Remote Schema Relationship tab
-- console: enable mssql server as an option in RS-to-DB and DB-to-DB remote joins
-- console: enable bigquery as an option in RS-to-DB remote joins
-- console: add feature flag to toggle remote schemas relationship tab
-- console: enable edit/delete functionality fo RS-to-DB remote joins
-- console: allow user to create mssql-to-RS and bigquery-to-RS relationships
+- server: `clear_metadata` now correctly archives event triggers and the drop source API drops indirect dependencies created by remote relationships when the dependent source is dropped.
+- server: fix inserting values into columns with case sensitive enum types for PostgreSQL/Citus backends (fix #4014)
+- server: remote relationships can be defined _on_ and _to_ Microsoft SQL Server tables
+- server: fix issues with JSON key encoding for remote schemas (fixes #7543 and #8200)
+- server: fix Microsoft SQL Server insert mutation when relationships are used in check permissions (fix #8225)
+- server: refactor GraphQL query static analysis and improve OpenAPI warning messages
+- server: avoid a resource leak when connecting to PostgreSQL fails
+- console: add support for setting aggregation query permissions for Microsoft SQL Server
+- console: add support for RS-to-DB and RS-to-RS joins to Remote Schemas tab
+- console: removed the need for clicking the Modify btn before editing a remote schema (#1193, #8262)
 - cli: fix remote schema metadata formatting issues (#7608)
 - cli: fix query collections metadata formatting issues (#7616)
 - docs: support for `graphql-ws` is considered GA
 
-## v2.5.0-beta.1
+## v2.5.0
 
 ### Remote relationships from remote schemas
 
