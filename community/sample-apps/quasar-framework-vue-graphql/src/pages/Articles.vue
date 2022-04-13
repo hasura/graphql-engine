@@ -15,7 +15,7 @@
 </template>
 
 <script>
-import { ref, watch } from "vue";
+import { watch } from "vue";
 import { useQuery, useResult } from "@vue/apollo-composable";
 import { useRoute } from "vue-router";
 import gql from "graphql-tag";
