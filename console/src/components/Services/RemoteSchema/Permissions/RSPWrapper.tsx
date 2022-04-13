@@ -1,10 +1,9 @@
 import React from 'react';
-import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
+import { RemoteSchema } from '../../../../metadata/types';
 import { NotFoundError } from '../../../Error/PageNotFound';
+import { Tabs } from '../Common/Tabs';
 import { appPrefix } from '../constants';
 import styles from '../RemoteSchema.scss';
-import { RemoteSchema } from '../../../../metadata/types';
-import tabInfo from '../Edit/tabInfo';
 
 export type RSPWrapperProps = {
   params: { remoteSchemaName: string };
@@ -58,11 +57,10 @@ const RSPWrapper: React.FC<RSPWrapperProps> = ({
 
   return (
     <>
-      <CommonTabLayout
+      <Tabs
         appPrefix={appPrefix}
         currentTab={tabName}
         heading={remoteSchemaName}
-        tabsInfo={tabInfo}
         breadCrumbs={breadCrumbs}
         baseUrl={`${appPrefix}/manage/${remoteSchemaName}`}
         showLoader={false}

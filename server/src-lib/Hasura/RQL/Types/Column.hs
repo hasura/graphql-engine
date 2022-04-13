@@ -60,7 +60,8 @@ type EnumValues = M.HashMap EnumValue EnumValueInfo
 -- via foreign key.
 data EnumReference (b :: BackendType) = EnumReference
   { erTable :: !(TableName b),
-    erValues :: !EnumValues
+    erValues :: !EnumValues,
+    erTableCustomName :: !(Maybe G.Name)
   }
   deriving (Generic)
 
@@ -110,7 +111,9 @@ $(makePrisms ''ColumnType)
 instance Backend b => ToTxt (ColumnType b) where
   toTxt = \case
     ColumnScalar scalar -> toTxt scalar
-    ColumnEnumReference (EnumReference tableName _) -> toTxt tableName
+    ColumnEnumReference (EnumReference tableName _ tableCustomName) ->
+      let tableTxtName = toTxt tableName
+       in maybe tableTxtName toTxt tableCustomName
 
 -- | A parser to parse a json value with enforcing column type
 type ValueParser b m v =
@@ -139,7 +142,7 @@ parseScalarValueColumnType ::
   m (ScalarValue b)
 parseScalarValueColumnType columnType value = case columnType of
   ColumnScalar scalarType -> liftEither $ parseScalarValue @b scalarType value
-  ColumnEnumReference (EnumReference tableName enumValues) ->
+  ColumnEnumReference (EnumReference tableName enumValues _) ->
     -- maybe (pure $ PGNull PGText) parseEnumValue =<< decodeValue value
     parseEnumValue =<< decodeValue value
     where

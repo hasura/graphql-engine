@@ -7,9 +7,15 @@ module Harness.Test.Schema
     Column (..),
     ScalarType (..),
     ScalarValue (..),
-    serialize,
+    BackendScalarType (..),
+    BackendScalarValue (..),
     column,
     columnNull,
+    defaultBackendScalarType,
+    getBackendScalarType,
+    defaultBackendScalarValue,
+    getBackendScalarValue,
+    formatBackendScalarValue,
     parseUTCTimeOrError,
     trackTable,
     untrackTable,
@@ -20,15 +26,14 @@ module Harness.Test.Schema
 where
 
 import Data.Foldable (for_)
-import Data.Text (Text, pack, replace)
-import Data.Time (UTCTime, defaultTimeLocale, formatTime)
+import Data.Text (Text)
+import Data.Time (UTCTime, defaultTimeLocale)
 import Data.Time.Format (parseTimeOrError)
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.State (State)
 import Harness.Test.Context (BackendType, defaultBackendTypeString, defaultSchema, defaultSource)
-import Hasura.Prelude (tshow)
 import Prelude
 
 -- | Generic type to use to specify schema tables for all backends.
@@ -67,6 +72,87 @@ data Column = Column
   }
   deriving (Show, Eq)
 
+-- | Generic type to represent ScalarType for multiple backends. This
+-- type can be used to encapsulate the column types for different
+-- backends by providing explicit name of the datatype. This provides
+-- flexibility and scalability which is difficult to achieve by just
+-- extending ScalarType.
+--
+-- To give a concrete usecase, right now we have 'ScalarType' with
+-- value 'TUTCTime'. This is treated as TIMESTAMP for Citus and
+-- DATETIME for MSSQL server. There might be usecases where you want
+-- your table column to treat it as TIMESTAMP for Citus and
+-- <https://docs.microsoft.com/en-us/sql/t-sql/data-types/datetime2-transact-sql?redirectedfrom=MSDN&view=sql-server-ver15
+-- DATETIME2> for MSSQL server. BackendScalarType makes such use case
+-- very simple to achive instead of making you define a new sum type
+-- and handling it.
+data BackendScalarType = BackendScalarType
+  { bstMysql :: Maybe Text,
+    bstCitus :: Maybe Text,
+    bstPostgres :: Maybe Text,
+    bstBigQuery :: Maybe Text,
+    bstMssql :: Maybe Text
+  }
+  deriving (Show, Eq)
+
+-- | Default value for 'BackendScalarType' initialized with 'Nothing'
+-- for all the fields.
+defaultBackendScalarType :: BackendScalarType
+defaultBackendScalarType =
+  BackendScalarType
+    { bstMysql = Nothing,
+      bstCitus = Nothing,
+      bstMssql = Nothing,
+      bstPostgres = Nothing,
+      bstBigQuery = Nothing
+    }
+
+-- | Access specific backend scalar type out of 'BackendScalarType'
+getBackendScalarType :: BackendScalarType -> (BackendScalarType -> Maybe Text) -> Text
+getBackendScalarType bst fn =
+  case fn bst of
+    Just scalarType -> scalarType
+    Nothing -> error $ "getBackendScalarType: BackendScalarType is Nothing, passed " <> show bst
+
+-- | Generic type to represent ScalarValue for multiple backends. This
+-- type can be used to encapsulate the column values for different
+-- backends by providing explicit data for individual backend. This provides
+-- flexibility and scalability which is difficult to achieve by just
+-- extending ScalarValue.
+--
+-- To give a concrete usecase, right now we have timestamp column for
+-- out database. Depending on the database, the value can be
+-- different. For postgres backend, we use 2017-09-21T09:39:44 to
+-- represent timestamp. But we would want to use 2017-09-21T09:39:44Z
+-- for Microsoft's SQL server backend. This type provides flexibility
+-- to provide such options.
+data BackendScalarValue = BackendScalarValue
+  { bsvMysql :: Maybe Text,
+    bsvCitus :: Maybe Text,
+    bsvPostgres :: Maybe Text,
+    bsvBigQuery :: Maybe Text,
+    bsvMssql :: Maybe Text
+  }
+  deriving (Show, Eq)
+
+-- | Default value for 'BackendScalarValue' initialized with 'Nothing'
+-- for all the fields.
+defaultBackendScalarValue :: BackendScalarValue
+defaultBackendScalarValue =
+  BackendScalarValue
+    { bsvMysql = Nothing,
+      bsvCitus = Nothing,
+      bsvPostgres = Nothing,
+      bsvBigQuery = Nothing,
+      bsvMssql = Nothing
+    }
+
+-- | Access specific backend scalar value out of 'BackendScalarValue'
+getBackendScalarValue :: BackendScalarValue -> (BackendScalarValue -> Maybe Text) -> Text
+getBackendScalarValue bsv fn = case fn bsv of
+  Nothing -> error $ "getBackendScalarValue: BackendScalarValue is Nothing, passed " <> show bsv
+  Just scalarValue -> scalarValue
+
 -- | Generic scalar type for all backends, for simplicity.
 -- Ideally, we would be wiring in @'Backend@ specific scalar types here to make
 -- sure all backend-specific scalar types are also covered by tests, perhaps in
@@ -76,10 +162,7 @@ data ScalarType
   | TStr
   | TUTCTime
   | TBool
-  | -- | Specialized. See: https://github.com/hasura/graphql-engine/issues/8158
-    -- session variable string values are not truncated to default (30) length in Test.RequestHeadersSpec
-    -- works with VStr
-    TVarchar50
+  | TCustomType BackendScalarType
   deriving (Show, Eq)
 
 -- | Generic scalar value type for all backends, that should directly correspond
@@ -90,19 +173,13 @@ data ScalarValue
   | VUTCTime UTCTime
   | VBool Bool
   | VNull
+  | VCustomValue BackendScalarValue
   deriving (Show, Eq)
 
--- | Generic 'ScalarValue' serializer.
---
--- NOTE: For serialization of 'ScalarType' we need to have backend-specific
--- functions as they correspond to the query language of the specific backend
-serialize :: ScalarValue -> Text
-serialize = \case
-  VInt i -> tshow i
-  VStr s -> "'" <> replace "'" "\'" s <> "'"
-  VUTCTime t -> pack $ formatTime defaultTimeLocale "'%F %T'" t
-  VBool b -> tshow @Int $ if b then 1 else 0
-  VNull -> "NULL"
+formatBackendScalarValue :: BackendScalarValue -> (BackendScalarValue -> Maybe Text) -> Text
+formatBackendScalarValue bsv fn = case fn bsv of
+  Nothing -> error $ "formatBackendScalarValue: Retrieved value is Nothing, passed " <> show bsv
+  Just scalarValue -> scalarValue
 
 -- | Helper function to construct 'Column's with common defaults
 column :: Text -> ScalarType -> Column

@@ -22,7 +22,8 @@ export const FeatureFlagToast = (props: FeatureFlagToastProps) => {
     isLoading ||
     dismissed ||
     !featureFlag ||
-    featureFlag?.state.dismissed
+    featureFlag.state.dismissed ||
+    featureFlag.state.enabled
   )
     return null;
   return (

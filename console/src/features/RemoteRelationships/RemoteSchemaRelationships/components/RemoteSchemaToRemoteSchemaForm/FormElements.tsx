@@ -18,6 +18,7 @@ import { RsToRsSchema } from '../../types';
 
 export type RemoteSchemaToRemoteSchemaFormProps = {
   sourceRemoteSchema: string;
+  existingRelationshipName?: string;
 };
 
 const rsSourceTypeKey = 'rsSourceType';

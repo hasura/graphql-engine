@@ -8,7 +8,7 @@ export type ArgValueKind = 'field' | 'static';
 
 export type ArgValue = {
   kind: ArgValueKind;
-  value: string;
+  value: string | number | boolean;
   type: string;
 };
 
@@ -53,9 +53,11 @@ export type InputArgumentsType = {
 export type RemoteRelationship = {
   name: string;
   definition: {
-    hasura_fields: string[];
-    remote_schema: string;
-    remote_field: RemoteField;
+    to_remote_schema: {
+      lhs_fields: string[];
+      remote_field: RemoteField;
+      remote_schema: string;
+    };
   };
 };
 

@@ -16,8 +16,10 @@ import { getTypesFromIntrospection } from '../../utils';
 
 export const FormElements = ({
   sourceRemoteSchema,
+  existingRelationshipName,
 }: {
   sourceRemoteSchema: string;
+  existingRelationshipName: string;
 }) => {
   const { watch } = useFormContext<Schema>();
 
@@ -25,7 +27,12 @@ export const FormElements = ({
   const schema = watch('schema');
   const table = watch('table');
   const RSTypeName = watch('typeName');
+  const mapping = watch('mapping');
   const { fetchSchema, data, isLoading } = useRemoteSchema();
+
+  const [typeMap, setTypeMap] = useState<{ field: string; column: string }[]>(
+    []
+  );
 
   const { data: columnData } = useTableColumns(database, {
     name: table,
@@ -36,19 +43,16 @@ export const FormElements = ({
     ? columnData.slice(1).map((x: string[]) => x[3])
     : [];
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (sourceRemoteSchema) {
       fetchSchema(sourceRemoteSchema);
     }
   }, [fetchSchema, sourceRemoteSchema]);
 
-  const [typeMap, setTypeMap] = useState<{ field: string; column: string }[]>(
-    []
-  );
-
   useEffect(() => {
-    setTypeMap([]);
-  }, [RSTypeName]);
+    const defaultMapping = mapping?.length ? mapping : [];
+    if (existingRelationshipName && mapping?.length) setTypeMap(defaultMapping);
+  }, [RSTypeName, existingRelationshipName, mapping]);
 
   if (!data)
     return (
@@ -65,7 +69,7 @@ export const FormElements = ({
     );
 
   const remoteSchemaTypes = getTypesFromIntrospection(data);
-
+  console.log('form!!');
   return (
     <>
       <div className="w-full sm:w-6/12 my-md">
@@ -75,6 +79,7 @@ export const FormElements = ({
             label="Name"
             placeholder="Relationship name"
             dataTest="rs-to-db-rel-name"
+            disabled={!!existingRelationshipName}
           />
         </div>
 

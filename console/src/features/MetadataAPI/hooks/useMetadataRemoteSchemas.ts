@@ -68,3 +68,9 @@ export const useRemoteSchema = () => {
 
   return { fetchSchema, data, isLoading, isError, error };
 };
+
+export const useGetRemoteSchemaRelationship = (sourceRemoteSchema: string) => {
+  return useMetadata(
+    MetadataSelector.getRemoteSchemaRelationship(sourceRemoteSchema)
+  );
+};

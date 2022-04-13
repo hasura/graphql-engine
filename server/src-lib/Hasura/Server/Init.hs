@@ -269,6 +269,10 @@ mkServeOptions rso = do
     WSConnectionInitTimeout . fromIntegral . fromMaybe 3
       <$> withEnv (rsoWebSocketConnectionInitTimeout rso) (fst webSocketConnectionInitTimeoutEnv)
 
+  enableMetadataQueryLogging <-
+    bool MetadataQueryLoggingDisabled MetadataQueryLoggingEnabled
+      <$> withEnvBool (rsoEnableMetadataQueryLoggingEnv rso) (fst enableMetadataQueryLoggingEnv)
+
   pure $
     ServeOptions
       port
@@ -309,6 +313,7 @@ mkServeOptions rso = do
       webSocketConnectionInitTimeout
       EventingEnabled
       ReadOnlyModeDisabled
+      enableMetadataQueryLogging
   where
     defaultAsyncActionsFetchInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
     defaultSchemaPollInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
@@ -490,7 +495,8 @@ serveCmdFooter =
         txIsoEnv,
         unAuthRoleEnv,
         webSocketKeepAliveEnv,
-        wsReadCookieEnv
+        wsReadCookieEnv,
+        enableMetadataQueryLoggingEnv
       ]
 
     eventEnvs = [eventsHttpPoolSizeEnv, eventsFetchIntervalEnv]
@@ -760,6 +766,12 @@ adminInternalErrorsEnv :: (String, String)
 adminInternalErrorsEnv =
   ( "HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS",
     "Enables including 'internal' information in an error response for requests made by an 'admin' (default: true)"
+  )
+
+enableMetadataQueryLoggingEnv :: (String, String)
+enableMetadataQueryLoggingEnv =
+  ( "HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING",
+    "Enables the query field in http-logs for metadata queries (default: false)"
   )
 
 parsePostgresConnInfo :: Parser (PostgresConnInfo (Maybe PostgresRawConnInfo))
@@ -1268,6 +1280,13 @@ parseSchemaPollInterval =
           <> help (snd schemaPollIntervalEnv)
       )
 
+parseEnableMetadataQueryLogging :: Parser Bool
+parseEnableMetadataQueryLogging =
+  switch
+    ( long "enable-metadata-query-logging"
+        <> help (snd enableMetadataQueryLoggingEnv)
+    )
+
 mkLiveQueryRefetchDelayEnv :: (String, String)
 mkLiveQueryRefetchDelayEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL",
@@ -1412,7 +1431,8 @@ serveOptsToLog so =
           "experimental_features" J..= soExperimentalFeatures so,
           "events_fetch_batch_size" J..= soEventsFetchBatchSize so,
           "graceful_shutdown_timeout" J..= soGracefulShutdownTimeout so,
-          "websocket_connection_init_timeout" J..= show (soWebsocketConnectionInitTimeout so)
+          "websocket_connection_init_timeout" J..= show (soWebsocketConnectionInitTimeout so),
+          "enable_metadata_query_logging" J..= soEnableMetadataQueryLogging so
         ]
 
 mkGenericStrLog :: L.LogLevel -> Text -> String -> StartupLog
@@ -1472,6 +1492,7 @@ serveOptionsParser =
     <*> parseEventsFetchBatchSize
     <*> parseGracefulShutdownTimeout
     <*> parseWebSocketConnectionInitTimeout
+    <*> parseEnableMetadataQueryLogging
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.

@@ -21,21 +21,24 @@ where
 import Data.Bool (bool)
 import Data.Foldable (for_)
 import Data.String
-import Data.Text (Text)
+import Data.Text (Text, pack, replace)
 import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated)
+import Data.Time (defaultTimeLocale, formatTime)
+import GHC.Stack
 import Harness.Constants as Constants
 import Harness.Env
-import Harness.Exceptions (HasCallStack, forFinally_)
+import Harness.Exceptions (forFinally_)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.State (State)
 import Harness.Test.Context (BackendType (BigQuery), defaultBackendTypeString, defaultSource)
+import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..), formatBackendScalarValue)
 import Harness.Test.Schema qualified as Schema
 import Hasura.Backends.BigQuery.Connection (initConnection)
 import Hasura.Backends.BigQuery.Execute qualified as Execute
 import Hasura.Backends.BigQuery.Source (ServiceAccount)
-import Hasura.Prelude (onLeft)
+import Hasura.Prelude (onLeft, tshow)
 import Prelude
 
 getServiceAccount :: HasCallStack => IO ServiceAccount
@@ -89,7 +92,7 @@ scalarType = \case
   Schema.TStr -> "STRING"
   Schema.TUTCTime -> "DATETIME"
   Schema.TBool -> "BIT"
-  t -> error $ "Unexpected scalar type used for BigQuery: " <> show t
+  Schema.TCustomType txt -> Schema.getBackendScalarType txt bstBigQuery
 
 mkColumn :: Schema.Column -> Text
 mkColumn Schema.Column {columnName, columnType, columnNullable, columnDefault} =
@@ -122,11 +125,21 @@ insertTable Schema.Table {tableName, tableColumns, tableData}
             ";"
           ]
 
+-- | 'ScalarValue' serializer for BigQuery
+serialize :: ScalarValue -> Text
+serialize = \case
+  VInt i -> tshow i
+  VStr s -> "'" <> replace "'" "\'" s <> "'"
+  VUTCTime t -> pack $ formatTime defaultTimeLocale "'%F %T'" t
+  VBool b -> tshow @Int $ if b then 1 else 0
+  VNull -> "NULL"
+  VCustomValue bsv -> "'" <> formatBackendScalarValue bsv bsvBigQuery <> "'"
+
 mkRow :: [Schema.ScalarValue] -> Text
 mkRow row =
   T.unwords
     [ "(",
-      commaSeparated $ Schema.serialize <$> row,
+      commaSeparated $ serialize <$> row,
       ")"
     ]
 

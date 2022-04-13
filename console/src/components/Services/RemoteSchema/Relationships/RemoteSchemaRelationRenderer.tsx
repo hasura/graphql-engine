@@ -1,18 +1,33 @@
 import React, { useState } from 'react';
-import { useGetAllRemoteSchemaRelationships } from '@/features/MetadataAPI';
-import { RemoteSchemaRelationshipTable } from '@/features/RelationshipsTable';
-import { Button } from '@/new-components/Button';
 import { RiAddCircleFill } from 'react-icons/ri';
 import {
-  RemoteSchemaToRemoteSchemaForm,
+  availableFeatureFlagIds,
+  FeatureFlagFloatingButton,
+  useIsFeatureFlagEnabled,
+} from '@/features/FeatureFlags';
+import {
+  allowedMetadataTypes,
+  useGetAllRemoteSchemaRelationships,
+  useMetadataMigration,
+} from '@/features/MetadataAPI';
+import {
+  RemoteSchemaRelationshipTable,
+  ExistingRelationshipMeta,
+} from '@/features/RelationshipsTable';
+import { Button } from '@/new-components/Button';
+import {
   RemoteRelOption,
   RemoteSchemaToDbForm,
+  RemoteSchemaToRemoteSchemaForm,
 } from '@/features/RemoteRelationships';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { fireNotification } from '@/new-components/Notifications';
+import { getConfirmation } from '@/components/Common/utils/jsUtils';
 
 type RemoteSchemaRelationRendererProp = {
   remoteSchemaName: string;
 };
+
 export const RemoteSchemaRelationRenderer = ({
   remoteSchemaName,
 }: RemoteSchemaRelationRendererProp) => {
@@ -21,22 +36,104 @@ export const RemoteSchemaRelationRenderer = ({
     isLoading,
     isError,
   } = useGetAllRemoteSchemaRelationships();
+
   const [isFormOpen, setIsFormOpen] = useState(false);
+
+  const [
+    existingRelationship,
+    setExistingRelationship,
+  ] = useState<ExistingRelationshipMeta>({
+    relationshipName: '',
+    rsType: '',
+  });
   const [formState, setFormState] = useState<RemoteRelOption>('remoteSchema');
+
+  const mutation = useMetadataMigration({
+    onSuccess: () => {
+      fireNotification({
+        title: 'Success!',
+        message: 'Relationship deleted successfully',
+        type: 'success',
+      });
+    },
+    onError: () => {
+      fireNotification({
+        title: 'Error',
+        message: 'Error while deleting the relationship',
+        type: 'error',
+      });
+    },
+  });
+
+  const {
+    enabled: ffEnabled,
+    isLoading: ffIsLoading,
+  } = useIsFeatureFlagEnabled(
+    availableFeatureFlagIds.remoteSchemaRelationshipsId
+  );
+
+  if (isLoading || ffIsLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (ffEnabled === undefined)
+    return <div>Remote schema relationships are not yet enabled.</div>;
+
+  if (ffEnabled === false)
+    return (
+      <div>
+        Remote schema relationships are not enabled. To enable them, visit the
+        Feature Flag section in Settings.
+      </div>
+    );
+
+  const openForm = ({
+    relationshipName,
+    rsType,
+    relationshipType,
+  }: ExistingRelationshipMeta) => {
+    setFormState((relationshipType ?? 'remoteSchema') as RemoteRelOption);
+    setExistingRelationship({ relationshipName, rsType });
+    setIsFormOpen(true);
+  };
+
+  const onDelete = ({ relationshipName, rsType }: ExistingRelationshipMeta) => {
+    const confirmMessage = `This will permanently delete the ${relationshipName} from Hasura`;
+    const isOk = getConfirmation(confirmMessage, true, relationshipName);
+    if (!isOk) {
+      return;
+    }
+
+    mutation.mutate({
+      source: '',
+      query: {
+        type: 'delete_remote_schema_remote_relationship' as allowedMetadataTypes,
+        args: {
+          remote_schema: remoteSchemaName,
+          type_name: rsType,
+          name: relationshipName,
+        },
+      },
+      migrationName: 'deleteRSToDBRelationship',
+    });
+  };
 
   if (isError) {
     return <div>Error in fetching remote schema relationships.</div>;
   }
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <>
+      <FeatureFlagFloatingButton />
+
       {remoteSchemaRels?.length ? (
         <RemoteSchemaRelationshipTable
           remoteSchemaRels={remoteSchemaRels}
-          showActionCell={false}
+          showActionCell
+          onEdit={props => {
+            openForm(props);
+          }}
+          onDelete={onDelete}
           remoteSchema={remoteSchemaName}
         />
       ) : (
@@ -51,12 +148,17 @@ export const RemoteSchemaRelationRenderer = ({
         formState === 'remoteSchema' ? (
           <RemoteSchemaToRemoteSchemaForm
             sourceRemoteSchema={remoteSchemaName}
+            existingRelationshipName={existingRelationship.relationshipName}
+            typeName={existingRelationship.rsType}
             closeHandler={() => setIsFormOpen(!isFormOpen)}
+            onSuccess={() => setIsFormOpen(false)}
             relModeHandler={setFormState}
           />
         ) : (
           <RemoteSchemaToDbForm
             sourceRemoteSchema={remoteSchemaName}
+            existingRelationshipName={existingRelationship.relationshipName}
+            typeName={existingRelationship.rsType}
             closeHandler={() => setIsFormOpen(!isFormOpen)}
             onSuccess={() => setIsFormOpen(false)}
             relModeHandler={setFormState}
@@ -66,7 +168,7 @@ export const RemoteSchemaRelationRenderer = ({
         <Button
           icon={<RiAddCircleFill />}
           onClick={() => {
-            setIsFormOpen(!isFormOpen);
+            openForm({});
           }}
           data-test="add-a-new-rs-relationship"
         >
