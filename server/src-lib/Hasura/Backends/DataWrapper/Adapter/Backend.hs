@@ -6,6 +6,7 @@ module Hasura.Backends.DataWrapper.Adapter.Backend () where
 
 import Data.Aeson qualified as J (Value)
 import Hasura.Backends.DataWrapper.Adapter.Types qualified as Adapter
+import Hasura.Backends.DataWrapper.Agent.Client qualified as Agent.Client
 import Hasura.Backends.DataWrapper.IR.Column qualified as Column (Name)
 import Hasura.Backends.DataWrapper.IR.Expression (Expression, Operator)
 import Hasura.Backends.DataWrapper.IR.Function qualified as Function (Name)
@@ -36,7 +37,7 @@ type Unimplemented = ()
 
 instance Backend 'DataWrapper where
   type SourceConfig 'DataWrapper = Adapter.SourceConfig
-  type SourceConnConfiguration 'DataWrapper = Unimplemented
+  type SourceConnConfiguration 'DataWrapper = Agent.Client.ConnSourceConfig
 
   type TableName 'DataWrapper = Table.Name
   type FunctionName 'DataWrapper = Function.Name

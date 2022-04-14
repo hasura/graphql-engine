@@ -10,7 +10,7 @@ where
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.Text.Encoding qualified as TE
-import Hasura.Backends.DataWrapper.API (Capabilities (dcRelationships), SchemaResponse (srCapabilities))
+import Hasura.Backends.DataWrapper.API (Capabilities (dcRelationships), Routes (..), SchemaResponse (srCapabilities))
 import Hasura.Backends.DataWrapper.Agent.Client
 import Hasura.Backends.DataWrapper.IR.Query qualified as IR
 import Hasura.Backends.DataWrapper.Plan qualified as GDW
@@ -70,7 +70,7 @@ toExplainPlan fieldName plan_ =
 buildAction :: GDW.SourceConfig -> IR.Query -> Tracing.TraceT (ExceptT QErr IO) EncJSON
 buildAction GDW.SourceConfig {..} query = do
   -- TODO(SOLOMON): Should this check occur during query construction in 'mkPlan'?
-  unless (dcRelationships (srCapabilities dscSchema) && GDW.queryHasRelations query) $
+  when (GDW.queryHasRelations query && not (dcRelationships (srCapabilities dscSchema))) $
     throw400 NotSupported "Agents must provide their own dataloader."
   Routes {..} <- liftIO $ client @(Tracing.TraceT (ExceptT QErr IO)) dscManager (ConnSourceConfig dscEndpoint)
   queryResponse <- _query $ Witch.from query

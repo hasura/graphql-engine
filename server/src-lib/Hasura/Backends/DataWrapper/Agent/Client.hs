@@ -3,57 +3,54 @@
 --
 module Hasura.Backends.DataWrapper.Agent.Client
   ( ConnSourceConfig (..),
-    Routes (..),
     Hasura.Backends.DataWrapper.Agent.Client.client,
   )
 where
 
 import Control.Exception (try)
 import Control.Monad.Free
-import Data.Text (unpack)
 -- import           Hasura.Tracing                         (MonadTrace, tracedHttpRequest)
 
 -- import qualified Network.HTTP.Client.Transformable      as Transformable
 
+import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson qualified as J
+import Data.Aeson.Casing qualified as J
+import Data.Text (unpack)
 import Hasura.Backends.DataWrapper.API qualified as API
-import Hasura.Backends.DataWrapper.API.V0.Schema
 import Hasura.Base.Error
 import Hasura.Incremental.Internal.Dependency (Cacheable (..))
 import Hasura.Prelude
 import Network.HTTP.Client (Manager)
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types.Status (statusCode, statusMessage)
-import Servant.API
-import Servant.API.Generic
 import Servant.Client
 import Servant.Client.Core.RunClient (ClientF (..))
 import Servant.Client.Generic
 import Servant.Client.Internal.HttpClient (clientResponseToResponse)
 
 --------------------------------------------------------------------------------
--- Servant Routes
-
-data Routes mode = Routes
-  { -- | 'GET /schema'
-    _schema ::
-      mode :- "schema"
-        :> Get '[JSON] SchemaResponse,
-    -- | 'POST /query'
-    _query ::
-      mode :- "query"
-        :> ReqBody '[JSON] API.Query
-        :> Post '[JSON] QueryResponse
-  }
-  deriving (Generic)
-
---------------------------------------------------------------------------------
 -- Client
 
-data ConnSourceConfig = ConnSourceConfig
+newtype ConnSourceConfig = ConnSourceConfig
   { dcscEndpoint :: Text
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (Hashable, NFData, Cacheable)
+
+instance ToJSON ConnSourceConfig where
+  toJSON =
+    J.genericToJSON $
+      J.defaultOptions
+        { J.fieldLabelModifier = J.snakeCase . drop 4
+        }
+
+instance FromJSON ConnSourceConfig where
+  parseJSON =
+    J.genericParseJSON $
+      J.defaultOptions
+        { J.fieldLabelModifier = J.snakeCase . drop 4
+        }
 
 -- | Create a record of client functions (see 'Routes') from a 'ConnSourceConfig'
 -- configuration object. This function takes care to add trace headers, and to
@@ -63,7 +60,7 @@ client ::
   (MonadIO m {- MonadTrace m, -}, MonadError QErr m) =>
   Manager ->
   ConnSourceConfig ->
-  IO (Routes (AsClientT m))
+  IO (API.Routes (AsClientT m))
 client mgr config = do
   baseUrl <- parseBaseUrl (unpack (dcscEndpoint config))
   let interpret :: ClientF a -> m a
