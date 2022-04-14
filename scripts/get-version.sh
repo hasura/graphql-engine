@@ -34,4 +34,4 @@ VERSION="${GIT_TAG_EXACT}"
 test -n "$VERSION" || VERSION="${GIT_BRANCH}-${GIT_SHA}${GIT_DIRTY}"
 
 VERSION="$(echo $VERSION | tr -cd '[[:alnum:]]._-')"
-echo "$VERSION"
+echo "${VERSION:0:50}"
