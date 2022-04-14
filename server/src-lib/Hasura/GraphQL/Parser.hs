@@ -17,6 +17,7 @@ module Hasura.GraphQL.Parser
     jsonb,
     nonNegativeInt,
     bigInt,
+    scientific,
     unsafeRawScalar,
     jsonScalar,
     enum,

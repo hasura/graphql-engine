@@ -402,7 +402,10 @@ fetchMetadataFromHdbTables = liftTx do
   computedFields <- fetchComputedFields
 
   -- Fetch all remote relationships
-  remoteRelationships <- Q.catchE defaultTxErrorHandler fetchRemoteRelationships
+  remoteRelationshipsRaw <- Q.catchE defaultTxErrorHandler fetchRemoteRelationships
+  remoteRelationships <- for remoteRelationshipsRaw $ \(table, relationshipName, definitionValue) -> do
+    definition <- runAesonParser (parseRemoteRelationshipDefinition RRPLegacy) definitionValue
+    pure $ (table, RemoteRelationship relationshipName definition)
 
   let (_, fullTableMetaMap) = flip runState tableMetaMap $ do
         modMetaMap tmObjectRelationships _rdName objRelDefs
@@ -671,7 +674,8 @@ fetchMetadataFromHdbTables = liftTx do
       pure $
         flip map r $ \(schema, table, name, Q.AltJ definition) ->
           ( QualifiedObject schema table,
-            RemoteRelationship name $ RelationshipToSchema RRFOldDBToRemoteSchema definition
+            name,
+            definition
           )
 
 addCronTriggerForeignKeyConstraint :: MonadTx m => m ()

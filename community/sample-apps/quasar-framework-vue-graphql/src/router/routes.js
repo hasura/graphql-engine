@@ -1,21 +1,22 @@
-
 const routes = [
   {
-    path: '/',
-    component: () => import('layouts/MyLayout.vue'),
+    path: "/",
+    component: () => import("layouts/MainLayout.vue"),
     children: [
-      { path: '/author/:authorId', component: () => import('pages/Articles.vue') },
-      { path: '', component: () => import('pages/Index.vue') }
-    ]
-  }
-]
+      {
+        path: "/author/:authorId",
+        component: () => import("pages/Articles.vue"),
+      },
+      { path: "", component: () => import("pages/IndexPage.vue") },
+    ],
+  },
 
-// Always leave this as last one
-if (process.env.MODE !== 'ssr') {
-  routes.push({
-    path: '*',
-    component: () => import('pages/Error404.vue')
-  })
-}
+  // Always leave this as last one,
+  // but you can also remove it
+  {
+    path: "/:catchAll(.*)*",
+    component: () => import("pages/ErrorNotFound.vue"),
+  },
+];
 
-export default routes
+export default routes;
