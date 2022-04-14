@@ -5,6 +5,7 @@ module Hasura.Backends.DataWrapper.Plan
   ( SourceConfig (..),
     Plan (..),
     mkPlan,
+    renderPlan,
     queryHasRelations,
   )
 where
@@ -13,12 +14,15 @@ where
 
 import Data.Aeson qualified as J
 import Data.Align
+import Data.ByteString.Lazy qualified as BL
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Semigroup (Any (..), Min (..))
+import Data.Text.Encoding qualified as TE
 import Data.These
 import Data.Vector qualified as Vector
 import Hasura.Backends.DataWrapper.API (Capabilities (..), QueryResponse (..), SchemaResponse (..))
+import Hasura.Backends.DataWrapper.API qualified as API
 import Hasura.Backends.DataWrapper.Adapter.Types
 import Hasura.Backends.DataWrapper.IR.Expression qualified as IR
 import Hasura.Backends.DataWrapper.IR.Expression qualified as IR.Expression
@@ -37,6 +41,7 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.SQL.Backend
 import Hasura.Session
+import Witch qualified
 
 --------------------------------------------------------------------------------
 
@@ -58,6 +63,13 @@ data ResponseError
   | ExpectedArray
   | UnexpectedResponseCardinality
   deriving (Show, Eq)
+
+-- | Extract the 'IR.Query' from a 'Plan' and render it as 'Text'.
+--
+-- NOTE: This is for logging and debug purposes only.
+renderPlan :: Plan -> Text
+renderPlan =
+  TE.decodeUtf8 . BL.toStrict . J.encode . Witch.from @_ @API.Query . query
 
 -- | Map a 'QueryDB 'DataWrapper' term into a 'Plan'
 mkPlan ::
@@ -144,11 +156,12 @@ mkPlan session (SourceConfig _ SchemaResponse {srCapabilities} _) ir = translate
       fields <- traverse (traverse (translateField card)) xs
       pure $
         HashMap.fromList $
-          catMaybes $
-            fmap sequence $
-              [ (getFieldNameTxt f, field)
+          mapMaybe
+            sequence
+            ( [ (getFieldNameTxt f, field)
                 | (f, field) <- fields
               ]
+            )
 
     translateField ::
       IR.Query.Cardinality ->
