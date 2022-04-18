@@ -19,6 +19,7 @@ import { findAllFromRel, isFeatureSupported } from '../../../../dataSources';
 import { getRemoteSchemasSelector } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { resetRelationshipForm, resetManualRelationshipForm } from './Actions';
+import { RemoteDbRelationships } from './RemoteDbRelationships/RemoteDbRelationships';
 
 const RelationshipsView = ({
   tableName,
@@ -156,10 +157,17 @@ const RelationshipsView = ({
   }
 
   const remoteRelationshipsSection = () => {
+    const existingRemoteRelationships =
+      tableSchema?.remote_relationships?.filter(
+        field =>
+          'remote_schema' in field.definition ||
+          'to_remote_schema' in field.definition
+      ) ?? [];
+
     return (
       <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
         <RemoteRelationships
-          relationships={tableSchema.remote_relationships}
+          relationships={existingRemoteRelationships}
           reduxDispatch={dispatch}
           table={tableSchema}
           allFunctions={allFunctions}
@@ -203,6 +211,19 @@ const RelationshipsView = ({
                 />
               </div>
             </div>
+            {isFeatureSupported(
+              'tables.relationships.remoteDbRelationships.hostSource'
+            ) ? (
+              <div
+                className={`${styles.padd_left_remove} col-xs-10 col-md-10 ${styles.add_mar_bottom}`}
+              >
+                <RemoteDbRelationships
+                  tableSchema={tableSchema}
+                  reduxDispatch={dispatch}
+                  currentSource={currentSource}
+                />
+              </div>
+            ) : null}
             {isFeatureSupported('tables.relationships.track') &&
               remoteRelationshipsSection()}
           </div>
