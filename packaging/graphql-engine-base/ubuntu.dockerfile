@@ -1,4 +1,4 @@
-# DATE VERSION: 2022-04-07
+# DATE VERSION: 2022-04-12
 # Modify the above date version (YYYY-MM-DD) if you want to rebuild the image for security updates
 FROM ubuntu:20.04
 
@@ -20,6 +20,15 @@ RUN if [ "$TARGETPLATFORM" = "linux/amd64" ] ; then \
       && apt-get update \
       && ACCEPT_EULA=Y apt-get install -y msodbcsql17 ; \
     fi
+
+# Install pg_dump
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt focal-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+  && curl -s https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
+  && apt-get -y update \
+  && apt-get install -y \
+    postgresql-client-14 \
+  # delete all pg tools except pg_dump to keep the image minimal
+  && find /usr/bin -name 'pg*' -not -path '/usr/bin/pg_dump' -delete
 
 # Cleanup unwanted files and packages
 RUN apt-get -y remove curl gnupg2 \

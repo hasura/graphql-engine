@@ -4,6 +4,8 @@
 
 ### Bug fixes and improvements
 
+- server: update pg_dump to be compatible with postgres 14 (#7676)
+
 ## v2.6.0-beta.1
 
 ### Breaking changes

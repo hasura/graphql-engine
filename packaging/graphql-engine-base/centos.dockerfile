@@ -1,4 +1,4 @@
-# DATE VERSION: 2022-03-31
+# DATE VERSION: 2022-04-12
 # Modify the above date version (YYYY-MM-DD) if you want to rebuild the image for security updates
 FROM quay.io/centos/centos@sha256:fc45f3e1294861d7851a87be152b1ab2350d755744077d5ee12b725fdca87919
 
@@ -23,13 +23,14 @@ RUN yum update -y --nobest \
   && case "$TARGETPLATFORM" in \
   "linux/amd64") \
     dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm \
-    && dnf install -y postgresql13-devel \
     ;; \
   "linux/arm64") \
     dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-aarch64/pgdg-redhat-repo-latest.noarch.rpm \
-    && dnf install -y postgresql13-devel \
     ;; \
-  esac
+  esac \
+  && dnf install -y postgresql14-devel \
+  # delete all pg tools except pg_dump to keep the image minimal
+  && find /usr/bin -name 'pg*' -not -path '/usr/bin/pg_dump' -delete
 
 # msodbcsql17
 RUN yum remove unixODBC-utf16 unixODBC-utf16-devel \
