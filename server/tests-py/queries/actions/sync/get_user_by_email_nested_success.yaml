@@ -214,5 +214,6 @@
         city0: Bangalore
         country0: India
         other_addresses:
+          - ~
           - city: Melbourne
             country: Australia

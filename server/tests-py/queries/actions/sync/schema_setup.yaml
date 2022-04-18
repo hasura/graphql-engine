@@ -206,6 +206,13 @@ args:
       - name: id
         type: Int!
 
+    - name: TypedNestedNull
+      fields:
+      - name: id
+        type: ID!
+      - name: child
+        type: TypedNestedNull
+
 - type: create_action
   args:
     name: create_user
@@ -486,3 +493,19 @@ args:
                 "id": {{ x }}
               }
             {{ end }}
+
+- type: create_action
+  args:
+    name: typed_nested_null
+    definition:
+      type: query
+      output_type: TypedNestedNull!
+      handler: http://127.0.0.1:5593/typed-nested-null
+
+- type: create_action
+  args:
+    name: typed_nested_null_wrong_field
+    definition:
+      type: query
+      output_type: TypedNestedNull!
+      handler: http://127.0.0.1:5593/typed-nested-null-wrong-field

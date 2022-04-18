@@ -157,6 +157,7 @@ makeActionResponseNoRelations annFields webhookResponse =
                         mkValue = \case
                           J.Object o -> Just $ mkResponseObject nestedFields o
                           J.Array a -> Just $ AO.array $ mapMaybe mkValue $ toList a
+                          J.Null -> Just AO.Null
                           _ -> Nothing
                     Map.lookup fieldText obj >>= mkValue
    in -- NOTE (Sam): This case would still not allow for aliased fields to be
