@@ -1,5 +1,4 @@
 {-# LANGUAGE Arrows #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 -- | Description: Create/delete SQL tables to/from Hasura metadata.
 module Hasura.RQL.DDL.Schema.Table
@@ -37,6 +36,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Context
 import Hasura.GraphQL.Namespace
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Schema.Common (purgeDependencies, textToName)
 import Hasura.Incremental qualified as Inc
 import Hasura.Prelude
@@ -143,25 +143,25 @@ checkConflictingNode sc tnGQL = do
         [ G.SelectionField $
             G.Field
               Nothing
-              $$(G.litName "__schema")
+              G.___schema
               mempty
               []
               [ G.SelectionField $
                   G.Field
                     Nothing
-                    $$(G.litName "queryType")
+                    G._queryType
                     mempty
                     []
                     [ G.SelectionField $
                         G.Field
                           Nothing
-                          $$(G.litName "fields")
+                          G._fields
                           mempty
                           []
                           [ G.SelectionField $
                               G.Field
                                 Nothing
-                                $$(G.litName "name")
+                                G._name
                                 mempty
                                 []
                                 []
@@ -172,7 +172,7 @@ checkConflictingNode sc tnGQL = do
   case queryParser introspectionQuery of
     Left _ -> pure ()
     Right results -> do
-      case OMap.lookup (mkUnNamespacedRootFieldAlias $$(G.litName "__schema")) results of
+      case OMap.lookup (mkUnNamespacedRootFieldAlias G.___schema) results of
         Just (RFRaw (JO.Object schema)) -> do
           let names = do
                 JO.Object queryType <- JO.lookup "queryType" schema

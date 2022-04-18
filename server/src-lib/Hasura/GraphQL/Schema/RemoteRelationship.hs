@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.GraphQL.Schema.RemoteRelationship
   ( remoteRelationshipField,
   )
@@ -14,6 +12,7 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Types qualified as ET
 import Hasura.GraphQL.Parser
 import Hasura.GraphQL.Parser qualified as P
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
@@ -195,7 +194,7 @@ remoteRelationshipToSourceField RemoteSourceFieldInfo {..} =
                     IR.SourceRelationshipObject $
                       IR.AnnObjectSelectG fields _rsfiTable $ IR._tpFilter $ tablePermissionsInfo tablePerms
           ArrRel -> do
-            let aggFieldName = fieldName <> $$(G.litName "_aggregate")
+            let aggFieldName = fieldName <> G.__aggregate
             selectionSetParser <- selectTable _rsfiSource tableInfo fieldName Nothing
             aggSelectionSetParser <- selectTableAggregate _rsfiSource tableInfo aggFieldName Nothing
             pure $

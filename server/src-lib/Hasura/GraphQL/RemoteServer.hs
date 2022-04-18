@@ -21,6 +21,7 @@ import Data.Text qualified as T
 import Data.Text.Extended (dquoteList, (<<>))
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Types
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Monad (ParseT, runSchemaT)
 import Hasura.GraphQL.Schema.Common (QueryContext (..))
 import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
@@ -95,8 +96,8 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
     addDefaultRoots :: IntrospectionResult -> IntrospectionResult
     addDefaultRoots IntrospectionResult {..} =
       IntrospectionResult
-        { irMutationRoot = getRootTypeName $$(G.litName "Mutation") irMutationRoot,
-          irSubscriptionRoot = getRootTypeName $$(G.litName "Subscription") irSubscriptionRoot,
+        { irMutationRoot = getRootTypeName G._Mutation irMutationRoot,
+          irSubscriptionRoot = getRootTypeName G._Subscription irSubscriptionRoot,
           ..
         }
       where

@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module Hasura.GraphQL.Schema
@@ -27,6 +27,7 @@ import Hasura.GraphQL.Parser
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Internal.Parser (FieldParser (..))
 import Hasura.GraphQL.Parser.Schema.Convert (convertToSchemaIntrospection)
 import Hasura.GraphQL.Schema.Backend
@@ -238,15 +239,15 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
         (,,)
           <$> customizeFields
             sourceCustomization
-            (mkTypename <> P.MkTypename (<> $$(G.litName "_query")))
+            (mkTypename <> P.MkTypename (<> G.__query))
             (buildQueryFields sourceName sourceConfig validTables validFunctions queryTagsConfig)
           <*> customizeFields
             sourceCustomization
-            (mkTypename <> P.MkTypename (<> $$(G.litName "_mutation_frontend")))
+            (mkTypename <> P.MkTypename (<> G.__mutation_frontend))
             (buildMutationFields Frontend sourceName sourceConfig validTables validFunctions queryTagsConfig)
           <*> customizeFields
             sourceCustomization
-            (mkTypename <> P.MkTypename (<> $$(G.litName "_mutation_backend")))
+            (mkTypename <> P.MkTypename (<> G.__mutation_backend))
             (buildMutationFields Backend sourceName sourceConfig validTables validFunctions queryTagsConfig)
 
 buildRelayRoleContext ::
@@ -337,15 +338,15 @@ buildRelayRoleContext options sources allActionInfos customTypes role = do
         (,,)
           <$> customizeFields
             sourceCustomization
-            (mkTypename <> P.MkTypename (<> $$(G.litName "_query")))
+            (mkTypename <> P.MkTypename (<> G.__query))
             (buildRelayQueryFields sourceName sourceConfig validTables validFunctions queryTagsConfig)
           <*> customizeFields
             sourceCustomization
-            (mkTypename <> P.MkTypename (<> $$(G.litName "_mutation_frontend")))
+            (mkTypename <> P.MkTypename (<> G.__mutation_frontend))
             (buildMutationFields Frontend sourceName sourceConfig validTables validFunctions queryTagsConfig)
           <*> customizeFields
             sourceCustomization
-            (mkTypename <> P.MkTypename (<> $$(G.litName "_mutation_backend")))
+            (mkTypename <> P.MkTypename (<> G.__mutation_backend))
             (buildMutationFields Backend sourceName sourceConfig validTables validFunctions queryTagsConfig)
 
 -- | Builds the schema context for unauthenticated users.
@@ -380,7 +381,7 @@ unauthenticatedContext allRemotes remoteSchemaPermsCtx = do
           remoteSchemaPermsCtx
           False
       -- chosen arbitrarily to be as improbable as possible
-      fakeRole = mkRoleNameSafe $$(NT.nonEmptyText "MyNameIsOzymandiasKingOfKingsLookOnMyWorksYeMightyAndDespair")
+      fakeRole = mkRoleNameSafe [NT.nonEmptyTextQQ|MyNameIsOzymandiasKingOfKingsLookOnMyWorksYeMightyAndDespair|]
       -- we delete all references to remote joins
       alteredRemoteSchemas =
         allRemotes <&> first \context ->
@@ -617,7 +618,7 @@ queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
       -- provide any query. In such a case, to meet both of those, we introduce a placeholder query
       -- in the schema.
       placeholderText = "There are no queries available to the current role. Either there are no sources or remote schemas configured, or the current role doesn't have the required permissions."
-      placeholderField = NotNamespaced (RFRaw $ JO.String placeholderText) <$ P.selection_ $$(G.litName "no_queries_available") (Just $ G.Description placeholderText) P.string
+      placeholderField = NotNamespaced (RFRaw $ JO.String placeholderText) <$ P.selection_ G._no_queries_available (Just $ G.Description placeholderText) P.string
       fixedQueryFP = if null basicQueryFP then [placeholderField] else basicQueryFP
   basicQueryP <- queryRootFromFields fixedQueryFP
   let buildIntrospectionResponse printResponseFromSchema = do
@@ -721,13 +722,13 @@ takeExposedAs :: FunctionExposedAs -> FunctionCache b -> FunctionCache b
 takeExposedAs x = Map.filter ((== x) . _fiExposedAs)
 
 subscriptionRoot :: G.Name
-subscriptionRoot = $$(G.litName "subscription_root")
+subscriptionRoot = G._subscription_root
 
 mutationRoot :: G.Name
-mutationRoot = $$(G.litName "mutation_root")
+mutationRoot = G._mutation_root
 
 queryRoot :: G.Name
-queryRoot = $$(G.litName "query_root")
+queryRoot = G._query_root
 
 finalizeParser :: Parser 'Output (P.ParseT Identity) a -> ParserFn a
 finalizeParser parser = runIdentity . P.runParseT . P.runParser parser

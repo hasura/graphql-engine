@@ -39,6 +39,7 @@ import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Data.HashSet qualified as Set
 import Data.List.Extended (longestCommonPrefix)
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Schema as G (InputValue)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (FieldName)
@@ -89,7 +90,7 @@ mkInterfaceSelectionSet ::
   DeduplicatedSelectionSet r var
 mkInterfaceSelectionSet interfaceFields selectionSets =
   DeduplicatedSelectionSet
-    (Set.insert $$(G.litName "__typename") interfaceFields)
+    (Set.insert G.___typename interfaceFields)
     (Map.fromList selectionSets)
 
 -- | Constructs an 'UnionSelectionSet' from a list of the fields, using a
@@ -100,7 +101,7 @@ mkUnionSelectionSet ::
   DeduplicatedSelectionSet r var
 mkUnionSelectionSet selectionSets =
   DeduplicatedSelectionSet
-    (Set.singleton $$(G.litName "__typename"))
+    (Set.singleton G.___typename)
     (Map.fromList selectionSets)
 
 -- | Representation of one individual field.

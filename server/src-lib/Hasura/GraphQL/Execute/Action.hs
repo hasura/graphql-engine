@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.GraphQL.Execute.Action
   ( fetchActionLogResponses,
@@ -48,6 +47,7 @@ import Hasura.EncJSON
 import Hasura.Eventing.Common
 import Hasura.GraphQL.Execute.Action.Types as Types
 import Hasura.GraphQL.Parser
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import Hasura.HTTP
 import Hasura.Logging qualified as L
@@ -251,7 +251,7 @@ resolveAsyncActionQuery userInfo annAction =
                     asyncFields <&> second \case
                       AsyncTypename t -> RS.AFExpression t
                       AsyncOutput annFields ->
-                        RS.AFComputedField () (ComputedFieldName $$(nonEmptyText "__action_computed_field")) $
+                        RS.AFComputedField () (ComputedFieldName [nonEmptyTextQQ|__action_computed_field|]) $
                           RS.CFSTable jsonAggSelect $
                             processOutputSelectionSet RS.AEActionResponsePayload outputType definitionList annFields stringifyNumerics
                       AsyncId -> mkAnnFldFromPGCol idColumn
@@ -300,7 +300,7 @@ resolveAsyncActionQuery userInfo annAction =
       let actionIdColumnInfo =
             ColumnInfo
               { ciColumn = unsafePGCol "id",
-                ciName = $$(G.litName "id"),
+                ciName = G._id,
                 ciPosition = 0,
                 ciType = ColumnScalar PGUUID,
                 ciIsNullable = False,

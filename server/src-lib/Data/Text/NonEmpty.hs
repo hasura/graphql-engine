@@ -6,6 +6,7 @@ module Data.Text.NonEmpty
     mkNonEmptyText,
     unNonEmptyText,
     nonEmptyText,
+    nonEmptyTextQQ,
   )
 where
 
@@ -13,8 +14,9 @@ import Data.Aeson
 import Data.Text qualified as T
 import Data.Text.Extended
 import Database.PG.Query qualified as Q
-import Hasura.Prelude
-import Language.Haskell.TH.Syntax (Lift, Q, TExp)
+import Hasura.Prelude hiding (lift)
+import Language.Haskell.TH.Quote (QuasiQuoter (..))
+import Language.Haskell.TH.Syntax (Lift, Q, TExp, lift)
 import Test.QuickCheck qualified as QC
 
 newtype NonEmptyText = NonEmptyText {unNonEmptyText :: Text}
@@ -35,6 +37,18 @@ parseNonEmptyText text = mkNonEmptyText text `onNothing` fail "empty string not 
 
 nonEmptyText :: Text -> Q (TExp NonEmptyText)
 nonEmptyText = parseNonEmptyText >=> \text -> [||text||]
+
+-- | Construct 'NonEmptyText' literals at compile-time via quasiquotation.
+nonEmptyTextQQ :: QuasiQuoter
+nonEmptyTextQQ =
+  QuasiQuoter {quoteExp, quotePat, quoteType, quoteDec}
+  where
+    quotePat _ = error "nonEmptyTextQQ does not support quoting patterns"
+    quoteType _ = error "nonEmptyTextQQ does not support quoting types"
+    quoteDec _ = error "nonEmptyTextQQ does not support quoting declarations"
+    quoteExp s = case mkNonEmptyText (T.pack s) of
+      Just result -> lift result
+      Nothing -> fail "empty string not allowed"
 
 instance FromJSON NonEmptyText where
   parseJSON = withText "String" parseNonEmptyText

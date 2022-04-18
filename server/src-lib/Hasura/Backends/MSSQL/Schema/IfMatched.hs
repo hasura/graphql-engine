@@ -1,5 +1,4 @@
 {-# LANGUAGE ApplicativeDo #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 -- | MSSQL Schema IfMatched
 --
@@ -25,6 +24,7 @@ import Hasura.GraphQL.Parser
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Common
@@ -54,7 +54,7 @@ ifMatchedFieldParser ::
   m (InputFieldsParser n (Maybe (IfMatched (UnpreparedValue 'MSSQL))))
 ifMatchedFieldParser sourceName tableInfo = do
   maybeObject <- ifMatchedObjectParser sourceName tableInfo
-  return $ withJust maybeObject $ P.fieldOptional $$(G.litName "if_matched") (Just "upsert condition")
+  return $ withJust maybeObject $ P.fieldOptional G._if_matched (Just "upsert condition")
 
 -- | Parse a @tablename_if_matched@ object.
 ifMatchedObjectParser ::
@@ -70,13 +70,13 @@ ifMatchedObjectParser sourceName tableInfo = runMaybeT do
   lift do
     updateColumnsEnum <- updateColumnsPlaceholderParser tableInfo
     tableGQLName <- getTableGQLName tableInfo
-    objectName <- P.mkTypename $ tableGQLName <> $$(G.litName "_if_matched")
+    objectName <- P.mkTypename $ tableGQLName <> G.__if_matched
     let _imColumnPresets = partialSQLExpToUnpreparedValue <$> upiSet updatePerms
         updateFilter = fmap partialSQLExpToUnpreparedValue <$> upiFilter updatePerms
         objectDesc = G.Description $ "upsert condition type for table " <>> tableInfoName tableInfo
-        matchColumnsName = $$(G.litName "match_columns")
-        updateColumnsName = $$(G.litName "update_columns")
-        whereName = $$(G.litName "where")
+        matchColumnsName = G._match_columns
+        updateColumnsName = G._update_columns
+        whereName = G._where
     whereExpParser <- boolExp sourceName tableInfo
     pure $
       P.object objectName (Just objectDesc) do
@@ -109,7 +109,7 @@ tableInsertMatchColumnsEnum ::
 tableInsertMatchColumnsEnum sourceName tableInfo = do
   tableGQLName <- getTableGQLName @'MSSQL tableInfo
   columns <- tableSelectColumns sourceName tableInfo
-  enumName <- P.mkTypename $ tableGQLName <> $$(G.litName "_insert_match_column")
+  enumName <- P.mkTypename $ tableGQLName <> G.__insert_match_column
   let description =
         Just $
           G.Description $

@@ -50,6 +50,7 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Types qualified as ET (GraphQLQueryType)
 import Hasura.GraphQL.Namespace (NamespacedField)
 import Hasura.GraphQL.Parser qualified as P
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.Prelude
 import Hasura.RQL.IR.Action qualified as IR
 import Hasura.RQL.IR.RemoteSchema qualified as IR
@@ -166,14 +167,14 @@ parsedSelectionsToFields mkTypename =
 
 numericAggOperators :: [G.Name]
 numericAggOperators =
-  [ $$(G.litName "sum"),
-    $$(G.litName "avg"),
-    $$(G.litName "stddev"),
-    $$(G.litName "stddev_samp"),
-    $$(G.litName "stddev_pop"),
-    $$(G.litName "variance"),
-    $$(G.litName "var_samp"),
-    $$(G.litName "var_pop")
+  [ G._sum,
+    G._avg,
+    G._stddev,
+    G._stddev_samp,
+    G._stddev_pop,
+    G._variance,
+    G._var_samp,
+    G._var_pop
   ]
 
 comparisonAggOperators :: [G.Name]
@@ -247,7 +248,7 @@ mkEnumTypeName (EnumReference enumTableName _ enumTableCustomName) = do
   addEnumSuffix enumTableGQLName enumTableCustomName
 
 addEnumSuffix :: (MonadReader r m, Has MkTypename r) => G.Name -> Maybe G.Name -> m G.Name
-addEnumSuffix enumTableGQLName enumTableCustomName = P.mkTypename $ (fromMaybe enumTableGQLName enumTableCustomName) <> $$(G.litName "_enum")
+addEnumSuffix enumTableGQLName enumTableCustomName = P.mkTypename $ (fromMaybe enumTableGQLName enumTableCustomName) <> G.__enum
 
 -- | Return the indirect dependencies on a source.
 -- We return a [SchemaObjId] instead of [SourceObjId], because the latter has no
