@@ -381,6 +381,18 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             resp, status = self.get_results()
             self._send_response(status, resp)
 
+        elif req_path == "/typed-nested-null":
+            self._send_response(
+                HTTPStatus.OK,
+                self.get_typed_nested_null()
+            )
+
+        elif req_path == "/typed-nested-null-wrong-field":
+            self._send_response(
+                HTTPStatus.OK,
+                self.get_typed_nested_null_wrong_field()
+            )
+
         else:
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()
@@ -560,6 +572,18 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             return make_nested_out_object(resp), status
         else:
             return map(make_nested_out_object, resp), status
+
+    def get_typed_nested_null(self):
+        return {
+            'id': 1,
+            'child': None
+        }
+
+    def get_typed_nested_null_wrong_field(self):
+        return {
+            'id': None,
+            'child': None
+        }
 
     def null_response(self):
         response = None

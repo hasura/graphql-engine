@@ -1,0 +1,18 @@
+description: Typed nested nullable object should passtrough null values
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    query {
+      typed_nested_null {
+        id
+        child {
+          id
+        }
+      }
+    }
+response:
+  data:
+    typed_nested_null:
+      id: 1
+      child: null

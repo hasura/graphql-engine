@@ -72,6 +72,14 @@ args:
   args:
     name: results
     clear_data: true
+- type: drop_action
+  args:
+    name: typed_nested_null
+    clear_data: true
+- type: drop_action
+  args:
+    name: typed_nested_null_wrong_field
+    clear_data: true
 # clear custom types
 - type: set_custom_types
   args: {}
