@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -30,6 +29,7 @@ import Hasura.GraphQL.Namespace
     RootFieldMap,
     mkUnNamespacedRootFieldAlias,
   )
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Transport.Backend
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Logging qualified as L
@@ -39,7 +39,6 @@ import Hasura.Server.Types (RequestId)
 import Hasura.Session
 import Hasura.Tracing
 import Hasura.Tracing qualified as Tracing
-import Language.GraphQL.Draft.Syntax qualified as G
 
 instance
   ( Backend ('Postgres pgKind),
@@ -173,7 +172,7 @@ runPGMutationTransaction ::
   RootFieldMap (DBStepInfo ('Postgres pgKind)) ->
   m (DiffTime, RootFieldMap EncJSON)
 runPGMutationTransaction reqId query userInfo logger sourceConfig mutations = do
-  logQueryLog logger $ mkQueryLog query (mkUnNamespacedRootFieldAlias $$(G.litName "transaction")) Nothing reqId
+  logQueryLog logger $ mkQueryLog query (mkUnNamespacedRootFieldAlias G._transaction) Nothing reqId
   ctx <- Tracing.currentContext
   withElapsedTime $ do
     Tracing.interpTraceT

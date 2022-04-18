@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 -- | Tools to analyze the structure of a GraphQL request.
 module Hasura.GraphQL.Analyse
   ( -- * Query structure
@@ -18,6 +16,7 @@ import Control.Monad.Writer (Writer, runWriter)
 import Data.HashMap.Strict qualified as Map
 import Data.Sequence ((|>))
 import Data.Text qualified as T
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -339,24 +338,24 @@ render (AnalysisError path diagnosis) =
 -- Special type names
 
 queryRootName :: G.Name
-queryRootName = $$(G.litName "query_root")
+queryRootName = G._query_root
 
 mutationRootName :: G.Name
-mutationRootName = $$(G.litName "mutation_root")
+mutationRootName = G._mutation_root
 
 subscriptionRootName :: G.Name
-subscriptionRootName = $$(G.litName "subscription_root")
+subscriptionRootName = G._subscription_root
 
 -- Reserved fields
 
 typenameField :: G.FieldDefinition G.InputValueDefinition
-typenameField = mkReservedField $$(G.litName "__typename") $$(G.litName "String")
+typenameField = mkReservedField G.___typename G._String
 
 schemaField :: G.FieldDefinition G.InputValueDefinition
-schemaField = mkReservedField $$(G.litName "__schema") $$(G.litName "__Schema")
+schemaField = mkReservedField G.___schema G.___Schema
 
 typeField :: G.FieldDefinition G.InputValueDefinition
-typeField = mkReservedField $$(G.litName "__type") $$(G.litName "__Type")
+typeField = mkReservedField G.___type G.___Type
 
 mkReservedField :: G.Name -> G.Name -> G.FieldDefinition G.InputValueDefinition
 mkReservedField fieldName typeName =

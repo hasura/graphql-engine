@@ -15,6 +15,7 @@ import Hasura.Backends.MySQL.Types qualified as MySQL
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser hiding (EnumValueInfo, field)
 import Hasura.GraphQL.Parser qualified as P
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Internal.Parser hiding (field)
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Build qualified as GSB
@@ -208,22 +209,22 @@ jsonPathArg' _columnType = pure Nothing
 orderByOperators' :: NonEmpty (Definition P.EnumValueInfo, (BasicOrderType 'MySQL, NullsOrderType 'MySQL))
 orderByOperators' =
   NE.fromList
-    [ ( define $$(G.litName "asc") "in ascending order, nulls first",
+    [ ( define G._asc "in ascending order, nulls first",
         (MySQL.Asc, MySQL.NullsFirst)
       ),
-      ( define $$(G.litName "asc_nulls_first") "in ascending order, nulls first",
+      ( define G._asc_nulls_first "in ascending order, nulls first",
         (MySQL.Asc, MySQL.NullsFirst)
       ),
-      ( define $$(G.litName "asc_nulls_last") "in ascending order, nulls last",
+      ( define G._asc_nulls_last "in ascending order, nulls last",
         (MySQL.Asc, MySQL.NullsLast)
       ),
-      ( define $$(G.litName "desc") "in descending order, nulls last",
+      ( define G._desc "in descending order, nulls last",
         (MySQL.Desc, MySQL.NullsLast)
       ),
-      ( define $$(G.litName "desc_nulls_first") "in descending order, nulls first",
+      ( define G._desc_nulls_first "in descending order, nulls first",
         (MySQL.Desc, MySQL.NullsFirst)
       ),
-      ( define $$(G.litName "desc_nulls_last") "in descending order, nulls last",
+      ( define G._desc_nulls_last "in descending order, nulls last",
         (MySQL.Desc, MySQL.NullsLast)
       )
     ]
@@ -239,32 +240,35 @@ comparisonExps' ::
 comparisonExps' = P.memoize 'comparisonExps $ \columnType -> do
   -- see Note [Columns in comparison expression are never nullable]
   typedParser <- columnParser columnType (G.Nullability False)
-  nullableTextParser <- columnParser (ColumnScalar @'MySQL MySQL.VarChar) (G.Nullability True)
+  _nullableTextParser <- columnParser (ColumnScalar @'MySQL MySQL.VarChar) (G.Nullability True)
   textParser <- columnParser (ColumnScalar @'MySQL MySQL.VarChar) (G.Nullability False)
-  let name = P.getName typedParser <> $$(G.litName "_MySQL_comparison_exp")
+  let name = P.getName typedParser <> G.__MySQL_comparison_exp
       desc =
         G.Description $
           "Boolean expression to compare columns of type "
             <> P.getName typedParser
             <<> ". All fields are combined with logical 'AND'."
-      textListParser = fmap openValueOrigin <$> P.list textParser
-      columnListParser = fmap openValueOrigin <$> P.list typedParser
+      _textListParser = fmap openValueOrigin <$> P.list textParser
+      _columnListParser = fmap openValueOrigin <$> P.list typedParser
   pure $
     P.object name (Just desc) $
       catMaybes
         <$> sequenceA
-          [ P.fieldOptional $$(G.litName "_is_null") Nothing (bool ANISNOTNULL ANISNULL <$> P.boolean),
-            P.fieldOptional $$(G.litName "_eq") Nothing (AEQ True . mkParameter <$> typedParser),
-            P.fieldOptional $$(G.litName "_neq") Nothing (ANE True . mkParameter <$> typedParser),
-            P.fieldOptional $$(G.litName "_gt") Nothing (AGT . mkParameter <$> typedParser),
-            P.fieldOptional $$(G.litName "_lt") Nothing (ALT . mkParameter <$> typedParser),
-            P.fieldOptional $$(G.litName "_gte") Nothing (AGTE . mkParameter <$> typedParser),
-            P.fieldOptional $$(G.litName "_lte") Nothing (ALTE . mkParameter <$> typedParser)
+          [ P.fieldOptional G.__is_null Nothing (bool ANISNOTNULL ANISNULL <$> P.boolean),
+            P.fieldOptional G.__eq Nothing (AEQ True . mkParameter <$> typedParser),
+            P.fieldOptional G.__neq Nothing (ANE True . mkParameter <$> typedParser),
+            P.fieldOptional G.__gt Nothing (AGT . mkParameter <$> typedParser),
+            P.fieldOptional G.__lt Nothing (ALT . mkParameter <$> typedParser),
+            P.fieldOptional G.__gte Nothing (AGTE . mkParameter <$> typedParser),
+            P.fieldOptional G.__lte Nothing (ALTE . mkParameter <$> typedParser)
           ]
 
+{-
+NOTE: Should this be removed?
 offsetParser' :: MonadParse n => Parser 'Both n (SQLExpression 'MySQL)
 offsetParser' =
   MySQL.ValueExpression . MySQL.BigValue . fromIntegral <$> P.int
+-}
 
 mysqlCountTypeInput ::
   MonadParse n =>
@@ -272,7 +276,7 @@ mysqlCountTypeInput ::
   InputFieldsParser n (IR.CountDistinct -> CountType 'MySQL)
 mysqlCountTypeInput = \case
   Just columnEnum -> do
-    columns <- P.fieldOptional $$(G.litName "columns") Nothing $ P.list columnEnum
+    columns <- P.fieldOptional G._columns Nothing $ P.list columnEnum
     pure $ flip mkCountType columns
   Nothing -> pure $ flip mkCountType Nothing
   where

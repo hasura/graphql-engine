@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.GraphQL.Schema.RemoteTest (spec) where
 
@@ -16,6 +15,7 @@ import Hasura.GraphQL.Execute.Remote (resolveRemoteVariable, runVariableCache)
 import Hasura.GraphQL.Execute.Resolve
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Parser.Column (UnpreparedValue)
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Parser.Monad
 import Hasura.GraphQL.Parser.Schema
@@ -70,12 +70,12 @@ mkTestRemoteSchema schema = RemoteSchemaIntrospection $
           _rsitdPresetArgument =
             choice $
               G._ivdDirectives ivd <&> \dir -> do
-                guard $ G._dName dir == $$(G.litName "preset")
-                value <- M.lookup $$(G.litName "value") $ G._dArguments dir
+                guard $ G._dName dir == G._preset
+                value <- M.lookup G._value $ G._dArguments dir
                 Just $ case value of
                   G.VString "x-hasura-test" ->
                     G.VVariable $
-                      SessionPresetVariable (mkSessionVariable "x-hasura-test") $$(G.litName "String") SessionArgumentPresetScalar
+                      SessionPresetVariable (mkSessionVariable "x-hasura-test") G._String SessionArgumentPresetScalar
                   _ -> absurd <$> value
         }
 
@@ -108,7 +108,7 @@ buildQueryParsers ::
   RemoteSchemaIntrospection ->
   IO (P.FieldParser TestMonad (GraphQLField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))
 buildQueryParsers introspection = do
-  let introResult = IntrospectionResult introspection $$(G.litName "Query") Nothing Nothing
+  let introResult = IntrospectionResult introspection G._Query Nothing Nothing
       remoteSchemaInfo = RemoteSchemaInfo (ValidatedRemoteSchemaDef N.nullURI [] False 60 Nothing) identityCustomizer
       remoteSchemaRels = mempty
       -- Since remote schemas can theoretically join against tables, we need to
@@ -219,13 +219,13 @@ query($a: A!) {
 |]
   let arg = head $ M.toList $ _fArguments field
   arg
-    `shouldBe` ( $$(G.litName "a"),
+    `shouldBe` ( G._a,
                  -- the parser did not create a new JSON variable, and forwarded the query variable unmodified
                  G.VVariable $
                    QueryVariable $
                      Variable
-                       (VIRequired $$(G.litName "a"))
-                       (G.TypeNamed (G.Nullability False) $$(G.litName "A"))
+                       (VIRequired G._a)
+                       (G.TypeNamed (G.Nullability False) G._A)
                        (JSONValue $ J.Object $ M.fromList [("b", J.Object $ M.fromList [("c", J.Object $ M.fromList [("i", J.Number 0)])])])
                )
 
@@ -273,12 +273,12 @@ query($a: A) {
 |]
   let arg = head $ M.toList $ _fArguments field
   arg
-    `shouldBe` ( $$(G.litName "a"),
+    `shouldBe` ( G._a,
                  -- fieldOptional has peeled the variable; all we see is a JSON blob, and in doubt
                  -- we repackage it as a newly minted JSON variable
                  G.VVariable $
                    RemoteJSONValue
-                     (G.TypeNamed (G.Nullability True) $$(G.litName "A"))
+                     (G.TypeNamed (G.Nullability True) G._A)
                      (J.Object $ M.fromList [("b", J.Object $ M.fromList [("c", J.Object $ M.fromList [("i", J.Number 0)])])])
                )
 
@@ -327,17 +327,17 @@ query($a: A!) {
 |]
   let arg = head $ M.toList $ _fArguments field
   arg
-    `shouldBe` ( $$(G.litName "a"),
+    `shouldBe` ( G._a,
                  -- the preset has caused partial variable expansion, only up to where it's needed
                  G.VObject $
                    M.fromList
-                     [ ( $$(G.litName "x"),
+                     [ ( G._x,
                          G.VInt 0
                        ),
-                       ( $$(G.litName "b"),
+                       ( G._b,
                          G.VVariable $
                            RemoteJSONValue
-                             (G.TypeNamed (G.Nullability True) $$(G.litName "B"))
+                             (G.TypeNamed (G.Nullability True) G._B)
                              (J.Object $ M.fromList [("c", J.Object $ M.fromList [("i", J.Number 0)])])
                        )
                      ]

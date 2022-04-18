@@ -18,6 +18,7 @@ import Hasura.GraphQL.Parser
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common (askTableInfo, partialSQLExpToUnpreparedValue)
 import Hasura.GraphQL.Schema.Table
@@ -41,7 +42,7 @@ boolExp ::
   m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
 boolExp sourceName tableInfo = memoizeOn 'boolExp (sourceName, tableName) $ do
   tableGQLName <- getTableGQLName tableInfo
-  name <- P.mkTypename $ tableGQLName <> $$(G.litName "_bool_exp")
+  name <- P.mkTypename $ tableGQLName <> G.__bool_exp
   let description =
         G.Description $
           "Boolean expression to filter rows from the table " <> tableName
@@ -53,9 +54,9 @@ boolExp sourceName tableInfo = memoizeOn 'boolExp (sourceName, tableName) $ do
   -- Bafflingly, ApplicativeDo doesn’t work if we inline this definition (I
   -- think the TH splices throw it off), so we have to define it separately.
   let specialFieldParsers =
-        [ P.fieldOptional $$(G.litName "_or") Nothing (BoolOr <$> P.list recur),
-          P.fieldOptional $$(G.litName "_and") Nothing (BoolAnd <$> P.list recur),
-          P.fieldOptional $$(G.litName "_not") Nothing (BoolNot <$> recur)
+        [ P.fieldOptional G.__or Nothing (BoolOr <$> P.list recur),
+          P.fieldOptional G.__and Nothing (BoolAnd <$> P.list recur),
+          P.fieldOptional G.__not Nothing (BoolNot <$> recur)
         ]
 
   pure $
@@ -192,11 +193,11 @@ equalityOperators ::
   Parser k n (UnpreparedValue b) ->
   [InputFieldsParser n (Maybe (OpExpG b (UnpreparedValue b)))]
 equalityOperators collapseIfNull valueParser valueListParser =
-  [ mkBoolOperator collapseIfNull $$(G.litName "_is_null") Nothing $ bool ANISNOTNULL ANISNULL <$> P.boolean,
-    mkBoolOperator collapseIfNull $$(G.litName "_eq") Nothing $ AEQ True <$> valueParser,
-    mkBoolOperator collapseIfNull $$(G.litName "_neq") Nothing $ ANE True <$> valueParser,
-    mkBoolOperator collapseIfNull $$(G.litName "_in") Nothing $ AIN <$> valueListParser,
-    mkBoolOperator collapseIfNull $$(G.litName "_nin") Nothing $ ANIN <$> valueListParser
+  [ mkBoolOperator collapseIfNull G.__is_null Nothing $ bool ANISNOTNULL ANISNULL <$> P.boolean,
+    mkBoolOperator collapseIfNull G.__eq Nothing $ AEQ True <$> valueParser,
+    mkBoolOperator collapseIfNull G.__neq Nothing $ ANE True <$> valueParser,
+    mkBoolOperator collapseIfNull G.__in Nothing $ AIN <$> valueListParser,
+    mkBoolOperator collapseIfNull G.__nin Nothing $ ANIN <$> valueListParser
   ]
 
 comparisonOperators ::
@@ -207,8 +208,8 @@ comparisonOperators ::
   Parser k n (UnpreparedValue b) ->
   [InputFieldsParser n (Maybe (OpExpG b (UnpreparedValue b)))]
 comparisonOperators collapseIfNull valueParser =
-  [ mkBoolOperator collapseIfNull $$(G.litName "_gt") Nothing $ AGT <$> valueParser,
-    mkBoolOperator collapseIfNull $$(G.litName "_lt") Nothing $ ALT <$> valueParser,
-    mkBoolOperator collapseIfNull $$(G.litName "_gte") Nothing $ AGTE <$> valueParser,
-    mkBoolOperator collapseIfNull $$(G.litName "_lte") Nothing $ ALTE <$> valueParser
+  [ mkBoolOperator collapseIfNull G.__gt Nothing $ AGT <$> valueParser,
+    mkBoolOperator collapseIfNull G.__lt Nothing $ ALT <$> valueParser,
+    mkBoolOperator collapseIfNull G.__gte Nothing $ AGTE <$> valueParser,
+    mkBoolOperator collapseIfNull G.__lte Nothing $ ALTE <$> valueParser
   ]

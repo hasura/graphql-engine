@@ -14,6 +14,7 @@ import Hasura.Backends.BigQuery.Types qualified as BigQuery
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser hiding (EnumValueInfo, field)
 import Hasura.GraphQL.Parser qualified as P
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Internal.Parser hiding (field)
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
@@ -148,7 +149,7 @@ bqColumnParser columnType (G.Nullability isNullable) =
     ColumnScalar scalarType -> case scalarType of
       -- bytestrings
       -- we only accept string literals
-      BigQuery.BytesScalarType -> pure $ possiblyNullable scalarType $ BigQuery.StringValue <$> stringBased $$(G.litName "Bytes")
+      BigQuery.BytesScalarType -> pure $ possiblyNullable scalarType $ BigQuery.StringValue <$> stringBased G._Bytes
       -- text
       BigQuery.StringScalarType -> pure $ possiblyNullable scalarType $ BigQuery.StringValue <$> P.string
       -- floating point values
@@ -162,13 +163,13 @@ bqColumnParser columnType (G.Nullability isNullable) =
       BigQuery.BigDecimalScalarType -> pure $ possiblyNullable scalarType $ BigQuery.BigDecimalValue . BigQuery.doubleToBigDecimal <$> P.float
       -- boolean type
       BigQuery.BoolScalarType -> pure $ possiblyNullable scalarType $ BigQuery.BoolValue <$> P.boolean
-      BigQuery.DateScalarType -> pure $ possiblyNullable scalarType $ BigQuery.DateValue . BigQuery.Date <$> stringBased $$(G.litName "Date")
-      BigQuery.TimeScalarType -> pure $ possiblyNullable scalarType $ BigQuery.TimeValue . BigQuery.Time <$> stringBased $$(G.litName "Time")
-      BigQuery.DatetimeScalarType -> pure $ possiblyNullable scalarType $ BigQuery.DatetimeValue . BigQuery.Datetime <$> stringBased $$(G.litName "Datetime")
+      BigQuery.DateScalarType -> pure $ possiblyNullable scalarType $ BigQuery.DateValue . BigQuery.Date <$> stringBased G._Date
+      BigQuery.TimeScalarType -> pure $ possiblyNullable scalarType $ BigQuery.TimeValue . BigQuery.Time <$> stringBased G._Time
+      BigQuery.DatetimeScalarType -> pure $ possiblyNullable scalarType $ BigQuery.DatetimeValue . BigQuery.Datetime <$> stringBased G._Datetime
       BigQuery.GeographyScalarType ->
-        pure $ possiblyNullable scalarType $ BigQuery.GeographyValue . BigQuery.Geography <$> throughJSON $$(G.litName "Geography")
+        pure $ possiblyNullable scalarType $ BigQuery.GeographyValue . BigQuery.Geography <$> throughJSON G._Geography
       BigQuery.TimestampScalarType ->
-        pure $ possiblyNullable scalarType $ BigQuery.TimestampValue . BigQuery.Timestamp <$> stringBased $$(G.litName "Timestamp")
+        pure $ possiblyNullable scalarType $ BigQuery.TimestampValue . BigQuery.Timestamp <$> stringBased G._Timestamp
       ty -> throwError $ internalError $ T.pack $ "Type currently unsupported for BigQuery: " ++ show ty
     ColumnEnumReference enumRef@(EnumReference _ enumValues _) ->
       case nonEmpty (Map.toList enumValues) of
@@ -210,22 +211,22 @@ bqOrderByOperators ::
     )
 bqOrderByOperators =
   NE.fromList
-    [ ( define $$(G.litName "asc") "in ascending order, nulls first",
+    [ ( define G._asc "in ascending order, nulls first",
         (BigQuery.AscOrder, BigQuery.NullsFirst)
       ),
-      ( define $$(G.litName "asc_nulls_first") "in ascending order, nulls first",
+      ( define G._asc_nulls_first "in ascending order, nulls first",
         (BigQuery.AscOrder, BigQuery.NullsFirst)
       ),
-      ( define $$(G.litName "asc_nulls_last") "in ascending order, nulls last",
+      ( define G._asc_nulls_last "in ascending order, nulls last",
         (BigQuery.AscOrder, BigQuery.NullsLast)
       ),
-      ( define $$(G.litName "desc") "in descending order, nulls last",
+      ( define G._desc "in descending order, nulls last",
         (BigQuery.DescOrder, BigQuery.NullsLast)
       ),
-      ( define $$(G.litName "desc_nulls_first") "in descending order, nulls first",
+      ( define G._desc_nulls_first "in descending order, nulls first",
         (BigQuery.DescOrder, BigQuery.NullsFirst)
       ),
-      ( define $$(G.litName "desc_nulls_last") "in descending order, nulls last",
+      ( define G._desc_nulls_last "in descending order, nulls last",
         (BigQuery.DescOrder, BigQuery.NullsLast)
       )
     ]
@@ -242,9 +243,9 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
   dWithinGeogOpParser <- geographyWithinDistanceInput
   -- see Note [Columns in comparison expression are never nullable]
   typedParser <- columnParser columnType (G.Nullability False)
-  nullableTextParser <- columnParser (ColumnScalar @'BigQuery BigQuery.StringScalarType) (G.Nullability True)
+  _nullableTextParser <- columnParser (ColumnScalar @'BigQuery BigQuery.StringScalarType) (G.Nullability True)
   -- textParser <- columnParser (ColumnScalar @'BigQuery BigQuery.StringScalarType) (G.Nullability False)
-  let name = P.getName typedParser <> $$(G.litName "_BigQuery_comparison_exp")
+  let name = P.getName typedParser <> G.__BigQuery_comparison_exp
       desc =
         G.Description $
           "Boolean expression to compare columns of type "
@@ -275,12 +276,12 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
               guard (isScalarColumnWhere (== BigQuery.StringScalarType) columnType)
                 *> [ mkBoolOperator
                        collapseIfNull
-                       $$(G.litName "_like")
+                       G.__like
                        (Just "does the column match the given pattern")
                        (ALIKE . mkParameter <$> typedParser),
                      mkBoolOperator
                        collapseIfNull
-                       $$(G.litName "_nlike")
+                       G.__nlike
                        (Just "does the column NOT match the given pattern")
                        (ANLIKE . mkParameter <$> typedParser)
                    ],
@@ -288,12 +289,12 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
               guard (isScalarColumnWhere (== BigQuery.BytesScalarType) columnType)
                 *> [ mkBoolOperator
                        collapseIfNull
-                       $$(G.litName "_like")
+                       G.__like
                        (Just "does the column match the given pattern")
                        (ALIKE . mkParameter <$> typedParser),
                      mkBoolOperator
                        collapseIfNull
-                       $$(G.litName "_nlike")
+                       G.__nlike
                        (Just "does the column NOT match the given pattern")
                        (ANLIKE . mkParameter <$> typedParser)
                    ],
@@ -301,32 +302,32 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
               guard (isScalarColumnWhere (== BigQuery.GeographyScalarType) columnType)
                 *> [ mkBoolOperator
                        collapseIfNull
-                       $$(G.litName "_st_contains")
+                       G.__st_contains
                        (Just "does the column contain the given geography value")
                        (ABackendSpecific . BigQuery.ASTContains . mkParameter <$> typedParser),
                      mkBoolOperator
                        collapseIfNull
-                       $$(G.litName "_st_equals")
+                       G.__st_equals
                        (Just "is the column equal to given geography value (directionality is ignored)")
                        (ABackendSpecific . BigQuery.ASTEquals . mkParameter <$> typedParser),
                      mkBoolOperator
                        collapseIfNull
-                       $$(G.litName "_st_touches")
+                       G.__st_touches
                        (Just "does the column have at least one point in common with the given geography value")
                        (ABackendSpecific . BigQuery.ASTTouches . mkParameter <$> typedParser),
                      mkBoolOperator
                        collapseIfNull
-                       $$(G.litName "_st_within")
+                       G.__st_within
                        (Just "is the column contained in the given geography value")
                        (ABackendSpecific . BigQuery.ASTWithin . mkParameter <$> typedParser),
                      mkBoolOperator
                        collapseIfNull
-                       $$(G.litName "_st_intersects")
+                       G.__st_intersects
                        (Just "does the column spatially intersect the given geography value")
                        (ABackendSpecific . BigQuery.ASTIntersects . mkParameter <$> typedParser),
                      mkBoolOperator
                        collapseIfNull
-                       $$(G.litName "_st_d_within")
+                       G.__st_d_within
                        (Just "is the column within a given distance from the given geometry value")
                        (ABackendSpecific . BigQuery.ASTDWithin <$> dWithinGeogOpParser)
                    ]
@@ -338,7 +339,7 @@ bqCountTypeInput ::
   InputFieldsParser n (IR.CountDistinct -> CountType 'BigQuery)
 bqCountTypeInput = \case
   Just columnEnum -> do
-    columns <- P.fieldOptional $$(G.litName "columns") Nothing $ P.list columnEnum
+    columns <- P.fieldOptional G._columns Nothing $ P.list columnEnum
     pure $ flip mkCountType columns
   Nothing -> pure $ flip mkCountType Nothing
   where
@@ -359,10 +360,10 @@ geographyWithinDistanceInput = do
   booleanParser <- columnParser (ColumnScalar BigQuery.BoolScalarType) (G.Nullability True)
   floatParser <- columnParser (ColumnScalar BigQuery.FloatScalarType) (G.Nullability False)
   pure $
-    P.object $$(G.litName "st_dwithin_input") Nothing $
-      DWithinGeogOp <$> (mkParameter <$> P.field $$(G.litName "distance") Nothing floatParser)
-        <*> (mkParameter <$> P.field $$(G.litName "from") Nothing geographyParser)
-        <*> (mkParameter <$> P.fieldWithDefault $$(G.litName "use_spheroid") Nothing (G.VBoolean False) booleanParser)
+    P.object G._st_dwithin_input Nothing $
+      DWithinGeogOp <$> (mkParameter <$> P.field G._distance Nothing floatParser)
+        <*> (mkParameter <$> P.field G._from Nothing geographyParser)
+        <*> (mkParameter <$> P.fieldWithDefault G._use_spheroid Nothing (G.VBoolean False) booleanParser)
 
 -- | Computed field parser.
 -- Currently unsupported: returns Nothing for now.
@@ -375,6 +376,8 @@ bqComputedField ::
   m (Maybe (FieldParser n (AnnotatedField 'BigQuery)))
 bqComputedField _sourceName _fieldInfo _table _tableInfo = pure Nothing
 
+{-
+NOTE: Unused. Should we remove?
 -- | Remote join field parser.
 -- Currently unsupported: returns Nothing for now.
 bqRemoteRelationshipField ::
@@ -382,6 +385,7 @@ bqRemoteRelationshipField ::
   RemoteFieldInfo (DBJoinField 'BigQuery) ->
   m (Maybe [FieldParser n (AnnotatedField 'BigQuery)])
 bqRemoteRelationshipField _remoteFieldInfo = pure Nothing
+-}
 
 -- | The 'node' root field of a Relay request. Relay is currently unsupported on BigQuery,
 -- meaning this parser will never be called: any attempt to create this parser should

@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ViewPatterns #-}
 
 -- | Validate input queries against remote schemas.
@@ -12,6 +11,7 @@ import Data.HashMap.Strict.Extended qualified as HM
 import Data.HashSet qualified as HS
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Relationships.Remote
@@ -337,7 +337,7 @@ renameTypeForRelationship (relNameToTxt -> relTxt) lhsIdentifier name = do
     G.mkName relTxt
       `onNothing` throwError (InvalidGraphQLName relTxt)
   pure $
-    name <> $$(G.litName "_remote_rel_") <> lhsName <> relName
+    name <> G.__remote_rel_ <> lhsName <> relName
 
 -- | Convert a field name to a variable name.
 hasuraFieldToVariable ::
@@ -464,7 +464,7 @@ isTypeCoercible actualType expectedType =
   let (actualBaseType, actualNestingLevel) = getBaseTyWithNestedLevelsCount actualType
       (expectedBaseType, expectedNestingLevel) = getBaseTyWithNestedLevelsCount expectedType
    in if
-          | expectedBaseType == $$(G.litName "ID") ->
+          | expectedBaseType == G._ID ->
             bool
               (throwError $ IDTypeJoin actualBaseType)
               (pure ())

@@ -1,7 +1,6 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.StreamingSubscriptionSpec (buildStreamingSubscriptionsSpec) where
 
@@ -27,6 +26,7 @@ import Hasura.GraphQL.Execute.Subscription.Poll.StreamingQuery (pollStreamingQue
 import Hasura.GraphQL.Execute.Subscription.State
 import Hasura.GraphQL.Execute.Subscription.TMap qualified as TMap
 import Hasura.GraphQL.ParameterizedQueryHash
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Transport.WebSocket.Protocol (unsafeMkOperationId)
 import Hasura.GraphQL.Transport.WebSocket.Server qualified as WS
 import Hasura.Logging
@@ -179,7 +179,7 @@ streamingSubscriptionPollingSpec srcConfig = do
     (subscriberId1, subscriberId2) <- runIO $ (,) <$> newSubscriberId <*> newSubscriberId
     let subscriber1 = mkSubscriber subscriberId1
         subscriber2 = mkSubscriber subscriberId2
-    let initialCursorValue = Map.singleton $$(G.litName "id") (TELit "1")
+    let initialCursorValue = Map.singleton G._id (TELit "1")
     cohort1 <- runIO $
       liftIO $
         STM.atomically $ do

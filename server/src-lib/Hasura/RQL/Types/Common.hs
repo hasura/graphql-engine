@@ -53,7 +53,6 @@ module Hasura.RQL.Types.Common
   )
 where
 
-import Control.Lens (makeLenses)
 import Data.Aeson
 import Data.Aeson.Casing
 import Data.Aeson.TH
@@ -68,6 +67,7 @@ import Data.URL.Template
 import Database.PG.Query qualified as Q
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers ()
@@ -362,7 +362,6 @@ instance Cacheable PGConnectionParams
 
 instance Hashable PGConnectionParams
 
-$(makeLenses ''PGConnectionParams)
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''PGConnectionParams)
 
 instance FromJSON PGConnectionParams where
@@ -485,11 +484,11 @@ getEnv env k = do
 
 -- default scalar names
 intScalar, floatScalar, stringScalar, boolScalar, idScalar :: G.Name
-intScalar = $$(G.litName "Int")
-floatScalar = $$(G.litName "Float")
-stringScalar = $$(G.litName "String")
-boolScalar = $$(G.litName "Boolean")
-idScalar = $$(G.litName "ID")
+intScalar = G._Int
+floatScalar = G._Float
+stringScalar = G._String
+boolScalar = G._Boolean
+idScalar = G._ID
 
 -- | Various user-controlled configuration for metrics used by Pro
 data MetricsConfig = MetricsConfig

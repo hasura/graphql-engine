@@ -56,6 +56,7 @@ import Data.Text qualified as T
 import Data.Text.Extended
 import Database.PG.Query qualified as Q
 import Hasura.Base.Error
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
@@ -594,7 +595,7 @@ mkScalarTypeName (PGCompositeScalar compositeScalarType) =
   -- both these types (scalar and object type with same name).
   -- To avoid this, we suffix the table name with `_scalar`
   -- and create a new scalar type
-  (<> $$(G.litName "_scalar")) <$> G.mkName compositeScalarType
+  (<> G.__scalar) <$> G.mkName compositeScalarType
     `onNothing` throw400
       ValidationFailed
       ( "cannot use SQL type " <> compositeScalarType <<> " in the GraphQL schema because its name is not a "

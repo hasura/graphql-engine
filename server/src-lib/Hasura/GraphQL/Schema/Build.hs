@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 -- | This module provides building blocks for the GraphQL Schema that the
 -- GraphQL Engine presents.
 --
@@ -57,6 +55,7 @@ where
 
 import Data.Text.Extended
 import Hasura.GraphQL.Parser hiding (EnumValueInfo, field)
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Schema.Backend (MonadBuildSchema)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Mutation
@@ -79,9 +78,9 @@ buildTableQueryFields sourceName tableName tableInfo gqlName = do
   -- select table
   selectName <- mkRootFieldName . fromMaybe gqlName $ _crfName _tcrfSelect
   -- select table by pk
-  selectPKName <- mkRootFieldName . fromMaybe (gqlName <> $$(G.litName "_by_pk")) $ _crfName _tcrfSelectByPk
+  selectPKName <- mkRootFieldName . fromMaybe (gqlName <> G.__by_pk) $ _crfName _tcrfSelectByPk
   -- select table aggregate
-  selectAggName <- mkRootFieldName . fromMaybe (gqlName <> $$(G.litName "_aggregate")) $ _crfName _tcrfSelectAggregate
+  selectAggName <- mkRootFieldName . fromMaybe (gqlName <> G.__aggregate) $ _crfName _tcrfSelectAggregate
   catMaybes
     <$> sequenceA
       [ optionalFieldParser QDBMultipleRows $ selectTable sourceName tableInfo selectName selectDesc,
@@ -108,8 +107,8 @@ buildTableInsertMutationFields ::
   G.Name ->
   m [FieldParser n (AnnotatedInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 buildTableInsertMutationFields backendInsertAction scenario sourceName tableName tableInfo gqlName = do
-  insertName <- mkRootFieldName . fromMaybe ($$(G.litName "insert_") <> gqlName) $ _crfName _tcrfInsert
-  insertOneName <- mkRootFieldName . fromMaybe ($$(G.litName "insert_") <> gqlName <> $$(G.litName "_one")) $ _crfName _tcrfInsertOne
+  insertName <- mkRootFieldName . fromMaybe (G._insert_ <> gqlName) $ _crfName _tcrfInsert
+  insertOneName <- mkRootFieldName . fromMaybe (G._insert_ <> gqlName <> G.__one) $ _crfName _tcrfInsertOne
   insert <- insertIntoTable backendInsertAction scenario sourceName tableInfo insertName insertDesc
   -- Select permissions are required for insertOne: the selection set is the
   -- same as a select on that table, and it therefore can't be populated if the
@@ -162,12 +161,12 @@ buildTableUpdateMutationFields ::
   G.Name ->
   m [FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 buildTableUpdateMutationFields mkBackendUpdate sourceName tableName tableInfo gqlName = do
-  let viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
+  let _viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   backendUpdate <- mkBackendUpdate tableInfo
   -- update table
-  updateName <- mkRootFieldName . fromMaybe ($$(G.litName "update_") <> gqlName) $ _crfName _tcrfUpdate
+  updateName <- mkRootFieldName . fromMaybe (G._update_ <> gqlName) $ _crfName _tcrfUpdate
   -- update table by pk
-  updatePKName <- mkRootFieldName . fromMaybe ($$(G.litName "update_") <> gqlName <> $$(G.litName "_by_pk")) $ _crfName _tcrfUpdateByPk
+  updatePKName <- mkRootFieldName . fromMaybe (G._update_ <> gqlName <> G.__by_pk) $ _crfName _tcrfUpdateByPk
   update <- updateTable backendUpdate sourceName tableInfo updateName updateDesc
   -- Primary keys can only be tested in the `where` clause if a primary key
   -- exists on the table and if the user has select permissions on all columns
@@ -191,9 +190,9 @@ buildTableDeleteMutationFields ::
   m [FieldParser n (AnnDelG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 buildTableDeleteMutationFields sourceName tableName tableInfo gqlName = do
   -- delete from table
-  deleteName <- mkRootFieldName . fromMaybe ($$(G.litName "delete_") <> gqlName) $ _crfName _tcrfDelete
+  deleteName <- mkRootFieldName . fromMaybe (G._delete_ <> gqlName) $ _crfName _tcrfDelete
   -- delete from table by pk
-  deletePKName <- mkRootFieldName . fromMaybe ($$(G.litName "delete_") <> gqlName <> $$(G.litName "_by_pk")) $ _crfName _tcrfDeleteByPk
+  deletePKName <- mkRootFieldName . fromMaybe (G._delete_ <> gqlName <> G.__by_pk) $ _crfName _tcrfDeleteByPk
   delete <- deleteFromTable sourceName tableInfo deleteName deleteDesc
   -- Primary keys can only be tested in the `where` clause if the user has
   -- select permissions for them, which at the very least requires select

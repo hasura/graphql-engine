@@ -21,6 +21,7 @@ import Hasura.GraphQL.Parser
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Common
@@ -53,7 +54,7 @@ onConflictFieldParser sourceName tableInfo = do
   let maybeConstraints = tciUniqueOrPrimaryKeyConstraints . _tiCoreInfo $ tableInfo
   let maybeConflictObject = conflictObjectParser sourceName tableInfo <$> maybeConstraints <*> updatePerms
   case maybeConflictObject of
-    Just conflictObject -> conflictObject <&> P.fieldOptional $$(G.litName "on_conflict") (Just "upsert condition")
+    Just conflictObject -> conflictObject <&> P.fieldOptional G._on_conflict (Just "upsert condition")
     Nothing -> return $ pure Nothing
 
 -- | Create a parser for the @_on_conflict@ object of the given table.
@@ -70,14 +71,14 @@ conflictObjectParser sourceName tableInfo constraints updatePerms = do
   constraintParser <- conflictConstraint constraints sourceName tableInfo
   whereExpParser <- boolExp sourceName tableInfo
   tableGQLName <- getTableGQLName tableInfo
-  objectName <- P.mkTypename $ tableGQLName <> $$(G.litName "_on_conflict")
+  objectName <- P.mkTypename $ tableGQLName <> G.__on_conflict
 
   let presetColumns = partialSQLExpToUnpreparedValue <$> upiSet updatePerms
       updateFilter = fmap partialSQLExpToUnpreparedValue <$> upiFilter updatePerms
       objectDesc = G.Description $ "on_conflict condition type for table " <>> tableName
-      constraintName = $$(G.litName "constraint")
-      columnsName = $$(G.litName "update_columns")
-      whereExpName = $$(G.litName "where")
+      constraintName = G._constraint
+      columnsName = G._update_columns
+      whereExpName = G._where
 
   pure $
     P.object objectName (Just objectDesc) $ do
@@ -119,7 +120,7 @@ conflictConstraint constraints sourceName tableInfo =
         ( P.Definition name (Just "unique or primary key constraint") P.EnumValueInfo,
           _cName constraint
         )
-    enumName <- P.mkTypename $ tableGQLName <> $$(G.litName "_constraint")
+    enumName <- P.mkTypename $ tableGQLName <> G.__constraint
     let enumDesc = G.Description $ "unique or primary key constraints on table " <>> tableName
     pure $ P.enum enumName (Just enumDesc) constraintEnumValues
   where

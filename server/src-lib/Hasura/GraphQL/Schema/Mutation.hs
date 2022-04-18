@@ -25,6 +25,7 @@ import Hasura.GraphQL.Parser
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Common
@@ -82,7 +83,7 @@ insertIntoTable backendInsertAction scenario sourceName tableInfo fieldName desc
   where
     mkObjectsArg objectParser =
       P.field
-        $$(G.litName "objects")
+        G._objects
         (Just "the rows to be inserted")
         (P.list objectParser)
 
@@ -126,7 +127,7 @@ insertOneIntoTable backendInsertAction scenario sourceName tableInfo fieldName d
   where
     mkObjectArg objectParser =
       P.field
-        $$(G.litName "object")
+        G._object
         (Just "the row to be inserted")
         objectParser
 
@@ -157,7 +158,7 @@ tableFieldsInput sourceName tableInfo =
   memoizeOn 'tableFieldsInput (sourceName, tableName) do
     tableGQLName <- getTableGQLName tableInfo
     objectFields <- traverse mkFieldParser (Map.elems allFields)
-    objectName <- P.mkTypename $ tableGQLName <> $$(G.litName "_insert_input")
+    objectName <- P.mkTypename $ tableGQLName <> G.__insert_input
     let objectDesc = G.Description $ "input type for inserting data into table " <>> tableName
     pure $ P.object objectName (Just objectDesc) $ coalesceFields objectFields
   where
@@ -246,12 +247,12 @@ objectRelationshipInput backendInsertAction sourceName tableInfo = runMaybeT $ d
   insertPerms <- MaybeT $ (_permIns =<<) <$> tablePermissions tableInfo
   lift $ memoizeOn 'objectRelationshipInput (sourceName, tableName) do
     updatePerms <- (_permUpd =<<) <$> tablePermissions tableInfo
-    selectPerms <- (_permSel =<<) <$> tablePermissions tableInfo
+    _selectPerms <- (_permSel =<<) <$> tablePermissions tableInfo
     tableGQLName <- getTableGQLName tableInfo
     objectParser <- tableFieldsInput sourceName tableInfo
     backendInsertParser <- backendInsertAction sourceName tableInfo
-    inputName <- P.mkTypename $ tableGQLName <> $$(G.litName "_obj_rel_insert_input")
-    let objectName = $$(G.litName "data")
+    inputName <- P.mkTypename $ tableGQLName <> G.__obj_rel_insert_input
+    let objectName = G._data
         inputDesc = G.Description $ "input type for inserting object relation for remote table " <>> tableName
         inputParser = do
           backendInsert <- backendInsertParser
@@ -279,12 +280,12 @@ arrayRelationshipInput backendInsertAction sourceName tableInfo = runMaybeT $ do
   insertPerms <- MaybeT $ (_permIns =<<) <$> tablePermissions tableInfo
   lift $ memoizeOn 'arrayRelationshipInput (sourceName, tableName) do
     updatePerms <- (_permUpd =<<) <$> tablePermissions tableInfo
-    selectPerms <- (_permSel =<<) <$> tablePermissions tableInfo
+    _selectPerms <- (_permSel =<<) <$> tablePermissions tableInfo
     tableGQLName <- getTableGQLName tableInfo
     objectParser <- tableFieldsInput sourceName tableInfo
     backendInsertParser <- backendInsertAction sourceName tableInfo
-    inputName <- P.mkTypename $ tableGQLName <> $$(G.litName "_arr_rel_insert_input")
-    let objectsName = $$(G.litName "data")
+    inputName <- P.mkTypename $ tableGQLName <> G.__arr_rel_insert_input
+    let objectsName = G._data
         inputDesc = G.Description $ "input type for inserting array relation for remote table " <>> tableName
         inputParser = do
           backendInsert <- backendInsertParser
@@ -348,7 +349,7 @@ deleteFromTable sourceName tableInfo fieldName description = runMaybeT $ do
   guard $ isMutable viIsInsertable viewInfo
   deletePerms <- MaybeT $ (_permDel =<<) <$> tablePermissions tableInfo
   lift do
-    let whereName = $$(G.litName "where")
+    let whereName = G._where
         whereDesc = "filter the rows which have to be deleted"
     whereArg <- P.field whereName (Just whereDesc) <$> boolExp sourceName tableInfo
     selection <- mutationSelectionSet sourceName tableInfo
@@ -414,13 +415,13 @@ mutationSelectionSet sourceName tableInfo =
   memoizeOn 'mutationSelectionSet (sourceName, tableName) do
     tableGQLName <- getTableGQLName tableInfo
     returning <- runMaybeT do
-      permissions <- MaybeT $ tableSelectPermissions tableInfo
+      _permissions <- MaybeT $ tableSelectPermissions tableInfo
       tableSet <- MaybeT $ tableSelectionList sourceName tableInfo
-      let returningName = $$(G.litName "returning")
+      let returningName = G._returning
           returningDesc = "data from the rows affected by the mutation"
       pure $ IR.MRet <$> P.subselection_ returningName (Just returningDesc) tableSet
-    selectionName <- P.mkTypename $ tableGQLName <> $$(G.litName "_mutation_response")
-    let affectedRowsName = $$(G.litName "affected_rows")
+    selectionName <- P.mkTypename $ tableGQLName <> G.__mutation_response
+    let affectedRowsName = G._affected_rows
         affectedRowsDesc = "number of rows affected by the mutation"
         selectionDesc = G.Description $ "response of any mutation on the table " <>> tableName
 

@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 -- | Helper functions for generating the schema of database tables
 module Hasura.GraphQL.Schema.Table
   ( getTableGQLName,
@@ -22,6 +20,7 @@ import Data.Text.Extended
 import Hasura.Base.Error (QErr)
 import Hasura.GraphQL.Parser (Kind (..), Parser)
 import Hasura.GraphQL.Parser qualified as P
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
 import Hasura.Prelude
@@ -68,7 +67,7 @@ tableSelectColumnsEnum ::
 tableSelectColumnsEnum sourceName tableInfo = do
   tableGQLName <- getTableGQLName @b tableInfo
   columns <- tableSelectColumns sourceName tableInfo
-  enumName <- P.mkTypename $ tableGQLName <> $$(G.litName "_select_column")
+  enumName <- P.mkTypename $ tableGQLName <> G.__select_column
   let description =
         Just $
           G.Description $
@@ -98,7 +97,7 @@ tableUpdateColumnsEnum ::
 tableUpdateColumnsEnum tableInfo = do
   tableGQLName <- getTableGQLName tableInfo
   columns <- tableUpdateColumns tableInfo
-  enumName <- P.mkTypename $ tableGQLName <> $$(G.litName "_update_column")
+  enumName <- P.mkTypename $ tableGQLName <> G.__update_column
   let tableName = tableInfoName tableInfo
       enumDesc = Just $ G.Description $ "update columns of table " <>> tableName
       enumValues = do
@@ -121,11 +120,11 @@ updateColumnsPlaceholderParser tableInfo = do
     Just e -> pure $ Just <$> e
     Nothing -> do
       tableGQLName <- getTableGQLName tableInfo
-      enumName <- P.mkTypename $ tableGQLName <> $$(G.litName "_update_column")
+      enumName <- P.mkTypename $ tableGQLName <> G.__update_column
       pure $
         P.enum enumName (Just $ G.Description $ "placeholder for update columns of table " <> tableInfoName tableInfo <<> " (current role has no relevant permissions)") $
           pure
-            ( P.Definition @P.EnumValueInfo $$(G.litName "_PLACEHOLDER") (Just $ G.Description "placeholder (do not use)") P.EnumValueInfo,
+            ( P.Definition @P.EnumValueInfo G.__PLACEHOLDER (Just $ G.Description "placeholder (do not use)") P.EnumValueInfo,
               Nothing
             )
 

@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 -- |
 -- = Remote Schema Permissions Validation
 --
@@ -47,6 +45,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Base.Error
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.Prelude
 import Hasura.RQL.Types hiding (GraphQLType, defaultScalars)
 import Hasura.Server.Utils (englishList, isSessionVariable)
@@ -169,6 +168,9 @@ data RoleBasedSchemaValidationError
     UnexpectedNonMatchingNames !G.Name !G.Name !GraphQLType
   deriving (Show, Eq)
 
+{-
+NOTE: Unused. Should we remove?
+
 convertTypeDef :: G.TypeDefinition [G.Name] a -> G.TypeDefinition () a
 convertTypeDef (G.TypeDefinitionInterface (G.InterfaceTypeDefinition desc name dirs flds _)) =
   G.TypeDefinitionInterface $ G.InterfaceTypeDefinition desc name dirs flds ()
@@ -177,6 +179,7 @@ convertTypeDef (G.TypeDefinitionInputObject inpObj) = G.TypeDefinitionInputObjec
 convertTypeDef (G.TypeDefinitionEnum s) = G.TypeDefinitionEnum s
 convertTypeDef (G.TypeDefinitionUnion s) = G.TypeDefinitionUnion s
 convertTypeDef (G.TypeDefinitionObject s) = G.TypeDefinitionObject s
+-}
 
 {- Note [Remote Schema Argument Presets]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -361,21 +364,25 @@ showRoleBasedSchemaValidationError = \case
       Just defaultValue -> toTxt defaultValue
       Nothing -> ""
 
+{-
+NOTE: Unused. Should we remove?
+
 presetValueScalar :: G.ScalarTypeDefinition
-presetValueScalar = G.ScalarTypeDefinition Nothing $$(G.litName "PresetValue") mempty
+presetValueScalar = G.ScalarTypeDefinition Nothing G._PresetValue mempty
 
 presetDirectiveDefn :: G.DirectiveDefinition G.InputValueDefinition
 presetDirectiveDefn =
-  G.DirectiveDefinition Nothing $$(G.litName "preset") [directiveArg] directiveLocations
+  G.DirectiveDefinition Nothing G._preset [directiveArg] directiveLocations
   where
     gType = G.TypeNamed (G.Nullability False) $ G._stdName presetValueScalar
 
     directiveLocations = map G.DLTypeSystem [G.TSDLARGUMENT_DEFINITION, G.TSDLINPUT_FIELD_DEFINITION]
 
-    directiveArg = G.InputValueDefinition Nothing $$(G.litName "value") gType Nothing mempty
+    directiveArg = G.InputValueDefinition Nothing G._value gType Nothing mempty
 
 presetDirectiveName :: G.Name
-presetDirectiveName = $$(G.litName "preset")
+presetDirectiveName = G._preset
+-}
 
 lookupInputType ::
   G.SchemaDocument ->
@@ -488,15 +495,15 @@ parsePresetDirective ::
   G.Name ->
   G.Directive Void ->
   m (G.Value RemoteSchemaVariable)
-parsePresetDirective gType parentArgName (G.Directive name args) = do
+parsePresetDirective gType parentArgName (G.Directive _name args) = do
   if
       | Map.null args -> refute $ pure $ NoPresetArgumentFound
       | otherwise -> do
         val <-
-          onNothing (Map.lookup $$(G.litName "value") args) $
+          onNothing (Map.lookup G._value args) $
             refute $ pure $ InvalidPresetArgument parentArgName
         isStatic <-
-          case (Map.lookup $$(G.litName "static") args) of
+          case (Map.lookup G._static args) of
             Nothing -> pure False
             (Just (G.VBoolean b)) -> pure b
             _ -> refute $ pure $ InvalidStaticValue
@@ -562,7 +569,7 @@ validateDirectives providedDirectives upstreamDirectives directiveLocation paren
   where
     upstreamDirectivesMap = mapFromL G._dName upstreamDirectives
 
-    presetFilterFn = (== $$(G.litName "preset")) . G._dName
+    presetFilterFn = (== G._preset) . G._dName
 
     presetDirectives = filter presetFilterFn providedDirectives
 
@@ -903,7 +910,7 @@ getSchemaDocIntrospection providedTypeDefns (queryRoot, mutationRoot, subscripti
           G.TypeDefinitionUnion union' -> pure $ G.TypeDefinitionUnion union'
           G.TypeDefinitionInputObject inpObj -> pure $ G.TypeDefinitionInputObject inpObj
       remoteSchemaIntrospection = RemoteSchemaIntrospection $ Map.fromListOn getTypeName modifiedTypeDefns
-   in IntrospectionResult remoteSchemaIntrospection (fromMaybe $$(G.litName "Query") queryRoot) mutationRoot subscriptionRoot
+   in IntrospectionResult remoteSchemaIntrospection (fromMaybe G._Query queryRoot) mutationRoot subscriptionRoot
 
 -- | validateRemoteSchema accepts two arguments, the `SchemaDocument` of
 --   the role-based schema, that is provided by the user and the `SchemaIntrospection`

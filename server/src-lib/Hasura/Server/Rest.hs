@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.Server.Rest
   ( runCustomEndpoint,
     RestRequest (..),
@@ -22,6 +20,7 @@ import Hasura.GraphQL.Execute qualified as E
 import Hasura.GraphQL.Execute.Backend qualified as EB
 import Hasura.GraphQL.Logging (MonadQueryLog)
 import Hasura.GraphQL.ParameterizedQueryHash (ParameterizedQueryHashList (..))
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Transport.HTTP qualified as GH
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.HTTP
@@ -66,22 +65,22 @@ resolveVar varName (These expectedVar providedVar) =
             (Just J.Null, True) -> pure Nothing
             (decoded, _)
               | typeName == boolScalar && T.null l -> Right $ Just $ J.Bool True -- Key present but value missing for bools defaults to True.
-              | typeName == $$(G.litName "UUID") -> Right $ Just $ J.String l
-              | typeName == $$(G.litName "uuid") -> Right $ Just $ J.String l
+              | typeName == G._UUID -> Right $ Just $ J.String l
+              | typeName == G._uuid -> Right $ Just $ J.String l
               | typeName == idScalar -> Right $ Just $ J.String l -- "ID" -- Note: Console doesn't expose this as a column type.
               | otherwise -> case decoded of
                 (Just J.Null) -> Left $ "Null or missing value for non-nullable variable: " <> G.unName varName
                 (Just x@(J.Bool _))
                   | typeName == boolScalar -> pure $ Just x -- "Boolean"
-                  | typeName == $$(G.litName "Bool") -> pure $ Just x
+                  | typeName == G._Bool -> pure $ Just x
                   | otherwise -> Left $ "Expected " <> toTxt typeName <> " for variable " <> G.unName varName <> " got Bool"
                 (Just x@(J.Number _))
                   | typeName == intScalar -> pure $ Just x -- "Int"
                   | typeName == floatScalar -> pure $ Just x -- "Float"
-                  | typeName == $$(G.litName "Number") -> pure $ Just x
-                  | typeName == $$(G.litName "Double") -> pure $ Just x
-                  | typeName == $$(G.litName "float8") -> pure $ Just x
-                  | typeName == $$(G.litName "numeric") -> pure $ Just x
+                  | typeName == G._Number -> pure $ Just x
+                  | typeName == G._Double -> pure $ Just x
+                  | typeName == G._float8 -> pure $ Just x
+                  | typeName == G._numeric -> pure $ Just x
                   | otherwise -> Left $ "Expected " <> toTxt typeName <> " for variable " <> G.unName varName <> " got Number"
                 _ -> Left ("Type of URL parameter for variable " <> G.unName varName <> " not supported - Consider putting it in the request body: " <> tshow l)
     -- TODO: This is a fallthrough case and is still required

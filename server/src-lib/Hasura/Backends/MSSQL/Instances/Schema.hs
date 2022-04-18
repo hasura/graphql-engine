@@ -20,6 +20,7 @@ import Hasura.Backends.MSSQL.Types.Update (BackendUpdate (..), UpdateOperator (.
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser hiding (EnumValueInfo, field)
 import Hasura.GraphQL.Parser qualified as P
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Internal.Parser hiding (field)
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
@@ -129,6 +130,10 @@ msBuildTableUpdateMutationFields sourceName tableName tableInfo gqlName = do
         gqlName
   pure . fold @Maybe @[_] $ fieldParsers
 
+{-
+NOTE: We currently use 'GSB.buildTableDeleteMutationFields' instead of
+this. Should we save it?
+
 msBuildTableDeleteMutationFields ::
   MonadBuildSchema 'MSSQL r m n =>
   SourceName ->
@@ -140,6 +145,7 @@ msBuildTableDeleteMutationFields ::
   m [a]
 msBuildTableDeleteMutationFields _sourceName _tableName _tableInfo _gqlName _delPerns _selPerms =
   pure []
+-}
 
 msBuildFunctionQueryFields ::
   MonadBuildSchema 'MSSQL r m n =>
@@ -294,22 +300,22 @@ msOrderByOperators ::
     )
 msOrderByOperators =
   NE.fromList
-    [ ( define $$(G.litName "asc") "in ascending order, nulls first",
+    [ ( define G._asc "in ascending order, nulls first",
         (MSSQL.AscOrder, MSSQL.NullsFirst)
       ),
-      ( define $$(G.litName "asc_nulls_first") "in ascending order, nulls first",
+      ( define G._asc_nulls_first "in ascending order, nulls first",
         (MSSQL.AscOrder, MSSQL.NullsFirst)
       ),
-      ( define $$(G.litName "asc_nulls_last") "in ascending order, nulls last",
+      ( define G._asc_nulls_last "in ascending order, nulls last",
         (MSSQL.AscOrder, MSSQL.NullsLast)
       ),
-      ( define $$(G.litName "desc") "in descending order, nulls last",
+      ( define G._desc "in descending order, nulls last",
         (MSSQL.DescOrder, MSSQL.NullsLast)
       ),
-      ( define $$(G.litName "desc_nulls_first") "in descending order, nulls first",
+      ( define G._desc_nulls_first "in descending order, nulls first",
         (MSSQL.DescOrder, MSSQL.NullsFirst)
       ),
-      ( define $$(G.litName "desc_nulls_last") "in descending order, nulls last",
+      ( define G._desc_nulls_last "in descending order, nulls last",
         (MSSQL.DescOrder, MSSQL.NullsLast)
       )
     ]
@@ -333,13 +339,13 @@ msComparisonExps = P.memoize 'comparisonExps \columnType -> do
 
   -- parsers used for individual values
   typedParser <- columnParser columnType (G.Nullability False)
-  nullableTextParser <- columnParser (ColumnScalar @'MSSQL MSSQL.VarcharType) (G.Nullability True)
+  _nullableTextParser <- columnParser (ColumnScalar @'MSSQL MSSQL.VarcharType) (G.Nullability True)
   textParser <- columnParser (ColumnScalar @'MSSQL MSSQL.VarcharType) (G.Nullability False)
   let columnListParser = fmap openValueOrigin <$> P.list typedParser
-      textListParser = fmap openValueOrigin <$> P.list textParser
+      _textListParser = fmap openValueOrigin <$> P.list textParser
 
   -- field info
-  let name = P.getName typedParser <> $$(G.litName "_MSSQL_comparison_exp")
+  let name = P.getName typedParser <> G.__MSSQL_comparison_exp
       desc =
         G.Description $
           "Boolean expression to compare columns of type "
@@ -362,45 +368,45 @@ msComparisonExps = P.memoize 'comparisonExps \columnType -> do
               -- Ops for String like types
               guard (isScalarColumnWhere (`elem` MSSQL.stringTypes) columnType)
                 *> [ P.fieldOptional
-                       $$(G.litName "_like")
+                       G.__like
                        (Just "does the column match the given pattern")
                        (ALIKE . mkParameter <$> typedParser),
                      P.fieldOptional
-                       $$(G.litName "_nlike")
+                       G.__nlike
                        (Just "does the column NOT match the given pattern")
                        (ANLIKE . mkParameter <$> typedParser)
                    ],
               -- Ops for Geometry/Geography types
               guard (isScalarColumnWhere (`elem` MSSQL.geoTypes) columnType)
                 *> [ P.fieldOptional
-                       $$(G.litName "_st_contains")
+                       G.__st_contains
                        (Just "does the column contain the given value")
                        (ABackendSpecific . MSSQL.ASTContains . mkParameter <$> typedParser),
                      P.fieldOptional
-                       $$(G.litName "_st_equals")
+                       G.__st_equals
                        (Just "is the column equal to given value (directionality is ignored)")
                        (ABackendSpecific . MSSQL.ASTEquals . mkParameter <$> typedParser),
                      P.fieldOptional
-                       $$(G.litName "_st_intersects")
+                       G.__st_intersects
                        (Just "does the column spatially intersect the given value")
                        (ABackendSpecific . MSSQL.ASTIntersects . mkParameter <$> typedParser),
                      P.fieldOptional
-                       $$(G.litName "_st_overlaps")
+                       G.__st_overlaps
                        (Just "does the column 'spatially overlap' (intersect but not completely contain) the given value")
                        (ABackendSpecific . MSSQL.ASTOverlaps . mkParameter <$> typedParser),
                      P.fieldOptional
-                       $$(G.litName "_st_within")
+                       G.__st_within
                        (Just "is the column contained in the given value")
                        (ABackendSpecific . MSSQL.ASTWithin . mkParameter <$> typedParser)
                    ],
               -- Ops for Geometry types
               guard (isScalarColumnWhere (MSSQL.GeometryType ==) columnType)
                 *> [ P.fieldOptional
-                       $$(G.litName "_st_crosses")
+                       G.__st_crosses
                        (Just "does the column cross the given geometry value")
                        (ABackendSpecific . MSSQL.ASTCrosses . mkParameter <$> typedParser),
                      P.fieldOptional
-                       $$(G.litName "_st_touches")
+                       G.__st_touches
                        (Just "does the column have at least one point in common with the given geometry value")
                        (ABackendSpecific . MSSQL.ASTTouches . mkParameter <$> typedParser)
                    ]
@@ -416,7 +422,7 @@ msCountTypeInput ::
   InputFieldsParser n (IR.CountDistinct -> CountType 'MSSQL)
 msCountTypeInput = \case
   Just columnEnum -> do
-    column <- P.fieldOptional $$(G.litName "column") Nothing columnEnum
+    column <- P.fieldOptional G._column Nothing columnEnum
     pure $ flip mkCountType column
   Nothing -> pure $ flip mkCountType Nothing
   where
@@ -436,6 +442,9 @@ msComputedField ::
   m (Maybe (FieldParser n (AnnotatedField 'MSSQL)))
 msComputedField _sourceName _fieldInfo _table _tableInfo = pure Nothing
 
+{-
+NOTE: Unused, should we remove?
+
 -- | Remote join field parser.
 -- Currently unsupported: returns Nothing for now.
 msRemoteRelationshipField ::
@@ -443,6 +452,7 @@ msRemoteRelationshipField ::
   RemoteFieldInfo (DBJoinField 'MSSQL) ->
   m (Maybe [FieldParser n (AnnotatedField 'MSSQL)])
 msRemoteRelationshipField _remoteFieldInfo = pure Nothing
+-}
 
 -- | The 'node' root field of a Relay request. Relay is currently unsupported on MSSQL,
 -- meaning this parser will never be called: any attempt to create this parser should
