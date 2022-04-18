@@ -68,10 +68,11 @@ func (r *RemoteSchemaConfig) Build() (map[string]interface{}, metadataobject.Err
 }
 
 type remoteSchema struct {
-	Name        yaml.Node    `yaml:"name,omitempty"`
-	Defintion   yaml.Node    `yaml:"definition,omitempty"`
-	Comment     yaml.Node    `yaml:"comment,omitempty"`
-	Permissions []permission `yaml:"permissions,omitempty"`
+	Name                yaml.Node    `yaml:"name,omitempty"`
+	Defintion           yaml.Node    `yaml:"definition,omitempty"`
+	Comment             yaml.Node    `yaml:"comment,omitempty"`
+	Permissions         []permission `yaml:"permissions,omitempty"`
+	RemoteRelationships yaml.Node    `yaml:"remote_relationships,omitempty"`
 }
 
 type permission struct {
