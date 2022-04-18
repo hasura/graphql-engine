@@ -11,7 +11,7 @@
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="hs-pragma">{-# SOURCE</span><span> </span><span class="hs-pragma">#-}</span><span> </span><span class="annot"><a href="Hasura.Server.API.Metadata.html"><span class="hs-identifier">Hasura.Server.API.Metadata</span></a></span><span>
 </span><span id="line-12"></span><span>
 </span><span id="line-13"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Server.API.Backend.html#BackendAPI"><span class="hs-identifier hs-type">BackendAPI</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-14"></span><span>  </span><span id="local-6989586621688535227"><span class="annot"><span class="annottext">metadataV1CommandParsers :: [CommandParser]
+</span><span id="line-14"></span><span>  </span><span id="local-6989586621688534190"><span class="annot"><span class="annottext">metadataV1CommandParsers :: [CommandParser]
 </span><a href="Hasura.Server.API.Backend.html#metadataV1CommandParsers"><span class="hs-identifier hs-var hs-var hs-var hs-var">metadataV1CommandParsers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-15"></span><span>    </span><span class="annot"><span class="annottext">[[CommandParser]] -&gt; [CommandParser]
 forall (t :: * -&gt; *) a. Foldable t =&gt; t [a] -&gt; [a]
@@ -70,8 +70,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser
 </span><span id="line-29"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-30"></span><span>
 </span><span id="line-31"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Server.API.Backend.html#BackendAPI"><span class="hs-identifier hs-type">BackendAPI</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Citus"><span class="hs-identifier hs-type">Citus</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-32"></span><span>  </span><span id="local-6989586621688535211"><span class="annot"><span class="annottext">metadataV1CommandParsers :: [CommandParser]
-</span><a href="#local-6989586621688535211"><span class="hs-identifier hs-var hs-var hs-var hs-var">metadataV1CommandParsers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-32"></span><span>  </span><span id="local-6989586621688534174"><span class="annot"><span class="annottext">metadataV1CommandParsers :: [CommandParser]
+</span><a href="#local-6989586621688534174"><span class="hs-identifier hs-var hs-var hs-var hs-var">metadataV1CommandParsers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-33"></span><span>    </span><span class="annot"><span class="annottext">[[CommandParser]] -&gt; [CommandParser]
 forall (t :: * -&gt; *) a. Foldable t =&gt; t [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">concat</span></span><span>

@@ -1,4 +1,4 @@
-This note is in [Hasura.RQL.DDL.RemoteSchema.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/RemoteSchema/Permission.hs#L181).
+This note is in [Hasura.RQL.DDL.RemoteSchema.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/RemoteSchema/Permission.hs#L184).
 It is referenced at:
   - line 400 of [Hasura.RQL.Types.RemoteSchema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/Types/RemoteSchema.hs#L400)
 
