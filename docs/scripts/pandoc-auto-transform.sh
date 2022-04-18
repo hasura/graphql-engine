@@ -19,7 +19,7 @@
 
 # run on only one file
 # ./docs/scripts/pandoc-auto-transform.sh "graphql/core/actions/create.rst"
-# pandoc "docs/$1" -f rst -t gfm -s -o "docs/docs/${1%}.txt";
+# pandoc "docs-old/$1" -f rst -t gfm -s -o "docs/docs/${1%}.txt";
 
 # run on list of files
 # Ref: https://stackoverflow.com/a/424142/10208226 to get list of changed files in a commit
@@ -28,7 +28,7 @@
 # files=( "graphql/core/databases/ms-sql-server/index.rst" "graphql/core/databases/ms-sql-server/mutations/index.rst" "graphql/core/databases/ms-sql-server/mutations/insert.rst" "graphql/core/databases/ms-sql-server/mutations/upsert.rst" "graphql/core/databases/postgres/mutations/upsert.rst" )
 # for f in "${files[@]}"; do
 #     mkdir -pv -- "docs/${f%/*}" && touch -- "docs/docs/${f%}.txt";
-#     pandoc "docs/$f" -f rst -t gfm -s -o "docs/docs/${f%}.txt";
+#     pandoc "docs-old/$f" -f rst -t gfm -s -o "docs/docs/${f%}.txt";
 # done
 
   # mkdir -pv -- "$1/${f%/*}" && touch -- "$1/${f%}.txt";
