@@ -31,6 +31,8 @@
 
 3. Install console assets
 
+   This step may require you to have python2 installed and available in your $PATH.
+
    ```sh
    cd console
    npm ci
@@ -43,6 +45,7 @@
     ```sh
     export PKG_CONFIG_PATH="/opt/homebrew/opt/libffi/lib/pkgconfig"
     export LDFLAGS="-L/opt/homebrew/opt/openssl@1.1/lib"
+    export CPPFLAGS="-I/opt/homebrew/opt/openssl@1.1/include"
 
     cd server
     python3 -m venv .python-venv
