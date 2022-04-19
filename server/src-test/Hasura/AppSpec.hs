@@ -5,7 +5,7 @@ module Hasura.AppSpec (spec) where
 import Control.Concurrent (threadDelay)
 import Control.Concurrent.Async qualified as Async
 import Control.Exception (throwIO)
-import Hasura.App (newShutdownLatch, shutdownGracefully, waitForShutdown)
+import Hasura.App (newShutdownLatch, shutdownGracefully, shuttingDown, waitForShutdown)
 import Hasura.Prelude
 import System.Timeout (timeout)
 import Test.Hspec
@@ -55,6 +55,12 @@ shutdownLatchSpec = do
       `shouldReturn` Just ()
     timeout 10_000 (waitForShutdown latch)
       `shouldReturn` Just ()
+
+  it "checks if a latch is ready for shutdown" $ do
+    latch <- newShutdownLatch
+    shuttingDown latch `shouldReturn` False
+    shutdownGracefully latch
+    shuttingDown latch `shouldReturn` True
 
 pollThrow :: Async.Async a -> IO (Maybe a)
 pollThrow async = do
