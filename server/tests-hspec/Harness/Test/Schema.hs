@@ -9,13 +9,16 @@ module Harness.Test.Schema
     ScalarValue (..),
     BackendScalarType (..),
     BackendScalarValue (..),
+    BackendScalarValueType (..),
+    quotedValue,
+    unquotedValue,
+    backendScalarValue,
     column,
     columnNull,
     defaultBackendScalarType,
     getBackendScalarType,
     defaultBackendScalarValue,
-    getBackendScalarValue,
-    formatBackendScalarValue,
+    formatBackendScalarValueType,
     parseUTCTimeOrError,
     trackTable,
     untrackTable,
@@ -114,6 +117,28 @@ getBackendScalarType bst fn =
     Just scalarType -> scalarType
     Nothing -> error $ "getBackendScalarType: BackendScalarType is Nothing, passed " <> show bst
 
+-- | This type represents how the serialization of a value should
+-- happen for a particular item. 'Quoted' text indicates that the text
+-- will be enclosed with double quotes whereas 'Unqouted' text will have
+-- none.
+--
+-- Usually, texts (or strings) should be represented as quoted and
+-- numbers might not require any quotes. Although, consult the
+-- particular database backend for the exact behavior. This type has
+-- been introduced to allow flexibility while construting values for
+-- the columns.
+data BackendScalarValueType = Quoted Text | Unquoted Text deriving (Show, Eq)
+
+quotedValue :: Text -> BackendScalarValueType
+quotedValue = Quoted
+
+unquotedValue :: Text -> BackendScalarValueType
+unquotedValue = Unquoted
+
+formatBackendScalarValueType :: BackendScalarValueType -> Text
+formatBackendScalarValueType (Quoted text) = "'" <> text <> "'"
+formatBackendScalarValueType (Unquoted text) = text
+
 -- | Generic type to represent ScalarValue for multiple backends. This
 -- type can be used to encapsulate the column values for different
 -- backends by providing explicit data for individual backend. This provides
@@ -127,11 +152,11 @@ getBackendScalarType bst fn =
 -- for Microsoft's SQL server backend. This type provides flexibility
 -- to provide such options.
 data BackendScalarValue = BackendScalarValue
-  { bsvMysql :: Maybe Text,
-    bsvCitus :: Maybe Text,
-    bsvPostgres :: Maybe Text,
-    bsvBigQuery :: Maybe Text,
-    bsvMssql :: Maybe Text
+  { bsvMysql :: Maybe BackendScalarValueType,
+    bsvCitus :: Maybe BackendScalarValueType,
+    bsvPostgres :: Maybe BackendScalarValueType,
+    bsvBigQuery :: Maybe BackendScalarValueType,
+    bsvMssql :: Maybe BackendScalarValueType
   }
   deriving (Show, Eq)
 
@@ -146,12 +171,6 @@ defaultBackendScalarValue =
       bsvBigQuery = Nothing,
       bsvMssql = Nothing
     }
-
--- | Access specific backend scalar value out of 'BackendScalarValue'
-getBackendScalarValue :: BackendScalarValue -> (BackendScalarValue -> Maybe Text) -> Text
-getBackendScalarValue bsv fn = case fn bsv of
-  Nothing -> error $ "getBackendScalarValue: BackendScalarValue is Nothing, passed " <> show bsv
-  Just scalarValue -> scalarValue
 
 -- | Generic scalar type for all backends, for simplicity.
 -- Ideally, we would be wiring in @'Backend@ specific scalar types here to make
@@ -176,9 +195,9 @@ data ScalarValue
   | VCustomValue BackendScalarValue
   deriving (Show, Eq)
 
-formatBackendScalarValue :: BackendScalarValue -> (BackendScalarValue -> Maybe Text) -> Text
-formatBackendScalarValue bsv fn = case fn bsv of
-  Nothing -> error $ "formatBackendScalarValue: Retrieved value is Nothing, passed " <> show bsv
+backendScalarValue :: BackendScalarValue -> (BackendScalarValue -> Maybe BackendScalarValueType) -> BackendScalarValueType
+backendScalarValue bsv fn = case fn bsv of
+  Nothing -> error $ "backendScalarValue: Retrieved value is Nothing, passed " <> show bsv
   Just scalarValue -> scalarValue
 
 -- | Helper function to construct 'Column's with common defaults

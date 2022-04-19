@@ -37,7 +37,7 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.State (State)
 import Harness.Test.Context (BackendType (BigQuery), defaultBackendTypeString, defaultSource)
-import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..), formatBackendScalarValue)
+import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..))
 import Harness.Test.Schema qualified as Schema
 import Hasura.Backends.BigQuery.Connection (initConnection)
 import Hasura.Backends.BigQuery.Execute qualified as Execute
@@ -162,7 +162,7 @@ serialize = \case
   VUTCTime t -> pack $ formatTime defaultTimeLocale "'%F %T'" t
   VBool b -> tshow @Int $ if b then 1 else 0
   VNull -> "NULL"
-  VCustomValue bsv -> "'" <> formatBackendScalarValue bsv bsvBigQuery <> "'"
+  VCustomValue bsv -> Schema.formatBackendScalarValueType $ Schema.backendScalarValue bsv bsvBigQuery
 
 mkRow :: [Schema.ScalarValue] -> Text
 mkRow row =

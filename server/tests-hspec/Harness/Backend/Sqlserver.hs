@@ -36,7 +36,7 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.State (State)
 import Harness.Test.Context (BackendType (SQLServer), defaultBackendTypeString, defaultSource)
-import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..), formatBackendScalarValue)
+import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..))
 import Harness.Test.Schema qualified as Schema
 import Hasura.Prelude (tshow)
 import System.Process.Typed
@@ -194,7 +194,7 @@ serialize = \case
   VUTCTime t -> pack $ formatTime defaultTimeLocale "'%F %T'" t
   VBool b -> tshow @Int $ if b then 1 else 0
   VNull -> "NULL"
-  VCustomValue bsv -> "'" <> formatBackendScalarValue bsv bsvMssql <> "'"
+  VCustomValue bsv -> Schema.formatBackendScalarValueType $ Schema.backendScalarValue bsv bsvMssql
 
 mkRow :: [Schema.ScalarValue] -> Text
 mkRow row =
