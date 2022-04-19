@@ -24948,9 +24948,9 @@ QueryParametersInfo :: !HashMap Name (ColumnValue b) -> !Seq (ColumnValue b) -> 
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> !HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_axe2G. Lens' (QueryParametersInfo b_axe2G) (Seq (ColumnValue b_axe2G))
-qpiReusableVariableValues :: forall b_axe2G. Lens' (QueryParametersInfo b_axe2G) (HashMap Name (ColumnValue b_axe2G))
-qpiReferencedSessionVariables :: forall b_axe2G. Lens' (QueryParametersInfo b_axe2G) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_axe1R. Lens' (QueryParametersInfo b_axe1R) (Seq (ColumnValue b_axe1R))
+qpiReusableVariableValues :: forall b_axe1R. Lens' (QueryParametersInfo b_axe1R) (HashMap Name (ColumnValue b_axe1R))
+qpiReferencedSessionVariables :: forall b_axe1R. Lens' (QueryParametersInfo b_axe1R) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
