@@ -5,6 +5,7 @@
 ### Bug fixes and improvements
 
 - server: update pg_dump to be compatible with postgres 14 (#7676)
+- console: add remote database relationships for views
 
 ## v2.6.0-beta.1
 
