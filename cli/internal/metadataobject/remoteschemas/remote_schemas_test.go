@@ -53,6 +53,16 @@ func TestRemoteSchemaConfig_Build(t *testing.T) {
 			"testdata/build_test/t3/want.golden.json",
 			false,
 		},
+		{
+			"t4",
+			"can build metadata with remote relationships",
+			fields{
+				MetadataDir: "testdata/build_test/t4/metadata",
+				logger:      logrus.New(),
+			},
+			"testdata/build_test/t4/want.golden.json",
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -201,6 +211,33 @@ func TestRemoteSchemaConfig_Export(t *testing.T) {
 			map[string][]byte{
 				"metadata/remote_schemas.yaml": func() []byte {
 					bs, err := ioutil.ReadFile("testdata/export_test/t4/want.remote_schemas.yaml")
+					assert.NoError(t, err)
+					return bs
+				}(),
+			},
+			false,
+		},
+		{
+			"t5",
+			"can export remote schema with remote relationships",
+			fields{
+				MetadataDir: "metadata",
+				logger:      logrus.New(),
+			},
+			args{
+				metadata: func() map[string]yaml.Node {
+					bs, err := ioutil.ReadFile("testdata/export_test/t5/metadata.json")
+					assert.NoError(t, err)
+					yamlbs, err := metadatautil.JSONToYAML(bs)
+					assert.NoError(t, err)
+					var v map[string]yaml.Node
+					assert.NoError(t, yaml.Unmarshal(yamlbs, &v))
+					return v
+				}(),
+			},
+			map[string][]byte{
+				"metadata/remote_schemas.yaml": func() []byte {
+					bs, err := ioutil.ReadFile("testdata/export_test/t5/want.remote_schemas.yaml")
 					assert.NoError(t, err)
 					return bs
 				}(),
