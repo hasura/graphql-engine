@@ -15,44 +15,10 @@
 
 - The `query` and `raw-query` field from http-logs for metadata requests are removed by default. Use
   `HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING` to renable those fields.
-- server: Fix BigQuery overflow issue when using Decimal/NUMERIC data
-  type. The Hasura Graphql Engine renders the column value as string instead
-  of numeric value to avoid precision loss. If your endpoint was
-  returning this result:
-
-``` json
-{
-  "data": {
-    "hasura_author": [
-      {
-        "name": "Author 3",
-        "tax_id": 44403
-      }
-    ]
-  }
-}
-```
-
-It would now instead return this:
-
-``` json
-{
-  "data": {
-    "hasura_author": [
-      {
-        "name": "Author 3",
-        "tax_id": "44403"
-      }
-    ]
-  }
-}
-```
-
-Note that the column type of `tax_id` is Decimal and in the second
-case it is represented as string.
 
 ### Bug fixes and improvements
 
+- server: Fix BigQuery overflow issue when using Decimal/BigDecimal data type.
 - server: remove 'query' and 'raw-query' field from logs for metadata queries by default. Use `HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING` to renable those fields.
 - server: `clear_metadata` now correctly archives event triggers and the drop source API drops indirect dependencies created by remote relationships when the dependent source is dropped.
 - server: fix inserting values into columns with case sensitive enum types for PostgreSQL/Citus backends (fix #4014)

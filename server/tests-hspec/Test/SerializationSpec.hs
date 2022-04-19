@@ -25,11 +25,7 @@ spec =
           mkLocalState = Context.noLocalState,
           setup = bigQuerySetup,
           teardown = const bigQueryTeardown,
-          customOptions =
-            Just $
-              Context.Options
-                { stringifyNumbers = True
-                }
+          customOptions = Nothing
         }
     ]
     tests
@@ -44,7 +40,6 @@ authorTable =
       tableData = []
     }
 
--- todo: Remove this when this gets merged: https://github.com/hasura/graphql-engine-mono/pull/4246
 bigQuerySetup :: (State, ()) -> IO ()
 bigQuerySetup (state, _) = do
   sourceMetadata <- Bigquery.defaultSourceMetadata
@@ -56,12 +51,13 @@ bigQuerySetup (state, _) = do
           id INT,
           name STRING,
           tax_id DECIMAL,
+          total_books BIGDECIMAL
         );
         |]
   Bigquery.runSql_
     [sql|
-        INSERT hasura.author (id, name, tax_id)
-        VALUES (1, "sibi", 5555555555555556666);
+        INSERT hasura.author (id, name, tax_id, total_books)
+        VALUES (1, "sibi", 5555555555555556666, 5555555555555556666);
         |]
 
   Bigquery.trackTable state authorTable
@@ -89,5 +85,26 @@ query MyQuery {
 data:
   hasura_author:
   - tax_id: "5555555555555556666"
-    id: 1
+    id: "1"
+|]
+  it "serde BigDecimal column" $ \state ->
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphql
+          state
+          [graphql|
+query MyQuery {
+  hasura_author(where: {total_books: {_eq: 5555555555555556666}}) {
+    id
+    tax_id
+    total_books
+  }
+}|]
+      )
+      [yaml|
+data:
+  hasura_author:
+  - tax_id: "5555555555555556666"
+    total_books: "5555555555555556666"
+    id: "1"
 |]
