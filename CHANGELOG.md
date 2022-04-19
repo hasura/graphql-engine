@@ -7,6 +7,7 @@
 - server: update pg_dump to be compatible with postgres 14 (#7676)
 - server: fix parsing remote relationship json definition from 1.x server catalog on migration (fix #7906)
 - server: Don't drop nested typed null fields in actions (fix #8237)
+- server: fixes remote relationships on actions (fix #8399)
 - console: add remote database relationships for views
 
 ## v2.6.0-beta.1
