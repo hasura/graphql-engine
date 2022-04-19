@@ -31,6 +31,7 @@ module Hasura.App
     setCatalogStateTx,
     shutdownGracefully,
     waitForShutdown,
+    shuttingDown,
 
     -- * Exported for testing
     mkHGEServer,
@@ -511,6 +512,10 @@ waitForShutdown = C.readMVar . unShutdownLatch
 -- latch.
 shutdownGracefully :: ShutdownLatch -> IO ()
 shutdownGracefully = void . flip C.tryPutMVar () . unShutdownLatch
+
+-- | Returns True if the latch is set for shutdown and vice-versa
+shuttingDown :: ShutdownLatch -> IO Bool
+shuttingDown latch = not <$> C.isEmptyMVar (unShutdownLatch latch)
 
 -- | If an exception is encountered , flush the log buffer and
 -- rethrow If we do not flush the log buffer on exception, then log lines
