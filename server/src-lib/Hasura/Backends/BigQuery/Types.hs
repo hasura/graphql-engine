@@ -6,7 +6,7 @@ module Hasura.Backends.BigQuery.Types
     Aliased (..),
     ArrayAgg (..),
     Base64,
-    BigDecimal,
+    BigDecimal (..),
     BooleanOperators (..),
     Cardinality (..),
     ColumnName (ColumnName),
@@ -721,9 +721,13 @@ scientificToText num = toStrict $ toLazyText $ formatScientificBuilder Fixed Not
 newtype BigDecimal = BigDecimal Text
   deriving (Show, Eq, Ord, Generic, Data, Cacheable, NFData, Hashable, Lift)
 
-instance FromJSON BigDecimal where parseJSON = liberalDecimalParser BigDecimal
+instance FromJSON BigDecimal where
+  parseJSON (J.Number num) = pure $ BigDecimal $ scientificToText num
+  parseJSON (J.String num) = pure $ BigDecimal num
+  parseJSON _ = fail "parseJSON: FromJSON BigDecimal failure"
 
-instance ToJSON BigDecimal where toJSON = liberalDecimalPrinter
+instance ToJSON BigDecimal where
+  toJSON (BigDecimal x) = J.toJSON x
 
 doubleToBigDecimal :: Double -> BigDecimal
 doubleToBigDecimal = BigDecimal . T.decodeUtf8 . L.toStrict . J.encode
