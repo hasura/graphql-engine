@@ -299,7 +299,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
 
       queryCollections = _boQueryCollections resolvedOutputs
       allowLists = HS.toList . iaGlobal . _boAllowlist $ resolvedOutputs
-      inconsistentQueryCollections = getInconsistentQueryCollections adminIntrospection queryCollections listedQueryObjects endpoints allowLists
+
+  inconsistentQueryCollections <- bindA -< do getInconsistentQueryCollections adminIntrospection queryCollections listedQueryObjects endpoints allowLists
 
   returnA
     -<
