@@ -1,0 +1,21 @@
+type: bulk
+args:
+
+- type: drop_action
+  args:
+    name: get_messages
+
+- type: set_custom_types
+  args: {}
+
+- type: untrack_table
+  args:
+    table:
+      name: user
+      schema: public
+
+- type: run_sql
+  args:
+    sql: |
+      DROP TABLE "user";
+

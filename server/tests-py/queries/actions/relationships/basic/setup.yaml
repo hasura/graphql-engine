@@ -1,0 +1,45 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "user"(
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL
+      );
+      INSERT INTO "user" (name) VALUES
+        ('foo'),
+        ('bar');
+
+- type: track_table
+  args:
+    name: user
+    schema: public
+
+- type: set_custom_types
+  args:
+    objects:
+    - name: Message
+      fields:
+      - name: content
+        type: String!
+      - name: user_name
+        type: String!
+      relationships:
+      - name: user
+        type: object
+        remote_table: user
+        field_mapping:
+          user_name: name
+
+- type: create_action
+  args:
+    name: get_messages
+    definition:
+      kind: synchronous
+      type: query
+      arguments: []
+      output_type: "[Message]"
+      handler: http://127.0.0.1:5593/get_messages
+

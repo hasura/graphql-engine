@@ -1,0 +1,68 @@
+description: Test for relationship data
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    query {
+      without_join_column: get_messages {
+        content
+        user {
+          name
+        }
+      }
+      with_join_column: get_messages {
+        content
+        user_name
+        user {
+          name
+        }
+      }
+      with_aliased_join_column: get_messages {
+        content
+        something: user_name
+        user {
+          name
+        }
+      }
+      poisoned_join_column: get_messages {
+        user_name: content
+        user {
+          name
+        }
+      }
+    }
+
+response:
+  data:
+    without_join_column:
+    - content: baz
+      user:
+        name: foo
+    - content: foo
+      user:
+        name: bar
+    with_join_column:
+    - content: baz
+      user_name: foo
+      user:
+        name: foo
+    - content: foo
+      user_name: bar
+      user:
+        name: bar
+    with_aliased_join_column:
+    - content: baz
+      something: foo
+      user:
+        name: foo
+    - content: foo
+      something: bar
+      user:
+        name: bar
+    poisoned_join_column:
+    - user_name: baz
+      user:
+        name: foo
+    - user_name: foo
+      user:
+        name: bar

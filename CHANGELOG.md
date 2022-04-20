@@ -28,6 +28,11 @@
 - cli: fix query collections metadata formatting issues (#7616)
 - docs: support for `graphql-ws` is considered GA
 
+## v2.5.1
+
+### Bug fixes and improvements
+- server: fixes remote relationships on actions (fix #8399)
+
 ## v2.5.0
 
 ### Remote relationships from remote schemas

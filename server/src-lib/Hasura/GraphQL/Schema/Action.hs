@@ -252,9 +252,14 @@ actionOutputFields outputType annotatedObject objectTypes = do
     relationshipFieldParser (TypeRelationship relationshipName relType sourceName tableInfo fieldMapping) = runMaybeT do
       sourceInfo <- MaybeT $ asks $ (unsafeSourceInfo @('Postgres 'Vanilla) <=< Map.lookup sourceName) . getter
       relName <- hoistMaybe $ RelName <$> mkNonEmptyText (toTxt relationshipName)
-      let lhsJoinFields = Map.fromList $ do
-            (k, v) <- Map.toList fieldMapping
-            pure (FieldName $ G.unName $ unObjectFieldName k, ciName v)
+
+      --  `lhsJoinFields` is a map of `x: y`
+      --  where 'x' is the 'reference name' of a join field, i.e, how a join
+      --         field is referenced in the remote relationships definition
+      --  while 'y' is the join field.
+      --  In case of custom types, they are pretty much the same.
+      --  In case of databases, 'y' could be a computed field with session variables etc.
+      let lhsJoinFields = Map.fromList [(FieldName $ G.unName k, k) | ObjectFieldName k <- Map.keys fieldMapping]
           joinMapping = Map.fromList $ do
             (k, v) <- Map.toList fieldMapping
             let scalarType = case ciType v of
