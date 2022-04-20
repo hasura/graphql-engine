@@ -183,32 +183,35 @@ analyzeObjectSelectionSet ::
   G.SelectionSet G.FragmentSpread G.Name ->
   Analysis Selection
 analyzeObjectSelectionSet (G.ObjectTypeDefinition {..}) selectionSet = do
-  mconcat . catMaybes <$> for selectionSet \case
-    -- TODO: implement fragments
-    G.SelectionFragmentSpread _ ->
-      pure Nothing
-    G.SelectionInlineFragment _ ->
-      pure Nothing
-    G.SelectionField (G.Field {..}) ->
-      withField _fName $ withCatchAndRecord do
-        -- attempt to find that field in the object's definition
-        G.FieldDefinition {..} <-
-          findDefinition _fName
-            `onNothing` throwDiagnosis (ObjectFieldNotFound _otdName _fName)
-        -- attempt to find its type in the schema
-        let baseType = G.getBaseType _fldType
-        typeDefinition <-
-          lookupType baseType
-            `onNothingM` throwDiagnosis (TypeNotFound baseType)
-        -- recursively processthe selection set
-        subSelection <- analyzeSelectionSet typeDefinition _fSelectionSet
-        -- TODO: should we check arguments?
-        pure $
-          Selection $
-            Map.singleton
-              (fromMaybe _fName _fAlias)
-              (FieldInfo _fldType typeDefinition subSelection)
+  mconcat . catMaybes <$> for selectionSet analyzeObjectSelection
   where
+    analyzeObjectSelection :: G.Selection G.FragmentSpread G.Name -> Analysis (Maybe Selection)
+    analyzeObjectSelection = \case
+      -- TODO: implement fragments
+      G.SelectionFragmentSpread _ -> do
+        pure Nothing
+      G.SelectionInlineFragment inlineFrag -> do
+        -- analyze the inline fragment's selection set
+        mconcat <$> for (G._ifSelectionSet inlineFrag) analyzeObjectSelection
+      G.SelectionField (G.Field {..}) ->
+        withField _fName $ withCatchAndRecord do
+          -- attempt to find that field in the object's definition
+          G.FieldDefinition {..} <-
+            findDefinition _fName
+              `onNothing` throwDiagnosis (ObjectFieldNotFound _otdName _fName)
+          -- attempt to find its type in the schema
+          let baseType = G.getBaseType _fldType
+          typeDefinition <-
+            lookupType baseType
+              `onNothingM` throwDiagnosis (TypeNotFound baseType)
+          -- recursively processthe selection set
+          subSelection <- analyzeSelectionSet typeDefinition _fSelectionSet
+          -- TODO: should we check arguments?
+          pure $
+            Selection $
+              Map.singleton
+                (fromMaybe _fName _fAlias)
+                (FieldInfo _fldType typeDefinition subSelection)
     -- Additional hidden fields that are allowed despite not being listed in the
     -- schema.
     systemFields :: [G.FieldDefinition G.InputValueDefinition]

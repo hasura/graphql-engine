@@ -48,6 +48,7 @@ import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
 import Hasura.GraphQL.Analyse
+import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Prelude
 import Hasura.RQL.Types.Allowlist (NormalizedQuery, unNormalizedQuery)
 import Hasura.RQL.Types.Common
@@ -363,51 +364,66 @@ withNewInconsistentObjsCheck action = do
 -- static analysis over the saved queries and reports any inconsistenties
 -- with the current schema.
 getInconsistentQueryCollections ::
+  (MonadError QErr m) =>
   G.SchemaIntrospection ->
   QueryCollections ->
   ((CollectionName, ListedQuery) -> MetadataObject) ->
   EndpointTrie GQLQueryWithText ->
   [NormalizedQuery] ->
-  [InconsistentMetadata]
-getInconsistentQueryCollections rs qcs lqToMetadataObj restEndpoints allowLst = map (\(o, t) -> InconsistentObject t Nothing o) fE
-  where
-    zipLQwithDef :: (CollectionName, CreateCollection) -> [((CollectionName, ListedQuery), G.ExecutableDefinition G.Name)]
-    zipLQwithDef (cName, cc) =
-      let lqs = _cdQueries . _ccDefinition $ cc
-       in concatMap (\lq -> map ((cName, lq),) (G.getExecutableDefinitions . unGQLQuery . getGQLQuery . _lqQuery $ lq)) lqs
-    inAllowList :: [NormalizedQuery] -> (ListedQuery) -> Bool
-    inAllowList nqList (ListedQuery {..}) = any (\nq -> unNormalizedQuery nq == (unGQLQuery . getGQLQuery) _lqQuery) nqList
+  m [InconsistentMetadata]
+getInconsistentQueryCollections rs qcs lqToMetadataObj restEndpoints allowLst = do
+  let zipLQwithDef :: (CollectionName, CreateCollection) -> [((CollectionName, ListedQuery), [G.ExecutableDefinition G.Name])]
+      zipLQwithDef (cName, cc) =
+        let lqs = _cdQueries . _ccDefinition $ cc
+         in map (\lq -> ((cName, lq), (G.getExecutableDefinitions . unGQLQuery . getGQLQuery . _lqQuery $ lq))) lqs
+      inAllowList :: [NormalizedQuery] -> (ListedQuery) -> Bool
+      inAllowList nqList (ListedQuery {..}) = any (\nq -> unNormalizedQuery nq == (unGQLQuery . getGQLQuery) _lqQuery) nqList
 
-    inRESTEndpoints :: EndpointTrie GQLQueryWithText -> (ListedQuery) -> [Text]
-    inRESTEndpoints edTrie lq = map fst $ filter (queryIsFaulty) allQueries
-      where
-        methodMaps = Trie.elems edTrie
-        endpoints = concatMap snd $ concatMap (MultiMap.toList) methodMaps
-        allQueries :: [(Text, GQLQueryWithText)]
-        allQueries = map (\d -> (unNonEmptyText . unEndpointName . _ceName $ d, _edQuery . _ceDefinition $ d)) endpoints
+      inRESTEndpoints :: EndpointTrie GQLQueryWithText -> (ListedQuery) -> [Text]
+      inRESTEndpoints edTrie lq = map fst $ filter (queryIsFaulty) allQueries
+        where
+          methodMaps = Trie.elems edTrie
+          endpoints = concatMap snd $ concatMap (MultiMap.toList) methodMaps
+          allQueries :: [(Text, GQLQueryWithText)]
+          allQueries = map (\d -> (unNonEmptyText . unEndpointName . _ceName $ d, _edQuery . _ceDefinition $ d)) endpoints
 
-        queryIsFaulty :: (Text, GQLQueryWithText) -> Bool
-        queryIsFaulty (_, gqlQ) = (_lqQuery lq) == gqlQ
+          queryIsFaulty :: (Text, GQLQueryWithText) -> Bool
+          queryIsFaulty (_, gqlQ) = (_lqQuery lq) == gqlQ
 
-    lqLst = concatMap zipLQwithDef (OMap.toList qcs)
-    fE = lefts $ map (validateQuery rs (lqToMetadataObj) formatError) lqLst
-    formatError (cName, lq) allErrs =
-      let msgInit = "In query collection \"" <> toTxt cName <> "\" the query \"" <> (toTxt . _lqName) lq <> "\" is invalid with the following error(s): "
-          lToTxt = dquoteList . reverse
-          faultyEndpoints = case inRESTEndpoints restEndpoints lq of
-            [] -> ""
-            ePoints -> ". This query is being used in the following REST endpoint(s): " <> lToTxt ePoints
+      lqLst = concatMap zipLQwithDef (OMap.toList qcs)
+      formatError (cName, lq) allErrs =
+        let msgInit = "In query collection \"" <> toTxt cName <> "\" the query \"" <> (toTxt . _lqName) lq <> "\" is invalid with the following error(s): "
+            lToTxt = dquoteList . reverse
+            faultyEndpoints = case inRESTEndpoints restEndpoints lq of
+              [] -> ""
+              ePoints -> ". This query is being used in the following REST endpoint(s): " <> lToTxt ePoints
 
-          isInAllowList = if inAllowList allowLst lq then ". This query is in allowlist." else ""
-       in msgInit <> lToTxt allErrs <> faultyEndpoints <> isInAllowList
+            isInAllowList = if inAllowList allowLst lq then ". This query is in allowlist." else ""
+         in msgInit <> lToTxt allErrs <> faultyEndpoints <> isInAllowList
+  validatedMetaObjs <- traverse (validateQuery rs (lqToMetadataObj) formatError) lqLst
+  let inconsistentMetaObjs = lefts validatedMetaObjs
+  pure $ map (\(o, t) -> InconsistentObject t Nothing o) inconsistentMetaObjs
 
 validateQuery ::
+  (MonadError QErr m) =>
   G.SchemaIntrospection ->
   (a -> MetadataObject) ->
   (a -> [Text] -> Text) ->
-  (a, G.ExecutableDefinition G.Name) ->
-  Either (MetadataObject, Text) ()
-validateQuery rSchema getMetaObj formatError (eMeta, eDef) =
-  case diagnoseGraphQLQuery rSchema eDef of
+  (a, [G.ExecutableDefinition G.Name]) ->
+  m (Either (MetadataObject, Text) ())
+validateQuery rSchema getMetaObj formatError (eMeta, eDefs) = do
+  -- create the gql request object
+  let gqlRequest = GQLReq Nothing (GQLExecDoc eDefs) Nothing
+
+  -- @getSingleOperation@ will do the fragment inlining
+  G.TypedOperationDefinition {..} <- getSingleOperation gqlRequest
+
+  -- we need to create @ExecutableDefinitionOperation@ to do the validation
+  -- we are also changing the type from @NoFragments@ to @FragmentSpread@
+  -- TODO: fix the @diagnoseGraphQLQuery@ to use @SingleOperation Name@
+  let eDef =
+        G.ExecutableDefinitionOperation . G.OperationDefinitionTyped $
+          G.TypedOperationDefinition {_todSelectionSet = G.fmapSelectionSetFragment G.inline _todSelectionSet, ..}
+  pure $ case diagnoseGraphQLQuery rSchema eDef of
     Nothing -> Right ()
     Just errors -> Left (getMetaObj eMeta, formatError eMeta errors)
