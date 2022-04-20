@@ -8,21 +8,21 @@ import Harness.Backend.Mysql as Mysql
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml
-import Harness.State (State)
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema qualified as Schema
+import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec
 import Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith State
+spec :: SpecWith TestEnvironment
 spec =
   Context.run
     [ Context.Context
         { name = Context.Backend Context.MySQL,
-          mkLocalState = Context.noLocalState,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
           setup = Mysql.setup schema,
           teardown = Mysql.teardown schema,
           customOptions = Nothing
@@ -68,13 +68,13 @@ query QueryParams {includeId, skipId} =
   }
 |]
 
-tests :: Context.Options -> SpecWith State
+tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
-  it "Skip id field conditionally" \state ->
+  it "Skip id field conditionally" \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           (query QueryParams {includeId = False, skipId = False})
       )
       [yaml|
@@ -84,11 +84,11 @@ data:
   - name: Author 2
 |]
 
-  it "Skip id field conditionally, includeId=true" \state ->
+  it "Skip id field conditionally, includeId=true" \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           (query QueryParams {includeId = True, skipId = False})
       )
       [yaml|
@@ -100,11 +100,11 @@ data:
     name: Author 2
 |]
 
-  it "Skip id field conditionally, skipId=true" \state ->
+  it "Skip id field conditionally, skipId=true" \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           (query QueryParams {includeId = False, skipId = True})
       )
       [yaml|
@@ -114,11 +114,11 @@ data:
   - name: Author 2
 |]
 
-  it "Skip id field conditionally, skipId=true, includeId=true" \state ->
+  it "Skip id field conditionally, skipId=true, includeId=true" \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           (query QueryParams {includeId = True, skipId = True})
       )
       [yaml|
@@ -130,11 +130,11 @@ data:
 
   -- These two come from <https://github.com/hasura/graphql-engine-mono/blob/ec3568c704c4c3f13ecff757c547f0d5a272307b/server/tests-py/queries/graphql_query/mysql/select_query_author_with_skip_directive.yaml#L1>
 
-  it "Author with skip id" \state ->
+  it "Author with skip id" \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphqlYaml
-          state
+          testEnvironment
           [yaml|
 query: |
   query author_with_skip($skipId: Boolean!, $skipName: Boolean!) {
@@ -154,11 +154,11 @@ data:
   - name: Author 1
   - name: Author 2
 |]
-  it "Author with skip name" \state ->
+  it "Author with skip name" \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphqlYaml
-          state
+          testEnvironment
           [yaml|
 query: |
   query author_with_skip($skipId: Boolean!, $skipName: Boolean!) {
@@ -180,11 +180,11 @@ data:
 |]
 
   -- These three come from <https://github.com/hasura/graphql-engine-mono/blob/5f6f862e5f6b67d82cfa59568edfc4f08b920375/server/tests-py/queries/graphql_query/mysql/select_query_author_with_wrong_directive_err.yaml#L1>
-  it "Rejects unknown directives" \state ->
+  it "Rejects unknown directives" \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphqlYaml
-          state
+          testEnvironment
           [yaml|
     query: |
       query {
@@ -202,11 +202,11 @@ errors:
     code: validation-failed
   message: directive "exclude" is not defined in the schema
 |]
-  it "Rejects duplicate directives" \state ->
+  it "Rejects duplicate directives" \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphqlYaml
-          state
+          testEnvironment
           [yaml|
     query: |
       query {
@@ -224,11 +224,11 @@ errors:
     code: validation-failed
   message: 'the following directives are used more than once: include'
 |]
-  it "Rejects directives on wrong element" \state ->
+  it "Rejects directives on wrong element" \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphqlYaml
-          state
+          testEnvironment
           [yaml|
     query: |
       query @include(if: true) {

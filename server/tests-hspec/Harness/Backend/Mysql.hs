@@ -33,10 +33,10 @@ import Harness.Constants as Constants
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
-import Harness.State (State)
 import Harness.Test.Context (BackendType (MySQL), defaultBackendTypeString, defaultSource)
 import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..))
 import Harness.Test.Schema qualified as Schema
+import Harness.TestEnvironment (TestEnvironment)
 import Hasura.Prelude (tshow)
 import System.Process.Typed
 import Prelude
@@ -204,39 +204,39 @@ dropTable Schema.Table {tableName} = do
         ]
 
 -- | Post an http request to start tracking the table
-trackTable :: State -> Schema.Table -> IO ()
-trackTable state table =
-  Schema.trackTable MySQL (defaultSource MySQL) table state
+trackTable :: TestEnvironment -> Schema.Table -> IO ()
+trackTable testEnvironment table =
+  Schema.trackTable MySQL (defaultSource MySQL) table testEnvironment
 
 -- | Post an http request to stop tracking the table
-untrackTable :: State -> Schema.Table -> IO ()
-untrackTable state table =
-  Schema.untrackTable MySQL (defaultSource MySQL) table state
+untrackTable :: TestEnvironment -> Schema.Table -> IO ()
+untrackTable testEnvironment table =
+  Schema.untrackTable MySQL (defaultSource MySQL) table testEnvironment
 
 -- | Setup the schema in the most expected way.
 -- NOTE: Certain test modules may warrant having their own local version.
-setup :: [Schema.Table] -> (State, ()) -> IO ()
-setup tables (state, _) = do
+setup :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
+setup tables (testEnvironment, _) = do
   -- Clear and reconfigure the metadata
-  GraphqlEngine.setSource state defaultSourceMetadata
+  GraphqlEngine.setSource testEnvironment defaultSourceMetadata
   -- Setup and track tables
   for_ tables $ \table -> do
     createTable table
     insertTable table
-    trackTable state table
+    trackTable testEnvironment table
   -- Setup relationships
   for_ tables $ \table -> do
-    Schema.trackObjectRelationships MySQL table state
-    Schema.trackArrayRelationships MySQL table state
+    Schema.trackObjectRelationships MySQL table testEnvironment
+    Schema.trackArrayRelationships MySQL table testEnvironment
 
 -- | Teardown the schema and tracking in the most expected way.
 -- NOTE: Certain test modules may warrant having their own version.
-teardown :: [Schema.Table] -> (State, ()) -> IO ()
-teardown tables (state, _) = do
+teardown :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
+teardown tables (testEnvironment, _) = do
   forFinally_ (reverse tables) $ \table ->
     finally
-      (Schema.untrackRelationships MySQL table state)
+      (Schema.untrackRelationships MySQL table testEnvironment)
       ( finally
-          (untrackTable state table)
+          (untrackTable testEnvironment table)
           (dropTable table)
       )

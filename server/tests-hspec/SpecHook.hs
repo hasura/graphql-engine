@@ -5,22 +5,22 @@ where
 
 import Control.Exception.Safe (bracket)
 import Harness.GraphqlEngine (startServerThread)
-import Harness.State (State (..), stopServer)
+import Harness.TestEnvironment (TestEnvironment (..), stopServer)
 import System.Environment (lookupEnv)
 import Test.Hspec (Spec, SpecWith, aroundAllWith)
 import Text.Read (readMaybe)
 import Prelude
 
-setupState :: IO State
-setupState = do
+setupTestEnvironment :: IO TestEnvironment
+setupTestEnvironment = do
   murlPrefix <- lookupEnv "HASURA_TEST_URLPREFIX"
   mport <- fmap (>>= readMaybe) (lookupEnv "HASURA_TEST_PORT")
   server <- startServerThread ((,) <$> murlPrefix <*> mport)
-  pure $ State server
+  pure $ TestEnvironment server
 
-teardownState :: State -> IO ()
-teardownState State {server} =
+teardownTestEnvironment :: TestEnvironment -> IO ()
+teardownTestEnvironment TestEnvironment {server} =
   stopServer server
 
-hook :: SpecWith State -> Spec
-hook = aroundAllWith (const . bracket setupState teardownState)
+hook :: SpecWith TestEnvironment -> Spec
+hook = aroundAllWith (const . bracket setupTestEnvironment teardownTestEnvironment)

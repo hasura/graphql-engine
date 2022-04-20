@@ -34,30 +34,30 @@ import Data.Aeson.Lens (key, values, _String)
 import Data.Maybe qualified as Unsafe (fromJust)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (shouldBeYaml, shouldReturnYaml, yaml)
-import Harness.State (State)
 import Harness.Test.Context qualified as Context
+import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec (SpecWith, describe, it)
-import Test.RemoteRelationship.MetadataAPI.Common (LocalTestState (..), remoteSchemaToDBRemoteRelationshipContext)
+import Test.RemoteRelationship.MetadataAPI.Common (LocalTestTestEnvironment (..), remoteSchemaToDBRemoteRelationshipContext)
 import Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith State
-spec = Context.runWithLocalState contexts tests
+spec :: SpecWith TestEnvironment
+spec = Context.runWithLocalTestEnvironment contexts tests
   where
     contexts = [remoteSchemaToDBRemoteRelationshipContext]
 
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Context.Options -> SpecWith (State, LocalTestState)
+tests :: Context.Options -> SpecWith (TestEnvironment, LocalTestTestEnvironment)
 tests opts = describe "drop-source-metadata-tests" do
   dropMetadataTests opts
 
-dropMetadataTests :: Context.Options -> SpecWith (State, LocalTestState)
+dropMetadataTests :: Context.Options -> SpecWith (TestEnvironment, LocalTestTestEnvironment)
 dropMetadataTests opts = describe "drop_source on RHS source should remove remote relationship from LHS" do
-  it "drops the RHS source 'target'" \(state, _) -> do
+  it "drops the RHS source 'target'" \(testEnvironment, _) -> do
     let query =
           [yaml|
             type: pg_drop_source
@@ -72,10 +72,10 @@ dropMetadataTests opts = describe "drop_source on RHS source should remove remot
           |]
     shouldReturnYaml
       opts
-      (GraphqlEngine.postMetadata state query)
+      (GraphqlEngine.postMetadata testEnvironment query)
       expectedDropSourceResponse
 
-  it "export metadata, check if remote relationship is removed from LHS ('source', remote schema)" \(state, _) -> do
+  it "export metadata, check if remote relationship is removed from LHS ('source', remote schema)" \(testEnvironment, _) -> do
     -- No remote relationship should be present for table 'track' in 'source' remote schema
     let expectedRSRelationshipMetadata =
           [yaml|
@@ -83,7 +83,7 @@ dropMetadataTests opts = describe "drop_source on RHS source should remove remot
                 type_name: hasura_track
             |]
 
-    metadata <- GraphqlEngine.exportMetadata state
+    metadata <- GraphqlEngine.exportMetadata testEnvironment
 
     let remoteSchemas = key "remote_schemas" . values
         -- Extract the 'source' remote schema and check if any remote relationships exists

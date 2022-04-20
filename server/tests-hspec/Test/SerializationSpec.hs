@@ -8,21 +8,21 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Sql
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
-import Harness.State (State)
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema qualified as Schema
+import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec (SpecWith, describe, it)
 import Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith State
+spec :: SpecWith TestEnvironment
 spec =
   Context.run
     [ Context.Context
         { name = Context.Backend Context.BigQuery,
-          mkLocalState = Context.noLocalState,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
           setup = bigQuerySetup,
           teardown = const bigQueryTeardown,
           customOptions = Nothing
@@ -40,10 +40,10 @@ authorTable =
       tableData = []
     }
 
-bigQuerySetup :: (State, ()) -> IO ()
-bigQuerySetup (state, _) = do
+bigQuerySetup :: (TestEnvironment, ()) -> IO ()
+bigQuerySetup (testEnvironment, _) = do
   sourceMetadata <- Bigquery.defaultSourceMetadata
-  GraphqlEngine.postMetadata_ state sourceMetadata
+  GraphqlEngine.postMetadata_ testEnvironment sourceMetadata
 
   Bigquery.runSql_
     [sql|
@@ -60,19 +60,19 @@ bigQuerySetup (state, _) = do
         VALUES (1, "sibi", 5555555555555556666, 5555555555555556666);
         |]
 
-  Bigquery.trackTable state authorTable
+  Bigquery.trackTable testEnvironment authorTable
 
 bigQueryTeardown :: IO ()
 bigQueryTeardown = do
   Bigquery.dropTable authorTable
 
-tests :: Context.Options -> SpecWith State
+tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = describe "SerializationSpec" $ do
-  it "serde Decimal column" $ \state ->
+  it "serde Decimal column" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 query MyQuery {
   hasura_author(where: {tax_id: {_eq: 5555555555555556666}}) {
@@ -87,11 +87,11 @@ data:
   - tax_id: "5555555555555556666"
     id: "1"
 |]
-  it "serde BigDecimal column" $ \state ->
+  it "serde BigDecimal column" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 query MyQuery {
   hasura_author(where: {total_books: {_eq: 5555555555555556666}}) {

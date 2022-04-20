@@ -11,27 +11,27 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql
 import Harness.Quoter.Sql
 import Harness.Quoter.Yaml
-import Harness.State (State)
 import Harness.Test.Context qualified as Context
+import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec
 import Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith State
+spec :: SpecWith TestEnvironment
 spec =
   Context.run
     [ Context.Context
         { name = Context.Backend Context.Postgres,
-          mkLocalState = Context.noLocalState,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
           setup = pgSetup,
           teardown = pgTeardown,
           customOptions = Nothing
         },
       Context.Context
         { name = Context.Backend Context.Citus,
-          mkLocalState = Context.noLocalState,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
           setup = citusSetup,
           teardown = citusTeardown,
           customOptions = Nothing
@@ -65,17 +65,17 @@ DROP TYPE "UserRole";
 
 -- * Postgres backend
 
-pgSetup :: (State, ()) -> IO ()
-pgSetup (state, ()) = do
+pgSetup :: (TestEnvironment, ()) -> IO ()
+pgSetup (testEnvironment, ()) = do
   -- Clear and reconfigure the metadata
-  GraphqlEngine.setSource state Postgres.defaultSourceMetadata
+  GraphqlEngine.setSource testEnvironment Postgres.defaultSourceMetadata
 
   -- Setup schema
   Postgres.run_ commonSetupSQL
 
   -- Track tables
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: pg_track_table
 args:
@@ -85,11 +85,11 @@ args:
     name: User
 |]
 
-pgTeardown :: (State, ()) -> IO ()
-pgTeardown (state, ()) = do
+pgTeardown :: (TestEnvironment, ()) -> IO ()
+pgTeardown (testEnvironment, ()) = do
   -- Untrack tables
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: pg_untrack_table
 args:
@@ -103,23 +103,23 @@ args:
   Postgres.run_ commonTeardownSQL
 
   -- Clear metadata
-  GraphqlEngine.clearMetadata state
+  GraphqlEngine.clearMetadata testEnvironment
 
 --------------------------------------------------------------------------------
 
 -- * Citus backend
 
-citusSetup :: (State, ()) -> IO ()
-citusSetup (state, ()) = do
+citusSetup :: (TestEnvironment, ()) -> IO ()
+citusSetup (testEnvironment, ()) = do
   -- Clear and reconfigure the metadata
-  GraphqlEngine.setSource state Citus.defaultSourceMetadata
+  GraphqlEngine.setSource testEnvironment Citus.defaultSourceMetadata
 
   -- Setup schema
   Citus.run_ commonSetupSQL
 
   -- Track tables
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: citus_track_table
 args:
@@ -129,11 +129,11 @@ args:
     name: User
 |]
 
-citusTeardown :: (State, ()) -> IO ()
-citusTeardown (state, ()) = do
+citusTeardown :: (TestEnvironment, ()) -> IO ()
+citusTeardown (testEnvironment, ()) = do
   -- Untrack tables
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: citus_untrack_table
 args:
@@ -147,19 +147,19 @@ args:
   Citus.run_ commonTeardownSQL
 
   -- Clear metadata
-  GraphqlEngine.clearMetadata state
+  GraphqlEngine.clearMetadata testEnvironment
 
 --------------------------------------------------------------------------------
 
 -- * Tests
 
-tests :: Context.Options -> SpecWith State
+tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
-  it "Insert into enum column with valid enum values" $ \state ->
+  it "Insert into enum column with valid enum values" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 mutation {
   insert_hasura_User(
@@ -188,11 +188,11 @@ data:
     affected_rows: 2
 |]
 
-  it "Insert into enum column with invalid enum values" $ \state ->
+  it "Insert into enum column with invalid enum values" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 mutation {
   insert_hasura_User(

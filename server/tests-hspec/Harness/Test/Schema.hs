@@ -35,8 +35,8 @@ import Data.Time.Format (parseTimeOrError)
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
-import Harness.State (State)
 import Harness.Test.Context (BackendType, defaultBackendTypeString, defaultSchema, defaultSource)
+import Harness.TestEnvironment (TestEnvironment)
 import Prelude
 
 -- | Generic type to use to specify schema tables for all backends.
@@ -213,13 +213,13 @@ parseUTCTimeOrError :: String -> ScalarValue
 parseUTCTimeOrError = VUTCTime . parseTimeOrError True defaultTimeLocale "%F %T"
 
 -- | Unified track table
-trackTable :: HasCallStack => BackendType -> String -> Table -> State -> IO ()
-trackTable backend source Table {tableName} state = do
+trackTable :: HasCallStack => BackendType -> String -> Table -> TestEnvironment -> IO ()
+trackTable backend source Table {tableName} testEnvironment = do
   let backendType = defaultBackendTypeString backend
       schema = defaultSchema backend
       requestType = backendType <> "_track_table"
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: *requestType
 args:
@@ -230,13 +230,13 @@ args:
 |]
 
 -- | Unified untrack table
-untrackTable :: HasCallStack => BackendType -> String -> Table -> State -> IO ()
-untrackTable backend source Table {tableName} state = do
+untrackTable :: HasCallStack => BackendType -> String -> Table -> TestEnvironment -> IO ()
+untrackTable backend source Table {tableName} testEnvironment = do
   let backendType = defaultBackendTypeString backend
       schema = defaultSchema backend
   let requestType = backendType <> "_untrack_table"
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: *requestType
 args:
@@ -251,15 +251,15 @@ mkObjectRelationshipName :: Reference -> Text
 mkObjectRelationshipName Reference {referenceLocalColumn, referenceTargetTable} = referenceTargetTable <> "_by_" <> referenceLocalColumn
 
 -- | Unified track object relationships
-trackObjectRelationships :: HasCallStack => BackendType -> Table -> State -> IO ()
-trackObjectRelationships backend Table {tableName, tableReferences} state = do
+trackObjectRelationships :: HasCallStack => BackendType -> Table -> TestEnvironment -> IO ()
+trackObjectRelationships backend Table {tableName, tableReferences} testEnvironment = do
   let source = defaultSource backend
       schema = defaultSchema backend
       requestType = source <> "_create_object_relationship"
   for_ tableReferences $ \ref@Reference {referenceLocalColumn} -> do
     let relationshipName = mkObjectRelationshipName ref
     GraphqlEngine.postMetadata_
-      state
+      testEnvironment
       [yaml|
 type: *requestType
 args:
@@ -277,15 +277,15 @@ mkArrayRelationshipName :: Text -> Text -> Text
 mkArrayRelationshipName tableName referenceLocalColumn = tableName <> "s_by_" <> referenceLocalColumn
 
 -- | Unified track array relationships
-trackArrayRelationships :: HasCallStack => BackendType -> Table -> State -> IO ()
-trackArrayRelationships backend Table {tableName, tableReferences} state = do
+trackArrayRelationships :: HasCallStack => BackendType -> Table -> TestEnvironment -> IO ()
+trackArrayRelationships backend Table {tableName, tableReferences} testEnvironment = do
   let source = defaultSource backend
       schema = defaultSchema backend
       requestType = source <> "_create_array_relationship"
   for_ tableReferences $ \Reference {referenceLocalColumn, referenceTargetTable} -> do
     let relationshipName = mkArrayRelationshipName tableName referenceLocalColumn
     GraphqlEngine.postMetadata_
-      state
+      testEnvironment
       [yaml|
 type: *requestType
 args:
@@ -303,8 +303,8 @@ args:
 |]
 
 -- | Unified untrack relationships
-untrackRelationships :: HasCallStack => BackendType -> Table -> State -> IO ()
-untrackRelationships backend Table {tableName, tableReferences} state = do
+untrackRelationships :: HasCallStack => BackendType -> Table -> TestEnvironment -> IO ()
+untrackRelationships backend Table {tableName, tableReferences} testEnvironment = do
   let source = defaultSource backend
       schema = defaultSchema backend
       requestType = source <> "_drop_relationship"
@@ -313,7 +313,7 @@ untrackRelationships backend Table {tableName, tableReferences} state = do
         objectRelationshipName = mkObjectRelationshipName ref
     -- drop array relationships
     GraphqlEngine.postMetadata_
-      state
+      testEnvironment
       [yaml|
 type: *requestType
 args:
@@ -325,7 +325,7 @@ args:
 |]
     -- drop object relationships
     GraphqlEngine.postMetadata_
-      state
+      testEnvironment
       [yaml|
 type: *requestType
 args:

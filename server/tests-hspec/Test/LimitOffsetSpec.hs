@@ -7,21 +7,21 @@ import Harness.Backend.Mysql as Mysql
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql
 import Harness.Quoter.Yaml
-import Harness.State (State)
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema qualified as Schema
+import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec
 import Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith State
+spec :: SpecWith TestEnvironment
 spec =
   Context.run
     [ Context.Context
         { name = Context.Backend Context.MySQL,
-          mkLocalState = Context.noLocalState,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
           setup = Mysql.setup schema,
           teardown = Mysql.teardown schema,
           customOptions = Nothing
@@ -53,13 +53,13 @@ author =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Context.Options -> SpecWith State
+tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
-  it "limit 1" $ \state ->
+  it "limit 1" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 query {
   hasura_author(limit: 1) {
@@ -80,11 +80,11 @@ data:
   --
   -- Technically without an ORDER, the results are UB-ish. Keep an eye
   -- on ordering with tests like this.
-  it "Basic offset query" $ \state ->
+  it "Basic offset query" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 query {
   hasura_author(offset: 1) {
@@ -108,11 +108,11 @@ data:
   -- This is a more precise version of <https://github.com/hasura/graphql-engine-mono/blob/dbf32f15c25c12fba88afced311fd876111cb987/server/tests-py/queries/graphql_query/mysql/select_query_author_limit_offset.yaml#L1>
   --
   -- We use ordering here, which yields a stable result.
-  it "order descending, offset 2, limit 1" $ \state ->
+  it "order descending, offset 2, limit 1" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 query {
   hasura_author(limit: 1, offset: 2, order_by: {id: desc}) {

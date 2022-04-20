@@ -12,9 +12,9 @@ import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
-import Harness.State (State)
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema qualified as Schema
+import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec (SpecWith, it)
 import Prelude
 
@@ -22,19 +22,19 @@ import Prelude
 
 -- * Preamble
 
-spec :: SpecWith State
+spec :: SpecWith TestEnvironment
 spec =
   Context.run
     [ Context.Context
         { name = Context.Backend Context.SQLServer,
-          mkLocalState = Context.noLocalState,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
           setup = sqlserverSetup,
           teardown = Sqlserver.teardown schema,
           customOptions = Nothing
         },
       Context.Context
         { name = Context.Backend Context.Postgres,
-          mkLocalState = Context.noLocalState,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
           setup = postgresSetup,
           teardown = Postgres.teardown schema,
           customOptions = Nothing
@@ -46,14 +46,14 @@ spec =
 
 -- * Tests
 
-tests :: Context.Options -> SpecWith State
+tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
   ----------------------------------------
-  it "admin role is unaffected by column presets" $ \state ->
+  it "admin role is unaffected by column presets" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 mutation author {
   insert_hasura_author(objects:
@@ -80,11 +80,11 @@ data:
 |]
 
   ----------------------------------------
-  it "applies the column presets to the 'author id' and 'company' columns" $ \state ->
+  it "applies the column presets to the 'author id' and 'company' columns" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphqlWithHeaders
-          state
+          testEnvironment
           [ ("X-Hasura-Role", "user"),
             ("X-Hasura-User-Id", "36a6257b-1111-1111-1111-c1b7a7997087")
           ]
@@ -110,11 +110,11 @@ data:
 |]
 
   ----------------------------------------
-  it "Columns with session variables presets defined are not part of the schema" $ \state ->
+  it "Columns with session variables presets defined are not part of the schema" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphqlWithHeaders
-          state
+          testEnvironment
           [ ("X-Hasura-Role", "user"),
             ("X-Hasura-User-Id", "36a6257b-1111-1111-1111-c1b7a7997087")
           ]
@@ -142,11 +142,11 @@ errors:
 |]
 
   ----------------------------------------
-  it "Columns with static presets defined are not part of the schema" $ \state ->
+  it "Columns with static presets defined are not part of the schema" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphqlWithHeaders
-          state
+          testEnvironment
           [ ("X-Hasura-Role", "user"),
             ("X-Hasura-User-Id", "36a6257b-1111-1111-1111-c1b7a7997087")
           ]
@@ -195,15 +195,15 @@ schema =
 
 -- ** Postgres backend
 
-postgresSetup :: (State, ()) -> IO ()
-postgresSetup (state, localState) = do
-  Postgres.setup schema (state, localState)
-  postgresCreatePermissions state
+postgresSetup :: (TestEnvironment, ()) -> IO ()
+postgresSetup (testEnvironment, localTestEnvironment) = do
+  Postgres.setup schema (testEnvironment, localTestEnvironment)
+  postgresCreatePermissions testEnvironment
 
-postgresCreatePermissions :: State -> IO ()
-postgresCreatePermissions state = do
+postgresCreatePermissions :: TestEnvironment -> IO ()
+postgresCreatePermissions testEnvironment = do
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: pg_create_select_permission
 args:
@@ -218,7 +218,7 @@ args:
     columns: '*'
 |]
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: pg_create_insert_permission
 args:
@@ -239,15 +239,15 @@ args:
 
 -- ** SQL Server backend
 
-sqlserverSetup :: (State, ()) -> IO ()
-sqlserverSetup (state, localState) = do
-  Sqlserver.setup schema (state, localState)
-  sqlserverCreatePermissions state
+sqlserverSetup :: (TestEnvironment, ()) -> IO ()
+sqlserverSetup (testEnvironment, localTestEnvironment) = do
+  Sqlserver.setup schema (testEnvironment, localTestEnvironment)
+  sqlserverCreatePermissions testEnvironment
 
-sqlserverCreatePermissions :: State -> IO ()
-sqlserverCreatePermissions state = do
+sqlserverCreatePermissions :: TestEnvironment -> IO ()
+sqlserverCreatePermissions testEnvironment = do
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: mssql_create_select_permission
 args:
@@ -262,7 +262,7 @@ args:
     columns: '*'
 |]
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: mssql_create_insert_permission
 args:

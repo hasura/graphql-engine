@@ -28,7 +28,7 @@ module Test.RemoteRelationship.MetadataAPI.Common
     dbToRemoteSchemaRemoteRelationshipContext,
     remoteSchemaToDBRemoteRelationshipContext,
     remoteSchemaToremoteSchemaRemoteRelationshipContext,
-    LocalTestState (..),
+    LocalTestTestEnvironment (..),
   )
 where
 
@@ -50,94 +50,94 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.RemoteServer qualified as RemoteServer
-import Harness.State (Server, State, stopServer)
 import Harness.Test.Context (Context (..))
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema qualified as Schema
+import Harness.TestEnvironment (Server, TestEnvironment, stopServer)
 import Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
 
-data LocalTestState = LocalTestState
+data LocalTestTestEnvironment = LocalTestTestEnvironment
   { _lhsServer :: Maybe Server,
     _rhsServer :: Maybe Server
   }
 
-dbTodbRemoteRelationshipContext :: Context LocalTestState
+dbTodbRemoteRelationshipContext :: Context LocalTestTestEnvironment
 dbTodbRemoteRelationshipContext =
   Context
     { name = Context.Combine (Context.Backend Context.Postgres) (Context.Backend Context.Postgres),
-      mkLocalState = \_state ->
-        pure $ LocalTestState Nothing Nothing,
-      setup = \(state, _) -> do
-        GraphqlEngine.clearMetadata state
-        rhsPostgresSetup state
-        lhsPostgresSetup (state, Nothing)
-        createSourceRemoteRelationship state,
-      teardown = \(state, _) -> do
-        GraphqlEngine.clearMetadata state
+      mkLocalTestEnvironment = \_testEnvironment ->
+        pure $ LocalTestTestEnvironment Nothing Nothing,
+      setup = \(testEnvironment, _) -> do
+        GraphqlEngine.clearMetadata testEnvironment
+        rhsPostgresSetup testEnvironment
+        lhsPostgresSetup (testEnvironment, Nothing)
+        createSourceRemoteRelationship testEnvironment,
+      teardown = \(testEnvironment, _) -> do
+        GraphqlEngine.clearMetadata testEnvironment
         lhsPostgresTeardown
         rhsPostgresTeardown
         pure (),
       customOptions = Nothing
     }
 
-dbToRemoteSchemaRemoteRelationshipContext :: Context LocalTestState
+dbToRemoteSchemaRemoteRelationshipContext :: Context LocalTestTestEnvironment
 dbToRemoteSchemaRemoteRelationshipContext =
   Context
     { name = Context.Combine (Context.Backend Context.Postgres) Context.RemoteGraphQLServer,
-      mkLocalState = \state -> do
-        rhsServer <- rhsRemoteServerMkLocalState state
-        pure $ LocalTestState Nothing rhsServer,
-      setup = \(state, LocalTestState _ rhsSever) -> do
-        GraphqlEngine.clearMetadata state
-        rhsRemoteServerSetup (state, rhsSever)
-        lhsPostgresSetup (state, Nothing)
-        createRemoteSchemaRemoteRelationship state,
-      teardown = \(state, LocalTestState _ rhsSever) -> do
-        GraphqlEngine.clearMetadata state
+      mkLocalTestEnvironment = \testEnvironment -> do
+        rhsServer <- rhsRemoteServerMkLocalTestEnvironment testEnvironment
+        pure $ LocalTestTestEnvironment Nothing rhsServer,
+      setup = \(testEnvironment, LocalTestTestEnvironment _ rhsSever) -> do
+        GraphqlEngine.clearMetadata testEnvironment
+        rhsRemoteServerSetup (testEnvironment, rhsSever)
+        lhsPostgresSetup (testEnvironment, Nothing)
+        createRemoteSchemaRemoteRelationship testEnvironment,
+      teardown = \(testEnvironment, LocalTestTestEnvironment _ rhsSever) -> do
+        GraphqlEngine.clearMetadata testEnvironment
         lhsPostgresTeardown
-        rhsRemoteServerTeardown (state, rhsSever),
+        rhsRemoteServerTeardown (testEnvironment, rhsSever),
       customOptions = Nothing
     }
 
-remoteSchemaToDBRemoteRelationshipContext :: Context LocalTestState
+remoteSchemaToDBRemoteRelationshipContext :: Context LocalTestTestEnvironment
 remoteSchemaToDBRemoteRelationshipContext =
   Context
     { name = Context.Combine Context.RemoteGraphQLServer (Context.Backend Context.Postgres),
-      mkLocalState = \state -> do
-        lhsServer <- lhsRemoteServerMkLocalState state
-        pure $ LocalTestState lhsServer Nothing,
-      setup = \(state, LocalTestState lhsServer _) -> do
-        GraphqlEngine.clearMetadata state
-        rhsPostgresSetup state
-        lhsRemoteServerSetup (state, lhsServer)
-        addRStoDBRelationship state,
-      teardown = \(state, LocalTestState lhsServer _) -> do
-        GraphqlEngine.clearMetadata state
-        lhsRemoteServerTeardown (state, lhsServer)
+      mkLocalTestEnvironment = \testEnvironment -> do
+        lhsServer <- lhsRemoteServerMkLocalTestEnvironment testEnvironment
+        pure $ LocalTestTestEnvironment lhsServer Nothing,
+      setup = \(testEnvironment, LocalTestTestEnvironment lhsServer _) -> do
+        GraphqlEngine.clearMetadata testEnvironment
+        rhsPostgresSetup testEnvironment
+        lhsRemoteServerSetup (testEnvironment, lhsServer)
+        addRStoDBRelationship testEnvironment,
+      teardown = \(testEnvironment, LocalTestTestEnvironment lhsServer _) -> do
+        GraphqlEngine.clearMetadata testEnvironment
+        lhsRemoteServerTeardown (testEnvironment, lhsServer)
         rhsPostgresTeardown,
       customOptions = Nothing
     }
 
-remoteSchemaToremoteSchemaRemoteRelationshipContext :: Context LocalTestState
+remoteSchemaToremoteSchemaRemoteRelationshipContext :: Context LocalTestTestEnvironment
 remoteSchemaToremoteSchemaRemoteRelationshipContext =
   Context
     { name = Context.Combine Context.RemoteGraphQLServer Context.RemoteGraphQLServer,
-      mkLocalState = \state -> do
-        lhsServer <- lhsRemoteServerMkLocalState state
-        rhsServer <- rhsRemoteServerMkLocalState state
-        pure $ LocalTestState lhsServer rhsServer,
-      setup = \(state, LocalTestState lhsServer rhsServer) -> do
-        GraphqlEngine.clearMetadata state
-        rhsRemoteServerSetup (state, rhsServer)
-        lhsRemoteServerSetup (state, lhsServer)
-        addRStoRSRelationship state,
-      teardown = \(state, LocalTestState lhsServer rhsServer) -> do
-        GraphqlEngine.clearMetadata state
-        lhsRemoteServerTeardown (state, lhsServer)
-        rhsRemoteServerTeardown (state, rhsServer),
+      mkLocalTestEnvironment = \testEnvironment -> do
+        lhsServer <- lhsRemoteServerMkLocalTestEnvironment testEnvironment
+        rhsServer <- rhsRemoteServerMkLocalTestEnvironment testEnvironment
+        pure $ LocalTestTestEnvironment lhsServer rhsServer,
+      setup = \(testEnvironment, LocalTestTestEnvironment lhsServer rhsServer) -> do
+        GraphqlEngine.clearMetadata testEnvironment
+        rhsRemoteServerSetup (testEnvironment, rhsServer)
+        lhsRemoteServerSetup (testEnvironment, lhsServer)
+        addRStoRSRelationship testEnvironment,
+      teardown = \(testEnvironment, LocalTestTestEnvironment lhsServer rhsServer) -> do
+        GraphqlEngine.clearMetadata testEnvironment
+        lhsRemoteServerTeardown (testEnvironment, lhsServer)
+        rhsRemoteServerTeardown (testEnvironment, rhsServer),
       customOptions = Nothing
     }
 
@@ -185,12 +185,12 @@ albumTable =
 -- DB to DB Postgres Remote relationship
 
 -- | RHS Postgres Setup
-rhsPostgresSetup :: State -> IO ()
-rhsPostgresSetup state = do
+rhsPostgresSetup :: TestEnvironment -> IO ()
+rhsPostgresSetup testEnvironment = do
   let sourceName = "target"
       sourceConfig = Postgres.defaultSourceConfiguration
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: pg_add_source
 args:
@@ -200,19 +200,19 @@ args:
   -- setup tables only
   Postgres.createTable albumTable
   Postgres.insertTable albumTable
-  Schema.trackTable Context.Postgres sourceName albumTable state
+  Schema.trackTable Context.Postgres sourceName albumTable testEnvironment
 
 rhsPostgresTeardown :: IO ()
 rhsPostgresTeardown = Postgres.dropTable albumTable
 
 -- | LHS Postgres Setup
-lhsPostgresSetup :: (State, Maybe Server) -> IO ()
-lhsPostgresSetup (state, _) = do
+lhsPostgresSetup :: (TestEnvironment, Maybe Server) -> IO ()
+lhsPostgresSetup (testEnvironment, _) = do
   let sourceName = "source"
       sourceConfig = Postgres.defaultSourceConfiguration
   -- Add remote source
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: pg_add_source
 args:
@@ -222,13 +222,13 @@ args:
   -- setup tables only
   Postgres.createTable track
   Postgres.insertTable track
-  Schema.trackTable Context.Postgres sourceName track state
+  Schema.trackTable Context.Postgres sourceName track testEnvironment
 
-createSourceRemoteRelationship :: State -> IO ()
-createSourceRemoteRelationship state = do
+createSourceRemoteRelationship :: TestEnvironment -> IO ()
+createSourceRemoteRelationship testEnvironment = do
   let schemaName = Context.defaultSchema Context.Postgres
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: bulk
 args:
@@ -242,7 +242,7 @@ args:
     definition:
       to_source:
         source: target
-        table: 
+        table:
           schema: hasura
           name: album
         relationship_type: object
@@ -259,11 +259,11 @@ lhsPostgresTeardown = Postgres.dropTable track
 -- Here the RHS is remote schema because a postgres source has a remote reltionship
 -- with it and hence depends on it.
 
-createRemoteSchemaRemoteRelationship :: State -> IO ()
-createRemoteSchemaRemoteRelationship state = do
+createRemoteSchemaRemoteRelationship :: TestEnvironment -> IO ()
+createRemoteSchemaRemoteRelationship testEnvironment = do
   let schemaName = Context.defaultSchema Context.Postgres
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: bulk
 args:
@@ -288,10 +288,10 @@ args:
 -- Remote Schema to DB Remote relationship
 
 -- | LHS Remote Server
-addRStoDBRelationship :: State -> IO ()
-addRStoDBRelationship state =
+addRStoDBRelationship :: TestEnvironment -> IO ()
+addRStoDBRelationship testEnvironment =
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: bulk
 args:
@@ -314,10 +314,10 @@ args:
 --------------------------------------------------------------------------------
 -- Remote Schema to Remote Schema Remote relationship
 
-addRStoRSRelationship :: State -> IO ()
-addRStoRSRelationship state =
+addRStoRSRelationship :: TestEnvironment -> IO ()
+addRStoRSRelationship testEnvironment =
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: bulk
 args:
@@ -354,8 +354,8 @@ type Query {
 
 |]
 
-rhsRemoteServerMkLocalState :: State -> IO (Maybe Server)
-rhsRemoteServerMkLocalState _ = do
+rhsRemoteServerMkLocalTestEnvironment :: TestEnvironment -> IO (Maybe Server)
+rhsRemoteServerMkLocalTestEnvironment _ = do
   server <-
     RemoteServer.run $
       RemoteServer.generateQueryInterpreter (Query {album})
@@ -374,13 +374,13 @@ rhsRemoteServerMkLocalState _ = do
           artist_id = pure artist_id
         }
 
-rhsRemoteServerSetup :: (State, Maybe Server) -> IO ()
-rhsRemoteServerSetup (state, maybeRemoteServer) = case maybeRemoteServer of
-  Nothing -> error "RHS remote server local state did not succesfully create a server"
+rhsRemoteServerSetup :: (TestEnvironment, Maybe Server) -> IO ()
+rhsRemoteServerSetup (testEnvironment, maybeRemoteServer) = case maybeRemoteServer of
+  Nothing -> error "RHS remote server local testEnvironment did not succesfully create a server"
   Just remoteServer -> do
     let remoteSchemaEndpoint = GraphqlEngine.serverUrl remoteServer ++ "/graphql"
     GraphqlEngine.postMetadata_
-      state
+      testEnvironment
       [yaml|
   type: add_remote_schema
   args:
@@ -389,7 +389,7 @@ rhsRemoteServerSetup (state, maybeRemoteServer) = case maybeRemoteServer of
       url: *remoteSchemaEndpoint
     |]
 
-rhsRemoteServerTeardown :: (State, Maybe Server) -> IO ()
+rhsRemoteServerTeardown :: (TestEnvironment, Maybe Server) -> IO ()
 rhsRemoteServerTeardown (_, maybeServer) = traverse_ stopServer maybeServer
 
 -- LHS Remote Server
@@ -489,8 +489,8 @@ input StringCompExp {
 
 |]
 
-lhsRemoteServerMkLocalState :: State -> IO (Maybe Server)
-lhsRemoteServerMkLocalState _ = do
+lhsRemoteServerMkLocalTestEnvironment :: TestEnvironment -> IO (Maybe Server)
+lhsRemoteServerMkLocalTestEnvironment _ = do
   server <-
     RemoteServer.run $
       RemoteServer.generateQueryInterpreter (LHSQuery {q_hasura_track = hasura_track})
@@ -565,13 +565,13 @@ lhsRemoteServerMkLocalState _ = do
           t_album_id = pure albumId
         }
 
-lhsRemoteServerSetup :: (State, Maybe Server) -> IO ()
-lhsRemoteServerSetup (state, maybeRemoteServer) = case maybeRemoteServer of
-  Nothing -> error "LHS remote server local state did not succesfully create a server"
+lhsRemoteServerSetup :: (TestEnvironment, Maybe Server) -> IO ()
+lhsRemoteServerSetup (testEnvironment, maybeRemoteServer) = case maybeRemoteServer of
+  Nothing -> error "LHS remote server local testEnvironment did not succesfully create a server"
   Just remoteServer -> do
     let remoteSchemaEndpoint = GraphqlEngine.serverUrl remoteServer ++ "/graphql"
     GraphqlEngine.postMetadata_
-      state
+      testEnvironment
       [yaml|
 type: bulk
 args:
@@ -582,5 +582,5 @@ args:
       url: *remoteSchemaEndpoint
       |]
 
-lhsRemoteServerTeardown :: (State, Maybe Server) -> IO ()
+lhsRemoteServerTeardown :: (TestEnvironment, Maybe Server) -> IO ()
 lhsRemoteServerTeardown (_, maybeServer) = traverse_ stopServer maybeServer

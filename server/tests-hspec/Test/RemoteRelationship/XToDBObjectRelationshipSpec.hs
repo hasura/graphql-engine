@@ -31,18 +31,18 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
 import Harness.RemoteServer qualified as RemoteServer
-import Harness.State (Server, State, stopServer)
 import Harness.Test.Context (Context (..))
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema qualified as Schema
+import Harness.TestEnvironment (Server, TestEnvironment, stopServer)
 import Test.Hspec (SpecWith, describe, it)
 import Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith State
-spec = Context.runWithLocalState contexts tests
+spec :: SpecWith TestEnvironment
+spec = Context.runWithLocalTestEnvironment contexts tests
   where
     lhsContexts = [lhsPostgres, lhsSQLServer, lhsRemoteServer]
     rhsContexts = [rhsPostgres, rhsSQLServer]
@@ -59,22 +59,22 @@ combine :: LHSContext -> RHSContext -> Context (Maybe Server)
 combine lhs (tableName, rhs) =
   Context
     { name = Context.Combine lhsName rhsName,
-      mkLocalState = lhsMkLocalState,
-      setup = \(state, localState) -> do
-        GraphqlEngine.clearMetadata state
-        rhsSetup (state, ())
-        lhsSetup (state, localState),
-      teardown = \state@(globalState, _localState) -> do
-        lhsTeardown state
-        rhsTeardown (globalState, ())
-        GraphqlEngine.clearMetadata globalState,
+      mkLocalTestEnvironment = lhsMkLocalTestEnvironment,
+      setup = \(testEnvironment, localTestEnvironment) -> do
+        GraphqlEngine.clearMetadata testEnvironment
+        rhsSetup (testEnvironment, ())
+        lhsSetup (testEnvironment, localTestEnvironment),
+      teardown = \testEnvironment@(globalTestEnvironment, _localTestEnvironment) -> do
+        lhsTeardown testEnvironment
+        rhsTeardown (globalTestEnvironment, ())
+        GraphqlEngine.clearMetadata globalTestEnvironment,
       customOptions =
         Context.combineOptions lhsOptions rhsOptions
     }
   where
     Context
       { name = lhsName,
-        mkLocalState = lhsMkLocalState,
+        mkLocalTestEnvironment = lhsMkLocalTestEnvironment,
         setup = lhsSetup,
         teardown = lhsTeardown,
         customOptions = lhsOptions
@@ -99,7 +99,7 @@ lhsPostgres :: LHSContext
 lhsPostgres tableName =
   Context
     { name = Context.Backend Context.Postgres,
-      mkLocalState = lhsPostgresMkLocalState,
+      mkLocalTestEnvironment = lhsPostgresMkLocalTestEnvironment,
       setup = lhsPostgresSetup tableName,
       teardown = lhsPostgresTeardown,
       customOptions = Nothing
@@ -109,7 +109,7 @@ lhsSQLServer :: LHSContext
 lhsSQLServer tableName =
   Context
     { name = Context.Backend Context.SQLServer,
-      mkLocalState = lhsSQLServerMkLocalState,
+      mkLocalTestEnvironment = lhsSQLServerMkLocalTestEnvironment,
       setup = lhsSQLServerSetup tableName,
       teardown = lhsSQLServerTeardown,
       customOptions = Nothing
@@ -119,7 +119,7 @@ lhsRemoteServer :: LHSContext
 lhsRemoteServer tableName =
   Context
     { name = Context.RemoteGraphQLServer,
-      mkLocalState = lhsRemoteServerMkLocalState,
+      mkLocalTestEnvironment = lhsRemoteServerMkLocalTestEnvironment,
       setup = lhsRemoteServerSetup tableName,
       teardown = lhsRemoteServerTeardown,
       customOptions = Nothing
@@ -143,7 +143,7 @@ rhsPostgres =
       context =
         Context
           { name = Context.Backend Context.Postgres,
-            mkLocalState = Context.noLocalState,
+            mkLocalTestEnvironment = Context.noLocalTestEnvironment,
             setup = rhsPostgresSetup,
             teardown = rhsPostgresTeardown,
             customOptions = Nothing
@@ -160,7 +160,7 @@ rhsSQLServer =
       context =
         Context
           { name = Context.Backend Context.SQLServer,
-            mkLocalState = Context.noLocalState,
+            mkLocalTestEnvironment = Context.noLocalTestEnvironment,
             setup = rhsSQLServerSetup,
             teardown = rhsSQLServerTeardown,
             customOptions = Nothing
@@ -210,17 +210,17 @@ album =
 --------------------------------------------------------------------------------
 -- LHS Postgres
 
-lhsPostgresMkLocalState :: State -> IO (Maybe Server)
-lhsPostgresMkLocalState _ = pure Nothing
+lhsPostgresMkLocalTestEnvironment :: TestEnvironment -> IO (Maybe Server)
+lhsPostgresMkLocalTestEnvironment _ = pure Nothing
 
-lhsPostgresSetup :: Value -> (State, Maybe Server) -> IO ()
-lhsPostgresSetup rhsTableName (state, _) = do
+lhsPostgresSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsPostgresSetup rhsTableName (testEnvironment, _) = do
   let sourceName = "source"
       sourceConfig = Postgres.defaultSourceConfiguration
       schemaName = Context.defaultSchema Context.Postgres
   -- Add remote source
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: pg_add_source
 args:
@@ -230,9 +230,9 @@ args:
   -- setup tables only
   Postgres.createTable track
   Postgres.insertTable track
-  Schema.trackTable Context.Postgres sourceName track state
+  Schema.trackTable Context.Postgres sourceName track testEnvironment
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: bulk
 args:
@@ -272,23 +272,23 @@ args:
           album_id: id
   |]
 
-lhsPostgresTeardown :: (State, Maybe Server) -> IO ()
+lhsPostgresTeardown :: (TestEnvironment, Maybe Server) -> IO ()
 lhsPostgresTeardown _ = Postgres.dropTable track
 
 --------------------------------------------------------------------------------
 -- LHS SQLServer
 
-lhsSQLServerMkLocalState :: State -> IO (Maybe Server)
-lhsSQLServerMkLocalState _ = pure Nothing
+lhsSQLServerMkLocalTestEnvironment :: TestEnvironment -> IO (Maybe Server)
+lhsSQLServerMkLocalTestEnvironment _ = pure Nothing
 
-lhsSQLServerSetup :: Value -> (State, Maybe Server) -> IO ()
-lhsSQLServerSetup rhsTableName (state, _) = do
+lhsSQLServerSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsSQLServerSetup rhsTableName (testEnvironment, _) = do
   let sourceName = "source"
       sourceConfig = SQLServer.defaultSourceConfiguration
       schemaName = Context.defaultSchema Context.SQLServer
   -- Add remote source
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: mssql_add_source
 args:
@@ -298,9 +298,9 @@ args:
   -- setup tables only
   SQLServer.createTable track
   SQLServer.insertTable track
-  Schema.trackTable Context.SQLServer sourceName track state
+  Schema.trackTable Context.SQLServer sourceName track testEnvironment
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: bulk
 args:
@@ -340,7 +340,7 @@ args:
           album_id: id
   |]
 
-lhsSQLServerTeardown :: (State, Maybe Server) -> IO ()
+lhsSQLServerTeardown :: (TestEnvironment, Maybe Server) -> IO ()
 lhsSQLServerTeardown _ = SQLServer.dropTable track
 
 --------------------------------------------------------------------------------
@@ -438,8 +438,8 @@ input StringCompExp {
 
 |]
 
-lhsRemoteServerMkLocalState :: State -> IO (Maybe Server)
-lhsRemoteServerMkLocalState _ = do
+lhsRemoteServerMkLocalTestEnvironment :: TestEnvironment -> IO (Maybe Server)
+lhsRemoteServerMkLocalTestEnvironment _ = do
   server <-
     RemoteServer.run $
       RemoteServer.generateQueryInterpreter (Query {hasura_track})
@@ -514,13 +514,13 @@ lhsRemoteServerMkLocalState _ = do
           t_album_id = pure albumId
         }
 
-lhsRemoteServerSetup :: Value -> (State, Maybe Server) -> IO ()
-lhsRemoteServerSetup tableName (state, maybeRemoteServer) = case maybeRemoteServer of
-  Nothing -> error "XToDBObjectRelationshipSpec: remote server local state did not succesfully create a server"
+lhsRemoteServerSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsRemoteServerSetup tableName (testEnvironment, maybeRemoteServer) = case maybeRemoteServer of
+  Nothing -> error "XToDBObjectRelationshipSpec: remote server local testEnvironment did not succesfully create a server"
   Just remoteServer -> do
     let remoteSchemaEndpoint = GraphqlEngine.serverUrl remoteServer ++ "/graphql"
     GraphqlEngine.postMetadata_
-      state
+      testEnvironment
       [yaml|
 type: bulk
 args:
@@ -543,20 +543,20 @@ args:
           album_id: id
       |]
 
-lhsRemoteServerTeardown :: (State, Maybe Server) -> IO ()
+lhsRemoteServerTeardown :: (TestEnvironment, Maybe Server) -> IO ()
 lhsRemoteServerTeardown (_, maybeServer) = traverse_ stopServer maybeServer
 
 --------------------------------------------------------------------------------
 -- RHS Postgres
 
-rhsPostgresSetup :: (State, ()) -> IO ()
-rhsPostgresSetup (state, _) = do
+rhsPostgresSetup :: (TestEnvironment, ()) -> IO ()
+rhsPostgresSetup (testEnvironment, _) = do
   let sourceName = "target"
       sourceConfig = Postgres.defaultSourceConfiguration
       schemaName = Context.defaultSchema Context.Postgres
   -- Add remote source
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: pg_add_source
 args:
@@ -566,10 +566,10 @@ args:
   -- setup tables only
   Postgres.createTable album
   Postgres.insertTable album
-  Schema.trackTable Context.Postgres sourceName album state
+  Schema.trackTable Context.Postgres sourceName album testEnvironment
 
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: bulk
 args:
@@ -603,20 +603,20 @@ args:
       allow_aggregations: true
   |]
 
-rhsPostgresTeardown :: (State, ()) -> IO ()
+rhsPostgresTeardown :: (TestEnvironment, ()) -> IO ()
 rhsPostgresTeardown _ = Postgres.dropTable album
 
 --------------------------------------------------------------------------------
 -- RHS SQLServer
 
-rhsSQLServerSetup :: (State, ()) -> IO ()
-rhsSQLServerSetup (state, _) = do
+rhsSQLServerSetup :: (TestEnvironment, ()) -> IO ()
+rhsSQLServerSetup (testEnvironment, _) = do
   let sourceName = "target"
       sourceConfig = SQLServer.defaultSourceConfiguration
       schemaName = Context.defaultSchema Context.SQLServer
   -- Add remote source
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: mssql_add_source
 args:
@@ -626,10 +626,10 @@ args:
   -- setup tables only
   SQLServer.createTable album
   SQLServer.insertTable album
-  Schema.trackTable Context.SQLServer sourceName album state
+  Schema.trackTable Context.SQLServer sourceName album testEnvironment
 
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: bulk
 args:
@@ -663,23 +663,23 @@ args:
       allow_aggregations: true
   |]
 
-rhsSQLServerTeardown :: (State, ()) -> IO ()
+rhsSQLServerTeardown :: (TestEnvironment, ()) -> IO ()
 rhsSQLServerTeardown _ = SQLServer.dropTable album
 
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Context.Options -> SpecWith (State, Maybe Server)
+tests :: Context.Options -> SpecWith (TestEnvironment, Maybe Server)
 tests opts = describe "object-relationship" $ do
   schemaTests opts
   executionTests opts
   permissionTests opts
 
 -- | Basic queries using *-to-DB joins
-executionTests :: Context.Options -> SpecWith (State, Maybe Server)
+executionTests :: Context.Options -> SpecWith (TestEnvironment, Maybe Server)
 executionTests opts = describe "execution" $ do
   -- fetches the relationship data
-  it "related-data" $ \(state, _) -> do
+  it "related-data" $ \(testEnvironment, _) -> do
     let query =
           [graphql|
           query {
@@ -701,11 +701,11 @@ executionTests opts = describe "execution" $ do
           |]
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphql state query)
+      (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
   -- when any of the join columns are null, the relationship should be null
-  it "related-data-null" $ \(state, _) -> do
+  it "related-data-null" $ \(testEnvironment, _) -> do
     let query =
           [graphql|
           query {
@@ -726,11 +726,11 @@ executionTests opts = describe "execution" $ do
           |]
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphql state query)
+      (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
   -- when the lhs response has both null and non-null values for join columns
-  it "related-data-non-null-and-null" $ \(state, _) -> do
+  it "related-data-non-null-and-null" $ \(testEnvironment, _) -> do
     let query =
           [graphql|
           query {
@@ -762,17 +762,17 @@ executionTests opts = describe "execution" $ do
           |]
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphql state query)
+      (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
 -- | Spec that describe an object relationship's data in the presence of
 -- permisisons.
-permissionTests :: Context.Options -> SpecWith (State, Maybe Server)
+permissionTests :: Context.Options -> SpecWith (TestEnvironment, Maybe Server)
 permissionTests opts = describe "permission" $ do
   let userHeaders = [("x-hasura-role", "role1"), ("x-hasura-artist-id", "1")]
 
   -- only the allowed rows on the target table are queryable
-  it "only-allowed-rows" $ \(state, _) -> do
+  it "only-allowed-rows" $ \(testEnvironment, _) -> do
     let query =
           [graphql|
           query {
@@ -814,13 +814,13 @@ permissionTests opts = describe "permission" $ do
           |]
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphqlWithHeaders state userHeaders query)
+      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
   -- we use an introspection query to check column permissions:
   -- 1. the type 'hasura_album' has only 'artist_id' and 'title', the allowed columns
   -- 2. the album field in 'hasura_track' type is of type 'hasura_album'
-  it "only-allowed-columns" $ \(state, _) -> do
+  it "only-allowed-columns" $ \(testEnvironment, _) -> do
     let query =
           [graphql|
           query {
@@ -851,16 +851,16 @@ permissionTests opts = describe "permission" $ do
           |]
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphqlWithHeaders state userHeaders query)
+      (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
-schemaTests :: Context.Options -> SpecWith (State, Maybe Server)
+schemaTests :: Context.Options -> SpecWith (TestEnvironment, Maybe Server)
 schemaTests opts =
   -- we use an introspection query to check:
   -- 1. a field 'album' is added to the track table
   -- 1. track's where clause does not have 'album' field
   -- 2. track's order_by clause does nat have 'album' field
-  it "graphql-schema" $ \(state, _) -> do
+  it "graphql-schema" $ \(testEnvironment, _) -> do
     let query =
           [graphql|
           query {
@@ -906,5 +906,5 @@ schemaTests opts =
           |]
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphql state query)
+      (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse

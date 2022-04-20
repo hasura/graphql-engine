@@ -6,19 +6,19 @@ module Test.RunSQLSpec (spec) where
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
-import Harness.State (State)
 import Harness.Test.Context qualified as Context
+import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec
 import Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
-spec :: SpecWith State
+spec :: SpecWith TestEnvironment
 spec =
   Context.run
     [ Context.Context
         { name = Context.Backend Context.BigQuery,
-          mkLocalState = Context.noLocalState,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
           setup = BigQuery.setup [],
           teardown = BigQuery.teardown [],
           customOptions = Nothing
@@ -29,14 +29,14 @@ spec =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Context.Options -> SpecWith State
+tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
-  it "BigQuery - running invalid SQL" \state ->
+  it "BigQuery - running invalid SQL" \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postV2Query
           400
-          state
+          testEnvironment
           [yaml|
 type: bigquery_run_sql
 args:

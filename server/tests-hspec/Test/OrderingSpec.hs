@@ -7,21 +7,21 @@ import Harness.Backend.Mysql as Mysql
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql
 import Harness.Quoter.Yaml
-import Harness.State (State)
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema qualified as Schema
+import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec
 import Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith State
+spec :: SpecWith TestEnvironment
 spec =
   Context.run
     [ Context.Context
         { name = Context.Backend Context.MySQL,
-          mkLocalState = Context.noLocalState,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
           setup = Mysql.setup schema,
           teardown = Mysql.teardown schema,
           customOptions = Nothing
@@ -55,13 +55,13 @@ author =
 -- That includes order by {text,id} {desc,asc}
 --
 
-tests :: Context.Options -> SpecWith State
+tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
-  it "Order by id ascending" $ \state ->
+  it "Order by id ascending" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 query {
   hasura_author (order_by: {id: asc}) {
@@ -80,11 +80,11 @@ data:
     id: 2
 |]
 
-  it "Order by id descending" $ \state ->
+  it "Order by id descending" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 query {
   hasura_author (order_by: {id: desc}) {
@@ -103,11 +103,11 @@ data:
     id: 1
 |]
 
-  it "Order by name ascending" $ \state ->
+  it "Order by name ascending" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 query {
   hasura_author (order_by: {name: asc}) {
@@ -126,11 +126,11 @@ data:
     id: 2
 |]
 
-  it "Order by name descending" $ \state ->
+  it "Order by name descending" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 query {
   hasura_author (order_by: {name: desc}) {

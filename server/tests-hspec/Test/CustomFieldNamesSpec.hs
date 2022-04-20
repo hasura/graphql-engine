@@ -12,9 +12,9 @@ import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
-import Harness.State (State)
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema qualified as Schema
+import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec (SpecWith, it)
 import Prelude
 
@@ -22,19 +22,19 @@ import Prelude
 
 -- * Preamble
 
-spec :: SpecWith State
+spec :: SpecWith TestEnvironment
 spec =
   Context.run
     [ Context.Context
         { name = Context.Backend Context.SQLServer,
-          mkLocalState = Context.noLocalState,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
           setup = sqlserverSetup,
           teardown = Sqlserver.teardown schema,
           customOptions = Nothing
         },
       Context.Context
         { name = Context.Backend Context.Postgres,
-          mkLocalState = Context.noLocalState,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
           setup = postgresSetup,
           teardown = Postgres.teardown schema,
           customOptions = Nothing
@@ -46,13 +46,13 @@ spec =
 
 -- * Tests
 
-tests :: Context.Options -> SpecWith State
+tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
-  it "Delete respects custom names" $ \state ->
+  it "Delete respects custom names" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 mutation author {
   delete_hasura_author(
@@ -74,11 +74,11 @@ data:
         Name: 'Mercer'
 |]
 
-  it "Update respects custom names" $ \state ->
+  it "Update respects custom names" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 mutation author {
   update_hasura_author(
@@ -101,11 +101,11 @@ data:
         Name: 'Johnson'
 |]
 
-  it "Insert respects custom names" $ \state ->
+  it "Insert respects custom names" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 mutation author {
   insert_hasura_author(objects:
@@ -155,16 +155,16 @@ schema =
 
 -- ** Postgres backend
 
-postgresSetup :: (State, ()) -> IO ()
-postgresSetup (state, localState) = do
-  Postgres.setup schema (state, localState)
-  postgresCreateCustomNames state
+postgresSetup :: (TestEnvironment, ()) -> IO ()
+postgresSetup (testEnvironment, localTestEnvironment) = do
+  Postgres.setup schema (testEnvironment, localTestEnvironment)
+  postgresCreateCustomNames testEnvironment
 
-postgresCreateCustomNames :: State -> IO ()
-postgresCreateCustomNames state = do
+postgresCreateCustomNames :: TestEnvironment -> IO ()
+postgresCreateCustomNames testEnvironment = do
   let source = Context.defaultBackendTypeString Context.Postgres
    in GraphqlEngine.postMetadata_
-        state
+        testEnvironment
         [yaml|
 type: pg_set_table_customization
 args:
@@ -182,16 +182,16 @@ args:
 
 -- ** SQL Server backend
 
-sqlserverSetup :: (State, ()) -> IO ()
-sqlserverSetup (state, localState) = do
-  Sqlserver.setup schema (state, localState)
-  sqlserverCreateCustomNames state
+sqlserverSetup :: (TestEnvironment, ()) -> IO ()
+sqlserverSetup (testEnvironment, localTestEnvironment) = do
+  Sqlserver.setup schema (testEnvironment, localTestEnvironment)
+  sqlserverCreateCustomNames testEnvironment
 
-sqlserverCreateCustomNames :: State -> IO ()
-sqlserverCreateCustomNames state = do
+sqlserverCreateCustomNames :: TestEnvironment -> IO ()
+sqlserverCreateCustomNames testEnvironment = do
   let source = Context.defaultBackendTypeString Context.SQLServer
    in GraphqlEngine.postMetadata_
-        state
+        testEnvironment
         [yaml|
 type: mssql_set_table_customization
 args:

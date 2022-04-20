@@ -11,49 +11,49 @@ import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
-import Harness.State (State)
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema qualified as Schema
+import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec (SpecWith, describe, it)
 import Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith State
+spec :: SpecWith TestEnvironment
 spec =
   Context.run
     [ Context.Context
         { name = Context.Backend Context.MySQL,
-          mkLocalState = Context.noLocalState,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
           setup = Mysql.setup schema,
           teardown = Mysql.teardown schema,
           customOptions = Nothing
         },
       Context.Context
         { name = Context.Backend Context.Postgres,
-          mkLocalState = Context.noLocalState,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
           setup = Postgres.setup schema,
           teardown = Postgres.teardown schema,
           customOptions = Nothing
         },
       Context.Context
         { name = Context.Backend Context.Citus,
-          mkLocalState = Context.noLocalState,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
           setup = Citus.setup schema,
           teardown = Citus.teardown schema,
           customOptions = Nothing
         },
       Context.Context
         { name = Context.Backend Context.SQLServer,
-          mkLocalState = Context.noLocalState,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
           setup = Sqlserver.setup schema,
           teardown = Sqlserver.teardown schema,
           customOptions = Nothing
         },
       Context.Context
         { name = Context.Backend Context.BigQuery,
-          mkLocalState = Context.noLocalState,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
           setup = Bigquery.setup schema,
           teardown = Bigquery.teardown schema,
           customOptions =
@@ -102,13 +102,13 @@ _article =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Context.Options -> SpecWith State
+tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = describe "BasicFieldsSpec" $ do
-  it "Author fields" $ \state ->
+  it "Author fields" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 query {
   hasura_author(order_by:[{id:asc}]) {
@@ -126,11 +126,11 @@ data:
   - name: Author 2
     id: 2
 |]
-  it "Use operationName" $ \state ->
+  it "Use operationName" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphqlYaml
-          state
+          testEnvironment
           [yaml|
 operationName: chooseThisOne
 query: |
@@ -155,11 +155,11 @@ data:
   - name: Author 2
     id: 2
 |]
-  it "Missing field" $ \state -> do
+  it "Missing field" $ \testEnvironment -> do
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 query {
   hasura_author {
@@ -178,11 +178,11 @@ errors:
   message: |-
     field "notPresentCol" not found in type: 'hasura_author'
 |]
-  it "Missing table" $ \state ->
+  it "Missing table" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 query {
   random {
