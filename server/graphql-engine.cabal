@@ -1063,7 +1063,7 @@ test-suite tests-hspec
     Harness.GraphqlEngine
     Harness.Http
     Harness.RemoteServer
-    Harness.State
+    Harness.TestEnvironment
 
  -- Harness.Backend
     Harness.Backend.BigQuery

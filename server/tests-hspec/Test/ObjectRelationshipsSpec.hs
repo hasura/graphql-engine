@@ -8,21 +8,21 @@ import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql
 import Harness.Quoter.Yaml
-import Harness.State (State)
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema qualified as Schema
+import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec
 import Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith State
+spec :: SpecWith TestEnvironment
 spec = do
   Context.run
     [ Context.Context
         { name = Context.Backend Context.SQLServer,
-          mkLocalState = Context.noLocalState,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
           setup = Sqlserver.setup schema,
           teardown = Sqlserver.teardown schema,
           customOptions = Nothing
@@ -33,7 +33,7 @@ spec = do
   Context.run
     [ Context.Context
         { name = Context.Backend Context.MySQL,
-          mkLocalState = Context.noLocalState,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
           setup = Mysql.setup schema,
           teardown = Mysql.teardown schema,
           customOptions = Nothing
@@ -86,12 +86,12 @@ article =
 --------------------------------------------------------------------------------
 -- Tests
 
-mssqlTests :: Context.Options -> SpecWith State
+mssqlTests :: Context.Options -> SpecWith TestEnvironment
 mssqlTests opts = do
   usingWhereClause opts
   nullField opts
 
-mysqlTests :: Context.Options -> SpecWith State
+mysqlTests :: Context.Options -> SpecWith TestEnvironment
 mysqlTests opts = do
   usingWhereClause opts
   xdescribe
@@ -99,13 +99,13 @@ mysqlTests opts = do
     \ (https://github.com/hasura/graphql-engine-mono/issues/3650)"
     (nullField opts)
 
-usingWhereClause :: Context.Options -> SpecWith State
+usingWhereClause :: Context.Options -> SpecWith TestEnvironment
 usingWhereClause opts = do
-  it "Author of article where id=1" $ \state ->
+  it "Author of article where id=1" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 query {
   hasura_article(where: {id: {_eq: 1}}) {
@@ -125,13 +125,13 @@ data:
       id: 1
 |]
 
-nullField :: Context.Options -> SpecWith State
+nullField :: Context.Options -> SpecWith TestEnvironment
 nullField opts = do
-  it "Can realise a null relationship field" $ \state ->
+  it "Can realise a null relationship field" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 query {
   hasura_article(where: {id: {_eq: 4}}) {

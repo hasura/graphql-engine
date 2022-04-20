@@ -17,24 +17,24 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
 import Harness.RemoteServer qualified as RemoteServer
-import Harness.State (Server, State, stopServer)
 import Harness.Test.Context (Context (..))
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema qualified as Schema
+import Harness.TestEnvironment (Server, TestEnvironment, stopServer)
 import Test.Hspec (SpecWith, describe, it)
 import Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith State
-spec = Context.runWithLocalState [context] tests
+spec :: SpecWith TestEnvironment
+spec = Context.runWithLocalTestEnvironment [context] tests
   where
     context =
       Context
         { name = Context.RemoteGraphQLServer,
           -- start only one remote server
-          mkLocalState = \_state ->
+          mkLocalTestEnvironment = \_testEnvironment ->
             RemoteServer.run $
               RemoteServer.generateQueryInterpreter $
                 Query
@@ -46,14 +46,14 @@ spec = Context.runWithLocalState [context] tests
                   },
           -- set that remote server as both source and target, for convenience
           -- start a RHS Postgres for Metadata tests only
-          setup = \(state, server) -> do
-            GraphqlEngine.clearMetadata state
-            addRemoteSchema state "remote" server
-            addRelationships state
-            rhsPostgresSetup state,
+          setup = \(testEnvironment, server) -> do
+            GraphqlEngine.clearMetadata testEnvironment
+            addRemoteSchema testEnvironment "remote" server
+            addRelationships testEnvironment
+            rhsPostgresSetup testEnvironment,
           -- shutdown the server
-          teardown = \(state, server) -> do
-            GraphqlEngine.clearMetadata state
+          teardown = \(testEnvironment, server) -> do
+            GraphqlEngine.clearMetadata testEnvironment
             stopServer server
             rhsPostgresTeardown,
           -- no custom options
@@ -61,11 +61,11 @@ spec = Context.runWithLocalState [context] tests
         }
 
 -- | Add a remote schema to the engine with the given name.
-addRemoteSchema :: State -> String -> Server -> IO ()
-addRemoteSchema state rsName remoteServer = do
+addRemoteSchema :: TestEnvironment -> String -> Server -> IO ()
+addRemoteSchema testEnvironment rsName remoteServer = do
   let remoteSchemaEndpoint = RemoteServer.graphqlEndpoint remoteServer
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: add_remote_schema
 args:
@@ -75,10 +75,10 @@ args:
     |]
 
 -- | Create the remote relationships.
-addRelationships :: State -> IO ()
-addRelationships state = do
+addRelationships :: TestEnvironment -> IO ()
+addRelationships testEnvironment = do
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: bulk
 args:
@@ -245,12 +245,12 @@ track =
       [Schema.VInt 8, Schema.VStr "track_no_album", Schema.VNull]
     ]
 
-rhsPostgresSetup :: State -> IO ()
-rhsPostgresSetup state = do
+rhsPostgresSetup :: TestEnvironment -> IO ()
+rhsPostgresSetup testEnvironment = do
   let sourceName = "db"
       sourceConfig = Postgres.defaultSourceConfiguration
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: pg_add_source
 args:
@@ -260,7 +260,7 @@ args:
   -- setup tables only
   Postgres.createTable track
   Postgres.insertTable track
-  Schema.trackTable Context.Postgres sourceName track state
+  Schema.trackTable Context.Postgres sourceName track testEnvironment
 
 rhsPostgresTeardown :: IO ()
 rhsPostgresTeardown = Postgres.dropTable track
@@ -268,7 +268,7 @@ rhsPostgresTeardown = Postgres.dropTable track
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Context.Options -> SpecWith (State, Server)
+tests :: Context.Options -> SpecWith (TestEnvironment, Server)
 tests opts = do
   -- tests metadata API
   metadataAPITests
@@ -283,11 +283,11 @@ tests opts = do
   -- joins on deeply nested joins
   deeplyNestedJoinTests opts
 
-metadataAPITests :: SpecWith (State, Server)
+metadataAPITests :: SpecWith (TestEnvironment, Server)
 metadataAPITests = describe "metadata API" do
-  it "adds a RS-RS relationship" \(state, _) ->
+  it "adds a RS-RS relationship" \(testEnvironment, _) ->
     GraphqlEngine.postMetadata_
-      state
+      testEnvironment
       [yaml|
 type: create_remote_schema_remote_relationship
 args:
@@ -303,9 +303,9 @@ args:
           arguments:
             ids: $wIds
       |]
-  it "adds a RS-RD relationship" \(state, _) ->
+  it "adds a RS-RD relationship" \(testEnvironment, _) ->
     GraphqlEngine.postMetadata_
-      state
+      testEnvironment
       [yaml|
 type: create_remote_schema_remote_relationship
 args:
@@ -320,9 +320,9 @@ args:
       field_mapping:
         id: id
       |]
-  it "updates a RS-RS relationship" \(state, _) ->
+  it "updates a RS-RS relationship" \(testEnvironment, _) ->
     GraphqlEngine.postMetadata_
-      state
+      testEnvironment
       [yaml|
 type: update_remote_schema_remote_relationship
 args:
@@ -338,9 +338,9 @@ args:
           arguments:
             id: $id
       |]
-  it "updates a RS-DB relationship" \(state, _) ->
+  it "updates a RS-DB relationship" \(testEnvironment, _) ->
     GraphqlEngine.postMetadata_
-      state
+      testEnvironment
       [yaml|
 type: update_remote_schema_remote_relationship
 args:
@@ -355,9 +355,9 @@ args:
       field_mapping:
         id: id
       |]
-  it "deletes a RS-RS relationship" \(state, _) ->
+  it "deletes a RS-RS relationship" \(testEnvironment, _) ->
     GraphqlEngine.postMetadata_
-      state
+      testEnvironment
       [yaml|
 type: delete_remote_schema_remote_relationship
 args:
@@ -365,9 +365,9 @@ args:
   type_name: Writer
   name: nonsensical1
       |]
-  it "deletes a RS-DB relationship" \(state, _) ->
+  it "deletes a RS-DB relationship" \(testEnvironment, _) ->
     GraphqlEngine.postMetadata_
-      state
+      testEnvironment
       [yaml|
 type: delete_remote_schema_remote_relationship
 args:
@@ -378,9 +378,9 @@ args:
 
 -- | Ensure we don't insert `__hasura_internal_typename` when there are no
 -- joins.
-noJoinsTests :: Context.Options -> SpecWith (State, Server)
+noJoinsTests :: Context.Options -> SpecWith (TestEnvironment, Server)
 noJoinsTests opts = describe "simple joins" do
-  it "select objects without remote joins" \(state, _) -> do
+  it "select objects without remote joins" \(testEnvironment, _) -> do
     let query =
           [graphql|
           query {
@@ -408,12 +408,12 @@ noJoinsTests opts = describe "simple joins" do
           |]
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphql state query)
+      (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
-simpleTests :: Context.Options -> SpecWith (State, Server)
+simpleTests :: Context.Options -> SpecWith (TestEnvironment, Server)
 simpleTests opts = describe "simple joins" do
-  it "joins writer against articles" \(state, _) -> do
+  it "joins writer against articles" \(testEnvironment, _) -> do
     let query =
           [graphql|
           query {
@@ -436,9 +436,9 @@ simpleTests opts = describe "simple joins" do
           |]
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphql state query)
+      (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
-  it "joins no writer against articles" \(state, _) -> do
+  it "joins no writer against articles" \(testEnvironment, _) -> do
     let query =
           [graphql|
           query {
@@ -457,9 +457,9 @@ simpleTests opts = describe "simple joins" do
           |]
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphql state query)
+      (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
-  it "joins artist against articles" \(state, _) -> do
+  it "joins artist against articles" \(testEnvironment, _) -> do
     let query =
           [graphql|
           query {
@@ -482,9 +482,9 @@ simpleTests opts = describe "simple joins" do
           |]
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphql state query)
+      (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
-  it "joins no artist against articles" \(state, _) -> do
+  it "joins no artist against articles" \(testEnvironment, _) -> do
     let query =
           [graphql|
           query {
@@ -503,12 +503,12 @@ simpleTests opts = describe "simple joins" do
           |]
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphql state query)
+      (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
-joinArticleTests :: Context.Options -> SpecWith (State, Server)
+joinArticleTests :: Context.Options -> SpecWith (TestEnvironment, Server)
 joinArticleTests opts = describe "join from article object" do
-  it "does not join" \(state, _) -> do
+  it "does not join" \(testEnvironment, _) -> do
     let query =
           [graphql|
           query {
@@ -541,12 +541,12 @@ joinArticleTests opts = describe "join from article object" do
           |]
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphql state query)
+      (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
-joinWriterTests :: Context.Options -> SpecWith (State, Server)
+joinWriterTests :: Context.Options -> SpecWith (TestEnvironment, Server)
 joinWriterTests opts = describe "join from writer object" do
-  it "joins against articles" \(state, _) -> do
+  it "joins against articles" \(testEnvironment, _) -> do
     let query =
           [graphql|
           query {
@@ -582,12 +582,12 @@ joinWriterTests opts = describe "join from writer object" do
           |]
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphql state query)
+      (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
-joinArtistTests :: Context.Options -> SpecWith (State, Server)
+joinArtistTests :: Context.Options -> SpecWith (TestEnvironment, Server)
 joinArtistTests opts = describe "join from artist object" do
-  it "joins against articles" \(state, _) -> do
+  it "joins against articles" \(testEnvironment, _) -> do
     let query =
           [graphql|
           query {
@@ -623,12 +623,12 @@ joinArtistTests opts = describe "join from artist object" do
           |]
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphql state query)
+      (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
-deeplyNestedJoinTests :: Context.Options -> SpecWith (State, Server)
+deeplyNestedJoinTests :: Context.Options -> SpecWith (TestEnvironment, Server)
 deeplyNestedJoinTests opts = describe "join from artist object" do
-  it "joins ambiguously nested articles depending on the full path" \(state, _) -> do
+  it "joins ambiguously nested articles depending on the full path" \(testEnvironment, _) -> do
     let query =
           [graphql|
           query {
@@ -703,9 +703,9 @@ deeplyNestedJoinTests opts = describe "join from artist object" do
           |]
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphql state query)
+      (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
-  it "joins nested articles at different depths" \(state, _) -> do
+  it "joins nested articles at different depths" \(testEnvironment, _) -> do
     let query =
           [graphql|
           query {
@@ -743,5 +743,5 @@ deeplyNestedJoinTests opts = describe "join from artist object" do
           |]
     shouldReturnYaml
       opts
-      (GraphqlEngine.postGraphql state query)
+      (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse

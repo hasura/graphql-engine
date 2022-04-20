@@ -1,9 +1,9 @@
--- | State shared by tests. We intentionally use an abstract type to
+-- | TestEnvironment shared by tests. We intentionally use an abstract type to
 -- wrap up the values we need for tests, with accessors. This way, the
 -- tests are less liable to refactorings when we add or change the
--- state.
-module Harness.State
-  ( State (..),
+-- testEnvironment.
+module Harness.TestEnvironment
+  ( TestEnvironment (..),
     Server (..),
     getServer,
     serverUrl,
@@ -13,10 +13,10 @@ where
 
 import Control.Concurrent (ThreadId, killThread)
 import Data.Word
-import Hasura.Prelude hiding (State)
+import Hasura.Prelude
 
--- | A state that's passed to all tests.
-data State = State
+-- | A testEnvironment that's passed to all tests.
+data TestEnvironment = TestEnvironment
   { server :: Server
   }
 
@@ -30,9 +30,9 @@ data Server = Server
     threadId :: ThreadId
   }
 
--- | Retrieve the 'Server' associated with some 'State'.
-getServer :: State -> Server
-getServer State {server} = server
+-- | Retrieve the 'Server' associated with some 'TestEnvironment'.
+getServer :: TestEnvironment -> Server
+getServer TestEnvironment {server} = server
 
 -- | Extracts the full URL prefix and port number from a given 'Server'.
 --

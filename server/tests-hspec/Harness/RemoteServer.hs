@@ -24,7 +24,7 @@ import Data.Morpheus.Types
     Undefined (..),
   )
 import Harness.Http qualified as Http
-import Harness.State (Server (..), serverUrl)
+import Harness.TestEnvironment (Server (..), serverUrl)
 import Network.Socket qualified as Socket
 import Network.Wai.Extended qualified as Wai
 import Network.Wai.Handler.Warp qualified as Warp

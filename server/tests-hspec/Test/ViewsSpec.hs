@@ -8,21 +8,21 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql
 import Harness.Quoter.Sql
 import Harness.Quoter.Yaml
-import Harness.State (State)
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema qualified as Schema
+import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec
 import Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith State
+spec :: SpecWith TestEnvironment
 spec =
   Context.run
     [ Context.Context
         { name = Context.Backend Context.MySQL,
-          mkLocalState = Context.noLocalState,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
           setup = mysqlSetup,
           teardown = mysqlTeardown,
           customOptions = Nothing
@@ -53,9 +53,9 @@ author =
 --------------------------------------------------------------------------------
 -- Setup and Teardown
 
-mysqlSetup :: (State, ()) -> IO ()
-mysqlSetup (state, _) = do
-  Mysql.setup schema (state, ())
+mysqlSetup :: (TestEnvironment, ()) -> IO ()
+mysqlSetup (testEnvironment, _) = do
+  Mysql.setup schema (testEnvironment, ())
   -- Setup views
   Mysql.run_
     [sql|
@@ -64,7 +64,7 @@ CREATE OR REPLACE VIEW search_author_view AS
 |]
   -- Track the views
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: mysql_track_table
 args:
@@ -74,12 +74,12 @@ args:
     schema: hasura
 |]
 
-mysqlTeardown :: (State, ()) -> IO ()
-mysqlTeardown (state, _) = do
-  Mysql.teardown schema (state, ())
+mysqlTeardown :: (TestEnvironment, ()) -> IO ()
+mysqlTeardown (testEnvironment, _) = do
+  Mysql.teardown schema (testEnvironment, ())
   -- unrack the views
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: mysql_untrack_table
 args:
@@ -96,13 +96,13 @@ DROP VIEW IF EXISTS search_author_view;
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Context.Options -> SpecWith State
+tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
-  it "Query that a view works properly" \state ->
+  it "Query that a view works properly" \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 query {
   hasura_search_author_view(where: {id: {_eq: 1}}) {

@@ -7,13 +7,13 @@ import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
-import Harness.State (State)
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema
   ( BackendScalarType (..),
     defaultBackendScalarType,
   )
 import Harness.Test.Schema qualified as Schema
+import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec (SpecWith, it)
 import Prelude
 
@@ -21,12 +21,12 @@ import Prelude
 
 -- * Preamble
 
-spec :: SpecWith State
+spec :: SpecWith TestEnvironment
 spec =
   Context.run
     [ Context.Context
         { name = Context.Backend Context.SQLServer,
-          mkLocalState = Context.noLocalState,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
           setup = sqlserverSetup,
           teardown = sqlserverTeardown,
           customOptions = Nothing
@@ -62,12 +62,12 @@ author =
 --------------------------------------------------------------------------------
 -- Setup and teardown override
 
-sqlserverSetup :: (State, ()) -> IO ()
-sqlserverSetup (state, _) = do
-  Sqlserver.setup schema (state, ())
+sqlserverSetup :: (TestEnvironment, ()) -> IO ()
+sqlserverSetup (testEnvironment, _) = do
+  Sqlserver.setup schema (testEnvironment, ())
   -- create permissions
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: mssql_create_select_permission
 args:
@@ -82,11 +82,11 @@ args:
     columns: '*'
 |]
 
-sqlserverTeardown :: (State, ()) -> IO ()
-sqlserverTeardown (state, _) = do
+sqlserverTeardown :: (TestEnvironment, ()) -> IO ()
+sqlserverTeardown (testEnvironment, _) = do
   -- drop permissions
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: mssql_drop_select_permission
 args:
@@ -97,19 +97,19 @@ args:
   role: user
 |]
   -- rest of the teardown
-  Sqlserver.teardown schema (state, ())
+  Sqlserver.teardown schema (testEnvironment, ())
 
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Context.Options -> SpecWith State
+tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
   -- See https://github.com/hasura/graphql-engine/issues/8158
-  it "session variable string values are not truncated to default (30) length" $ \state ->
+  it "session variable string values are not truncated to default (30) length" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphqlWithHeaders
-          state
+          testEnvironment
           [ ("X-Hasura-Role", "user"),
             ("X-Hasura-User-Id", "36a6257b-08bb-45ef-a5cf-c1b7a7997087")
           ]

@@ -10,20 +10,20 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql
 import Harness.Quoter.Sql
 import Harness.Quoter.Yaml
-import Harness.State (State)
 import Harness.Test.Context qualified as Context
+import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec
 import Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith State
+spec :: SpecWith TestEnvironment
 spec =
   Context.run
     [ Context.Context
         { name = Context.Backend Context.MySQL,
-          mkLocalState = Context.noLocalState,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
           setup = mysqlSetup,
           teardown = mysqlTeardown,
           customOptions = Nothing
@@ -34,10 +34,10 @@ spec =
 --------------------------------------------------------------------------------
 -- MySQL backend
 
-mysqlSetup :: (State, ()) -> IO ()
-mysqlSetup (state, _) = do
+mysqlSetup :: (TestEnvironment, ()) -> IO ()
+mysqlSetup (testEnvironment, _) = do
   -- Clear and reconfigure the metadata
-  GraphqlEngine.setSource state Mysql.defaultSourceMetadata
+  GraphqlEngine.setSource testEnvironment Mysql.defaultSourceMetadata
 
   -- Setup tables
   Mysql.run_
@@ -85,7 +85,7 @@ VALUES
 
   -- Track the tables
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: bulk
 args:
@@ -105,7 +105,7 @@ args:
 
   -- Setup relationships
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: bulk
 args:
@@ -133,7 +133,7 @@ args:
         column: author_id
 |]
 
-mysqlTeardown :: (State, ()) -> IO ()
+mysqlTeardown :: (TestEnvironment, ()) -> IO ()
 mysqlTeardown _ = do
   Mysql.run_
     [sql|
@@ -147,13 +147,13 @@ DROP TABLE author;
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Context.Options -> SpecWith State
+tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
-  it "Nested select on article" $ \state ->
+  it "Nested select on article" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 query {
   hasura_article(where: {id: {_eq: 1}}) {

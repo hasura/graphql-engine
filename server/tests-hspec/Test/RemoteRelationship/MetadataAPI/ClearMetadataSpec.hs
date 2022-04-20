@@ -27,16 +27,16 @@ module Test.RemoteRelationship.MetadataAPI.ClearMetadataSpec (spec) where
 
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
-import Harness.State (State)
 import Harness.Test.Context qualified as Context
+import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec (SpecWith, describe, it)
 import Test.RemoteRelationship.MetadataAPI.Common qualified as Common
 
 --------------------------------------------------------------------------------
 -- Preamble
 
-spec :: SpecWith State
-spec = Context.runWithLocalState contexts tests
+spec :: SpecWith TestEnvironment
+spec = Context.runWithLocalTestEnvironment contexts tests
   where
     contexts =
       [ Common.dbTodbRemoteRelationshipContext,
@@ -48,13 +48,13 @@ spec = Context.runWithLocalState contexts tests
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Context.Options -> SpecWith (State, Common.LocalTestState)
+tests :: Context.Options -> SpecWith (TestEnvironment, Common.LocalTestTestEnvironment)
 tests opts = describe "clear-metadata-metadata-tests" do
   clearMetadataTests opts
 
-clearMetadataTests :: Context.Options -> SpecWith (State, Common.LocalTestState)
+clearMetadataTests :: Context.Options -> SpecWith (TestEnvironment, Common.LocalTestTestEnvironment)
 clearMetadataTests opts = describe "clear_metadata" do
-  it "clears the metadata" \(state, _) -> do
+  it "clears the metadata" \(testEnvironment, _) -> do
     let query =
           [yaml|
             type: clear_metadata
@@ -67,5 +67,5 @@ clearMetadataTests opts = describe "clear_metadata" do
           |]
     shouldReturnYaml
       opts
-      (GraphqlEngine.postMetadata state query)
+      (GraphqlEngine.postMetadata testEnvironment query)
       expectedResponse

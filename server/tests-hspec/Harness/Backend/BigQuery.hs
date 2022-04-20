@@ -35,10 +35,10 @@ import Harness.Env
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
-import Harness.State (State)
 import Harness.Test.Context (BackendType (BigQuery), defaultBackendTypeString, defaultSource)
 import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..))
 import Harness.Test.Schema qualified as Schema
+import Harness.TestEnvironment (TestEnvironment)
 import Hasura.Backends.BigQuery.Connection (initConnection)
 import Hasura.Backends.BigQuery.Execute qualified as Execute
 import Hasura.Backends.BigQuery.Source (ServiceAccount)
@@ -189,12 +189,12 @@ dropTable Schema.Table {tableName} = do
 
 -- | Post an http request to start tracking
 -- Overriding here because bigquery's API is uncommon
-trackTable :: State -> Schema.Table -> IO ()
-trackTable state Schema.Table {tableName} = do
+trackTable :: TestEnvironment -> Schema.Table -> IO ()
+trackTable testEnvironment Schema.Table {tableName} = do
   let datasetName = T.pack Constants.bigqueryDataset
       source = defaultSource BigQuery
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: bigquery_track_table
 args:
@@ -206,12 +206,12 @@ args:
 
 -- | Post an http request to stop tracking the table
 -- Overriding `Schema.trackTable` here because bigquery's API expects a `dataset` key
-untrackTable :: State -> Schema.Table -> IO ()
-untrackTable state Schema.Table {tableName} = do
+untrackTable :: TestEnvironment -> Schema.Table -> IO ()
+untrackTable testEnvironment Schema.Table {tableName} = do
   let datasetName = T.pack Constants.bigqueryDataset
       source = defaultSource BigQuery
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: bigquery_untrack_table
 args:
@@ -246,8 +246,8 @@ args:
 
 -- | Setup the schema in the most expected way.
 -- NOTE: Certain test modules may warrant having their own local version.
-setup :: [Schema.Table] -> (State, ()) -> IO ()
-setup tables (state, _) = do
+setup :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
+setup tables (testEnvironment, _) = do
   let dataset = Constants.bigqueryDataset
       source = defaultSource BigQuery
       backendType = defaultBackendTypeString BigQuery
@@ -255,7 +255,7 @@ setup tables (state, _) = do
   serviceAccount <- getServiceAccount
   projectId <- getProjectId
   GraphqlEngine.postMetadata_
-    state
+    testEnvironment
     [yaml|
 type: replace_metadata
 args:
@@ -273,20 +273,20 @@ args:
   for_ tables $ \table -> do
     createTable table
     insertTable table
-    trackTable state table
+    trackTable testEnvironment table
   -- Setup relationships
   for_ tables $ \table -> do
-    Schema.trackObjectRelationships BigQuery table state
-    Schema.trackArrayRelationships BigQuery table state
+    Schema.trackObjectRelationships BigQuery table testEnvironment
+    Schema.trackArrayRelationships BigQuery table testEnvironment
 
 -- | Teardown the schema and tracking in the most expected way.
 -- NOTE: Certain test modules may warrant having their own version.
-teardown :: [Schema.Table] -> (State, ()) -> IO ()
-teardown (reverse -> tables) (state, _) = do
+teardown :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
+teardown (reverse -> tables) (testEnvironment, _) = do
   -- Teardown relationships first
   forFinally_ tables $ \table ->
-    Schema.untrackRelationships BigQuery table state
+    Schema.untrackRelationships BigQuery table testEnvironment
   -- Then teardown tables
   forFinally_ tables $ \table -> do
-    untrackTable state table
+    untrackTable testEnvironment table
     dropTable table

@@ -9,9 +9,9 @@ import Harness.Backend.Postgres as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql
 import Harness.Quoter.Yaml
-import Harness.State (State)
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema qualified as Schema
+import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec
 import Prelude
 
@@ -19,12 +19,12 @@ import Prelude
 
 -- * Preamble
 
-spec :: SpecWith State
+spec :: SpecWith TestEnvironment
 spec =
   Context.run
     [ Context.Context
         { name = Context.Backend Context.Postgres,
-          mkLocalState = Context.noLocalState,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
           setup = postgresSetup,
           teardown = postgresTeardown,
           customOptions = Nothing
@@ -71,11 +71,11 @@ article =
 
 -- ** Setup and teardown override
 
-postgresSetup :: (State, ()) -> IO ()
-postgresSetup (state, ()) = do
-  Postgres.setup schema (state, ())
+postgresSetup :: (TestEnvironment, ()) -> IO ()
+postgresSetup (testEnvironment, ()) = do
+  Postgres.setup schema (testEnvironment, ())
   -- also setup special relationship
-  GraphqlEngine.postMetadata_ state $
+  GraphqlEngine.postMetadata_ testEnvironment $
     [yaml|
 type: pg_create_object_relationship
 args:
@@ -93,10 +93,10 @@ args:
          author_name: name
 |]
 
-postgresTeardown :: (State, ()) -> IO ()
-postgresTeardown (state, ()) = do
+postgresTeardown :: (TestEnvironment, ()) -> IO ()
+postgresTeardown (testEnvironment, ()) = do
   -- first teardown special relationship
-  GraphqlEngine.postMetadata_ state $
+  GraphqlEngine.postMetadata_ testEnvironment $
     [yaml|
 type: pg_drop_relationship
 args:
@@ -107,7 +107,7 @@ args:
   relationship: author
 |]
   -- and then rest of the teardown
-  Postgres.teardown schema (state, ())
+  Postgres.teardown schema (testEnvironment, ())
 
 --------------------------------------------------------------------------------
 
@@ -119,13 +119,13 @@ args:
 --
 --   Because of that, we use 'shouldReturnOneOfYaml' and list all of the possible (valid)
 --   expected results.
-tests :: Context.Options -> SpecWith State
+tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
-  it "Query by id" $ \state ->
+  it "Query by id" $ \testEnvironment ->
     shouldReturnOneOfYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 query {
   hasura_article(where: {id: {_eq: 1}}) {
@@ -153,11 +153,11 @@ data:
 |]
       ]
 
-  it "Query limit 2" $ \state ->
+  it "Query limit 2" $ \testEnvironment ->
     shouldReturnOneOfYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 query {
   hasura_article(limit: 2) {
@@ -191,11 +191,11 @@ data:
 |]
       ]
 
-  it "where author name" $ \state ->
+  it "where author name" $ \testEnvironment ->
     shouldReturnOneOfYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 query {
   hasura_article(where: { author: { name: { _eq: "Author 1" } } }) {
@@ -223,11 +223,11 @@ data:
 |]
       ]
 
-  it "order by author id" $ \state ->
+  it "order by author id" $ \testEnvironment ->
     shouldReturnOneOfYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 query {
   hasura_article(order_by: {author: {id: asc}}) {
@@ -261,11 +261,11 @@ data:
 |]
       ]
 
-  it "count articles" $ \state ->
+  it "count articles" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 query {
   hasura_article_aggregate {

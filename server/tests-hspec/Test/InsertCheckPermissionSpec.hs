@@ -7,9 +7,9 @@ import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
-import Harness.State (State)
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema qualified as Schema
+import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec (SpecWith, it)
 import Prelude
 
@@ -17,12 +17,12 @@ import Prelude
 
 -- ** Preamble
 
-spec :: SpecWith State
+spec :: SpecWith TestEnvironment
 spec =
   Context.run
     [ Context.Context
         { name = Context.Backend Context.SQLServer,
-          mkLocalState = Context.noLocalState,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
           setup = mssqlSetup,
           teardown = mssqlTeardown,
           customOptions = Nothing
@@ -67,12 +67,12 @@ article =
 
 -- ** Setup and teardown
 
-mssqlSetup :: (State, ()) -> IO ()
-mssqlSetup (state, ()) = do
-  Sqlserver.setup schema (state, ())
+mssqlSetup :: (TestEnvironment, ()) -> IO ()
+mssqlSetup (testEnvironment, ()) = do
+  Sqlserver.setup schema (testEnvironment, ())
 
   -- also setup permissions
-  GraphqlEngine.postMetadata_ state $
+  GraphqlEngine.postMetadata_ testEnvironment $
     [yaml|
 type: bulk
 args:
@@ -123,10 +123,10 @@ args:
       - name
 |]
 
-mssqlTeardown :: (State, ()) -> IO ()
-mssqlTeardown (state, ()) = do
+mssqlTeardown :: (TestEnvironment, ()) -> IO ()
+mssqlTeardown (testEnvironment, ()) = do
   -- teardown permissions
-  GraphqlEngine.postMetadata_ state $
+  GraphqlEngine.postMetadata_ testEnvironment $
     [yaml|
 type: bulk
 args:
@@ -154,20 +154,20 @@ args:
 |]
 
   -- and then rest of the teardown
-  Sqlserver.teardown schema (state, ())
+  Sqlserver.teardown schema (testEnvironment, ())
 
 --------------------------------------------------------------------------------
 
 -- * Tests
 
-tests :: Context.Options -> SpecWith State
+tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
   let userHeaders = [("X-Hasura-Role", "user"), ("X-Hasura-User-Id", "2")]
-  it "Insert article with mismatching author_id and X-Hasura-User-Id" $ \state ->
+  it "Insert article with mismatching author_id and X-Hasura-User-Id" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphqlWithHeaders
-          state
+          testEnvironment
           userHeaders
           [graphql|
 mutation {
@@ -187,11 +187,11 @@ errors:
   message: check constraint of an insert permission has failed
 |]
 
-  it "Insert article with matching author_id and X-Hasura-User-Id" $ \state ->
+  it "Insert article with matching author_id and X-Hasura-User-Id" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphqlWithHeaders
-          state
+          testEnvironment
           userHeaders
           [graphql|
 mutation {
@@ -220,11 +220,11 @@ data:
     affected_rows: 1
 |]
 
-  it "Insert author with mismatching id and X-Hasura-User-Id" $ \state ->
+  it "Insert author with mismatching id and X-Hasura-User-Id" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphqlWithHeaders
-          state
+          testEnvironment
           userHeaders
           [graphql|
 mutation {
