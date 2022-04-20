@@ -55,6 +55,18 @@ args:
               company
             }
           }
+      - name: query_3
+        query: |
+          fragment userDetails on user {
+            id
+            name
+            company
+          }
+          query {
+            user{
+              ...userDetails
+            }
+          }
 
 - type: add_collection_to_allowlist
   args:
