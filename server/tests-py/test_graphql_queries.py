@@ -1330,7 +1330,10 @@ class TestGraphQLExplainCommon:
     def test_array_relationship_orderby(self, hge_ctx, backend):
         self.with_admin_secret("query", hge_ctx, self.dir() + hge_ctx.backend_suffix('/author_articles_orderby') + ".yaml")
 
-    def with_admin_secret(self, explain_query_type, hge_ctx, f, hdrs=None, req_st=200, overwrite_expectations=False):
+    def with_admin_secret(self, explain_query_type, hge_ctx, f, hdrs=None, req_st=200):
+
+        overwrite_expectations = PytestConf.config.getoption("--accept")
+
         conf = get_conf_f(f)
         admin_secret = hge_ctx.hge_key
         headers = {}
