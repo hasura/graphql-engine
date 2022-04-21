@@ -309,6 +309,8 @@ type Metadata struct {
 
 	// HGE Pro
 	GraphQLSchemaIntrospection interface{} `yaml:"graphql_schema_introspection,omitempty" mapstructure:"graphql_schema_introspection,omitempty"`
+
+	// note: update metadatautil/json.metadata to reflect changes made here
 }
 
 // JSON is a helper function which returns JSON representation of Metadata

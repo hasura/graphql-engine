@@ -10,6 +10,7 @@
 - server: Don't drop nested typed null fields in actions (fix #8237)
 - server: fixes remote relationships on actions (fix #8399)
 - console: add remote database relationships for views
+- cli: fix performance regression in `migrate status` command (fix #8398)
 
 ## v2.6.0-beta.1
 
