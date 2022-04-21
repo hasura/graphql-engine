@@ -2,6 +2,7 @@
 
   - [Weird control operator types](weird-control-operator-types.md)
   - [Arrow rewrite rules](arrow-rewrite-rules.md)
+  - [Update Event Trigger MSSQL Spec](update-event-trigger-mssql-spec.md)
   - [Checking metadata consistency in run_sql](checking-metadata-consistency-in-runsql.md)
   - [Postgres identifier length limitations](postgres-identifier-length-limitations.md)
   - [Type casting prepared params](type-casting-prepared-params.md)

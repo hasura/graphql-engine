@@ -10,7 +10,7 @@
 </span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.API.Backend.html"><span class="hs-identifier">Hasura.Server.API.Backend</span></a></span><span>
 </span><span id="line-11"></span><span>
 </span><span id="line-12"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Server.API.Backend.html#BackendAPI"><span class="hs-identifier hs-type">BackendAPI</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-13"></span><span>  </span><span id="local-6989586621688535754"><span class="annot"><span class="annottext">metadataV1CommandParsers :: [CommandParser]
+</span><span id="line-13"></span><span>  </span><span id="local-6989586621688554284"><span class="annot"><span class="annottext">metadataV1CommandParsers :: [CommandParser]
 </span><a href="Hasura.Server.API.Backend.html#metadataV1CommandParsers"><span class="hs-identifier hs-var hs-var hs-var hs-var">metadataV1CommandParsers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-14"></span><span>    </span><span class="annot"><span class="annottext">[[CommandParser]] -&gt; [CommandParser]
 forall (t :: * -&gt; *) a. Foldable t =&gt; t [a] -&gt; [a]
@@ -29,6 +29,9 @@ forall (b :: BackendType). Backend b =&gt; [CommandParser]
 </span><a href="Hasura.Server.API.Backend.html#relationshipCommands"><span class="hs-identifier hs-var">relationshipCommands</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-19"></span><span>        </span><span class="annot"><span class="annottext">Backend 'MSSQL =&gt; [CommandParser]
 forall (b :: BackendType). Backend b =&gt; [CommandParser]
-</span><a href="Hasura.Server.API.Backend.html#remoteRelationshipCommands"><span class="hs-identifier hs-var">remoteRelationshipCommands</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span>
-</span><span id="line-20"></span><span>      </span><span class="hs-special">]</span><span>
-</span><span id="line-21"></span></pre></body></html>
+</span><a href="Hasura.Server.API.Backend.html#remoteRelationshipCommands"><span class="hs-identifier hs-var">remoteRelationshipCommands</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>        </span><span class="annot"><span class="annottext">Backend 'MSSQL =&gt; [CommandParser]
+forall (b :: BackendType). Backend b =&gt; [CommandParser]
+</span><a href="Hasura.Server.API.Backend.html#eventTriggerCommands"><span class="hs-identifier hs-var">eventTriggerCommands</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span>
+</span><span id="line-21"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-22"></span></pre></body></html>
