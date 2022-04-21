@@ -369,7 +369,7 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
         elif req_path == "/null-response":
             resp, status = self.null_response()
             self._send_response(status, resp)
-        
+
         elif req_path == "/scalar-response":
             self._send_response(HTTPStatus.OK, "some-string")
 
@@ -379,6 +379,10 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
 
         elif req_path == "/get-results":
             resp, status = self.get_results()
+            self._send_response(status, resp)
+
+        elif req_path == "/get_messages":
+            resp, status = self.get_messages()
             self._send_response(status, resp)
 
         else:
@@ -499,6 +503,13 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
         response = {
             'userObj': resp['data']['insert_user_one']
         }
+        return response, HTTPStatus.OK
+
+    def get_messages(self):
+        response = [
+            { "content": "baz", "user_name": "foo"},
+            { "content": "foo", "user_name": "bar"}
+        ]
         return response, HTTPStatus.OK
 
     def mirror_action(self):
@@ -764,10 +775,13 @@ class HGECtx:
         self.default_backend = 'postgres'
         self.is_default_backend = self.backend == self.default_backend
 
-        # HGE version
-        result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
         env_version = os.getenv('VERSION')
-        self.version = env_version if env_version else result.stdout.decode('utf-8').strip()
+        if env_version:
+            self.version = env_version
+        else:
+            # HGE version
+            result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
+            self.version = result.stdout.decode('utf-8').strip()
         if self.is_default_backend and not self.metadata_disabled and not config.getoption('--skip-schema-setup'):
           try:
               st_code, resp = self.v2q_f("queries/" + self.backend_suffix("clear_db")+ ".yaml")

@@ -53,6 +53,21 @@ class TestActionsSyncWebsocket:
     def test_create_users_success(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/create_users_success.yaml', transport)
 
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.usefixtures(
+    "graphql_service",
+    "actions_fixture",
+    'per_class_tests_db_state'
+)
+class TestActionsRelationshipsBasic:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/actions/relationships/basic'
+
+    def test_query_with_relationships(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_with_relationships.yaml', transport)
+
 @use_action_fixtures
 class TestActionsSync:
 
