@@ -32,6 +32,7 @@
 
 ### Bug fixes and improvements
 - server: fixes remote relationships on actions (fix #8399)
+- server: validate top level fragments in GQL query
 
 ## v2.5.0
 
