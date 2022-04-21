@@ -1,0 +1,57 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | MSSQL SQL Value</span><span>
+</span><span id="line-2"></span><span class="hs-comment">--</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- Provide a function to translate from a column value to its literal (textual)</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- value specific to MSSQL. Used in the 'BackendExecute' instance.</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.MSSQL.SQL.Value</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.SQL.Value.html#txtEncodedColVal"><span class="hs-identifier">txtEncodedColVal</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Encoding</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">decodeUtf8</span></span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Database.ODBC.SQLServer</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">ODBC</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html"><span class="hs-identifier">Hasura.Backends.MSSQL.Types.Internal</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Value"><span class="hs-identifier">Value</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html"><span class="hs-identifier">Hasura.GraphQL.Execute.Subscription.Plan</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html"><span class="hs-identifier">Hasura.RQL.Types.Column</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">RQL</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Value.html"><span class="hs-identifier">Hasura.SQL.Value</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Value.html#TxtEncodedVal"><span class="hs-identifier">TxtEncodedVal</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="annot"><a href="Hasura.Backends.MSSQL.SQL.Value.html#txtEncodedVal"><span class="hs-identifier hs-type">txtEncodedVal</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.SQL.Value.html#TxtEncodedVal"><span class="hs-identifier hs-type">TxtEncodedVal</span></a></span><span>
+</span><span id="line-18"></span><span id="txtEncodedVal"><span class="annot"><span class="annottext">txtEncodedVal :: Value -&gt; TxtEncodedVal
+</span><a href="Hasura.Backends.MSSQL.SQL.Value.html#txtEncodedVal"><span class="hs-identifier hs-var hs-var">txtEncodedVal</span></a></span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier hs-var">ODBC.NullValue</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TxtEncodedVal
+</span><a href="Hasura.SQL.Value.html#TENull"><span class="hs-identifier hs-var">TENull</span></a></span><span>
+</span><span id="line-19"></span><span class="annot"><a href="Hasura.Backends.MSSQL.SQL.Value.html#txtEncodedVal"><span class="hs-identifier hs-var">txtEncodedVal</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ODBC.ByteStringValue</span></span><span> </span><span id="local-6989586621688378013"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688378013"><span class="hs-identifier hs-var">b</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TxtEncodedVal
+</span><a href="Hasura.SQL.Value.html#TELit"><span class="hs-identifier hs-var">TELit</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; TxtEncodedVal) -&gt; Text -&gt; TxtEncodedVal
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
+</span><span class="hs-identifier hs-var">decodeUtf8</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688378013"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><span id="line-20"></span><span class="annot"><a href="Hasura.Backends.MSSQL.SQL.Value.html#txtEncodedVal"><span class="hs-identifier hs-var">txtEncodedVal</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ODBC.TextValue</span></span><span> </span><span id="local-6989586621688378010"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688378010"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TxtEncodedVal
+</span><a href="Hasura.SQL.Value.html#TELit"><span class="hs-identifier hs-var">TELit</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688378010"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-21"></span><span class="annot"><a href="Hasura.Backends.MSSQL.SQL.Value.html#txtEncodedVal"><span class="hs-identifier hs-var">txtEncodedVal</span></a></span><span> </span><span id="local-6989586621688378009"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688378009"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TxtEncodedVal
+</span><a href="Hasura.SQL.Value.html#TELit"><span class="hs-identifier hs-var">TELit</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; TxtEncodedVal) -&gt; Text -&gt; TxtEncodedVal
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Query -&gt; Text
+forall a. ToTxt a =&gt; a -&gt; Text
+</span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">(Query -&gt; Text) -&gt; Query -&gt; Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Query
+forall a. ToSql a =&gt; a -&gt; Query
+</span><span class="hs-identifier hs-var">ODBC.toSql</span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688378009"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="annot"><a href="Hasura.Backends.MSSQL.SQL.Value.html#txtEncodedColVal"><span class="hs-identifier hs-type">txtEncodedColVal</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">RQL.ColumnValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.SQL.Value.html#TxtEncodedVal"><span class="hs-identifier hs-type">TxtEncodedVal</span></a></span><span>
+</span><span id="line-24"></span><span id="txtEncodedColVal"><span class="annot"><span class="annottext">txtEncodedColVal :: ColumnValue 'MSSQL -&gt; TxtEncodedVal
+</span><a href="Hasura.Backends.MSSQL.SQL.Value.html#txtEncodedColVal"><span class="hs-identifier hs-var hs-var">txtEncodedColVal</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value -&gt; TxtEncodedVal
+</span><a href="Hasura.Backends.MSSQL.SQL.Value.html#txtEncodedVal"><span class="hs-identifier hs-var">txtEncodedVal</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; TxtEncodedVal)
+-&gt; (ColumnValue 'MSSQL -&gt; Value)
+-&gt; ColumnValue 'MSSQL
+-&gt; TxtEncodedVal
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ColumnValue 'MSSQL -&gt; Value
+forall (b :: BackendType). ColumnValue b -&gt; ScalarValue b
+</span><a href="Hasura.RQL.Types.Column.html#cvValue"><span class="hs-identifier hs-var hs-var">RQL.cvValue</span></a></span><span>
+</span><span id="line-25"></span></pre></body></html>

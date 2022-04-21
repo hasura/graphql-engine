@@ -1,0 +1,824 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- | Postgres Translate Types</span><span>
+</span><span id="line-4"></span><span class="hs-comment">--</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- Intermediary / helper types used for translating IR to Postgres SQL.</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.Postgres.Translate.Types</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ApplySortingAndSlicing"><span class="hs-identifier">ApplySortingAndSlicing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ApplySortingAndSlicing"><span class="hs-identifier">ApplySortingAndSlicing</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ArrayConnectionSource"><span class="hs-identifier">ArrayConnectionSource</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ArrayConnectionSource"><span class="hs-identifier">ArrayConnectionSource</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#_acsSource"><span class="hs-identifier">_acsSource</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ArrayRelationSource"><span class="hs-identifier">ArrayRelationSource</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ArrayRelationSource"><span class="hs-identifier">ArrayRelationSource</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ComputedFieldTableSetSource"><span class="hs-identifier">ComputedFieldTableSetSource</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ComputedFieldTableSetSource"><span class="hs-identifier">ComputedFieldTableSetSource</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#DistinctAndOrderByExpr"><span class="hs-identifier">DistinctAndOrderByExpr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ASorting"><span class="hs-identifier">ASorting</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#JoinTree"><span class="hs-identifier">JoinTree</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#MultiRowSelectNode"><span class="hs-identifier">MultiRowSelectNode</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ObjectRelationSource"><span class="hs-identifier">ObjectRelationSource</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ObjectRelationSource"><span class="hs-identifier">ObjectRelationSource</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ObjectSelectSource"><span class="hs-identifier">ObjectSelectSource</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ObjectSelectSource"><span class="hs-identifier">ObjectSelectSource</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#_ossPrefix"><span class="hs-identifier">_ossPrefix</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#PermissionLimitSubQuery"><span class="hs-identifier">PermissionLimitSubQuery</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectNode"><span class="hs-identifier">SelectNode</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectNode"><span class="hs-identifier">SelectNode</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSlicing"><span class="hs-identifier">SelectSlicing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSlicing"><span class="hs-identifier">SelectSlicing</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#_ssLimit"><span class="hs-identifier">_ssLimit</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#_ssOffset"><span class="hs-identifier">_ssOffset</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSorting"><span class="hs-identifier">SelectSorting</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSource"><span class="hs-identifier">SelectSource</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSource"><span class="hs-identifier">SelectSource</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#_ssPrefix"><span class="hs-identifier">_ssPrefix</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SortingAndSlicing"><span class="hs-identifier">SortingAndSlicing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SortingAndSlicing"><span class="hs-identifier">SortingAndSlicing</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SourcePrefixes"><span class="hs-identifier">SourcePrefixes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#applySortingAndSlicing"><span class="hs-identifier">applySortingAndSlicing</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#noSortingAndSlicing"><span class="hs-identifier">noSortingAndSlicing</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#objectSelectSourceToSelectSource"><span class="hs-identifier">objectSelectSourceToSelectSource</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-26"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#orderByForJsonAgg"><span class="hs-identifier">orderByForJsonAgg</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HM</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Int</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Int64</span></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.DML</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.Types</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html"><span class="hs-identifier">Hasura.RQL.IR.Select</span></a></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span id="local-6989586621688363120"><span id="local-6989586621688363121"></span></span><span class="hs-keyword">data</span><span> </span><span id="SourcePrefixes"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SourcePrefixes"><span class="hs-identifier hs-var">SourcePrefixes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SourcePrefixes"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SourcePrefixes"><span class="hs-identifier hs-var">SourcePrefixes</span></a></span></span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | Current source prefix</span><span>
+</span><span id="line-40"></span><span>    </span><span id="_pfThis"><span class="annot"><span class="annottext">SourcePrefixes -&gt; Identifier
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_pfThis"><span class="hs-identifier hs-var hs-var">_pfThis</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#Identifier"><span class="hs-identifier hs-type">PG.Identifier</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>    </span><span class="hs-comment">-- | Base table source row identifier to generate</span><span>
+</span><span id="line-42"></span><span>    </span><span class="hs-comment">-- the table's column identifiers for computed field</span><span>
+</span><span id="line-43"></span><span>    </span><span class="hs-comment">-- function input parameters</span><span>
+</span><span id="line-44"></span><span>    </span><span id="_pfBase"><span class="annot"><span class="annottext">SourcePrefixes -&gt; Identifier
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_pfBase"><span class="hs-identifier hs-var hs-var">_pfBase</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#Identifier"><span class="hs-identifier hs-type">PG.Identifier</span></a></span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688363111"><span id="local-6989586621688363113"><span id="local-6989586621688363115"><span class="annot"><span class="annottext">Int -&gt; SourcePrefixes -&gt; ShowS
+[SourcePrefixes] -&gt; ShowS
+SourcePrefixes -&gt; String
+(Int -&gt; SourcePrefixes -&gt; ShowS)
+-&gt; (SourcePrefixes -&gt; String)
+-&gt; ([SourcePrefixes] -&gt; ShowS)
+-&gt; Show SourcePrefixes
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [SourcePrefixes] -&gt; ShowS
+$cshowList :: [SourcePrefixes] -&gt; ShowS
+show :: SourcePrefixes -&gt; String
+$cshow :: SourcePrefixes -&gt; String
+showsPrec :: Int -&gt; SourcePrefixes -&gt; ShowS
+$cshowsPrec :: Int -&gt; SourcePrefixes -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688363106"><span id="local-6989586621688363108"><span class="annot"><span class="annottext">SourcePrefixes -&gt; SourcePrefixes -&gt; Bool
+(SourcePrefixes -&gt; SourcePrefixes -&gt; Bool)
+-&gt; (SourcePrefixes -&gt; SourcePrefixes -&gt; Bool) -&gt; Eq SourcePrefixes
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: SourcePrefixes -&gt; SourcePrefixes -&gt; Bool
+$c/= :: SourcePrefixes -&gt; SourcePrefixes -&gt; Bool
+== :: SourcePrefixes -&gt; SourcePrefixes -&gt; Bool
+$c== :: SourcePrefixes -&gt; SourcePrefixes -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. SourcePrefixes -&gt; Rep SourcePrefixes x)
+-&gt; (forall x. Rep SourcePrefixes x -&gt; SourcePrefixes)
+-&gt; Generic SourcePrefixes
+forall x. Rep SourcePrefixes x -&gt; SourcePrefixes
+forall x. SourcePrefixes -&gt; Rep SourcePrefixes x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep SourcePrefixes x -&gt; SourcePrefixes
+$cfrom :: forall x. SourcePrefixes -&gt; Rep SourcePrefixes x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688363098"><span id="local-6989586621688363100"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SourcePrefixes"><span class="hs-identifier hs-type">SourcePrefixes</span></a></span></span></span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span class="hs-comment">-- | Select portion of rows generated by the query using limit and offset</span><span>
+</span><span id="line-51"></span><span id="local-6989586621688363095"><span id="local-6989586621688363096"></span></span><span class="hs-keyword">data</span><span> </span><span id="SelectSlicing"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSlicing"><span class="hs-identifier hs-var">SelectSlicing</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SelectSlicing"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSlicing"><span class="hs-identifier hs-var">SelectSlicing</span></a></span></span><span>
+</span><span id="line-52"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_ssLimit"><span class="annot"><span class="annottext">SelectSlicing -&gt; Maybe Int
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_ssLimit"><span class="hs-identifier hs-var hs-var">_ssLimit</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-53"></span><span>    </span><span id="_ssOffset"><span class="annot"><span class="annottext">SelectSlicing -&gt; Maybe Int64
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_ssOffset"><span class="hs-identifier hs-var hs-var">_ssOffset</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int64</span></span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688363089"><span id="local-6989586621688363091"><span id="local-6989586621688363093"><span class="annot"><span class="annottext">Int -&gt; SelectSlicing -&gt; ShowS
+[SelectSlicing] -&gt; ShowS
+SelectSlicing -&gt; String
+(Int -&gt; SelectSlicing -&gt; ShowS)
+-&gt; (SelectSlicing -&gt; String)
+-&gt; ([SelectSlicing] -&gt; ShowS)
+-&gt; Show SelectSlicing
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [SelectSlicing] -&gt; ShowS
+$cshowList :: [SelectSlicing] -&gt; ShowS
+show :: SelectSlicing -&gt; String
+$cshow :: SelectSlicing -&gt; String
+showsPrec :: Int -&gt; SelectSlicing -&gt; ShowS
+$cshowsPrec :: Int -&gt; SelectSlicing -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688363085"><span id="local-6989586621688363087"><span class="annot"><span class="annottext">SelectSlicing -&gt; SelectSlicing -&gt; Bool
+(SelectSlicing -&gt; SelectSlicing -&gt; Bool)
+-&gt; (SelectSlicing -&gt; SelectSlicing -&gt; Bool) -&gt; Eq SelectSlicing
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: SelectSlicing -&gt; SelectSlicing -&gt; Bool
+$c/= :: SelectSlicing -&gt; SelectSlicing -&gt; Bool
+== :: SelectSlicing -&gt; SelectSlicing -&gt; Bool
+$c== :: SelectSlicing -&gt; SelectSlicing -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. SelectSlicing -&gt; Rep SelectSlicing x)
+-&gt; (forall x. Rep SelectSlicing x -&gt; SelectSlicing)
+-&gt; Generic SelectSlicing
+forall x. Rep SelectSlicing x -&gt; SelectSlicing
+forall x. SelectSlicing -&gt; Rep SelectSlicing x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep SelectSlicing x -&gt; SelectSlicing
+$cfrom :: forall x. SelectSlicing -&gt; Rep SelectSlicing x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688363079"><span id="local-6989586621688363081"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSlicing"><span class="hs-identifier hs-type">SelectSlicing</span></a></span></span></span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span id="local-6989586621688363077"><span id="local-6989586621688363078"></span></span><span class="hs-keyword">data</span><span> </span><span id="DistinctAndOrderByExpr"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#DistinctAndOrderByExpr"><span class="hs-identifier hs-var">DistinctAndOrderByExpr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ASorting"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ASorting"><span class="hs-identifier hs-var">ASorting</span></a></span></span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_sortAtNode"><span class="annot"><span class="annottext">DistinctAndOrderByExpr -&gt; (OrderByExp, Maybe DistinctExpr)
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_sortAtNode"><span class="hs-identifier hs-var hs-var">_sortAtNode</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#OrderByExp"><span class="hs-identifier hs-type">PG.OrderByExp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#DistinctExpr"><span class="hs-identifier hs-type">PG.DistinctExpr</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-61"></span><span>    </span><span id="_sortAtBase"><span class="annot"><span class="annottext">DistinctAndOrderByExpr -&gt; Maybe (OrderByExp, Maybe DistinctExpr)
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_sortAtBase"><span class="hs-identifier hs-var hs-var">_sortAtBase</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#OrderByExp"><span class="hs-identifier hs-type">PG.OrderByExp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#DistinctExpr"><span class="hs-identifier hs-type">PG.DistinctExpr</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688363069"><span id="local-6989586621688363071"><span id="local-6989586621688363073"><span class="annot"><span class="annottext">Int -&gt; DistinctAndOrderByExpr -&gt; ShowS
+[DistinctAndOrderByExpr] -&gt; ShowS
+DistinctAndOrderByExpr -&gt; String
+(Int -&gt; DistinctAndOrderByExpr -&gt; ShowS)
+-&gt; (DistinctAndOrderByExpr -&gt; String)
+-&gt; ([DistinctAndOrderByExpr] -&gt; ShowS)
+-&gt; Show DistinctAndOrderByExpr
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [DistinctAndOrderByExpr] -&gt; ShowS
+$cshowList :: [DistinctAndOrderByExpr] -&gt; ShowS
+show :: DistinctAndOrderByExpr -&gt; String
+$cshow :: DistinctAndOrderByExpr -&gt; String
+showsPrec :: Int -&gt; DistinctAndOrderByExpr -&gt; ShowS
+$cshowsPrec :: Int -&gt; DistinctAndOrderByExpr -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688363065"><span id="local-6989586621688363067"><span class="annot"><span class="annottext">DistinctAndOrderByExpr -&gt; DistinctAndOrderByExpr -&gt; Bool
+(DistinctAndOrderByExpr -&gt; DistinctAndOrderByExpr -&gt; Bool)
+-&gt; (DistinctAndOrderByExpr -&gt; DistinctAndOrderByExpr -&gt; Bool)
+-&gt; Eq DistinctAndOrderByExpr
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: DistinctAndOrderByExpr -&gt; DistinctAndOrderByExpr -&gt; Bool
+$c/= :: DistinctAndOrderByExpr -&gt; DistinctAndOrderByExpr -&gt; Bool
+== :: DistinctAndOrderByExpr -&gt; DistinctAndOrderByExpr -&gt; Bool
+$c== :: DistinctAndOrderByExpr -&gt; DistinctAndOrderByExpr -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. DistinctAndOrderByExpr -&gt; Rep DistinctAndOrderByExpr x)
+-&gt; (forall x.
+    Rep DistinctAndOrderByExpr x -&gt; DistinctAndOrderByExpr)
+-&gt; Generic DistinctAndOrderByExpr
+forall x. Rep DistinctAndOrderByExpr x -&gt; DistinctAndOrderByExpr
+forall x. DistinctAndOrderByExpr -&gt; Rep DistinctAndOrderByExpr x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep DistinctAndOrderByExpr x -&gt; DistinctAndOrderByExpr
+$cfrom :: forall x. DistinctAndOrderByExpr -&gt; Rep DistinctAndOrderByExpr x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-64"></span><span>
+</span><span id="line-65"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688363059"><span id="local-6989586621688363061"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#DistinctAndOrderByExpr"><span class="hs-identifier hs-type">DistinctAndOrderByExpr</span></a></span></span></span><span>
+</span><span id="line-66"></span><span>
+</span><span id="line-67"></span><span class="hs-comment">-- | Sorting with -- Note [Optimizing queries using limit/offset])</span><span>
+</span><span id="line-68"></span><span id="local-6989586621688363057"><span id="local-6989586621688363058"></span></span><span class="hs-keyword">data</span><span> </span><span id="SelectSorting"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSorting"><span class="hs-identifier hs-var">SelectSorting</span></a></span></span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="NoSorting"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#NoSorting"><span class="hs-identifier hs-var">NoSorting</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#DistinctExpr"><span class="hs-identifier hs-type">PG.DistinctExpr</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-70"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Sorting"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#Sorting"><span class="hs-identifier hs-var">Sorting</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#DistinctAndOrderByExpr"><span class="hs-identifier hs-type">DistinctAndOrderByExpr</span></a></span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688363049"><span id="local-6989586621688363051"><span id="local-6989586621688363053"><span class="annot"><span class="annottext">Int -&gt; SelectSorting -&gt; ShowS
+[SelectSorting] -&gt; ShowS
+SelectSorting -&gt; String
+(Int -&gt; SelectSorting -&gt; ShowS)
+-&gt; (SelectSorting -&gt; String)
+-&gt; ([SelectSorting] -&gt; ShowS)
+-&gt; Show SelectSorting
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [SelectSorting] -&gt; ShowS
+$cshowList :: [SelectSorting] -&gt; ShowS
+show :: SelectSorting -&gt; String
+$cshow :: SelectSorting -&gt; String
+showsPrec :: Int -&gt; SelectSorting -&gt; ShowS
+$cshowsPrec :: Int -&gt; SelectSorting -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688363045"><span id="local-6989586621688363047"><span class="annot"><span class="annottext">SelectSorting -&gt; SelectSorting -&gt; Bool
+(SelectSorting -&gt; SelectSorting -&gt; Bool)
+-&gt; (SelectSorting -&gt; SelectSorting -&gt; Bool) -&gt; Eq SelectSorting
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: SelectSorting -&gt; SelectSorting -&gt; Bool
+$c/= :: SelectSorting -&gt; SelectSorting -&gt; Bool
+== :: SelectSorting -&gt; SelectSorting -&gt; Bool
+$c== :: SelectSorting -&gt; SelectSorting -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. SelectSorting -&gt; Rep SelectSorting x)
+-&gt; (forall x. Rep SelectSorting x -&gt; SelectSorting)
+-&gt; Generic SelectSorting
+forall x. Rep SelectSorting x -&gt; SelectSorting
+forall x. SelectSorting -&gt; Rep SelectSorting x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep SelectSorting x -&gt; SelectSorting
+$cfrom :: forall x. SelectSorting -&gt; Rep SelectSorting x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-72"></span><span>
+</span><span id="line-73"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688363039"><span id="local-6989586621688363041"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSorting"><span class="hs-identifier hs-type">SelectSorting</span></a></span></span></span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span id="local-6989586621688363037"><span id="local-6989586621688363038"></span></span><span class="hs-keyword">data</span><span> </span><span id="SortingAndSlicing"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SortingAndSlicing"><span class="hs-identifier hs-var">SortingAndSlicing</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SortingAndSlicing"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SortingAndSlicing"><span class="hs-identifier hs-var">SortingAndSlicing</span></a></span></span><span>
+</span><span id="line-76"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_sasSorting"><span class="annot"><span class="annottext">SortingAndSlicing -&gt; SelectSorting
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_sasSorting"><span class="hs-identifier hs-var hs-var">_sasSorting</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSorting"><span class="hs-identifier hs-type">SelectSorting</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-77"></span><span>    </span><span id="_sasSlicing"><span class="annot"><span class="annottext">SortingAndSlicing -&gt; SelectSlicing
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_sasSlicing"><span class="hs-identifier hs-var hs-var">_sasSlicing</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSlicing"><span class="hs-identifier hs-type">SelectSlicing</span></a></span><span>
+</span><span id="line-78"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-79"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688363029"><span id="local-6989586621688363031"><span id="local-6989586621688363033"><span class="annot"><span class="annottext">Int -&gt; SortingAndSlicing -&gt; ShowS
+[SortingAndSlicing] -&gt; ShowS
+SortingAndSlicing -&gt; String
+(Int -&gt; SortingAndSlicing -&gt; ShowS)
+-&gt; (SortingAndSlicing -&gt; String)
+-&gt; ([SortingAndSlicing] -&gt; ShowS)
+-&gt; Show SortingAndSlicing
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [SortingAndSlicing] -&gt; ShowS
+$cshowList :: [SortingAndSlicing] -&gt; ShowS
+show :: SortingAndSlicing -&gt; String
+$cshow :: SortingAndSlicing -&gt; String
+showsPrec :: Int -&gt; SortingAndSlicing -&gt; ShowS
+$cshowsPrec :: Int -&gt; SortingAndSlicing -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688363025"><span id="local-6989586621688363027"><span class="annot"><span class="annottext">SortingAndSlicing -&gt; SortingAndSlicing -&gt; Bool
+(SortingAndSlicing -&gt; SortingAndSlicing -&gt; Bool)
+-&gt; (SortingAndSlicing -&gt; SortingAndSlicing -&gt; Bool)
+-&gt; Eq SortingAndSlicing
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: SortingAndSlicing -&gt; SortingAndSlicing -&gt; Bool
+$c/= :: SortingAndSlicing -&gt; SortingAndSlicing -&gt; Bool
+== :: SortingAndSlicing -&gt; SortingAndSlicing -&gt; Bool
+$c== :: SortingAndSlicing -&gt; SortingAndSlicing -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. SortingAndSlicing -&gt; Rep SortingAndSlicing x)
+-&gt; (forall x. Rep SortingAndSlicing x -&gt; SortingAndSlicing)
+-&gt; Generic SortingAndSlicing
+forall x. Rep SortingAndSlicing x -&gt; SortingAndSlicing
+forall x. SortingAndSlicing -&gt; Rep SortingAndSlicing x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep SortingAndSlicing x -&gt; SortingAndSlicing
+$cfrom :: forall x. SortingAndSlicing -&gt; Rep SortingAndSlicing x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-80"></span><span>
+</span><span id="line-81"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688363019"><span id="local-6989586621688363021"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SortingAndSlicing"><span class="hs-identifier hs-type">SortingAndSlicing</span></a></span></span></span><span>
+</span><span id="line-82"></span><span>
+</span><span id="line-83"></span><span id="local-6989586621688363017"><span id="local-6989586621688363018"></span></span><span class="hs-keyword">data</span><span> </span><span id="SelectSource"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSource"><span class="hs-identifier hs-var">SelectSource</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SelectSource"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSource"><span class="hs-identifier hs-var">SelectSource</span></a></span></span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_ssPrefix"><span class="annot"><span class="annottext">SelectSource -&gt; Identifier
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_ssPrefix"><span class="hs-identifier hs-var hs-var">_ssPrefix</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#Identifier"><span class="hs-identifier hs-type">PG.Identifier</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-85"></span><span>    </span><span id="_ssFrom"><span class="annot"><span class="annottext">SelectSource -&gt; FromItem
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_ssFrom"><span class="hs-identifier hs-var hs-var">_ssFrom</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#FromItem"><span class="hs-identifier hs-type">PG.FromItem</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-86"></span><span>    </span><span id="_ssWhere"><span class="annot"><span class="annottext">SelectSource -&gt; BoolExp
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_ssWhere"><span class="hs-identifier hs-var hs-var">_ssWhere</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#BoolExp"><span class="hs-identifier hs-type">PG.BoolExp</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-87"></span><span>    </span><span id="_ssSortingAndSlicing"><span class="annot"><span class="annottext">SelectSource -&gt; SortingAndSlicing
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_ssSortingAndSlicing"><span class="hs-identifier hs-var hs-var">_ssSortingAndSlicing</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SortingAndSlicing"><span class="hs-identifier hs-type">SortingAndSlicing</span></a></span><span>
+</span><span id="line-88"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-89"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x. SelectSource -&gt; Rep SelectSource x)
+-&gt; (forall x. Rep SelectSource x -&gt; SelectSource)
+-&gt; Generic SelectSource
+forall x. Rep SelectSource x -&gt; SelectSource
+forall x. SelectSource -&gt; Rep SelectSource x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep SelectSource x -&gt; SelectSource
+$cfrom :: forall x. SelectSource -&gt; Rep SelectSource x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-90"></span><span>
+</span><span id="line-91"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688363008"><span id="local-6989586621688363010"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSource"><span class="hs-identifier hs-type">SelectSource</span></a></span></span></span><span>
+</span><span id="line-92"></span><span>
+</span><span id="line-93"></span><span id="local-6989586621688363002"><span id="local-6989586621688363004"><span id="local-6989586621688363006"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSource"><span class="hs-identifier hs-type">SelectSource</span></a></span></span></span></span><span>
+</span><span id="line-94"></span><span>
+</span><span id="line-95"></span><span id="local-6989586621688362998"><span id="local-6989586621688363000"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSource"><span class="hs-identifier hs-type">SelectSource</span></a></span></span></span><span>
+</span><span id="line-96"></span><span>
+</span><span id="line-97"></span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#noSortingAndSlicing"><span class="hs-identifier hs-type">noSortingAndSlicing</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SortingAndSlicing"><span class="hs-identifier hs-type">SortingAndSlicing</span></a></span><span>
+</span><span id="line-98"></span><span id="noSortingAndSlicing"><span class="annot"><span class="annottext">noSortingAndSlicing :: SortingAndSlicing
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#noSortingAndSlicing"><span class="hs-identifier hs-var hs-var">noSortingAndSlicing</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-99"></span><span>  </span><span class="annot"><span class="annottext">SelectSorting -&gt; SelectSlicing -&gt; SortingAndSlicing
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#SortingAndSlicing"><span class="hs-identifier hs-var">SortingAndSlicing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe DistinctExpr -&gt; SelectSorting
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#NoSorting"><span class="hs-identifier hs-var">NoSorting</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe DistinctExpr
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SelectSlicing
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#noSlicing"><span class="hs-identifier hs-var">noSlicing</span></a></span><span>
+</span><span id="line-100"></span><span>
+</span><span id="line-101"></span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#noSlicing"><span class="hs-identifier hs-type">noSlicing</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSlicing"><span class="hs-identifier hs-type">SelectSlicing</span></a></span><span>
+</span><span id="line-102"></span><span id="noSlicing"><span class="annot"><span class="annottext">noSlicing :: SelectSlicing
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#noSlicing"><span class="hs-identifier hs-var hs-var">noSlicing</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Int -&gt; Maybe Int64 -&gt; SelectSlicing
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSlicing"><span class="hs-identifier hs-var">SelectSlicing</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Int
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe Int64
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-103"></span><span>
+</span><span id="line-104"></span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#orderByForJsonAgg"><span class="hs-identifier hs-type">orderByForJsonAgg</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSource"><span class="hs-identifier hs-type">SelectSource</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#OrderByExp"><span class="hs-identifier hs-type">PG.OrderByExp</span></a></span><span>
+</span><span id="line-105"></span><span id="orderByForJsonAgg"><span class="annot"><span class="annottext">orderByForJsonAgg :: SelectSource -&gt; Maybe OrderByExp
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#orderByForJsonAgg"><span class="hs-identifier hs-var hs-var">orderByForJsonAgg</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSource"><span class="hs-identifier hs-type">SelectSource</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688362993"><span id="local-6989586621688362994"><span id="local-6989586621688362995"><span id="local-6989586621688362996"><span class="annot"><span class="annottext">Identifier
+BoolExp
+FromItem
+SortingAndSlicing
+_ssSortingAndSlicing :: SortingAndSlicing
+_ssWhere :: BoolExp
+_ssFrom :: FromItem
+_ssPrefix :: Identifier
+_ssSortingAndSlicing :: SelectSource -&gt; SortingAndSlicing
+_ssWhere :: SelectSource -&gt; BoolExp
+_ssFrom :: SelectSource -&gt; FromItem
+_ssPrefix :: SelectSource -&gt; Identifier
+</span><a href="#local-6989586621688362993"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-106"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">SortingAndSlicing -&gt; SelectSorting
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_sasSorting"><span class="hs-identifier hs-var hs-var">_sasSorting</span></a></span><span> </span><span class="annot"><span class="annottext">SortingAndSlicing
+</span><a href="#local-6989586621688362993"><span class="hs-identifier hs-var">_ssSortingAndSlicing</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-107"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#NoSorting"><span class="hs-identifier hs-type">NoSorting</span></a></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe OrderByExp
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-108"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#Sorting"><span class="hs-identifier hs-type">Sorting</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ASorting"><span class="hs-identifier hs-type">ASorting</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688362991"><span id="local-6989586621688362992"><span class="annot"><span class="annottext">Maybe (OrderByExp, Maybe DistinctExpr)
+(OrderByExp, Maybe DistinctExpr)
+_sortAtBase :: Maybe (OrderByExp, Maybe DistinctExpr)
+_sortAtNode :: (OrderByExp, Maybe DistinctExpr)
+_sortAtBase :: DistinctAndOrderByExpr -&gt; Maybe (OrderByExp, Maybe DistinctExpr)
+_sortAtNode :: DistinctAndOrderByExpr -&gt; (OrderByExp, Maybe DistinctExpr)
+</span><a href="#local-6989586621688362991"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">OrderByExp -&gt; Maybe OrderByExp
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(OrderByExp -&gt; Maybe OrderByExp) -&gt; OrderByExp -&gt; Maybe OrderByExp
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(OrderByExp, Maybe DistinctExpr) -&gt; OrderByExp
+forall a b. (a, b) -&gt; a
+</span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="annot"><span class="annottext">(OrderByExp, Maybe DistinctExpr)
+</span><a href="#local-6989586621688362992"><span class="hs-identifier hs-var">_sortAtNode</span></a></span><span>
+</span><span id="line-109"></span><span>
+</span><span id="line-110"></span><span class="hs-keyword">data</span><span> </span><span id="ApplySortingAndSlicing"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ApplySortingAndSlicing"><span class="hs-identifier hs-var">ApplySortingAndSlicing</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ApplySortingAndSlicing"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ApplySortingAndSlicing"><span class="hs-identifier hs-var">ApplySortingAndSlicing</span></a></span></span><span>
+</span><span id="line-111"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_applyAtBase"><span class="annot"><span class="annottext">ApplySortingAndSlicing
+-&gt; (Maybe OrderByExp, SelectSlicing, Maybe DistinctExpr)
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_applyAtBase"><span class="hs-identifier hs-var hs-var">_applyAtBase</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#OrderByExp"><span class="hs-identifier hs-type">PG.OrderByExp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSlicing"><span class="hs-identifier hs-type">SelectSlicing</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#DistinctExpr"><span class="hs-identifier hs-type">PG.DistinctExpr</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-112"></span><span>    </span><span id="_applyAtNode"><span class="annot"><span class="annottext">ApplySortingAndSlicing
+-&gt; (Maybe OrderByExp, SelectSlicing, Maybe DistinctExpr)
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_applyAtNode"><span class="hs-identifier hs-var hs-var">_applyAtNode</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#OrderByExp"><span class="hs-identifier hs-type">PG.OrderByExp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSlicing"><span class="hs-identifier hs-type">SelectSlicing</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#DistinctExpr"><span class="hs-identifier hs-type">PG.DistinctExpr</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-113"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-114"></span><span>
+</span><span id="line-115"></span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#applySortingAndSlicing"><span class="hs-identifier hs-type">applySortingAndSlicing</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SortingAndSlicing"><span class="hs-identifier hs-type">SortingAndSlicing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ApplySortingAndSlicing"><span class="hs-identifier hs-type">ApplySortingAndSlicing</span></a></span><span>
+</span><span id="line-116"></span><span id="applySortingAndSlicing"><span class="annot"><span class="annottext">applySortingAndSlicing :: SortingAndSlicing -&gt; ApplySortingAndSlicing
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#applySortingAndSlicing"><span class="hs-identifier hs-var hs-var">applySortingAndSlicing</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SortingAndSlicing"><span class="hs-identifier hs-type">SortingAndSlicing</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688362987"><span id="local-6989586621688362988"><span class="annot"><span class="annottext">SelectSorting
+SelectSlicing
+_sasSlicing :: SelectSlicing
+_sasSorting :: SelectSorting
+_sasSlicing :: SortingAndSlicing -&gt; SelectSlicing
+_sasSorting :: SortingAndSlicing -&gt; SelectSorting
+</span><a href="#local-6989586621688362987"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-117"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">SelectSorting
+</span><a href="#local-6989586621688362988"><span class="hs-identifier hs-var">_sasSorting</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-118"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#NoSorting"><span class="hs-identifier hs-type">NoSorting</span></a></span><span> </span><span id="local-6989586621688362986"><span class="annot"><span class="annottext">Maybe DistinctExpr
+</span><a href="#local-6989586621688362986"><span class="hs-identifier hs-var">distinctExp</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe DistinctExpr -&gt; ApplySortingAndSlicing
+</span><a href="#local-6989586621688362985"><span class="hs-identifier hs-var">withNoSorting</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe DistinctExpr
+</span><a href="#local-6989586621688362986"><span class="hs-identifier hs-var">distinctExp</span></a></span><span>
+</span><span id="line-119"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#Sorting"><span class="hs-identifier hs-type">Sorting</span></a></span><span> </span><span id="local-6989586621688362984"><span class="annot"><span class="annottext">DistinctAndOrderByExpr
+</span><a href="#local-6989586621688362984"><span class="hs-identifier hs-var">sorting</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DistinctAndOrderByExpr -&gt; ApplySortingAndSlicing
+</span><a href="#local-6989586621688362983"><span class="hs-identifier hs-var">withSoritng</span></a></span><span> </span><span class="annot"><span class="annottext">DistinctAndOrderByExpr
+</span><a href="#local-6989586621688362984"><span class="hs-identifier hs-var">sorting</span></a></span><span>
+</span><span id="line-120"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-121"></span><span>    </span><span id="local-6989586621688362985"><span class="annot"><span class="annottext">withNoSorting :: Maybe DistinctExpr -&gt; ApplySortingAndSlicing
+</span><a href="#local-6989586621688362985"><span class="hs-identifier hs-var hs-var">withNoSorting</span></a></span></span><span> </span><span id="local-6989586621688362982"><span class="annot"><span class="annottext">Maybe DistinctExpr
+</span><a href="#local-6989586621688362982"><span class="hs-identifier hs-var">distinctExp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-122"></span><span>      </span><span class="annot"><span class="annottext">(Maybe OrderByExp, SelectSlicing, Maybe DistinctExpr)
+-&gt; (Maybe OrderByExp, SelectSlicing, Maybe DistinctExpr)
+-&gt; ApplySortingAndSlicing
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#ApplySortingAndSlicing"><span class="hs-identifier hs-var">ApplySortingAndSlicing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe OrderByExp
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SelectSlicing
+</span><a href="#local-6989586621688362987"><span class="hs-identifier hs-var">_sasSlicing</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe DistinctExpr
+</span><a href="#local-6989586621688362982"><span class="hs-identifier hs-var">distinctExp</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe OrderByExp
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SelectSlicing
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#noSlicing"><span class="hs-identifier hs-var">noSlicing</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe DistinctExpr
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span>
+</span><span id="line-123"></span><span>    </span><span id="local-6989586621688362983"><span class="annot"><span class="annottext">withSoritng :: DistinctAndOrderByExpr -&gt; ApplySortingAndSlicing
+</span><a href="#local-6989586621688362983"><span class="hs-identifier hs-var hs-var">withSoritng</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ASorting"><span class="hs-identifier hs-type">ASorting</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688362980"><span id="local-6989586621688362981"><span class="annot"><span class="annottext">Maybe (OrderByExp, Maybe DistinctExpr)
+(OrderByExp, Maybe DistinctExpr)
+_sortAtBase :: Maybe (OrderByExp, Maybe DistinctExpr)
+_sortAtNode :: (OrderByExp, Maybe DistinctExpr)
+_sortAtBase :: DistinctAndOrderByExpr -&gt; Maybe (OrderByExp, Maybe DistinctExpr)
+_sortAtNode :: DistinctAndOrderByExpr -&gt; (OrderByExp, Maybe DistinctExpr)
+</span><a href="#local-6989586621688362980"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-124"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688362979"><span class="annot"><span class="annottext">OrderByExp
+</span><a href="#local-6989586621688362979"><span class="hs-identifier hs-var">nodeOrderBy</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688362978"><span class="annot"><span class="annottext">Maybe DistinctExpr
+</span><a href="#local-6989586621688362978"><span class="hs-identifier hs-var">nodeDistinctOn</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(OrderByExp, Maybe DistinctExpr)
+</span><a href="#local-6989586621688362981"><span class="hs-identifier hs-var">_sortAtNode</span></a></span><span>
+</span><span id="line-125"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (OrderByExp, Maybe DistinctExpr)
+</span><a href="#local-6989586621688362980"><span class="hs-identifier hs-var">_sortAtBase</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-126"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688362977"><span class="annot"><span class="annottext">OrderByExp
+</span><a href="#local-6989586621688362977"><span class="hs-identifier hs-var">baseOrderBy</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688362976"><span class="annot"><span class="annottext">Maybe DistinctExpr
+</span><a href="#local-6989586621688362976"><span class="hs-identifier hs-var">baseDistinctOn</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-127"></span><span>              </span><span class="annot"><span class="annottext">(Maybe OrderByExp, SelectSlicing, Maybe DistinctExpr)
+-&gt; (Maybe OrderByExp, SelectSlicing, Maybe DistinctExpr)
+-&gt; ApplySortingAndSlicing
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#ApplySortingAndSlicing"><span class="hs-identifier hs-var">ApplySortingAndSlicing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OrderByExp -&gt; Maybe OrderByExp
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">OrderByExp
+</span><a href="#local-6989586621688362977"><span class="hs-identifier hs-var">baseOrderBy</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SelectSlicing
+</span><a href="#local-6989586621688362987"><span class="hs-identifier hs-var">_sasSlicing</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe DistinctExpr
+</span><a href="#local-6989586621688362976"><span class="hs-identifier hs-var">baseDistinctOn</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OrderByExp -&gt; Maybe OrderByExp
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">OrderByExp
+</span><a href="#local-6989586621688362979"><span class="hs-identifier hs-var">nodeOrderBy</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SelectSlicing
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#noSlicing"><span class="hs-identifier hs-var">noSlicing</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe DistinctExpr
+</span><a href="#local-6989586621688362978"><span class="hs-identifier hs-var">nodeDistinctOn</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-128"></span><span>            </span><span class="annot"><span class="annottext">Maybe (OrderByExp, Maybe DistinctExpr)
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-129"></span><span>              </span><span class="annot"><span class="annottext">(Maybe OrderByExp, SelectSlicing, Maybe DistinctExpr)
+-&gt; (Maybe OrderByExp, SelectSlicing, Maybe DistinctExpr)
+-&gt; ApplySortingAndSlicing
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#ApplySortingAndSlicing"><span class="hs-identifier hs-var">ApplySortingAndSlicing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe OrderByExp
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SelectSlicing
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#noSlicing"><span class="hs-identifier hs-var">noSlicing</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe DistinctExpr
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OrderByExp -&gt; Maybe OrderByExp
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">OrderByExp
+</span><a href="#local-6989586621688362979"><span class="hs-identifier hs-var">nodeOrderBy</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SelectSlicing
+</span><a href="#local-6989586621688362987"><span class="hs-identifier hs-var">_sasSlicing</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe DistinctExpr
+</span><a href="#local-6989586621688362978"><span class="hs-identifier hs-var">nodeDistinctOn</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-130"></span><span>
+</span><span id="line-131"></span><span class="hs-keyword">data</span><span> </span><span id="SelectNode"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectNode"><span class="hs-identifier hs-var">SelectNode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SelectNode"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectNode"><span class="hs-identifier hs-var">SelectNode</span></a></span></span><span>
+</span><span id="line-132"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_snExtractors"><span class="annot"><span class="annottext">SelectNode -&gt; HashMap Alias SQLExp
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_snExtractors"><span class="hs-identifier hs-var hs-var">_snExtractors</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HM.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#Alias"><span class="hs-identifier hs-type">PG.Alias</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">PG.SQLExp</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-133"></span><span>    </span><span id="_snJoinTree"><span class="annot"><span class="annottext">SelectNode -&gt; JoinTree
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_snJoinTree"><span class="hs-identifier hs-var hs-var">_snJoinTree</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#JoinTree"><span class="hs-identifier hs-type">JoinTree</span></a></span><span>
+</span><span id="line-134"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-135"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688362970"><span id="local-6989586621688362972"><span class="annot"><span class="annottext">SelectNode -&gt; SelectNode -&gt; Bool
+(SelectNode -&gt; SelectNode -&gt; Bool)
+-&gt; (SelectNode -&gt; SelectNode -&gt; Bool) -&gt; Eq SelectNode
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: SelectNode -&gt; SelectNode -&gt; Bool
+$c/= :: SelectNode -&gt; SelectNode -&gt; Bool
+== :: SelectNode -&gt; SelectNode -&gt; Bool
+$c== :: SelectNode -&gt; SelectNode -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-136"></span><span>
+</span><span id="line-137"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688362965"><span id="local-6989586621688362967"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectNode"><span class="hs-identifier hs-type">SelectNode</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-138"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectNode"><span class="hs-identifier hs-type">SelectNode</span></a></span><span> </span><span id="local-6989586621688362963"><span class="annot"><span class="annottext">HashMap Alias SQLExp
+</span><a href="#local-6989586621688362963"><span class="hs-identifier hs-var">lExtrs</span></a></span></span><span> </span><span id="local-6989586621688362962"><span class="annot"><span class="annottext">JoinTree
+</span><a href="#local-6989586621688362962"><span class="hs-identifier hs-var">lJoinTree</span></a></span></span><span> </span><span id="local-6989586621688362961"><span class="annot"><span class="annottext">&lt;&gt; :: SelectNode -&gt; SelectNode -&gt; SelectNode
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectNode"><span class="hs-identifier hs-type">SelectNode</span></a></span><span> </span><span id="local-6989586621688362960"><span class="annot"><span class="annottext">HashMap Alias SQLExp
+</span><a href="#local-6989586621688362960"><span class="hs-identifier hs-var">rExtrs</span></a></span></span><span> </span><span id="local-6989586621688362959"><span class="annot"><span class="annottext">JoinTree
+</span><a href="#local-6989586621688362959"><span class="hs-identifier hs-var">rJoinTree</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-139"></span><span>    </span><span class="annot"><span class="annottext">HashMap Alias SQLExp -&gt; JoinTree -&gt; SelectNode
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectNode"><span class="hs-identifier hs-var">SelectNode</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap Alias SQLExp
+</span><a href="#local-6989586621688362963"><span class="hs-identifier hs-var">lExtrs</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Alias SQLExp
+-&gt; HashMap Alias SQLExp -&gt; HashMap Alias SQLExp
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">HashMap Alias SQLExp
+</span><a href="#local-6989586621688362960"><span class="hs-identifier hs-var">rExtrs</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">JoinTree
+</span><a href="#local-6989586621688362962"><span class="hs-identifier hs-var">lJoinTree</span></a></span><span> </span><span class="annot"><span class="annottext">JoinTree -&gt; JoinTree -&gt; JoinTree
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">JoinTree
+</span><a href="#local-6989586621688362959"><span class="hs-identifier hs-var">rJoinTree</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-140"></span><span>
+</span><span id="line-141"></span><span id="local-6989586621688362957"><span id="local-6989586621688362958"></span></span><span class="hs-keyword">data</span><span> </span><span id="ObjectSelectSource"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ObjectSelectSource"><span class="hs-identifier hs-var">ObjectSelectSource</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ObjectSelectSource"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ObjectSelectSource"><span class="hs-identifier hs-var">ObjectSelectSource</span></a></span></span><span>
+</span><span id="line-142"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_ossPrefix"><span class="annot"><span class="annottext">ObjectSelectSource -&gt; Identifier
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_ossPrefix"><span class="hs-identifier hs-var hs-var">_ossPrefix</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#Identifier"><span class="hs-identifier hs-type">PG.Identifier</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-143"></span><span>    </span><span id="_ossFrom"><span class="annot"><span class="annottext">ObjectSelectSource -&gt; FromItem
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_ossFrom"><span class="hs-identifier hs-var hs-var">_ossFrom</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#FromItem"><span class="hs-identifier hs-type">PG.FromItem</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-144"></span><span>    </span><span id="_ossWhere"><span class="annot"><span class="annottext">ObjectSelectSource -&gt; BoolExp
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_ossWhere"><span class="hs-identifier hs-var hs-var">_ossWhere</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#BoolExp"><span class="hs-identifier hs-type">PG.BoolExp</span></a></span><span>
+</span><span id="line-145"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-146"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688362949"><span id="local-6989586621688362951"><span id="local-6989586621688362953"><span class="annot"><span class="annottext">Int -&gt; ObjectSelectSource -&gt; ShowS
+[ObjectSelectSource] -&gt; ShowS
+ObjectSelectSource -&gt; String
+(Int -&gt; ObjectSelectSource -&gt; ShowS)
+-&gt; (ObjectSelectSource -&gt; String)
+-&gt; ([ObjectSelectSource] -&gt; ShowS)
+-&gt; Show ObjectSelectSource
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ObjectSelectSource] -&gt; ShowS
+$cshowList :: [ObjectSelectSource] -&gt; ShowS
+show :: ObjectSelectSource -&gt; String
+$cshow :: ObjectSelectSource -&gt; String
+showsPrec :: Int -&gt; ObjectSelectSource -&gt; ShowS
+$cshowsPrec :: Int -&gt; ObjectSelectSource -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688362945"><span id="local-6989586621688362947"><span class="annot"><span class="annottext">ObjectSelectSource -&gt; ObjectSelectSource -&gt; Bool
+(ObjectSelectSource -&gt; ObjectSelectSource -&gt; Bool)
+-&gt; (ObjectSelectSource -&gt; ObjectSelectSource -&gt; Bool)
+-&gt; Eq ObjectSelectSource
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ObjectSelectSource -&gt; ObjectSelectSource -&gt; Bool
+$c/= :: ObjectSelectSource -&gt; ObjectSelectSource -&gt; Bool
+== :: ObjectSelectSource -&gt; ObjectSelectSource -&gt; Bool
+$c== :: ObjectSelectSource -&gt; ObjectSelectSource -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. ObjectSelectSource -&gt; Rep ObjectSelectSource x)
+-&gt; (forall x. Rep ObjectSelectSource x -&gt; ObjectSelectSource)
+-&gt; Generic ObjectSelectSource
+forall x. Rep ObjectSelectSource x -&gt; ObjectSelectSource
+forall x. ObjectSelectSource -&gt; Rep ObjectSelectSource x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep ObjectSelectSource x -&gt; ObjectSelectSource
+$cfrom :: forall x. ObjectSelectSource -&gt; Rep ObjectSelectSource x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-147"></span><span>
+</span><span id="line-148"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688362939"><span id="local-6989586621688362941"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ObjectSelectSource"><span class="hs-identifier hs-type">ObjectSelectSource</span></a></span></span></span><span>
+</span><span id="line-149"></span><span>
+</span><span id="line-150"></span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#objectSelectSourceToSelectSource"><span class="hs-identifier hs-type">objectSelectSourceToSelectSource</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ObjectSelectSource"><span class="hs-identifier hs-type">ObjectSelectSource</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSource"><span class="hs-identifier hs-type">SelectSource</span></a></span><span>
+</span><span id="line-151"></span><span id="objectSelectSourceToSelectSource"><span class="annot"><span class="annottext">objectSelectSourceToSelectSource :: ObjectSelectSource -&gt; SelectSource
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#objectSelectSourceToSelectSource"><span class="hs-identifier hs-var hs-var">objectSelectSourceToSelectSource</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ObjectSelectSource"><span class="hs-identifier hs-type">ObjectSelectSource</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688362936"><span id="local-6989586621688362937"><span id="local-6989586621688362938"><span class="annot"><span class="annottext">Identifier
+BoolExp
+FromItem
+_ossWhere :: BoolExp
+_ossFrom :: FromItem
+_ossPrefix :: Identifier
+_ossWhere :: ObjectSelectSource -&gt; BoolExp
+_ossFrom :: ObjectSelectSource -&gt; FromItem
+_ossPrefix :: ObjectSelectSource -&gt; Identifier
+</span><a href="#local-6989586621688362936"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-152"></span><span>  </span><span class="annot"><span class="annottext">Identifier
+-&gt; FromItem -&gt; BoolExp -&gt; SortingAndSlicing -&gt; SelectSource
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSource"><span class="hs-identifier hs-var">SelectSource</span></a></span><span> </span><span class="annot"><span class="annottext">Identifier
+</span><a href="#local-6989586621688362938"><span class="hs-identifier hs-var">_ossPrefix</span></a></span><span> </span><span class="annot"><span class="annottext">FromItem
+</span><a href="#local-6989586621688362937"><span class="hs-identifier hs-var">_ossFrom</span></a></span><span> </span><span class="annot"><span class="annottext">BoolExp
+</span><a href="#local-6989586621688362936"><span class="hs-identifier hs-var">_ossWhere</span></a></span><span> </span><span class="annot"><span class="annottext">SortingAndSlicing
+</span><a href="#local-6989586621688362935"><span class="hs-identifier hs-var">sortingAndSlicing</span></a></span><span>
+</span><span id="line-153"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-154"></span><span>    </span><span id="local-6989586621688362935"><span class="annot"><span class="annottext">sortingAndSlicing :: SortingAndSlicing
+</span><a href="#local-6989586621688362935"><span class="hs-identifier hs-var hs-var">sortingAndSlicing</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SelectSorting -&gt; SelectSlicing -&gt; SortingAndSlicing
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#SortingAndSlicing"><span class="hs-identifier hs-var">SortingAndSlicing</span></a></span><span> </span><span class="annot"><span class="annottext">SelectSorting
+</span><a href="#local-6989586621688362934"><span class="hs-identifier hs-var">noSorting</span></a></span><span> </span><span class="annot"><span class="annottext">SelectSlicing
+</span><a href="#local-6989586621688362933"><span class="hs-identifier hs-var">limit1</span></a></span><span>
+</span><span id="line-155"></span><span>    </span><span id="local-6989586621688362934"><span class="annot"><span class="annottext">noSorting :: SelectSorting
+</span><a href="#local-6989586621688362934"><span class="hs-identifier hs-var hs-var">noSorting</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe DistinctExpr -&gt; SelectSorting
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#NoSorting"><span class="hs-identifier hs-var">NoSorting</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe DistinctExpr
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-156"></span><span>    </span><span class="hs-comment">-- We specify 'LIMIT 1' here to mitigate misconfigured object relationships with an</span><span>
+</span><span id="line-157"></span><span>    </span><span class="hs-comment">-- unexpected one-to-many/many-to-many relationship, instead of the expected one-to-one/many-to-one relationship.</span><span>
+</span><span id="line-158"></span><span>    </span><span class="hs-comment">-- Because we can't detect this misconfiguration statically (it depends on the data),</span><span>
+</span><span id="line-159"></span><span>    </span><span class="hs-comment">-- we force a single (or null) result instead by adding 'LIMIT 1'.</span><span>
+</span><span id="line-160"></span><span>    </span><span class="hs-comment">-- Which result is returned might be non-deterministic (though only in misconfigured cases).</span><span>
+</span><span id="line-161"></span><span>    </span><span class="hs-comment">-- Proper one-to-one/many-to-one object relationships should not be semantically affected by this.</span><span>
+</span><span id="line-162"></span><span>    </span><span class="hs-comment">-- See: https://github.com/hasura/graphql-engine/issues/7936</span><span>
+</span><span id="line-163"></span><span>    </span><span id="local-6989586621688362933"><span class="annot"><span class="annottext">limit1 :: SelectSlicing
+</span><a href="#local-6989586621688362933"><span class="hs-identifier hs-var hs-var">limit1</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Int -&gt; Maybe Int64 -&gt; SelectSlicing
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSlicing"><span class="hs-identifier hs-var">SelectSlicing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Maybe Int
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">1</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Int64
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-164"></span><span>
+</span><span id="line-165"></span><span id="local-6989586621688362931"><span id="local-6989586621688362932"></span></span><span class="hs-keyword">data</span><span> </span><span id="ObjectRelationSource"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ObjectRelationSource"><span class="hs-identifier hs-var">ObjectRelationSource</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ObjectRelationSource"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ObjectRelationSource"><span class="hs-identifier hs-var">ObjectRelationSource</span></a></span></span><span>
+</span><span id="line-166"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_orsRelationshipName"><span class="annot"><span class="annottext">ObjectRelationSource -&gt; RelName
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_orsRelationshipName"><span class="hs-identifier hs-var hs-var">_orsRelationshipName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#RelName"><span class="hs-identifier hs-type">RelName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-167"></span><span>    </span><span id="_orsRelationMapping"><span class="annot"><span class="annottext">ObjectRelationSource -&gt; HashMap PGCol PGCol
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_orsRelationMapping"><span class="hs-identifier hs-var hs-var">_orsRelationMapping</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HM.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PG.PGCol</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PG.PGCol</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-168"></span><span>    </span><span id="_orsSelectSource"><span class="annot"><span class="annottext">ObjectRelationSource -&gt; ObjectSelectSource
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_orsSelectSource"><span class="hs-identifier hs-var hs-var">_orsSelectSource</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ObjectSelectSource"><span class="hs-identifier hs-type">ObjectSelectSource</span></a></span><span>
+</span><span id="line-169"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-170"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x. ObjectRelationSource -&gt; Rep ObjectRelationSource x)
+-&gt; (forall x. Rep ObjectRelationSource x -&gt; ObjectRelationSource)
+-&gt; Generic ObjectRelationSource
+forall x. Rep ObjectRelationSource x -&gt; ObjectRelationSource
+forall x. ObjectRelationSource -&gt; Rep ObjectRelationSource x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep ObjectRelationSource x -&gt; ObjectRelationSource
+$cfrom :: forall x. ObjectRelationSource -&gt; Rep ObjectRelationSource x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-171"></span><span>
+</span><span id="line-172"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688362922"><span id="local-6989586621688362924"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ObjectRelationSource"><span class="hs-identifier hs-type">ObjectRelationSource</span></a></span></span></span><span>
+</span><span id="line-173"></span><span>
+</span><span id="line-174"></span><span id="local-6989586621688362918"><span id="local-6989586621688362920"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ObjectRelationSource"><span class="hs-identifier hs-type">ObjectRelationSource</span></a></span></span></span><span>
+</span><span id="line-175"></span><span>
+</span><span id="line-176"></span><span id="local-6989586621688362916"><span id="local-6989586621688362917"></span></span><span class="hs-keyword">data</span><span> </span><span id="ArrayRelationSource"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ArrayRelationSource"><span class="hs-identifier hs-var">ArrayRelationSource</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ArrayRelationSource"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ArrayRelationSource"><span class="hs-identifier hs-var">ArrayRelationSource</span></a></span></span><span>
+</span><span id="line-177"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_arsAlias"><span class="annot"><span class="annottext">ArrayRelationSource -&gt; Alias
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_arsAlias"><span class="hs-identifier hs-var hs-var">_arsAlias</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#Alias"><span class="hs-identifier hs-type">PG.Alias</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-178"></span><span>    </span><span id="_arsRelationMapping"><span class="annot"><span class="annottext">ArrayRelationSource -&gt; HashMap PGCol PGCol
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_arsRelationMapping"><span class="hs-identifier hs-var hs-var">_arsRelationMapping</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HM.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PG.PGCol</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PG.PGCol</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-179"></span><span>    </span><span id="_arsSelectSource"><span class="annot"><span class="annottext">ArrayRelationSource -&gt; SelectSource
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_arsSelectSource"><span class="hs-identifier hs-var hs-var">_arsSelectSource</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSource"><span class="hs-identifier hs-type">SelectSource</span></a></span><span>
+</span><span id="line-180"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-181"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x. ArrayRelationSource -&gt; Rep ArrayRelationSource x)
+-&gt; (forall x. Rep ArrayRelationSource x -&gt; ArrayRelationSource)
+-&gt; Generic ArrayRelationSource
+forall x. Rep ArrayRelationSource x -&gt; ArrayRelationSource
+forall x. ArrayRelationSource -&gt; Rep ArrayRelationSource x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep ArrayRelationSource x -&gt; ArrayRelationSource
+$cfrom :: forall x. ArrayRelationSource -&gt; Rep ArrayRelationSource x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-182"></span><span>
+</span><span id="line-183"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688362907"><span id="local-6989586621688362909"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ArrayRelationSource"><span class="hs-identifier hs-type">ArrayRelationSource</span></a></span></span></span><span>
+</span><span id="line-184"></span><span>
+</span><span id="line-185"></span><span id="local-6989586621688362903"><span id="local-6989586621688362905"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ArrayRelationSource"><span class="hs-identifier hs-type">ArrayRelationSource</span></a></span></span></span><span>
+</span><span id="line-186"></span><span>
+</span><span id="line-187"></span><span class="hs-keyword">data</span><span> </span><span id="MultiRowSelectNode"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#MultiRowSelectNode"><span class="hs-identifier hs-var">MultiRowSelectNode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MultiRowSelectNode"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#MultiRowSelectNode"><span class="hs-identifier hs-var">MultiRowSelectNode</span></a></span></span><span>
+</span><span id="line-188"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_mrsnTopExtractors"><span class="annot"><span class="annottext">MultiRowSelectNode -&gt; [Extractor]
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_mrsnTopExtractors"><span class="hs-identifier hs-var hs-var">_mrsnTopExtractors</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#Extractor"><span class="hs-identifier hs-type">PG.Extractor</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-189"></span><span>    </span><span id="_mrsnSelectNode"><span class="annot"><span class="annottext">MultiRowSelectNode -&gt; SelectNode
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_mrsnSelectNode"><span class="hs-identifier hs-var hs-var">_mrsnSelectNode</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectNode"><span class="hs-identifier hs-type">SelectNode</span></a></span><span>
+</span><span id="line-190"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-191"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688362896"><span id="local-6989586621688362898"><span class="annot"><span class="annottext">MultiRowSelectNode -&gt; MultiRowSelectNode -&gt; Bool
+(MultiRowSelectNode -&gt; MultiRowSelectNode -&gt; Bool)
+-&gt; (MultiRowSelectNode -&gt; MultiRowSelectNode -&gt; Bool)
+-&gt; Eq MultiRowSelectNode
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: MultiRowSelectNode -&gt; MultiRowSelectNode -&gt; Bool
+$c/= :: MultiRowSelectNode -&gt; MultiRowSelectNode -&gt; Bool
+== :: MultiRowSelectNode -&gt; MultiRowSelectNode -&gt; Bool
+$c== :: MultiRowSelectNode -&gt; MultiRowSelectNode -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-192"></span><span>
+</span><span id="line-193"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688362891"><span id="local-6989586621688362893"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#MultiRowSelectNode"><span class="hs-identifier hs-type">MultiRowSelectNode</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-194"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#MultiRowSelectNode"><span class="hs-identifier hs-type">MultiRowSelectNode</span></a></span><span> </span><span id="local-6989586621688362890"><span class="annot"><span class="annottext">[Extractor]
+</span><a href="#local-6989586621688362890"><span class="hs-identifier hs-var">lTopExtrs</span></a></span></span><span> </span><span id="local-6989586621688362889"><span class="annot"><span class="annottext">SelectNode
+</span><a href="#local-6989586621688362889"><span class="hs-identifier hs-var">lSelNode</span></a></span></span><span> </span><span id="local-6989586621688362888"><span class="annot"><span class="annottext">&lt;&gt; :: MultiRowSelectNode -&gt; MultiRowSelectNode -&gt; MultiRowSelectNode
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#MultiRowSelectNode"><span class="hs-identifier hs-type">MultiRowSelectNode</span></a></span><span> </span><span id="local-6989586621688362887"><span class="annot"><span class="annottext">[Extractor]
+</span><a href="#local-6989586621688362887"><span class="hs-identifier hs-var">rTopExtrs</span></a></span></span><span> </span><span id="local-6989586621688362886"><span class="annot"><span class="annottext">SelectNode
+</span><a href="#local-6989586621688362886"><span class="hs-identifier hs-var">rSelNode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-195"></span><span>    </span><span class="annot"><span class="annottext">[Extractor] -&gt; SelectNode -&gt; MultiRowSelectNode
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#MultiRowSelectNode"><span class="hs-identifier hs-var">MultiRowSelectNode</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Extractor]
+</span><a href="#local-6989586621688362890"><span class="hs-identifier hs-var">lTopExtrs</span></a></span><span> </span><span class="annot"><span class="annottext">[Extractor] -&gt; [Extractor] -&gt; [Extractor]
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Extractor]
+</span><a href="#local-6989586621688362887"><span class="hs-identifier hs-var">rTopExtrs</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SelectNode
+</span><a href="#local-6989586621688362889"><span class="hs-identifier hs-var">lSelNode</span></a></span><span> </span><span class="annot"><span class="annottext">SelectNode -&gt; SelectNode -&gt; SelectNode
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">SelectNode
+</span><a href="#local-6989586621688362886"><span class="hs-identifier hs-var">rSelNode</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-196"></span><span>
+</span><span id="line-197"></span><span id="local-6989586621688362884"><span id="local-6989586621688362885"></span></span><span class="hs-keyword">data</span><span> </span><span id="ComputedFieldTableSetSource"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ComputedFieldTableSetSource"><span class="hs-identifier hs-var">ComputedFieldTableSetSource</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ComputedFieldTableSetSource"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ComputedFieldTableSetSource"><span class="hs-identifier hs-var">ComputedFieldTableSetSource</span></a></span></span><span>
+</span><span id="line-198"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_cftssFieldName"><span class="annot"><span class="annottext">ComputedFieldTableSetSource -&gt; FieldName
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_cftssFieldName"><span class="hs-identifier hs-var hs-var">_cftssFieldName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-199"></span><span>    </span><span id="_cftssSelectSource"><span class="annot"><span class="annottext">ComputedFieldTableSetSource -&gt; SelectSource
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_cftssSelectSource"><span class="hs-identifier hs-var hs-var">_cftssSelectSource</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSource"><span class="hs-identifier hs-type">SelectSource</span></a></span><span>
+</span><span id="line-200"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-201"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x.
+ ComputedFieldTableSetSource -&gt; Rep ComputedFieldTableSetSource x)
+-&gt; (forall x.
+    Rep ComputedFieldTableSetSource x -&gt; ComputedFieldTableSetSource)
+-&gt; Generic ComputedFieldTableSetSource
+forall x.
+Rep ComputedFieldTableSetSource x -&gt; ComputedFieldTableSetSource
+forall x.
+ComputedFieldTableSetSource -&gt; Rep ComputedFieldTableSetSource x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x.
+Rep ComputedFieldTableSetSource x -&gt; ComputedFieldTableSetSource
+$cfrom :: forall x.
+ComputedFieldTableSetSource -&gt; Rep ComputedFieldTableSetSource x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-202"></span><span>
+</span><span id="line-203"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688362876"><span id="local-6989586621688362878"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ComputedFieldTableSetSource"><span class="hs-identifier hs-type">ComputedFieldTableSetSource</span></a></span></span></span><span>
+</span><span id="line-204"></span><span>
+</span><span id="line-205"></span><span id="local-6989586621688362870"><span id="local-6989586621688362872"><span id="local-6989586621688362874"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ComputedFieldTableSetSource"><span class="hs-identifier hs-type">ComputedFieldTableSetSource</span></a></span></span></span></span><span>
+</span><span id="line-206"></span><span>
+</span><span id="line-207"></span><span id="local-6989586621688362866"><span id="local-6989586621688362868"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ComputedFieldTableSetSource"><span class="hs-identifier hs-type">ComputedFieldTableSetSource</span></a></span></span></span><span>
+</span><span id="line-208"></span><span>
+</span><span id="line-209"></span><span id="local-6989586621688362864"><span id="local-6989586621688362865"></span></span><span class="hs-keyword">data</span><span> </span><span id="ArrayConnectionSource"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ArrayConnectionSource"><span class="hs-identifier hs-var">ArrayConnectionSource</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ArrayConnectionSource"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ArrayConnectionSource"><span class="hs-identifier hs-var">ArrayConnectionSource</span></a></span></span><span>
+</span><span id="line-210"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_acsAlias"><span class="annot"><span class="annottext">ArrayConnectionSource -&gt; Alias
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_acsAlias"><span class="hs-identifier hs-var hs-var">_acsAlias</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#Alias"><span class="hs-identifier hs-type">PG.Alias</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-211"></span><span>    </span><span id="_acsRelationMapping"><span class="annot"><span class="annottext">ArrayConnectionSource -&gt; HashMap PGCol PGCol
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_acsRelationMapping"><span class="hs-identifier hs-var hs-var">_acsRelationMapping</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HM.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PG.PGCol</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PG.PGCol</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-212"></span><span>    </span><span id="_acsSplitFilter"><span class="annot"><span class="annottext">ArrayConnectionSource -&gt; Maybe BoolExp
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_acsSplitFilter"><span class="hs-identifier hs-var hs-var">_acsSplitFilter</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#BoolExp"><span class="hs-identifier hs-type">PG.BoolExp</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-213"></span><span>    </span><span id="_acsSlice"><span class="annot"><span class="annottext">ArrayConnectionSource -&gt; Maybe ConnectionSlice
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_acsSlice"><span class="hs-identifier hs-var hs-var">_acsSlice</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#ConnectionSlice"><span class="hs-identifier hs-type">ConnectionSlice</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-214"></span><span>    </span><span id="_acsSource"><span class="annot"><span class="annottext">ArrayConnectionSource -&gt; SelectSource
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_acsSource"><span class="hs-identifier hs-var hs-var">_acsSource</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectSource"><span class="hs-identifier hs-type">SelectSource</span></a></span><span>
+</span><span id="line-215"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-216"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x. ArrayConnectionSource -&gt; Rep ArrayConnectionSource x)
+-&gt; (forall x. Rep ArrayConnectionSource x -&gt; ArrayConnectionSource)
+-&gt; Generic ArrayConnectionSource
+forall x. Rep ArrayConnectionSource x -&gt; ArrayConnectionSource
+forall x. ArrayConnectionSource -&gt; Rep ArrayConnectionSource x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep ArrayConnectionSource x -&gt; ArrayConnectionSource
+$cfrom :: forall x. ArrayConnectionSource -&gt; Rep ArrayConnectionSource x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-217"></span><span>
+</span><span id="line-218"></span><span id="local-6989586621688362854"><span id="local-6989586621688362856"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ArrayConnectionSource"><span class="hs-identifier hs-type">ArrayConnectionSource</span></a></span></span></span><span>
+</span><span id="line-219"></span><span>
+</span><span id="line-220"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688362850"><span id="local-6989586621688362852"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ArrayConnectionSource"><span class="hs-identifier hs-type">ArrayConnectionSource</span></a></span></span></span><span>
+</span><span id="line-221"></span><span>
+</span><span id="line-222"></span><span class="hs-keyword">data</span><span> </span><span id="JoinTree"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#JoinTree"><span class="hs-identifier hs-var">JoinTree</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="JoinTree"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#JoinTree"><span class="hs-identifier hs-var">JoinTree</span></a></span></span><span>
+</span><span id="line-223"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_jtObjectRelations"><span class="annot"><span class="annottext">JoinTree -&gt; HashMap ObjectRelationSource SelectNode
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_jtObjectRelations"><span class="hs-identifier hs-var hs-var">_jtObjectRelations</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HM.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ObjectRelationSource"><span class="hs-identifier hs-type">ObjectRelationSource</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectNode"><span class="hs-identifier hs-type">SelectNode</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-224"></span><span>    </span><span id="_jtArrayRelations"><span class="annot"><span class="annottext">JoinTree -&gt; HashMap ArrayRelationSource MultiRowSelectNode
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_jtArrayRelations"><span class="hs-identifier hs-var hs-var">_jtArrayRelations</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HM.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ArrayRelationSource"><span class="hs-identifier hs-type">ArrayRelationSource</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#MultiRowSelectNode"><span class="hs-identifier hs-type">MultiRowSelectNode</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-225"></span><span>    </span><span id="_jtArrayConnections"><span class="annot"><span class="annottext">JoinTree -&gt; HashMap ArrayConnectionSource MultiRowSelectNode
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_jtArrayConnections"><span class="hs-identifier hs-var hs-var">_jtArrayConnections</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HM.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ArrayConnectionSource"><span class="hs-identifier hs-type">ArrayConnectionSource</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#MultiRowSelectNode"><span class="hs-identifier hs-type">MultiRowSelectNode</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-226"></span><span>    </span><span id="_jtComputedFieldTableSets"><span class="annot"><span class="annottext">JoinTree -&gt; HashMap ComputedFieldTableSetSource MultiRowSelectNode
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#_jtComputedFieldTableSets"><span class="hs-identifier hs-var hs-var">_jtComputedFieldTableSets</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HM.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ComputedFieldTableSetSource"><span class="hs-identifier hs-type">ComputedFieldTableSetSource</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#MultiRowSelectNode"><span class="hs-identifier hs-type">MultiRowSelectNode</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-227"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-228"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688362841"><span id="local-6989586621688362843"><span class="annot"><span class="annottext">JoinTree -&gt; JoinTree -&gt; Bool
+(JoinTree -&gt; JoinTree -&gt; Bool)
+-&gt; (JoinTree -&gt; JoinTree -&gt; Bool) -&gt; Eq JoinTree
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: JoinTree -&gt; JoinTree -&gt; Bool
+$c/= :: JoinTree -&gt; JoinTree -&gt; Bool
+== :: JoinTree -&gt; JoinTree -&gt; Bool
+$c== :: JoinTree -&gt; JoinTree -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-229"></span><span>
+</span><span id="line-230"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688362836"><span id="local-6989586621688362838"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#JoinTree"><span class="hs-identifier hs-type">JoinTree</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-231"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#JoinTree"><span class="hs-identifier hs-type">JoinTree</span></a></span><span> </span><span id="local-6989586621688362835"><span class="annot"><span class="annottext">HashMap ObjectRelationSource SelectNode
+</span><a href="#local-6989586621688362835"><span class="hs-identifier hs-var">lObjs</span></a></span></span><span> </span><span id="local-6989586621688362834"><span class="annot"><span class="annottext">HashMap ArrayRelationSource MultiRowSelectNode
+</span><a href="#local-6989586621688362834"><span class="hs-identifier hs-var">lArrs</span></a></span></span><span> </span><span id="local-6989586621688362833"><span class="annot"><span class="annottext">HashMap ArrayConnectionSource MultiRowSelectNode
+</span><a href="#local-6989586621688362833"><span class="hs-identifier hs-var">lArrConns</span></a></span></span><span> </span><span id="local-6989586621688362832"><span class="annot"><span class="annottext">HashMap ComputedFieldTableSetSource MultiRowSelectNode
+</span><a href="#local-6989586621688362832"><span class="hs-identifier hs-var">lCfts</span></a></span></span><span> </span><span id="local-6989586621688362831"><span class="annot"><span class="annottext">&lt;&gt; :: JoinTree -&gt; JoinTree -&gt; JoinTree
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#JoinTree"><span class="hs-identifier hs-type">JoinTree</span></a></span><span> </span><span id="local-6989586621688362830"><span class="annot"><span class="annottext">HashMap ObjectRelationSource SelectNode
+</span><a href="#local-6989586621688362830"><span class="hs-identifier hs-var">rObjs</span></a></span></span><span> </span><span id="local-6989586621688362829"><span class="annot"><span class="annottext">HashMap ArrayRelationSource MultiRowSelectNode
+</span><a href="#local-6989586621688362829"><span class="hs-identifier hs-var">rArrs</span></a></span></span><span> </span><span id="local-6989586621688362828"><span class="annot"><span class="annottext">HashMap ArrayConnectionSource MultiRowSelectNode
+</span><a href="#local-6989586621688362828"><span class="hs-identifier hs-var">rArrConns</span></a></span></span><span> </span><span id="local-6989586621688362827"><span class="annot"><span class="annottext">HashMap ComputedFieldTableSetSource MultiRowSelectNode
+</span><a href="#local-6989586621688362827"><span class="hs-identifier hs-var">rCfts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-232"></span><span>    </span><span class="annot"><span class="annottext">HashMap ObjectRelationSource SelectNode
+-&gt; HashMap ArrayRelationSource MultiRowSelectNode
+-&gt; HashMap ArrayConnectionSource MultiRowSelectNode
+-&gt; HashMap ComputedFieldTableSetSource MultiRowSelectNode
+-&gt; JoinTree
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#JoinTree"><span class="hs-identifier hs-var">JoinTree</span></a></span><span>
+</span><span id="line-233"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(SelectNode -&gt; SelectNode -&gt; SelectNode)
+-&gt; HashMap ObjectRelationSource SelectNode
+-&gt; HashMap ObjectRelationSource SelectNode
+-&gt; HashMap ObjectRelationSource SelectNode
+forall k v.
+(Eq k, Hashable k) =&gt;
+(v -&gt; v -&gt; v) -&gt; HashMap k v -&gt; HashMap k v -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">HM.unionWith</span></span><span> </span><span class="annot"><span class="annottext">SelectNode -&gt; SelectNode -&gt; SelectNode
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(&lt;&gt;)</span></span><span> </span><span class="annot"><span class="annottext">HashMap ObjectRelationSource SelectNode
+</span><a href="#local-6989586621688362835"><span class="hs-identifier hs-var">lObjs</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap ObjectRelationSource SelectNode
+</span><a href="#local-6989586621688362830"><span class="hs-identifier hs-var">rObjs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-234"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(MultiRowSelectNode -&gt; MultiRowSelectNode -&gt; MultiRowSelectNode)
+-&gt; HashMap ArrayRelationSource MultiRowSelectNode
+-&gt; HashMap ArrayRelationSource MultiRowSelectNode
+-&gt; HashMap ArrayRelationSource MultiRowSelectNode
+forall k v.
+(Eq k, Hashable k) =&gt;
+(v -&gt; v -&gt; v) -&gt; HashMap k v -&gt; HashMap k v -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">HM.unionWith</span></span><span> </span><span class="annot"><span class="annottext">MultiRowSelectNode -&gt; MultiRowSelectNode -&gt; MultiRowSelectNode
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(&lt;&gt;)</span></span><span> </span><span class="annot"><span class="annottext">HashMap ArrayRelationSource MultiRowSelectNode
+</span><a href="#local-6989586621688362834"><span class="hs-identifier hs-var">lArrs</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap ArrayRelationSource MultiRowSelectNode
+</span><a href="#local-6989586621688362829"><span class="hs-identifier hs-var">rArrs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-235"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(MultiRowSelectNode -&gt; MultiRowSelectNode -&gt; MultiRowSelectNode)
+-&gt; HashMap ArrayConnectionSource MultiRowSelectNode
+-&gt; HashMap ArrayConnectionSource MultiRowSelectNode
+-&gt; HashMap ArrayConnectionSource MultiRowSelectNode
+forall k v.
+(Eq k, Hashable k) =&gt;
+(v -&gt; v -&gt; v) -&gt; HashMap k v -&gt; HashMap k v -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">HM.unionWith</span></span><span> </span><span class="annot"><span class="annottext">MultiRowSelectNode -&gt; MultiRowSelectNode -&gt; MultiRowSelectNode
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(&lt;&gt;)</span></span><span> </span><span class="annot"><span class="annottext">HashMap ArrayConnectionSource MultiRowSelectNode
+</span><a href="#local-6989586621688362833"><span class="hs-identifier hs-var">lArrConns</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap ArrayConnectionSource MultiRowSelectNode
+</span><a href="#local-6989586621688362828"><span class="hs-identifier hs-var">rArrConns</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-236"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(MultiRowSelectNode -&gt; MultiRowSelectNode -&gt; MultiRowSelectNode)
+-&gt; HashMap ComputedFieldTableSetSource MultiRowSelectNode
+-&gt; HashMap ComputedFieldTableSetSource MultiRowSelectNode
+-&gt; HashMap ComputedFieldTableSetSource MultiRowSelectNode
+forall k v.
+(Eq k, Hashable k) =&gt;
+(v -&gt; v -&gt; v) -&gt; HashMap k v -&gt; HashMap k v -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">HM.unionWith</span></span><span> </span><span class="annot"><span class="annottext">MultiRowSelectNode -&gt; MultiRowSelectNode -&gt; MultiRowSelectNode
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(&lt;&gt;)</span></span><span> </span><span class="annot"><span class="annottext">HashMap ComputedFieldTableSetSource MultiRowSelectNode
+</span><a href="#local-6989586621688362832"><span class="hs-identifier hs-var">lCfts</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap ComputedFieldTableSetSource MultiRowSelectNode
+</span><a href="#local-6989586621688362827"><span class="hs-identifier hs-var">rCfts</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-237"></span><span>
+</span><span id="line-238"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688362820"><span id="local-6989586621688362822"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#JoinTree"><span class="hs-identifier hs-type">JoinTree</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-239"></span><span>  </span><span id="local-6989586621688362818"><span class="annot"><span class="annottext">mempty :: JoinTree
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">mempty</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap ObjectRelationSource SelectNode
+-&gt; HashMap ArrayRelationSource MultiRowSelectNode
+-&gt; HashMap ArrayConnectionSource MultiRowSelectNode
+-&gt; HashMap ComputedFieldTableSetSource MultiRowSelectNode
+-&gt; JoinTree
+</span><a href="Hasura.Backends.Postgres.Translate.Types.html#JoinTree"><span class="hs-identifier hs-var">JoinTree</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap ObjectRelationSource SelectNode
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="annot"><span class="annottext">HashMap ArrayRelationSource MultiRowSelectNode
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="annot"><span class="annottext">HashMap ArrayConnectionSource MultiRowSelectNode
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="annot"><span class="annottext">HashMap ComputedFieldTableSetSource MultiRowSelectNode
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span>
+</span><span id="line-240"></span><span>
+</span><span id="line-241"></span><span class="hs-keyword">data</span><span> </span><span id="PermissionLimitSubQuery"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#PermissionLimitSubQuery"><span class="hs-identifier hs-var">PermissionLimitSubQuery</span></a></span></span><span>
+</span><span id="line-242"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | Permission limit</span><span>
+</span><span id="line-243"></span><span>    </span><span id="PLSQRequired"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#PLSQRequired"><span class="hs-identifier hs-var">PLSQRequired</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-244"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="PLSQNotRequired"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#PLSQNotRequired"><span class="hs-identifier hs-var">PLSQNotRequired</span></a></span></span><span>
+</span><span id="line-245"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688362810"><span id="local-6989586621688362812"><span id="local-6989586621688362814"><span class="annot"><span class="annottext">Int -&gt; PermissionLimitSubQuery -&gt; ShowS
+[PermissionLimitSubQuery] -&gt; ShowS
+PermissionLimitSubQuery -&gt; String
+(Int -&gt; PermissionLimitSubQuery -&gt; ShowS)
+-&gt; (PermissionLimitSubQuery -&gt; String)
+-&gt; ([PermissionLimitSubQuery] -&gt; ShowS)
+-&gt; Show PermissionLimitSubQuery
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [PermissionLimitSubQuery] -&gt; ShowS
+$cshowList :: [PermissionLimitSubQuery] -&gt; ShowS
+show :: PermissionLimitSubQuery -&gt; String
+$cshow :: PermissionLimitSubQuery -&gt; String
+showsPrec :: Int -&gt; PermissionLimitSubQuery -&gt; ShowS
+$cshowsPrec :: Int -&gt; PermissionLimitSubQuery -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688362806"><span id="local-6989586621688362808"><span class="annot"><span class="annottext">PermissionLimitSubQuery -&gt; PermissionLimitSubQuery -&gt; Bool
+(PermissionLimitSubQuery -&gt; PermissionLimitSubQuery -&gt; Bool)
+-&gt; (PermissionLimitSubQuery -&gt; PermissionLimitSubQuery -&gt; Bool)
+-&gt; Eq PermissionLimitSubQuery
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: PermissionLimitSubQuery -&gt; PermissionLimitSubQuery -&gt; Bool
+$c/= :: PermissionLimitSubQuery -&gt; PermissionLimitSubQuery -&gt; Bool
+== :: PermissionLimitSubQuery -&gt; PermissionLimitSubQuery -&gt; Bool
+$c== :: PermissionLimitSubQuery -&gt; PermissionLimitSubQuery -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-246"></span></pre></body></html>

@@ -1,0 +1,573 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | This module defines the translation functions for insert and upsert</span><span>
+</span><span id="line-2"></span><span class="hs-comment">-- mutations.</span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.MSSQL.FromIr.Insert</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#fromInsert"><span class="hs-identifier">fromInsert</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#toMerge"><span class="hs-identifier">toMerge</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#toInsertValuesIntoTempTable"><span class="hs-identifier">toInsertValuesIntoTempTable</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Containers.ListUtils</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">nubOrd</span></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HM</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.html"><span class="hs-identifier">Hasura.Backends.MSSQL.FromIr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.html#FromIr"><span class="hs-identifier">FromIr</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html"><span class="hs-identifier">Hasura.Backends.MSSQL.FromIr.Constants</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#tempTableNameInserted"><span class="hs-identifier">tempTableNameInserted</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#tempTableNameValues"><span class="hs-identifier">tempTableNameValues</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Expression.html"><span class="hs-identifier">Hasura.Backends.MSSQL.FromIr.Expression</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Expression.html#fromGBoolExp"><span class="hs-identifier">fromGBoolExp</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Instances.Types.html"><span class="hs-identifier">Hasura.Backends.MSSQL.Instances.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Insert.html"><span class="hs-identifier">Hasura.Backends.MSSQL.Types.Insert</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Insert.html#IfMatched"><span class="hs-identifier">IfMatched</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html"><span class="hs-identifier">Hasura.Backends.MSSQL.Types.Internal</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TSQL</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.html"><span class="hs-identifier">Hasura.RQL.IR</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">IR</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html"><span class="hs-identifier">Hasura.RQL.Types.Column</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">IR</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#fromInsert"><span class="hs-identifier hs-type">fromInsert</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnInsert"><span class="hs-identifier hs-type">IR.AnnInsert</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Insert"><span class="hs-identifier hs-type">Insert</span></a></span><span>
+</span><span id="line-24"></span><span id="fromInsert"><span class="annot"><span class="annottext">fromInsert :: AnnInsert 'MSSQL Void Expression -&gt; Insert
+</span><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#fromInsert"><span class="hs-identifier hs-var hs-var">fromInsert</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnInsert"><span class="hs-identifier hs-type">IR.AnnInsert</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688362633"><span id="local-6989586621688362634"><span id="local-6989586621688362635"><span id="local-6989586621688362636"><span class="annot"><span class="annottext">Bool
+Text
+MutationOutputG 'MSSQL Void Expression
+MultiObjIns 'MSSQL Expression
+_aiOutput :: forall (b :: BackendType) r v.
+AnnInsert b r v -&gt; MutationOutputG b r v
+_aiData :: forall (b :: BackendType) r v. AnnInsert b r v -&gt; MultiObjIns b v
+_aiIsSingle :: forall (b :: BackendType) r v. AnnInsert b r v -&gt; Bool
+_aiFieldName :: forall (b :: BackendType) r v. AnnInsert b r v -&gt; Text
+_aiOutput :: MutationOutputG 'MSSQL Void Expression
+_aiData :: MultiObjIns 'MSSQL Expression
+_aiIsSingle :: Bool
+_aiFieldName :: Text
+</span><a href="Hasura.RQL.IR.Insert.html#_aiOutput"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnIns"><span class="hs-identifier hs-type">IR.AnnIns</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688362622"><span id="local-6989586621688362623"><span id="local-6989586621688362624"><span id="local-6989586621688362625"><span id="local-6989586621688362626"><span id="local-6989586621688362627"><span class="annot"><span class="annottext">[AnnotatedInsertRow 'MSSQL Expression]
+[ColumnInfo 'MSSQL]
+(AnnBoolExp 'MSSQL Expression,
+ Maybe (AnnBoolExp 'MSSQL Expression))
+PreSetColsG 'MSSQL Expression
+TableName 'MSSQL
+BackendInsert 'MSSQL Expression
+_aiBackendInsert :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnIns b f v -&gt; BackendInsert b v
+_aiDefVals :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnIns b f v -&gt; PreSetColsG b v
+_aiTableCols :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnIns b f v -&gt; [ColumnInfo b]
+_aiCheckCond :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnIns b f v -&gt; (AnnBoolExp b v, Maybe (AnnBoolExp b v))
+_aiTableName :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnIns b f v -&gt; TableName b
+_aiInsObj :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnIns b f v -&gt; f (AnnotatedInsertRow b v)
+_aiBackendInsert :: BackendInsert 'MSSQL Expression
+_aiDefVals :: PreSetColsG 'MSSQL Expression
+_aiTableCols :: [ColumnInfo 'MSSQL]
+_aiCheckCond :: (AnnBoolExp 'MSSQL Expression,
+ Maybe (AnnBoolExp 'MSSQL Expression))
+_aiTableName :: TableName 'MSSQL
+_aiInsObj :: [AnnotatedInsertRow 'MSSQL Expression]
+</span><a href="Hasura.RQL.IR.Insert.html#_aiBackendInsert"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MultiObjIns 'MSSQL Expression
+</span><a href="#local-6989586621688362634"><span class="hs-identifier hs-var">_aiData</span></a></span><span>
+</span><span id="line-26"></span><span>      </span><span id="local-6989586621688362615"><span class="annot"><span class="annottext">insertRows :: [[(Column 'MSSQL, Expression)]]
+</span><a href="#local-6989586621688362615"><span class="hs-identifier hs-var hs-var">insertRows</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap (Column 'MSSQL) Expression
+-&gt; [[(Column 'MSSQL, Expression)]]
+-&gt; [[(Column 'MSSQL, Expression)]]
+</span><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#normalizeInsertRows"><span class="hs-identifier hs-var">normalizeInsertRows</span></a></span><span> </span><span class="annot"><span class="annottext">PreSetColsG 'MSSQL Expression
+HashMap (Column 'MSSQL) Expression
+</span><a href="#local-6989586621688362623"><span class="hs-identifier hs-var">_aiDefVals</span></a></span><span> </span><span class="annot"><span class="annottext">([[(Column 'MSSQL, Expression)]]
+ -&gt; [[(Column 'MSSQL, Expression)]])
+-&gt; [[(Column 'MSSQL, Expression)]]
+-&gt; [[(Column 'MSSQL, Expression)]]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(AnnotatedInsertRow 'MSSQL Expression
+ -&gt; [(Column 'MSSQL, Expression)])
+-&gt; [AnnotatedInsertRow 'MSSQL Expression]
+-&gt; [[(Column 'MSSQL, Expression)]]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">AnnotatedInsertRow 'MSSQL Expression
+-&gt; [(Column 'MSSQL, Expression)]
+forall (b :: BackendType) v.
+AnnotatedInsertRow b v -&gt; [(Column b, v)]
+</span><a href="Hasura.RQL.IR.Insert.html#getInsertColumns"><span class="hs-identifier hs-var">IR.getInsertColumns</span></a></span><span> </span><span class="annot"><span class="annottext">[AnnotatedInsertRow 'MSSQL Expression]
+</span><a href="#local-6989586621688362627"><span class="hs-identifier hs-var">_aiInsObj</span></a></span><span>
+</span><span id="line-27"></span><span>      </span><span id="local-6989586621688362612"><span class="annot"><span class="annottext">insertColumnNames :: [Column 'MSSQL]
+</span><a href="#local-6989586621688362612"><span class="hs-identifier hs-var hs-var">insertColumnNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Column 'MSSQL]
+-&gt; ([(Column 'MSSQL, Expression)] -&gt; [Column 'MSSQL])
+-&gt; Maybe [(Column 'MSSQL, Expression)]
+-&gt; [Column 'MSSQL]
+forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">((Column 'MSSQL, Expression) -&gt; Column 'MSSQL)
+-&gt; [(Column 'MSSQL, Expression)] -&gt; [Column 'MSSQL]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(Column 'MSSQL, Expression) -&gt; Column 'MSSQL
+forall a b. (a, b) -&gt; a
+</span><span class="hs-identifier hs-var">fst</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Maybe [(Column 'MSSQL, Expression)] -&gt; [Column 'MSSQL])
+-&gt; Maybe [(Column 'MSSQL, Expression)] -&gt; [Column 'MSSQL]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[[(Column 'MSSQL, Expression)]]
+-&gt; Maybe [(Column 'MSSQL, Expression)]
+forall a. [a] -&gt; Maybe a
+</span><span class="hs-identifier hs-var">listToMaybe</span></span><span> </span><span class="annot"><span class="annottext">[[(Column 'MSSQL, Expression)]]
+</span><a href="#local-6989586621688362615"><span class="hs-identifier hs-var">insertRows</span></a></span><span>
+</span><span id="line-28"></span><span>      </span><span id="local-6989586621688362609"><span class="annot"><span class="annottext">insertValues :: [Values]
+</span><a href="#local-6989586621688362609"><span class="hs-identifier hs-var hs-var">insertValues</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">([(Column 'MSSQL, Expression)] -&gt; Values)
+-&gt; [[(Column 'MSSQL, Expression)]] -&gt; [Values]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Expression] -&gt; Values
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Values"><span class="hs-identifier hs-var">Values</span></a></span><span> </span><span class="annot"><span class="annottext">([Expression] -&gt; Values)
+-&gt; ([(Column 'MSSQL, Expression)] -&gt; [Expression])
+-&gt; [(Column 'MSSQL, Expression)]
+-&gt; Values
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">((Column 'MSSQL, Expression) -&gt; Expression)
+-&gt; [(Column 'MSSQL, Expression)] -&gt; [Expression]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(Column 'MSSQL, Expression) -&gt; Expression
+forall a b. (a, b) -&gt; b
+</span><span class="hs-identifier hs-var">snd</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[[(Column 'MSSQL, Expression)]]
+</span><a href="#local-6989586621688362615"><span class="hs-identifier hs-var">insertRows</span></a></span><span>
+</span><span id="line-29"></span><span>      </span><span id="local-6989586621688362606"><span class="annot"><span class="annottext">allColumnNames :: [Column 'MSSQL]
+</span><a href="#local-6989586621688362606"><span class="hs-identifier hs-var hs-var">allColumnNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ColumnInfo 'MSSQL -&gt; Column 'MSSQL)
+-&gt; [ColumnInfo 'MSSQL] -&gt; [Column 'MSSQL]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL -&gt; Column 'MSSQL
+forall (b :: BackendType). ColumnInfo b -&gt; Column b
+</span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var hs-var">IR.ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">[ColumnInfo 'MSSQL]
+</span><a href="#local-6989586621688362624"><span class="hs-identifier hs-var">_aiTableCols</span></a></span><span>
+</span><span id="line-30"></span><span>      </span><span id="local-6989586621688362604"><span class="annot"><span class="annottext">insertOutput :: Output Inserted
+</span><a href="#local-6989586621688362604"><span class="hs-identifier hs-var hs-var">insertOutput</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Inserted -&gt; [OutputColumn] -&gt; Output Inserted
+forall t. t -&gt; [OutputColumn] -&gt; Output t
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Output"><span class="hs-identifier hs-var">Output</span></a></span><span> </span><span class="annot"><span class="annottext">Inserted
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Inserted"><span class="hs-identifier hs-var">Inserted</span></a></span><span> </span><span class="annot"><span class="annottext">([OutputColumn] -&gt; Output Inserted)
+-&gt; [OutputColumn] -&gt; Output Inserted
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Column 'MSSQL -&gt; OutputColumn)
+-&gt; [Column 'MSSQL] -&gt; [OutputColumn]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Column 'MSSQL -&gt; OutputColumn
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#OutputColumn"><span class="hs-identifier hs-var">OutputColumn</span></a></span><span> </span><span class="annot"><span class="annottext">[Column 'MSSQL]
+</span><a href="#local-6989586621688362606"><span class="hs-identifier hs-var">allColumnNames</span></a></span><span>
+</span><span id="line-31"></span><span>      </span><span id="local-6989586621688362600"><span class="annot"><span class="annottext">tempTable :: TempTable
+</span><a href="#local-6989586621688362600"><span class="hs-identifier hs-var hs-var">tempTable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TempTableName -&gt; [Column 'MSSQL] -&gt; TempTable
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#TempTable"><span class="hs-identifier hs-var">TempTable</span></a></span><span> </span><span class="annot"><span class="annottext">TempTableName
+</span><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#tempTableNameInserted"><span class="hs-identifier hs-var">tempTableNameInserted</span></a></span><span> </span><span class="annot"><span class="annottext">[Column 'MSSQL]
+</span><a href="#local-6989586621688362606"><span class="hs-identifier hs-var">allColumnNames</span></a></span><span>
+</span><span id="line-32"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">TableName
+-&gt; [Column 'MSSQL]
+-&gt; Output Inserted
+-&gt; TempTable
+-&gt; [Values]
+-&gt; Insert
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Insert"><span class="hs-identifier hs-var">Insert</span></a></span><span> </span><span class="annot"><span class="annottext">TableName 'MSSQL
+TableName
+</span><a href="#local-6989586621688362626"><span class="hs-identifier hs-var">_aiTableName</span></a></span><span> </span><span class="annot"><span class="annottext">[Column 'MSSQL]
+</span><a href="#local-6989586621688362612"><span class="hs-identifier hs-var">insertColumnNames</span></a></span><span> </span><span class="annot"><span class="annottext">Output Inserted
+</span><a href="#local-6989586621688362604"><span class="hs-identifier hs-var">insertOutput</span></a></span><span> </span><span class="annot"><span class="annottext">TempTable
+</span><a href="#local-6989586621688362600"><span class="hs-identifier hs-var">tempTable</span></a></span><span> </span><span class="annot"><span class="annottext">[Values]
+</span><a href="#local-6989586621688362609"><span class="hs-identifier hs-var">insertValues</span></a></span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span class="hs-comment">-- | Normalize a row by adding missing columns with @DEFAULT@ value and sort by</span><span>
+</span><span id="line-35"></span><span class="hs-comment">-- column name to make sure all rows are consistent in column values and order.</span><span>
+</span><span id="line-36"></span><span class="hs-comment">--</span><span>
+</span><span id="line-37"></span><span class="hs-comment">-- Example: A table &quot;author&quot; is defined as:</span><span>
+</span><span id="line-38"></span><span class="hs-comment">--</span><span>
+</span><span id="line-39"></span><span class="hs-comment">-- &gt; CREATE TABLE author ([id] INTEGER NOT NULL PRIMARY KEY, name TEXT NOT NULL, age INTEGER)</span><span>
+</span><span id="line-40"></span><span class="hs-comment">--</span><span>
+</span><span id="line-41"></span><span class="hs-comment">-- Consider the following mutation:</span><span>
+</span><span id="line-42"></span><span class="hs-comment">--</span><span>
+</span><span id="line-43"></span><span class="hs-comment">-- &gt; mutation {</span><span>
+</span><span id="line-44"></span><span class="hs-comment">-- &gt;   insert_author(</span><span>
+</span><span id="line-45"></span><span class="hs-comment">-- &gt;     objects: [{id: 1, name: &quot;Foo&quot;, age: 21}, {id: 2, name: &quot;Bar&quot;}]</span><span>
+</span><span id="line-46"></span><span class="hs-comment">-- &gt;   ){</span><span>
+</span><span id="line-47"></span><span class="hs-comment">-- &gt;     affected_rows</span><span>
+</span><span id="line-48"></span><span class="hs-comment">-- &gt;   }</span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- &gt; }</span><span>
+</span><span id="line-50"></span><span class="hs-comment">--</span><span>
+</span><span id="line-51"></span><span class="hs-comment">-- We consider @DEFAULT@ value for @age@ column which is missing in second</span><span>
+</span><span id="line-52"></span><span class="hs-comment">-- insert row.</span><span>
+</span><span id="line-53"></span><span class="hs-comment">--</span><span>
+</span><span id="line-54"></span><span class="hs-comment">-- The corresponding @INSERT@ statement looks like:</span><span>
+</span><span id="line-55"></span><span class="hs-comment">--</span><span>
+</span><span id="line-56"></span><span class="hs-comment">-- &gt; INSERT INTO author (id, name, age)</span><span>
+</span><span id="line-57"></span><span class="hs-comment">-- &gt;   OUTPUT INSERTED.id</span><span>
+</span><span id="line-58"></span><span class="hs-comment">-- &gt;   VALUES (1, 'Foo', 21), (2, 'Bar', DEFAULT)</span><span>
+</span><span id="line-59"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#normalizeInsertRows"><span class="hs-identifier hs-type">normalizeInsertRows</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-60"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HM.HashMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-61"></span><span>  </span><span class="hs-special">[</span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-special">[</span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">]</span><span>
+</span><span id="line-63"></span><span id="normalizeInsertRows"><span class="annot"><span class="annottext">normalizeInsertRows :: HashMap (Column 'MSSQL) Expression
+-&gt; [[(Column 'MSSQL, Expression)]]
+-&gt; [[(Column 'MSSQL, Expression)]]
+</span><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#normalizeInsertRows"><span class="hs-identifier hs-var hs-var">normalizeInsertRows</span></a></span></span><span> </span><span id="local-6989586621688362597"><span class="annot"><span class="annottext">HashMap (Column 'MSSQL) Expression
+</span><a href="#local-6989586621688362597"><span class="hs-identifier hs-var">presets</span></a></span></span><span> </span><span id="local-6989586621688362596"><span class="annot"><span class="annottext">[[(Column 'MSSQL, Expression)]]
+</span><a href="#local-6989586621688362596"><span class="hs-identifier hs-var">insertRows</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688362595"><span class="annot"><span class="annottext">insertColumns :: [Column 'MSSQL]
+</span><a href="#local-6989586621688362595"><span class="hs-identifier hs-var hs-var">insertColumns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Column 'MSSQL] -&gt; [Column 'MSSQL]
+forall a. Ord a =&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">nubOrd</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">([(Column 'MSSQL, Expression)] -&gt; [Column 'MSSQL])
+-&gt; [[(Column 'MSSQL, Expression)]] -&gt; [Column 'MSSQL]
+forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
+</span><span class="hs-identifier hs-var">concatMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">((Column 'MSSQL, Expression) -&gt; Column 'MSSQL)
+-&gt; [(Column 'MSSQL, Expression)] -&gt; [Column 'MSSQL]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(Column 'MSSQL, Expression) -&gt; Column 'MSSQL
+forall a b. (a, b) -&gt; a
+</span><span class="hs-identifier hs-var">fst</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[[(Column 'MSSQL, Expression)]]
+</span><a href="#local-6989586621688362596"><span class="hs-identifier hs-var">insertRows</span></a></span><span> </span><span class="annot"><span class="annottext">[Column 'MSSQL] -&gt; [Column 'MSSQL] -&gt; [Column 'MSSQL]
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">HashMap (Column 'MSSQL) Expression -&gt; [Column 'MSSQL]
+forall k v. HashMap k v -&gt; [k]
+</span><span class="hs-identifier hs-var">HM.keys</span></span><span> </span><span class="annot"><span class="annottext">HashMap (Column 'MSSQL) Expression
+</span><a href="#local-6989586621688362597"><span class="hs-identifier hs-var">presets</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-65"></span><span>      </span><span id="local-6989586621688362592"><span class="annot"><span class="annottext">allColumnsWithDefaultValue :: [(Column 'MSSQL, Expression)]
+</span><a href="#local-6989586621688362592"><span class="hs-identifier hs-var hs-var">allColumnsWithDefaultValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-66"></span><span>        </span><span class="annot"><span class="annottext">(Column 'MSSQL -&gt; (Column 'MSSQL, Expression))
+-&gt; [Column 'MSSQL] -&gt; [(Column 'MSSQL, Expression)]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621688362591"><span class="annot"><span class="annottext">Column 'MSSQL
+</span><a href="#local-6989586621688362591"><span class="hs-identifier hs-var">col</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Column 'MSSQL
+</span><a href="#local-6989586621688362591"><span class="hs-identifier hs-var">col</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Maybe Expression -&gt; Expression
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Expression
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#DefaultExpression"><span class="hs-identifier hs-var">DefaultExpression</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe Expression -&gt; Expression) -&gt; Maybe Expression -&gt; Expression
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Column 'MSSQL
+-&gt; HashMap (Column 'MSSQL) Expression -&gt; Maybe Expression
+forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
+</span><span class="hs-identifier hs-var">HM.lookup</span></span><span> </span><span class="annot"><span class="annottext">Column 'MSSQL
+</span><a href="#local-6989586621688362591"><span class="hs-identifier hs-var">col</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (Column 'MSSQL) Expression
+</span><a href="#local-6989586621688362597"><span class="hs-identifier hs-var">presets</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Column 'MSSQL]
+</span><a href="#local-6989586621688362595"><span class="hs-identifier hs-var">insertColumns</span></a></span><span>
+</span><span id="line-67"></span><span>      </span><span id="local-6989586621688362587"><span class="annot"><span class="annottext">addMissingColumns :: [(Column 'MSSQL, Expression)] -&gt; [(Column 'MSSQL, Expression)]
+</span><a href="#local-6989586621688362587"><span class="hs-identifier hs-var hs-var">addMissingColumns</span></a></span></span><span> </span><span id="local-6989586621688362586"><span class="annot"><span class="annottext">[(Column 'MSSQL, Expression)]
+</span><a href="#local-6989586621688362586"><span class="hs-identifier hs-var">insertRow</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-68"></span><span>        </span><span class="annot"><span class="annottext">HashMap (Column 'MSSQL) Expression -&gt; [(Column 'MSSQL, Expression)]
+forall k v. HashMap k v -&gt; [(k, v)]
+</span><span class="hs-identifier hs-var">HM.toList</span></span><span> </span><span class="annot"><span class="annottext">(HashMap (Column 'MSSQL) Expression
+ -&gt; [(Column 'MSSQL, Expression)])
+-&gt; HashMap (Column 'MSSQL) Expression
+-&gt; [(Column 'MSSQL, Expression)]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[(Column 'MSSQL, Expression)] -&gt; HashMap (Column 'MSSQL) Expression
+forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">HM.fromList</span></span><span> </span><span class="annot"><span class="annottext">[(Column 'MSSQL, Expression)]
+</span><a href="#local-6989586621688362586"><span class="hs-identifier hs-var">insertRow</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (Column 'MSSQL) Expression
+-&gt; HashMap (Column 'MSSQL) Expression
+-&gt; HashMap (Column 'MSSQL) Expression
+forall k v.
+(Eq k, Hashable k) =&gt;
+HashMap k v -&gt; HashMap k v -&gt; HashMap k v
+</span><span class="hs-operator hs-var">`HM.union`</span></span><span> </span><span class="annot"><span class="annottext">[(Column 'MSSQL, Expression)] -&gt; HashMap (Column 'MSSQL) Expression
+forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">HM.fromList</span></span><span> </span><span class="annot"><span class="annottext">[(Column 'MSSQL, Expression)]
+</span><a href="#local-6989586621688362592"><span class="hs-identifier hs-var">allColumnsWithDefaultValue</span></a></span><span>
+</span><span id="line-69"></span><span>      </span><span id="local-6989586621688362582"><span class="annot"><span class="annottext">sortByColumn :: [(Column 'MSSQL, b)] -&gt; [(Column 'MSSQL, b)]
+</span><a href="#local-6989586621688362582"><span class="hs-identifier hs-var hs-var">sortByColumn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Column 'MSSQL, b) -&gt; (Column 'MSSQL, b) -&gt; Ordering)
+-&gt; [(Column 'MSSQL, b)] -&gt; [(Column 'MSSQL, b)]
+forall a. (a -&gt; a -&gt; Ordering) -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">sortBy</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621688362580"><span class="annot"><span class="annottext">(Column 'MSSQL, b)
+</span><a href="#local-6989586621688362580"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span id="local-6989586621688362579"><span class="annot"><span class="annottext">(Column 'MSSQL, b)
+</span><a href="#local-6989586621688362579"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Column 'MSSQL -&gt; Column 'MSSQL -&gt; Ordering
+forall a. Ord a =&gt; a -&gt; a -&gt; Ordering
+</span><span class="hs-identifier hs-var">compare</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Column 'MSSQL, b) -&gt; Column 'MSSQL
+forall a b. (a, b) -&gt; a
+</span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="annot"><span class="annottext">(Column 'MSSQL, b)
+</span><a href="#local-6989586621688362580"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Column 'MSSQL, b) -&gt; Column 'MSSQL
+forall a b. (a, b) -&gt; a
+</span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="annot"><span class="annottext">(Column 'MSSQL, b)
+</span><a href="#local-6989586621688362579"><span class="hs-identifier hs-var">r</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-70"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">([(Column 'MSSQL, Expression)] -&gt; [(Column 'MSSQL, Expression)])
+-&gt; [[(Column 'MSSQL, Expression)]]
+-&gt; [[(Column 'MSSQL, Expression)]]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[(Column 'MSSQL, Expression)] -&gt; [(Column 'MSSQL, Expression)]
+forall b. [(Column 'MSSQL, b)] -&gt; [(Column 'MSSQL, b)]
+</span><a href="#local-6989586621688362582"><span class="hs-identifier hs-var">sortByColumn</span></a></span><span> </span><span class="annot"><span class="annottext">([(Column 'MSSQL, Expression)] -&gt; [(Column 'MSSQL, Expression)])
+-&gt; ([(Column 'MSSQL, Expression)] -&gt; [(Column 'MSSQL, Expression)])
+-&gt; [(Column 'MSSQL, Expression)]
+-&gt; [(Column 'MSSQL, Expression)]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">[(Column 'MSSQL, Expression)] -&gt; [(Column 'MSSQL, Expression)]
+</span><a href="#local-6989586621688362587"><span class="hs-identifier hs-var">addMissingColumns</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[[(Column 'MSSQL, Expression)]]
+</span><a href="#local-6989586621688362596"><span class="hs-identifier hs-var">insertRows</span></a></span><span>
+</span><span id="line-71"></span><span>
+</span><span id="line-72"></span><span class="hs-comment">-- | Construct a MERGE statement from AnnInsert information.</span><span>
+</span><span id="line-73"></span><span class="hs-comment">--   A MERGE statement is responsible for actually inserting and/or updating</span><span>
+</span><span id="line-74"></span><span class="hs-comment">--   the data in the table.</span><span>
+</span><span id="line-75"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#toMerge"><span class="hs-identifier hs-type">toMerge</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-76"></span><span>  </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-77"></span><span>  </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsertRow"><span class="hs-identifier hs-type">IR.AnnotatedInsertRow</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-78"></span><span>  </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">IR.ColumnInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-79"></span><span>  </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Insert.html#IfMatched"><span class="hs-identifier hs-type">IfMatched</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-80"></span><span>  </span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.html#FromIr"><span class="hs-identifier hs-type">FromIr</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Merge"><span class="hs-identifier hs-type">Merge</span></a></span><span>
+</span><span id="line-81"></span><span id="toMerge"><span class="annot"><span class="annottext">toMerge :: TableName
+-&gt; [AnnotatedInsertRow 'MSSQL Expression]
+-&gt; [ColumnInfo 'MSSQL]
+-&gt; IfMatched Expression
+-&gt; FromIr Merge
+</span><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#toMerge"><span class="hs-identifier hs-var hs-var">toMerge</span></a></span></span><span> </span><span id="local-6989586621688362577"><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621688362577"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span id="local-6989586621688362576"><span class="annot"><span class="annottext">[AnnotatedInsertRow 'MSSQL Expression]
+</span><a href="#local-6989586621688362576"><span class="hs-identifier hs-var">insertRows</span></a></span></span><span> </span><span id="local-6989586621688362575"><span class="annot"><span class="annottext">[ColumnInfo 'MSSQL]
+</span><a href="#local-6989586621688362575"><span class="hs-identifier hs-var">allColumns</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Insert.html#IfMatched"><span class="hs-identifier hs-type">IfMatched</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688362570"><span id="local-6989586621688362571"><span id="local-6989586621688362572"><span id="local-6989586621688362573"><span class="annot"><span class="annottext">[Column 'MSSQL]
+HashMap (Column 'MSSQL) Expression
+AnnBoolExp 'MSSQL Expression
+_imColumnPresets :: forall v. IfMatched v -&gt; HashMap (Column 'MSSQL) v
+_imConditions :: forall v. IfMatched v -&gt; AnnBoolExp 'MSSQL v
+_imUpdateColumns :: forall v. IfMatched v -&gt; [Column 'MSSQL]
+_imMatchColumns :: forall v. IfMatched v -&gt; [Column 'MSSQL]
+_imColumnPresets :: HashMap (Column 'MSSQL) Expression
+_imConditions :: AnnBoolExp 'MSSQL Expression
+_imUpdateColumns :: [Column 'MSSQL]
+_imMatchColumns :: [Column 'MSSQL]
+</span><a href="Hasura.Backends.MSSQL.Types.Insert.html#_imColumnPresets"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-82"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688362565"><span class="annot"><span class="annottext">normalizedInsertRows :: [[(Column 'MSSQL, Expression)]]
+</span><a href="#local-6989586621688362565"><span class="hs-identifier hs-var hs-var">normalizedInsertRows</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap (Column 'MSSQL) Expression
+-&gt; [[(Column 'MSSQL, Expression)]]
+-&gt; [[(Column 'MSSQL, Expression)]]
+</span><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#normalizeInsertRows"><span class="hs-identifier hs-var">normalizeInsertRows</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (Column 'MSSQL) Expression
+</span><a href="#local-6989586621688362570"><span class="hs-identifier hs-var">_imColumnPresets</span></a></span><span> </span><span class="annot"><span class="annottext">([[(Column 'MSSQL, Expression)]]
+ -&gt; [[(Column 'MSSQL, Expression)]])
+-&gt; [[(Column 'MSSQL, Expression)]]
+-&gt; [[(Column 'MSSQL, Expression)]]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(AnnotatedInsertRow 'MSSQL Expression
+ -&gt; [(Column 'MSSQL, Expression)])
+-&gt; [AnnotatedInsertRow 'MSSQL Expression]
+-&gt; [[(Column 'MSSQL, Expression)]]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">AnnotatedInsertRow 'MSSQL Expression
+-&gt; [(Column 'MSSQL, Expression)]
+forall (b :: BackendType) v.
+AnnotatedInsertRow b v -&gt; [(Column b, v)]
+</span><a href="Hasura.RQL.IR.Insert.html#getInsertColumns"><span class="hs-identifier hs-var">IR.getInsertColumns</span></a></span><span> </span><span class="annot"><span class="annottext">[AnnotatedInsertRow 'MSSQL Expression]
+</span><a href="#local-6989586621688362576"><span class="hs-identifier hs-var">insertRows</span></a></span><span>
+</span><span id="line-83"></span><span>      </span><span id="local-6989586621688362564"><span class="annot"><span class="annottext">insertColumnNames :: [Column 'MSSQL]
+</span><a href="#local-6989586621688362564"><span class="hs-identifier hs-var hs-var">insertColumnNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Column 'MSSQL]
+-&gt; ([(Column 'MSSQL, Expression)] -&gt; [Column 'MSSQL])
+-&gt; Maybe [(Column 'MSSQL, Expression)]
+-&gt; [Column 'MSSQL]
+forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">((Column 'MSSQL, Expression) -&gt; Column 'MSSQL)
+-&gt; [(Column 'MSSQL, Expression)] -&gt; [Column 'MSSQL]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(Column 'MSSQL, Expression) -&gt; Column 'MSSQL
+forall a b. (a, b) -&gt; a
+</span><span class="hs-identifier hs-var">fst</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Maybe [(Column 'MSSQL, Expression)] -&gt; [Column 'MSSQL])
+-&gt; Maybe [(Column 'MSSQL, Expression)] -&gt; [Column 'MSSQL]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[[(Column 'MSSQL, Expression)]]
+-&gt; Maybe [(Column 'MSSQL, Expression)]
+forall a. [a] -&gt; Maybe a
+</span><span class="hs-identifier hs-var">listToMaybe</span></span><span> </span><span class="annot"><span class="annottext">[[(Column 'MSSQL, Expression)]]
+</span><a href="#local-6989586621688362565"><span class="hs-identifier hs-var">normalizedInsertRows</span></a></span><span>
+</span><span id="line-84"></span><span>      </span><span id="local-6989586621688362563"><span class="annot"><span class="annottext">allColumnNames :: [Column 'MSSQL]
+</span><a href="#local-6989586621688362563"><span class="hs-identifier hs-var hs-var">allColumnNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ColumnInfo 'MSSQL -&gt; Column 'MSSQL)
+-&gt; [ColumnInfo 'MSSQL] -&gt; [Column 'MSSQL]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL -&gt; Column 'MSSQL
+forall (b :: BackendType). ColumnInfo b -&gt; Column b
+</span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var hs-var">IR.ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">[ColumnInfo 'MSSQL]
+</span><a href="#local-6989586621688362575"><span class="hs-identifier hs-var">allColumns</span></a></span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span>  </span><span id="local-6989586621688362562"><span class="annot"><span class="annottext">Expression
+</span><a href="#local-6989586621688362562"><span class="hs-identifier hs-var">matchConditions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-87"></span><span>    </span><span class="annot"><span class="annottext">(ReaderT EntityAlias FromIr Expression
+ -&gt; EntityAlias -&gt; FromIr Expression)
+-&gt; EntityAlias
+-&gt; ReaderT EntityAlias FromIr Expression
+-&gt; FromIr Expression
+forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">ReaderT EntityAlias FromIr Expression
+-&gt; EntityAlias -&gt; FromIr Expression
+forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
+</span><span class="hs-identifier hs-var hs-var">runReaderT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; EntityAlias
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#EntityAlias"><span class="hs-identifier hs-var">EntityAlias</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;target&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(ReaderT EntityAlias FromIr Expression -&gt; FromIr Expression)
+-&gt; ReaderT EntityAlias FromIr Expression -&gt; FromIr Expression
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-comment">-- the table is aliased as &quot;target&quot; in MERGE sql</span><span>
+</span><span id="line-88"></span><span>      </span><span class="annot"><span class="annottext">AnnBoolExp 'MSSQL Expression
+-&gt; ReaderT EntityAlias FromIr Expression
+</span><a href="Hasura.Backends.MSSQL.FromIr.Expression.html#fromGBoolExp"><span class="hs-identifier hs-var">fromGBoolExp</span></a></span><span> </span><span class="annot"><span class="annottext">AnnBoolExp 'MSSQL Expression
+</span><a href="#local-6989586621688362571"><span class="hs-identifier hs-var">_imConditions</span></a></span><span>
+</span><span id="line-89"></span><span>
+</span><span id="line-90"></span><span>  </span><span class="annot"><span class="annottext">Merge -&gt; FromIr Merge
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Merge -&gt; FromIr Merge) -&gt; Merge -&gt; FromIr Merge
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-91"></span><span>    </span><span class="annot"><span class="annottext">Merge :: TableName
+-&gt; MergeUsing
+-&gt; MergeOn
+-&gt; MergeWhenMatched
+-&gt; MergeWhenNotMatched
+-&gt; Output Inserted
+-&gt; TempTable
+-&gt; Merge
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Merge"><span class="hs-identifier hs-type">Merge</span></a></span><span>
+</span><span id="line-92"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:mergeTargetTable:Merge :: TableName
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AmergeTargetTable%3AMerge"><span class="hs-identifier hs-var">mergeTargetTable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621688362577"><span class="hs-identifier hs-var">tableName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-93"></span><span>        </span><span class="annot"><span class="annottext">$sel:mergeUsing:Merge :: MergeUsing
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AmergeUsing%3AMerge"><span class="hs-identifier hs-var">mergeUsing</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TempTableName -&gt; [Column 'MSSQL] -&gt; MergeUsing
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#MergeUsing"><span class="hs-identifier hs-var">MergeUsing</span></a></span><span> </span><span class="annot"><span class="annottext">TempTableName
+</span><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#tempTableNameValues"><span class="hs-identifier hs-var">tempTableNameValues</span></a></span><span> </span><span class="annot"><span class="annottext">[Column 'MSSQL]
+</span><a href="#local-6989586621688362564"><span class="hs-identifier hs-var">insertColumnNames</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-94"></span><span>        </span><span class="annot"><span class="annottext">$sel:mergeOn:Merge :: MergeOn
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AmergeOn%3AMerge"><span class="hs-identifier hs-var">mergeOn</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Column 'MSSQL] -&gt; MergeOn
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#MergeOn"><span class="hs-identifier hs-var">MergeOn</span></a></span><span> </span><span class="annot"><span class="annottext">[Column 'MSSQL]
+</span><a href="#local-6989586621688362573"><span class="hs-identifier hs-var">_imMatchColumns</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-95"></span><span>        </span><span class="annot"><span class="annottext">$sel:mergeWhenMatched:Merge :: MergeWhenMatched
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AmergeWhenMatched%3AMerge"><span class="hs-identifier hs-var">mergeWhenMatched</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Column 'MSSQL]
+-&gt; Expression
+-&gt; HashMap (Column 'MSSQL) Expression
+-&gt; MergeWhenMatched
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#MergeWhenMatched"><span class="hs-identifier hs-var">MergeWhenMatched</span></a></span><span> </span><span class="annot"><span class="annottext">[Column 'MSSQL]
+</span><a href="#local-6989586621688362572"><span class="hs-identifier hs-var">_imUpdateColumns</span></a></span><span> </span><span class="annot"><span class="annottext">Expression
+</span><a href="#local-6989586621688362562"><span class="hs-identifier hs-var">matchConditions</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (Column 'MSSQL) Expression
+</span><a href="#local-6989586621688362570"><span class="hs-identifier hs-var">_imColumnPresets</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-96"></span><span>        </span><span class="annot"><span class="annottext">$sel:mergeWhenNotMatched:Merge :: MergeWhenNotMatched
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AmergeWhenNotMatched%3AMerge"><span class="hs-identifier hs-var">mergeWhenNotMatched</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Column 'MSSQL] -&gt; MergeWhenNotMatched
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#MergeWhenNotMatched"><span class="hs-identifier hs-var">MergeWhenNotMatched</span></a></span><span> </span><span class="annot"><span class="annottext">[Column 'MSSQL]
+</span><a href="#local-6989586621688362564"><span class="hs-identifier hs-var">insertColumnNames</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-97"></span><span>        </span><span class="annot"><span class="annottext">$sel:mergeInsertOutput:Merge :: Output Inserted
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AmergeInsertOutput%3AMerge"><span class="hs-identifier hs-var">mergeInsertOutput</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Inserted -&gt; [OutputColumn] -&gt; Output Inserted
+forall t. t -&gt; [OutputColumn] -&gt; Output t
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Output"><span class="hs-identifier hs-var">Output</span></a></span><span> </span><span class="annot"><span class="annottext">Inserted
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Inserted"><span class="hs-identifier hs-var">Inserted</span></a></span><span> </span><span class="annot"><span class="annottext">([OutputColumn] -&gt; Output Inserted)
+-&gt; [OutputColumn] -&gt; Output Inserted
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Column 'MSSQL -&gt; OutputColumn)
+-&gt; [Column 'MSSQL] -&gt; [OutputColumn]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Column 'MSSQL -&gt; OutputColumn
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#OutputColumn"><span class="hs-identifier hs-var">OutputColumn</span></a></span><span> </span><span class="annot"><span class="annottext">[Column 'MSSQL]
+</span><a href="#local-6989586621688362563"><span class="hs-identifier hs-var">allColumnNames</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-98"></span><span>        </span><span class="annot"><span class="annottext">$sel:mergeOutputTempTable:Merge :: TempTable
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AmergeOutputTempTable%3AMerge"><span class="hs-identifier hs-var">mergeOutputTempTable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TempTableName -&gt; [Column 'MSSQL] -&gt; TempTable
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#TempTable"><span class="hs-identifier hs-var">TempTable</span></a></span><span> </span><span class="annot"><span class="annottext">TempTableName
+</span><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#tempTableNameInserted"><span class="hs-identifier hs-var">tempTableNameInserted</span></a></span><span> </span><span class="annot"><span class="annottext">[Column 'MSSQL]
+</span><a href="#local-6989586621688362563"><span class="hs-identifier hs-var">allColumnNames</span></a></span><span>
+</span><span id="line-99"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-100"></span><span>
+</span><span id="line-101"></span><span class="hs-comment">-- | As part of an INSERT/UPSERT process, insert VALUES into a temporary table.</span><span>
+</span><span id="line-102"></span><span class="hs-comment">--   The content of the temporary table will later be inserted into the original table</span><span>
+</span><span id="line-103"></span><span class="hs-comment">--   using a MERGE statement.</span><span>
+</span><span id="line-104"></span><span class="hs-comment">--</span><span>
+</span><span id="line-105"></span><span class="hs-comment">--   We insert the values into a temporary table first in order to replace the missing</span><span>
+</span><span id="line-106"></span><span class="hs-comment">--   fields with @DEFAULT@ in @normalizeInsertRows@, and we can't do that in a</span><span>
+</span><span id="line-107"></span><span class="hs-comment">--   MERGE statement directly.</span><span>
+</span><span id="line-108"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#toInsertValuesIntoTempTable"><span class="hs-identifier hs-type">toInsertValuesIntoTempTable</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#TempTableName"><span class="hs-identifier hs-type">TempTableName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnInsert"><span class="hs-identifier hs-type">IR.AnnInsert</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#InsertValuesIntoTempTable"><span class="hs-identifier hs-type">InsertValuesIntoTempTable</span></a></span><span>
+</span><span id="line-109"></span><span id="toInsertValuesIntoTempTable"><span class="annot"><span class="annottext">toInsertValuesIntoTempTable :: TempTableName
+-&gt; AnnInsert 'MSSQL Void Expression -&gt; InsertValuesIntoTempTable
+</span><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#toInsertValuesIntoTempTable"><span class="hs-identifier hs-var hs-var">toInsertValuesIntoTempTable</span></a></span></span><span> </span><span id="local-6989586621688362546"><span class="annot"><span class="annottext">TempTableName
+</span><a href="#local-6989586621688362546"><span class="hs-identifier hs-var">tempTable</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnInsert"><span class="hs-identifier hs-type">IR.AnnInsert</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688362542"><span id="local-6989586621688362543"><span id="local-6989586621688362544"><span id="local-6989586621688362545"><span class="annot"><span class="annottext">Bool
+Text
+MutationOutputG 'MSSQL Void Expression
+MultiObjIns 'MSSQL Expression
+_aiOutput :: MutationOutputG 'MSSQL Void Expression
+_aiData :: MultiObjIns 'MSSQL Expression
+_aiIsSingle :: Bool
+_aiFieldName :: Text
+_aiOutput :: forall (b :: BackendType) r v.
+AnnInsert b r v -&gt; MutationOutputG b r v
+_aiData :: forall (b :: BackendType) r v. AnnInsert b r v -&gt; MultiObjIns b v
+_aiIsSingle :: forall (b :: BackendType) r v. AnnInsert b r v -&gt; Bool
+_aiFieldName :: forall (b :: BackendType) r v. AnnInsert b r v -&gt; Text
+</span><a href="#local-6989586621688362542"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-110"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnIns"><span class="hs-identifier hs-type">IR.AnnIns</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688362536"><span id="local-6989586621688362537"><span id="local-6989586621688362538"><span id="local-6989586621688362539"><span id="local-6989586621688362540"><span id="local-6989586621688362541"><span class="annot"><span class="annottext">[AnnotatedInsertRow 'MSSQL Expression]
+[ColumnInfo 'MSSQL]
+(AnnBoolExp 'MSSQL Expression,
+ Maybe (AnnBoolExp 'MSSQL Expression))
+PreSetColsG 'MSSQL Expression
+TableName 'MSSQL
+BackendInsert 'MSSQL Expression
+_aiBackendInsert :: BackendInsert 'MSSQL Expression
+_aiDefVals :: PreSetColsG 'MSSQL Expression
+_aiTableCols :: [ColumnInfo 'MSSQL]
+_aiCheckCond :: (AnnBoolExp 'MSSQL Expression,
+ Maybe (AnnBoolExp 'MSSQL Expression))
+_aiTableName :: TableName 'MSSQL
+_aiInsObj :: [AnnotatedInsertRow 'MSSQL Expression]
+_aiBackendInsert :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnIns b f v -&gt; BackendInsert b v
+_aiDefVals :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnIns b f v -&gt; PreSetColsG b v
+_aiTableCols :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnIns b f v -&gt; [ColumnInfo b]
+_aiCheckCond :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnIns b f v -&gt; (AnnBoolExp b v, Maybe (AnnBoolExp b v))
+_aiTableName :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnIns b f v -&gt; TableName b
+_aiInsObj :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnIns b f v -&gt; f (AnnotatedInsertRow b v)
+</span><a href="#local-6989586621688362536"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MultiObjIns 'MSSQL Expression
+</span><a href="#local-6989586621688362543"><span class="hs-identifier hs-var">_aiData</span></a></span><span>
+</span><span id="line-111"></span><span>      </span><span id="local-6989586621688362535"><span class="annot"><span class="annottext">insertRows :: [[(Column 'MSSQL, Expression)]]
+</span><a href="#local-6989586621688362535"><span class="hs-identifier hs-var hs-var">insertRows</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap (Column 'MSSQL) Expression
+-&gt; [[(Column 'MSSQL, Expression)]]
+-&gt; [[(Column 'MSSQL, Expression)]]
+</span><a href="Hasura.Backends.MSSQL.FromIr.Insert.html#normalizeInsertRows"><span class="hs-identifier hs-var">normalizeInsertRows</span></a></span><span> </span><span class="annot"><span class="annottext">PreSetColsG 'MSSQL Expression
+HashMap (Column 'MSSQL) Expression
+</span><a href="#local-6989586621688362537"><span class="hs-identifier hs-var">_aiDefVals</span></a></span><span> </span><span class="annot"><span class="annottext">([[(Column 'MSSQL, Expression)]]
+ -&gt; [[(Column 'MSSQL, Expression)]])
+-&gt; [[(Column 'MSSQL, Expression)]]
+-&gt; [[(Column 'MSSQL, Expression)]]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(AnnotatedInsertRow 'MSSQL Expression
+ -&gt; [(Column 'MSSQL, Expression)])
+-&gt; [AnnotatedInsertRow 'MSSQL Expression]
+-&gt; [[(Column 'MSSQL, Expression)]]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">AnnotatedInsertRow 'MSSQL Expression
+-&gt; [(Column 'MSSQL, Expression)]
+forall (b :: BackendType) v.
+AnnotatedInsertRow b v -&gt; [(Column b, v)]
+</span><a href="Hasura.RQL.IR.Insert.html#getInsertColumns"><span class="hs-identifier hs-var">IR.getInsertColumns</span></a></span><span> </span><span class="annot"><span class="annottext">[AnnotatedInsertRow 'MSSQL Expression]
+</span><a href="#local-6989586621688362541"><span class="hs-identifier hs-var">_aiInsObj</span></a></span><span>
+</span><span id="line-112"></span><span>      </span><span id="local-6989586621688362534"><span class="annot"><span class="annottext">insertColumnNames :: [Column 'MSSQL]
+</span><a href="#local-6989586621688362534"><span class="hs-identifier hs-var hs-var">insertColumnNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Column 'MSSQL]
+-&gt; ([(Column 'MSSQL, Expression)] -&gt; [Column 'MSSQL])
+-&gt; Maybe [(Column 'MSSQL, Expression)]
+-&gt; [Column 'MSSQL]
+forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">((Column 'MSSQL, Expression) -&gt; Column 'MSSQL)
+-&gt; [(Column 'MSSQL, Expression)] -&gt; [Column 'MSSQL]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(Column 'MSSQL, Expression) -&gt; Column 'MSSQL
+forall a b. (a, b) -&gt; a
+</span><span class="hs-identifier hs-var">fst</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Maybe [(Column 'MSSQL, Expression)] -&gt; [Column 'MSSQL])
+-&gt; Maybe [(Column 'MSSQL, Expression)] -&gt; [Column 'MSSQL]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[[(Column 'MSSQL, Expression)]]
+-&gt; Maybe [(Column 'MSSQL, Expression)]
+forall a. [a] -&gt; Maybe a
+</span><span class="hs-identifier hs-var">listToMaybe</span></span><span> </span><span class="annot"><span class="annottext">[[(Column 'MSSQL, Expression)]]
+</span><a href="#local-6989586621688362535"><span class="hs-identifier hs-var">insertRows</span></a></span><span>
+</span><span id="line-113"></span><span>      </span><span id="local-6989586621688362533"><span class="annot"><span class="annottext">insertValues :: [Values]
+</span><a href="#local-6989586621688362533"><span class="hs-identifier hs-var hs-var">insertValues</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">([(Column 'MSSQL, Expression)] -&gt; Values)
+-&gt; [[(Column 'MSSQL, Expression)]] -&gt; [Values]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Expression] -&gt; Values
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Values"><span class="hs-identifier hs-var">Values</span></a></span><span> </span><span class="annot"><span class="annottext">([Expression] -&gt; Values)
+-&gt; ([(Column 'MSSQL, Expression)] -&gt; [Expression])
+-&gt; [(Column 'MSSQL, Expression)]
+-&gt; Values
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">((Column 'MSSQL, Expression) -&gt; Expression)
+-&gt; [(Column 'MSSQL, Expression)] -&gt; [Expression]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(Column 'MSSQL, Expression) -&gt; Expression
+forall a b. (a, b) -&gt; b
+</span><span class="hs-identifier hs-var">snd</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[[(Column 'MSSQL, Expression)]]
+</span><a href="#local-6989586621688362535"><span class="hs-identifier hs-var">insertRows</span></a></span><span>
+</span><span id="line-114"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">InsertValuesIntoTempTable :: TempTableName
+-&gt; [Column 'MSSQL] -&gt; [Values] -&gt; InsertValuesIntoTempTable
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#InsertValuesIntoTempTable"><span class="hs-identifier hs-type">InsertValuesIntoTempTable</span></a></span><span>
+</span><span id="line-115"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:ivittTempTableName:InsertValuesIntoTempTable :: TempTableName
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AivittTempTableName%3AInsertValuesIntoTempTable"><span class="hs-identifier hs-var">ivittTempTableName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TempTableName
+</span><a href="#local-6989586621688362546"><span class="hs-identifier hs-var">tempTable</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-116"></span><span>          </span><span class="annot"><span class="annottext">$sel:ivittColumns:InsertValuesIntoTempTable :: [Column 'MSSQL]
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AivittColumns%3AInsertValuesIntoTempTable"><span class="hs-identifier hs-var">ivittColumns</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Column 'MSSQL]
+</span><a href="#local-6989586621688362534"><span class="hs-identifier hs-var">insertColumnNames</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-117"></span><span>          </span><span class="annot"><span class="annottext">$sel:ivittValues:InsertValuesIntoTempTable :: [Values]
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AivittValues%3AInsertValuesIntoTempTable"><span class="hs-identifier hs-var">ivittValues</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Values]
+</span><a href="#local-6989586621688362533"><span class="hs-identifier hs-var">insertValues</span></a></span><span>
+</span><span id="line-118"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-119"></span></pre></body></html>

@@ -1,0 +1,524 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.IR.Action</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldG"><span class="hs-identifier">ActionFieldG</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldsG"><span class="hs-identifier">ActionFieldsG</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFields"><span class="hs-identifier">ActionFields</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionRemoteRelationshipSelect"><span class="hs-identifier">ActionRemoteRelationshipSelect</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#_ACFExpression"><span class="hs-identifier">_ACFExpression</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#_ACFNestedObject"><span class="hs-identifier">_ACFNestedObject</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#_ACFRemote"><span class="hs-identifier">_ACFRemote</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#_ACFScalar"><span class="hs-identifier">_ACFScalar</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens.TH</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">makePrisms</span></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Kind</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Type</span></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier">FieldName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#Fields"><span class="hs-identifier">Fields</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-comment">-- | Internal representation for a selection of fields on the result of an action.</span><span>
+</span><span id="line-22"></span><span class="hs-comment">-- Type parameter r will be either</span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- r ~ (RemoteRelationshipField UnpreparedValue) when the AST is emitted by the parser.</span><span>
+</span><span id="line-24"></span><span class="hs-comment">-- r ~ Void when an execution tree is constructed so that a backend is</span><span>
+</span><span id="line-25"></span><span class="hs-comment">-- absolved of dealing with remote relationships.</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">data</span><span> </span><span id="ActionFieldG"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldG"><span class="hs-identifier hs-var">ActionFieldG</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688290069"><span class="annot"><a href="#local-6989586621688290069"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | Scalar value. G.Name is the original field name from the object type.</span><span>
+</span><span id="line-28"></span><span>    </span><span id="ACFScalar"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ACFScalar"><span class="hs-identifier hs-var">ACFScalar</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | Remote relationship</span><span>
+</span><span id="line-30"></span><span>    </span><span id="ACFRemote"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ACFRemote"><span class="hs-identifier hs-var">ACFRemote</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionRemoteRelationshipSelect"><span class="hs-identifier hs-type">ActionRemoteRelationshipSelect</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688290069"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | Constant text value (used for __typename fields)</span><span>
+</span><span id="line-32"></span><span>    </span><span id="ACFExpression"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ACFExpression"><span class="hs-identifier hs-var">ACFExpression</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | Nested object. G.Name is the original field name from the object type.</span><span>
+</span><span id="line-34"></span><span>    </span><span id="ACFNestedObject"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ACFNestedObject"><span class="hs-identifier hs-var">ACFNestedObject</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldsG"><span class="hs-identifier hs-type">ActionFieldsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688290069"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688290061"><span id="local-6989586621688290063"><span class="annot"><span class="annottext">ActionFieldG r -&gt; ActionFieldG r -&gt; Bool
+(ActionFieldG r -&gt; ActionFieldG r -&gt; Bool)
+-&gt; (ActionFieldG r -&gt; ActionFieldG r -&gt; Bool)
+-&gt; Eq (ActionFieldG r)
+forall r. Eq r =&gt; ActionFieldG r -&gt; ActionFieldG r -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ActionFieldG r -&gt; ActionFieldG r -&gt; Bool
+$c/= :: forall r. Eq r =&gt; ActionFieldG r -&gt; ActionFieldG r -&gt; Bool
+== :: ActionFieldG r -&gt; ActionFieldG r -&gt; Bool
+$c== :: forall r. Eq r =&gt; ActionFieldG r -&gt; ActionFieldG r -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688290054"><span id="local-6989586621688290056"><span id="local-6989586621688290058"><span class="annot"><span class="annottext">Int -&gt; ActionFieldG r -&gt; ShowS
+[ActionFieldG r] -&gt; ShowS
+ActionFieldG r -&gt; String
+(Int -&gt; ActionFieldG r -&gt; ShowS)
+-&gt; (ActionFieldG r -&gt; String)
+-&gt; ([ActionFieldG r] -&gt; ShowS)
+-&gt; Show (ActionFieldG r)
+forall r. Show r =&gt; Int -&gt; ActionFieldG r -&gt; ShowS
+forall r. Show r =&gt; [ActionFieldG r] -&gt; ShowS
+forall r. Show r =&gt; ActionFieldG r -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ActionFieldG r] -&gt; ShowS
+$cshowList :: forall r. Show r =&gt; [ActionFieldG r] -&gt; ShowS
+show :: ActionFieldG r -&gt; String
+$cshow :: forall r. Show r =&gt; ActionFieldG r -&gt; String
+showsPrec :: Int -&gt; ActionFieldG r -&gt; ShowS
+$cshowsPrec :: forall r. Show r =&gt; Int -&gt; ActionFieldG r -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688290049"><span id="local-6989586621688290051"><span class="annot"><span class="annottext">a -&gt; ActionFieldG b -&gt; ActionFieldG a
+(a -&gt; b) -&gt; ActionFieldG a -&gt; ActionFieldG b
+(forall a b. (a -&gt; b) -&gt; ActionFieldG a -&gt; ActionFieldG b)
+-&gt; (forall a b. a -&gt; ActionFieldG b -&gt; ActionFieldG a)
+-&gt; Functor ActionFieldG
+forall a b. a -&gt; ActionFieldG b -&gt; ActionFieldG a
+forall a b. (a -&gt; b) -&gt; ActionFieldG a -&gt; ActionFieldG b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a -&gt; ActionFieldG b -&gt; ActionFieldG a
+$c&lt;$ :: forall a b. a -&gt; ActionFieldG b -&gt; ActionFieldG a
+fmap :: (a -&gt; b) -&gt; ActionFieldG a -&gt; ActionFieldG b
+$cfmap :: forall a b. (a -&gt; b) -&gt; ActionFieldG a -&gt; ActionFieldG b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688290014"><span id="local-6989586621688290016"><span id="local-6989586621688290018"><span id="local-6989586621688290020"><span id="local-6989586621688290022"><span id="local-6989586621688290024"><span id="local-6989586621688290026"><span id="local-6989586621688290028"><span id="local-6989586621688290030"><span id="local-6989586621688290032"><span id="local-6989586621688290034"><span id="local-6989586621688290036"><span id="local-6989586621688290038"><span id="local-6989586621688290040"><span id="local-6989586621688290042"><span id="local-6989586621688290044"><span id="local-6989586621688290046"><span class="annot"><span class="annottext">ActionFieldG a -&gt; Bool
+(a -&gt; m) -&gt; ActionFieldG a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b
+(forall m. Monoid m =&gt; ActionFieldG m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; ActionFieldG a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; ActionFieldG a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; ActionFieldG a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; ActionFieldG a -&gt; a)
+-&gt; (forall a. ActionFieldG a -&gt; [a])
+-&gt; (forall a. ActionFieldG a -&gt; Bool)
+-&gt; (forall a. ActionFieldG a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; ActionFieldG a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; ActionFieldG a -&gt; a)
+-&gt; (forall a. Ord a =&gt; ActionFieldG a -&gt; a)
+-&gt; (forall a. Num a =&gt; ActionFieldG a -&gt; a)
+-&gt; (forall a. Num a =&gt; ActionFieldG a -&gt; a)
+-&gt; Foldable ActionFieldG
+forall a. Eq a =&gt; a -&gt; ActionFieldG a -&gt; Bool
+forall a. Num a =&gt; ActionFieldG a -&gt; a
+forall a. Ord a =&gt; ActionFieldG a -&gt; a
+forall m. Monoid m =&gt; ActionFieldG m -&gt; m
+forall a. ActionFieldG a -&gt; Bool
+forall a. ActionFieldG a -&gt; Int
+forall a. ActionFieldG a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; ActionFieldG a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; ActionFieldG a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+product :: ActionFieldG a -&gt; a
+$cproduct :: forall a. Num a =&gt; ActionFieldG a -&gt; a
+sum :: ActionFieldG a -&gt; a
+$csum :: forall a. Num a =&gt; ActionFieldG a -&gt; a
+minimum :: ActionFieldG a -&gt; a
+$cminimum :: forall a. Ord a =&gt; ActionFieldG a -&gt; a
+maximum :: ActionFieldG a -&gt; a
+$cmaximum :: forall a. Ord a =&gt; ActionFieldG a -&gt; a
+elem :: a -&gt; ActionFieldG a -&gt; Bool
+$celem :: forall a. Eq a =&gt; a -&gt; ActionFieldG a -&gt; Bool
+length :: ActionFieldG a -&gt; Int
+$clength :: forall a. ActionFieldG a -&gt; Int
+null :: ActionFieldG a -&gt; Bool
+$cnull :: forall a. ActionFieldG a -&gt; Bool
+toList :: ActionFieldG a -&gt; [a]
+$ctoList :: forall a. ActionFieldG a -&gt; [a]
+foldl1 :: (a -&gt; a -&gt; a) -&gt; ActionFieldG a -&gt; a
+$cfoldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; ActionFieldG a -&gt; a
+foldr1 :: (a -&gt; a -&gt; a) -&gt; ActionFieldG a -&gt; a
+$cfoldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; ActionFieldG a -&gt; a
+foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b
+$cfoldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b
+foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b
+$cfoldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b
+foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b
+$cfoldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b
+foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b
+$cfoldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b
+foldMap' :: (a -&gt; m) -&gt; ActionFieldG a -&gt; m
+$cfoldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; ActionFieldG a -&gt; m
+foldMap :: (a -&gt; m) -&gt; ActionFieldG a -&gt; m
+$cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; ActionFieldG a -&gt; m
+fold :: ActionFieldG m -&gt; m
+$cfold :: forall m. Monoid m =&gt; ActionFieldG m -&gt; m
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688290003"><span id="local-6989586621688290005"><span id="local-6989586621688290007"><span id="local-6989586621688290009"><span class="annot"><span class="annottext">Functor ActionFieldG
+Foldable ActionFieldG
+Functor ActionFieldG
+-&gt; Foldable ActionFieldG
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; ActionFieldG a -&gt; f (ActionFieldG b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    ActionFieldG (f a) -&gt; f (ActionFieldG a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; ActionFieldG a -&gt; m (ActionFieldG b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    ActionFieldG (m a) -&gt; m (ActionFieldG a))
+-&gt; Traversable ActionFieldG
+(a -&gt; f b) -&gt; ActionFieldG a -&gt; f (ActionFieldG b)
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+ActionFieldG (m a) -&gt; m (ActionFieldG a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+ActionFieldG (f a) -&gt; f (ActionFieldG a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; ActionFieldG a -&gt; m (ActionFieldG b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; ActionFieldG a -&gt; f (ActionFieldG b)
+sequence :: ActionFieldG (m a) -&gt; m (ActionFieldG a)
+$csequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+ActionFieldG (m a) -&gt; m (ActionFieldG a)
+mapM :: (a -&gt; m b) -&gt; ActionFieldG a -&gt; m (ActionFieldG b)
+$cmapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; ActionFieldG a -&gt; m (ActionFieldG b)
+sequenceA :: ActionFieldG (f a) -&gt; f (ActionFieldG a)
+$csequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+ActionFieldG (f a) -&gt; f (ActionFieldG a)
+traverse :: (a -&gt; f b) -&gt; ActionFieldG a -&gt; f (ActionFieldG b)
+$ctraverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; ActionFieldG a -&gt; f (ActionFieldG b)
+$cp2Traversable :: Foldable ActionFieldG
+$cp1Traversable :: Functor ActionFieldG
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">type</span><span> </span><span id="ActionFieldsG"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldsG"><span class="hs-identifier hs-var">ActionFieldsG</span></a></span></span><span> </span><span id="local-6989586621688290001"><span class="annot"><a href="#local-6989586621688290001"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#Fields"><span class="hs-identifier hs-type">Fields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldG"><span class="hs-identifier hs-type">ActionFieldG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688290001"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">type</span><span> </span><span id="ActionFields"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFields"><span class="hs-identifier hs-var">ActionFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldsG"><span class="hs-identifier hs-type">ActionFieldsG</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">data</span><span> </span><span id="ActionRemoteRelationshipSelect"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionRemoteRelationshipSelect"><span class="hs-identifier hs-var">ActionRemoteRelationshipSelect</span></a></span></span><span> </span><span id="local-6989586621688289999"><span class="annot"><a href="#local-6989586621688289999"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionRemoteRelationshipSelect"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionRemoteRelationshipSelect"><span class="hs-identifier hs-var">ActionRemoteRelationshipSelect</span></a></span></span><span>
+</span><span id="line-42"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | The fields on the table that are required for the join condition</span><span>
+</span><span id="line-43"></span><span>    </span><span class="hs-comment">-- of the remote relationship</span><span>
+</span><span id="line-44"></span><span>    </span><span id="_arrsLHSJoinFields"><span class="annot"><span class="annottext">ActionRemoteRelationshipSelect r -&gt; HashMap FieldName Name
+</span><a href="Hasura.RQL.IR.Action.html#_arrsLHSJoinFields"><span class="hs-identifier hs-var hs-var">_arrsLHSJoinFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>    </span><span class="hs-comment">-- | The field that captures the relationship</span><span>
+</span><span id="line-46"></span><span>    </span><span class="hs-comment">-- r ~ (RemoteRelationshipField UnpreparedValue) when the AST is emitted by the parser.</span><span>
+</span><span id="line-47"></span><span>    </span><span class="hs-comment">-- r ~ Void when an execution tree is constructed so that a backend is</span><span>
+</span><span id="line-48"></span><span>    </span><span class="hs-comment">-- absolved of dealing with remote relationships.</span><span>
+</span><span id="line-49"></span><span>    </span><span id="_arrsRelationship"><span class="annot"><span class="annottext">ActionRemoteRelationshipSelect r -&gt; r
+</span><a href="Hasura.RQL.IR.Action.html#_arrsRelationship"><span class="hs-identifier hs-var hs-var">_arrsRelationship</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621688289999"><span class="hs-identifier hs-type">r</span></a></span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688289992"><span id="local-6989586621688289994"><span class="annot"><span class="annottext">ActionRemoteRelationshipSelect r
+-&gt; ActionRemoteRelationshipSelect r -&gt; Bool
+(ActionRemoteRelationshipSelect r
+ -&gt; ActionRemoteRelationshipSelect r -&gt; Bool)
+-&gt; (ActionRemoteRelationshipSelect r
+    -&gt; ActionRemoteRelationshipSelect r -&gt; Bool)
+-&gt; Eq (ActionRemoteRelationshipSelect r)
+forall r.
+Eq r =&gt;
+ActionRemoteRelationshipSelect r
+-&gt; ActionRemoteRelationshipSelect r -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ActionRemoteRelationshipSelect r
+-&gt; ActionRemoteRelationshipSelect r -&gt; Bool
+$c/= :: forall r.
+Eq r =&gt;
+ActionRemoteRelationshipSelect r
+-&gt; ActionRemoteRelationshipSelect r -&gt; Bool
+== :: ActionRemoteRelationshipSelect r
+-&gt; ActionRemoteRelationshipSelect r -&gt; Bool
+$c== :: forall r.
+Eq r =&gt;
+ActionRemoteRelationshipSelect r
+-&gt; ActionRemoteRelationshipSelect r -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688289986"><span id="local-6989586621688289988"><span id="local-6989586621688289990"><span class="annot"><span class="annottext">Int -&gt; ActionRemoteRelationshipSelect r -&gt; ShowS
+[ActionRemoteRelationshipSelect r] -&gt; ShowS
+ActionRemoteRelationshipSelect r -&gt; String
+(Int -&gt; ActionRemoteRelationshipSelect r -&gt; ShowS)
+-&gt; (ActionRemoteRelationshipSelect r -&gt; String)
+-&gt; ([ActionRemoteRelationshipSelect r] -&gt; ShowS)
+-&gt; Show (ActionRemoteRelationshipSelect r)
+forall r.
+Show r =&gt;
+Int -&gt; ActionRemoteRelationshipSelect r -&gt; ShowS
+forall r. Show r =&gt; [ActionRemoteRelationshipSelect r] -&gt; ShowS
+forall r. Show r =&gt; ActionRemoteRelationshipSelect r -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ActionRemoteRelationshipSelect r] -&gt; ShowS
+$cshowList :: forall r. Show r =&gt; [ActionRemoteRelationshipSelect r] -&gt; ShowS
+show :: ActionRemoteRelationshipSelect r -&gt; String
+$cshow :: forall r. Show r =&gt; ActionRemoteRelationshipSelect r -&gt; String
+showsPrec :: Int -&gt; ActionRemoteRelationshipSelect r -&gt; ShowS
+$cshowsPrec :: forall r.
+Show r =&gt;
+Int -&gt; ActionRemoteRelationshipSelect r -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688289982"><span id="local-6989586621688289984"><span class="annot"><span class="annottext">a
+-&gt; ActionRemoteRelationshipSelect b
+-&gt; ActionRemoteRelationshipSelect a
+(a -&gt; b)
+-&gt; ActionRemoteRelationshipSelect a
+-&gt; ActionRemoteRelationshipSelect b
+(forall a b.
+ (a -&gt; b)
+ -&gt; ActionRemoteRelationshipSelect a
+ -&gt; ActionRemoteRelationshipSelect b)
+-&gt; (forall a b.
+    a
+    -&gt; ActionRemoteRelationshipSelect b
+    -&gt; ActionRemoteRelationshipSelect a)
+-&gt; Functor ActionRemoteRelationshipSelect
+forall a b.
+a
+-&gt; ActionRemoteRelationshipSelect b
+-&gt; ActionRemoteRelationshipSelect a
+forall a b.
+(a -&gt; b)
+-&gt; ActionRemoteRelationshipSelect a
+-&gt; ActionRemoteRelationshipSelect b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a
+-&gt; ActionRemoteRelationshipSelect b
+-&gt; ActionRemoteRelationshipSelect a
+$c&lt;$ :: forall a b.
+a
+-&gt; ActionRemoteRelationshipSelect b
+-&gt; ActionRemoteRelationshipSelect a
+fmap :: (a -&gt; b)
+-&gt; ActionRemoteRelationshipSelect a
+-&gt; ActionRemoteRelationshipSelect b
+$cfmap :: forall a b.
+(a -&gt; b)
+-&gt; ActionRemoteRelationshipSelect a
+-&gt; ActionRemoteRelationshipSelect b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688289948"><span id="local-6989586621688289950"><span id="local-6989586621688289952"><span id="local-6989586621688289954"><span id="local-6989586621688289956"><span id="local-6989586621688289958"><span id="local-6989586621688289960"><span id="local-6989586621688289962"><span id="local-6989586621688289964"><span id="local-6989586621688289966"><span id="local-6989586621688289968"><span id="local-6989586621688289970"><span id="local-6989586621688289972"><span id="local-6989586621688289974"><span id="local-6989586621688289976"><span id="local-6989586621688289978"><span id="local-6989586621688289980"><span class="annot"><span class="annottext">ActionRemoteRelationshipSelect a -&gt; Bool
+(a -&gt; m) -&gt; ActionRemoteRelationshipSelect a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b
+(forall m. Monoid m =&gt; ActionRemoteRelationshipSelect m -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; ActionRemoteRelationshipSelect a -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; ActionRemoteRelationshipSelect a -&gt; m)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b)
+-&gt; (forall a.
+    (a -&gt; a -&gt; a) -&gt; ActionRemoteRelationshipSelect a -&gt; a)
+-&gt; (forall a.
+    (a -&gt; a -&gt; a) -&gt; ActionRemoteRelationshipSelect a -&gt; a)
+-&gt; (forall a. ActionRemoteRelationshipSelect a -&gt; [a])
+-&gt; (forall a. ActionRemoteRelationshipSelect a -&gt; Bool)
+-&gt; (forall a. ActionRemoteRelationshipSelect a -&gt; Int)
+-&gt; (forall a.
+    Eq a =&gt;
+    a -&gt; ActionRemoteRelationshipSelect a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; ActionRemoteRelationshipSelect a -&gt; a)
+-&gt; (forall a. Ord a =&gt; ActionRemoteRelationshipSelect a -&gt; a)
+-&gt; (forall a. Num a =&gt; ActionRemoteRelationshipSelect a -&gt; a)
+-&gt; (forall a. Num a =&gt; ActionRemoteRelationshipSelect a -&gt; a)
+-&gt; Foldable ActionRemoteRelationshipSelect
+forall a. Eq a =&gt; a -&gt; ActionRemoteRelationshipSelect a -&gt; Bool
+forall a. Num a =&gt; ActionRemoteRelationshipSelect a -&gt; a
+forall a. Ord a =&gt; ActionRemoteRelationshipSelect a -&gt; a
+forall m. Monoid m =&gt; ActionRemoteRelationshipSelect m -&gt; m
+forall a. ActionRemoteRelationshipSelect a -&gt; Bool
+forall a. ActionRemoteRelationshipSelect a -&gt; Int
+forall a. ActionRemoteRelationshipSelect a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; ActionRemoteRelationshipSelect a -&gt; a
+forall m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; ActionRemoteRelationshipSelect a -&gt; m
+forall b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b
+forall a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+product :: ActionRemoteRelationshipSelect a -&gt; a
+$cproduct :: forall a. Num a =&gt; ActionRemoteRelationshipSelect a -&gt; a
+sum :: ActionRemoteRelationshipSelect a -&gt; a
+$csum :: forall a. Num a =&gt; ActionRemoteRelationshipSelect a -&gt; a
+minimum :: ActionRemoteRelationshipSelect a -&gt; a
+$cminimum :: forall a. Ord a =&gt; ActionRemoteRelationshipSelect a -&gt; a
+maximum :: ActionRemoteRelationshipSelect a -&gt; a
+$cmaximum :: forall a. Ord a =&gt; ActionRemoteRelationshipSelect a -&gt; a
+elem :: a -&gt; ActionRemoteRelationshipSelect a -&gt; Bool
+$celem :: forall a. Eq a =&gt; a -&gt; ActionRemoteRelationshipSelect a -&gt; Bool
+length :: ActionRemoteRelationshipSelect a -&gt; Int
+$clength :: forall a. ActionRemoteRelationshipSelect a -&gt; Int
+null :: ActionRemoteRelationshipSelect a -&gt; Bool
+$cnull :: forall a. ActionRemoteRelationshipSelect a -&gt; Bool
+toList :: ActionRemoteRelationshipSelect a -&gt; [a]
+$ctoList :: forall a. ActionRemoteRelationshipSelect a -&gt; [a]
+foldl1 :: (a -&gt; a -&gt; a) -&gt; ActionRemoteRelationshipSelect a -&gt; a
+$cfoldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; ActionRemoteRelationshipSelect a -&gt; a
+foldr1 :: (a -&gt; a -&gt; a) -&gt; ActionRemoteRelationshipSelect a -&gt; a
+$cfoldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; ActionRemoteRelationshipSelect a -&gt; a
+foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b
+$cfoldl' :: forall b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b
+foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b
+$cfoldl :: forall b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b
+foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b
+$cfoldr' :: forall a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b
+foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b
+$cfoldr :: forall a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b
+foldMap' :: (a -&gt; m) -&gt; ActionRemoteRelationshipSelect a -&gt; m
+$cfoldMap' :: forall m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; ActionRemoteRelationshipSelect a -&gt; m
+foldMap :: (a -&gt; m) -&gt; ActionRemoteRelationshipSelect a -&gt; m
+$cfoldMap :: forall m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; ActionRemoteRelationshipSelect a -&gt; m
+fold :: ActionRemoteRelationshipSelect m -&gt; m
+$cfold :: forall m. Monoid m =&gt; ActionRemoteRelationshipSelect m -&gt; m
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688289938"><span id="local-6989586621688289940"><span id="local-6989586621688289942"><span id="local-6989586621688289944"><span class="annot"><span class="annottext">Functor ActionRemoteRelationshipSelect
+Foldable ActionRemoteRelationshipSelect
+Functor ActionRemoteRelationshipSelect
+-&gt; Foldable ActionRemoteRelationshipSelect
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b)
+    -&gt; ActionRemoteRelationshipSelect a
+    -&gt; f (ActionRemoteRelationshipSelect b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    ActionRemoteRelationshipSelect (f a)
+    -&gt; f (ActionRemoteRelationshipSelect a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b)
+    -&gt; ActionRemoteRelationshipSelect a
+    -&gt; m (ActionRemoteRelationshipSelect b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    ActionRemoteRelationshipSelect (m a)
+    -&gt; m (ActionRemoteRelationshipSelect a))
+-&gt; Traversable ActionRemoteRelationshipSelect
+(a -&gt; f b)
+-&gt; ActionRemoteRelationshipSelect a
+-&gt; f (ActionRemoteRelationshipSelect b)
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+ActionRemoteRelationshipSelect (m a)
+-&gt; m (ActionRemoteRelationshipSelect a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+ActionRemoteRelationshipSelect (f a)
+-&gt; f (ActionRemoteRelationshipSelect a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; ActionRemoteRelationshipSelect a
+-&gt; m (ActionRemoteRelationshipSelect b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; ActionRemoteRelationshipSelect a
+-&gt; f (ActionRemoteRelationshipSelect b)
+sequence :: ActionRemoteRelationshipSelect (m a)
+-&gt; m (ActionRemoteRelationshipSelect a)
+$csequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+ActionRemoteRelationshipSelect (m a)
+-&gt; m (ActionRemoteRelationshipSelect a)
+mapM :: (a -&gt; m b)
+-&gt; ActionRemoteRelationshipSelect a
+-&gt; m (ActionRemoteRelationshipSelect b)
+$cmapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; ActionRemoteRelationshipSelect a
+-&gt; m (ActionRemoteRelationshipSelect b)
+sequenceA :: ActionRemoteRelationshipSelect (f a)
+-&gt; f (ActionRemoteRelationshipSelect a)
+$csequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+ActionRemoteRelationshipSelect (f a)
+-&gt; f (ActionRemoteRelationshipSelect a)
+traverse :: (a -&gt; f b)
+-&gt; ActionRemoteRelationshipSelect a
+-&gt; f (ActionRemoteRelationshipSelect b)
+$ctraverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; ActionRemoteRelationshipSelect a
+-&gt; f (ActionRemoteRelationshipSelect b)
+$cp2Traversable :: Foldable ActionRemoteRelationshipSelect
+$cp1Traversable :: Functor ActionRemoteRelationshipSelect
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span class="hs-special">$(</span><span id="local-6989586621688290069"><span id="_ACFScalar"><span id="_ACFRemote"><span id="_ACFNestedObject"><span id="_ACFExpression"><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActionFieldG</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span></pre></body></html>

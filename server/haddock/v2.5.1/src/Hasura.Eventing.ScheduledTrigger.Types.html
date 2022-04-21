@@ -1,0 +1,216 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Eventing.ScheduledTrigger.Types</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#CronTriggerStats"><span class="hs-identifier">CronTriggerStats</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#CronTriggerStats"><span class="hs-identifier">CronTriggerStats</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ctsMaxScheduledTime"><span class="hs-identifier">ctsMaxScheduledTime</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ctsName"><span class="hs-identifier">ctsName</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#RetryContext"><span class="hs-identifier">RetryContext</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#RetryContext"><span class="hs-identifier">RetryContext</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#_rctxConf"><span class="hs-identifier">_rctxConf</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledEventOp"><span class="hs-identifier">ScheduledEventOp</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledEventWebhookPayload"><span class="hs-identifier">ScheduledEventWebhookPayload</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledEventWebhookPayload"><span class="hs-identifier">ScheduledEventWebhookPayload</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#sewpName"><span class="hs-identifier">sewpName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#sewpScheduledTime"><span class="hs-identifier">sewpScheduledTime</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#sewpRequestTransform"><span class="hs-identifier">sewpRequestTransform</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#sewpResponseTransform"><span class="hs-identifier">sewpResponseTransform</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledTriggerInternalErr"><span class="hs-identifier">ScheduledTriggerInternalErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledTriggerInternalErr"><span class="hs-identifier">ScheduledTriggerInternalErr</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.TH</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Time.Clock</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Eventing.HTTP.html"><span class="hs-identifier">Hasura.Eventing.HTTP</span></a></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Logging.html"><span class="hs-identifier">Hasura.Logging</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html"><span class="hs-identifier">Hasura.RQL.DDL.Webhook.Transform</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#MetadataResponseTransform"><span class="hs-identifier">MetadataResponseTransform</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestTransform"><span class="hs-identifier">RequestTransform</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.html"><span class="hs-identifier">Hasura.RQL.Types</span></a></span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">newtype</span><span> </span><span id="ScheduledTriggerInternalErr"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledTriggerInternalErr"><span class="hs-identifier hs-var">ScheduledTriggerInternalErr</span></a></span></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="ScheduledTriggerInternalErr"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledTriggerInternalErr"><span class="hs-identifier hs-var">ScheduledTriggerInternalErr</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688379764"><span id="local-6989586621688379766"><span id="local-6989586621688379768"><span class="annot"><span class="annottext">Int -&gt; ScheduledTriggerInternalErr -&gt; ShowS
+[ScheduledTriggerInternalErr] -&gt; ShowS
+ScheduledTriggerInternalErr -&gt; String
+(Int -&gt; ScheduledTriggerInternalErr -&gt; ShowS)
+-&gt; (ScheduledTriggerInternalErr -&gt; String)
+-&gt; ([ScheduledTriggerInternalErr] -&gt; ShowS)
+-&gt; Show ScheduledTriggerInternalErr
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ScheduledTriggerInternalErr] -&gt; ShowS
+$cshowList :: [ScheduledTriggerInternalErr] -&gt; ShowS
+show :: ScheduledTriggerInternalErr -&gt; String
+$cshow :: ScheduledTriggerInternalErr -&gt; String
+showsPrec :: Int -&gt; ScheduledTriggerInternalErr -&gt; ShowS
+$cshowsPrec :: Int -&gt; ScheduledTriggerInternalErr -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688379759"><span id="local-6989586621688379761"><span class="annot"><span class="annottext">ScheduledTriggerInternalErr -&gt; ScheduledTriggerInternalErr -&gt; Bool
+(ScheduledTriggerInternalErr
+ -&gt; ScheduledTriggerInternalErr -&gt; Bool)
+-&gt; (ScheduledTriggerInternalErr
+    -&gt; ScheduledTriggerInternalErr -&gt; Bool)
+-&gt; Eq ScheduledTriggerInternalErr
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ScheduledTriggerInternalErr -&gt; ScheduledTriggerInternalErr -&gt; Bool
+$c/= :: ScheduledTriggerInternalErr -&gt; ScheduledTriggerInternalErr -&gt; Bool
+== :: ScheduledTriggerInternalErr -&gt; ScheduledTriggerInternalErr -&gt; Bool
+$c== :: ScheduledTriggerInternalErr -&gt; ScheduledTriggerInternalErr -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Logging.html#ToEngineLog"><span class="hs-identifier hs-type">L.ToEngineLog</span></a></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledTriggerInternalErr"><span class="hs-identifier hs-type">ScheduledTriggerInternalErr</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-27"></span><span>  </span><span id="local-6989586621688379754"><span class="annot"><span class="annottext">toEngineLog :: ScheduledTriggerInternalErr
+-&gt; (LogLevel, EngineLogType Hasura, Value)
+</span><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledTriggerInternalErr"><span class="hs-identifier hs-type">ScheduledTriggerInternalErr</span></a></span><span> </span><span id="local-6989586621688379752"><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621688379752"><span class="hs-identifier hs-var">qerr</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-28"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogLevel
+</span><a href="Hasura.Logging.html#LevelError"><span class="hs-identifier hs-var">L.LevelError</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">EngineLogType Hasura
+</span><a href="Hasura.Logging.html#scheduledTriggerLogType"><span class="hs-identifier hs-var">L.scheduledTriggerLogType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">QErr -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621688379752"><span class="hs-identifier hs-var">qerr</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">data</span><span> </span><span id="CronTriggerStats"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#CronTriggerStats"><span class="hs-identifier hs-var">CronTriggerStats</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CronTriggerStats"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#CronTriggerStats"><span class="hs-identifier hs-var">CronTriggerStats</span></a></span></span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="ctsName"><span class="annot"><span class="annottext">CronTriggerStats -&gt; TriggerName
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ctsName"><span class="hs-identifier hs-var hs-var">ctsName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerName"><span class="hs-identifier hs-type">TriggerName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>    </span><span id="ctsUpcomingEventsCount"><span class="annot"><span class="annottext">CronTriggerStats -&gt; Int
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ctsUpcomingEventsCount"><span class="hs-identifier hs-var hs-var">ctsUpcomingEventsCount</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>    </span><span id="ctsMaxScheduledTime"><span class="annot"><span class="annottext">CronTriggerStats -&gt; UTCTime
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ctsMaxScheduledTime"><span class="hs-identifier hs-var hs-var">ctsMaxScheduledTime</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688379742"><span id="local-6989586621688379744"><span id="local-6989586621688379746"><span class="annot"><span class="annottext">Int -&gt; CronTriggerStats -&gt; ShowS
+[CronTriggerStats] -&gt; ShowS
+CronTriggerStats -&gt; String
+(Int -&gt; CronTriggerStats -&gt; ShowS)
+-&gt; (CronTriggerStats -&gt; String)
+-&gt; ([CronTriggerStats] -&gt; ShowS)
+-&gt; Show CronTriggerStats
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [CronTriggerStats] -&gt; ShowS
+$cshowList :: [CronTriggerStats] -&gt; ShowS
+show :: CronTriggerStats -&gt; String
+$cshow :: CronTriggerStats -&gt; String
+showsPrec :: Int -&gt; CronTriggerStats -&gt; ShowS
+$cshowsPrec :: Int -&gt; CronTriggerStats -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688379738"><span id="local-6989586621688379740"><span class="annot"><span class="annottext">CronTriggerStats -&gt; CronTriggerStats -&gt; Bool
+(CronTriggerStats -&gt; CronTriggerStats -&gt; Bool)
+-&gt; (CronTriggerStats -&gt; CronTriggerStats -&gt; Bool)
+-&gt; Eq CronTriggerStats
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: CronTriggerStats -&gt; CronTriggerStats -&gt; Bool
+$c/= :: CronTriggerStats -&gt; CronTriggerStats -&gt; Bool
+== :: CronTriggerStats -&gt; CronTriggerStats -&gt; Bool
+$c== :: CronTriggerStats -&gt; CronTriggerStats -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">data</span><span> </span><span id="RetryContext"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#RetryContext"><span class="hs-identifier hs-var">RetryContext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RetryContext"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#RetryContext"><span class="hs-identifier hs-var">RetryContext</span></a></span></span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_rctxTries"><span class="annot"><span class="annottext">RetryContext -&gt; Int
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#_rctxTries"><span class="hs-identifier hs-var hs-var">_rctxTries</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span>    </span><span id="_rctxConf"><span class="annot"><span class="annottext">RetryContext -&gt; STRetryConf
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#_rctxConf"><span class="hs-identifier hs-var hs-var">_rctxConf</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#STRetryConf"><span class="hs-identifier hs-type">STRetryConf</span></a></span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688379731"><span id="local-6989586621688379733"><span id="local-6989586621688379735"><span class="annot"><span class="annottext">Int -&gt; RetryContext -&gt; ShowS
+[RetryContext] -&gt; ShowS
+RetryContext -&gt; String
+(Int -&gt; RetryContext -&gt; ShowS)
+-&gt; (RetryContext -&gt; String)
+-&gt; ([RetryContext] -&gt; ShowS)
+-&gt; Show RetryContext
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [RetryContext] -&gt; ShowS
+$cshowList :: [RetryContext] -&gt; ShowS
+show :: RetryContext -&gt; String
+$cshow :: RetryContext -&gt; String
+showsPrec :: Int -&gt; RetryContext -&gt; ShowS
+$cshowsPrec :: Int -&gt; RetryContext -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688379727"><span id="local-6989586621688379729"><span class="annot"><span class="annottext">RetryContext -&gt; RetryContext -&gt; Bool
+(RetryContext -&gt; RetryContext -&gt; Bool)
+-&gt; (RetryContext -&gt; RetryContext -&gt; Bool) -&gt; Eq RetryContext
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: RetryContext -&gt; RetryContext -&gt; Bool
+$c/= :: RetryContext -&gt; RetryContext -&gt; Bool
+== :: RetryContext -&gt; RetryContext -&gt; Bool
+$c== :: RetryContext -&gt; RetryContext -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span>
+</span><span id="line-43"></span><span class="hs-keyword">data</span><span> </span><span id="ScheduledEventWebhookPayload"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledEventWebhookPayload"><span class="hs-identifier hs-var">ScheduledEventWebhookPayload</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ScheduledEventWebhookPayload"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledEventWebhookPayload"><span class="hs-identifier hs-var">ScheduledEventWebhookPayload</span></a></span></span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="sewpId"><span class="annot"><span class="annottext">ScheduledEventWebhookPayload -&gt; EventId
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#sewpId"><span class="hs-identifier hs-var hs-var">sewpId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-type">EventId</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>    </span><span id="sewpName"><span class="annot"><span class="annottext">ScheduledEventWebhookPayload -&gt; Maybe TriggerName
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#sewpName"><span class="hs-identifier hs-var hs-var">sewpName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerName"><span class="hs-identifier hs-type">TriggerName</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-46"></span><span>    </span><span id="sewpScheduledTime"><span class="annot"><span class="annottext">ScheduledEventWebhookPayload -&gt; UTCTime
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#sewpScheduledTime"><span class="hs-identifier hs-var hs-var">sewpScheduledTime</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>    </span><span id="sewpPayload"><span class="annot"><span class="annottext">ScheduledEventWebhookPayload -&gt; Value
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#sewpPayload"><span class="hs-identifier hs-var hs-var">sewpPayload</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>    </span><span id="sewpComment"><span class="annot"><span class="annottext">ScheduledEventWebhookPayload -&gt; Maybe Text
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#sewpComment"><span class="hs-identifier hs-var hs-var">sewpComment</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>    </span><span class="hs-comment">-- | sewpCreatedAt is the time at which the event was created,</span><span>
+</span><span id="line-50"></span><span>    </span><span class="hs-comment">-- In case of one-off scheduled events, it's the time at which</span><span>
+</span><span id="line-51"></span><span>    </span><span class="hs-comment">-- the user created the event and in case of cron triggers, the</span><span>
+</span><span id="line-52"></span><span>    </span><span class="hs-comment">-- graphql-engine generator, generates the cron events, the</span><span>
+</span><span id="line-53"></span><span>    </span><span class="hs-comment">-- `created_at` is just an implementation detail, so we</span><span>
+</span><span id="line-54"></span><span>    </span><span class="hs-comment">-- don't send it</span><span>
+</span><span id="line-55"></span><span>    </span><span id="sewpCreatedAt"><span class="annot"><span class="annottext">ScheduledEventWebhookPayload -&gt; Maybe UTCTime
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#sewpCreatedAt"><span class="hs-identifier hs-var hs-var">sewpCreatedAt</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-56"></span><span>    </span><span id="sewpRequestTransform"><span class="annot"><span class="annottext">ScheduledEventWebhookPayload -&gt; Maybe RequestTransform
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#sewpRequestTransform"><span class="hs-identifier hs-var hs-var">sewpRequestTransform</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestTransform"><span class="hs-identifier hs-type">RequestTransform</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-57"></span><span>    </span><span id="sewpResponseTransform"><span class="annot"><span class="annottext">ScheduledEventWebhookPayload -&gt; Maybe MetadataResponseTransform
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#sewpResponseTransform"><span class="hs-identifier hs-var hs-var">sewpResponseTransform</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#MetadataResponseTransform"><span class="hs-identifier hs-type">MetadataResponseTransform</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688379717"><span id="local-6989586621688379719"><span id="local-6989586621688379721"><span class="annot"><span class="annottext">Int -&gt; ScheduledEventWebhookPayload -&gt; ShowS
+[ScheduledEventWebhookPayload] -&gt; ShowS
+ScheduledEventWebhookPayload -&gt; String
+(Int -&gt; ScheduledEventWebhookPayload -&gt; ShowS)
+-&gt; (ScheduledEventWebhookPayload -&gt; String)
+-&gt; ([ScheduledEventWebhookPayload] -&gt; ShowS)
+-&gt; Show ScheduledEventWebhookPayload
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ScheduledEventWebhookPayload] -&gt; ShowS
+$cshowList :: [ScheduledEventWebhookPayload] -&gt; ShowS
+show :: ScheduledEventWebhookPayload -&gt; String
+$cshow :: ScheduledEventWebhookPayload -&gt; String
+showsPrec :: Int -&gt; ScheduledEventWebhookPayload -&gt; ShowS
+$cshowsPrec :: Int -&gt; ScheduledEventWebhookPayload -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688379713"><span id="local-6989586621688379715"><span class="annot"><span class="annottext">ScheduledEventWebhookPayload
+-&gt; ScheduledEventWebhookPayload -&gt; Bool
+(ScheduledEventWebhookPayload
+ -&gt; ScheduledEventWebhookPayload -&gt; Bool)
+-&gt; (ScheduledEventWebhookPayload
+    -&gt; ScheduledEventWebhookPayload -&gt; Bool)
+-&gt; Eq ScheduledEventWebhookPayload
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ScheduledEventWebhookPayload
+-&gt; ScheduledEventWebhookPayload -&gt; Bool
+$c/= :: ScheduledEventWebhookPayload
+-&gt; ScheduledEventWebhookPayload -&gt; Bool
+== :: ScheduledEventWebhookPayload
+-&gt; ScheduledEventWebhookPayload -&gt; Bool
+$c== :: ScheduledEventWebhookPayload
+-&gt; ScheduledEventWebhookPayload -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-60"></span><span>
+</span><span id="line-61"></span><span class="hs-special">$(</span><span id="local-6989586621688379705"><span id="local-6989586621688379707"><span id="local-6989586621688379709"><span id="local-6989586621688379711"><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ScheduledEventWebhookPayload</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span><span class="hs-keyword">data</span><span> </span><span id="ScheduledEventOp"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledEventOp"><span class="hs-identifier hs-var">ScheduledEventOp</span></a></span></span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="SEOpRetry"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#SEOpRetry"><span class="hs-identifier hs-var">SEOpRetry</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span>
+</span><span id="line-65"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="SEOpStatus"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#SEOpStatus"><span class="hs-identifier hs-var">SEOpStatus</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#ScheduledEventStatus"><span class="hs-identifier hs-type">ScheduledEventStatus</span></a></span><span>
+</span><span id="line-66"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688379694"><span id="local-6989586621688379696"><span id="local-6989586621688379698"><span class="annot"><span class="annottext">Int -&gt; ScheduledEventOp -&gt; ShowS
+[ScheduledEventOp] -&gt; ShowS
+ScheduledEventOp -&gt; String
+(Int -&gt; ScheduledEventOp -&gt; ShowS)
+-&gt; (ScheduledEventOp -&gt; String)
+-&gt; ([ScheduledEventOp] -&gt; ShowS)
+-&gt; Show ScheduledEventOp
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ScheduledEventOp] -&gt; ShowS
+$cshowList :: [ScheduledEventOp] -&gt; ShowS
+show :: ScheduledEventOp -&gt; String
+$cshow :: ScheduledEventOp -&gt; String
+showsPrec :: Int -&gt; ScheduledEventOp -&gt; ShowS
+$cshowsPrec :: Int -&gt; ScheduledEventOp -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688379690"><span id="local-6989586621688379692"><span class="annot"><span class="annottext">ScheduledEventOp -&gt; ScheduledEventOp -&gt; Bool
+(ScheduledEventOp -&gt; ScheduledEventOp -&gt; Bool)
+-&gt; (ScheduledEventOp -&gt; ScheduledEventOp -&gt; Bool)
+-&gt; Eq ScheduledEventOp
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ScheduledEventOp -&gt; ScheduledEventOp -&gt; Bool
+$c/= :: ScheduledEventOp -&gt; ScheduledEventOp -&gt; Bool
+== :: ScheduledEventOp -&gt; ScheduledEventOp -&gt; Bool
+$c== :: ScheduledEventOp -&gt; ScheduledEventOp -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-67"></span></pre></body></html>

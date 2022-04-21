@@ -1,0 +1,1036 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Database.MSSQL.Transaction</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxET"><span class="hs-identifier">TxET</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLTxError"><span class="hs-identifier">MSSQLTxError</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxT"><span class="hs-identifier">TxT</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxE"><span class="hs-identifier">TxE</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Database.MSSQL.Transaction.html#runTx"><span class="hs-identifier">runTx</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Database.MSSQL.Transaction.html#runTxE"><span class="hs-identifier">runTxE</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Database.MSSQL.Transaction.html#unitQuery"><span class="hs-identifier">unitQuery</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Database.MSSQL.Transaction.html#unitQueryE"><span class="hs-identifier">unitQueryE</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Database.MSSQL.Transaction.html#singleRowQuery"><span class="hs-identifier">singleRowQuery</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Database.MSSQL.Transaction.html#singleRowQueryE"><span class="hs-identifier">singleRowQueryE</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Database.MSSQL.Transaction.html#multiRowQuery"><span class="hs-identifier">multiRowQuery</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Database.MSSQL.Transaction.html#multiRowQueryE"><span class="hs-identifier">multiRowQueryE</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Database.MSSQL.Transaction.html#forJsonQueryE"><span class="hs-identifier">forJsonQueryE</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Database.MSSQL.Transaction.html#buildGenericQueryTxE"><span class="hs-identifier">buildGenericQueryTxE</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Database.MSSQL.Transaction.html#withTxET"><span class="hs-identifier">withTxET</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Exception</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">try</span></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Morph</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MFunctor</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">hoist</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Trans.Control</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadBaseControl</span></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Database.MSSQL.Pool.html"><span class="hs-identifier">Database.MSSQL.Pool</span></a></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Database.ODBC.SQLServer</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromRow</span></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Database.ODBC.SQLServer</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">ODBC</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="hs-comment">-- | The transaction command to run, parameterised over:</span><span>
+</span><span id="line-29"></span><span class="hs-comment">-- e - the exception type (usually 'MSSQLTxError')</span><span>
+</span><span id="line-30"></span><span class="hs-comment">-- m - some Monad, (usually some 'MonadIO')</span><span>
+</span><span id="line-31"></span><span class="hs-comment">-- a - the successful result type</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">newtype</span><span> </span><span id="TxET"><span class="annot"><a href="Database.MSSQL.Transaction.html#TxET"><span class="hs-identifier hs-var">TxET</span></a></span></span><span> </span><span id="local-6989586621688267161"><span class="annot"><a href="#local-6989586621688267161"><span class="hs-identifier hs-type">e</span></a></span></span><span> </span><span id="local-6989586621688267160"><span class="annot"><a href="#local-6989586621688267160"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688267159"><span class="annot"><a href="#local-6989586621688267159"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TxET"><span class="annot"><a href="Database.MSSQL.Transaction.html#TxET"><span class="hs-identifier hs-var">TxET</span></a></span></span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="txHandler"><span class="annot"><span class="annottext">TxET e m a -&gt; ReaderT Connection (ExceptT e m) a
+</span><a href="Database.MSSQL.Transaction.html#txHandler"><span class="hs-identifier hs-var hs-var">txHandler</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ODBC.Connection</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="#local-6989586621688267161"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267160"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688267159"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-keyword">deriving</span><span>
+</span><span id="line-36"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621688266984"><span id="local-6989586621688266986"><span class="annot"><span class="annottext">a -&gt; TxET e m b -&gt; TxET e m a
+(a -&gt; b) -&gt; TxET e m a -&gt; TxET e m b
+(forall a b. (a -&gt; b) -&gt; TxET e m a -&gt; TxET e m b)
+-&gt; (forall a b. a -&gt; TxET e m b -&gt; TxET e m a)
+-&gt; Functor (TxET e m)
+forall a b. a -&gt; TxET e m b -&gt; TxET e m a
+forall a b. (a -&gt; b) -&gt; TxET e m a -&gt; TxET e m b
+forall e (m :: * -&gt; *) a b.
+Functor m =&gt;
+a -&gt; TxET e m b -&gt; TxET e m a
+forall e (m :: * -&gt; *) a b.
+Functor m =&gt;
+(a -&gt; b) -&gt; TxET e m a -&gt; TxET e m b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a -&gt; TxET e m b -&gt; TxET e m a
+$c&lt;$ :: forall e (m :: * -&gt; *) a b.
+Functor m =&gt;
+a -&gt; TxET e m b -&gt; TxET e m a
+fmap :: (a -&gt; b) -&gt; TxET e m a -&gt; TxET e m b
+$cfmap :: forall e (m :: * -&gt; *) a b.
+Functor m =&gt;
+(a -&gt; b) -&gt; TxET e m a -&gt; TxET e m b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>      </span><span id="local-6989586621688266972"><span id="local-6989586621688266974"><span id="local-6989586621688266976"><span id="local-6989586621688266978"><span id="local-6989586621688266980"><span class="annot"><span class="annottext">Functor (TxET e m)
+a -&gt; TxET e m a
+Functor (TxET e m)
+-&gt; (forall a. a -&gt; TxET e m a)
+-&gt; (forall a b. TxET e m (a -&gt; b) -&gt; TxET e m a -&gt; TxET e m b)
+-&gt; (forall a b c.
+    (a -&gt; b -&gt; c) -&gt; TxET e m a -&gt; TxET e m b -&gt; TxET e m c)
+-&gt; (forall a b. TxET e m a -&gt; TxET e m b -&gt; TxET e m b)
+-&gt; (forall a b. TxET e m a -&gt; TxET e m b -&gt; TxET e m a)
+-&gt; Applicative (TxET e m)
+TxET e m a -&gt; TxET e m b -&gt; TxET e m b
+TxET e m a -&gt; TxET e m b -&gt; TxET e m a
+TxET e m (a -&gt; b) -&gt; TxET e m a -&gt; TxET e m b
+(a -&gt; b -&gt; c) -&gt; TxET e m a -&gt; TxET e m b -&gt; TxET e m c
+forall a. a -&gt; TxET e m a
+forall a b. TxET e m a -&gt; TxET e m b -&gt; TxET e m a
+forall a b. TxET e m a -&gt; TxET e m b -&gt; TxET e m b
+forall a b. TxET e m (a -&gt; b) -&gt; TxET e m a -&gt; TxET e m b
+forall a b c.
+(a -&gt; b -&gt; c) -&gt; TxET e m a -&gt; TxET e m b -&gt; TxET e m c
+forall e (m :: * -&gt; *). Monad m =&gt; Functor (TxET e m)
+forall e (m :: * -&gt; *) a. Monad m =&gt; a -&gt; TxET e m a
+forall e (m :: * -&gt; *) a b.
+Monad m =&gt;
+TxET e m a -&gt; TxET e m b -&gt; TxET e m a
+forall e (m :: * -&gt; *) a b.
+Monad m =&gt;
+TxET e m a -&gt; TxET e m b -&gt; TxET e m b
+forall e (m :: * -&gt; *) a b.
+Monad m =&gt;
+TxET e m (a -&gt; b) -&gt; TxET e m a -&gt; TxET e m b
+forall e (m :: * -&gt; *) a b c.
+Monad m =&gt;
+(a -&gt; b -&gt; c) -&gt; TxET e m a -&gt; TxET e m b -&gt; TxET e m c
+forall (f :: * -&gt; *).
+Functor f
+-&gt; (forall a. a -&gt; f a)
+-&gt; (forall a b. f (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b c. (a -&gt; b -&gt; c) -&gt; f a -&gt; f b -&gt; f c)
+-&gt; (forall a b. f a -&gt; f b -&gt; f b)
+-&gt; (forall a b. f a -&gt; f b -&gt; f a)
+-&gt; Applicative f
+&lt;* :: TxET e m a -&gt; TxET e m b -&gt; TxET e m a
+$c&lt;* :: forall e (m :: * -&gt; *) a b.
+Monad m =&gt;
+TxET e m a -&gt; TxET e m b -&gt; TxET e m a
+*&gt; :: TxET e m a -&gt; TxET e m b -&gt; TxET e m b
+$c*&gt; :: forall e (m :: * -&gt; *) a b.
+Monad m =&gt;
+TxET e m a -&gt; TxET e m b -&gt; TxET e m b
+liftA2 :: (a -&gt; b -&gt; c) -&gt; TxET e m a -&gt; TxET e m b -&gt; TxET e m c
+$cliftA2 :: forall e (m :: * -&gt; *) a b c.
+Monad m =&gt;
+(a -&gt; b -&gt; c) -&gt; TxET e m a -&gt; TxET e m b -&gt; TxET e m c
+&lt;*&gt; :: TxET e m (a -&gt; b) -&gt; TxET e m a -&gt; TxET e m b
+$c&lt;*&gt; :: forall e (m :: * -&gt; *) a b.
+Monad m =&gt;
+TxET e m (a -&gt; b) -&gt; TxET e m a -&gt; TxET e m b
+pure :: a -&gt; TxET e m a
+$cpure :: forall e (m :: * -&gt; *) a. Monad m =&gt; a -&gt; TxET e m a
+$cp1Applicative :: forall e (m :: * -&gt; *). Monad m =&gt; Functor (TxET e m)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Applicative</span></span></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>      </span><span id="local-6989586621688266964"><span id="local-6989586621688266966"><span id="local-6989586621688266968"><span class="annot"><span class="annottext">Applicative (TxET e m)
+a -&gt; TxET e m a
+Applicative (TxET e m)
+-&gt; (forall a b. TxET e m a -&gt; (a -&gt; TxET e m b) -&gt; TxET e m b)
+-&gt; (forall a b. TxET e m a -&gt; TxET e m b -&gt; TxET e m b)
+-&gt; (forall a. a -&gt; TxET e m a)
+-&gt; Monad (TxET e m)
+TxET e m a -&gt; (a -&gt; TxET e m b) -&gt; TxET e m b
+TxET e m a -&gt; TxET e m b -&gt; TxET e m b
+forall a. a -&gt; TxET e m a
+forall a b. TxET e m a -&gt; TxET e m b -&gt; TxET e m b
+forall a b. TxET e m a -&gt; (a -&gt; TxET e m b) -&gt; TxET e m b
+forall e (m :: * -&gt; *). Monad m =&gt; Applicative (TxET e m)
+forall e (m :: * -&gt; *) a. Monad m =&gt; a -&gt; TxET e m a
+forall e (m :: * -&gt; *) a b.
+Monad m =&gt;
+TxET e m a -&gt; TxET e m b -&gt; TxET e m b
+forall e (m :: * -&gt; *) a b.
+Monad m =&gt;
+TxET e m a -&gt; (a -&gt; TxET e m b) -&gt; TxET e m b
+forall (m :: * -&gt; *).
+Applicative m
+-&gt; (forall a b. m a -&gt; (a -&gt; m b) -&gt; m b)
+-&gt; (forall a b. m a -&gt; m b -&gt; m b)
+-&gt; (forall a. a -&gt; m a)
+-&gt; Monad m
+return :: a -&gt; TxET e m a
+$creturn :: forall e (m :: * -&gt; *) a. Monad m =&gt; a -&gt; TxET e m a
+&gt;&gt; :: TxET e m a -&gt; TxET e m b -&gt; TxET e m b
+$c&gt;&gt; :: forall e (m :: * -&gt; *) a b.
+Monad m =&gt;
+TxET e m a -&gt; TxET e m b -&gt; TxET e m b
+&gt;&gt;= :: TxET e m a -&gt; (a -&gt; TxET e m b) -&gt; TxET e m b
+$c&gt;&gt;= :: forall e (m :: * -&gt; *) a b.
+Monad m =&gt;
+TxET e m a -&gt; (a -&gt; TxET e m b) -&gt; TxET e m b
+$cp1Monad :: forall e (m :: * -&gt; *). Monad m =&gt; Applicative (TxET e m)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monad</span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span>      </span><span id="local-6989586621688266958"><span id="local-6989586621688266960"><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="#local-6989586621688267161"><span class="hs-identifier hs-type">e</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>      </span><span id="local-6989586621688266954"><span class="annot"><span class="annottext">Monad (TxET e m)
+Monad (TxET e m)
+-&gt; (forall a. IO a -&gt; TxET e m a) -&gt; MonadIO (TxET e m)
+IO a -&gt; TxET e m a
+forall a. IO a -&gt; TxET e m a
+forall e (m :: * -&gt; *). MonadIO m =&gt; Monad (TxET e m)
+forall e (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; TxET e m a
+forall (m :: * -&gt; *).
+Monad m -&gt; (forall a. IO a -&gt; m a) -&gt; MonadIO m
+liftIO :: IO a -&gt; TxET e m a
+$cliftIO :: forall e (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; TxET e m a
+$cp1MonadIO :: forall e (m :: * -&gt; *). MonadIO m =&gt; Monad (TxET e m)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadIO</span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>      </span><span id="local-6989586621688266946"><span id="local-6989586621688266948"><span id="local-6989586621688266950"><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ODBC.Connection</span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>      </span><span id="local-6989586621688266942"><span class="annot"><span class="annottext">Monad (TxET e m)
+Monad (TxET e m)
+-&gt; (forall a. (a -&gt; TxET e m a) -&gt; TxET e m a)
+-&gt; MonadFix (TxET e m)
+(a -&gt; TxET e m a) -&gt; TxET e m a
+forall a. (a -&gt; TxET e m a) -&gt; TxET e m a
+forall e (m :: * -&gt; *). MonadFix m =&gt; Monad (TxET e m)
+forall e (m :: * -&gt; *) a.
+MonadFix m =&gt;
+(a -&gt; TxET e m a) -&gt; TxET e m a
+forall (m :: * -&gt; *).
+Monad m -&gt; (forall a. (a -&gt; m a) -&gt; m a) -&gt; MonadFix m
+mfix :: (a -&gt; TxET e m a) -&gt; TxET e m a
+$cmfix :: forall e (m :: * -&gt; *) a.
+MonadFix m =&gt;
+(a -&gt; TxET e m a) -&gt; TxET e m a
+$cp1MonadFix :: forall e (m :: * -&gt; *). MonadFix m =&gt; Monad (TxET e m)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadFix</span></span></span><span>
+</span><span id="line-43"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span id="local-6989586621688266940"><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MFunctor</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxET"><span class="hs-identifier hs-type">TxET</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688266940"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-46"></span><span>  </span><span id="local-6989586621688266937"><span class="annot"><span class="annottext">hoist :: (forall a. m a -&gt; n a) -&gt; TxET e m b -&gt; TxET e n b
+</span><a href="#local-6989586621688266937"><span class="hs-identifier hs-var hs-var hs-var hs-var">hoist</span></a></span></span><span> </span><span id="local-6989586621688266936"><span class="annot"><span class="annottext">forall a. m a -&gt; n a
+</span><a href="#local-6989586621688266936"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReaderT Connection (ExceptT e n) b -&gt; TxET e n b
+forall e (m :: * -&gt; *) a.
+ReaderT Connection (ExceptT e m) a -&gt; TxET e m a
+</span><a href="Database.MSSQL.Transaction.html#TxET"><span class="hs-identifier hs-var">TxET</span></a></span><span> </span><span class="annot"><span class="annottext">(ReaderT Connection (ExceptT e n) b -&gt; TxET e n b)
+-&gt; (TxET e m b -&gt; ReaderT Connection (ExceptT e n) b)
+-&gt; TxET e m b
+-&gt; TxET e n b
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(forall a. ExceptT e m a -&gt; ExceptT e n a)
+-&gt; ReaderT Connection (ExceptT e m) b
+-&gt; ReaderT Connection (ExceptT e n) b
+forall k (t :: (* -&gt; *) -&gt; k -&gt; *) (m :: * -&gt; *) (n :: * -&gt; *)
+       (b :: k).
+(MFunctor t, Monad m) =&gt;
+(forall a. m a -&gt; n a) -&gt; t m b -&gt; t n b
+</span><span class="hs-identifier hs-var">hoist</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall a. m a -&gt; n a) -&gt; ExceptT e m a -&gt; ExceptT e n a
+forall k (t :: (* -&gt; *) -&gt; k -&gt; *) (m :: * -&gt; *) (n :: * -&gt; *)
+       (b :: k).
+(MFunctor t, Monad m) =&gt;
+(forall a. m a -&gt; n a) -&gt; t m b -&gt; t n b
+</span><span class="hs-identifier hs-var">hoist</span></span><span> </span><span class="annot"><span class="annottext">forall a. m a -&gt; n a
+</span><a href="#local-6989586621688266936"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(ReaderT Connection (ExceptT e m) b
+ -&gt; ReaderT Connection (ExceptT e n) b)
+-&gt; (TxET e m b -&gt; ReaderT Connection (ExceptT e m) b)
+-&gt; TxET e m b
+-&gt; ReaderT Connection (ExceptT e n) b
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">TxET e m b -&gt; ReaderT Connection (ExceptT e m) b
+forall e (m :: * -&gt; *) a.
+TxET e m a -&gt; ReaderT Connection (ExceptT e m) a
+</span><a href="Database.MSSQL.Transaction.html#txHandler"><span class="hs-identifier hs-var hs-var">txHandler</span></a></span></span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span id="local-6989586621688266934"><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadTrans</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxET"><span class="hs-identifier hs-type">TxET</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688266934"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-49"></span><span>  </span><span id="local-6989586621688266931"><span class="annot"><span class="annottext">lift :: m a -&gt; TxET e m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">lift</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReaderT Connection (ExceptT e m) a -&gt; TxET e m a
+forall e (m :: * -&gt; *) a.
+ReaderT Connection (ExceptT e m) a -&gt; TxET e m a
+</span><a href="Database.MSSQL.Transaction.html#TxET"><span class="hs-identifier hs-var">TxET</span></a></span><span> </span><span class="annot"><span class="annottext">(ReaderT Connection (ExceptT e m) a -&gt; TxET e m a)
+-&gt; (m a -&gt; ReaderT Connection (ExceptT e m) a) -&gt; m a -&gt; TxET e m a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ExceptT e m a -&gt; ReaderT Connection (ExceptT e m) a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(ExceptT e m a -&gt; ReaderT Connection (ExceptT e m) a)
+-&gt; (m a -&gt; ExceptT e m a)
+-&gt; m a
+-&gt; ReaderT Connection (ExceptT e m) a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">m a -&gt; ExceptT e m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span></span><span>
+</span><span id="line-50"></span><span>
+</span><span id="line-51"></span><span class="hs-comment">-- | Error type generally used in 'TxET'.</span><span>
+</span><span id="line-52"></span><span class="hs-keyword">data</span><span> </span><span id="MSSQLTxError"><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLTxError"><span class="hs-identifier hs-var">MSSQLTxError</span></a></span></span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="MSSQLQueryError"><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLQueryError"><span class="hs-identifier hs-var">MSSQLQueryError</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">ODBC.Query</span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">ODBC.ODBCException</span></span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="MSSQLConnError"><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLConnError"><span class="hs-identifier hs-var">MSSQLConnError</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">ODBC.ODBCException</span></span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="MSSQLInternal"><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLInternal"><span class="hs-identifier hs-var">MSSQLInternal</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688266923"><span id="local-6989586621688266925"><span class="annot"><span class="annottext">MSSQLTxError -&gt; MSSQLTxError -&gt; Bool
+(MSSQLTxError -&gt; MSSQLTxError -&gt; Bool)
+-&gt; (MSSQLTxError -&gt; MSSQLTxError -&gt; Bool) -&gt; Eq MSSQLTxError
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: MSSQLTxError -&gt; MSSQLTxError -&gt; Bool
+$c/= :: MSSQLTxError -&gt; MSSQLTxError -&gt; Bool
+== :: MSSQLTxError -&gt; MSSQLTxError -&gt; Bool
+$c== :: MSSQLTxError -&gt; MSSQLTxError -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688266916"><span id="local-6989586621688266918"><span id="local-6989586621688266920"><span class="annot"><span class="annottext">Int -&gt; MSSQLTxError -&gt; ShowS
+[MSSQLTxError] -&gt; ShowS
+MSSQLTxError -&gt; String
+(Int -&gt; MSSQLTxError -&gt; ShowS)
+-&gt; (MSSQLTxError -&gt; String)
+-&gt; ([MSSQLTxError] -&gt; ShowS)
+-&gt; Show MSSQLTxError
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [MSSQLTxError] -&gt; ShowS
+$cshowList :: [MSSQLTxError] -&gt; ShowS
+show :: MSSQLTxError -&gt; String
+$cshow :: MSSQLTxError -&gt; String
+showsPrec :: Int -&gt; MSSQLTxError -&gt; ShowS
+$cshowsPrec :: Int -&gt; MSSQLTxError -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span>
+</span><span id="line-58"></span><span class="hs-keyword">type</span><span> </span><span id="TxE"><span class="annot"><a href="Database.MSSQL.Transaction.html#TxE"><span class="hs-identifier hs-var">TxE</span></a></span></span><span> </span><span id="local-6989586621688266914"><span class="annot"><a href="#local-6989586621688266914"><span class="hs-identifier hs-type">e</span></a></span></span><span> </span><span id="local-6989586621688266913"><span class="annot"><a href="#local-6989586621688266913"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxET"><span class="hs-identifier hs-type">TxET</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688266914"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688266913"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-59"></span><span>
+</span><span id="line-60"></span><span class="hs-comment">-- | The transaction command to run, returning an MSSQLTxError or the result.</span><span>
+</span><span id="line-61"></span><span class="hs-keyword">type</span><span> </span><span id="TxT"><span class="annot"><a href="Database.MSSQL.Transaction.html#TxT"><span class="hs-identifier hs-var">TxT</span></a></span></span><span> </span><span id="local-6989586621688266912"><span class="annot"><a href="#local-6989586621688266912"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688266911"><span class="annot"><a href="#local-6989586621688266911"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxET"><span class="hs-identifier hs-type">TxET</span></a></span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLTxError"><span class="hs-identifier hs-type">MSSQLTxError</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688266912"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688266911"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span><span class="hs-comment">-- | Run a command on the given connection wrapped in a transaction.</span><span>
+</span><span id="line-64"></span><span class="hs-comment">--</span><span>
+</span><span id="line-65"></span><span class="hs-comment">-- See 'runTxE' if you need to map the error type as well.</span><span>
+</span><span id="line-66"></span><span id="local-6989586621688266909"><span id="local-6989586621688266910"><span class="annot"><a href="Database.MSSQL.Transaction.html#runTx"><span class="hs-identifier hs-type">runTx</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-67"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688266910"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688266910"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-68"></span><span>  </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxT"><span class="hs-identifier hs-type">TxT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688266910"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688266909"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-69"></span><span>  </span><span class="annot"><a href="Database.MSSQL.Pool.html#MSSQLPool"><span class="hs-identifier hs-type">MSSQLPool</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-70"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLTxError"><span class="hs-identifier hs-type">MSSQLTxError</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688266910"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688266909"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-71"></span><span id="runTx"><span class="annot"><span class="annottext">runTx :: TxT m a -&gt; MSSQLPool -&gt; ExceptT MSSQLTxError m a
+</span><a href="Database.MSSQL.Transaction.html#runTx"><span class="hs-identifier hs-var hs-var">runTx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; MSSQLTxError)
+-&gt; TxT m a -&gt; MSSQLPool -&gt; ExceptT MSSQLTxError m a
+forall (m :: * -&gt; *) e a.
+(MonadIO m, MonadBaseControl IO m) =&gt;
+(MSSQLTxError -&gt; e) -&gt; TxET e m a -&gt; MSSQLPool -&gt; ExceptT e m a
+</span><a href="Database.MSSQL.Transaction.html#runTxE"><span class="hs-identifier hs-var">runTxE</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; MSSQLTxError
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span>
+</span><span id="line-72"></span><span>
+</span><span id="line-73"></span><span class="hs-comment">-- | Run a command on the given connection wrapped in a transaction.</span><span>
+</span><span id="line-74"></span><span id="local-6989586621688267135"><span id="local-6989586621688267136"><span id="local-6989586621688267138"><span class="annot"><a href="Database.MSSQL.Transaction.html#runTxE"><span class="hs-identifier hs-type">runTxE</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-75"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688267138"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688267138"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-76"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLTxError"><span class="hs-identifier hs-type">MSSQLTxError</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688267136"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-77"></span><span>  </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxET"><span class="hs-identifier hs-type">TxET</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267136"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267138"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267135"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-78"></span><span>  </span><span class="annot"><a href="Database.MSSQL.Pool.html#MSSQLPool"><span class="hs-identifier hs-type">MSSQLPool</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-79"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="#local-6989586621688267136"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267138"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267135"><span class="hs-identifier hs-type">a</span></a></span></span></span></span><span>
+</span><span id="line-80"></span><span id="runTxE"><span class="annot"><span class="annottext">runTxE :: (MSSQLTxError -&gt; e) -&gt; TxET e m a -&gt; MSSQLPool -&gt; ExceptT e m a
+</span><a href="Database.MSSQL.Transaction.html#runTxE"><span class="hs-identifier hs-var hs-var">runTxE</span></a></span></span><span> </span><span id="local-6989586621688266907"><span class="annot"><span class="annottext">MSSQLTxError -&gt; e
+</span><a href="#local-6989586621688266907"><span class="hs-identifier hs-var">ef</span></a></span></span><span> </span><span id="local-6989586621688266906"><span class="annot"><span class="annottext">TxET e m a
+</span><a href="#local-6989586621688266906"><span class="hs-identifier hs-var">tx</span></a></span></span><span> </span><span id="local-6989586621688266905"><span class="annot"><span class="annottext">MSSQLPool
+</span><a href="#local-6989586621688266905"><span class="hs-identifier hs-var">pool</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-81"></span><span>  </span><span class="annot"><span class="annottext">MSSQLPool
+-&gt; (Connection -&gt; ExceptT e m a)
+-&gt; ExceptT e m (Either ODBCException a)
+forall (m :: * -&gt; *) a.
+MonadBaseControl IO m =&gt;
+MSSQLPool -&gt; (Connection -&gt; m a) -&gt; m (Either ODBCException a)
+</span><a href="Database.MSSQL.Pool.html#withMSSQLPool"><span class="hs-identifier hs-var">withMSSQLPool</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLPool
+</span><a href="#local-6989586621688266905"><span class="hs-identifier hs-var">pool</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; e)
+-&gt; (Connection -&gt; ExceptT e m a) -&gt; Connection -&gt; ExceptT e m a
+forall e a (m :: * -&gt; *).
+MonadIO m =&gt;
+(MSSQLTxError -&gt; e)
+-&gt; (Connection -&gt; ExceptT e m a) -&gt; Connection -&gt; ExceptT e m a
+</span><a href="Database.MSSQL.Transaction.html#asTransaction"><span class="hs-identifier hs-var">asTransaction</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; e
+</span><a href="#local-6989586621688266907"><span class="hs-identifier hs-var">ef</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Connection -&gt; TxET e m a -&gt; ExceptT e m a
+forall e (m :: * -&gt; *) a. Connection -&gt; TxET e m a -&gt; ExceptT e m a
+</span><a href="Database.MSSQL.Transaction.html#execTx"><span class="hs-operator hs-var">`execTx`</span></a></span><span> </span><span class="annot"><span class="annottext">TxET e m a
+</span><a href="#local-6989586621688266906"><span class="hs-identifier hs-var">tx</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-82"></span><span>    </span><span class="annot"><span class="annottext">ExceptT e m (Either ODBCException a)
+-&gt; (Either ODBCException a -&gt; ExceptT e m a) -&gt; ExceptT e m a
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Either e a -&gt; ExceptT e m a
+forall (m :: * -&gt; *) e a.
+Applicative m =&gt;
+Either e a -&gt; ExceptT e m a
+</span><a href="Hasura.Prelude.html#hoistEither"><span class="hs-identifier hs-var">hoistEither</span></a></span><span> </span><span class="annot"><span class="annottext">(Either e a -&gt; ExceptT e m a)
+-&gt; (Either ODBCException a -&gt; Either e a)
+-&gt; Either ODBCException a
+-&gt; ExceptT e m a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(ODBCException -&gt; e) -&gt; Either ODBCException a -&gt; Either e a
+forall e1 e2 a. (e1 -&gt; e2) -&gt; Either e1 a -&gt; Either e2 a
+</span><a href="Hasura.Prelude.html#mapLeft"><span class="hs-identifier hs-var">mapLeft</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MSSQLTxError -&gt; e
+</span><a href="#local-6989586621688266907"><span class="hs-identifier hs-var">ef</span></a></span><span> </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; e)
+-&gt; (ODBCException -&gt; MSSQLTxError) -&gt; ODBCException -&gt; e
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ODBCException -&gt; MSSQLTxError
+</span><a href="Database.MSSQL.Transaction.html#MSSQLConnError"><span class="hs-identifier hs-var">MSSQLConnError</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-83"></span><span>
+</span><span id="line-84"></span><span class="hs-comment">-- | Useful for building transactions which return no data.</span><span>
+</span><span id="line-85"></span><span class="hs-comment">--</span><span>
+</span><span id="line-86"></span><span class="hs-comment">-- @</span><span>
+</span><span id="line-87"></span><span class="hs-comment">-- insertId :: TxT m ()</span><span>
+</span><span id="line-88"></span><span class="hs-comment">-- insertId = unitQuery &quot;INSERT INTO some_table VALUES (1, \&quot;hello\&quot;)&quot;</span><span>
+</span><span id="line-89"></span><span class="hs-comment">-- @</span><span>
+</span><span id="line-90"></span><span class="hs-comment">--</span><span>
+</span><span id="line-91"></span><span class="hs-comment">-- See 'unitQueryE' if you need to map the error type as well.</span><span>
+</span><span id="line-92"></span><span id="local-6989586621688267011"><span class="annot"><a href="Database.MSSQL.Transaction.html#unitQuery"><span class="hs-identifier hs-type">unitQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688267011"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ODBC.Query</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxT"><span class="hs-identifier hs-type">TxT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267011"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-93"></span><span id="unitQuery"><span class="annot"><span class="annottext">unitQuery :: Query -&gt; TxT m ()
+</span><a href="Database.MSSQL.Transaction.html#unitQuery"><span class="hs-identifier hs-var hs-var">unitQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; MSSQLTxError) -&gt; Query -&gt; TxT m ()
+forall (m :: * -&gt; *) e.
+MonadIO m =&gt;
+(MSSQLTxError -&gt; e) -&gt; Query -&gt; TxET e m ()
+</span><a href="Database.MSSQL.Transaction.html#unitQueryE"><span class="hs-identifier hs-var">unitQueryE</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; MSSQLTxError
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span>
+</span><span id="line-94"></span><span>
+</span><span id="line-95"></span><span class="hs-comment">-- | Useful for building transactions which return no data.</span><span>
+</span><span id="line-96"></span><span id="local-6989586621688267112"><span id="local-6989586621688267113"><span class="annot"><a href="Database.MSSQL.Transaction.html#unitQueryE"><span class="hs-identifier hs-type">unitQueryE</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688267113"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLTxError"><span class="hs-identifier hs-type">MSSQLTxError</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688267112"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ODBC.Query</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxET"><span class="hs-identifier hs-type">TxET</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267112"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267113"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-97"></span><span id="unitQueryE"><span class="annot"><span class="annottext">unitQueryE :: (MSSQLTxError -&gt; e) -&gt; Query -&gt; TxET e m ()
+</span><a href="Database.MSSQL.Transaction.html#unitQueryE"><span class="hs-identifier hs-var hs-var">unitQueryE</span></a></span></span><span> </span><span id="local-6989586621688266899"><span class="annot"><span class="annottext">MSSQLTxError -&gt; e
+</span><a href="#local-6989586621688266899"><span class="hs-identifier hs-var">ef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; e)
+-&gt; (MSSQLResult -&gt; Either String ()) -&gt; Query -&gt; TxET e m ()
+forall (m :: * -&gt; *) e a.
+MonadIO m =&gt;
+(MSSQLTxError -&gt; e)
+-&gt; (MSSQLResult -&gt; Either String a) -&gt; Query -&gt; TxET e m a
+</span><a href="Database.MSSQL.Transaction.html#rawQueryE"><span class="hs-identifier hs-var">rawQueryE</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; e
+</span><a href="#local-6989586621688266899"><span class="hs-identifier hs-var">ef</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLResult -&gt; Either String ()
+</span><a href="#local-6989586621688266897"><span class="hs-identifier hs-var">emptyResult</span></a></span><span>
+</span><span id="line-98"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-99"></span><span>    </span><span class="annot"><a href="#local-6989586621688266897"><span class="hs-identifier hs-type">emptyResult</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLResult"><span class="hs-identifier hs-type">MSSQLResult</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-100"></span><span>    </span><span id="local-6989586621688266897"><span class="annot"><span class="annottext">emptyResult :: MSSQLResult -&gt; Either String ()
+</span><a href="#local-6989586621688266897"><span class="hs-identifier hs-var hs-var">emptyResult</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLResult"><span class="hs-identifier hs-type">MSSQLResult</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">() -&gt; Either String ()
+forall a b. b -&gt; Either a b
+</span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-101"></span><span>    </span><span class="annot"><a href="#local-6989586621688266897"><span class="hs-identifier hs-var">emptyResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLResult"><span class="hs-identifier hs-type">MSSQLResult</span></a></span><span> </span><span class="annot"><span class="annottext">[[Value]]
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String ()
+forall a b. a -&gt; Either a b
+</span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;expecting no data for ()&quot;</span></span><span>
+</span><span id="line-102"></span><span>
+</span><span id="line-103"></span><span class="hs-comment">-- | Useful for building query transactions which return a single one row.</span><span>
+</span><span id="line-104"></span><span class="hs-comment">--</span><span>
+</span><span id="line-105"></span><span class="hs-comment">-- @</span><span>
+</span><span id="line-106"></span><span class="hs-comment">-- returnOne :: TxT m Int</span><span>
+</span><span id="line-107"></span><span class="hs-comment">-- returnOne = singleRowQuery &quot;SELECT 1&quot;</span><span>
+</span><span id="line-108"></span><span class="hs-comment">-- @</span><span>
+</span><span id="line-109"></span><span class="hs-comment">--</span><span>
+</span><span id="line-110"></span><span class="hs-comment">-- See 'singleRowQueryE' if you need to map the error type as well.</span><span>
+</span><span id="line-111"></span><span class="annot"><a href="Database.MSSQL.Transaction.html#singleRowQuery"><span class="hs-identifier hs-type">singleRowQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688267004"><span class="annot"><a href="#local-6989586621688267004"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621688267005"><span class="annot"><a href="#local-6989586621688267005"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688267005"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromRow</span></span><span> </span><span class="annot"><a href="#local-6989586621688267004"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ODBC.Query</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxT"><span class="hs-identifier hs-type">TxT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267005"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267004"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-112"></span><span id="singleRowQuery"><span class="annot"><span class="annottext">singleRowQuery :: Query -&gt; TxT m a
+</span><a href="Database.MSSQL.Transaction.html#singleRowQuery"><span class="hs-identifier hs-var hs-var">singleRowQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; MSSQLTxError) -&gt; Query -&gt; TxT m a
+forall (m :: * -&gt; *) a e.
+(MonadIO m, FromRow a) =&gt;
+(MSSQLTxError -&gt; e) -&gt; Query -&gt; TxET e m a
+</span><a href="Database.MSSQL.Transaction.html#singleRowQueryE"><span class="hs-identifier hs-var">singleRowQueryE</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; MSSQLTxError
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span>
+</span><span id="line-113"></span><span>
+</span><span id="line-114"></span><span class="hs-comment">-- | Useful for building query transactions which return a single one row.</span><span>
+</span><span id="line-115"></span><span class="annot"><a href="Database.MSSQL.Transaction.html#singleRowQueryE"><span class="hs-identifier hs-type">singleRowQueryE</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-116"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688267100"><span class="annot"><a href="#local-6989586621688267100"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688267099"><span class="annot"><a href="#local-6989586621688267099"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621688267097"><span class="annot"><a href="#local-6989586621688267097"><span class="hs-identifier hs-type">e</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-117"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688267100"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromRow</span></span><span> </span><span class="annot"><a href="#local-6989586621688267099"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-118"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLTxError"><span class="hs-identifier hs-type">MSSQLTxError</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688267097"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-119"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.Query</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-120"></span><span>  </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxET"><span class="hs-identifier hs-type">TxET</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267097"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267100"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267099"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-121"></span><span id="singleRowQueryE"><span class="annot"><span class="annottext">singleRowQueryE :: (MSSQLTxError -&gt; e) -&gt; Query -&gt; TxET e m a
+</span><a href="Database.MSSQL.Transaction.html#singleRowQueryE"><span class="hs-identifier hs-var hs-var">singleRowQueryE</span></a></span></span><span> </span><span id="local-6989586621688266895"><span class="annot"><span class="annottext">MSSQLTxError -&gt; e
+</span><a href="#local-6989586621688266895"><span class="hs-identifier hs-var">ef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; e)
+-&gt; (MSSQLResult -&gt; Either String a) -&gt; Query -&gt; TxET e m a
+forall (m :: * -&gt; *) e a.
+MonadIO m =&gt;
+(MSSQLTxError -&gt; e)
+-&gt; (MSSQLResult -&gt; Either String a) -&gt; Query -&gt; TxET e m a
+</span><a href="Database.MSSQL.Transaction.html#rawQueryE"><span class="hs-identifier hs-var">rawQueryE</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; e
+</span><a href="#local-6989586621688266895"><span class="hs-identifier hs-var">ef</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLResult -&gt; Either String a
+</span><a href="#local-6989586621688266894"><span class="hs-identifier hs-var">singleRowResult</span></a></span><span>
+</span><span id="line-122"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-123"></span><span>    </span><span class="annot"><a href="#local-6989586621688266894"><span class="hs-identifier hs-type">singleRowResult</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLResult"><span class="hs-identifier hs-type">MSSQLResult</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><a href="#local-6989586621688267099"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-124"></span><span>    </span><span id="local-6989586621688266894"><span class="annot"><span class="annottext">singleRowResult :: MSSQLResult -&gt; Either String a
+</span><a href="#local-6989586621688266894"><span class="hs-identifier hs-var hs-var">singleRowResult</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLResult"><span class="hs-identifier hs-type">MSSQLResult</span></a></span><span> </span><span class="hs-special">[</span><span id="local-6989586621688266893"><span class="annot"><span class="annottext">[Value]
+</span><a href="#local-6989586621688266893"><span class="hs-identifier hs-var">row</span></a></span></span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; Either String a
+forall r. FromRow r =&gt; [Value] -&gt; Either String r
+</span><span class="hs-identifier hs-var">ODBC.fromRow</span></span><span> </span><span class="annot"><span class="annottext">[Value]
+</span><a href="#local-6989586621688266893"><span class="hs-identifier hs-var">row</span></a></span><span>
+</span><span id="line-125"></span><span>    </span><span class="annot"><a href="#local-6989586621688266894"><span class="hs-identifier hs-var">singleRowResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLResult"><span class="hs-identifier hs-type">MSSQLResult</span></a></span><span> </span><span class="annot"><span class="annottext">[[Value]]
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String a
+forall a b. a -&gt; Either a b
+</span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;expecting single row&quot;</span></span><span>
+</span><span id="line-126"></span><span>
+</span><span id="line-127"></span><span class="hs-comment">-- | MSSQL splits up results that have a @SELECT .. FOR JSON@ at the top-level</span><span>
+</span><span id="line-128"></span><span class="hs-comment">-- into multiple rows with a single column, see</span><span>
+</span><span id="line-129"></span><span class="hs-comment">-- https://docs.microsoft.com/en-us/sql/relational-databases/json/format-query-results-as-json-with-for-json-sql-server?view=sql-server-ver15#output-of-the-for-json-clause</span><span>
+</span><span id="line-130"></span><span class="hs-comment">--</span><span>
+</span><span id="line-131"></span><span class="hs-comment">-- This function simply concatenates each single-column row into one long 'Text' string.</span><span>
+</span><span id="line-132"></span><span class="annot"><a href="Database.MSSQL.Transaction.html#forJsonQueryE"><span class="hs-identifier hs-type">forJsonQueryE</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-133"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688266891"><span class="annot"><a href="#local-6989586621688266891"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688266890"><span class="annot"><a href="#local-6989586621688266890"><span class="hs-identifier hs-type">e</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-134"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688266891"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-135"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLTxError"><span class="hs-identifier hs-type">MSSQLTxError</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688266890"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-136"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.Query</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-137"></span><span>  </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxET"><span class="hs-identifier hs-type">TxET</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688266890"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688266891"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-138"></span><span id="forJsonQueryE"><span class="annot"><span class="annottext">forJsonQueryE :: (MSSQLTxError -&gt; e) -&gt; Query -&gt; TxET e m Text
+</span><a href="Database.MSSQL.Transaction.html#forJsonQueryE"><span class="hs-identifier hs-var hs-var">forJsonQueryE</span></a></span></span><span> </span><span id="local-6989586621688266889"><span class="annot"><span class="annottext">MSSQLTxError -&gt; e
+</span><a href="#local-6989586621688266889"><span class="hs-identifier hs-var">ef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; e)
+-&gt; (MSSQLResult -&gt; Either String Text) -&gt; Query -&gt; TxET e m Text
+forall (m :: * -&gt; *) e a.
+MonadIO m =&gt;
+(MSSQLTxError -&gt; e)
+-&gt; (MSSQLResult -&gt; Either String a) -&gt; Query -&gt; TxET e m a
+</span><a href="Database.MSSQL.Transaction.html#rawQueryE"><span class="hs-identifier hs-var">rawQueryE</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; e
+</span><a href="#local-6989586621688266889"><span class="hs-identifier hs-var">ef</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLResult -&gt; Either String Text
+</span><a href="#local-6989586621688266888"><span class="hs-identifier hs-var">concatRowResult</span></a></span><span>
+</span><span id="line-139"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-140"></span><span>    </span><span class="annot"><a href="#local-6989586621688266888"><span class="hs-identifier hs-type">concatRowResult</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLResult"><span class="hs-identifier hs-type">MSSQLResult</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-141"></span><span>    </span><span id="local-6989586621688266888"><span class="annot"><span class="annottext">concatRowResult :: MSSQLResult -&gt; Either String Text
+</span><a href="#local-6989586621688266888"><span class="hs-identifier hs-var hs-var">concatRowResult</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLResult"><span class="hs-identifier hs-type">MSSQLResult</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either String Text
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Text
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span>
+</span><span id="line-142"></span><span>    </span><span class="annot"><a href="#local-6989586621688266888"><span class="hs-identifier hs-var">concatRowResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLResult"><span class="hs-identifier hs-type">MSSQLResult</span></a></span><span> </span><span id="local-6989586621688266887"><span class="annot"><span class="annottext">rows :: [[Value]]
+</span><a href="#local-6989586621688266887"><span class="hs-identifier hs-var">rows</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span id="local-6989586621688266886"><span class="annot"><span class="annottext">[Value]
+</span><a href="#local-6989586621688266886"><span class="hs-identifier hs-var">r1</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span class="annot"><span class="annottext">[[Value]]
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; Int
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
+</span><span class="hs-identifier hs-var">length</span></span><span> </span><span class="annot"><span class="annottext">[Value]
+</span><a href="#local-6989586621688266886"><span class="hs-identifier hs-var">r1</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">1</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span> </span><span class="annot"><span class="annottext">([Text] -&gt; Text) -&gt; Either String [Text] -&gt; Either String Text
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">([Value] -&gt; Either String Text)
+-&gt; [[Value]] -&gt; Either String [Text]
+forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
+(Traversable t, Monad m) =&gt;
+(a -&gt; m b) -&gt; t a -&gt; m (t b)
+</span><span class="hs-identifier hs-var">mapM</span></span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; Either String Text
+forall r. FromRow r =&gt; [Value] -&gt; Either String r
+</span><span class="hs-identifier hs-var">ODBC.fromRow</span></span><span> </span><span class="annot"><span class="annottext">[[Value]]
+</span><a href="#local-6989586621688266887"><span class="hs-identifier hs-var">rows</span></a></span><span>
+</span><span id="line-143"></span><span>    </span><span class="annot"><a href="#local-6989586621688266888"><span class="hs-identifier hs-var">concatRowResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLResult"><span class="hs-identifier hs-type">MSSQLResult</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688266882"><span class="annot"><span class="annottext">[Value]
+</span><a href="#local-6989586621688266882"><span class="hs-identifier hs-var">r1</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span class="annot"><span class="annottext">[[Value]]
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String Text
+forall a b. a -&gt; Either a b
+</span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Either String Text) -&gt; String -&gt; Either String Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;forJsonQueryE: Expected single-column results, but got &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Value] -&gt; Int
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
+</span><span class="hs-identifier hs-var">length</span></span><span> </span><span class="annot"><span class="annottext">[Value]
+</span><a href="#local-6989586621688266882"><span class="hs-identifier hs-var">r1</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot; columns&quot;</span></span><span>
+</span><span id="line-144"></span><span>
+</span><span id="line-145"></span><span class="hs-comment">-- | Useful for building query transactions which return multiple rows.</span><span>
+</span><span id="line-146"></span><span class="hs-comment">--</span><span>
+</span><span id="line-147"></span><span class="hs-comment">-- @</span><span>
+</span><span id="line-148"></span><span class="hs-comment">-- selectIds :: TxT m [Int]</span><span>
+</span><span id="line-149"></span><span class="hs-comment">-- selectIds = multiRowQuery &quot;SELECT id FROM author&quot;</span><span>
+</span><span id="line-150"></span><span class="hs-comment">-- @</span><span>
+</span><span id="line-151"></span><span class="hs-comment">--</span><span>
+</span><span id="line-152"></span><span class="hs-comment">-- See 'multiRowQueryE' if you need to map the error type as well.</span><span>
+</span><span id="line-153"></span><span class="annot"><a href="Database.MSSQL.Transaction.html#multiRowQuery"><span class="hs-identifier hs-type">multiRowQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688266880"><span class="annot"><a href="#local-6989586621688266880"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621688266879"><span class="annot"><a href="#local-6989586621688266879"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688266879"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromRow</span></span><span> </span><span class="annot"><a href="#local-6989586621688266880"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ODBC.Query</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxT"><span class="hs-identifier hs-type">TxT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688266879"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621688266880"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-154"></span><span id="multiRowQuery"><span class="annot"><span class="annottext">multiRowQuery :: Query -&gt; TxT m [a]
+</span><a href="Database.MSSQL.Transaction.html#multiRowQuery"><span class="hs-identifier hs-var hs-var">multiRowQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; MSSQLTxError) -&gt; Query -&gt; TxT m [a]
+forall (m :: * -&gt; *) a e.
+(MonadIO m, FromRow a) =&gt;
+(MSSQLTxError -&gt; e) -&gt; Query -&gt; TxET e m [a]
+</span><a href="Database.MSSQL.Transaction.html#multiRowQueryE"><span class="hs-identifier hs-var">multiRowQueryE</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; MSSQLTxError
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span>
+</span><span id="line-155"></span><span>
+</span><span id="line-156"></span><span class="hs-comment">-- | Useful for building query transactions which return multiple rows.</span><span>
+</span><span id="line-157"></span><span class="annot"><a href="Database.MSSQL.Transaction.html#multiRowQueryE"><span class="hs-identifier hs-type">multiRowQueryE</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-158"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688267073"><span class="annot"><a href="#local-6989586621688267073"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688267072"><span class="annot"><a href="#local-6989586621688267072"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621688267071"><span class="annot"><a href="#local-6989586621688267071"><span class="hs-identifier hs-type">e</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-159"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688267073"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromRow</span></span><span> </span><span class="annot"><a href="#local-6989586621688267072"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-160"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLTxError"><span class="hs-identifier hs-type">MSSQLTxError</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688267071"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-161"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.Query</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-162"></span><span>  </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxET"><span class="hs-identifier hs-type">TxET</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267071"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267073"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621688267072"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-163"></span><span id="multiRowQueryE"><span class="annot"><span class="annottext">multiRowQueryE :: (MSSQLTxError -&gt; e) -&gt; Query -&gt; TxET e m [a]
+</span><a href="Database.MSSQL.Transaction.html#multiRowQueryE"><span class="hs-identifier hs-var hs-var">multiRowQueryE</span></a></span></span><span> </span><span id="local-6989586621688266878"><span class="annot"><span class="annottext">MSSQLTxError -&gt; e
+</span><a href="#local-6989586621688266878"><span class="hs-identifier hs-var">ef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; e)
+-&gt; (MSSQLResult -&gt; Either String [a]) -&gt; Query -&gt; TxET e m [a]
+forall (m :: * -&gt; *) e a.
+MonadIO m =&gt;
+(MSSQLTxError -&gt; e)
+-&gt; (MSSQLResult -&gt; Either String a) -&gt; Query -&gt; TxET e m a
+</span><a href="Database.MSSQL.Transaction.html#rawQueryE"><span class="hs-identifier hs-var">rawQueryE</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; e
+</span><a href="#local-6989586621688266878"><span class="hs-identifier hs-var">ef</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLResult -&gt; Either String [a]
+</span><a href="#local-6989586621688266877"><span class="hs-identifier hs-var">multiRowResult</span></a></span><span>
+</span><span id="line-164"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-165"></span><span>    </span><span class="annot"><a href="#local-6989586621688266877"><span class="hs-identifier hs-type">multiRowResult</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLResult"><span class="hs-identifier hs-type">MSSQLResult</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621688267072"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-166"></span><span>    </span><span id="local-6989586621688266877"><span class="annot"><span class="annottext">multiRowResult :: MSSQLResult -&gt; Either String [a]
+</span><a href="#local-6989586621688266877"><span class="hs-identifier hs-var hs-var">multiRowResult</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLResult"><span class="hs-identifier hs-type">MSSQLResult</span></a></span><span> </span><span id="local-6989586621688266876"><span class="annot"><span class="annottext">[[Value]]
+</span><a href="#local-6989586621688266876"><span class="hs-identifier hs-var">rows</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">([Value] -&gt; Either String a) -&gt; [[Value]] -&gt; Either String [a]
+forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+(Traversable t, Applicative f) =&gt;
+(a -&gt; f b) -&gt; t a -&gt; f (t b)
+</span><span class="hs-identifier hs-var">traverse</span></span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; Either String a
+forall r. FromRow r =&gt; [Value] -&gt; Either String r
+</span><span class="hs-identifier hs-var">ODBC.fromRow</span></span><span> </span><span class="annot"><span class="annottext">[[Value]]
+</span><a href="#local-6989586621688266876"><span class="hs-identifier hs-var">rows</span></a></span><span>
+</span><span id="line-167"></span><span>
+</span><span id="line-168"></span><span class="hs-comment">-- | Build a generic transaction out of an IO action.</span><span>
+</span><span id="line-169"></span><span id="local-6989586621688267039"><span id="local-6989586621688267040"><span id="local-6989586621688267041"><span id="local-6989586621688267042"><span class="annot"><a href="Database.MSSQL.Transaction.html#buildGenericQueryTxE"><span class="hs-identifier hs-type">buildGenericQueryTxE</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-170"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688267042"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-171"></span><span>  </span><span class="hs-comment">-- | map 'MSSQLTxError' to some other type</span><span>
+</span><span id="line-172"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLTxError"><span class="hs-identifier hs-type">MSSQLTxError</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688267041"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-173"></span><span>  </span><span class="hs-comment">-- | query to run</span><span>
+</span><span id="line-174"></span><span>  </span><span class="annot"><a href="#local-6989586621688267040"><span class="hs-identifier hs-type">query</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-175"></span><span>  </span><span class="hs-comment">-- | how to map a query to a 'ODBC.Query'</span><span>
+</span><span id="line-176"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688267040"><span class="hs-identifier hs-type">query</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ODBC.Query</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-177"></span><span>  </span><span class="hs-comment">-- | run the query on a provided 'ODBC.Connection'</span><span>
+</span><span id="line-178"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ODBC.Connection</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688267040"><span class="hs-identifier hs-type">query</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688267039"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-179"></span><span>  </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxET"><span class="hs-identifier hs-type">TxET</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267041"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267042"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267039"><span class="hs-identifier hs-type">a</span></a></span></span></span></span></span><span>
+</span><span id="line-180"></span><span id="buildGenericQueryTxE"><span class="annot"><span class="annottext">buildGenericQueryTxE :: (MSSQLTxError -&gt; e)
+-&gt; query
+-&gt; (query -&gt; Query)
+-&gt; (Connection -&gt; query -&gt; IO a)
+-&gt; TxET e m a
+</span><a href="Database.MSSQL.Transaction.html#buildGenericQueryTxE"><span class="hs-identifier hs-var hs-var">buildGenericQueryTxE</span></a></span></span><span> </span><span id="local-6989586621688266874"><span class="annot"><span class="annottext">MSSQLTxError -&gt; e
+</span><a href="#local-6989586621688266874"><span class="hs-identifier hs-var">errorF</span></a></span></span><span> </span><span id="local-6989586621688266873"><span class="annot"><span class="annottext">query
+</span><a href="#local-6989586621688266873"><span class="hs-identifier hs-var">query</span></a></span></span><span> </span><span id="local-6989586621688266872"><span class="annot"><span class="annottext">query -&gt; Query
+</span><a href="#local-6989586621688266872"><span class="hs-identifier hs-var">convertQ</span></a></span></span><span> </span><span id="local-6989586621688266871"><span class="annot"><span class="annottext">Connection -&gt; query -&gt; IO a
+</span><a href="#local-6989586621688266871"><span class="hs-identifier hs-var">runQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-181"></span><span>  </span><span class="annot"><span class="annottext">ReaderT Connection (ExceptT e m) a -&gt; TxET e m a
+forall e (m :: * -&gt; *) a.
+ReaderT Connection (ExceptT e m) a -&gt; TxET e m a
+</span><a href="Database.MSSQL.Transaction.html#TxET"><span class="hs-identifier hs-var">TxET</span></a></span><span> </span><span class="annot"><span class="annottext">(ReaderT Connection (ExceptT e m) a -&gt; TxET e m a)
+-&gt; ReaderT Connection (ExceptT e m) a -&gt; TxET e m a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Connection -&gt; ExceptT e m a) -&gt; ReaderT Connection (ExceptT e m) a
+forall r (m :: * -&gt; *) a. (r -&gt; m a) -&gt; ReaderT r m a
+</span><span class="hs-identifier hs-var">ReaderT</span></span><span> </span><span class="annot"><span class="annottext">((Connection -&gt; ExceptT e m a)
+ -&gt; ReaderT Connection (ExceptT e m) a)
+-&gt; (Connection -&gt; ExceptT e m a)
+-&gt; ReaderT Connection (ExceptT e m) a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; e) -&gt; ExceptT MSSQLTxError m a -&gt; ExceptT e m a
+forall (m :: * -&gt; *) e e' a.
+Functor m =&gt;
+(e -&gt; e') -&gt; ExceptT e m a -&gt; ExceptT e' m a
+</span><span class="hs-identifier hs-var">withExceptT</span></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; e
+</span><a href="#local-6989586621688266874"><span class="hs-identifier hs-var">errorF</span></a></span><span> </span><span class="annot"><span class="annottext">(ExceptT MSSQLTxError m a -&gt; ExceptT e m a)
+-&gt; (Connection -&gt; ExceptT MSSQLTxError m a)
+-&gt; Connection
+-&gt; ExceptT e m a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">query
+-&gt; (query -&gt; Query) -&gt; (query -&gt; IO a) -&gt; ExceptT MSSQLTxError m a
+forall (m :: * -&gt; *) a query.
+MonadIO m =&gt;
+query
+-&gt; (query -&gt; Query) -&gt; (query -&gt; IO a) -&gt; ExceptT MSSQLTxError m a
+</span><a href="Database.MSSQL.Transaction.html#execQuery"><span class="hs-identifier hs-var">execQuery</span></a></span><span> </span><span class="annot"><span class="annottext">query
+</span><a href="#local-6989586621688266873"><span class="hs-identifier hs-var">query</span></a></span><span> </span><span class="annot"><span class="annottext">query -&gt; Query
+</span><a href="#local-6989586621688266872"><span class="hs-identifier hs-var">convertQ</span></a></span><span> </span><span class="annot"><span class="annottext">((query -&gt; IO a) -&gt; ExceptT MSSQLTxError m a)
+-&gt; (Connection -&gt; query -&gt; IO a)
+-&gt; Connection
+-&gt; ExceptT MSSQLTxError m a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Connection -&gt; query -&gt; IO a
+</span><a href="#local-6989586621688266871"><span class="hs-identifier hs-var">runQuery</span></a></span><span>
+</span><span id="line-182"></span><span>
+</span><span id="line-183"></span><span class="hs-comment">-- | Map the error type for a 'TxET'.</span><span>
+</span><span id="line-184"></span><span id="local-6989586621688266864"><span id="local-6989586621688266865"><span id="local-6989586621688266866"><span id="local-6989586621688266867"><span class="annot"><a href="Database.MSSQL.Transaction.html#withTxET"><span class="hs-identifier hs-type">withTxET</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621688266867"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688266866"><span class="hs-identifier hs-type">e1</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688266865"><span class="hs-identifier hs-type">e2</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxET"><span class="hs-identifier hs-type">TxET</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688266866"><span class="hs-identifier hs-type">e1</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688266867"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688266864"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxET"><span class="hs-identifier hs-type">TxET</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688266865"><span class="hs-identifier hs-type">e2</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688266867"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688266864"><span class="hs-identifier hs-type">a</span></a></span></span></span></span></span><span>
+</span><span id="line-185"></span><span id="withTxET"><span class="annot"><span class="annottext">withTxET :: (e1 -&gt; e2) -&gt; TxET e1 m a -&gt; TxET e2 m a
+</span><a href="Database.MSSQL.Transaction.html#withTxET"><span class="hs-identifier hs-var hs-var">withTxET</span></a></span></span><span> </span><span id="local-6989586621688266863"><span class="annot"><span class="annottext">e1 -&gt; e2
+</span><a href="#local-6989586621688266863"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxET"><span class="hs-identifier hs-type">TxET</span></a></span><span> </span><span id="local-6989586621688266862"><span class="annot"><span class="annottext">ReaderT Connection (ExceptT e1 m) a
+</span><a href="#local-6989586621688266862"><span class="hs-identifier hs-var">m</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReaderT Connection (ExceptT e2 m) a -&gt; TxET e2 m a
+forall e (m :: * -&gt; *) a.
+ReaderT Connection (ExceptT e m) a -&gt; TxET e m a
+</span><a href="Database.MSSQL.Transaction.html#TxET"><span class="hs-identifier hs-var">TxET</span></a></span><span> </span><span class="annot"><span class="annottext">(ReaderT Connection (ExceptT e2 m) a -&gt; TxET e2 m a)
+-&gt; ReaderT Connection (ExceptT e2 m) a -&gt; TxET e2 m a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(forall a. ExceptT e1 m a -&gt; ExceptT e2 m a)
+-&gt; ReaderT Connection (ExceptT e1 m) a
+-&gt; ReaderT Connection (ExceptT e2 m) a
+forall k (t :: (* -&gt; *) -&gt; k -&gt; *) (m :: * -&gt; *) (n :: * -&gt; *)
+       (b :: k).
+(MFunctor t, Monad m) =&gt;
+(forall a. m a -&gt; n a) -&gt; t m b -&gt; t n b
+</span><span class="hs-identifier hs-var">hoist</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(e1 -&gt; e2) -&gt; ExceptT e1 m a -&gt; ExceptT e2 m a
+forall (m :: * -&gt; *) e e' a.
+Functor m =&gt;
+(e -&gt; e') -&gt; ExceptT e m a -&gt; ExceptT e' m a
+</span><span class="hs-identifier hs-var">withExceptT</span></span><span> </span><span class="annot"><span class="annottext">e1 -&gt; e2
+</span><a href="#local-6989586621688266863"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ReaderT Connection (ExceptT e1 m) a
+</span><a href="#local-6989586621688266862"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><span id="line-186"></span><span>
+</span><span id="line-187"></span><span class="hs-comment">-- | A successful result from a query is a list of rows where each row contains</span><span>
+</span><span id="line-188"></span><span class="hs-comment">-- list of column values</span><span>
+</span><span id="line-189"></span><span class="hs-keyword">newtype</span><span> </span><span id="MSSQLResult"><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLResult"><span class="hs-identifier hs-var">MSSQLResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MSSQLResult"><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLResult"><span class="hs-identifier hs-var">MSSQLResult</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">ODBC.Value</span></span><span class="hs-special">]</span><span class="hs-special">]</span><span>
+</span><span id="line-190"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688266858"><span id="local-6989586621688266860"><span class="annot"><span class="annottext">MSSQLResult -&gt; MSSQLResult -&gt; Bool
+(MSSQLResult -&gt; MSSQLResult -&gt; Bool)
+-&gt; (MSSQLResult -&gt; MSSQLResult -&gt; Bool) -&gt; Eq MSSQLResult
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: MSSQLResult -&gt; MSSQLResult -&gt; Bool
+$c/= :: MSSQLResult -&gt; MSSQLResult -&gt; Bool
+== :: MSSQLResult -&gt; MSSQLResult -&gt; Bool
+$c== :: MSSQLResult -&gt; MSSQLResult -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688266852"><span id="local-6989586621688266854"><span id="local-6989586621688266856"><span class="annot"><span class="annottext">Int -&gt; MSSQLResult -&gt; ShowS
+[MSSQLResult] -&gt; ShowS
+MSSQLResult -&gt; String
+(Int -&gt; MSSQLResult -&gt; ShowS)
+-&gt; (MSSQLResult -&gt; String)
+-&gt; ([MSSQLResult] -&gt; ShowS)
+-&gt; Show MSSQLResult
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [MSSQLResult] -&gt; ShowS
+$cshowList :: [MSSQLResult] -&gt; ShowS
+show :: MSSQLResult -&gt; String
+$cshow :: MSSQLResult -&gt; String
+showsPrec :: Int -&gt; MSSQLResult -&gt; ShowS
+$cshowsPrec :: Int -&gt; MSSQLResult -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-191"></span><span>
+</span><span id="line-192"></span><span class="hs-comment">-- | Packs a query, along with result and error converters into a 'TxET'.</span><span>
+</span><span id="line-193"></span><span class="hs-comment">--</span><span>
+</span><span id="line-194"></span><span class="hs-comment">-- Used by 'unitQueryE', 'singleRowQueryE', and 'multiRowQueryE'.</span><span>
+</span><span id="line-195"></span><span id="local-6989586621688267106"><span id="local-6989586621688267107"><span id="local-6989586621688267108"><span class="annot"><a href="Database.MSSQL.Transaction.html#rawQueryE"><span class="hs-identifier hs-type">rawQueryE</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-196"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688267108"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-197"></span><span>  </span><span class="hs-comment">-- | Error modifier</span><span>
+</span><span id="line-198"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLTxError"><span class="hs-identifier hs-type">MSSQLTxError</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688267107"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-199"></span><span>  </span><span class="hs-comment">-- | Result modifier with a failure</span><span>
+</span><span id="line-200"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLResult"><span class="hs-identifier hs-type">MSSQLResult</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><a href="#local-6989586621688267106"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-201"></span><span>  </span><span class="hs-comment">-- | Query to run</span><span>
+</span><span id="line-202"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.Query</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-203"></span><span>  </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxET"><span class="hs-identifier hs-type">TxET</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267107"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267108"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267106"><span class="hs-identifier hs-type">a</span></a></span></span></span></span><span>
+</span><span id="line-204"></span><span id="rawQueryE"><span class="annot"><span class="annottext">rawQueryE :: (MSSQLTxError -&gt; e)
+-&gt; (MSSQLResult -&gt; Either String a) -&gt; Query -&gt; TxET e m a
+</span><a href="Database.MSSQL.Transaction.html#rawQueryE"><span class="hs-identifier hs-var hs-var">rawQueryE</span></a></span></span><span> </span><span id="local-6989586621688266851"><span class="annot"><span class="annottext">MSSQLTxError -&gt; e
+</span><a href="#local-6989586621688266851"><span class="hs-identifier hs-var">ef</span></a></span></span><span> </span><span id="local-6989586621688266850"><span class="annot"><span class="annottext">MSSQLResult -&gt; Either String a
+</span><a href="#local-6989586621688266850"><span class="hs-identifier hs-var">rf</span></a></span></span><span> </span><span id="local-6989586621688266849"><span class="annot"><span class="annottext">Query
+</span><a href="#local-6989586621688266849"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-205"></span><span>  </span><span id="local-6989586621688266848"><span class="annot"><span class="annottext">[[Value]]
+</span><a href="#local-6989586621688266848"><span class="hs-identifier hs-var">rows</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; e)
+-&gt; Query
+-&gt; (Query -&gt; Query)
+-&gt; (Connection -&gt; Query -&gt; IO [[Value]])
+-&gt; TxET e m [[Value]]
+forall (m :: * -&gt; *) e query a.
+MonadIO m =&gt;
+(MSSQLTxError -&gt; e)
+-&gt; query
+-&gt; (query -&gt; Query)
+-&gt; (Connection -&gt; query -&gt; IO a)
+-&gt; TxET e m a
+</span><a href="Database.MSSQL.Transaction.html#buildGenericQueryTxE"><span class="hs-identifier hs-var">buildGenericQueryTxE</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; e
+</span><a href="#local-6989586621688266851"><span class="hs-identifier hs-var">ef</span></a></span><span> </span><span class="annot"><span class="annottext">Query
+</span><a href="#local-6989586621688266849"><span class="hs-identifier hs-var">q</span></a></span><span> </span><span class="annot"><span class="annottext">Query -&gt; Query
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span> </span><span class="annot"><span class="annottext">Connection -&gt; Query -&gt; IO [[Value]]
+forall (m :: * -&gt; *) row.
+(MonadIO m, FromRow row) =&gt;
+Connection -&gt; Query -&gt; m [row]
+</span><span class="hs-identifier hs-var">ODBC.query</span></span><span>
+</span><span id="line-206"></span><span>  </span><span class="annot"><span class="annottext">Either e a -&gt; TxET e m a
+forall e (m :: * -&gt; *) a. MonadError e m =&gt; Either e a -&gt; m a
+</span><span class="hs-identifier hs-var">liftEither</span></span><span> </span><span class="annot"><span class="annottext">(Either e a -&gt; TxET e m a) -&gt; Either e a -&gt; TxET e m a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-207"></span><span>    </span><span class="annot"><span class="annottext">(String -&gt; e) -&gt; Either String a -&gt; Either e a
+forall e1 e2 a. (e1 -&gt; e2) -&gt; Either e1 a -&gt; Either e2 a
+</span><a href="Hasura.Prelude.html#mapLeft"><span class="hs-identifier hs-var">mapLeft</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MSSQLTxError -&gt; e
+</span><a href="#local-6989586621688266851"><span class="hs-identifier hs-var">ef</span></a></span><span> </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; e) -&gt; (String -&gt; MSSQLTxError) -&gt; String -&gt; e
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Query -&gt; ODBCException -&gt; MSSQLTxError
+</span><a href="Database.MSSQL.Transaction.html#MSSQLQueryError"><span class="hs-identifier hs-var">MSSQLQueryError</span></a></span><span> </span><span class="annot"><span class="annottext">Query
+</span><a href="#local-6989586621688266849"><span class="hs-identifier hs-var">q</span></a></span><span> </span><span class="annot"><span class="annottext">(ODBCException -&gt; MSSQLTxError)
+-&gt; (String -&gt; ODBCException) -&gt; String -&gt; MSSQLTxError
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ODBCException
+</span><span class="hs-identifier hs-var">ODBC.DataRetrievalError</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Either String a -&gt; Either e a) -&gt; Either String a -&gt; Either e a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-208"></span><span>      </span><span class="annot"><span class="annottext">MSSQLResult -&gt; Either String a
+</span><a href="#local-6989586621688266850"><span class="hs-identifier hs-var">rf</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[[Value]] -&gt; MSSQLResult
+</span><a href="Database.MSSQL.Transaction.html#MSSQLResult"><span class="hs-identifier hs-var">MSSQLResult</span></a></span><span> </span><span class="annot"><span class="annottext">[[Value]]
+</span><a href="#local-6989586621688266848"><span class="hs-identifier hs-var">rows</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-209"></span><span>
+</span><span id="line-210"></span><span class="hs-comment">-- | Combinator for abstracting over the query type and ensuring we catch exceptions.</span><span>
+</span><span id="line-211"></span><span class="hs-comment">--</span><span>
+</span><span id="line-212"></span><span class="hs-comment">-- Used by 'buildGenericQueryTxE'.</span><span>
+</span><span id="line-213"></span><span class="annot"><a href="Database.MSSQL.Transaction.html#execQuery"><span class="hs-identifier hs-type">execQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-214"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688267053"><span class="annot"><a href="#local-6989586621688267053"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688267051"><span class="annot"><a href="#local-6989586621688267051"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621688267052"><span class="annot"><a href="#local-6989586621688267052"><span class="hs-identifier hs-type">query</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-215"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688267053"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-216"></span><span>  </span><span class="annot"><a href="#local-6989586621688267052"><span class="hs-identifier hs-type">query</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-217"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688267052"><span class="hs-identifier hs-type">query</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ODBC.Query</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-218"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688267052"><span class="hs-identifier hs-type">query</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688267051"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-219"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLTxError"><span class="hs-identifier hs-type">MSSQLTxError</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267053"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267051"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-220"></span><span id="execQuery"><span class="annot"><span class="annottext">execQuery :: query
+-&gt; (query -&gt; Query) -&gt; (query -&gt; IO a) -&gt; ExceptT MSSQLTxError m a
+</span><a href="Database.MSSQL.Transaction.html#execQuery"><span class="hs-identifier hs-var hs-var">execQuery</span></a></span></span><span> </span><span id="local-6989586621688266844"><span class="annot"><span class="annottext">query
+</span><a href="#local-6989586621688266844"><span class="hs-identifier hs-var">query</span></a></span></span><span> </span><span id="local-6989586621688266843"><span class="annot"><span class="annottext">query -&gt; Query
+</span><a href="#local-6989586621688266843"><span class="hs-identifier hs-var">toODBCQuery</span></a></span></span><span> </span><span id="local-6989586621688266842"><span class="annot"><span class="annottext">query -&gt; IO a
+</span><a href="#local-6989586621688266842"><span class="hs-identifier hs-var">runQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-221"></span><span>  </span><span id="local-6989586621688266841"><span class="annot"><span class="annottext">Either ODBCException a
+</span><a href="#local-6989586621688266841"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ODBC.ODBCException</span></span><span> </span><span class="annot"><a href="#local-6989586621688267051"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Either ODBCException a)
+-&gt; ExceptT MSSQLTxError m (Either ODBCException a)
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (Either ODBCException a)
+ -&gt; ExceptT MSSQLTxError m (Either ODBCException a))
+-&gt; IO (Either ODBCException a)
+-&gt; ExceptT MSSQLTxError m (Either ODBCException a)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">IO a -&gt; IO (Either ODBCException a)
+forall e a. Exception e =&gt; IO a -&gt; IO (Either e a)
+</span><span class="hs-identifier hs-var">try</span></span><span> </span><span class="annot"><span class="annottext">(IO a -&gt; IO (Either ODBCException a))
+-&gt; IO a -&gt; IO (Either ODBCException a)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">query -&gt; IO a
+</span><a href="#local-6989586621688266842"><span class="hs-identifier hs-var">runQuery</span></a></span><span> </span><span class="annot"><span class="annottext">query
+</span><a href="#local-6989586621688266844"><span class="hs-identifier hs-var">query</span></a></span><span>
+</span><span id="line-222"></span><span>  </span><span class="annot"><span class="annottext">(ODBCException -&gt; MSSQLTxError)
+-&gt; ExceptT ODBCException m a -&gt; ExceptT MSSQLTxError m a
+forall (m :: * -&gt; *) e e' a.
+Functor m =&gt;
+(e -&gt; e') -&gt; ExceptT e m a -&gt; ExceptT e' m a
+</span><span class="hs-identifier hs-var">withExceptT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Query -&gt; ODBCException -&gt; MSSQLTxError
+</span><a href="Database.MSSQL.Transaction.html#MSSQLQueryError"><span class="hs-identifier hs-var">MSSQLQueryError</span></a></span><span> </span><span class="annot"><span class="annottext">(Query -&gt; ODBCException -&gt; MSSQLTxError)
+-&gt; Query -&gt; ODBCException -&gt; MSSQLTxError
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">query -&gt; Query
+</span><a href="#local-6989586621688266843"><span class="hs-identifier hs-var">toODBCQuery</span></a></span><span> </span><span class="annot"><span class="annottext">query
+</span><a href="#local-6989586621688266844"><span class="hs-identifier hs-var">query</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(ExceptT ODBCException m a -&gt; ExceptT MSSQLTxError m a)
+-&gt; ExceptT ODBCException m a -&gt; ExceptT MSSQLTxError m a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Either ODBCException a -&gt; ExceptT ODBCException m a
+forall (m :: * -&gt; *) e a.
+Applicative m =&gt;
+Either e a -&gt; ExceptT e m a
+</span><a href="Hasura.Prelude.html#hoistEither"><span class="hs-identifier hs-var">hoistEither</span></a></span><span> </span><span class="annot"><span class="annottext">Either ODBCException a
+</span><a href="#local-6989586621688266841"><span class="hs-identifier hs-var">result</span></a></span><span>
+</span><span id="line-223"></span><span>
+</span><span id="line-224"></span><span class="hs-comment">-- | Run a 'TxET' with the given connection.</span><span>
+</span><span id="line-225"></span><span class="hs-comment">--</span><span>
+</span><span id="line-226"></span><span class="hs-comment">-- Used by 'runTxE' and 'asTransaction'.</span><span>
+</span><span id="line-227"></span><span id="local-6989586621688267122"><span id="local-6989586621688267123"><span id="local-6989586621688267124"><span class="annot"><a href="Database.MSSQL.Transaction.html#execTx"><span class="hs-identifier hs-type">execTx</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ODBC.Connection</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxET"><span class="hs-identifier hs-type">TxET</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267124"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267123"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267122"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="#local-6989586621688267124"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267123"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267122"><span class="hs-identifier hs-type">a</span></a></span></span></span></span><span>
+</span><span id="line-228"></span><span id="execTx"><span class="annot"><span class="annottext">execTx :: Connection -&gt; TxET e m a -&gt; ExceptT e m a
+</span><a href="Database.MSSQL.Transaction.html#execTx"><span class="hs-identifier hs-var hs-var">execTx</span></a></span></span><span> </span><span id="local-6989586621688266839"><span class="annot"><span class="annottext">Connection
+</span><a href="#local-6989586621688266839"><span class="hs-identifier hs-var">conn</span></a></span></span><span> </span><span id="local-6989586621688266838"><span class="annot"><span class="annottext">TxET e m a
+</span><a href="#local-6989586621688266838"><span class="hs-identifier hs-var">tx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReaderT Connection (ExceptT e m) a -&gt; Connection -&gt; ExceptT e m a
+forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
+</span><span class="hs-identifier hs-var hs-var">runReaderT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TxET e m a -&gt; ReaderT Connection (ExceptT e m) a
+forall e (m :: * -&gt; *) a.
+TxET e m a -&gt; ReaderT Connection (ExceptT e m) a
+</span><a href="Database.MSSQL.Transaction.html#txHandler"><span class="hs-identifier hs-var hs-var">txHandler</span></a></span><span> </span><span class="annot"><span class="annottext">TxET e m a
+</span><a href="#local-6989586621688266838"><span class="hs-identifier hs-var">tx</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Connection
+</span><a href="#local-6989586621688266839"><span class="hs-identifier hs-var">conn</span></a></span><span>
+</span><span id="line-229"></span><span class="hs-pragma">{-# INLINE</span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html#execTx"><span class="hs-pragma hs-type">execTx</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-230"></span><span>
+</span><span id="line-231"></span><span class="hs-comment">-- | The transaction state of the current connection</span><span>
+</span><span id="line-232"></span><span class="hs-keyword">data</span><span> </span><span id="TransactionState"><span class="annot"><a href="Database.MSSQL.Transaction.html#TransactionState"><span class="hs-identifier hs-var">TransactionState</span></a></span></span><span>
+</span><span id="line-233"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | Has an active transaction.</span><span>
+</span><span id="line-234"></span><span>    </span><span id="TSActive"><span class="annot"><a href="Database.MSSQL.Transaction.html#TSActive"><span class="hs-identifier hs-var">TSActive</span></a></span></span><span>
+</span><span id="line-235"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | Has no active transaction.</span><span>
+</span><span id="line-236"></span><span>    </span><span id="TSNoActive"><span class="annot"><a href="Database.MSSQL.Transaction.html#TSNoActive"><span class="hs-identifier hs-var">TSNoActive</span></a></span></span><span>
+</span><span id="line-237"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | An error occurred that caused the transaction to be uncommittable.</span><span>
+</span><span id="line-238"></span><span>    </span><span class="hs-comment">-- We cannot commit or rollback to a savepoint; we can only do a full</span><span>
+</span><span id="line-239"></span><span>    </span><span class="hs-comment">-- rollback of the transaction.</span><span>
+</span><span id="line-240"></span><span>    </span><span id="TSUncommittable"><span class="annot"><a href="Database.MSSQL.Transaction.html#TSUncommittable"><span class="hs-identifier hs-var">TSUncommittable</span></a></span></span><span>
+</span><span id="line-241"></span><span>
+</span><span id="line-242"></span><span class="hs-comment">-- | Wraps an action in a transaction. Rolls back on errors.</span><span>
+</span><span id="line-243"></span><span class="annot"><a href="Database.MSSQL.Transaction.html#asTransaction"><span class="hs-identifier hs-type">asTransaction</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-244"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688267126"><span class="annot"><a href="#local-6989586621688267126"><span class="hs-identifier hs-type">e</span></a></span></span><span> </span><span id="local-6989586621688267125"><span class="annot"><a href="#local-6989586621688267125"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621688267127"><span class="annot"><a href="#local-6989586621688267127"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-245"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688267127"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-246"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Transaction.html#MSSQLTxError"><span class="hs-identifier hs-type">MSSQLTxError</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688267126"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-247"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ODBC.Connection</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="#local-6989586621688267126"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267127"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267125"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-248"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ODBC.Connection</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-249"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="#local-6989586621688267126"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267127"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267125"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-250"></span><span id="asTransaction"><span class="annot"><span class="annottext">asTransaction :: (MSSQLTxError -&gt; e)
+-&gt; (Connection -&gt; ExceptT e m a) -&gt; Connection -&gt; ExceptT e m a
+</span><a href="Database.MSSQL.Transaction.html#asTransaction"><span class="hs-identifier hs-var hs-var">asTransaction</span></a></span></span><span> </span><span id="local-6989586621688266833"><span class="annot"><span class="annottext">MSSQLTxError -&gt; e
+</span><a href="#local-6989586621688266833"><span class="hs-identifier hs-var">ef</span></a></span></span><span> </span><span id="local-6989586621688266832"><span class="annot"><span class="annottext">Connection -&gt; ExceptT e m a
+</span><a href="#local-6989586621688266832"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span id="local-6989586621688266831"><span class="annot"><span class="annottext">Connection
+</span><a href="#local-6989586621688266831"><span class="hs-identifier hs-var">conn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-251"></span><span>  </span><span class="hs-comment">-- Begin the transaction. If there is an error, do not rollback.</span><span>
+</span><span id="line-252"></span><span>  </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; e) -&gt; ExceptT MSSQLTxError m () -&gt; ExceptT e m ()
+forall (m :: * -&gt; *) e e' a.
+Functor m =&gt;
+(e -&gt; e') -&gt; ExceptT e m a -&gt; ExceptT e' m a
+</span><span class="hs-identifier hs-var">withExceptT</span></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; e
+</span><a href="#local-6989586621688266833"><span class="hs-identifier hs-var">ef</span></a></span><span> </span><span class="annot"><span class="annottext">(ExceptT MSSQLTxError m () -&gt; ExceptT e m ())
+-&gt; ExceptT MSSQLTxError m () -&gt; ExceptT e m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Connection -&gt; TxET MSSQLTxError m () -&gt; ExceptT MSSQLTxError m ()
+forall e (m :: * -&gt; *) a. Connection -&gt; TxET e m a -&gt; ExceptT e m a
+</span><a href="Database.MSSQL.Transaction.html#execTx"><span class="hs-identifier hs-var">execTx</span></a></span><span> </span><span class="annot"><span class="annottext">Connection
+</span><a href="#local-6989586621688266831"><span class="hs-identifier hs-var">conn</span></a></span><span> </span><span class="annot"><span class="annottext">TxET MSSQLTxError m ()
+forall (m :: * -&gt; *). MonadIO m =&gt; TxT m ()
+</span><a href="Database.MSSQL.Transaction.html#beginTx"><span class="hs-identifier hs-var">beginTx</span></a></span><span>
+</span><span id="line-253"></span><span>  </span><span class="hs-comment">-- Run the transaction and commit. If there is an error, rollback.</span><span>
+</span><span id="line-254"></span><span>  </span><span class="annot"><span class="annottext">(ExceptT e m a -&gt; (e -&gt; ExceptT e m a) -&gt; ExceptT e m a)
+-&gt; (e -&gt; ExceptT e m a) -&gt; ExceptT e m a -&gt; ExceptT e m a
+forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">ExceptT e m a -&gt; (e -&gt; ExceptT e m a) -&gt; ExceptT e m a
+forall e (m :: * -&gt; *) a.
+MonadError e m =&gt;
+m a -&gt; (e -&gt; m a) -&gt; m a
+</span><span class="hs-identifier hs-var">catchError</span></span><span> </span><span class="annot"><span class="annottext">e -&gt; ExceptT e m a
+forall b. e -&gt; ExceptT e m b
+</span><a href="#local-6989586621688266827"><span class="hs-identifier hs-var">rollbackAndThrow</span></a></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-255"></span><span>    </span><span id="local-6989586621688266826"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688266826"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Connection -&gt; ExceptT e m a
+</span><a href="#local-6989586621688266832"><span class="hs-identifier hs-var">action</span></a></span><span> </span><span class="annot"><span class="annottext">Connection
+</span><a href="#local-6989586621688266831"><span class="hs-identifier hs-var">conn</span></a></span><span>
+</span><span id="line-256"></span><span>    </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; e) -&gt; ExceptT MSSQLTxError m () -&gt; ExceptT e m ()
+forall (m :: * -&gt; *) e e' a.
+Functor m =&gt;
+(e -&gt; e') -&gt; ExceptT e m a -&gt; ExceptT e' m a
+</span><span class="hs-identifier hs-var">withExceptT</span></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; e
+</span><a href="#local-6989586621688266833"><span class="hs-identifier hs-var">ef</span></a></span><span> </span><span class="annot"><span class="annottext">(ExceptT MSSQLTxError m () -&gt; ExceptT e m ())
+-&gt; ExceptT MSSQLTxError m () -&gt; ExceptT e m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Connection -&gt; TxET MSSQLTxError m () -&gt; ExceptT MSSQLTxError m ()
+forall e (m :: * -&gt; *) a. Connection -&gt; TxET e m a -&gt; ExceptT e m a
+</span><a href="Database.MSSQL.Transaction.html#execTx"><span class="hs-identifier hs-var">execTx</span></a></span><span> </span><span class="annot"><span class="annottext">Connection
+</span><a href="#local-6989586621688266831"><span class="hs-identifier hs-var">conn</span></a></span><span> </span><span class="annot"><span class="annottext">TxET MSSQLTxError m ()
+forall (m :: * -&gt; *). MonadIO m =&gt; TxT m ()
+</span><a href="Database.MSSQL.Transaction.html#commitTx"><span class="hs-identifier hs-var">commitTx</span></a></span><span>
+</span><span id="line-257"></span><span>    </span><span class="annot"><span class="annottext">a -&gt; ExceptT e m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688266826"><span class="hs-identifier hs-var">result</span></a></span><span>
+</span><span id="line-258"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-259"></span><span>    </span><span class="hs-comment">-- Rollback and throw error.</span><span>
+</span><span id="line-260"></span><span>    </span><span id="local-6989586621688267014"><span class="annot"><a href="#local-6989586621688266827"><span class="hs-identifier hs-type">rollbackAndThrow</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621688267126"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="#local-6989586621688267126"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267127"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267014"><span class="hs-identifier hs-type">b</span></a></span></span><span>
+</span><span id="line-261"></span><span>    </span><span id="local-6989586621688266827"><span class="annot"><span class="annottext">rollbackAndThrow :: e -&gt; ExceptT e m b
+</span><a href="#local-6989586621688266827"><span class="hs-identifier hs-var hs-var">rollbackAndThrow</span></a></span></span><span> </span><span id="local-6989586621688266824"><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621688266824"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-262"></span><span>      </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; e) -&gt; ExceptT MSSQLTxError m () -&gt; ExceptT e m ()
+forall (m :: * -&gt; *) e e' a.
+Functor m =&gt;
+(e -&gt; e') -&gt; ExceptT e m a -&gt; ExceptT e' m a
+</span><span class="hs-identifier hs-var">withExceptT</span></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; e
+</span><a href="#local-6989586621688266833"><span class="hs-identifier hs-var">ef</span></a></span><span> </span><span class="annot"><span class="annottext">(ExceptT MSSQLTxError m () -&gt; ExceptT e m ())
+-&gt; ExceptT MSSQLTxError m () -&gt; ExceptT e m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Connection -&gt; TxET MSSQLTxError m () -&gt; ExceptT MSSQLTxError m ()
+forall e (m :: * -&gt; *) a. Connection -&gt; TxET e m a -&gt; ExceptT e m a
+</span><a href="Database.MSSQL.Transaction.html#execTx"><span class="hs-identifier hs-var">execTx</span></a></span><span> </span><span class="annot"><span class="annottext">Connection
+</span><a href="#local-6989586621688266831"><span class="hs-identifier hs-var">conn</span></a></span><span> </span><span class="annot"><span class="annottext">TxET MSSQLTxError m ()
+forall (m :: * -&gt; *). MonadIO m =&gt; TxT m ()
+</span><a href="Database.MSSQL.Transaction.html#rollbackTx"><span class="hs-identifier hs-var">rollbackTx</span></a></span><span>
+</span><span id="line-263"></span><span>      </span><span class="annot"><span class="annottext">e -&gt; ExceptT e m b
+forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
+</span><span class="hs-identifier hs-var">throwError</span></span><span> </span><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621688266824"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-264"></span><span>
+</span><span id="line-265"></span><span id="local-6989586621688267018"><span class="annot"><a href="Database.MSSQL.Transaction.html#beginTx"><span class="hs-identifier hs-type">beginTx</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688267018"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxT"><span class="hs-identifier hs-type">TxT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267018"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-266"></span><span id="beginTx"><span class="annot"><span class="annottext">beginTx :: TxT m ()
+</span><a href="Database.MSSQL.Transaction.html#beginTx"><span class="hs-identifier hs-var hs-var">beginTx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Query -&gt; TxT m ()
+forall (m :: * -&gt; *). MonadIO m =&gt; Query -&gt; TxT m ()
+</span><a href="Database.MSSQL.Transaction.html#unitQuery"><span class="hs-identifier hs-var">unitQuery</span></a></span><span> </span><span class="annot"><span class="annottext">Query
+</span><span class="hs-string">&quot;BEGIN TRANSACTION&quot;</span></span><span>
+</span><span id="line-267"></span><span>
+</span><span id="line-268"></span><span id="local-6989586621688266821"><span class="annot"><a href="Database.MSSQL.Transaction.html#commitTx"><span class="hs-identifier hs-type">commitTx</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688266821"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxT"><span class="hs-identifier hs-type">TxT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688266821"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-269"></span><span id="commitTx"><span class="annot"><span class="annottext">commitTx :: TxT m ()
+</span><a href="Database.MSSQL.Transaction.html#commitTx"><span class="hs-identifier hs-var hs-var">commitTx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-270"></span><span>  </span><span class="annot"><span class="annottext">TxT m TransactionState
+forall (m :: * -&gt; *). MonadIO m =&gt; TxT m TransactionState
+</span><a href="Database.MSSQL.Transaction.html#getTransactionState"><span class="hs-identifier hs-var">getTransactionState</span></a></span><span> </span><span class="annot"><span class="annottext">TxT m TransactionState
+-&gt; (TransactionState -&gt; TxT m ()) -&gt; TxT m ()
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-271"></span><span>    </span><span class="annot"><span class="annottext">TransactionState
+</span><a href="Database.MSSQL.Transaction.html#TSActive"><span class="hs-identifier hs-var">TSActive</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-272"></span><span>      </span><span class="annot"><span class="annottext">Query -&gt; TxT m ()
+forall (m :: * -&gt; *). MonadIO m =&gt; Query -&gt; TxT m ()
+</span><a href="Database.MSSQL.Transaction.html#unitQuery"><span class="hs-identifier hs-var">unitQuery</span></a></span><span> </span><span class="annot"><span class="annottext">Query
+</span><span class="hs-string">&quot;COMMIT TRANSACTION&quot;</span></span><span>
+</span><span id="line-273"></span><span>    </span><span class="annot"><span class="annottext">TransactionState
+</span><a href="Database.MSSQL.Transaction.html#TSUncommittable"><span class="hs-identifier hs-var">TSUncommittable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-274"></span><span>      </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; TxT m ()
+forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
+</span><span class="hs-identifier hs-var">throwError</span></span><span> </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; TxT m ()) -&gt; MSSQLTxError -&gt; TxT m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; MSSQLTxError
+</span><a href="Database.MSSQL.Transaction.html#MSSQLInternal"><span class="hs-identifier hs-var">MSSQLInternal</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Transaction is uncommittable&quot;</span></span><span>
+</span><span id="line-275"></span><span>    </span><span class="annot"><span class="annottext">TransactionState
+</span><a href="Database.MSSQL.Transaction.html#TSNoActive"><span class="hs-identifier hs-var">TSNoActive</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-276"></span><span>      </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; TxT m ()
+forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
+</span><span class="hs-identifier hs-var">throwError</span></span><span> </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; TxT m ()) -&gt; MSSQLTxError -&gt; TxT m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; MSSQLTxError
+</span><a href="Database.MSSQL.Transaction.html#MSSQLInternal"><span class="hs-identifier hs-var">MSSQLInternal</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;No active transaction exist; cannot commit&quot;</span></span><span>
+</span><span id="line-277"></span><span>
+</span><span id="line-278"></span><span id="local-6989586621688266819"><span class="annot"><a href="Database.MSSQL.Transaction.html#rollbackTx"><span class="hs-identifier hs-type">rollbackTx</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688266819"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxT"><span class="hs-identifier hs-type">TxT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688266819"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-279"></span><span id="rollbackTx"><span class="annot"><span class="annottext">rollbackTx :: TxT m ()
+</span><a href="Database.MSSQL.Transaction.html#rollbackTx"><span class="hs-identifier hs-var hs-var">rollbackTx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-280"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688266818"><span class="annot"><span class="annottext">rollback :: TxT m ()
+</span><a href="#local-6989586621688266818"><span class="hs-identifier hs-var hs-var">rollback</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Query -&gt; TxT m ()
+forall (m :: * -&gt; *). MonadIO m =&gt; Query -&gt; TxT m ()
+</span><a href="Database.MSSQL.Transaction.html#unitQuery"><span class="hs-identifier hs-var">unitQuery</span></a></span><span> </span><span class="annot"><span class="annottext">Query
+</span><span class="hs-string">&quot;ROLLBACK TRANSACTION&quot;</span></span><span>
+</span><span id="line-281"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">TxT m TransactionState
+forall (m :: * -&gt; *). MonadIO m =&gt; TxT m TransactionState
+</span><a href="Database.MSSQL.Transaction.html#getTransactionState"><span class="hs-identifier hs-var">getTransactionState</span></a></span><span> </span><span class="annot"><span class="annottext">TxT m TransactionState
+-&gt; (TransactionState -&gt; TxT m ()) -&gt; TxT m ()
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-282"></span><span>        </span><span class="annot"><span class="annottext">TransactionState
+</span><a href="Database.MSSQL.Transaction.html#TSActive"><span class="hs-identifier hs-var">TSActive</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TxT m ()
+</span><a href="#local-6989586621688266818"><span class="hs-identifier hs-var">rollback</span></a></span><span>
+</span><span id="line-283"></span><span>        </span><span class="annot"><span class="annottext">TransactionState
+</span><a href="Database.MSSQL.Transaction.html#TSUncommittable"><span class="hs-identifier hs-var">TSUncommittable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TxT m ()
+</span><a href="#local-6989586621688266818"><span class="hs-identifier hs-var">rollback</span></a></span><span>
+</span><span id="line-284"></span><span>        </span><span class="annot"><span class="annottext">TransactionState
+</span><a href="Database.MSSQL.Transaction.html#TSNoActive"><span class="hs-identifier hs-var">TSNoActive</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-285"></span><span>          </span><span class="hs-comment">-- Some query exceptions result in an auto-rollback of the transaction.</span><span>
+</span><span id="line-286"></span><span>          </span><span class="hs-comment">-- For eg. Creating a table with already existing table name (See https://github.com/hasura/graphql-engine-mono/issues/3046)</span><span>
+</span><span id="line-287"></span><span>          </span><span class="hs-comment">-- In such cases, we shouldn't rollback the transaction again.</span><span>
+</span><span id="line-288"></span><span>          </span><span class="annot"><span class="annottext">() -&gt; TxT m ()
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-289"></span><span>
+</span><span id="line-290"></span><span class="hs-comment">-- | Get the @'TransactionState' of current connection</span><span>
+</span><span id="line-291"></span><span class="hs-comment">-- For more details, refer to https://docs.microsoft.com/en-us/sql/t-sql/functions/xact-state-transact-sql?view=sql-server-ver15</span><span>
+</span><span id="line-292"></span><span id="local-6989586621688267008"><span class="annot"><a href="Database.MSSQL.Transaction.html#getTransactionState"><span class="hs-identifier hs-type">getTransactionState</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688267008"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TxT"><span class="hs-identifier hs-type">TxT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688267008"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html#TransactionState"><span class="hs-identifier hs-type">TransactionState</span></a></span></span><span>
+</span><span id="line-293"></span><span id="getTransactionState"><span class="annot"><span class="annottext">getTransactionState :: TxT m TransactionState
+</span><a href="Database.MSSQL.Transaction.html#getTransactionState"><span class="hs-identifier hs-var hs-var">getTransactionState</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-294"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688266817"><span class="annot"><span class="annottext">query :: Query
+</span><a href="#local-6989586621688266817"><span class="hs-identifier hs-var hs-var">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Query
+</span><span class="hs-string">&quot;SELECT XACT_STATE()&quot;</span></span><span>
+</span><span id="line-295"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Query -&gt; TxT m Int
+forall a (m :: * -&gt; *). (MonadIO m, FromRow a) =&gt; Query -&gt; TxT m a
+</span><a href="Database.MSSQL.Transaction.html#singleRowQuery"><span class="hs-identifier hs-var">singleRowQuery</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="annot"><span class="annottext">Query
+</span><a href="#local-6989586621688266817"><span class="hs-identifier hs-var">query</span></a></span><span>
+</span><span id="line-296"></span><span>        </span><span class="annot"><span class="annottext">TxT m Int
+-&gt; (Int -&gt; TxT m TransactionState) -&gt; TxT m TransactionState
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-297"></span><span>          </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">1</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TransactionState -&gt; TxT m TransactionState
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">TransactionState
+</span><a href="Database.MSSQL.Transaction.html#TSActive"><span class="hs-identifier hs-var">TSActive</span></a></span><span>
+</span><span id="line-298"></span><span>          </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TransactionState -&gt; TxT m TransactionState
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">TransactionState
+</span><a href="Database.MSSQL.Transaction.html#TSNoActive"><span class="hs-identifier hs-var">TSNoActive</span></a></span><span>
+</span><span id="line-299"></span><span>          </span><span class="hs-glyph">-</span><span class="hs-number">1</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TransactionState -&gt; TxT m TransactionState
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">TransactionState
+</span><a href="Database.MSSQL.Transaction.html#TSUncommittable"><span class="hs-identifier hs-var">TSUncommittable</span></a></span><span>
+</span><span id="line-300"></span><span>          </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-301"></span><span>            </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; TxT m TransactionState
+forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
+</span><span class="hs-identifier hs-var">throwError</span></span><span> </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; TxT m TransactionState)
+-&gt; MSSQLTxError -&gt; TxT m TransactionState
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-302"></span><span>              </span><span class="annot"><span class="annottext">Query -&gt; ODBCException -&gt; MSSQLTxError
+</span><a href="Database.MSSQL.Transaction.html#MSSQLQueryError"><span class="hs-identifier hs-var">MSSQLQueryError</span></a></span><span> </span><span class="annot"><span class="annottext">Query
+</span><a href="#local-6989586621688266817"><span class="hs-identifier hs-var">query</span></a></span><span> </span><span class="annot"><span class="annottext">(ODBCException -&gt; MSSQLTxError) -&gt; ODBCException -&gt; MSSQLTxError
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-303"></span><span>                </span><span class="annot"><span class="annottext">String -&gt; ODBCException
+</span><span class="hs-identifier hs-var">ODBC.DataRetrievalError</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Unexpected value for XACT_STATE&quot;</span></span><span>
+</span><span id="line-304"></span></pre></body></html>
