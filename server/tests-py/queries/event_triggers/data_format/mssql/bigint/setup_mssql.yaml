@@ -1,0 +1,24 @@
+type: bulk
+args:
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      schema: hge_tests
+      name: test_bigint
+
+- type: mssql_create_event_trigger
+  args:
+    source: mssql
+    name: bigint_all
+    table:
+      schema: hge_tests
+      name: test_bigint
+    insert:
+      columns: '*'
+    update:
+      columns: '*'
+    delete:
+      columns: '*'
+    webhook: http://127.0.0.1:5592

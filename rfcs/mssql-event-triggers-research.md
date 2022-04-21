@@ -115,10 +115,11 @@ which can be divided in two parts as the following:
       BEGIN
       DECLARE @json NVARCHAR(MAX)
       SET @json =  (
-        select d.id as [data.old.id], d.name as [data.old.name], i.id as [data.new.id], i.name as [data.new.name]
-        from deleted d
-        JOIN inserted i on i.id = d.id
-        where (i.id != d.id OR i.name != d.name)
+        select deleted.id as [data.old.id], deleted.name as [data.old.name], inserted.id as [data.new.id], inserted.name as [data.new.name]
+        from deleted 
+        JOIN inserted 
+        ON inserted.id = deleted.id
+        where (inserted.id != deleted.id OR inserted.name != deleted.name)
         FOR JSON PATH
       )
       insert into hdb_catalog.event_log (schema_name,table_name,trigger_name, payload)
@@ -126,8 +127,89 @@ which can be divided in two parts as the following:
       END
    ```
 
-   NOTE: the above will work only when a table has a primary key, which is used
+   **NOTE**: The above will work only when a table has a primary key, which is used
    to join the `deleted` and the `inserted` tables.
+
+   **NOTE**: Since we use the primary keys to co-relate DELETED and INSERTED table,
+   no trigger will fire when the primary key is updated. To fix this problem, we
+   update the UPDATE Trigger Spec as following.
+
+   1. When PK is not updated, then we send both `data.new` and `data.old`
+   2. When PK is updated, there are two cases:
+         * The updated PK value is already present in the table, then this case is
+           similar to CASE 1, where a single row is being updated. In such cases
+           send both `data.new` and `data.old`
+         * The updated PK value is not present in the table, then  the updated value
+           will be sent as `data.new` and `data.old` will be made NULL
+
+   Thus, the `UPDATE` trigger will now look like following:
+   
+   ```sql
+      CREATE   TRIGGER hasuraAuthorsAfterUpdate
+      ON books
+      AFTER UPDATE
+      AS
+      BEGIN
+      DECLARE @json_pk_not_updated NVARCHAR(MAX)
+      DECLARE @json_pk_updated NVARCHAR(MAX)
+
+      -- When primary key is not updated during a UPDATE transaction then construct both
+      -- 'data.old' and 'data.new'.
+      SET @json_pk_not_updated =  
+            (SELECT 
+               DELETED.name as [payload.data.old.name],  DELETED.id as [payload.data.old.id],  INSERTED.name as [payload.data.new.name],  INSERTED.id as [payload.data.new.id],
+               'UPDATE' as [payload.op],
+               'dbo' as [schema_name],
+               'books' as [table_name],
+               'insert_test_books' as [trigger_name]
+            FROM DELETED
+            JOIN INSERTED
+            ON  INSERTED.id = DELETED.id 
+            where  INSERTED.name != DELETED.name  OR  INSERTED.id != DELETED.id 
+            FOR JSON PATH
+            )
+
+      insert into hdb_catalog.event_log (schema_name,table_name,trigger_name,payload)
+      select * from OPENJSON (@json_pk_not_updated)
+      WITH(
+      schema_name NVARCHAR(MAX) '$.schema_name',
+      table_name NVARCHAR(MAX) '$.table_name',
+      trigger_name NVARCHAR(MAX) '$.trigger_name',
+      [payload] NVARCHAR(MAX) AS JSON
+      )
+
+      -- When primary key is updated during a UPDATE transaction then construct only 'data.new'
+      -- since according to the UPDATE Event trigger spec for MSSQL, the 'data.old' would be NULL
+      IF (1 = 1)
+      BEGIN
+         SET @json_pk_updated =
+               -- The following SQL statement checks, if there are any rows in INSERTED
+               -- table whose primary key does not match to any rows present in DELETED
+               -- table. When such an situation occurs during a UPDATE transaction, then
+               -- this means that the primary key of the row was updated.
+               (SELECT 
+                  NULL as [payload.data.old],  INSERTED.name as [payload.data.new.name],  INSERTED.id as [payload.data.new.id],
+                  'UPDATE' as [payload.op],
+                  'dbo' as [schema_name],
+                  'books' as [table_name],
+                  'insert_test_books' as [trigger_name]
+               FROM INSERTED
+               WHERE NOT EXISTS (SELECT * FROM DELETED WHERE  INSERTED.id = DELETED.id )
+               FOR JSON PATH, INCLUDE_NULL_VALUES
+               )
+
+         insert into hdb_catalog.event_log (schema_name,table_name,trigger_name,payload)
+         select * from OPENJSON (@json_pk_updated)
+         WITH(
+            schema_name NVARCHAR(MAX) '$.schema_name',
+            table_name NVARCHAR(MAX) '$.table_name',
+            trigger_name NVARCHAR(MAX) '$.trigger_name',
+            [payload] NVARCHAR(MAX) AS JSON
+         )
+      END
+
+      END;
+   ```
 
    The triggers will be created with template string values where the values of
    the tables or row expressions will be substitutedcbefore creating the
@@ -135,7 +217,7 @@ which can be divided in two parts as the following:
 
 5. MS-SQL doesn't allow for the trigger to be created in a different schema from
    the target table's schema. For example, if a table is created in the `dbo`
-   schema, then the trigger should also be in the `dbo` schema.
+   schema, then the trigger should also be in the `dbo` schema. Ref: [MSSQL Docs](https://docs.microsoft.com/en-us/sql/t-sql/statements/create-trigger-transact-sql?redirectedfrom=MSDN&view=sql-server-ver15)
 
 6. In postgres, the session variables and trace context were set in runtime
    configurations, `hasura.user` and `hasura.tracecontext` respectively, it's

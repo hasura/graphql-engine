@@ -1,0 +1,79 @@
+type: bulk
+args:
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      schema: hge_tests
+      name: test_t1
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      schema: hge_tests
+      name: test_t2
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      schema: hge_tests
+      name: test_t3
+
+- type: mssql_create_event_trigger
+  args:
+    source: mssql
+    name: t1_retry
+    table:
+      schema: hge_tests
+      name: test_t1
+    insert:
+      columns: "*"
+    update:
+      columns: "*"
+    delete:
+      columns: "*"
+    webhook: http://127.0.0.1:5592/fail
+    retry_conf:
+      num_retries: 4
+      interval_sec: 1
+
+- type: mssql_create_event_trigger
+  args:
+    source: mssql
+    name: t2_timeout_short
+    table:
+      schema: hge_tests
+      name: test_t2
+    insert:
+      columns: "*"
+    update:
+      columns: "*"
+    delete:
+      columns: "*"
+    webhook: http://127.0.0.1:5592/sleep_2s
+    retry_conf:
+      num_retries: 2
+      interval_sec: 1
+      timeout_sec: 1
+
+- type: mssql_create_event_trigger
+  args:
+    source: mssql
+    name: t3_timeout_long
+    table:
+      schema: hge_tests
+      name: test_t3
+    insert:
+      columns: "*"
+    update:
+      columns: "*"
+    delete:
+      columns: "*"
+    webhook: http://127.0.0.1:5592/sleep_2s
+    retry_conf:
+      num_retries: 0
+      interval_sec: 2
+      timeout_sec: 10

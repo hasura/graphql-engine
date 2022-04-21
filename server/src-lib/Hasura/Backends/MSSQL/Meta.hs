@@ -3,7 +3,7 @@
 -- | Metadata related types, functions and helpers.
 --
 -- Provides a single function which loads the MSSQL database metadata.
--- See the file at src-rsr/mssql_table_metadata.sql for the SQL we use to build
+-- See the file at src-rsr/mssql/mssql_table_metadata.sql for the SQL we use to build
 -- this metadata.
 -- See 'Hasura.RQL.Types.Table.DBTableMetadata' for the Haskell type we use forall
 -- storing this metadata.
@@ -38,7 +38,7 @@ import Hasura.SQL.Backend
 
 loadDBMetadata :: (MonadIO m) => Tx.TxET QErr m (DBTablesMetadata 'MSSQL)
 loadDBMetadata = do
-  let queryBytes = $(makeRelativeToProject "src-rsr/mssql_table_metadata.sql" >>= embedFile)
+  let queryBytes = $(makeRelativeToProject "src-rsr/mssql/mssql_table_metadata.sql" >>= embedFile)
       odbcQuery :: ODBC.Query = fromString . BSUTF8.toString $ queryBytes
   sysTablesText <- runIdentity <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler odbcQuery
   case Aeson.eitherDecodeStrict (T.encodeUtf8 sysTablesText) of

@@ -1,0 +1,33 @@
+- description: 'Track Table'
+  url: /v1/metadata
+  status: 200
+  query:
+    type: mssql_track_table
+    args:
+      source: mssql
+      table:
+        schema: hge_tests
+        name: test_geojson
+
+- description: 'Create a event trigger for a table with Spatial Data type column: Not Supported'
+  url: /v1/metadata
+  status: 400
+  response:
+    error: Event triggers for MS-SQL sources are not supported on tables having Geometry or Geography column types
+    code: not-supported
+    path: $.args
+  query:
+    type: mssql_create_event_trigger
+    args:
+      source: mssql
+      name: geojson_all
+      table:
+        schema: hge_tests
+        name: test_geojson
+      insert:
+        columns: '*'
+      update:
+        columns: '*'
+      delete:
+        columns: '*'
+      webhook: http://127.0.0.1:5592

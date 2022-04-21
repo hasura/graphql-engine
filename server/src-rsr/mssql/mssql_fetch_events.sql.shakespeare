@@ -1,0 +1,13 @@
+UPDATE hdb_catalog.event_log
+        SET locked = SYSDATETIMEOFFSET()
+        OUTPUT CONVERT(varchar(MAX), inserted.id), inserted.schema_name, inserted.table_name, inserted.trigger_name, CONVERT(varchar(MAX), inserted.payload), inserted.tries, CONVERT(varchar(MAX), inserted.created_at)
+        WHERE id in 
+          (SELECT TOP(#{fetchBatchSize}) l.id 
+            FROM hdb_catalog.event_log l WITH (UPDLOCK, READPAST)
+            WHERE (l.delivered = 0 and l.error = 0)
+                AND (l.locked IS NULL or l.locked < DATEADD(MINUTE, -30, SYSDATETIMEOFFSET()))
+                AND (l.next_retry_at is NULL or l.next_retry_at <= SYSDATETIMEOFFSET())
+                AND l.archived = 0
+                AND l.trigger_name IN #{triggerNamesTxt}
+            -- Note: In MSSQL, when you order it by ASC - it implies nulls first
+            ORDER BY l.locked ASC, l.next_retry_at ASC, l.created_at)

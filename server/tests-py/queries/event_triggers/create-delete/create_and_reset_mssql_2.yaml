@@ -1,0 +1,48 @@
+- description: Clear metadata
+  url: /v1/query
+  status: 200
+  query:
+    type: clear_metadata
+    args: {}
+
+- description: MSSQL add source
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: mssql_add_source
+    args:
+      name: mssql
+      configuration:
+        connection_info:
+          connection_string:
+            from_env: HASURA_GRAPHQL_MSSQL_SOURCE_URL
+          pool_settings:
+            max_connections: 50
+            idle_timeout: 180
+
+- description: Track Table so that we can execute SQL against the MSSQL Source
+  url: /v1/metadata
+  status: 200
+  query:
+    type: mssql_track_table
+    args:
+      source: mssql
+      table:
+        schema: hge_tests
+        name: test_t1
+
+- description: ensure the event was archived
+  url: /v2/query
+  status: 200
+  response:
+    result_type: TuplesOk
+    result:
+    - - exists
+    - - 0
+  query:
+    type: mssql_run_sql
+    args:
+      source: mssql
+      sql: SELECT 0 as 'exists' WHERE NOT EXISTS (SELECT * FROM information_schema.tables WHERE table_schema = 'hdb_catalog' and table_name = 'event_log')

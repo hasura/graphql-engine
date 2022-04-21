@@ -23,15 +23,14 @@ import Hasura.Server.Types
 import Hasura.Session (UserInfo)
 import Hasura.Tracing qualified as Tracing
 
--- | The @BackendEventTrigger@ type class contains functions which
---   interact with the source database to perform event trigger related
---   operations like fetching pending events from the database or
---   inserting a new invocation log after processing an event.
+-- | The @BackendEventTrigger@ type class contains functions which interacts
+--   with the source database to perform event trigger related operations like
+--   fetching pending events from the database or inserting a new invocation log
+--   after processing an event.
 class Backend b => BackendEventTrigger (b :: BackendType) where
-  -- | insertManualEvent inserts the specified event
-  --   in the event log table, note that this method should
-  --   also set the trace context and session variables in the
-  --   source database context (if available)
+  -- | insertManualEvent inserts the specified event in the event log table,
+  --   note that this method should also set the trace context and session
+  --   variables in the source database context (if available)
   insertManualEvent ::
     (MonadIO m, MonadError QErr m) =>
     SourceConfig b ->
@@ -42,28 +41,36 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
     Tracing.TraceContext ->
     m EventId
 
-  -- | @fetchUndeliveredEvents@ fetches the undelivered events
-  --   from the source and locks the events which are fetched for
-  --   processing. The locking is done so that when there are multiple
-  --   instances of graphql-engine connected to the same source they don't
-  --   end up processing the same events concurrently. Also, it's crucial
-  --   that the SQL query used to fetch events in this function uses something like Postgres's
-  --   `FOR UPDATE SKIP LOCKED` mechanism so that it skips past the events which are locked by the database and pick
-  --   newer undelivered events to achieve maximum throughput.
+  -- | @fetchUndeliveredEvents@ fetches the undelivered events from the source
+  --   and locks those events for processing. The locking is done so that when
+  --   there are multiple instances of graphql-engine connected to the same
+  --   source they don't end up processing the same events concurrently.
   --
-  --   The locking mechanism for event triggers is timestamp based i.e. when an event
-  --   is fetched from the database, the `locked` column will contain the timestamp of when
-  --   it was fetched from the database. Undelivered events will have `NULL` value as their `locked` column value.
-  --   The idea behind having a timestamp based locking mechanism is that if the graphql-engine is shutdown
-  --   abruptly with events being fetched by the events processor, it will be locked and after the shutdown it will
-  --   remain locked. Now with a timestamp based lock, when the graphql-engine is started again it will also fetch
-  --   events which have a `locked` value of older than 30 mins along with the undelivered events. So, this way
-  --   no events remain in a `locked` state.
+  --   Also, it's crucial that the SQL query used to fetch events in this
+  --   function uses something like Postgres's `FOR UPDATE SKIP LOCKED`
+  --   mechanism so that it skips past the events which are locked by the
+  --   database and pick newer undelivered events to achieve maximum throughput.
   --
-  --   When fetching the events from the event_log table we also include the list of the triggers that exist in the metadata
-  --   at that point of time, because we have seen in some cases there are events that do not belong to any of the event triggers
-  --   present in the metadata and those are fetched only to be failed saying the said event trigger doesn't exist. So, to avoid
-  --   this (atleast, as much as possible) we get only the events of the event triggers we have in the metadata.
+  --   The locking mechanism for event triggers is timestamp based i.e. when an
+  --   event is fetched from the database, the `locked` column will contain the
+  --   timestamp of when it was fetched from the database. Undelivered events
+  --   will have `NULL` value as their `locked` column value.
+  --
+  --   The idea behind having a timestamp based locking mechanism is that if the
+  --   graphql-engine is shutdown abruptly with events being fetched by the
+  --   events processor, it will be locked and after the shutdown it will remain
+  --   locked. Now with a timestamp based lock, when the graphql-engine is
+  --   started again it will also fetch events which have a `locked` value of
+  --   older than 30 mins along with the undelivered events. So, this way no
+  --   events remain in a `locked` state.
+  --
+  --   When fetching the events from the event_log table we also include the
+  --   list of the triggers that exist in the metadata at that point of time,
+  --   because we have seen in some cases there are events that do not belong to
+  --   any of the event triggers present in the metadata and those are fetched
+  --   only to be failed saying the said event trigger doesn't exist. So, to
+  --   avoid this (atleast, as much as possible) we get only the events of the
+  --   event triggers we have in the metadata.
   fetchUndeliveredEvents ::
     (MonadIO m, MonadError QErr m) =>
     SourceConfig b ->
@@ -107,8 +114,8 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
     Maybe MaintenanceModeVersion ->
     m (Either QErr ())
 
-  -- | @recordError@ records an erronous event invocation, it does a couple
-  --   of things,
+  -- | @recordError@ records an erronous event invocation, it does a couple of
+  --   things,
   --
   --   1. Insert the invocation in the invocation logs table
   --   2. Depending on the value of `ProcessEventError`, it will either,
@@ -123,8 +130,8 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
     Maybe MaintenanceModeVersion ->
     m (Either QErr ())
 
-  -- | @recordError'@ records an erronous event invocation, it does a couple
-  --   of things,
+  -- | @recordError'@ records an erronous event invocation, it does a couple of
+  --   things,
   --
   --   1. If present, insert the invocation in the invocation logs table
   --   2. Depending on the value of `ProcessEventError`, it will either,
@@ -148,20 +155,23 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
     ) =>
     SourceConfig b ->
     TriggerName ->
+    TableName b ->
     m ()
 
-  -- | @dropDanglingSQLTriggger@ is used to delete the extraneous SQL triggers created
-  --   by an event trigger. The extraneous SQL triggers can be created when
-  --   an event trigger's definition is replaced to a new definition. For example,
-  --   an event trigger `authors_all` had an INSERT and UPDATE trigger defined
-  --   earlier and after it has UPDATE and DELETE triggers. So, in this case, we need
-  --   to drop the trigger created by us earlier for the INSERT trigger.
+  -- | @dropDanglingSQLTriggger@ is used to delete the extraneous SQL triggers
+  --   created by an event trigger. The extraneous SQL triggers can be created
+  --   when an event trigger's definition is replaced to a new definition. For
+  --   example, an event trigger `authors_all` had an INSERT and UPDATE trigger
+  --   defined earlier and after it has UPDATE and DELETE triggers. So, in this
+  --   case, we need to drop the trigger created by us earlier for the INSERT
+  --   trigger.
   dropDanglingSQLTrigger ::
     ( MonadIO m,
       MonadError QErr m
     ) =>
     SourceConfig b ->
     TriggerName ->
+    TableName b ->
     HashSet Ops ->
     m ()
 
@@ -171,10 +181,10 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
     EventId ->
     m ()
 
-  -- | @unlockEventsInSource@ unlocks the cached locked events captured
-  --   by the events when a graceful shutdown is initiated, so that when
-  --   the graphql-engine is started up again these events can be fetched
-  --   to process them immediately.
+  -- | @unlockEventsInSource@ unlocks the cached locked events which were
+  --   captured when a graceful shutdown is initiated, so that when the
+  --   graphql-engine restarts these events can be fetched to process them
+  --   immediately.
   unlockEventsInSource ::
     MonadIO m =>
     SourceConfig b ->
@@ -220,24 +230,24 @@ instance BackendEventTrigger ('Postgres 'Citus) where
   getMaintenanceModeVersion _ = throw400 NotSupported "Event triggers are not supported for Citus sources"
   recordError _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for Citus sources"
   recordError' _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for Citus sources"
-  dropTriggerAndArchiveEvents _ _ = throw400 NotSupported "Event triggers are not supported for Citus sources"
-  dropDanglingSQLTrigger _ _ _ = throw400 NotSupported "Event triggers are not supported for Citus sources"
+  dropTriggerAndArchiveEvents _ _ _ = throw400 NotSupported "Event triggers are not supported for Citus sources"
+  dropDanglingSQLTrigger _ _ _ _ = throw400 NotSupported "Event triggers are not supported for Citus sources"
   redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for Citus sources"
   unlockEventsInSource _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for Citus sources"
   createTableEventTrigger _ _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for Citus sources"
 
 instance BackendEventTrigger 'MSSQL where
-  insertManualEvent _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for MS-SQL sources"
-  fetchUndeliveredEvents _ _ _ _ _ = throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
-  setRetry _ _ _ _ = throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
-  recordSuccess _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
-  getMaintenanceModeVersion _ = throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
-  recordError _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
-  recordError' _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
-  dropTriggerAndArchiveEvents _ _ = throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
-  dropDanglingSQLTrigger _ _ _ = throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
-  redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
-  unlockEventsInSource _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MS-SQL sources"
+  insertManualEvent = MSSQL.insertManualEvent
+  fetchUndeliveredEvents = MSSQL.fetchUndeliveredEvents
+  setRetry = MSSQL.setRetry
+  recordSuccess = MSSQL.recordSuccess
+  getMaintenanceModeVersion = MSSQL.getMaintenanceModeVersion
+  recordError = MSSQL.recordError
+  recordError' = MSSQL.recordError'
+  dropTriggerAndArchiveEvents = MSSQL.dropTriggerAndArchiveEvents
+  redeliverEvent = MSSQL.redeliverEvent
+  unlockEventsInSource = MSSQL.unlockEventsInSource
+  dropDanglingSQLTrigger = MSSQL.dropDanglingSQLTrigger
   createTableEventTrigger = MSSQL.createTableEventTrigger
 
 instance BackendEventTrigger 'BigQuery where
@@ -248,8 +258,8 @@ instance BackendEventTrigger 'BigQuery where
   getMaintenanceModeVersion _ = throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   recordError _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   recordError' _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for BigQuery sources"
-  dropTriggerAndArchiveEvents _ _ = throw400 NotSupported "Event triggers are not supported for BigQuery sources"
-  dropDanglingSQLTrigger _ _ _ = throw400 NotSupported "Event triggers are not supported for BigQuery sources"
+  dropTriggerAndArchiveEvents _ _ _ = throw400 NotSupported "Event triggers are not supported for BigQuery sources"
+  dropDanglingSQLTrigger _ _ _ _ = throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   unlockEventsInSource _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   createTableEventTrigger _ _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for BigQuery sources"
@@ -262,8 +272,8 @@ instance BackendEventTrigger 'MySQL where
   getMaintenanceModeVersion _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
   recordError _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
   recordError' _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
-  dropTriggerAndArchiveEvents _ _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
-  dropDanglingSQLTrigger _ _ _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
+  dropTriggerAndArchiveEvents _ _ _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
+  dropDanglingSQLTrigger _ _ _ _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
   redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
   unlockEventsInSource _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
   createTableEventTrigger _ _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
@@ -289,9 +299,9 @@ instance BackendEventTrigger 'DataWrapper where
     runExceptT $ throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
   recordError' _ _ _ _ _ =
     runExceptT $ throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
-  dropTriggerAndArchiveEvents _ _ =
+  dropTriggerAndArchiveEvents _ _ _ =
     throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
-  dropDanglingSQLTrigger _ _ _ =
+  dropDanglingSQLTrigger _ _ _ _ =
     throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers"
   redeliverEvent _ _ =
     throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."

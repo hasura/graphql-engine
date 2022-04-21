@@ -1,0 +1,20 @@
+type: bulk
+args:
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      schema: hge_tests
+      name: test_t1
+
+- type: mssql_create_event_trigger
+  args: &def_args
+    source: mssql
+    name: t1_insert
+    table:
+      schema: hge_tests
+      name: test_t1
+    insert:
+      columns: "*"
+    webhook: http://127.0.0.1:5592

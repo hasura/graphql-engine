@@ -16,5 +16,6 @@ instance BackendAPI 'MSSQL where
         tableCommands @'MSSQL,
         tablePermissionsCommands @'MSSQL,
         relationshipCommands @'MSSQL,
-        remoteRelationshipCommands @'MSSQL
+        remoteRelationshipCommands @'MSSQL,
+        eventTriggerCommands @'MSSQL
       ]
