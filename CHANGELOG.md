@@ -46,6 +46,23 @@
 - console: bug fixes for RS-to-RS relationships
 - cli: fix performance regression in `migrate status` command (fix #8398)
 
+## v2.5.1
+
+### Bug fixes and improvements
+- server: fixes remote relationships on actions (fix #8399)
+- server: validate top level fragments in GQL query
+- cli: fix performance regression in `migrate status` command (fix #8398)
+
+## v2.6.0-beta.2
+
+### Bug fixes and improvements
+- server: fix parsing remote relationship json definition from 1.x server catalog on migration (fix #7906)
+- server: Don't drop nested typed null fields in actions (fix #8237)
+- server: fixes remote relationships on actions (fix #8399)
+- server: update pg_dump to be compatible with postgres 14 (#7676)
+- console: add remote database relationships for views
+- cli: fix performance regression in `migrate status` command (fix #8398)
+
 ## v2.6.0-beta.1
 
 ### Breaking changes
