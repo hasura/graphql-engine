@@ -57,9 +57,6 @@ instance BackendSchema 'BigQuery where
   computedField = bqComputedField
   node = bqNode
 
-  -- SQL literals
-  columnDefaultValue = error "TODO: Make impossible by the type system. BigQuery doesn't support insertions."
-
 ----------------------------------------------------------------
 -- Top level parsers
 

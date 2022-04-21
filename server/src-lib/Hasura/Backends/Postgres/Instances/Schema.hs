@@ -160,9 +160,6 @@ instance
   computedField = computedFieldPG
   node = pgkNode
 
-  -- SQL literals
-  columnDefaultValue = const PG.columnDefaultValue
-
 backendInsertParser ::
   forall pgKind m r n.
   MonadBuildSchema ('Postgres pgKind) r m n =>

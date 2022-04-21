@@ -16,29 +16,21 @@ response:
   errors:
   - extensions:
       internal:
-        query: "INSERT INTO [dbo].[test_types] ([c11_varchar_3], [c12_char_4], [c13_text],\
-          \ [c16_date], [c17_time], [c1_smallint], [c2_integer], [c44_xml], [c45_money],\
-          \ [c47_smallmoney], [c48_bit], [c49_tinyint], [c4_decimal], [c50_float],\
-          \ [c51_real], [c52_datetime], [c53_datetime2], [c54_datetimeoffset], [c55_smalldatetime],\
-          \ [c58_hierarchyid], [c59_uniqueidentifier], [c5_numeric], [c6_real], [c7_double_precision])\
-          \ OUTPUT INSERTED.[c12_char_4], INSERTED.[c16_date], INSERTED.[c17_time],\
-          \ INSERTED.[c7_double_precision], INSERTED.[c52_datetime], INSERTED.[c51_real],\
-          \ INSERTED.[c5_numeric], INSERTED.[c11_varchar_3], INSERTED.[c47_smallmoney],\
-          \ INSERTED.[c59_uniqueidentifier], INSERTED.[c49_tinyint], INSERTED.[c4_decimal],\
-          \ INSERTED.[c_pkey], INSERTED.[c58_hierarchyid], INSERTED.[c50_float], INSERTED.[c54_datetimeoffset],\
-          \ INSERTED.[c48_bit], INSERTED.[c55_smalldatetime], INSERTED.[c45_money],\
-          \ INSERTED.[c44_xml], INSERTED.[c6_real], INSERTED.[c2_integer], INSERTED.[c13_text],\
-          \ INSERTED.[c53_datetime2], INSERTED.[c1_smallint] INTO #inserted([c12_char_4],\
-          \ [c16_date], [c17_time], [c7_double_precision], [c52_datetime], [c51_real],\
-          \ [c5_numeric], [c11_varchar_3], [c47_smallmoney], [c59_uniqueidentifier],\
-          \ [c49_tinyint], [c4_decimal], [c_pkey], [c58_hierarchyid], [c50_float],\
-          \ [c54_datetimeoffset], [c48_bit], [c55_smalldatetime], [c45_money], [c44_xml],\
-          \ [c6_real], [c2_integer], [c13_text], [c53_datetime2], [c1_smallint]) VALUES\
-          \ ( NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,\
-          \ NULL, NULL, NULL, (N'invalid_datetime'), NULL, NULL, NULL, NULL, NULL,\
-          \ NULL, NULL, NULL )"
-
-
+        query: "INSERT INTO [dbo].[test_types] ([c52_datetime]) OUTPUT INSERTED.[c12_char_4],\
+          \ INSERTED.[c16_date], INSERTED.[c17_time], INSERTED.[c7_double_precision],\
+          \ INSERTED.[c52_datetime], INSERTED.[c51_real], INSERTED.[c5_numeric], INSERTED.[c11_varchar_3],\
+          \ INSERTED.[c47_smallmoney], INSERTED.[c59_uniqueidentifier], INSERTED.[c49_tinyint],\
+          \ INSERTED.[c4_decimal], INSERTED.[c_pkey], INSERTED.[c58_hierarchyid],\
+          \ INSERTED.[c50_float], INSERTED.[c54_datetimeoffset], INSERTED.[c48_bit],\
+          \ INSERTED.[c55_smalldatetime], INSERTED.[c45_money], INSERTED.[c44_xml],\
+          \ INSERTED.[c6_real], INSERTED.[c2_integer], INSERTED.[c13_text], INSERTED.[c53_datetime2],\
+          \ INSERTED.[c1_smallint] INTO #inserted([c12_char_4], [c16_date], [c17_time],\
+          \ [c7_double_precision], [c52_datetime], [c51_real], [c5_numeric], [c11_varchar_3],\
+          \ [c47_smallmoney], [c59_uniqueidentifier], [c49_tinyint], [c4_decimal],\
+          \ [c_pkey], [c58_hierarchyid], [c50_float], [c54_datetimeoffset], [c48_bit],\
+          \ [c55_smalldatetime], [c45_money], [c44_xml], [c6_real], [c2_integer],\
+          \ [c13_text], [c53_datetime2], [c1_smallint]) VALUES ( (N'invalid_datetime')\
+          \ )"
       path: $
       code: data-exception
     message: Data exception. Invalid datetime format. [Microsoft][ODBC Driver 17 for

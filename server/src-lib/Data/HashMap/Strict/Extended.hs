@@ -11,6 +11,7 @@ module Data.HashMap.Strict.Extended
     unionWithM,
     unionsAll,
     unionsWith,
+    homogenise,
   )
 where
 
@@ -19,7 +20,10 @@ import Data.Align qualified as A
 import Data.Foldable qualified as F
 import Data.Function (on)
 import Data.HashMap.Strict as M
+import Data.HashSet (HashSet)
+import Data.HashSet qualified as S
 import Data.Hashable (Hashable)
+import Data.List qualified as L
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.These (These (That, These, This))
 import Prelude
@@ -133,3 +137,11 @@ unionsWith ::
   f (HashMap k a) ->
   HashMap k a
 unionsWith f ts = F.foldl' (unionWith f) empty ts
+
+-- | Homogenise maps, such that all maps range over the full set of
+-- keys, inserting a default value as needed.
+homogenise :: (Hashable a, Eq a) => b -> [HashMap a b] -> (HashSet a, [HashMap a b])
+homogenise defaultValue maps =
+  let ks = S.unions $ L.map keysSet maps
+      defaults = fromList [(k, defaultValue) | k <- S.toList ks]
+   in (ks, L.map (<> defaults) maps)

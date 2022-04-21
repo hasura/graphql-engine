@@ -60,8 +60,6 @@ instance BackendSchema 'DataWrapper where
     error "computedField: not implemented for GraphQL Data Wrappers."
   node =
     error "node: not implemented for GraphQL Data Wrappers."
-  columnDefaultValue =
-    error "columnDefaultValue: not implemented for GraphQL Data Wrappers."
 
 --------------------------------------------------------------------------------
 
