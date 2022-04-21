@@ -156,6 +156,49 @@ sources:
           retries: 1
           idle_timeout: 180
           max_connections: 50
+actions:
+  - name: foo
+    definition:
+      handler: '{{ACTION_BASE_URL}}/foo'
+      output_type: FooOutput
+      headers:
+        - value: foo-value
+          name: foo-header
+      arguments:
+        - name: foo
+          type: FooInput!
+      request_transform:
+        body: "{\n  \"my-baz\": {{$body.input.foo.baz}}\n   \n}"
+        content_type: application/json
+        method: POST
+        query_params: {}
+        template_engine: Kriti
+      type: mutation
+      kind: synchronous
+      timeout: 97
+    comment: foo action
+    permissions:
+      - role: user
+custom_types:
+  input_objects:
+    - name: FooInput
+      fields:
+        - name: baz
+          type: String!
+  objects:
+    - name: FooOutput
+      fields:
+        - name: bar
+          type: String!
+      relationships:
+        - remote_table:
+            schema: public
+            name: artists
+          name: fooArtist
+          source: default
+          type: object
+          field_mapping:
+            bar: name
 remote_schemas:
   - name: countries
     definition:
@@ -252,49 +295,6 @@ allowlist:
   - collection: allowed-queries
     scope:
       global: true
-actions:
-  - name: foo
-    definition:
-      handler: '{{ACTION_BASE_URL}}/foo'
-      output_type: FooOutput
-      headers:
-        - value: foo-value
-          name: foo-header
-      arguments:
-        - name: foo
-          type: FooInput!
-      request_transform:
-        body: "{\n  \"my-baz\": {{$body.input.foo.baz}}\n   \n}"
-        content_type: application/json
-        method: POST
-        query_params: {}
-        template_engine: Kriti
-      type: mutation
-      kind: synchronous
-      timeout: 97
-    comment: foo action
-    permissions:
-      - role: user
-custom_types:
-  input_objects:
-    - name: FooInput
-      fields:
-        - name: baz
-          type: String!
-  objects:
-    - name: FooOutput
-      fields:
-        - name: bar
-          type: String!
-      relationships:
-        - remote_table:
-            schema: public
-            name: artists
-          name: fooArtist
-          source: default
-          type: object
-          field_mapping:
-            bar: name
 cron_triggers:
   - name: bar-trigger
     webhook: https://httpbin.org/post
@@ -311,6 +311,12 @@ cron_triggers:
       - value: foo
         name: stuff
     comment: bar-trigger
+network:
+  tls_allowlist:
+    - suffix: null
+      permissions:
+        - self-signed
+      host: scriptonist.dev
 rest_endpoints:
   - definition:
       query:
@@ -325,9 +331,3 @@ inherited_roles:
   - role_name: user-dupe
     role_set:
       - user
-network:
-  tls_allowlist:
-    - suffix: null
-      permissions:
-        - self-signed
-      host: scriptonist.dev
