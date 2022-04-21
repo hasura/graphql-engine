@@ -3,6 +3,10 @@
 ## Next release
 
 ### Bug fixes and improvements
+
+## v2.6.0-beta.2
+
+### Bug fixes and improvements
 - server: fix parsing remote relationship json definition from 1.x server catalog on migration (fix #7906)
 - server: Don't drop nested typed null fields in actions (fix #8237)
 - server: fixes remote relationships on actions (fix #8399)
