@@ -28,7 +28,7 @@
 </span><span id="line-26"></span><span>    </span><span id="prbCleanOutput"><span class="annot"><span class="annottext">PGDumpReqBody -&gt; Bool
 </span><a href="Hasura.Server.API.PGDump.html#prbCleanOutput"><span class="hs-identifier hs-var hs-var">prbCleanOutput</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-27"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-28"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688499029"><span id="local-6989586621688499031"><span id="local-6989586621688499033"><span class="annot"><span class="annottext">Int -&gt; PGDumpReqBody -&gt; ShowS
+</span><span id="line-28"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688499189"><span id="local-6989586621688499191"><span id="local-6989586621688499193"><span class="annot"><span class="annottext">Int -&gt; PGDumpReqBody -&gt; ShowS
 [PGDumpReqBody] -&gt; ShowS
 PGDumpReqBody -&gt; String
 (Int -&gt; PGDumpReqBody -&gt; ShowS)
@@ -43,7 +43,7 @@ show :: PGDumpReqBody -&gt; String
 $cshow :: PGDumpReqBody -&gt; String
 showsPrec :: Int -&gt; PGDumpReqBody -&gt; ShowS
 $cshowsPrec :: Int -&gt; PGDumpReqBody -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688499024"><span id="local-6989586621688499026"><span class="annot"><span class="annottext">PGDumpReqBody -&gt; PGDumpReqBody -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688499184"><span id="local-6989586621688499186"><span class="annot"><span class="annottext">PGDumpReqBody -&gt; PGDumpReqBody -&gt; Bool
 (PGDumpReqBody -&gt; PGDumpReqBody -&gt; Bool)
 -&gt; (PGDumpReqBody -&gt; PGDumpReqBody -&gt; Bool) -&gt; Eq PGDumpReqBody
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -53,8 +53,8 @@ $c/= :: PGDumpReqBody -&gt; PGDumpReqBody -&gt; Bool
 $c== :: PGDumpReqBody -&gt; PGDumpReqBody -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-29"></span><span>
-</span><span id="line-30"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688499020"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.API.PGDump.html#PGDumpReqBody"><span class="hs-identifier hs-type">PGDumpReqBody</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-31"></span><span>  </span><span id="local-6989586621688499018"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser PGDumpReqBody
+</span><span id="line-30"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688499180"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.API.PGDump.html#PGDumpReqBody"><span class="hs-identifier hs-type">PGDumpReqBody</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-31"></span><span>  </span><span id="local-6989586621688499178"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser PGDumpReqBody
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser PGDumpReqBody)
 -&gt; Value
@@ -66,15 +66,15 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser PGDumpReqBody
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688499015"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688499015"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688499175"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688499175"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-32"></span><span>    </span><span class="annot"><span class="annottext">SourceName -&gt; [String] -&gt; Bool -&gt; PGDumpReqBody
 </span><a href="Hasura.Server.API.PGDump.html#PGDumpReqBody"><span class="hs-identifier hs-var">PGDumpReqBody</span></a></span><span>
 </span><span id="line-33"></span><span>      </span><span class="annot"><span class="annottext">(SourceName -&gt; [String] -&gt; Bool -&gt; PGDumpReqBody)
 -&gt; Parser SourceName -&gt; Parser ([String] -&gt; Bool -&gt; PGDumpReqBody)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688499015"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe SourceName)
+</span><a href="#local-6989586621688499175"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe SourceName)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;source&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe SourceName) -&gt; SourceName -&gt; Parser SourceName
@@ -85,7 +85,7 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 -&gt; Parser [String] -&gt; Parser (Bool -&gt; PGDumpReqBody)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688499015"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser [String]
+</span><a href="#local-6989586621688499175"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser [String]
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;opts&quot;</span></span><span>
@@ -93,7 +93,7 @@ forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 -&gt; Parser Bool -&gt; Parser PGDumpReqBody
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688499015"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe Bool)
+</span><a href="#local-6989586621688499175"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe Bool)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;clean_output&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Bool) -&gt; Bool -&gt; Parser Bool
@@ -101,17 +101,17 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
 </span><span id="line-36"></span><span>
-</span><span id="line-37"></span><span id="local-6989586621688499010"><span class="annot"><a href="Hasura.Server.API.PGDump.html#execPGDump"><span class="hs-identifier hs-type">execPGDump</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-38"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">RTE.QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688499010"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688499010"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-37"></span><span id="local-6989586621688499170"><span class="annot"><a href="Hasura.Server.API.PGDump.html#execPGDump"><span class="hs-identifier hs-type">execPGDump</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">RTE.QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688499170"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688499170"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-39"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.PGDump.html#PGDumpReqBody"><span class="hs-identifier hs-type">PGDumpReqBody</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-40"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Q.ConnInfo</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-41"></span><span>  </span><span class="annot"><a href="#local-6989586621688499010"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span></span><span>
+</span><span id="line-41"></span><span>  </span><span class="annot"><a href="#local-6989586621688499170"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span></span><span>
 </span><span id="line-42"></span><span id="execPGDump"><span class="annot"><span class="annottext">execPGDump :: PGDumpReqBody -&gt; ConnInfo -&gt; m ByteString
-</span><a href="Hasura.Server.API.PGDump.html#execPGDump"><span class="hs-identifier hs-var hs-var">execPGDump</span></a></span></span><span> </span><span id="local-6989586621688499009"><span class="annot"><span class="annottext">PGDumpReqBody
-</span><a href="#local-6989586621688499009"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621688499008"><span class="annot"><span class="annottext">ConnInfo
-</span><a href="#local-6989586621688499008"><span class="hs-identifier hs-var">ci</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-43"></span><span>  </span><span id="local-6989586621688499007"><span class="annot"><span class="annottext">Either IOException (Either Text ByteString)
-</span><a href="#local-6989586621688499007"><span class="hs-identifier hs-var">eOutput</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Either IOException (Either Text ByteString))
+</span><a href="Hasura.Server.API.PGDump.html#execPGDump"><span class="hs-identifier hs-var hs-var">execPGDump</span></a></span></span><span> </span><span id="local-6989586621688499169"><span class="annot"><span class="annottext">PGDumpReqBody
+</span><a href="#local-6989586621688499169"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621688499168"><span class="annot"><span class="annottext">ConnInfo
+</span><a href="#local-6989586621688499168"><span class="hs-identifier hs-var">ci</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-43"></span><span>  </span><span id="local-6989586621688499167"><span class="annot"><span class="annottext">Either IOException (Either Text ByteString)
+</span><a href="#local-6989586621688499167"><span class="hs-identifier hs-var">eOutput</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Either IOException (Either Text ByteString))
 -&gt; m (Either IOException (Either Text ByteString))
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (Either IOException (Either Text ByteString))
@@ -123,28 +123,28 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; IO (Either IOException (Either Text ByteString))
 forall e a. Exception e =&gt; IO a -&gt; IO (Either e a)
 </span><span class="hs-identifier hs-var">try</span></span><span> </span><span class="annot"><span class="annottext">IO (Either Text ByteString)
-</span><a href="#local-6989586621688499005"><span class="hs-identifier hs-var">execProcess</span></a></span><span>
-</span><span id="line-44"></span><span>  </span><span id="local-6989586621688499004"><span class="annot"><span class="annottext">Either Text ByteString
-</span><a href="#local-6989586621688499004"><span class="hs-identifier hs-var">output</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Either IOException (Either Text ByteString)
+</span><a href="#local-6989586621688499165"><span class="hs-identifier hs-var">execProcess</span></a></span><span>
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621688499164"><span class="annot"><span class="annottext">Either Text ByteString
+</span><a href="#local-6989586621688499164"><span class="hs-identifier hs-var">output</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Either IOException (Either Text ByteString)
 -&gt; (IOException -&gt; m (Either Text ByteString))
 -&gt; m (Either Text ByteString)
 forall (m :: * -&gt; *) e a.
 Applicative m =&gt;
 Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><a href="Hasura.Prelude.html#onLeft"><span class="hs-identifier hs-var">onLeft</span></a></span><span> </span><span class="annot"><span class="annottext">Either IOException (Either Text ByteString)
-</span><a href="#local-6989586621688499007"><span class="hs-identifier hs-var">eOutput</span></a></span><span> </span><span class="annot"><span class="annottext">IOException -&gt; m (Either Text ByteString)
+</span><a href="#local-6989586621688499167"><span class="hs-identifier hs-var">eOutput</span></a></span><span> </span><span class="annot"><span class="annottext">IOException -&gt; m (Either Text ByteString)
 forall (m :: * -&gt; *) a. MonadError QErr m =&gt; IOException -&gt; m a
-</span><a href="#local-6989586621688499002"><span class="hs-identifier hs-var">throwException</span></a></span><span>
+</span><a href="#local-6989586621688499162"><span class="hs-identifier hs-var">throwException</span></a></span><span>
 </span><span id="line-45"></span><span>  </span><span class="annot"><span class="annottext">Either Text ByteString -&gt; (Text -&gt; m ByteString) -&gt; m ByteString
 forall (m :: * -&gt; *) e a.
 Applicative m =&gt;
 Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><a href="Hasura.Prelude.html#onLeft"><span class="hs-identifier hs-var">onLeft</span></a></span><span> </span><span class="annot"><span class="annottext">Either Text ByteString
-</span><a href="#local-6989586621688499004"><span class="hs-identifier hs-var">output</span></a></span><span> </span><span class="annot"><span class="annottext">((Text -&gt; m ByteString) -&gt; m ByteString)
+</span><a href="#local-6989586621688499164"><span class="hs-identifier hs-var">output</span></a></span><span> </span><span class="annot"><span class="annottext">((Text -&gt; m ByteString) -&gt; m ByteString)
 -&gt; (Text -&gt; m ByteString) -&gt; m ByteString
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688499001"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688499001"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688499161"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688499161"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-46"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; m ByteString
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">RTE.throw500</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; m ByteString) -&gt; Text -&gt; m ByteString
@@ -153,25 +153,25 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;error while executing pg_dump: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688499001"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><a href="#local-6989586621688499161"><span class="hs-identifier hs-var">err</span></a></span><span>
 </span><span id="line-47"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-48"></span><span>    </span><span id="local-6989586621688499083"><span id="local-6989586621688499085"><span class="annot"><a href="#local-6989586621688499002"><span class="hs-identifier hs-type">throwException</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">RTE.QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688499085"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IOException</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688499085"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688499083"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
-</span><span id="line-49"></span><span>    </span><span id="local-6989586621688499002"><span class="annot"><span class="annottext">throwException :: IOException -&gt; m a
-</span><a href="#local-6989586621688499002"><span class="hs-identifier hs-var hs-var">throwException</span></a></span></span><span> </span><span class="annot"><span class="annottext">IOException
+</span><span id="line-48"></span><span>    </span><span id="local-6989586621688499243"><span id="local-6989586621688499245"><span class="annot"><a href="#local-6989586621688499162"><span class="hs-identifier hs-type">throwException</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">RTE.QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688499245"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IOException</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688499245"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688499243"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-49"></span><span>    </span><span id="local-6989586621688499162"><span class="annot"><span class="annottext">throwException :: IOException -&gt; m a
+</span><a href="#local-6989586621688499162"><span class="hs-identifier hs-var hs-var">throwException</span></a></span></span><span> </span><span class="annot"><span class="annottext">IOException
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m a
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">RTE.throw500</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;internal exception while executing pg_dump&quot;</span></span><span>
 </span><span id="line-50"></span><span>
-</span><span id="line-51"></span><span>    </span><span id="local-6989586621688499005"><span class="annot"><span class="annottext">execProcess :: IO (Either Text ByteString)
-</span><a href="#local-6989586621688499005"><span class="hs-identifier hs-var hs-var">execProcess</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-52"></span><span>      </span><span class="hs-special">(</span><span id="local-6989586621688498999"><span class="annot"><span class="annottext">ExitCode
-</span><a href="#local-6989586621688498999"><span class="hs-identifier hs-var">exitCode</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688498998"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688498998"><span class="hs-identifier hs-var">stdOut</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688498997"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688498997"><span class="hs-identifier hs-var">stdErr</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; [String] -&gt; String -&gt; IO (ExitCode, String, String)
+</span><span id="line-51"></span><span>    </span><span id="local-6989586621688499165"><span class="annot"><span class="annottext">execProcess :: IO (Either Text ByteString)
+</span><a href="#local-6989586621688499165"><span class="hs-identifier hs-var hs-var">execProcess</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-52"></span><span>      </span><span class="hs-special">(</span><span id="local-6989586621688499159"><span class="annot"><span class="annottext">ExitCode
+</span><a href="#local-6989586621688499159"><span class="hs-identifier hs-var">exitCode</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688499158"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688499158"><span class="hs-identifier hs-var">stdOut</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688499157"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688499157"><span class="hs-identifier hs-var">stdErr</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; [String] -&gt; String -&gt; IO (ExitCode, String, String)
 </span><span class="hs-identifier hs-var">readProcessWithExitCode</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;pg_dump&quot;</span></span><span> </span><span class="annot"><span class="annottext">[String]
-</span><a href="#local-6989586621688498995"><span class="hs-identifier hs-var">opts</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688499155"><span class="hs-identifier hs-var">opts</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;&quot;</span></span><span>
 </span><span id="line-53"></span><span>      </span><span class="annot"><span class="annottext">Either Text ByteString -&gt; IO (Either Text ByteString)
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
@@ -179,7 +179,7 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 -&gt; Either Text ByteString -&gt; IO (Either Text ByteString)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ExitCode
-</span><a href="#local-6989586621688498999"><span class="hs-identifier hs-var">exitCode</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688499159"><span class="hs-identifier hs-var">exitCode</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-54"></span><span>        </span><span class="annot"><span class="annottext">ExitCode
 </span><span class="hs-identifier hs-var">ExitSuccess</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either Text ByteString
 forall a b. b -&gt; Either a b
@@ -193,8 +193,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; UTF8 ByteString
 forall a b. (ToText a, FromText b) =&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">convertText</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ShowS
-</span><a href="#local-6989586621688498991"><span class="hs-identifier hs-var">clean</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688498998"><span class="hs-identifier hs-var">stdOut</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688499151"><span class="hs-identifier hs-var">clean</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688499158"><span class="hs-identifier hs-var">stdOut</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-55"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">ExitFailure</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text ByteString
 forall a b. a -&gt; Either a b
@@ -203,10 +203,10 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
 forall a. ToText a =&gt; a -&gt; Text
 </span><span class="hs-identifier hs-var">toText</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688498997"><span class="hs-identifier hs-var">stdErr</span></a></span><span>
+</span><a href="#local-6989586621688499157"><span class="hs-identifier hs-var">stdErr</span></a></span><span>
 </span><span id="line-56"></span><span>
-</span><span id="line-57"></span><span>    </span><span id="local-6989586621688498988"><span class="annot"><span class="annottext">connString :: String
-</span><a href="#local-6989586621688498988"><span class="hs-identifier hs-var hs-var">connString</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><span id="line-57"></span><span>    </span><span id="local-6989586621688499148"><span class="annot"><span class="annottext">connString :: String
+</span><a href="#local-6989586621688499148"><span class="hs-identifier hs-var hs-var">connString</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; String) -&gt; Text -&gt; String
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
@@ -217,24 +217,24 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ConnInfo -&gt; ConnDetails
 </span><span class="hs-identifier hs-var hs-var">Q.ciDetails</span></span><span> </span><span class="annot"><span class="annottext">ConnInfo
-</span><a href="#local-6989586621688499008"><span class="hs-identifier hs-var">ci</span></a></span><span>
-</span><span id="line-58"></span><span>    </span><span id="local-6989586621688498995"><span class="annot"><span class="annottext">opts :: [String]
-</span><a href="#local-6989586621688498995"><span class="hs-identifier hs-var hs-var">opts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688498988"><span class="hs-identifier hs-var">connString</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; [String] -&gt; [String]
+</span><a href="#local-6989586621688499168"><span class="hs-identifier hs-var">ci</span></a></span><span>
+</span><span id="line-58"></span><span>    </span><span id="local-6989586621688499155"><span class="annot"><span class="annottext">opts :: [String]
+</span><a href="#local-6989586621688499155"><span class="hs-identifier hs-var hs-var">opts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688499148"><span class="hs-identifier hs-var">connString</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; [String] -&gt; [String]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;--encoding=utf8&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; [String] -&gt; [String]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">PGDumpReqBody -&gt; [String]
 </span><a href="Hasura.Server.API.PGDump.html#prbOpts"><span class="hs-identifier hs-var hs-var">prbOpts</span></a></span><span> </span><span class="annot"><span class="annottext">PGDumpReqBody
-</span><a href="#local-6989586621688499009"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><a href="#local-6989586621688499169"><span class="hs-identifier hs-var">b</span></a></span><span>
 </span><span id="line-59"></span><span>
-</span><span id="line-60"></span><span>    </span><span id="local-6989586621688498991"><span class="annot"><span class="annottext">clean :: ShowS
-</span><a href="#local-6989586621688498991"><span class="hs-identifier hs-var hs-var">clean</span></a></span></span><span> </span><span id="local-6989586621688498983"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688498983"><span class="hs-identifier hs-var">str</span></a></span></span><span>
+</span><span id="line-60"></span><span>    </span><span id="local-6989586621688499151"><span class="annot"><span class="annottext">clean :: ShowS
+</span><a href="#local-6989586621688499151"><span class="hs-identifier hs-var hs-var">clean</span></a></span></span><span> </span><span id="local-6989586621688499143"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688499143"><span class="hs-identifier hs-var">str</span></a></span></span><span>
 </span><span id="line-61"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">PGDumpReqBody -&gt; Bool
 </span><a href="Hasura.Server.API.PGDump.html#prbCleanOutput"><span class="hs-identifier hs-var hs-var">prbCleanOutput</span></a></span><span> </span><span class="annot"><span class="annottext">PGDumpReqBody
-</span><a href="#local-6989586621688499009"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621688499169"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-62"></span><span>        </span><span class="annot"><span class="annottext">[String] -&gt; String
 </span><span class="hs-identifier hs-var">unlines</span></span><span> </span><span class="annot"><span class="annottext">([String] -&gt; String) -&gt; [String] -&gt; String
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -244,48 +244,48 @@ forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Bool) -&gt; (String -&gt; Bool) -&gt; String -&gt; Bool
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Bool
-</span><a href="#local-6989586621688498979"><span class="hs-identifier hs-var">shouldDropLine</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; [String]
+</span><a href="#local-6989586621688499139"><span class="hs-identifier hs-var">shouldDropLine</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; [String]
 </span><span class="hs-identifier hs-var">lines</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688498983"><span class="hs-identifier hs-var">str</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688499143"><span class="hs-identifier hs-var">str</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-63"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688498983"><span class="hs-identifier hs-var">str</span></a></span><span>
+</span><a href="#local-6989586621688499143"><span class="hs-identifier hs-var">str</span></a></span><span>
 </span><span id="line-64"></span><span>
-</span><span id="line-65"></span><span>    </span><span id="local-6989586621688498979"><span class="annot"><span class="annottext">shouldDropLine :: String -&gt; Bool
-</span><a href="#local-6989586621688498979"><span class="hs-identifier hs-var hs-var">shouldDropLine</span></a></span></span><span> </span><span id="local-6989586621688498977"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688498977"><span class="hs-identifier hs-var">line</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-65"></span><span>    </span><span id="local-6989586621688499139"><span class="annot"><span class="annottext">shouldDropLine :: String -&gt; Bool
+</span><a href="#local-6989586621688499139"><span class="hs-identifier hs-var hs-var">shouldDropLine</span></a></span></span><span> </span><span id="local-6989586621688499137"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688499137"><span class="hs-identifier hs-var">line</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-66"></span><span>      </span><span class="hs-comment">-- delete empty lines</span><span>
 </span><span id="line-67"></span><span>      </span><span class="annot"><span class="annottext">(Char -&gt; Bool) -&gt; String -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">all</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Bool
 </span><span class="hs-identifier hs-var">isSpace</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688498977"><span class="hs-identifier hs-var">line</span></a></span><span>
+</span><a href="#local-6989586621688499137"><span class="hs-identifier hs-var">line</span></a></span><span>
 </span><span id="line-68"></span><span>        </span><span class="hs-comment">-- delete comments</span><span>
 </span><span id="line-69"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;--&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; Bool
 forall a. Eq a =&gt; [a] -&gt; [a] -&gt; Bool
 </span><span class="hs-operator hs-var">`L.isPrefixOf`</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688498977"><span class="hs-identifier hs-var">line</span></a></span><span>
+</span><a href="#local-6989586621688499137"><span class="hs-identifier hs-var">line</span></a></span><span>
 </span><span id="line-70"></span><span>        </span><span class="hs-comment">-- delete front matter</span><span>
 </span><span id="line-71"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688498977"><span class="hs-identifier hs-var">line</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; [String] -&gt; Bool
+</span><a href="#local-6989586621688499137"><span class="hs-identifier hs-var">line</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; [String] -&gt; Bool
 forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><span class="hs-operator hs-var">`elem`</span></span><span> </span><span class="annot"><span class="annottext">[String]
-</span><a href="#local-6989586621688498972"><span class="hs-identifier hs-var">preambleLines</span></a></span><span>
+</span><a href="#local-6989586621688499132"><span class="hs-identifier hs-var">preambleLines</span></a></span><span>
 </span><span id="line-72"></span><span>        </span><span class="hs-comment">-- delete notify triggers</span><span>
 </span><span id="line-73"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Regex
-</span><a href="#local-6989586621688498971"><span class="hs-identifier hs-var">eventTriggerRegex</span></a></span><span> </span><span class="annot"><span class="annottext">Regex -&gt; String -&gt; Bool
+</span><a href="#local-6989586621688499131"><span class="hs-identifier hs-var">eventTriggerRegex</span></a></span><span> </span><span class="annot"><span class="annottext">Regex -&gt; String -&gt; Bool
 forall regex source target.
 RegexContext regex source target =&gt;
 regex -&gt; source -&gt; target
 </span><span class="hs-operator hs-var">`TDFA.match`</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688498977"><span class="hs-identifier hs-var">line</span></a></span><span>
+</span><a href="#local-6989586621688499137"><span class="hs-identifier hs-var">line</span></a></span><span>
 </span><span id="line-74"></span><span>
-</span><span id="line-75"></span><span>    </span><span id="local-6989586621688498972"><span class="annot"><span class="annottext">preambleLines :: [String]
-</span><a href="#local-6989586621688498972"><span class="hs-identifier hs-var hs-var">preambleLines</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-75"></span><span>    </span><span id="local-6989586621688499132"><span class="annot"><span class="annottext">preambleLines :: [String]
+</span><a href="#local-6989586621688499132"><span class="hs-identifier hs-var hs-var">preambleLines</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-76"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;SET statement_timeout = 0;&quot;</span></span><span class="hs-special">,</span><span>
 </span><span id="line-77"></span><span>        </span><span class="annot"><span class="annottext">String
@@ -316,10 +316,10 @@ regex -&gt; source -&gt; target
 </span><span class="hs-string">&quot;COMMENT ON SCHEMA public IS 'standard public schema';&quot;</span></span><span>
 </span><span id="line-90"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-91"></span><span>
-</span><span id="line-92"></span><span>    </span><span id="local-6989586621688498971"><span class="annot"><span class="annottext">eventTriggerRegex :: Regex
-</span><a href="#local-6989586621688498971"><span class="hs-identifier hs-var hs-var">eventTriggerRegex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-93"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688498969"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688498969"><span class="hs-identifier hs-var">regexStr</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-92"></span><span>    </span><span id="local-6989586621688499131"><span class="annot"><span class="annottext">eventTriggerRegex :: Regex
+</span><a href="#local-6989586621688499131"><span class="hs-identifier hs-var hs-var">eventTriggerRegex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-93"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688499129"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688499129"><span class="hs-identifier hs-var">regexStr</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-94"></span><span>            </span><span class="hs-comment">-- pg functions created by hasura for event triggers used &quot;notify_hasura&quot;</span><span>
 </span><span id="line-95"></span><span>            </span><span class="hs-comment">-- These changes are also documented on the method pgIdenTrigger</span><span>
 </span><span id="line-96"></span><span>            </span><span class="annot"><span class="annottext">String
@@ -337,5 +337,5 @@ forall regex compOpt execOpt source.
 RegexMaker regex compOpt execOpt source =&gt;
 source -&gt; regex
 </span><span class="hs-identifier hs-var">TDFA.makeRegex</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688498969"><span class="hs-identifier hs-var">regexStr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TDFA.Regex</span></span><span>
+</span><a href="#local-6989586621688499129"><span class="hs-identifier hs-var">regexStr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TDFA.Regex</span></span><span>
 </span><span id="line-100"></span></pre></body></html>
