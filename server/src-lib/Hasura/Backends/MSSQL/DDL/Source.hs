@@ -25,6 +25,7 @@ import Database.MSSQL.Transaction qualified as Tx
 import Database.ODBC.SQLServer
 import Database.ODBC.TH qualified as ODBC
 import Hasura.Backends.MSSQL.Connection
+import Hasura.Backends.MSSQL.DDL.EventTrigger
 import Hasura.Backends.MSSQL.DDL.Source.Version
 import Hasura.Backends.MSSQL.Meta
 import Hasura.Backends.MSSQL.SQL.Error qualified as HGE
@@ -36,6 +37,9 @@ import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (..))
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.Backend
+import Language.Haskell.TH.Lib qualified as TH
+import Language.Haskell.TH.Syntax qualified as TH
+import Text.Shakespeare.Text qualified as ST
 
 resolveSourceConfig ::
   (MonadIO m, MonadResolveSource m) =>
@@ -82,10 +86,29 @@ doesSchemaExist (SchemaName schemaName) = do
       AS BIT)
     |]
 
+doesTableExist :: MonadMSSQLTx m => TableName -> m Bool
+doesTableExist tableName = do
+  liftMSSQLTx $
+    Tx.singleRowQueryE
+      HGE.defaultMSSQLTxErrorHandler
+      [ODBC.sql|
+        SELECT CAST (
+          CASE
+            WHEN (Select OBJECT_ID($qualifiedTable)) IS NOT NULL
+              THEN 1 
+            ELSE 0 
+          END
+        AS BIT)
+      |]
+  where
+    qualifiedTable = qualifyTableName tableName
+
 -- | Initialise catalog tables for a source, including those required by the event delivery subsystem.
 initCatalogForSource :: MonadMSSQLTx m => m RecreateEventTriggers
 initCatalogForSource = do
   hdbCatalogExist <- doesSchemaExist "hdb_catalog"
+  eventLogTableExist <- doesTableExist $ TableName "event_log" "hdb_catalog"
+  sourceVersionTableExist <- doesTableExist $ TableName "hdb_source_catalog_version" "hdb_catalog"
 
   if
       -- Fresh database
@@ -93,15 +116,50 @@ initCatalogForSource = do
         unitQueryE HGE.defaultMSSQLTxErrorHandler "CREATE SCHEMA hdb_catalog"
         initSourceCatalog
         return RETDoNothing
-      -- TODO: When we need to make any changes to the source catalog, we'll have to introduce code which which will migrate
-      -- from one source catalog version to the next one
-      | otherwise -> pure RETDoNothing
+      -- Only 'hdb_catalog' schema defined
+      | not sourceVersionTableExist && not eventLogTableExist -> do
+        liftMSSQLTx initSourceCatalog
+        return RETDoNothing
+      | otherwise -> migrateSourceCatalog
   where
     initSourceCatalog = do
-      unitQueryE HGE.defaultMSSQLTxErrorHandler $(makeRelativeToProject "src-rsr/init_mssql_source.sql" >>= ODBC.sqlFile)
+      unitQueryE HGE.defaultMSSQLTxErrorHandler $(makeRelativeToProject "src-rsr/mssql/init_mssql_source.sql" >>= ODBC.sqlFile)
       setSourceCatalogVersion latestSourceCatalogVersion
 
 dropSourceCatalog :: MonadMSSQLTx m => m ()
 dropSourceCatalog = do
-  let sql = $(makeRelativeToProject "src-rsr/drop_mssql_source.sql" >>= ODBC.sqlFile)
+  let sql = $(makeRelativeToProject "src-rsr/mssql/drop_mssql_source.sql" >>= ODBC.sqlFile)
   liftMSSQLTx $ unitQueryE HGE.defaultMSSQLTxErrorHandler sql
+
+migrateSourceCatalog :: MonadMSSQLTx m => m RecreateEventTriggers
+migrateSourceCatalog =
+  getSourceCatalogVersion >>= migrateSourceCatalogFrom
+
+migrateSourceCatalogFrom :: MonadMSSQLTx m => Int -> m RecreateEventTriggers
+migrateSourceCatalogFrom prevVersion
+  | prevVersion == latestSourceCatalogVersion = pure RETDoNothing
+  | [] <- neededMigrations =
+    throw400 NotSupported $
+      "Expected source catalog version <= "
+        <> latestSourceCatalogVersionText
+        <> ", but the current version is "
+        <> (tshow prevVersion)
+  | otherwise = do
+    liftMSSQLTx $ traverse_ snd neededMigrations
+    setSourceCatalogVersion latestSourceCatalogVersion
+    pure RETRecreate
+  where
+    neededMigrations =
+      dropWhile ((/= prevVersion) . fst) sourceMigrations
+
+sourceMigrations :: [(Int, TxE QErr ())]
+sourceMigrations =
+  $( let migrationFromFile from =
+           let to = from + 1
+               path = "src-rsr/mssql_source_migrations/" <> show from <> "_to_" <> show to <> ".sql"
+            in [|multiRowQueryE defaultTxErrorHandler $(makeRelativeToProject path >>= ST.stextFile)|]
+
+         migrationsFromFile = map $ \(from :: Int) ->
+           [|($(TH.lift $ from), $(migrationFromFile from))|]
+      in TH.listE $ migrationsFromFile [1 .. (latestSourceCatalogVersion - 1)]
+   )

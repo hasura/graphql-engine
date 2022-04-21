@@ -191,7 +191,6 @@ dropSource _schemaCache (DropSource sourceName cascade) sourceInfo = do
     tell $ dropSourceMetadataModifier sourceName
 
   buildSchemaCacheFor (MOSource sourceName) metadataModifier
-
   runPostDropSourceHook sourceName sourceInfo
 
 runPostDropSourceHook ::

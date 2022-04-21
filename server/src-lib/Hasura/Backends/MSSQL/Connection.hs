@@ -15,6 +15,8 @@ module Hasura.Backends.MSSQL.Connection
     getEnv,
     odbcValueToJValue,
     mkMSSQLExecCtx,
+    runMSSQLSourceReadTx,
+    runMSSQLSourceWriteTx,
   )
 where
 
@@ -234,3 +236,19 @@ odbcValueToJValue = \case
   ODBC.TimeOfDayValue td -> J.toJSON td
   ODBC.LocalTimeValue l -> J.toJSON l
   ODBC.NullValue -> J.Null
+
+runMSSQLSourceReadTx ::
+  (MonadIO m, MonadBaseControl IO m) =>
+  MSSQLSourceConfig ->
+  MSTx.TxET QErr m a ->
+  m (Either QErr a)
+runMSSQLSourceReadTx msc =
+  runExceptT . mssqlRunReadOnly (_mscExecCtx msc)
+
+runMSSQLSourceWriteTx ::
+  (MonadIO m, MonadBaseControl IO m) =>
+  MSSQLSourceConfig ->
+  MSTx.TxET QErr m a ->
+  m (Either QErr a)
+runMSSQLSourceWriteTx msc =
+  runExceptT . mssqlRunReadWrite (_mscExecCtx msc)

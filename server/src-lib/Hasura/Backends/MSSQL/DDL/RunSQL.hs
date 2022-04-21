@@ -80,7 +80,7 @@ runSQL mssqlRunSQL@MSSQLRunSQL {..} = do
   where
     runTx :: SourceConfig 'MSSQL -> Tx.TxET QErr m a -> m a
     runTx sourceConfig =
-      liftEitherM . runExceptT . mssqlRunReadWrite (_mscExecCtx sourceConfig)
+      liftEitherM . runMSSQLSourceWriteTx sourceConfig
 
     sqlQueryTx :: Tx.TxET QErr m [[(ODBC.Column, ODBC.Value)]]
     sqlQueryTx =

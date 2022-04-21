@@ -1,0 +1,34 @@
+- description: MSSQL create event trigger
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: mssql_create_event_trigger
+    args:
+      source: mssql
+      name: sample_trigger
+      table:
+        name: test_t1
+        schema: hge_tests
+      webhook: http://127.0.0.1:5592
+      insert:
+        columns: '*'
+        payload:
+          - id
+          - first_name
+          - last_name
+      replace: false
+      request_transform:
+        version: 2
+        template_engine: Kriti
+        body:
+          action: transform
+          template: "{{ $body.event.data.new }}"
+        query_params:
+          "foo": "bar"
+        request_headers:
+          remove_headers:
+            - user-agent
+          add_headers:
+            foo: "bar"

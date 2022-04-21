@@ -1,0 +1,18 @@
+- description: 'Create event trigger with no operation specs provider: Error'
+  url: /v1/metadata
+  status: 400
+  response:
+    error:  "Error when parsing command create_event_trigger.\nSee our documentation\
+      \ at https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/index.html#metadata-apis.\n\
+      Internal error message: atleast one amongst insert/update/delete/enable_manual\
+      \ spec must be provided"
+    code: parse-failed
+    path: $.args
+  query:
+    type: mssql_create_event_trigger
+    args:
+      source: mssql
+      name: t1_1
+      table:
+        schema: hge_tests
+        name: test_t1

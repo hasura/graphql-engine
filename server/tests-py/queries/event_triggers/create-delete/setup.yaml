@@ -8,4 +8,3 @@ args:
           c1 int,
           c2 text
       );
-

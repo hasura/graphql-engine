@@ -172,6 +172,7 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
           RMWithSources m -> _metaSetGraphqlIntrospectionOptions m
           RMWithoutSources _ -> mempty
   oldMetadata <- getMetadata
+  oldSchemaCache <- askSchemaCache
 
   (cronTriggersMetadata, cronTriggersToBeAdded) <- processCronTriggers oldMetadata
 
@@ -216,7 +217,7 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
     populateInitialCronTriggerEvents ctSchedule ctName
 
   -- See Note [Cleanup for dropped triggers]
-  dropSourceSQLTriggers logger (_metaSources oldMetadata) (_metaSources metadata)
+  dropSourceSQLTriggers logger oldSchemaCache (_metaSources oldMetadata) (_metaSources metadata)
 
   encJFromJValue . formatInconsistentObjs . scInconsistentObjs <$> askSchemaCache
   where
@@ -281,10 +282,11 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
 
     dropSourceSQLTriggers ::
       HL.Logger HL.Hasura ->
+      SchemaCache ->
       InsOrdHashMap SourceName BackendSourceMetadata ->
       InsOrdHashMap SourceName BackendSourceMetadata ->
       m ()
-    dropSourceSQLTriggers (HL.Logger logger) oldSources newSources = do
+    dropSourceSQLTriggers (HL.Logger logger) oldSchemaCache oldSources newSources = do
       -- NOTE: the current implementation of this function has an edge case.
       -- The edge case is that when a `SourceA` which contained some event triggers
       -- is modified to point to a new database, this function will try to drop the
@@ -311,7 +313,10 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
               return $
                 flip catchError catcher do
                   sourceConfig <- askSourceConfig @b source
-                  for_ droppedEventTriggers $ dropTriggerAndArchiveEvents @b sourceConfig
+                  for_ droppedEventTriggers $
+                    \triggerName -> do
+                      tableName <- getTableNameFromTrigger @b oldSchemaCache source triggerName
+                      dropTriggerAndArchiveEvents @b sourceConfig triggerName tableName
                   for_ (OMap.toList retainedNewTriggers) $ \(retainedNewTriggerName, retainedNewTriggerConf) ->
                     case OMap.lookup retainedNewTriggerName oldTriggersMap of
                       Nothing -> pure ()
@@ -324,7 +329,8 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
                                 (bool Nothing (Just UPDATE) (isDroppedOp (tdUpdate oldTriggerOps) (tdUpdate newTriggerOps))),
                                 (bool Nothing (Just ET.DELETE) (isDroppedOp (tdDelete oldTriggerOps) (tdDelete newTriggerOps)))
                               ]
-                        dropDanglingSQLTrigger @b sourceConfig retainedNewTriggerName (Set.fromList $ catMaybes droppedOps)
+                        tableName <- getTableNameFromTrigger @b oldSchemaCache source retainedNewTriggerName
+                        dropDanglingSQLTrigger @b sourceConfig retainedNewTriggerName tableName (Set.fromList $ catMaybes droppedOps)
       where
         dispatch = AB.dispatchAnyBackend @BackendEventTrigger
 

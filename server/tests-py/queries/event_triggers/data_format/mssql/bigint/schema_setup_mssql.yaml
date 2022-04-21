@@ -1,0 +1,12 @@
+type: bulk
+args:
+
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      create schema hge_tests
+        create table hge_tests.test_bigint(
+          id bigint PRIMARY KEY,
+          name NVARCHAR(MAX)
+        );

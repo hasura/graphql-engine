@@ -174,8 +174,9 @@ dropTriggerAndArchiveEvents ::
   ) =>
   SourceConfig ('Postgres pgKind) ->
   TriggerName ->
+  QualifiedTable ->
   m ()
-dropTriggerAndArchiveEvents sourceConfig triggerName =
+dropTriggerAndArchiveEvents sourceConfig triggerName _table =
   liftEitherM $
     liftIO $
       runPgSourceWriteTx sourceConfig $ do
@@ -203,9 +204,10 @@ dropDanglingSQLTrigger ::
   ) =>
   SourceConfig ('Postgres pgKind) ->
   TriggerName ->
+  QualifiedTable ->
   HashSet Ops ->
   m ()
-dropDanglingSQLTrigger sourceConfig triggerName ops =
+dropDanglingSQLTrigger sourceConfig triggerName _ ops =
   liftEitherM $
     liftIO $
       runPgSourceWriteTx sourceConfig $

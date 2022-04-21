@@ -1,0 +1,7 @@
+type: bulk
+args:
+
+- type: mssql_delete_event_trigger
+  args:
+    source: mssql
+    name: bigint_all

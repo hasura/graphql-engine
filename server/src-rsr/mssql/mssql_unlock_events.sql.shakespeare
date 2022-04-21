@@ -1,0 +1,7 @@
+UPDATE hdb_catalog.event_log
+SET locked = NULL
+WHERE id = 
+    ANY ( SELECT id from  (VALUES #{eventIdsValues}) AS X(id)) 
+    AND locked IS NOT NULL
+
+SELECT @@ROWCOUNT

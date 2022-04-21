@@ -16,6 +16,7 @@ module Hasura.RQL.DDL.EventTrigger
     buildEventTriggerInfo,
     getTriggerNames,
     getTriggersMap,
+    getTableNameFromTrigger,
     cetqSource,
     cetqName,
     cetqTable,
@@ -201,7 +202,7 @@ createEventTriggerQueryMetadata q = do
   when replace $ do
     existingEventTriggerOps <- etiOpsDef <$> askEventTriggerInfo @b source triggerName
     let droppedOps = droppedTriggerOps existingEventTriggerOps (etcDefinition triggerConf)
-    dropDanglingSQLTrigger @b (_siConfiguration sourceInfo) triggerName droppedOps
+    dropDanglingSQLTrigger @b (_siConfiguration sourceInfo) triggerName table droppedOps
 
   buildSchemaCacheFor metadataObj $
     MetadataModifier $
@@ -224,23 +225,16 @@ runDeleteEventTriggerQuery ::
   (BackendEventTrigger b, MonadError QErr m, CacheRWM m, MonadIO m, MetadataM m) =>
   DeleteEventTriggerQuery b ->
   m EncJSON
-runDeleteEventTriggerQuery (DeleteEventTriggerQuery source name) = do
-  sourceInfo <- askSourceInfo source
-  let maybeTable = HM.lookup name $
-        HM.unions $
-          flip map (HM.toList $ _siTables @b sourceInfo) $ \(table, tableInfo) ->
-            HM.map (const table) $ _tiEventTriggerInfoMap tableInfo
-  table <-
-    onNothing maybeTable $
-      throw400 NotExists $
-        "event trigger with name " <> name <<> " does not exist"
+runDeleteEventTriggerQuery (DeleteEventTriggerQuery sourceName triggerName) = do
+  sourceConfig <- askSourceConfig @b sourceName
+  tableName <- (_tciName . _tiCoreInfo) <$> askTabInfoFromTrigger @b sourceName triggerName
 
   withNewInconsistentObjsCheck $
     buildSchemaCache $
       MetadataModifier $
-        tableMetadataSetter @b source table %~ dropEventTriggerInMetadata name
+        tableMetadataSetter @b sourceName tableName %~ dropEventTriggerInMetadata triggerName
 
-  dropTriggerAndArchiveEvents @b (_siConfiguration sourceInfo) name
+  dropTriggerAndArchiveEvents @b sourceConfig triggerName tableName
 
   pure successMsg
 
@@ -288,8 +282,17 @@ askTabInfoFromTrigger ::
   TriggerName ->
   m (TableInfo b)
 askTabInfoFromTrigger sourceName triggerName = do
-  sc <- askSchemaCache
-  let tabInfos = HM.elems $ fromMaybe mempty $ unsafeTableCache sourceName $ scSources sc
+  schemaCache <- askSchemaCache
+  getTabInfoFromSchemaCache schemaCache sourceName triggerName
+
+getTabInfoFromSchemaCache ::
+  (Backend b, QErrM m) =>
+  SchemaCache ->
+  SourceName ->
+  TriggerName ->
+  m (TableInfo b)
+getTabInfoFromSchemaCache schemaCache sourceName triggerName = do
+  let tabInfos = HM.elems $ fromMaybe mempty $ unsafeTableCache sourceName $ scSources schemaCache
   find (isJust . HM.lookup triggerName . _tiEventTriggerInfoMap) tabInfos
     `onNothing` throw400 NotExists errMsg
   where
@@ -411,3 +414,13 @@ getTriggerNames ::
   SourceMetadata b ->
   Set.HashSet TriggerName
 getTriggerNames = Set.fromList . OMap.keys . getTriggersMap
+
+getTableNameFromTrigger ::
+  forall b m.
+  (Backend b, QErrM m) =>
+  SchemaCache ->
+  SourceName ->
+  TriggerName ->
+  m (TableName b)
+getTableNameFromTrigger schemaCache sourceName triggerName =
+  (_tciName . _tiCoreInfo) <$> getTabInfoFromSchemaCache @b schemaCache sourceName triggerName

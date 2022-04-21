@@ -54,6 +54,35 @@ def validate_removed_event_headers (ev_headers, headers):
 def validate_event_webhook(ev_webhook_path, webhook_path):
     assert ev_webhook_path == webhook_path
 
+def validate_session_variables(hge_ctx, ev, session_variables):
+    # TODO: Naveen: MSSQL ET does not yet contain session variables in it's
+    # payload body. Hence ignoring that for now. Remove this guard when payload
+    # has it
+    if (hge_ctx.backend == "postgres"):
+        assert ev['session_variables'] == session_variables, ev
+    elif (hge_ctx.backend == "mssql"):
+        with pytest.raises(KeyError):
+            assert ev['session_variables'] == session_variables, ev
+
+def validate_event(hge_ctx,
+                   trig_name,
+                   table,
+                   operation,
+                   ev_full,
+                   exp_ev_data,
+                   headers = {},
+                   webhook_path = '/',
+                   session_variables = {'x-hasura-role': 'admin'},
+                   retry = 0,
+):
+    ev = ev_full['body']['event']
+    validate_event_webhook(ev_full['path'], webhook_path)
+    validate_event_headers(ev_full['headers'], headers)
+    validate_event_payload(ev_full['body'], trig_name, table)
+    assert ev['op'] == operation, ev
+    validate_session_variables(hge_ctx, ev, session_variables)
+    assert ev['data'] == exp_ev_data, ev
+    assert ev_full['body']['delivery_info']['current_retry'] == retry 
 
 # Make some assertions on a single event recorded by webhook. Waits up to 3
 # seconds by default for an event to appear
@@ -70,15 +99,48 @@ def check_event(hge_ctx,
                 get_timeout = 3
 ):
     ev_full = evts_webhook.get_event(get_timeout)
-    validate_event_webhook(ev_full['path'], webhook_path)
-    validate_event_headers(ev_full['headers'], headers)
-    validate_event_payload(ev_full['body'], trig_name, table)
-    ev = ev_full['body']['event']
-    assert ev['op'] == operation, ev
-    assert ev['session_variables'] == session_variables, ev
-    assert ev['data'] == exp_ev_data, ev
-    assert ev_full['body']['delivery_info']['current_retry'] == retry
+    validate_event(hge_ctx, trig_name, table, operation, ev_full, exp_ev_data, headers, webhook_path, session_variables, retry)
 
+# Compares the list of expected event data with the one received from webhook. Waits
+# up to 3 seconds by default for an event to appear.
+# This is useful when the list of events that are generated have no order, so you
+# cannot use 'check_event' to check each event one after another.
+def check_events(hge_ctx,
+                evts_webhook,
+                trig_name,
+                table,
+                operation,
+                num_of_events,
+                exp_ev_datas,
+                headers = {},
+                webhook_path = '/',
+                session_variables = {'x-hasura-role': 'admin'},
+                retry = 0,
+                get_timeout = 3
+):
+    events_payloads_webhook = []
+
+    # Get all the expected number of events
+    for i in range(num_of_events):
+        ev_full = evts_webhook.get_event(get_timeout)
+        ev_payload_data = ev_full['body']['event']['data']
+        events_payloads_webhook.append((ev_payload_data, ev_full))
+    
+    # If there are still some events present in queue after we get the expected number
+    # of events, then it means some stray events got generated.
+    if (not evts_webhook.is_queue_empty()):
+        assert False, "expected number of event payload not equal to the actual number of event payload generated"
+    
+    # Check if the payload we get from event webhook is present in the expected datas
+    # If no such data is present, then error else validate the data.
+    for (ev_payload_data, ev_full) in events_payloads_webhook:
+        if ev_payload_data in exp_ev_datas:
+            # Since ev_payload_data is present in exp_ev_datas, is means that it is
+            # the exp_ev_data for that particular event payload (ev_full)
+            exp_ev_data = ev_payload_data
+            validate_event(hge_ctx, trig_name, table, operation, ev_full, exp_ev_data, headers, webhook_path, session_variables, retry)
+        else:
+            assert False, ("Received event data: \n" + json.dumps(ev_payload_data) + "\n not present in expected event data from webhook")
 
 def check_event_transformed(hge_ctx,
                             evts_webhook,
