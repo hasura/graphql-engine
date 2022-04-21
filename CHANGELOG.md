@@ -33,6 +33,7 @@
 ### Bug fixes and improvements
 - server: fixes remote relationships on actions (fix #8399)
 - server: validate top level fragments in GQL query
+- cli: fix performance regression in `migrate status` command (fix #8398)
 
 ## v2.5.0
 

@@ -1,7 +1,9 @@
 package metadatautil
 
 import (
+	"bytes"
 	"io"
+	"io/ioutil"
 	"reflect"
 	"strings"
 	"testing"
@@ -10,6 +12,26 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var kindblackhole *hasura.SourceKind
+
+func BenchmarkGetSourceKind(b *testing.B) {
+	funcs := []struct {
+		name string
+		f    func(func() (io.Reader, error), string) (*hasura.SourceKind, error)
+	}{
+		{"jsonparser", GetSourceKind},
+	}
+	for _, f := range funcs {
+		b.Run(f.name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				input, err := ioutil.ReadFile("testdata/json/t2/metadata.json")
+				assert.NoError(b, err)
+				kindblackhole, err = f.f(func() (io.Reader, error) { return bytes.NewReader(input), nil }, "default")
+				assert.NoError(b, err)
+			}
+		})
+	}
+}
 func TestGetSourceKind(t *testing.T) {
 	type args struct {
 		exportMetadata func() (io.Reader, error)
