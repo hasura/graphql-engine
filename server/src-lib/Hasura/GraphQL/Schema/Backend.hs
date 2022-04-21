@@ -225,9 +225,6 @@ class
     MonadBuildSchema b r m n =>
     m (Parser 'Output n (HashMap (TableName b) (SourceName, SourceConfig b, SelPermInfo b, PrimaryKeyColumns b, AnnotatedFields b)))
 
-  -- SQL literals
-  columnDefaultValue :: Column b -> SQLExpression b
-
 type ComparisonExp b = OpExpG b (UnpreparedValue b)
 
 -- $modelling

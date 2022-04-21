@@ -72,7 +72,7 @@ data AnnotatedInsertData (b :: BackendType) (f :: Type -> Type) (v :: Type) = An
     _aiTableName :: TableName b,
     _aiCheckCondition :: (AnnBoolExp b v, Maybe (AnnBoolExp b v)),
     _aiTableColumns :: [ColumnInfo b],
-    _aiDefaultValues :: PreSetColsG b v,
+    _aiPresetValues :: PreSetColsG b v,
     _aiBackendInsert :: BackendInsert b v
   }
   deriving (Functor, Foldable, Traversable)

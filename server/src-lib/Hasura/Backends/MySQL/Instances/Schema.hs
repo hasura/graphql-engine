@@ -47,7 +47,6 @@ instance BackendSchema 'MySQL where
   aggregateOrderByCountType = error "aggregateOrderByCountType: MySQL backend does not support this operation yet."
   computedField = error "computedField: MySQL backend does not support this operation yet."
   node = error "node: MySQL backend does not support this operation yet."
-  columnDefaultValue = error "columnDefaultValue: MySQL backend does not support this operation yet."
 
 mysqlTableArgs ::
   forall r m n.
