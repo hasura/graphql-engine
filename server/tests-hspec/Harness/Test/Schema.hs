@@ -129,11 +129,11 @@ getBackendScalarType bst fn =
 -- the columns.
 data BackendScalarValueType = Quoted Text | Unquoted Text deriving (Show, Eq)
 
-quotedValue :: Text -> BackendScalarValueType
-quotedValue = Quoted
+quotedValue :: Text -> Maybe BackendScalarValueType
+quotedValue = Just . Quoted
 
-unquotedValue :: Text -> BackendScalarValueType
-unquotedValue = Unquoted
+unquotedValue :: Text -> Maybe BackendScalarValueType
+unquotedValue = Just . Unquoted
 
 formatBackendScalarValueType :: BackendScalarValueType -> Text
 formatBackendScalarValueType (Quoted text) = "'" <> text <> "'"

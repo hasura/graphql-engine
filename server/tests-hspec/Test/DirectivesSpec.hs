@@ -3,8 +3,11 @@
 -- | Test directives.
 module Test.DirectivesSpec (spec) where
 
-import Data.Aeson (Value)
+import Data.Aeson (Value (..), object, (.=))
+import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Mysql as Mysql
+import Harness.Backend.Postgres qualified as Postgres
+import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml
@@ -25,6 +28,27 @@ spec =
           mkLocalTestEnvironment = Context.noLocalTestEnvironment,
           setup = Mysql.setup schema,
           teardown = Mysql.teardown schema,
+          customOptions = Nothing
+        },
+      Context.Context
+        { name = Context.Backend Context.Postgres,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+          setup = Postgres.setup schema,
+          teardown = Postgres.teardown schema,
+          customOptions = Nothing
+        },
+      Context.Context
+        { name = Context.Backend Context.Citus,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+          setup = Citus.setup schema,
+          teardown = Citus.teardown schema,
+          customOptions = Nothing
+        },
+      Context.Context
+        { name = Context.Backend Context.SQLServer,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+          setup = Sqlserver.setup schema,
+          teardown = Sqlserver.teardown schema,
           customOptions = Nothing
         }
     ]
@@ -70,6 +94,8 @@ query QueryParams {includeId, skipId} =
 
 tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
+  -- Equivalent python suite: test_select_query_author_with_skip_include_directive
+  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L268
   it "Skip id field conditionally" \testEnvironment ->
     shouldReturnYaml
       opts
@@ -83,7 +109,8 @@ data:
   - name: Author 1
   - name: Author 2
 |]
-
+  -- Equivalent python suite: test_select_query_author_with_skip_include_directive
+  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L268
   it "Skip id field conditionally, includeId=true" \testEnvironment ->
     shouldReturnYaml
       opts
@@ -99,7 +126,8 @@ data:
   - id: 2
     name: Author 2
 |]
-
+  -- Equivalent python suite: test_select_query_author_with_skip_include_directive
+  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L268
   it "Skip id field conditionally, skipId=true" \testEnvironment ->
     shouldReturnYaml
       opts
@@ -113,7 +141,8 @@ data:
   - name: Author 1
   - name: Author 2
 |]
-
+  -- Equivalent python suite: test_select_query_author_with_skip_include_directive
+  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L268
   it "Skip id field conditionally, skipId=true, includeId=true" \testEnvironment ->
     shouldReturnYaml
       opts
@@ -127,9 +156,8 @@ data:
   - name: Author 1
   - name: Author 2
 |]
-
-  -- These two come from <https://github.com/hasura/graphql-engine-mono/blob/ec3568c704c4c3f13ecff757c547f0d5a272307b/server/tests-py/queries/graphql_query/mysql/select_query_author_with_skip_directive.yaml#L1>
-
+  -- Equivalent python suite: test_select_query_author_with_skip_directive
+  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L262
   it "Author with skip id" \testEnvironment ->
     shouldReturnYaml
       opts
@@ -154,6 +182,8 @@ data:
   - name: Author 1
   - name: Author 2
 |]
+  -- Equivalent python suite: test_select_query_author_with_skip_directive
+  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L262
   it "Author with skip name" \testEnvironment ->
     shouldReturnYaml
       opts
@@ -178,8 +208,8 @@ data:
   - id: 1
   - id: 2
 |]
-
-  -- These three come from <https://github.com/hasura/graphql-engine-mono/blob/5f6f862e5f6b67d82cfa59568edfc4f08b920375/server/tests-py/queries/graphql_query/mysql/select_query_author_with_wrong_directive_err.yaml#L1>
+  -- Equivalent python suite: test_select_query_author_with_wrong_directive_err
+  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L271
   it "Rejects unknown directives" \testEnvironment ->
     shouldReturnYaml
       opts
@@ -245,4 +275,48 @@ errors:
     path: $
     code: validation-failed
   message: directive "include" is not allowed on a query
+|]
+  -- Equivalent python suite: test_select_query_author_with_include_directive
+  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L265
+  it "works with includeId as True includeName as False" \testEnvironment ->
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphqlWithPair
+          testEnvironment
+          [graphql|
+  query author_with_include($includeId: Boolean!, $includeName: Boolean!) {
+    hasura_author {
+      id @include(if: $includeId)
+      name @include(if: $includeName)
+     }
+    }
+|]
+          ["variables" .= object ["includeId" .= True, "includeName" .= False]]
+      )
+      [yaml|
+data:
+  hasura_author:
+  - id: 1
+  - id: 2
+|]
+  it "works with includeId as False includeName as True" \testEnvironment ->
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphqlWithPair
+          testEnvironment
+          [graphql|
+  query author_with_include($includeId: Boolean!, $includeName: Boolean!) {
+    hasura_author {
+      id @include(if: $includeId)
+      name @include(if: $includeName)
+     }
+    }
+|]
+          ["variables" .= object ["includeId" .= False, "includeName" .= True]]
+      )
+      [yaml|
+data:
+  hasura_author:
+  - name: Author 1
+  - name: Author 2
 |]
