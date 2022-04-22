@@ -202,7 +202,6 @@ library
                      , mtl
                      , openapi3
                      , optparse-applicative
-                     , optparse-generic
                      , parsec
                      , pg-client
                      , postgresql-binary
@@ -225,6 +224,7 @@ library
                      , text-builder >= 0.6
                      , these
                      , time >= 1.9
+                     , time-compat
                      , transformers
                      , transformers-base
                      , unordered-containers >= 0.2.12
@@ -787,6 +787,7 @@ library
                      , Hasura.GraphQL.Schema.Remote
                      , Hasura.GraphQL.Schema.RemoteRelationship
                      , Hasura.GraphQL.Schema.Select
+                     , Hasura.GraphQL.Schema.SubscriptionStream
                      , Hasura.GraphQL.Schema.Table
                      , Hasura.GraphQL.Schema.Update
                      , Hasura.GraphQL.Transport.Backend

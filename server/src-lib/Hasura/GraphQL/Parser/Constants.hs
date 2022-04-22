@@ -14,6 +14,9 @@ import Language.GraphQL.Draft.Syntax.QQ as G
 _A :: G.Name
 _A = [G.name|A|]
 
+_ASC :: G.Name
+_ASC = [G.name|ASC|]
+
 _Boolean :: G.Name
 _Boolean = [G.name|Boolean|]
 
@@ -34,6 +37,9 @@ _Datetime = [G.name|Datetime|]
 
 _Date :: G.Name
 _Date = [G.name|Date|]
+
+_DESC :: G.Name
+_DESC = [G.name|DESC|]
 
 _Double :: G.Name
 _Double = [G.name|Double|]
@@ -398,6 +404,15 @@ __st_touches = [G.name|_st_touches|]
 __st_within :: G.Name
 __st_within = [G.name|_st_within|]
 
+__subscription :: G.Name
+__subscription = [G.name|_subscription|]
+
+__stream_cursor_input :: G.Name
+__stream_cursor_input = [G.name|_stream_cursor_input|]
+
+__stream_cursor_value_input :: G.Name
+__stream_cursor_value_input = [G.name|_stream_cursor_value_input|]
+
 __update_column :: G.Name
 __update_column = [G.name|_update_column|]
 
@@ -431,6 +446,9 @@ _avg = [G.name|avg|]
 _a :: G.Name
 _a = [G.name|a|]
 
+_batch_size :: G.Name
+_batch_size = [G.name|batch_size|]
+
 _before :: G.Name
 _before = [G.name|before|]
 
@@ -460,6 +478,9 @@ _created_at = [G.name|created_at|]
 
 _cursor :: G.Name
 _cursor = [G.name|cursor|]
+
+_cursor_ordering :: G.Name
+_cursor_ordering = [G.name|cursor_ordering|]
 
 _data :: G.Name
 _data = [G.name|data|]
@@ -545,6 +566,9 @@ _includeDeprecated = [G.name|includeDeprecated|]
 _include :: G.Name
 _include = [G.name|include|]
 
+_initial_value :: G.Name
+_initial_value = [G.name|initial_value|]
+
 _inputFields :: G.Name
 _inputFields = [G.name|inputFields|]
 
@@ -617,6 +641,9 @@ _on_conflict = [G.name|on_conflict|]
 _order_by :: G.Name
 _order_by = [G.name|order_by|]
 
+_ordering :: G.Name
+_ordering = [G.name|ordering|]
+
 _output :: G.Name
 _output = [G.name|output|]
 
@@ -676,6 +703,9 @@ _stddev_samp = [G.name|stddev_samp|]
 
 _stddev :: G.Name
 _stddev = [G.name|stddev|]
+
+_stream :: G.Name
+_stream = [G.name|_stream|]
 
 _subscriptionType :: G.Name
 _subscriptionType = [G.name|subscriptionType|]

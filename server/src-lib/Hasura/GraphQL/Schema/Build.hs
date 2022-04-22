@@ -49,6 +49,7 @@ module Hasura.GraphQL.Schema.Build
     buildTableDeleteMutationFields,
     buildTableInsertMutationFields,
     buildTableQueryFields,
+    buildTableStreamingSubscriptionFields,
     buildTableUpdateMutationFields,
   )
 where
@@ -60,6 +61,7 @@ import Hasura.GraphQL.Schema.Backend (MonadBuildSchema)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Mutation
 import Hasura.GraphQL.Schema.Select
+import Hasura.GraphQL.Schema.SubscriptionStream (selectStreamTable)
 import Hasura.GraphQL.Schema.Update (updateTable, updateTableByPk)
 import Hasura.Prelude
 import Hasura.RQL.IR
@@ -95,6 +97,24 @@ buildTableQueryFields sourceName tableName tableInfo gqlName = do
     defaultSelectPKDesc = "fetch data from the table: " <> tableName <<> " using primary key columns"
     defaultSelectAggDesc = "fetch aggregated fields from the table: " <>> tableName
     TableCustomRootFields {..} = _tcCustomRootFields . _tciCustomConfig $ _tiCoreInfo tableInfo
+
+buildTableStreamingSubscriptionFields ::
+  forall b r m n.
+  MonadBuildSchema b r m n =>
+  SourceName ->
+  TableName b ->
+  TableInfo b ->
+  G.Name ->
+  m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+buildTableStreamingSubscriptionFields sourceName tableName tableInfo gqlName = do
+  let customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
+      selectDesc = Just $ G.Description $ "fetch data from the table in a streaming manner : " <>> tableName
+  selectStreamName <-
+    mkRootFieldName $ (fromMaybe gqlName $ _crfName $ _tcrfSelect customRootFields) <> G._stream
+  catMaybes
+    <$> sequenceA
+      [ optionalFieldParser QDBStreamMultipleRows $ selectStreamTable sourceName tableInfo selectStreamName selectDesc
+      ]
 
 buildTableInsertMutationFields ::
   forall b r m n.
@@ -244,7 +264,6 @@ buildFunctionMutationFields ::
   m [FieldParser n (MutationDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 buildFunctionMutationFields sourceName functionName functionInfo tableName = do
   let funcDesc = Just $ G.Description $ "execute VOLATILE function " <> functionName <<> " which returns " <>> tableName
-
       jsonAggSelect = _fiJsonAggSelect functionInfo
   catMaybes
     <$> sequenceA

@@ -38,10 +38,12 @@ instance BackendSchema 'DataWrapper where
   buildTableInsertMutationFields _ _ _ _ _ = pure []
   buildTableUpdateMutationFields _ _ _ _ = pure []
   buildTableDeleteMutationFields _ _ _ _ = pure []
+  buildTableStreamingSubscriptionFields _ _ _ _ = pure []
 
   -- backend extensions
   relayExtension = Nothing
   nodesAggExtension = Nothing
+  streamSubscriptionExtension = Nothing
 
   -- table arguments
   tableArguments = tableArgs'

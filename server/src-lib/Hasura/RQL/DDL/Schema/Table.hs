@@ -129,7 +129,7 @@ checkConflictingNode ::
   Text ->
   m ()
 checkConflictingNode sc tnGQL = do
-  let GQLContext queryParser _ = scUnauthenticatedGQLContext sc
+  let GQLContext queryParser _ _ = scUnauthenticatedGQLContext sc
       -- {
       --   __schema {
       --     queryType {

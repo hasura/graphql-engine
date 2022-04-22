@@ -779,6 +779,7 @@ class HGECtx:
         self.metadata_disabled = config.getoption('--test-metadata-disabled')
         self.may_skip_test_teardown = False
         self.function_permissions = config.getoption('--test-function-permissions')
+        self.streaming_subscriptions = config.getoption('--test-streaming-subscriptions')
 
         # This will be GC'd, but we also explicitly dispose() in teardown()
         self.engine = create_engine(self.pg_url)

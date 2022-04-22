@@ -7,6 +7,7 @@ module Hasura.Server.Types
     PGVersion (PGVersion),
     RequestId (..),
     ServerConfigCtx (..),
+    StreamingSubscriptionsCtx (..),
     HasServerConfigCtx (..),
     getRequestId,
   )
@@ -48,6 +49,7 @@ newtype InstanceId = InstanceId {getInstanceId :: Text}
 data ExperimentalFeature
   = EFInheritedRoles
   | EFOptimizePermissionFilters
+  | EFStreamingSubscriptions
   deriving (Show, Eq, Generic)
 
 instance Hashable ExperimentalFeature
@@ -56,12 +58,14 @@ instance FromJSON ExperimentalFeature where
   parseJSON = withText "ExperimentalFeature" $ \case
     "inherited_roles" -> pure EFInheritedRoles
     "optimize_permission_filters" -> pure EFOptimizePermissionFilters
-    _ -> fail "ExperimentalFeature can only be one of these value: inherited_roles, optimize_permission_filters"
+    "streaming_subscriptions" -> pure EFStreamingSubscriptions
+    _ -> fail "ExperimentalFeature can only be one of these value: inherited_roles, optimize_permission_filters or streaming_subscriptions"
 
 instance ToJSON ExperimentalFeature where
   toJSON = \case
     EFInheritedRoles -> "inherited_roles"
     EFOptimizePermissionFilters -> "optimize_permission_filters"
+    EFStreamingSubscriptions -> "streaming_subscriptions"
 
 data MaintenanceMode = MaintenanceModeEnabled | MaintenanceModeDisabled
   deriving (Show, Eq)
@@ -73,6 +77,9 @@ instance FromJSON MaintenanceMode where
 
 instance ToJSON MaintenanceMode where
   toJSON = Bool . (== MaintenanceModeEnabled)
+
+data StreamingSubscriptionsCtx = StreamingSubscriptionsEnabled | StreamingSubscriptionsDisabled
+  deriving (Show, Eq)
 
 -- | See Note [ReadOnly Mode]
 data ReadOnlyMode = ReadOnlyModeEnabled | ReadOnlyModeDisabled

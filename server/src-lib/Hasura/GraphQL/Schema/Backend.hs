@@ -92,7 +92,13 @@ class
     TableInfo b ->
     G.Name ->
     m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-
+  buildTableStreamingSubscriptionFields ::
+    MonadBuildSchema b r m n =>
+    SourceName ->
+    TableName b ->
+    TableInfo b ->
+    G.Name ->
+    m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
   buildTableRelayQueryFields ::
     MonadBuildSchema b r m n =>
     SourceName ->
@@ -101,7 +107,6 @@ class
     G.Name ->
     NESeq (ColumnInfo b) ->
     m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-
   buildTableInsertMutationFields ::
     MonadBuildSchema b r m n =>
     Scenario ->
@@ -181,6 +186,7 @@ class
   -- backend extensions
   relayExtension :: Maybe (XRelay b)
   nodesAggExtension :: Maybe (XNodesAgg b)
+  streamSubscriptionExtension :: Maybe (XStreamingSubscription b)
 
   -- individual components
   columnParser ::

@@ -1,0 +1,91 @@
+-
+  description: Insert mutation 1
+  name: insert_hge_tests_test_t2
+  query: |
+    mutation insert_articles($objects: [hge_tests_test_t2_insert_input!]! ) {
+      insert_hge_tests_test_t2(objects: $objects) {
+        returning {
+          c1
+          c2
+        }
+      }
+    }
+  variables: |
+    {
+      "objects": [
+        {
+          "c1": 1,
+          "c2": "test1"
+        }
+      ]
+    }
+  response: |
+    {
+      "insert_hge_tests_test_t2": {
+        "returning": [
+          {
+            "c1": 1,
+            "c2": "test1"
+          }
+        ]
+      }
+    }
+  stream_response: |
+    [
+      {
+        "c1": 1,
+        "c2": "test1"
+      }
+    ]
+
+-
+  description: Insert mutation 1
+  name: insert_hge_tests_test_t2
+  query: |
+    mutation insert_articles($objects: [hge_tests_test_t2_insert_input!]! ) {
+      insert_hge_tests_test_t2(objects: $objects) {
+        returning {
+          c1
+          c2
+        }
+      }
+    }
+  variables: |
+    {
+      "objects": [
+        {
+          "c1": 2,
+          "c2": "test2"
+        },
+        {
+          "c1": 3,
+          "c2": "test3"
+        }
+      ]
+    }
+  response: |
+    {
+      "insert_hge_tests_test_t2": {
+        "returning": [
+          {
+            "c1": 2,
+            "c2": "test2"
+          },
+          {
+            "c1": 3,
+            "c2": "test3"
+          }
+        ]
+      }
+    }
+  stream_response: |
+    [
+      {
+        "c1": 2,
+        "c2": "test2"
+      },
+      {
+        "c1": 3,
+        "c2": "test3"
+      }
+    ]

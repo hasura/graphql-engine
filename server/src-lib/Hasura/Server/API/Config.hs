@@ -40,6 +40,7 @@ data ServerConfig = ServerConfig
     scfgJwt :: ![JWTInfo],
     scfgIsAllowListEnabled :: !Bool,
     scfgLiveQueries :: !ES.LiveQueriesOptions,
+    scfgStreamingQueries :: !ES.SubscriptionsOptions,
     scfgConsoleAssetsDir :: !(Maybe Text),
     scfgExperimentalFeatures :: !(Set.HashSet ExperimentalFeature)
   }
@@ -53,6 +54,7 @@ runGetConfig ::
   AuthMode ->
   Bool ->
   ES.LiveQueriesOptions ->
+  ES.SubscriptionsOptions ->
   Maybe Text ->
   Set.HashSet ExperimentalFeature ->
   ServerConfig
@@ -62,6 +64,7 @@ runGetConfig
   am
   isAllowListEnabled
   liveQueryOpts
+  streamQueryOpts
   consoleAssetsDir
   experimentalFeatures =
     ServerConfig
@@ -74,6 +77,7 @@ runGetConfig
       (getJWTInfo am)
       isAllowListEnabled
       liveQueryOpts
+      streamQueryOpts
       consoleAssetsDir
       experimentalFeatures
 
