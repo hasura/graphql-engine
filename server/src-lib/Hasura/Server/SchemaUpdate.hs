@@ -35,7 +35,7 @@ import Hasura.Server.SchemaCacheRef
     readSchemaCacheRef,
     withSchemaCacheUpdate,
   )
-import Hasura.Server.Types (InstanceId (..))
+import Hasura.Server.Types
 import Hasura.Session
 import Network.HTTP.Client qualified as HTTP
 

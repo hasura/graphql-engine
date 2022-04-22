@@ -2,8 +2,6 @@ module Hasura.RQL.Types
   ( MonadTx (..),
     SQLGenCtx (..),
     RemoteSchemaPermsCtx (..),
-    ServerConfigCtx (..),
-    HasServerConfigCtx (..),
     HasSystemDefined (..),
     HasSystemDefinedT,
     runHasSystemDefinedT,
@@ -32,7 +30,6 @@ where
 import Control.Lens (Traversal', at, preview, (^.))
 import Data.HashMap.Strict qualified as M
 import Data.Text.Extended
-import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection as R
 import Hasura.Base.Error
 import Hasura.Prelude
@@ -73,7 +70,6 @@ import Hasura.RQL.Types.SourceCustomization as R
 import Hasura.RQL.Types.Subscription as R
 import Hasura.RQL.Types.Table as R
 import Hasura.SQL.Backend as R
-import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing
 import Network.HTTP.Client.Manager (HasHttpManagerM (..))
@@ -168,57 +164,6 @@ askTableMetadata sourceName tableName = do
         . smTables
         . ix tableName
 
-class (Monad m) => HasServerConfigCtx m where
-  askServerConfigCtx :: m ServerConfigCtx
-
-instance
-  (HasServerConfigCtx m) =>
-  HasServerConfigCtx (ReaderT r m)
-  where
-  askServerConfigCtx = lift askServerConfigCtx
-
-instance
-  (HasServerConfigCtx m) =>
-  HasServerConfigCtx (ExceptT e m)
-  where
-  askServerConfigCtx = lift askServerConfigCtx
-
-instance
-  (HasServerConfigCtx m) =>
-  HasServerConfigCtx (StateT s m)
-  where
-  askServerConfigCtx = lift askServerConfigCtx
-
-instance
-  (Monoid w, HasServerConfigCtx m) =>
-  HasServerConfigCtx (WriterT w m)
-  where
-  askServerConfigCtx = lift askServerConfigCtx
-
-instance
-  (HasServerConfigCtx m) =>
-  HasServerConfigCtx (TableCoreCacheRT b m)
-  where
-  askServerConfigCtx = lift askServerConfigCtx
-
-instance
-  (HasServerConfigCtx m) =>
-  HasServerConfigCtx (TraceT m)
-  where
-  askServerConfigCtx = lift askServerConfigCtx
-
-instance
-  (HasServerConfigCtx m) =>
-  HasServerConfigCtx (MetadataT m)
-  where
-  askServerConfigCtx = lift askServerConfigCtx
-
-instance (HasServerConfigCtx m) => HasServerConfigCtx (Q.TxET QErr m) where
-  askServerConfigCtx = lift askServerConfigCtx
-
-instance (HasServerConfigCtx m) => HasServerConfigCtx (TableCacheRT b m) where
-  askServerConfigCtx = lift askServerConfigCtx
-
 class (Monad m) => HasSystemDefined m where
   askSystemDefined :: m SystemDefined
 
@@ -247,8 +192,7 @@ newtype HasSystemDefinedT m a = HasSystemDefinedT {unHasSystemDefinedT :: Reader
       SourceM,
       TableCoreInfoRM b,
       CacheRM,
-      UserInfoM,
-      HasServerConfigCtx
+      UserInfoM
     )
 
 runHasSystemDefinedT :: SystemDefined -> HasSystemDefinedT m a -> m a

@@ -21,6 +21,7 @@ import Hasura.RQL.IR.OrderBy
 import Hasura.RQL.IR.Select
 import Hasura.RQL.Types
 import Hasura.SQL.Types
+import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 

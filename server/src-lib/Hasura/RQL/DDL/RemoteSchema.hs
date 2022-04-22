@@ -26,6 +26,7 @@ import Hasura.GraphQL.RemoteServer
 import Hasura.Prelude
 import Hasura.RQL.DDL.RemoteSchema.Permission
 import Hasura.RQL.Types
+import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
