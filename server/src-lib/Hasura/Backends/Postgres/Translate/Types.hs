@@ -20,6 +20,7 @@ module Hasura.Backends.Postgres.Translate.Types
     SelectSource (SelectSource, _ssPrefix),
     SortingAndSlicing (SortingAndSlicing),
     SourcePrefixes (..),
+    SimilarArrayFields,
     applySortingAndSlicing,
     noSortingAndSlicing,
     objectSelectSourceToSelectSource,
@@ -243,3 +244,5 @@ data PermissionLimitSubQuery
     PLSQRequired !Int
   | PLSQNotRequired
   deriving (Show, Eq)
+
+type SimilarArrayFields = HM.HashMap FieldName [FieldName]

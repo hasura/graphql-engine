@@ -506,6 +506,18 @@ library
                      , Hasura.Backends.Postgres.Translate.Mutation
                      , Hasura.Backends.Postgres.Translate.Returning
                      , Hasura.Backends.Postgres.Translate.Select
+                     , Hasura.Backends.Postgres.Translate.Select.Aggregate
+                     , Hasura.Backends.Postgres.Translate.Select.Aliases
+                     , Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
+                     , Hasura.Backends.Postgres.Translate.Select.Aux1
+                     , Hasura.Backends.Postgres.Translate.Select.Connection
+                     , Hasura.Backends.Postgres.Translate.Select.Extractor
+                     , Hasura.Backends.Postgres.Translate.Select.GenerateSelect
+                     , Hasura.Backends.Postgres.Translate.Select.JoinTree
+                     , Hasura.Backends.Postgres.Translate.Select.OrderBy
+                     , Hasura.Backends.Postgres.Translate.Select.Process
+                     , Hasura.Backends.Postgres.Translate.Select.Query
+                     , Hasura.Backends.Postgres.Translate.Select.Streaming
                      , Hasura.Backends.Postgres.Translate.Types
                      , Hasura.Backends.Postgres.Translate.Update
                      , Hasura.Backends.Postgres.Types.BoolExp

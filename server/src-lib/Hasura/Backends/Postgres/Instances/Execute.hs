@@ -41,7 +41,7 @@ import Hasura.Backends.Postgres.Translate.Select (PostgresAnnotatedFieldJSON)
 import Hasura.Backends.Postgres.Translate.Select qualified as DS
 import Hasura.Backends.Postgres.Types.Update
 import Hasura.Base.Error (QErr)
-import Hasura.EncJSON (EncJSON, encJFromJValue)
+import Hasura.EncJSON (EncJSON, encJFromBS, encJFromJValue)
 import Hasura.GraphQL.Execute.Backend
   ( BackendExecute (..),
     DBStepInfo (..),
@@ -393,7 +393,18 @@ mkCurPlanTx userInfo ps@(PreparedSql q prepMap) =
       -- WARNING: this quietly assumes the intmap keys are contiguous
       prepArgs = fst <$> IntMap.elems args
    in (,Just ps) $
-        Tracing.trace "Postgres" $ liftTx $ DS.asSingleRowJsonResp q prepArgs
+        Tracing.trace "Postgres" $ liftTx $ asSingleRowJsonResp q prepArgs
+
+-- | This function is generally used on the result of 'selectQuerySQL',
+-- 'selectAggregateQuerySQL' or 'connectionSelectSQL' to run said query and get
+-- back the resulting JSON.
+asSingleRowJsonResp ::
+  Q.Query ->
+  [Q.PrepArg] ->
+  Q.TxE QErr EncJSON
+asSingleRowJsonResp query args =
+  encJFromBS . runIdentity . Q.getRow
+    <$> Q.rawQE dmlTxErrorHandler query args True
 
 -- convert a query from an intermediate representation to... another
 irToRootFieldPlan ::
