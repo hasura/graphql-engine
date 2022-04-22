@@ -41,26 +41,26 @@
 </span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.Haskell.TH.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TH</span></span><span>
 </span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Text.Shakespeare.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">ST</span></span><span>
 </span><span id="line-43"></span><span>
-</span><span id="line-44"></span><span id="local-6989586621688472230"><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.Source.html#resolveSourceConfig"><span class="hs-identifier hs-type">resolveSourceConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-45"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688472230"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#MonadResolveSource"><span class="hs-identifier hs-type">MonadResolveSource</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688472230"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-44"></span><span id="local-6989586621688473120"><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.Source.html#resolveSourceConfig"><span class="hs-identifier hs-type">resolveSourceConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688473120"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#MonadResolveSource"><span class="hs-identifier hs-type">MonadResolveSource</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688473120"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-46"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-47"></span><span>  </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLConnConfiguration"><span class="hs-identifier hs-type">MSSQLConnConfiguration</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-48"></span><span>  </span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-49"></span><span>  </span><span class="annot"><a href="#local-6989586621688472230"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLSourceConfig"><span class="hs-identifier hs-type">MSSQLSourceConfig</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-49"></span><span>  </span><span class="annot"><a href="#local-6989586621688473120"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLSourceConfig"><span class="hs-identifier hs-type">MSSQLSourceConfig</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-50"></span><span id="resolveSourceConfig"><span class="annot"><span class="annottext">resolveSourceConfig :: SourceName
 -&gt; MSSQLConnConfiguration
 -&gt; Environment
 -&gt; m (Either QErr MSSQLSourceConfig)
-</span><a href="Hasura.Backends.MSSQL.DDL.Source.html#resolveSourceConfig"><span class="hs-identifier hs-var hs-var">resolveSourceConfig</span></a></span></span><span> </span><span id="local-6989586621688472229"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688472229"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621688472228"><span class="annot"><span class="annottext">MSSQLConnConfiguration
-</span><a href="#local-6989586621688472228"><span class="hs-identifier hs-var">config</span></a></span></span><span> </span><span id="local-6989586621688472227"><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621688472227"><span class="hs-identifier hs-var">_env</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ExceptT QErr m MSSQLSourceConfig
+</span><a href="Hasura.Backends.MSSQL.DDL.Source.html#resolveSourceConfig"><span class="hs-identifier hs-var hs-var">resolveSourceConfig</span></a></span></span><span> </span><span id="local-6989586621688473119"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688473119"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621688473118"><span class="annot"><span class="annottext">MSSQLConnConfiguration
+</span><a href="#local-6989586621688473118"><span class="hs-identifier hs-var">config</span></a></span></span><span> </span><span id="local-6989586621688473117"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621688473117"><span class="hs-identifier hs-var">_env</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ExceptT QErr m MSSQLSourceConfig
 -&gt; m (Either QErr MSSQLSourceConfig)
 forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
 </span><span class="hs-identifier hs-var">runExceptT</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-51"></span><span>  </span><span id="local-6989586621688472225"><span class="annot"><span class="annottext">SourceName
+</span><span id="line-51"></span><span>  </span><span id="local-6989586621688473115"><span class="annot"><span class="annottext">SourceName
 -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig)
-</span><a href="#local-6989586621688472225"><span class="hs-identifier hs-var">sourceResolver</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ExceptT
+</span><a href="#local-6989586621688473115"><span class="hs-identifier hs-var">sourceResolver</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ExceptT
   QErr
   m
   (SourceName
@@ -87,31 +87,31 @@ forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SourceName
 -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig)
-</span><a href="#local-6989586621688472225"><span class="hs-identifier hs-var">sourceResolver</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688472229"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLConnConfiguration
-</span><a href="#local-6989586621688472228"><span class="hs-identifier hs-var">config</span></a></span><span>
+</span><a href="#local-6989586621688473115"><span class="hs-identifier hs-var">sourceResolver</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688473119"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLConnConfiguration
+</span><a href="#local-6989586621688473118"><span class="hs-identifier hs-var">config</span></a></span><span>
 </span><span id="line-53"></span><span>
-</span><span id="line-54"></span><span id="local-6989586621688472221"><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.Source.html#resolveDatabaseMetadata"><span class="hs-identifier hs-type">resolveDatabaseMetadata</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-55"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688472221"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688472221"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-54"></span><span id="local-6989586621688473111"><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.Source.html#resolveDatabaseMetadata"><span class="hs-identifier hs-type">resolveDatabaseMetadata</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688473111"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688473111"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-56"></span><span>  </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLSourceConfig"><span class="hs-identifier hs-type">MSSQLSourceConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-57"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceTypeCustomization"><span class="hs-identifier hs-type">SourceTypeCustomization</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-58"></span><span>  </span><span class="annot"><a href="#local-6989586621688472221"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.html#ResolvedSource"><span class="hs-identifier hs-type">ResolvedSource</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-58"></span><span>  </span><span class="annot"><a href="#local-6989586621688473111"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.html#ResolvedSource"><span class="hs-identifier hs-type">ResolvedSource</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
 </span><span id="line-59"></span><span id="resolveDatabaseMetadata"><span class="annot"><span class="annottext">resolveDatabaseMetadata :: MSSQLSourceConfig
 -&gt; SourceTypeCustomization
 -&gt; m (Either QErr (ResolvedSource 'MSSQL))
-</span><a href="Hasura.Backends.MSSQL.DDL.Source.html#resolveDatabaseMetadata"><span class="hs-identifier hs-var hs-var">resolveDatabaseMetadata</span></a></span></span><span> </span><span id="local-6989586621688472220"><span class="annot"><span class="annottext">MSSQLSourceConfig
-</span><a href="#local-6989586621688472220"><span class="hs-identifier hs-var">config</span></a></span></span><span> </span><span id="local-6989586621688472219"><span class="annot"><span class="annottext">SourceTypeCustomization
-</span><a href="#local-6989586621688472219"><span class="hs-identifier hs-var">customization</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ExceptT QErr m (ResolvedSource 'MSSQL)
+</span><a href="Hasura.Backends.MSSQL.DDL.Source.html#resolveDatabaseMetadata"><span class="hs-identifier hs-var hs-var">resolveDatabaseMetadata</span></a></span></span><span> </span><span id="local-6989586621688473110"><span class="annot"><span class="annottext">MSSQLSourceConfig
+</span><a href="#local-6989586621688473110"><span class="hs-identifier hs-var">config</span></a></span></span><span> </span><span id="local-6989586621688473109"><span class="annot"><span class="annottext">SourceTypeCustomization
+</span><a href="#local-6989586621688473109"><span class="hs-identifier hs-var">customization</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ExceptT QErr m (ResolvedSource 'MSSQL)
 -&gt; m (Either QErr (ResolvedSource 'MSSQL))
 forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
 </span><span class="hs-identifier hs-var">runExceptT</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-60"></span><span>  </span><span id="local-6989586621688472218"><span class="annot"><span class="annottext">HashMap TableName (DBTableMetadata 'MSSQL)
-</span><a href="#local-6989586621688472218"><span class="hs-identifier hs-var">dbTablesMetadata</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">MSSQLExecCtx
+</span><span id="line-60"></span><span>  </span><span id="local-6989586621688473108"><span class="annot"><span class="annottext">HashMap TableName (DBTableMetadata 'MSSQL)
+</span><a href="#local-6989586621688473108"><span class="hs-identifier hs-var">dbTablesMetadata</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">MSSQLExecCtx
 -&gt; forall (m :: * -&gt; *) a.
    (MonadIO m, MonadBaseControl IO m) =&gt;
    TxET QErr m a -&gt; ExceptT QErr m a
 </span><a href="Hasura.Backends.MSSQL.Connection.html#mssqlRunReadOnly"><span class="hs-identifier hs-var hs-var">mssqlRunReadOnly</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLExecCtx
-</span><a href="#local-6989586621688472216"><span class="hs-identifier hs-var">mssqlExecCtx</span></a></span><span> </span><span class="annot"><span class="annottext">(TxET QErr m (HashMap TableName (DBTableMetadata 'MSSQL))
+</span><a href="#local-6989586621688473106"><span class="hs-identifier hs-var">mssqlExecCtx</span></a></span><span> </span><span class="annot"><span class="annottext">(TxET QErr m (HashMap TableName (DBTableMetadata 'MSSQL))
  -&gt; ExceptT QErr m (HashMap TableName (DBTableMetadata 'MSSQL)))
 -&gt; TxET QErr m (HashMap TableName (DBTableMetadata 'MSSQL))
 -&gt; ExceptT QErr m (HashMap TableName (DBTableMetadata 'MSSQL))
@@ -141,28 +141,28 @@ SourceConfig b
 -&gt; ResolvedSource b
 </span><a href="Hasura.RQL.Types.Source.html#ResolvedSource"><span class="hs-identifier hs-var">ResolvedSource</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
 MSSQLSourceConfig
-</span><a href="#local-6989586621688472220"><span class="hs-identifier hs-var">config</span></a></span><span> </span><span class="annot"><span class="annottext">SourceTypeCustomization
-</span><a href="#local-6989586621688472219"><span class="hs-identifier hs-var">customization</span></a></span><span> </span><span class="annot"><span class="annottext">DBTablesMetadata 'MSSQL
+</span><a href="#local-6989586621688473110"><span class="hs-identifier hs-var">config</span></a></span><span> </span><span class="annot"><span class="annottext">SourceTypeCustomization
+</span><a href="#local-6989586621688473109"><span class="hs-identifier hs-var">customization</span></a></span><span> </span><span class="annot"><span class="annottext">DBTablesMetadata 'MSSQL
 HashMap TableName (DBTableMetadata 'MSSQL)
-</span><a href="#local-6989586621688472218"><span class="hs-identifier hs-var">dbTablesMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">DBFunctionsMetadata 'MSSQL
+</span><a href="#local-6989586621688473108"><span class="hs-identifier hs-var">dbTablesMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">DBFunctionsMetadata 'MSSQL
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="annot"><span class="annottext">HashSet (ScalarType 'MSSQL)
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span>
 </span><span id="line-62"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-63"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLSourceConfig"><span class="hs-identifier hs-type">MSSQLSourceConfig</span></a></span><span> </span><span id="local-6989586621688472212"><span class="annot"><span class="annottext">ConnectionString
-</span><a href="#local-6989586621688472212"><span class="hs-identifier hs-var">_connString</span></a></span></span><span> </span><span id="local-6989586621688472216"><span class="annot"><span class="annottext">MSSQLExecCtx
-</span><a href="#local-6989586621688472216"><span class="hs-identifier hs-var">mssqlExecCtx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MSSQLSourceConfig
-</span><a href="#local-6989586621688472220"><span class="hs-identifier hs-var">config</span></a></span><span>
+</span><span id="line-63"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLSourceConfig"><span class="hs-identifier hs-type">MSSQLSourceConfig</span></a></span><span> </span><span id="local-6989586621688473102"><span class="annot"><span class="annottext">ConnectionString
+</span><a href="#local-6989586621688473102"><span class="hs-identifier hs-var">_connString</span></a></span></span><span> </span><span id="local-6989586621688473106"><span class="annot"><span class="annottext">MSSQLExecCtx
+</span><a href="#local-6989586621688473106"><span class="hs-identifier hs-var">mssqlExecCtx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MSSQLSourceConfig
+</span><a href="#local-6989586621688473110"><span class="hs-identifier hs-var">config</span></a></span><span>
 </span><span id="line-64"></span><span>
-</span><span id="line-65"></span><span id="local-6989586621688472211"><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.Source.html#postDropSourceHook"><span class="hs-identifier hs-type">postDropSourceHook</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-66"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688472211"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688472211"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-65"></span><span id="local-6989586621688473101"><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.Source.html#postDropSourceHook"><span class="hs-identifier hs-type">postDropSourceHook</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-66"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688473101"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688473101"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-67"></span><span>  </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLSourceConfig"><span class="hs-identifier hs-type">MSSQLSourceConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-68"></span><span>  </span><span class="annot"><a href="#local-6989586621688472211"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-68"></span><span>  </span><span class="annot"><a href="#local-6989586621688473101"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
 </span><span id="line-69"></span><span id="postDropSourceHook"><span class="annot"><span class="annottext">postDropSourceHook :: MSSQLSourceConfig -&gt; m ()
 </span><a href="Hasura.Backends.MSSQL.DDL.Source.html#postDropSourceHook"><span class="hs-identifier hs-var hs-var">postDropSourceHook</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MSSQLSourceConfig"><span class="hs-identifier hs-type">MSSQLSourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">ConnectionString
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688472210"><span class="annot"><span class="annottext">MSSQLExecCtx
-</span><a href="#local-6989586621688472210"><span class="hs-identifier hs-var">mssqlExecCtx</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688473100"><span class="annot"><span class="annottext">MSSQLExecCtx
+</span><a href="#local-6989586621688473100"><span class="hs-identifier hs-var">mssqlExecCtx</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-70"></span><span>  </span><span class="annot"><span class="annottext">Either QErr ()
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ExceptT QErr m () -&gt; m (Either QErr ())
 forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
@@ -175,7 +175,7 @@ MSSQLExecCtx
    (MonadIO m, MonadBaseControl IO m) =&gt;
    TxET QErr m a -&gt; ExceptT QErr m a
 </span><a href="Hasura.Backends.MSSQL.Connection.html#mssqlRunReadWrite"><span class="hs-identifier hs-var hs-var">mssqlRunReadWrite</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLExecCtx
-</span><a href="#local-6989586621688472210"><span class="hs-identifier hs-var">mssqlExecCtx</span></a></span><span> </span><span class="annot"><span class="annottext">TxET QErr m ()
+</span><a href="#local-6989586621688473100"><span class="hs-identifier hs-var">mssqlExecCtx</span></a></span><span> </span><span class="annot"><span class="annottext">TxET QErr m ()
 forall (m :: * -&gt; *). MonadMSSQLTx m =&gt; m ()
 </span><a href="Hasura.Backends.MSSQL.DDL.Source.html#dropSourceCatalog"><span class="hs-identifier hs-var">dropSourceCatalog</span></a></span><span>
 </span><span id="line-71"></span><span>  </span><span class="hs-comment">-- Close the connection</span><span>
@@ -185,12 +185,12 @@ forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MSSQLExecCtx -&gt; IO ()
 </span><a href="Hasura.Backends.MSSQL.Connection.html#mssqlDestroyConn"><span class="hs-identifier hs-var hs-var">mssqlDestroyConn</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLExecCtx
-</span><a href="#local-6989586621688472210"><span class="hs-identifier hs-var">mssqlExecCtx</span></a></span><span>
+</span><a href="#local-6989586621688473100"><span class="hs-identifier hs-var">mssqlExecCtx</span></a></span><span>
 </span><span id="line-73"></span><span>
-</span><span id="line-74"></span><span id="local-6989586621688472268"><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.Source.html#doesSchemaExist"><span class="hs-identifier hs-type">doesSchemaExist</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MonadMSSQLTx"><span class="hs-identifier hs-type">MonadMSSQLTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688472268"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#SchemaName"><span class="hs-identifier hs-type">SchemaName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688472268"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span></span><span>
+</span><span id="line-74"></span><span id="local-6989586621688473158"><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.Source.html#doesSchemaExist"><span class="hs-identifier hs-type">doesSchemaExist</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MonadMSSQLTx"><span class="hs-identifier hs-type">MonadMSSQLTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688473158"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#SchemaName"><span class="hs-identifier hs-type">SchemaName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688473158"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span></span><span>
 </span><span id="line-75"></span><span id="doesSchemaExist"><span class="annot"><span class="annottext">doesSchemaExist :: SchemaName -&gt; m Bool
-</span><a href="Hasura.Backends.MSSQL.DDL.Source.html#doesSchemaExist"><span class="hs-identifier hs-var hs-var">doesSchemaExist</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#SchemaName"><span class="hs-identifier hs-type">SchemaName</span></a></span><span> </span><span id="local-6989586621688472204"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688472204"><span class="hs-identifier hs-var">schemaName</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="Hasura.Backends.MSSQL.DDL.Source.html#doesSchemaExist"><span class="hs-identifier hs-var hs-var">doesSchemaExist</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#SchemaName"><span class="hs-identifier hs-type">SchemaName</span></a></span><span> </span><span id="local-6989586621688473094"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688473094"><span class="hs-identifier hs-var">schemaName</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-76"></span><span>  </span><span class="annot"><span class="annottext">TxE QErr Bool -&gt; m Bool
 forall (m :: * -&gt; *) a. MonadMSSQLTx m =&gt; TxE QErr a -&gt; m a
 </span><a href="Hasura.Backends.MSSQL.Connection.html#liftMSSQLTx"><span class="hs-identifier hs-var">liftMSSQLTx</span></a></span><span> </span><span class="annot"><span class="annottext">(TxE QErr Bool -&gt; m Bool) -&gt; TxE QErr Bool -&gt; m Bool
@@ -213,10 +213,10 @@ forall (m :: * -&gt; *) a e.
       AS BIT)
     |]</span></span><span>
 </span><span id="line-88"></span><span>
-</span><span id="line-89"></span><span id="local-6989586621688472267"><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.Source.html#doesTableExist"><span class="hs-identifier hs-type">doesTableExist</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MonadMSSQLTx"><span class="hs-identifier hs-type">MonadMSSQLTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688472267"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688472267"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span></span><span>
+</span><span id="line-89"></span><span id="local-6989586621688473157"><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.Source.html#doesTableExist"><span class="hs-identifier hs-type">doesTableExist</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MonadMSSQLTx"><span class="hs-identifier hs-type">MonadMSSQLTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688473157"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688473157"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span></span><span>
 </span><span id="line-90"></span><span id="doesTableExist"><span class="annot"><span class="annottext">doesTableExist :: TableName -&gt; m Bool
-</span><a href="Hasura.Backends.MSSQL.DDL.Source.html#doesTableExist"><span class="hs-identifier hs-var hs-var">doesTableExist</span></a></span></span><span> </span><span id="local-6989586621688472198"><span class="annot"><span class="annottext">TableName
-</span><a href="#local-6989586621688472198"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="Hasura.Backends.MSSQL.DDL.Source.html#doesTableExist"><span class="hs-identifier hs-var hs-var">doesTableExist</span></a></span></span><span> </span><span id="local-6989586621688473088"><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621688473088"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-91"></span><span>  </span><span class="annot"><span class="annottext">TxE QErr Bool -&gt; m Bool
 forall (m :: * -&gt; *) a. MonadMSSQLTx m =&gt; TxE QErr a -&gt; m a
 </span><a href="Hasura.Backends.MSSQL.Connection.html#liftMSSQLTx"><span class="hs-identifier hs-var">liftMSSQLTx</span></a></span><span> </span><span class="annot"><span class="annottext">(TxE QErr Bool -&gt; m Bool) -&gt; TxE QErr Bool -&gt; m Bool
@@ -239,22 +239,22 @@ forall (m :: * -&gt; *) a e.
         AS BIT)
       |]</span></span><span>
 </span><span id="line-103"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-104"></span><span>    </span><span id="local-6989586621688472197"><span class="annot"><span class="annottext">qualifiedTable :: Text
-</span><a href="#local-6989586621688472197"><span class="hs-identifier hs-var hs-var">qualifiedTable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableName -&gt; Text
+</span><span id="line-104"></span><span>    </span><span id="local-6989586621688473087"><span class="annot"><span class="annottext">qualifiedTable :: Text
+</span><a href="#local-6989586621688473087"><span class="hs-identifier hs-var hs-var">qualifiedTable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableName -&gt; Text
 </span><a href="Hasura.Backends.MSSQL.DDL.EventTrigger.html#qualifyTableName"><span class="hs-identifier hs-var">qualifyTableName</span></a></span><span> </span><span class="annot"><span class="annottext">TableName
-</span><a href="#local-6989586621688472198"><span class="hs-identifier hs-var">tableName</span></a></span><span>
+</span><a href="#local-6989586621688473088"><span class="hs-identifier hs-var">tableName</span></a></span><span>
 </span><span id="line-105"></span><span>
 </span><span id="line-106"></span><span class="hs-comment">-- | Initialise catalog tables for a source, including those required by the event delivery subsystem.</span><span>
-</span><span id="line-107"></span><span id="local-6989586621688472195"><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.Source.html#initCatalogForSource"><span class="hs-identifier hs-type">initCatalogForSource</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MonadMSSQLTx"><span class="hs-identifier hs-type">MonadMSSQLTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688472195"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688472195"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RecreateEventTriggers"><span class="hs-identifier hs-type">RecreateEventTriggers</span></a></span></span><span>
+</span><span id="line-107"></span><span id="local-6989586621688473085"><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.Source.html#initCatalogForSource"><span class="hs-identifier hs-type">initCatalogForSource</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MonadMSSQLTx"><span class="hs-identifier hs-type">MonadMSSQLTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688473085"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688473085"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RecreateEventTriggers"><span class="hs-identifier hs-type">RecreateEventTriggers</span></a></span></span><span>
 </span><span id="line-108"></span><span id="initCatalogForSource"><span class="annot"><span class="annottext">initCatalogForSource :: m RecreateEventTriggers
 </span><a href="Hasura.Backends.MSSQL.DDL.Source.html#initCatalogForSource"><span class="hs-identifier hs-var hs-var">initCatalogForSource</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-109"></span><span>  </span><span id="local-6989586621688472194"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688472194"><span class="hs-identifier hs-var">hdbCatalogExist</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaName -&gt; m Bool
+</span><span id="line-109"></span><span>  </span><span id="local-6989586621688473084"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688473084"><span class="hs-identifier hs-var">hdbCatalogExist</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaName -&gt; m Bool
 forall (m :: * -&gt; *). MonadMSSQLTx m =&gt; SchemaName -&gt; m Bool
 </span><a href="Hasura.Backends.MSSQL.DDL.Source.html#doesSchemaExist"><span class="hs-identifier hs-var">doesSchemaExist</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaName
 </span><span class="hs-string">&quot;hdb_catalog&quot;</span></span><span>
-</span><span id="line-110"></span><span>  </span><span id="local-6989586621688472193"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688472193"><span class="hs-identifier hs-var">eventLogTableExist</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableName -&gt; m Bool
+</span><span id="line-110"></span><span>  </span><span id="local-6989586621688473083"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688473083"><span class="hs-identifier hs-var">eventLogTableExist</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableName -&gt; m Bool
 forall (m :: * -&gt; *). MonadMSSQLTx m =&gt; TableName -&gt; m Bool
 </span><a href="Hasura.Backends.MSSQL.DDL.Source.html#doesTableExist"><span class="hs-identifier hs-var">doesTableExist</span></a></span><span> </span><span class="annot"><span class="annottext">(TableName -&gt; m Bool) -&gt; TableName -&gt; m Bool
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -262,8 +262,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#TableName"><span class="hs-identifier hs-var">TableName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;event_log&quot;</span></span><span> </span><span class="annot"><span class="annottext">SchemaName
 </span><span class="hs-string">&quot;hdb_catalog&quot;</span></span><span>
-</span><span id="line-111"></span><span>  </span><span id="local-6989586621688472191"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688472191"><span class="hs-identifier hs-var">sourceVersionTableExist</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableName -&gt; m Bool
+</span><span id="line-111"></span><span>  </span><span id="local-6989586621688473081"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688473081"><span class="hs-identifier hs-var">sourceVersionTableExist</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableName -&gt; m Bool
 forall (m :: * -&gt; *). MonadMSSQLTx m =&gt; TableName -&gt; m Bool
 </span><a href="Hasura.Backends.MSSQL.DDL.Source.html#doesTableExist"><span class="hs-identifier hs-var">doesTableExist</span></a></span><span> </span><span class="annot"><span class="annottext">(TableName -&gt; m Bool) -&gt; TableName -&gt; m Bool
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -276,7 +276,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-114"></span><span>      </span><span class="hs-comment">-- Fresh database</span><span>
 </span><span id="line-115"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688472194"><span class="hs-identifier hs-var">hdbCatalogExist</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TxE QErr RecreateEventTriggers -&gt; m RecreateEventTriggers
+</span><a href="#local-6989586621688473084"><span class="hs-identifier hs-var">hdbCatalogExist</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TxE QErr RecreateEventTriggers -&gt; m RecreateEventTriggers
 forall (m :: * -&gt; *) a. MonadMSSQLTx m =&gt; TxE QErr a -&gt; m a
 </span><a href="Hasura.Backends.MSSQL.Connection.html#liftMSSQLTx"><span class="hs-identifier hs-var">liftMSSQLTx</span></a></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-116"></span><span>        </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; QErr) -&gt; Query -&gt; TxET QErr IO ()
@@ -287,7 +287,7 @@ MonadIO m =&gt;
 </span><a href="Hasura.Backends.MSSQL.SQL.Error.html#defaultMSSQLTxErrorHandler"><span class="hs-identifier hs-var">HGE.defaultMSSQLTxErrorHandler</span></a></span><span> </span><span class="annot"><span class="annottext">Query
 </span><span class="hs-string">&quot;CREATE SCHEMA hdb_catalog&quot;</span></span><span>
 </span><span id="line-117"></span><span>        </span><span class="annot"><span class="annottext">TxET QErr IO ()
-</span><a href="#local-6989586621688472188"><span class="hs-identifier hs-var">initSourceCatalog</span></a></span><span>
+</span><a href="#local-6989586621688473078"><span class="hs-identifier hs-var">initSourceCatalog</span></a></span><span>
 </span><span id="line-118"></span><span>        </span><span class="annot"><span class="annottext">RecreateEventTriggers -&gt; TxE QErr RecreateEventTriggers
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">RecreateEventTriggers
@@ -295,14 +295,14 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span id="line-119"></span><span>      </span><span class="hs-comment">-- Only 'hdb_catalog' schema defined</span><span>
 </span><span id="line-120"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688472191"><span class="hs-identifier hs-var">sourceVersionTableExist</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621688473081"><span class="hs-identifier hs-var">sourceVersionTableExist</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688472193"><span class="hs-identifier hs-var">eventLogTableExist</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621688473083"><span class="hs-identifier hs-var">eventLogTableExist</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-121"></span><span>        </span><span class="annot"><span class="annottext">TxET QErr IO () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadMSSQLTx m =&gt; TxE QErr a -&gt; m a
 </span><a href="Hasura.Backends.MSSQL.Connection.html#liftMSSQLTx"><span class="hs-identifier hs-var">liftMSSQLTx</span></a></span><span> </span><span class="annot"><span class="annottext">TxET QErr IO ()
-</span><a href="#local-6989586621688472188"><span class="hs-identifier hs-var">initSourceCatalog</span></a></span><span>
+</span><a href="#local-6989586621688473078"><span class="hs-identifier hs-var">initSourceCatalog</span></a></span><span>
 </span><span id="line-122"></span><span>        </span><span class="annot"><span class="annottext">RecreateEventTriggers -&gt; m RecreateEventTriggers
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">RecreateEventTriggers
@@ -312,8 +312,8 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 forall (m :: * -&gt; *). MonadMSSQLTx m =&gt; m RecreateEventTriggers
 </span><a href="Hasura.Backends.MSSQL.DDL.Source.html#migrateSourceCatalog"><span class="hs-identifier hs-var">migrateSourceCatalog</span></a></span><span>
 </span><span id="line-124"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-125"></span><span>    </span><span id="local-6989586621688472188"><span class="annot"><span class="annottext">initSourceCatalog :: TxET QErr IO ()
-</span><a href="#local-6989586621688472188"><span class="hs-identifier hs-var hs-var">initSourceCatalog</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-125"></span><span>    </span><span id="local-6989586621688473078"><span class="annot"><span class="annottext">initSourceCatalog :: TxET QErr IO ()
+</span><a href="#local-6989586621688473078"><span class="hs-identifier hs-var hs-var">initSourceCatalog</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-126"></span><span>      </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; QErr) -&gt; Query -&gt; TxET QErr IO ()
 forall (m :: * -&gt; *) e.
 MonadIO m =&gt;
@@ -325,11 +325,11 @@ forall (m :: * -&gt; *). MonadMSSQLTx m =&gt; Int -&gt; m ()
 </span><a href="Hasura.Backends.MSSQL.DDL.Source.Version.html#setSourceCatalogVersion"><span class="hs-identifier hs-var">setSourceCatalogVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><a href="Hasura.Backends.MSSQL.DDL.Source.Version.html#latestSourceCatalogVersion"><span class="hs-identifier hs-var">latestSourceCatalogVersion</span></a></span><span>
 </span><span id="line-128"></span><span>
-</span><span id="line-129"></span><span id="local-6989586621688472288"><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.Source.html#dropSourceCatalog"><span class="hs-identifier hs-type">dropSourceCatalog</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MonadMSSQLTx"><span class="hs-identifier hs-type">MonadMSSQLTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688472288"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688472288"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-129"></span><span id="local-6989586621688473178"><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.Source.html#dropSourceCatalog"><span class="hs-identifier hs-type">dropSourceCatalog</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MonadMSSQLTx"><span class="hs-identifier hs-type">MonadMSSQLTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688473178"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688473178"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
 </span><span id="line-130"></span><span id="dropSourceCatalog"><span class="annot"><span class="annottext">dropSourceCatalog :: m ()
 </span><a href="Hasura.Backends.MSSQL.DDL.Source.html#dropSourceCatalog"><span class="hs-identifier hs-var hs-var">dropSourceCatalog</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-131"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688472182"><span class="annot"><span class="annottext">sql :: Query
-</span><a href="#local-6989586621688472182"><span class="hs-identifier hs-var hs-var">sql</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">$(</span><span class="hs-identifier">makeRelativeToProject</span><span> </span><span class="hs-string">&quot;src-rsr/mssql/drop_mssql_source.sql&quot;</span><span> </span><span class="hs-operator">&gt;&gt;=</span><span> </span><span class="hs-identifier">ODBC.sqlFile</span><span class="hs-special">)</span><span>
+</span><span id="line-131"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688473072"><span class="annot"><span class="annottext">sql :: Query
+</span><a href="#local-6989586621688473072"><span class="hs-identifier hs-var hs-var">sql</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">$(</span><span class="hs-identifier">makeRelativeToProject</span><span> </span><span class="hs-string">&quot;src-rsr/mssql/drop_mssql_source.sql&quot;</span><span> </span><span class="hs-operator">&gt;&gt;=</span><span> </span><span class="hs-identifier">ODBC.sqlFile</span><span class="hs-special">)</span><span>
 </span><span id="line-132"></span><span>  </span><span class="annot"><span class="annottext">TxET QErr IO () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadMSSQLTx m =&gt; TxE QErr a -&gt; m a
 </span><a href="Hasura.Backends.MSSQL.Connection.html#liftMSSQLTx"><span class="hs-identifier hs-var">liftMSSQLTx</span></a></span><span> </span><span class="annot"><span class="annottext">(TxET QErr IO () -&gt; m ()) -&gt; TxET QErr IO () -&gt; m ()
@@ -340,9 +340,9 @@ MonadIO m =&gt;
 (MSSQLTxError -&gt; e) -&gt; Query -&gt; TxET e m ()
 </span><a href="Database.MSSQL.Transaction.html#unitQueryE"><span class="hs-identifier hs-var">unitQueryE</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; QErr
 </span><a href="Hasura.Backends.MSSQL.SQL.Error.html#defaultMSSQLTxErrorHandler"><span class="hs-identifier hs-var">HGE.defaultMSSQLTxErrorHandler</span></a></span><span> </span><span class="annot"><span class="annottext">Query
-</span><a href="#local-6989586621688472182"><span class="hs-identifier hs-var">sql</span></a></span><span>
+</span><a href="#local-6989586621688473072"><span class="hs-identifier hs-var">sql</span></a></span><span>
 </span><span id="line-133"></span><span>
-</span><span id="line-134"></span><span id="local-6989586621688472262"><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.Source.html#migrateSourceCatalog"><span class="hs-identifier hs-type">migrateSourceCatalog</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MonadMSSQLTx"><span class="hs-identifier hs-type">MonadMSSQLTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688472262"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688472262"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RecreateEventTriggers"><span class="hs-identifier hs-type">RecreateEventTriggers</span></a></span></span><span>
+</span><span id="line-134"></span><span id="local-6989586621688473152"><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.Source.html#migrateSourceCatalog"><span class="hs-identifier hs-type">migrateSourceCatalog</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MonadMSSQLTx"><span class="hs-identifier hs-type">MonadMSSQLTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688473152"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688473152"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RecreateEventTriggers"><span class="hs-identifier hs-type">RecreateEventTriggers</span></a></span></span><span>
 </span><span id="line-135"></span><span id="migrateSourceCatalog"><span class="annot"><span class="annottext">migrateSourceCatalog :: m RecreateEventTriggers
 </span><a href="Hasura.Backends.MSSQL.DDL.Source.html#migrateSourceCatalog"><span class="hs-identifier hs-var hs-var">migrateSourceCatalog</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-136"></span><span>  </span><span class="annot"><span class="annottext">m Int
@@ -356,12 +356,12 @@ MonadMSSQLTx m =&gt;
 Int -&gt; m RecreateEventTriggers
 </span><a href="Hasura.Backends.MSSQL.DDL.Source.html#migrateSourceCatalogFrom"><span class="hs-identifier hs-var">migrateSourceCatalogFrom</span></a></span><span>
 </span><span id="line-137"></span><span>
-</span><span id="line-138"></span><span id="local-6989586621688472255"><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.Source.html#migrateSourceCatalogFrom"><span class="hs-identifier hs-type">migrateSourceCatalogFrom</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MonadMSSQLTx"><span class="hs-identifier hs-type">MonadMSSQLTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688472255"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688472255"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RecreateEventTriggers"><span class="hs-identifier hs-type">RecreateEventTriggers</span></a></span></span><span>
+</span><span id="line-138"></span><span id="local-6989586621688473145"><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.Source.html#migrateSourceCatalogFrom"><span class="hs-identifier hs-type">migrateSourceCatalogFrom</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MonadMSSQLTx"><span class="hs-identifier hs-type">MonadMSSQLTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688473145"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688473145"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RecreateEventTriggers"><span class="hs-identifier hs-type">RecreateEventTriggers</span></a></span></span><span>
 </span><span id="line-139"></span><span id="migrateSourceCatalogFrom"><span class="annot"><span class="annottext">migrateSourceCatalogFrom :: Int -&gt; m RecreateEventTriggers
-</span><a href="Hasura.Backends.MSSQL.DDL.Source.html#migrateSourceCatalogFrom"><span class="hs-identifier hs-var hs-var">migrateSourceCatalogFrom</span></a></span></span><span> </span><span id="local-6989586621688472179"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621688472179"><span class="hs-identifier hs-var">prevVersion</span></a></span></span><span>
+</span><a href="Hasura.Backends.MSSQL.DDL.Source.html#migrateSourceCatalogFrom"><span class="hs-identifier hs-var hs-var">migrateSourceCatalogFrom</span></a></span></span><span> </span><span id="local-6989586621688473069"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621688473069"><span class="hs-identifier hs-var">prevVersion</span></a></span></span><span>
 </span><span id="line-140"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621688472179"><span class="hs-identifier hs-var">prevVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+</span><a href="#local-6989586621688473069"><span class="hs-identifier hs-var">prevVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><a href="Hasura.Backends.MSSQL.DDL.Source.Version.html#latestSourceCatalogVersion"><span class="hs-identifier hs-var">latestSourceCatalogVersion</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RecreateEventTriggers -&gt; m RecreateEventTriggers
@@ -369,7 +369,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">RecreateEventTriggers
 </span><a href="Hasura.RQL.Types.EventTrigger.html#RETDoNothing"><span class="hs-identifier hs-var">RETDoNothing</span></a></span><span>
 </span><span id="line-141"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[(Int, TxET QErr IO ())]
-</span><a href="#local-6989586621688472178"><span class="hs-identifier hs-var">neededMigrations</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621688473068"><span class="hs-identifier hs-var">neededMigrations</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-142"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m RecreateEventTriggers
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
@@ -392,7 +392,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621688472179"><span class="hs-identifier hs-var">prevVersion</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688473069"><span class="hs-identifier hs-var">prevVersion</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-147"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-148"></span><span>    </span><span class="annot"><span class="annottext">TxET QErr IO () -&gt; m ()
@@ -407,7 +407,7 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 </span><span class="hs-identifier hs-var">traverse_</span></span><span> </span><span class="annot"><span class="annottext">(Int, TxET QErr IO ()) -&gt; TxET QErr IO ()
 forall a b. (a, b) -&gt; b
 </span><span class="hs-identifier hs-var">snd</span></span><span> </span><span class="annot"><span class="annottext">[(Int, TxET QErr IO ())]
-</span><a href="#local-6989586621688472178"><span class="hs-identifier hs-var">neededMigrations</span></a></span><span>
+</span><a href="#local-6989586621688473068"><span class="hs-identifier hs-var">neededMigrations</span></a></span><span>
 </span><span id="line-149"></span><span>    </span><span class="annot"><span class="annottext">Int -&gt; m ()
 forall (m :: * -&gt; *). MonadMSSQLTx m =&gt; Int -&gt; m ()
 </span><a href="Hasura.Backends.MSSQL.DDL.Source.Version.html#setSourceCatalogVersion"><span class="hs-identifier hs-var">setSourceCatalogVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Int
@@ -417,15 +417,15 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">RecreateEventTriggers
 </span><a href="Hasura.RQL.Types.EventTrigger.html#RETRecreate"><span class="hs-identifier hs-var">RETRecreate</span></a></span><span>
 </span><span id="line-151"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-152"></span><span>    </span><span id="local-6989586621688472178"><span class="annot"><span class="annottext">neededMigrations :: [(Int, TxET QErr IO ())]
-</span><a href="#local-6989586621688472178"><span class="hs-identifier hs-var hs-var">neededMigrations</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-152"></span><span>    </span><span id="local-6989586621688473068"><span class="annot"><span class="annottext">neededMigrations :: [(Int, TxET QErr IO ())]
+</span><a href="#local-6989586621688473068"><span class="hs-identifier hs-var hs-var">neededMigrations</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-153"></span><span>      </span><span class="annot"><span class="annottext">((Int, TxET QErr IO ()) -&gt; Bool)
 -&gt; [(Int, TxET QErr IO ())] -&gt; [(Int, TxET QErr IO ())]
 forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">dropWhile</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621688472179"><span class="hs-identifier hs-var">prevVersion</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Bool)
+</span><a href="#local-6989586621688473069"><span class="hs-identifier hs-var">prevVersion</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Bool)
 -&gt; ((Int, TxET QErr IO ()) -&gt; Int)
 -&gt; (Int, TxET QErr IO ())
 -&gt; Bool
