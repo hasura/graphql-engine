@@ -7,6 +7,9 @@ module Hasura.RQL.DDL.Schema.LegacyCatalog
     fetchMetadataFromHdbTables,
     recreateSystemMetadata,
     addCronTriggerForeignKeyConstraint,
+
+    -- * export for testing
+    parseLegacyRemoteRelationshipDefinition,
   )
 where
 
@@ -370,6 +373,13 @@ addCronTriggerToCatalog CronTriggerMetadata {..} = liftTx $ do
   let scheduleTimes = generateScheduleTimes currentTime 100 ctSchedule -- generate next 100 events
   insertCronEventsTx $ map (CronEventSeed ctName) scheduleTimes
 
+parseLegacyRemoteRelationshipDefinition ::
+  (MonadError QErr m) =>
+  Value ->
+  m RemoteRelationshipDefinition
+parseLegacyRemoteRelationshipDefinition =
+  runAesonParser (parseRemoteRelationshipDefinition RRPLegacy)
+
 fetchMetadataFromHdbTables :: MonadTx m => m MetadataNoSources
 fetchMetadataFromHdbTables = liftTx do
   tables <- Q.catchE defaultTxErrorHandler fetchTables
@@ -404,7 +414,7 @@ fetchMetadataFromHdbTables = liftTx do
   -- Fetch all remote relationships
   remoteRelationshipsRaw <- Q.catchE defaultTxErrorHandler fetchRemoteRelationships
   remoteRelationships <- for remoteRelationshipsRaw $ \(table, relationshipName, definitionValue) -> do
-    definition <- runAesonParser (parseRemoteRelationshipDefinition RRPLegacy) definitionValue
+    definition <- parseLegacyRemoteRelationshipDefinition definitionValue
     pure $ (table, RemoteRelationship relationshipName definition)
 
   let (_, fullTableMetaMap) = flip runState tableMetaMap $ do

@@ -13,6 +13,7 @@ import Data.HashMap.Strict.ExtendedSpec qualified as HashMapExtendedSpec
 import Data.NonNegativeIntSpec qualified as NonNegativeIntSpec
 import Data.Parser.CacheControlSpec qualified as CacheControlParser
 import Data.Parser.JSONPathSpec qualified as JsonPath
+import Data.Parser.RemoteRelationshipSpec qualified as RemoteRelationship
 import Data.Parser.URLTemplateSpec qualified as URLTemplate
 import Data.Time.Clock (getCurrentTime)
 import Data.TimeSpec qualified as TimeSpec
@@ -101,6 +102,7 @@ unitSpecs = do
   describe "Data.Parser.CacheControl" CacheControlParser.spec
   describe "Data.Parser.JSONPath" JsonPath.spec
   describe "Data.Parser.URLTemplate" URLTemplate.spec
+  describe "Data.Parser.RemoteRelationshipSpec" RemoteRelationship.spec
   describe "Data.Time" TimeSpec.spec
   describe "Data.Trie" TrieSpec.spec
   describe "Hasura.App" AppSpec.spec
