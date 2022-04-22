@@ -39,6 +39,42 @@ export const metadata = {
               schema: 'public',
               name: 'Album',
             },
+            object_relationships: [
+              {
+                name: 'relt1obj',
+                using: {
+                  manual_configuration: {
+                    remote_table: {
+                      schema: 'user',
+                      name: 'userAddress',
+                    },
+                    insertion_order: null,
+                    column_mapping: {
+                      AlbumId: 'Id',
+                      Title: 'Country',
+                    },
+                  },
+                },
+              },
+            ],
+            array_relationships: [
+              {
+                name: 'relt1array',
+                using: {
+                  manual_configuration: {
+                    remote_table: {
+                      schema: 'public',
+                      name: 'Artist',
+                    },
+                    insertion_order: null,
+                    column_mapping: {
+                      AlbumId: 'Id',
+                      Title: 'Name',
+                    },
+                  },
+                },
+              },
+            ],
           },
           {
             table: {
@@ -104,6 +140,18 @@ export const metadata = {
             table: {
               schema: 'public',
               name: 'comedies',
+            },
+          },
+          {
+            table: {
+              schema: 'user',
+              name: 'userAddress',
+            },
+          },
+          {
+            table: {
+              schema: 'user',
+              name: 'userInfo',
             },
           },
         ],

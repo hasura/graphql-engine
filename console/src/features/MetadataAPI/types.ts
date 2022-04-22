@@ -1,3 +1,4 @@
+import { MetadataQueryType } from '@/metadata/queryUtils';
 import { HasuraMetadataV3 } from '@/metadata/types';
 import { IntrospectionQuery } from 'graphql';
 
@@ -35,4 +36,15 @@ export const allowedMetadataTypesArr = [
   'bulk',
 ] as const;
 
-export type allowedMetadataTypes = typeof allowedMetadataTypesArr[number];
+type SupportedDataSourcesPrefix =
+  | 'mysql_'
+  | 'mssql_'
+  | 'bigquery_'
+  | 'citus_'
+  | 'pg_';
+
+export type AllMetadataQueries = `${SupportedDataSourcesPrefix}${MetadataQueryType}`;
+
+export type allowedMetadataTypes =
+  | typeof allowedMetadataTypesArr[number]
+  | AllMetadataQueries;

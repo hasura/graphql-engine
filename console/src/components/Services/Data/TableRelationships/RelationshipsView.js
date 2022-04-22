@@ -5,7 +5,7 @@ import {
   useFeatureFlags,
   availableFeatureFlagIds,
 } from '@/features/FeatureFlags';
-import { DatabaseRelationshipsTab } from '@/features/DatabaseRelationshipsTab';
+import { DatabaseRelationshipsTab } from '@/features/DataRelationships';
 import TableHeader from '../TableCommon/TableHeader';
 import { getObjArrRelList } from './utils';
 import { setTable, UPDATE_REMOTE_SCHEMA_MANUAL_REL } from '../DataActions';

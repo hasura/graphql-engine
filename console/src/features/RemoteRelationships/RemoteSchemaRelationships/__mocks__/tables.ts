@@ -8,12 +8,46 @@ export const tables = {
   ],
 };
 
-export const tableColumnsResult = {
+export const albumTableColumnsResult = {
   result_type: 'TuplesOk',
   result: [
     ['database', 'table_schema', 'table_name', 'column_name', 'data_type'],
     ['chinook', 'public', 'Album', 'AlbumId', 'integer'],
     ['chinook', 'public', 'Album', 'Title', 'character varying'],
     ['chinook', 'public', 'Album', 'ArtistId', 'integer'],
+  ],
+};
+
+export const artistTableColumnsResult = {
+  result_type: 'TuplesOk',
+  result: [
+    ['database', 'table_schema', 'table_name', 'column_name', 'data_type'],
+    ['chinook', 'public', 'Artist', 'Id', 'integer'],
+    ['chinook', 'public', 'Artist', 'Name', 'character varying'],
+    ['chinook', 'public', 'Artist', 'Age', 'integer'],
+  ],
+};
+
+export const userInfoTableColumnsResult = {
+  result_type: 'TuplesOk',
+  result: [
+    ['database', 'table_schema', 'table_name', 'column_name', 'data_type'],
+    ['chinook', 'user', 'userInfo', 'Id', 'integer'],
+    ['chinook', 'user', 'userInfo', 'FirstName', 'character varying'],
+    ['chinook', 'user', 'userInfo', 'LastName', 'character varying'],
+    ['chinook', 'user', 'userInfo', 'Age', 'integer'],
+  ],
+};
+
+export const userAddressTableColumnsResult = {
+  result_type: 'TuplesOk',
+  result: [
+    ['database', 'table_schema', 'table_name', 'column_name', 'data_type'],
+    ['chinook', 'user', 'userAddress', 'Id', 'integer'],
+    ['chinook', 'user', 'userAddress', 'Block', 'character varying'],
+    ['chinook', 'user', 'userAddress', 'Street', 'character varying'],
+    ['chinook', 'user', 'userAddress', 'City', 'character varying'],
+    ['chinook', 'user', 'userAddress', 'Country', 'character varying'],
+    ['chinook', 'user', 'userAddress', 'CountryCode', 'integer'],
   ],
 };

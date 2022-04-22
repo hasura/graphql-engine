@@ -9,6 +9,8 @@ import type {
   rsToRsRelDef,
   TableEntry,
   rsToDbRelDef,
+  ObjectRelationship,
+  ArrayRelationship,
 } from '@/metadata/types';
 import { MetadataResponse } from '..';
 
@@ -169,6 +171,26 @@ export namespace MetadataSelector {
       metadataTable?.remote_relationships ?? []
     ).filter(field => 'to_remote_schema' in field.definition);
     return remote_schema_relationships;
+  };
+
+  export const getLocalDBObjectRelationships = (
+    currentDataSource: string,
+    table: QualifiedTable
+  ) => (m: MetadataResponse) => {
+    const metadataTable = getTable(currentDataSource, table)(m);
+    const object_relationships: ObjectRelationship[] =
+      metadataTable?.object_relationships ?? [];
+    return object_relationships;
+  };
+
+  export const getLocalDBArrayRelationships = (
+    currentDataSource: string,
+    table: QualifiedTable
+  ) => (m: MetadataResponse) => {
+    const metadataTable = getTable(currentDataSource, table)(m);
+    const array_relationships: ArrayRelationship[] =
+      metadataTable?.array_relationships ?? [];
+    return array_relationships;
   };
 
   export const getAllDriversList = (m: MetadataResponse) =>

@@ -107,6 +107,7 @@ export const DatabaseSelector = (props: Props) => {
           data-testid={`${name}_database`}
           icon={<FaDatabase />}
           label={labels?.database ?? 'Source'}
+          name={`${name}_database`}
         />
       </div>
 
@@ -139,6 +140,7 @@ export const DatabaseSelector = (props: Props) => {
               ? labels?.dataset
               : labels?.schema) ?? 'Schema'
           }
+          name={`${name}_schema`}
         />
       </div>
       <div
@@ -165,6 +167,7 @@ export const DatabaseSelector = (props: Props) => {
           data-testid={`${name}_table`}
           icon={<FaTable />}
           label={labels?.table || 'Table'}
+          name={`${name}_table`}
         />
       </div>
     </div>
