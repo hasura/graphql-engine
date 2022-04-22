@@ -182,7 +182,7 @@ serialize = \case
   VUTCTime t -> pack $ formatTime defaultTimeLocale "'%F %T'" t
   VBool b -> tshow @Int $ if b then 1 else 0
   VNull -> "NULL"
-  VCustomValue bsv -> Schema.formatBackendScalarValueType $ Schema.backendScalarValue bsv bsvMssql
+  VCustomValue bsv -> Schema.formatBackendScalarValueType $ Schema.backendScalarValue bsv bsvMysql
 
 mkRow :: [Schema.ScalarValue] -> Text
 mkRow row =

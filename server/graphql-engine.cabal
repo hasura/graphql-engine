@@ -1104,6 +1104,7 @@ test-suite tests-hspec
     Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec
     Test.RequestHeadersSpec
     Test.SerializationSpec
+    Test.SelectSpec
     Test.ServiceLivenessSpec
     Test.ViewsSpec
     Test.WhereSpec

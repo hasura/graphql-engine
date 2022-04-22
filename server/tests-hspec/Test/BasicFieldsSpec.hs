@@ -84,21 +84,6 @@ author =
       [Schema.VInt 2, Schema.VStr "Author 2"]
     ]
 
-_article :: Schema.Table
-_article =
-  Schema.Table
-    "article"
-    [ Schema.column "id" Schema.TInt,
-      Schema.column "name" Schema.TStr,
-      Schema.column "author_id" Schema.TInt
-    ]
-    ["id"]
-    [Schema.Reference "author_id" "hasura.author" "id"]
-    [ [Schema.VInt 1, Schema.VStr "article1", Schema.VInt 1],
-      [Schema.VInt 2, Schema.VStr "article2", Schema.VInt 2],
-      [Schema.VInt 3, Schema.VStr "article3", Schema.VInt 3]
-    ]
-
 --------------------------------------------------------------------------------
 -- Tests
 
@@ -126,6 +111,8 @@ data:
   - name: Author 2
     id: 2
 |]
+  -- Equivalent python suite: test_select_query_author
+  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L254
   it "Use operationName" $ \testEnvironment ->
     shouldReturnYaml
       opts
@@ -155,6 +142,8 @@ data:
   - name: Author 2
     id: 2
 |]
+  -- Equivalent python suite: test_select_query_col_not_present_err
+  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L292
   it "Missing field" $ \testEnvironment -> do
     shouldReturnYaml
       opts
@@ -178,6 +167,8 @@ errors:
   message: |-
     field "notPresentCol" not found in type: 'hasura_author'
 |]
+  -- Equivalent python suite: test_select_query_non_tracked_table
+  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L289
   it "Missing table" $ \testEnvironment ->
     shouldReturnYaml
       opts

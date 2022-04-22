@@ -148,7 +148,9 @@ mkPrimaryKey key =
 mkReference :: Schema.Reference -> Text
 mkReference Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} =
   T.unwords
-    [ "FOREIGN KEY",
+    [ "CONSTRAINT ",
+      constraintName,
+      "FOREIGN KEY ",
       "(",
       wrapIdentifier referenceLocalColumn,
       ")",
@@ -160,6 +162,12 @@ mkReference Schema.Reference {referenceLocalColumn, referenceTargetTable, refere
       "ON DELETE CASCADE",
       "ON UPDATE CASCADE"
     ]
+  where
+    constraintName :: Text
+    constraintName =
+      "FK_" <> referenceTargetTable <> "_" <> referenceTargetColumn
+        <> "_"
+        <> referenceLocalColumn
 
 -- | Serialize tableData into a T-SQL insert statement and execute it.
 insertTable :: HasCallStack => Schema.Table -> IO ()

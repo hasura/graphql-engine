@@ -46,7 +46,7 @@ author =
     "author"
     [ Schema.column
         "uuid"
-        ( Schema.TCustomType
+        ( Schema.TCustomType $
             defaultBackendScalarType
               { bstMssql = Just "VARCHAR(50)"
               }

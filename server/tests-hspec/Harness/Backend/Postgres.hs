@@ -151,7 +151,7 @@ mkPrimaryKey key =
 mkReference :: Schema.Reference -> Text
 mkReference Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} =
   T.unwords
-    [ "CONSTRAINT FOREIGN KEY",
+    [ "FOREIGN KEY",
       "(",
       wrapIdentifier referenceLocalColumn,
       ")",
