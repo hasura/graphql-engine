@@ -13,7 +13,9 @@ module Hasura.GraphQL.Schema.Common
     QueryContext (..),
     Scenario (..),
     SelectArgs,
+    SelectStreamArgs,
     SelectExp,
+    StreamSelectExp,
     TablePerms,
     askTableInfo,
     comparisonAggOperators,
@@ -77,11 +79,15 @@ type MonadBuildSchemaBase r m n =
 
 type SelectExp b = IR.AnnSimpleSelectG b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
 
+type StreamSelectExp b = IR.AnnSimpleStreamSelectG b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
+
 type AggSelectExp b = IR.AnnAggregateSelectG b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
 
 type ConnectionSelectExp b = IR.ConnectionSelect b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
 
 type SelectArgs b = IR.SelectArgsG b (P.UnpreparedValue b)
+
+type SelectStreamArgs b = IR.SelectStreamArgsG b (P.UnpreparedValue b)
 
 type TablePerms b = IR.TablePermG b (P.UnpreparedValue b)
 

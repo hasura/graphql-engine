@@ -63,8 +63,10 @@ openValueOrigin (ValueWithOrigin _ a) = a
 openValueOrigin (ValueNoOrigin a) = a
 
 mkParameter :: ValueWithOrigin (ColumnValue b) -> UnpreparedValue b
-mkParameter (ValueWithOrigin valInfo columnValue) = UVParameter (Just valInfo) columnValue
-mkParameter (ValueNoOrigin columnValue) = UVParameter Nothing columnValue
+mkParameter (ValueWithOrigin valInfo columnValue) =
+  UVParameter (Just valInfo) columnValue
+mkParameter (ValueNoOrigin columnValue) =
+  UVParameter Nothing columnValue
 
 -- TODO: figure out what the purpose of this method is.
 peelWithOrigin :: MonadParse m => Parser 'Both m a -> Parser 'Both m (ValueWithOrigin a)

@@ -5,6 +5,7 @@ import queue
 import time
 import json
 import utils
+from utils import *
 from validate import check_query, check_query_f, check_event, check_event_transformed, check_events
 
 usefixtures = pytest.mark.usefixtures
@@ -27,47 +28,6 @@ def select_last_event_fromdb(hge_ctx):
     st_code, resp = hge_ctx.v1q(q)
     return st_code, resp
 
-
-def insert(hge_ctx, table, row, returning=[], headers = {}):
-    return insert_many(hge_ctx, table, [row], returning, headers)
-
-def insert_many(hge_ctx, table, rows, returning=[], headers = {}):
-    q = {
-        "type": "insert",
-        "args": {
-            "table": table,
-            "objects": rows,
-            "returning": returning
-        }
-    }
-    st_code, resp = hge_ctx.v1q(q, headers = headers)
-    return st_code, resp
-
-
-def update(hge_ctx, table, where_exp, set_exp, headers = {}):
-    q = {
-        "type": "update",
-        "args": {
-            "table": table,
-            "where": where_exp,
-            "$set": set_exp
-        }
-    }
-    st_code, resp = hge_ctx.v1q(q, headers = headers)
-    return st_code, resp
-
-
-def delete(hge_ctx, table, where_exp, headers = {}):
-    q = {
-        "type": "delete",
-        "args": {
-            "table": table,
-            "where": where_exp
-        }
-    }
-    st_code, resp = hge_ctx.v1q(q, headers = headers)
-    return st_code, resp
-
 def insert_mutation(hge_ctx, table, row, headers = {}):
     return insert_many_mutation(hge_ctx, table, [row], headers)
 
@@ -81,7 +41,7 @@ def insert_many_mutation(hge_ctx, table, rows, headers = {}):
     else:
         insert_value_type = table["name"] + "_" + "insert" + "_" + "input"
         insert_mutation_field = "insert" + "_" + table["name"]
-    
+
     insert_mutation_query = """
     mutation {mutation_name}($values: [{insert_value_type}!]!) {{
         {insert_mutation_field}(objects: $values) {{
@@ -89,10 +49,10 @@ def insert_many_mutation(hge_ctx, table, rows, headers = {}):
         }}
     }}
     """.format(mutation_name = mutation_name, insert_value_type = insert_value_type, insert_mutation_field = insert_mutation_field )
-    
+
     variables = {'values': rows}
     graphql_query = {'query': insert_mutation_query, 'variables': variables}
-    
+
     st_code, resp = hge_ctx.v1graphqlq(graphql_query, headers = headers)
     return st_code, resp
 
@@ -104,7 +64,7 @@ def update_mutation(hge_ctx, table, where_exp, set_exp, headers = {}):
         update_mutation_field = "update" + "_" + table["schema"] +"_" + table["name"]
     else:
         update_mutation_field = "update" + "_" + table["name"]
-    
+
     update_mutation_query = """
     mutation {mutation_name} {{
         {update_mutation_field}(where: {where_exp}, _set: {set_exp}) {{
@@ -115,7 +75,7 @@ def update_mutation(hge_ctx, table, where_exp, set_exp, headers = {}):
                update_mutation_field = update_mutation_field,
                where_exp = where_exp,
                set_exp = set_exp)
-    
+
     print("--- UPDATE MUTATION QUERY ---- \n", update_mutation_query)
 
     graphql_query = {'query': update_mutation_query}
@@ -132,7 +92,7 @@ def delete_mutation(hge_ctx, table, where_exp, headers = {}):
         delete_mutation_field = "delete" + "_" + table["schema"] +"_" + table["name"]
     else:
         delete_mutation_field = "delete" + "_" + table["name"]
-    
+
     delete_mutation_query = """
     mutation {mutation_name} {{
         {delete_mutation_field}(where: {where_exp}) {{
@@ -142,7 +102,7 @@ def delete_mutation(hge_ctx, table, where_exp, headers = {}):
     """.format(mutation_name = mutation_name,
                delete_mutation_field = delete_mutation_field,
                where_exp = where_exp)
-    
+
     print("--- DELETE MUTATION QUERY ---- \n", delete_mutation_query)
 
     graphql_query = {'query': delete_mutation_query}
@@ -187,7 +147,7 @@ class TestEventCreateAndDeleteMSSQL:
 
     def test_create_reset(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/create_and_reset_mssql.yaml")
-        
+
         table = {"schema": "hge_tests", "name": "test_t1"}
         init_row = {"c1": 1, "c2": "world"}
         st_code, resp = insert_mutation(hge_ctx, table, init_row)
@@ -272,7 +232,7 @@ class TestEventFloodCommon(object):
                     }
                 }
                 st, resp = hge_ctx.v2q(locked_counts)
-            
+
             assert st == 200, resp
             # Make sure we have 2*HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE events checked out:
             #  - 100 prefetched
@@ -283,7 +243,7 @@ class TestEventFloodCommon(object):
                 assert resp['result'][1][0] == '200'
             elif (hge_ctx.backend == "mssql"):
                 assert resp['result'][1][0] == 200
-            
+
         # Rather than sleep arbitrarily, loop until assertions pass:
         utils.until_asserts_pass(30, check_backpressure)
         # ...then make sure we're truly stable:
@@ -384,7 +344,7 @@ class TestEventDataFormatBigIntMSSQL(object):
           "new": {"id": 50755254975729665, "name": "hello"}
       }
 
-      # TODO: Naveen: Insert mutation on big int values in MSSQL source 
+      # TODO: Naveen: Insert mutation on big int values in MSSQL source
       # does not work as of now, hence using 'run_sql' to directly insert rows
       # and trigger the event trigger. When they are supported in future, we
       # might wanna use the insert_mutation here for consistency.
@@ -396,7 +356,7 @@ class TestEventDataFormatBigIntMSSQL(object):
             "sql":'''
             INSERT INTO hge_tests.test_bigint ([id], [name]) VALUES (50755254975729665, 'hello')
             '''
-        } 
+        }
       }
       st_code, resp = hge_ctx.v2q(insert_bigint_sql)
       print("----------- resp ----------\n", resp)
@@ -440,7 +400,7 @@ class TestCreateEventQueryCommon(object):
         #assert st_code == 400, resp
         check_event(hge_ctx, evts_webhook, "t1_all", table, "INSERT", exp_ev_data)
         assert st_code == 200, resp
-        
+
         # Check Update Event Trigger Payload
         if (hge_ctx.backend == "postgres"):
             where_exp = {"c1": 1}
@@ -450,7 +410,7 @@ class TestCreateEventQueryCommon(object):
             where_exp = '{c1: {_eq: 1}}'
             set_exp = '{c2: "world"}'
             st_code, resp = update_mutation(hge_ctx, table, where_exp, set_exp)
-        
+
         exp_ev_data = {
                 "old": init_row,
                 "new": {"c1": 1, "c2": "world"}
@@ -636,7 +596,7 @@ class TestUpdateEventQuery(object):
         table = {"schema": "hge_tests", "name": "test_t1"}
 
         # Expect that inserting a row (which would have triggered in original
-        # create_event_trigger) does not trigger      
+        # create_event_trigger) does not trigger
         init_row = {"c1": 1, "c2": "hello", "c3": {"name": "clarke"}}
         st_code, resp = insert(hge_ctx, table, init_row)
         assert st_code == 200, resp
@@ -688,7 +648,7 @@ class TestUpdateEventQueryMSSQL(object):
     @classmethod
     def dir(cls):
         return 'queries/event_triggers/update_query'
-    
+
     @pytest.fixture(autouse=True)
     def transact(self, request, hge_ctx, evts_webhook):
         print("In setup method")
@@ -718,7 +678,7 @@ class TestUpdateEventQueryMSSQL(object):
         print("--- TEARDOWN STARTED -----")
         st_code, resp = hge_ctx.v2q_f(self.dir() + '/teardown-mssql.yaml')
         assert st_code == 200, resp
-    
+
     def test_update_basic(self, hge_ctx, evts_webhook):
         table = {"schema": "hge_tests", "name": "test_t1"}
 
@@ -867,7 +827,7 @@ class TestDeleteEventQueryMSSQL(object):
         with pytest.raises(queue.Empty):
             # NOTE: use a bit of a delay here, to catch any stray events generated above
             check_event(hge_ctx, evts_webhook, "t1_all", table, "DELETE", exp_ev_data, get_timeout=2)
-    
+
 
 @usefixtures('per_class_tests_db_state')
 class TestEventSelCols:
@@ -957,7 +917,7 @@ class TestEventSelColsMSSQL:
 
         where_exp = '{c1: {_eq: 1}}'
         set_exp = '{c1: 2}'
-        
+
         # expected no event hence previous expected data
         st_code, resp = update_mutation(hge_ctx, table, where_exp, set_exp)
         print("----- RESP 2 -----", resp)
@@ -971,7 +931,7 @@ class TestEventSelColsMSSQL:
             "old": {"c1": 2, "c2": "hello", "c3": "bellamy"},
             "new": {"c1": 2, "c2": "world", "c3": "bellamy"}
         }
-        
+
         st_code, resp = update_mutation(hge_ctx, table, where_exp, set_exp)
         print("----- RESP 3 -----", resp)
         assert st_code == 200, resp
@@ -1166,9 +1126,9 @@ class TestEventUpdateOnlyMSSQL:
         with pytest.raises(queue.Empty):
             # NOTE: use a bit of a delay here, to catch any stray events generated above
             check_event(hge_ctx, evts_webhook, "t1_update", table, "DELETE", exp_ev_data, get_timeout=2)
-    
+
     # CASE 3: An Update transaction, which can give rise to both CASE 1 and CASE 2
-    # described above. 
+    # described above.
     # i.e for a single update transaction which changes the primary key of a row
     # and a non primary key of another row, 2 event triggers should be fired.
     def test_update_both_cases(self, hge_ctx, evts_webhook):
@@ -1192,7 +1152,7 @@ class TestEventUpdateOnlyMSSQL:
       # INSERT operations will not fire event triggers
       with pytest.raises(queue.Empty):
           check_event(hge_ctx, evts_webhook, "t1_update", table, "INSERT", exp_insert_ev_data, get_timeout=0)
-      
+
       # An UPDATE SQL which will create two events, one for each case
       # The following update transaction does the following changes
       # We have the following values in table [(1, 'hello'), (2, 'world')]
@@ -1203,8 +1163,8 @@ class TestEventUpdateOnlyMSSQL:
             "source": "mssql",
             "sql":'''
             UPDATE hge_tests.test_t1
-            SET c1 = (CASE WHEN c1 = 1 THEN 2 
-                           WHEN c1 = 2 THEN 3 
+            SET c1 = (CASE WHEN c1 = 1 THEN 2
+                           WHEN c1 = 2 THEN 3
                            ELSE c1 END),
                 c2 = (CASE WHEN c1 = 2 THEN N'clarke' ELSE c2 END)
             '''

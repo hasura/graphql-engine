@@ -104,6 +104,14 @@ def pytest_addoption(parser):
     )
 
     parser.addoption(
+        "--test-streaming-subscriptions",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Run streaming subscription tests"
+    )
+
+    parser.addoption(
         "--test-jwk-url",
         action="store_true",
         default=False,
@@ -372,6 +380,12 @@ use_function_permission_fixtures = pytest.mark.usefixtures(
     'per_method_db_data_for_mutation_tests',
     'functions_permissions_fixtures'
 )
+
+@pytest.fixture(scope='class')
+def streaming_subscriptions_fixtures(hge_ctx):
+    if not hge_ctx.streaming_subscriptions:
+        pytest.skip('These tests are meant to be run with --test-streaming-subscriptions set with pytest')
+        return
 
 @pytest.fixture(scope='class')
 def pro_tests_fixtures(hge_ctx):

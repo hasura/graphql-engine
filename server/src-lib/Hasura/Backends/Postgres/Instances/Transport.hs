@@ -112,9 +112,7 @@ runPGSubscription ::
   m (DiffTime, Either QErr [(CohortId, B.ByteString)])
 runPGSubscription sourceConfig query variables =
   withElapsedTime $
-    runExceptT $
-      runQueryTx (_pscExecCtx sourceConfig) $
-        PGL.executeMultiplexedQuery query variables
+    runExceptT $ runQueryTx (_pscExecCtx sourceConfig) $ PGL.executeMultiplexedQuery query variables
 
 runPGStreamingSubscription ::
   MonadIO m =>

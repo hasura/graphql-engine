@@ -404,7 +404,15 @@ v1QueryHandler query = do
       experimentalFeatures <- asks (scExperimentalFeatures . hcServerCtx)
       eventingMode <- asks (scEventingMode . hcServerCtx)
       readOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
-      let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode experimentalFeatures eventingMode readOnlyMode
+      let serverConfigCtx =
+            ServerConfigCtx
+              functionPermsCtx
+              remoteSchemaPermsCtx
+              sqlGenCtx
+              maintenanceMode
+              experimentalFeatures
+              eventingMode
+              readOnlyMode
       runQuery
         env
         logger
@@ -495,7 +503,16 @@ v2QueryHandler query = do
       maintenanceMode <- asks (scEnableMaintenanceMode . hcServerCtx)
       eventingMode <- asks (scEventingMode . hcServerCtx)
       readOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
-      let serverConfigCtx = ServerConfigCtx functionPermsCtx remoteSchemaPermsCtx sqlGenCtx maintenanceMode experimentalFeatures eventingMode readOnlyMode
+      let serverConfigCtx =
+            ServerConfigCtx
+              functionPermsCtx
+              remoteSchemaPermsCtx
+              sqlGenCtx
+              maintenanceMode
+              experimentalFeatures
+              eventingMode
+              readOnlyMode
+
       V2Q.runQuery env instanceId userInfo schemaCache httpMgr serverConfigCtx query
 
 v1Alpha1GQHandler ::
@@ -676,6 +693,7 @@ configApiGetHandler serverCtx@ServerCtx {..} consoleAssetsDir =
                 scAuthMode
                 scEnableAllowlist
                 (ES._ssLiveQueryOptions $ scSubscriptionState)
+                (ES._ssStreamQueryOptions $ scSubscriptionState)
                 consoleAssetsDir
                 scExperimentalFeatures
         return (emptyHttpLogMetadata @m, JSONResp $ HttpResponse (encJFromJValue res) [])
@@ -793,6 +811,7 @@ mkWaiApp
         postPollHook = fromMaybe (ES.defaultSubscriptionPostPollHook logger) liveQueryHook
 
     subscriptionsState <- liftIO $ ES.initSubscriptionsState lqOpts streamQOpts postPollHook
+
     wsServerEnv <-
       WS.createWSServerEnv
         logger

@@ -65,8 +65,8 @@ data SubscriptionsState = SubscriptionsState
     _ssLiveQueryMap :: PollerMap (),
     _ssStreamQueryMap :: PollerMap (STM.TVar CursorVariableValues),
     -- | A hook function which is run after each fetch cycle
-    _ssPostPollHook :: !SubscriptionPostPollHook,
-    _ssAsyncActions :: !AsyncActionSubscriptionState
+    _ssPostPollHook :: SubscriptionPostPollHook,
+    _ssAsyncActions :: AsyncActionSubscriptionState
   }
 
 initSubscriptionsState ::
@@ -105,6 +105,39 @@ type LiveQuerySubscriberDetails = SubscriberDetails CohortKey
 --   details and then stop it.
 type StreamingSubscriberDetails = SubscriberDetails (CohortKey, STM.TVar CursorVariableValues)
 
+-- | `findPollerForSubscriber` places a subscriber in the correct poller.
+--   If the poller doesn't exist then we create one otherwise we return the
+--   existing one.
+findPollerForSubscriber ::
+  Subscriber ->
+  CohortId ->
+  PollerMap streamCursorVars ->
+  PollerKey ->
+  CohortKey ->
+  (Subscriber -> Cohort streamCursorVars -> STM.STM streamCursorVars) ->
+  (Subscriber -> CohortId -> Poller streamCursorVars -> STM.STM streamCursorVars) ->
+  STM.STM ((Maybe (Poller streamCursorVars)), streamCursorVars)
+findPollerForSubscriber subscriber cohortId pollerMap pollerKey cohortKey addToCohort addToPoller =
+  -- a handler is returned only when it is newly created
+  STMMap.lookup pollerKey pollerMap >>= \case
+    Just poller -> do
+      -- Found a poller, now check if a cohort also exists
+      cursorVars <-
+        TMap.lookup cohortKey (_pCohorts poller) >>= \case
+          -- cohort found too! Simply add the subscriber to the cohort
+          Just cohort -> addToCohort subscriber cohort
+          -- cohort not found. Create a cohort with the subscriber and add
+          -- the cohort to the poller
+          Nothing -> addToPoller subscriber cohortId poller
+      return (Nothing, cursorVars)
+    Nothing -> do
+      -- no poller found, so create one with the cohort
+      -- and the subscriber within it.
+      !poller <- Poller <$> TMap.new <*> STM.newEmptyTMVar
+      cursorVars <- addToPoller subscriber cohortId poller
+      STMMap.insert poller pollerKey pollerMap
+      return $ (Just poller, cursorVars)
+
 -- | Fork a thread handling a regular (live query) subscription
 addLiveQuery ::
   forall b.
@@ -142,33 +175,28 @@ addLiveQuery
     let !subscriber = Subscriber subscriberId subscriberMetadata requestId operationName onResultAction
 
     $assertNFHere subscriber -- so we don't write thunks to mutable vars
-
-    -- a handler is returned only when it is newly created
-    handlerM <-
+    (pollerMaybe, ()) <-
       STM.atomically $
-        STMMap.lookup handlerId lqMap >>= \case
-          Just handler -> do
-            TMap.lookup cohortKey (_pCohorts handler) >>= \case
-              Just cohort -> addToCohort subscriber cohort
-              Nothing -> addToPoller subscriber cohortId handler
-            return Nothing
-          Nothing -> do
-            !poller <- newPoller
-            addToPoller subscriber cohortId poller
-            STMMap.insert poller handlerId lqMap
-            return $ Just poller
+        findPollerForSubscriber
+          subscriber
+          cohortId
+          lqMap
+          handlerId
+          cohortKey
+          addToCohort
+          addToPoller
 
     -- we can then attach a polling thread if it is new the livequery can only be
     -- cancelled after putTMVar
-    onJust handlerM $ \handler -> do
+    onJust pollerMaybe $ \poller -> do
       pollerId <- PollerId <$> UUID.nextRandom
       threadRef <- forkImmortal ("pollLiveQuery." <> show pollerId) logger $
         forever $ do
-          pollLiveQuery @b pollerId lqOpts (source, sourceConfig) role parameterizedQueryHash query (_pCohorts handler) postPollHook
+          pollLiveQuery @b pollerId lqOpts (source, sourceConfig) role parameterizedQueryHash query (_pCohorts poller) postPollHook
           sleep $ unNonNegativeDiffTime $ unRefetchInterval refetchInterval
       let !pState = PollerIOState threadRef pollerId
       $assertNFHere pState -- so we don't write thunks to mutable vars
-      STM.atomically $ STM.putTMVar (_pIOState handler) pState
+      STM.atomically $ STM.putTMVar (_pIOState poller) pState
 
     liftIO $ EKG.Gauge.inc $ smActiveSubscriptions serverMetrics
 
@@ -193,11 +221,7 @@ addLiveQuery
         addToCohort subscriber newCohort
         TMap.insert newCohort cohortKey $ _pCohorts handler
 
-      newPoller = Poller <$> TMap.new <*> STM.newEmptyTMVar
-
 -- | Fork a thread handling a streaming subscription
---
--- TODO can we DRY and combine this with 'addLiveQuery'?
 addStreamSubscriptionQuery ::
   forall b.
   BackendTransport b =>
@@ -237,22 +261,16 @@ addStreamSubscriptionQuery
     let !subscriber = Subscriber subscriberId subscriberMetadata requestId operationName onResultAction
 
     $assertNFHere subscriber -- so we don't write thunks to mutable vars
-
-    -- a handler is returned only when it is newly created
     (handlerM, cohortCursorTVar) <-
       STM.atomically $
-        STMMap.lookup handlerId streamQueryMap >>= \case
-          Just handler -> do
-            cohortCursorTVar <-
-              TMap.lookup cohortKey (_pCohorts handler) >>= \case
-                Just cohort -> addToCohort subscriber cohort
-                Nothing -> addToPoller subscriber cohortId handler
-            return (Nothing, cohortCursorTVar)
-          Nothing -> do
-            !poller <- newPoller
-            cohortCursorTVar <- addToPoller subscriber cohortId poller
-            STMMap.insert poller handlerId streamQueryMap
-            return $ (Just poller, cohortCursorTVar)
+        findPollerForSubscriber
+          subscriber
+          cohortId
+          streamQueryMap
+          handlerId
+          cohortKey
+          addToCohort
+          addToPoller
 
     -- we can then attach a polling thread if it is new the subscription can only be
     -- cancelled after putTMVar
@@ -287,8 +305,6 @@ addStreamSubscriptionQuery
         cohortCursorVals <- addToCohort subscriber newCohort
         TMap.insert newCohort cohortKey $ _pCohorts handler
         pure cohortCursorVals
-
-      newPoller = Poller <$> TMap.new <*> STM.newEmptyTMVar
 
 removeLiveQuery ::
   L.Logger L.Hasura ->

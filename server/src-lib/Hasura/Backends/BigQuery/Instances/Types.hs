@@ -35,6 +35,7 @@ instance Backend 'BigQuery where
   type XRelay 'BigQuery = XDisable
   type XNodesAgg 'BigQuery = XEnable
   type XNestedInserts 'BigQuery = XDisable
+  type XStreamingSubscription 'BigQuery = XDisable
 
   type ExtraTableMetadata 'BigQuery = ()
 

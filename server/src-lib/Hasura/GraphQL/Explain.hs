@@ -13,12 +13,14 @@ import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.GraphQL.Context qualified as C
 import Hasura.GraphQL.Execute qualified as E
 import Hasura.GraphQL.Execute.Action qualified as E
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Execute.Instances ()
 import Hasura.GraphQL.Execute.Query qualified as E
 import Hasura.GraphQL.Execute.RemoteJoin.Collect qualified as RJ
+import Hasura.GraphQL.Execute.Resolve qualified as ER
 import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.ParameterizedQueryHash
 import Hasura.GraphQL.Parser
@@ -100,7 +102,14 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
     G.TypedOperationDefinition G.OperationTypeMutation _ _ _ _ ->
       throw400 InvalidParams "only queries can be explained"
     G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives inlinedSelSet -> do
-      (unpreparedQueries, _, normalizedSelectionSet) <- E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) directives inlinedSelSet
+      (_normalizedDirectives, normalizedSelectionSet) <-
+        ER.resolveVariables
+          varDefs
+          (fromMaybe mempty (GH._grVariables query))
+          directives
+          inlinedSelSet
+      subscriptionParser <- C.gqlSubscriptionParser graphQLContext `onNothing` throw400 NotFound "no subscriptions found"
+      unpreparedQueries <- (subscriptionParser >>> (`onLeft` reportParseErrors)) normalizedSelectionSet
       let parameterizedQueryHash = calculateParameterizedQueryHash normalizedSelectionSet
       -- TODO: validate directives here
       -- query-tags are not necessary for EXPLAIN API

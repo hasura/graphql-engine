@@ -1,5 +1,5 @@
 {-# LANGUAGE ApplicativeDo #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskellQuotes #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- | MSSQL Instances Schema
@@ -44,8 +44,8 @@ instance BackendSchema 'MSSQL where
   -- top level parsers
   buildTableQueryFields = GSB.buildTableQueryFields
   buildTableRelayQueryFields = msBuildTableRelayQueryFields
-  buildTableInsertMutationFields =
-    GSB.buildTableInsertMutationFields backendInsertParser
+  buildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
+  buildTableInsertMutationFields = GSB.buildTableInsertMutationFields backendInsertParser
   buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
   buildTableUpdateMutationFields = msBuildTableUpdateMutationFields
 
@@ -56,6 +56,7 @@ instance BackendSchema 'MSSQL where
   -- backend extensions
   relayExtension = Nothing
   nodesAggExtension = Just ()
+  streamSubscriptionExtension = Nothing
 
   -- table arguments
   tableArguments = msTableArgs

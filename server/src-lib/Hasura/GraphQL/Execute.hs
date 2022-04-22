@@ -33,6 +33,7 @@ import Hasura.GraphQL.Execute.Common qualified as EC
 import Hasura.GraphQL.Execute.Mutation qualified as EM
 import Hasura.GraphQL.Execute.Query qualified as EQ
 import Hasura.GraphQL.Execute.RemoteJoin qualified as RJ
+import Hasura.GraphQL.Execute.Resolve qualified as ER
 import Hasura.GraphQL.Execute.Subscription.Plan qualified as ES
 import Hasura.GraphQL.Execute.Types qualified as ET
 import Hasura.GraphQL.Namespace
@@ -377,9 +378,14 @@ getResolvedExecPlan
               maybeOperationName
           pure (parameterizedQueryHash, MutationExecutionPlan executionPlan)
         G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives inlinedSelSet -> do
-          -- Parse as query to check correctness
-          (unpreparedAST, normalizedDirectives, normalizedSelectionSet) <-
-            EQ.parseGraphQLQuery gCtx varDefs (_grVariables reqUnparsed) directives inlinedSelSet
+          (normalizedDirectives, normalizedSelectionSet) <-
+            ER.resolveVariables
+              varDefs
+              (fromMaybe mempty (_grVariables reqUnparsed))
+              directives
+              inlinedSelSet
+          subscriptionParser <- C.gqlSubscriptionParser gCtx `onNothing` throw400 ValidationFailed "no subscriptions exist"
+          unpreparedAST <- (subscriptionParser >>> (`onLeft` reportParseErrors)) normalizedSelectionSet
           let parameterizedQueryHash = calculateParameterizedQueryHash normalizedSelectionSet
           -- Process directives on the subscription
           dirMap <-
@@ -391,8 +397,8 @@ getResolvedExecPlan
           -- SUPPORTED FEATURE. We might remove it in the future without warning. DO NOT USE THIS.
           allowMultipleRootFields <- withDirective dirMap multipleRootFields $ pure . isJust
           case inlinedSelSet of
-            [_] -> pure ()
             [] -> throw500 "empty selset for subscription"
+            [_] -> pure ()
             _ ->
               unless (allowMultipleRootFields && isSingleNamespace unpreparedAST) $
                 throw400 ValidationFailed "subscriptions must select one top level field"

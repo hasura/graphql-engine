@@ -9,11 +9,20 @@ args:
         code TEXT,
         name TEXT
       );
+      CREATE TABLE authors (
+        id SERIAL PRIMARY KEY,
+        name TEXT
+      );
 
 - type: track_table
   args:
     schema: public
     name: hello
+
+- type: track_table
+  args:
+    schema: public
+    name: authors
 
 - type: add_remote_schema
   args:

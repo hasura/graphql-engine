@@ -92,7 +92,7 @@ import Network.HTTP.Types qualified as HTTP
 import Network.WebSockets qualified as WS
 import StmContainers.Map qualified as STMMap
 
--- | 'ES.LiveQueryId' comes from 'Hasura.GraphQL.Execute.LiveQuery.State.addLiveQuery'. We use
+-- | 'ES.SubscriberDetails' comes from 'Hasura.GraphQL.Execute.LiveQuery.State.addLiveQuery'. We use
 -- this to track a connection's operations so we can remove them from 'LiveQueryState', and
 -- log.
 --
@@ -224,7 +224,7 @@ sendCloseWithMsg ::
   m ()
 sendCloseWithMsg logger wsConn errCode mErrServerMsg mCode = do
   case mErrServerMsg of
-    Just errServerMsg -> do
+    Just errServerMsg ->
       sendMsg wsConn errServerMsg
     Nothing -> pure ()
   logWSEvent logger wsConn EClosed
@@ -287,7 +287,7 @@ onConn wsId requestHead ipAddress onConnHActions = do
     -- NOTE: the "Keep-Alive" delay is something that's mentioned
     -- in the Apollo spec. For 'graphql-ws', we're using the Ping
     -- messages that are part of the spec.
-    keepAliveAction keepAliveDelay wsConn = do
+    keepAliveAction keepAliveDelay wsConn =
       liftIO $
         forever $ do
           kaAction wsConn
@@ -518,7 +518,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
           sendResultFromFragments Telem.Query timerTot requestId conclusion opName parameterizedQueryHash
           case conclusion of
             Left _ -> pure ()
-            Right results -> do
+            Right results ->
               -- Note: The result of cacheStore is ignored here since we can't ensure that
               --       the WS client will respond correctly to multiple messages.
               void $
@@ -664,7 +664,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
     fmtErrorMessage = WS._wsaErrorMsgFormat onMessageActions
 
     getExecStepActionWithActionInfo acc execStep = case execStep of
-      E.ExecStepAction _ actionInfo _remoteJoins -> (actionInfo : acc)
+      E.ExecStepAction _ actionInfo _remoteJoins -> actionInfo : acc
       _ -> acc
 
     doQErr ::
@@ -682,7 +682,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
       ExceptT f n a
     withErr embed f action = do
       res <- runExceptT $ f $ lift action
-      onLeft res (\e -> throwError $ embed e)
+      onLeft res (throwError . embed)
 
     forWithKey = flip OMap.traverseWithKey
 
@@ -950,7 +950,7 @@ onPing wsConn mPayload =
 
 onPong :: (MonadIO m) => WSConn -> Maybe PingPongPayload -> m ()
 onPong wsConn mPayload = liftIO $ case mPayload of
-  Just message -> do
+  Just message ->
     when (message /= keepAliveMessage) $
       sendMsg wsConn (SMPing mPayload)
   -- NOTE: this is done to avoid sending Ping for every "keepalive" that the server sends

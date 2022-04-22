@@ -1,5 +1,5 @@
 {-# LANGUAGE ApplicativeDo #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskellQuotes #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Hasura.Backends.MySQL.Instances.Schema () where
@@ -30,6 +30,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 instance BackendSchema 'MySQL where
   buildTableQueryFields = GSB.buildTableQueryFields
   buildTableRelayQueryFields = buildTableRelayQueryFields'
+  buildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
   buildTableInsertMutationFields = buildTableInsertMutationFields'
   buildTableUpdateMutationFields = buildTableUpdateMutationFields'
   buildTableDeleteMutationFields = buildTableDeleteMutationFields'
@@ -39,6 +40,7 @@ instance BackendSchema 'MySQL where
   relayExtension = Nothing
   tableArguments = mysqlTableArgs
   nodesAggExtension = Just ()
+  streamSubscriptionExtension = Nothing
   columnParser = columnParser'
   jsonPathArg = jsonPathArg'
   orderByOperators = orderByOperators'

@@ -1,5 +1,5 @@
 {-# LANGUAGE ApplicativeDo #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskellQuotes #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -135,6 +135,7 @@ instance
   -- top level parsers
   buildTableQueryFields = GSB.buildTableQueryFields
   buildTableRelayQueryFields = pgkBuildTableRelayQueryFields
+  buildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
   buildTableInsertMutationFields = GSB.buildTableInsertMutationFields backendInsertParser
   buildTableUpdateMutationFields = pgkBuildTableUpdateMutationFields
   buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
@@ -149,6 +150,7 @@ instance
   -- backend extensions
   relayExtension = pgkRelayExtension @pgKind
   nodesAggExtension = Just ()
+  streamSubscriptionExtension = Just ()
 
   -- indivdual components
   columnParser = columnParser

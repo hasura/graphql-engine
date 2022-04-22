@@ -1,5 +1,5 @@
 {-# LANGUAGE ApplicativeDo #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskellQuotes #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Hasura.Backends.BigQuery.Instances.Schema () where
@@ -33,6 +33,7 @@ instance BackendSchema 'BigQuery where
   -- top level parsers
   buildTableQueryFields = GSB.buildTableQueryFields
   buildTableRelayQueryFields = bqBuildTableRelayQueryFields
+  buildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
   buildTableInsertMutationFields = bqBuildTableInsertMutationFields
   buildTableUpdateMutationFields = bqBuildTableUpdateMutationFields
   buildTableDeleteMutationFields = bqBuildTableDeleteMutationFields
@@ -43,6 +44,7 @@ instance BackendSchema 'BigQuery where
   -- backend extensions
   relayExtension = Nothing
   nodesAggExtension = Just ()
+  streamSubscriptionExtension = Nothing
 
   -- table arguments
   tableArguments = defaultTableArgs

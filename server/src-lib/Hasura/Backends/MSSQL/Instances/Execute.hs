@@ -274,7 +274,7 @@ prepareStateCohortVariables sourceConfig session prepState = do
       session
       namedVars
       posVars
-      mempty
+      mempty -- streaming cursor variables are kept empty because streaming subscriptions aren't yet supported for MS-SQL
 
 -- | Ensure that the set of variables (with value instantiations) that occur in
 -- a (RQL) query produce a well-formed and executable (SQL) query when

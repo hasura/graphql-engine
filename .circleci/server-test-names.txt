@@ -25,6 +25,7 @@ ws-metadata-api-disabled
 remote-schema-permissions
 function-permissions
 roles-inheritance
+streaming-subscriptions
 remote-schema-https
 query-caching
 query-logs

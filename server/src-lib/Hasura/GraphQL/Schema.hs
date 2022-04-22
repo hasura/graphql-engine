@@ -95,6 +95,7 @@ buildGQLContext ServerConfigCtx {..} queryType sources allRemoteSchemas allActio
       allActionInfos = Map.elems allActions
       allTableRoles = Set.fromList $ getTableRoles =<< Map.elems sources
       allRoles = nonTableRoles <> allTableRoles
+
   roleContexts <-
     -- Buld role contexts in parallel. We'd prefer deterministic parallelism
     -- but that isn't really acheivable (see mono #3829). NOTE: the admin role
@@ -113,6 +114,7 @@ buildGQLContext ServerConfigCtx {..} queryType sources allRemoteSchemas allActio
                 customTypes
                 role
                 _sccRemoteSchemaPermsCtx
+                (bool StreamingSubscriptionsDisabled StreamingSubscriptionsEnabled $ EFStreamingSubscriptions `elem` _sccExperimentalFeatures)
             QueryRelay ->
               (,mempty,G.SchemaIntrospection mempty)
                 <$> buildRelayRoleContext
@@ -145,12 +147,13 @@ buildRoleContext ::
   AnnotatedCustomTypes ->
   RoleName ->
   RemoteSchemaPermsCtx ->
+  StreamingSubscriptionsCtx ->
   m
     ( RoleContext GQLContext,
       HashSet InconsistentMetadata,
       G.SchemaIntrospection
     )
-buildRoleContext options sources remotes allActionInfos customTypes role remoteSchemaPermsCtx = do
+buildRoleContext options sources remotes allActionInfos customTypes role remoteSchemaPermsCtx streamingSubscriptionsCtx = do
   let ( SQLGenCtx stringifyNum dangerousBooleanCollapse optimizePermissionFilters,
         queryType,
         functionPermsCtx
@@ -165,7 +168,7 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
           optimizePermissionFilters
   runMonadSchema role roleQueryContext sources (fst <$> remotes) $ do
     -- build all sources
-    (sourcesQueryFields, sourcesMutationFrontendFields, sourcesMutationBackendFields) <-
+    (sourcesQueryFields, sourcesMutationFrontendFields, sourcesMutationBackendFields, subscriptionFields) <-
       fmap mconcat $ traverse (buildBackendSource buildSource) $ toList sources
     -- build all remote schemas
     -- we only keep the ones that don't result in a name conflict
@@ -173,13 +176,14 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
       buildAndValidateRemoteSchemas remotes sourcesQueryFields sourcesMutationBackendFields role remoteSchemaPermsCtx
     let remotesQueryFields = concatMap piQuery remoteSchemaFields
         remotesMutationFields = concat $ mapMaybe piMutation remoteSchemaFields
+        remotesSubscriptionFields = concat $ mapMaybe piSubscription remoteSchemaFields
 
     mutationParserFrontend <-
       buildMutationParser remotesMutationFields allActionInfos customTypes sourcesMutationFrontendFields
     mutationParserBackend <-
       buildMutationParser remotesMutationFields allActionInfos customTypes sourcesMutationBackendFields
     subscriptionParser <-
-      buildSubscriptionParser sourcesQueryFields allActionInfos customTypes
+      buildSubscriptionParser subscriptionFields allActionInfos customTypes remotesSubscriptionFields
     queryParserFrontend <-
       buildQueryParser sourcesQueryFields remotesQueryFields allActionInfos customTypes mutationParserFrontend subscriptionParser
     queryParserBackend <-
@@ -212,9 +216,15 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
 
     -- (since we're running this in parallel in caller, be strict)
     let !frontendContext =
-          GQLContext (finalizeParser queryParserFrontend) (finalizeParser <$> mutationParserFrontend)
+          GQLContext
+            (finalizeParser queryParserFrontend)
+            (finalizeParser <$> mutationParserFrontend)
+            (finalizeParser <$> subscriptionParser)
         !backendContext =
-          GQLContext (finalizeParser queryParserBackend) (finalizeParser <$> mutationParserBackend)
+          GQLContext
+            (finalizeParser queryParserBackend)
+            (finalizeParser <$> mutationParserBackend)
+            (finalizeParser <$> subscriptionParser)
 
     pure
       ( RoleContext frontendContext $ Just backendContext,
@@ -230,18 +240,24 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
         m
         ( [FieldParser (P.ParseT Identity) (NamespacedField (QueryRootField UnpreparedValue))],
           [FieldParser (P.ParseT Identity) (NamespacedField (MutationRootField UnpreparedValue))],
-          [FieldParser (P.ParseT Identity) (NamespacedField (MutationRootField UnpreparedValue))]
+          [FieldParser (P.ParseT Identity) (NamespacedField (MutationRootField UnpreparedValue))],
+          [FieldParser (P.ParseT Identity) (NamespacedField (QueryRootField UnpreparedValue))]
         )
     buildSource (SourceInfo sourceName tables functions sourceConfig queryTagsConfig sourceCustomization) =
       withSourceCustomization sourceCustomization do
         let validFunctions = takeValidFunctions functions
             validTables = takeValidTables tables
         mkTypename <- asks getter
-        (,,)
+        uncustomizedQueryFields <- buildQueryFields sourceName sourceConfig validTables validFunctions queryTagsConfig
+        uncustomizedStreamSubscriptionFields <-
+          case streamingSubscriptionsCtx of
+            StreamingSubscriptionsEnabled -> buildTableStreamSubscriptionFields sourceName sourceConfig validTables queryTagsConfig
+            StreamingSubscriptionsDisabled -> pure mempty
+        (,,,)
           <$> customizeFields
             sourceCustomization
             (mkTypename <> P.MkTypename (<> G.__query))
-            (buildQueryFields sourceName sourceConfig validTables validFunctions queryTagsConfig)
+            (pure uncustomizedQueryFields)
           <*> customizeFields
             sourceCustomization
             (mkTypename <> P.MkTypename (<> G.__mutation_frontend))
@@ -250,6 +266,10 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
             sourceCustomization
             (mkTypename <> P.MkTypename (<> G.__mutation_backend))
             (buildMutationFields Backend sourceName sourceConfig validTables validFunctions queryTagsConfig)
+          <*> customizeFields
+            sourceCustomization
+            (mkTypename <> P.MkTypename (<> G.__subscription))
+            (pure $ uncustomizedStreamSubscriptionFields <> uncustomizedQueryFields)
 
 buildRelayRoleContext ::
   forall m.
@@ -293,7 +313,7 @@ buildRelayRoleContext options sources allActionInfos customTypes role = do
     mutationParserBackend <-
       buildMutationParser mempty allActionInfos customTypes mutationBackendFields
     subscriptionParser <-
-      buildSubscriptionParser queryPGFields [] customTypes
+      buildSubscriptionParser queryPGFields [] customTypes []
     queryParserFrontend <-
       queryWithIntrospectionHelper queryPGFields mutationParserFrontend subscriptionParser
     queryParserBackend <-
@@ -314,9 +334,15 @@ buildRelayRoleContext options sources allActionInfos customTypes role = do
         (P.parserType <$> subscriptionParser)
 
     let frontendContext =
-          GQLContext (finalizeParser queryParserFrontend) (finalizeParser <$> mutationParserFrontend)
+          GQLContext
+            (finalizeParser queryParserFrontend)
+            (finalizeParser <$> mutationParserFrontend)
+            (finalizeParser <$> subscriptionParser)
         backendContext =
-          GQLContext (finalizeParser queryParserBackend) (finalizeParser <$> mutationParserBackend)
+          GQLContext
+            (finalizeParser queryParserBackend)
+            (finalizeParser <$> mutationParserBackend)
+            (finalizeParser <$> subscriptionParser)
 
     pure $ RoleContext frontendContext $ Just backendContext
   where
@@ -389,10 +415,10 @@ unauthenticatedContext allRemotes remoteSchemaPermsCtx = do
           context {_rscRemoteRelationships = mempty}
 
   runMonadSchema fakeRole fakeQueryContext mempty mempty do
-    (queryFields, mutationFields, remoteErrors) <- case remoteSchemaPermsCtx of
+    (queryFields, mutationFields, subscriptionFields, remoteErrors) <- case remoteSchemaPermsCtx of
       RemoteSchemaPermsEnabled ->
         -- Permissions are enabled, unauthenticated users have access to nothing.
-        pure ([], [], mempty)
+        pure ([], [], [], mempty)
       RemoteSchemaPermsDisabled -> do
         -- Permissions are disabled, unauthenticated users have access to remote schemas.
         (remoteFields, remoteSchemaErrors) <-
@@ -400,19 +426,24 @@ unauthenticatedContext allRemotes remoteSchemaPermsCtx = do
         pure
           ( fmap (fmap RFRemote) <$> concatMap piQuery remoteFields,
             fmap (fmap RFRemote) <$> concat (mapMaybe piMutation remoteFields),
+            fmap (fmap RFRemote) <$> concat (mapMaybe piSubscription remoteFields),
             remoteSchemaErrors
           )
     mutationParser <-
       whenMaybe (not $ null mutationFields) $
         P.safeSelectionSet mutationRoot (Just $ G.Description "mutation root") mutationFields
           <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
+    subscriptionParser <-
+      whenMaybe (not $ null subscriptionFields) $
+        P.safeSelectionSet subscriptionRoot (Just $ G.Description "subscription root") subscriptionFields
+          <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
     queryParser <- queryWithIntrospectionHelper queryFields mutationParser Nothing
     void $
       buildIntrospectionSchema
         (P.parserType queryParser)
         (P.parserType <$> mutationParser)
-        Nothing
-    pure (GQLContext (finalizeParser queryParser) (finalizeParser <$> mutationParser), remoteErrors)
+        (P.parserType <$> subscriptionParser)
+    pure (GQLContext (finalizeParser queryParser) (finalizeParser <$> mutationParser) (finalizeParser <$> subscriptionParser), remoteErrors)
 
 -------------------------------------------------------------------------------
 -- Building parser fields
@@ -507,6 +538,27 @@ buildQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> funct
     let targetTableName = _fiReturnType functionInfo
     lift $ mkRF $ buildFunctionQueryFields sourceName functionName functionInfo targetTableName
   pure $ concat $ tableSelectExpParsers <> catMaybes functionSelectExpParsers
+  where
+    mkRF = mkRootField sourceName sourceConfig queryTagsConfig QDBR
+
+buildTableStreamSubscriptionFields ::
+  forall b r m n.
+  MonadBuildSchema b r m n =>
+  SourceName ->
+  SourceConfig b ->
+  TableCache b ->
+  Maybe QueryTagsConfig ->
+  m [P.FieldParser n (QueryRootField UnpreparedValue)]
+buildTableStreamSubscriptionFields sourceName sourceConfig tables queryTagsConfig = do
+  tableSelectExpParsers <- for (Map.toList tables) \(tableName, tableInfo) -> do
+    tableGQLName <- getTableGQLName @b tableInfo
+    mkRF $
+      buildTableStreamingSubscriptionFields
+        sourceName
+        tableName
+        tableInfo
+        tableGQLName
+  pure $ concat tableSelectExpParsers
   where
     mkRF = mkRootField sourceName sourceConfig queryTagsConfig QDBR
 
@@ -651,10 +703,11 @@ buildSubscriptionParser ::
   [P.FieldParser n (NamespacedField (QueryRootField UnpreparedValue))] ->
   [ActionInfo] ->
   AnnotatedCustomTypes ->
+  [P.FieldParser n (NamespacedField (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))] ->
   m (Maybe (Parser 'Output n (RootFieldMap (QueryRootField UnpreparedValue))))
-buildSubscriptionParser queryFields allActions customTypes = do
+buildSubscriptionParser sourceSubscriptionFields allActions customTypes remoteSubscriptionFields = do
   actionSubscriptionFields <- fmap (fmap NotNamespaced) . concat <$> traverse (buildActionSubscriptionFields customTypes) allActions
-  let subscriptionFields = queryFields <> actionSubscriptionFields
+  let subscriptionFields = sourceSubscriptionFields <> actionSubscriptionFields <> fmap (fmap $ fmap RFRemote) remoteSubscriptionFields
   whenMaybe (not $ null subscriptionFields) $
     P.safeSelectionSet subscriptionRoot Nothing subscriptionFields
       <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)

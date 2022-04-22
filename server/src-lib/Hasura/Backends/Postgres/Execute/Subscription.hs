@@ -18,6 +18,7 @@ module Hasura.Backends.Postgres.Execute.Subscription
     executeMultiplexedQuery,
     executeStreamingMultiplexedQuery,
     executeQuery,
+    SubscriptionType (..),
   )
 where
 
@@ -163,7 +164,7 @@ mkMultiplexedQuery rootFields =
         mkQualifiedIdentifier (aliasToIdentifier fieldAlias) (Identifier "root")
       ]
 
-    mkQualifiedIdentifier prefix = S.SEQIdentifier . S.QIdentifier (S.QualifiedIdentifier prefix Nothing) -- TODO fix this Nothing of course
+    mkQualifiedIdentifier prefix = S.SEQIdentifier . S.QIdentifier (S.QualifiedIdentifier prefix Nothing)
     aliasToIdentifier = Identifier . G.unName
 
 mkStreamingMultiplexedQuery ::
@@ -274,7 +275,8 @@ executeMultiplexedQuery ::
   MultiplexedQuery ->
   [(CohortId, CohortVariables)] ->
   m [(CohortId, B.ByteString)]
-executeMultiplexedQuery (MultiplexedQuery query) = executeQuery query
+executeMultiplexedQuery (MultiplexedQuery query) cohorts =
+  executeQuery query cohorts
 
 executeStreamingMultiplexedQuery ::
   (MonadTx m) =>

@@ -15,17 +15,17 @@ services:
     - "postgres"
     command:
     - graphql-engine
-    - --mysql-host 
+    - --mysql-host
     - <mysql-host>
-    - --mysql-user 
+    - --mysql-user
     - <mysql-user>
-    - --mysql-port 
+    - --mysql-port
     - <mysql-port>
-    - --mysql-dbname 
+    - --mysql-dbname
     - <mysql-dbname>
-    - --mysql-password 
+    - --mysql-password
     - <mysql-password>
-    - serve 
+    - serve
     restart: always
     environment:
       HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
@@ -38,4 +38,3 @@ services:
       # HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
 volumes:
   db_data:
-

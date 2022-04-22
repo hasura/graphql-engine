@@ -719,6 +719,24 @@ roles-inheritance)
 	kill_hge_servers
 	;;
 
+streaming-subscriptions)
+	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH STREAMING SUBSCRIPTIONS #########################>\n"
+
+  export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES="streaming_subscriptions"
+  export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+
+  run_hge_with_args serve
+  wait_for_port 8080
+
+  # run all the subscriptions tests with streaming subscriptions enabled
+	pytest --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" test_subscriptions.py --test-streaming-subscriptions
+
+  unset HASURA_GRAPHQL_ADMIN_SECRET
+  unset HASURA_GRAPHQL_EXPERIMENTAL_FEATURES
+
+  kill_hge_servers
+  ;;
+
 query-caching)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE QUERY CACHING #####################################>\n"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
@@ -857,6 +875,7 @@ remote-schema-https)
 	kill_hge_servers
 	kill $GQL_SERVER_PID
 	;;
+
 
 post-webhook)
 	webhook_tests_check_root

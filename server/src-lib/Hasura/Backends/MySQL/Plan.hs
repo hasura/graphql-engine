@@ -42,11 +42,8 @@ planQuery ::
   m Select
 planQuery sessionVariables queryDB = do
   rootField <- traverse (prepareValueQuery sessionVariables) queryDB
-  sel <-
-    runValidate (runFromIr (fromRootField rootField))
-      `onLeft` (throw400 NotSupported . tshow)
-  pure $
-    sel
+  runValidate (runFromIr (fromRootField rootField))
+    `onLeft` (throw400 NotSupported . tshow)
 
 -- | Prepare a value without any query planning; we just execute the
 -- query with the values embedded.

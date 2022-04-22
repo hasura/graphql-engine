@@ -270,7 +270,12 @@ resolveAsyncActionQuery userInfo annAction =
                       AsyncErrors -> mkAnnFldFromPGCol errorsColumn
 
                   jsonbToRecordSet = QualifiedObject "pg_catalog" $ FunctionName "jsonb_to_recordset"
-                  actionLogInput = UVParameter Nothing $ ColumnValue (ColumnScalar PGJSONB) $ PGValJSONB $ Q.JSONB $ J.toJSON [actionLogResponse]
+                  actionLogInput =
+                    UVParameter Nothing $
+                      ColumnValue (ColumnScalar PGJSONB) $
+                        PGValJSONB $
+                          Q.JSONB $
+                            J.toJSON [actionLogResponse]
                   functionArgs = RS.FunctionArgsExp [RS.AEInput actionLogInput] mempty
                   tableFromExp =
                     RS.FromFunction jsonbToRecordSet functionArgs $
