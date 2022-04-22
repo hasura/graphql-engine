@@ -40,7 +40,6 @@ import Hasura.Backends.Postgres.Execute.Prepare
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.SQL.Value (PGScalarValue (..))
-import Hasura.Backends.Postgres.Translate.Select (asSingleRowJsonResp)
 import Hasura.Backends.Postgres.Translate.Select qualified as RS
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -56,6 +55,7 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.DDL.Webhook.Transform.Class (mkReqTransformCtx)
+import Hasura.RQL.DML.Internal (dmlTxErrorHandler)
 import Hasura.RQL.IR.Action qualified as RA
 import Hasura.RQL.IR.Select qualified as RS
 import Hasura.RQL.Types
@@ -107,6 +107,17 @@ runActionExecution userInfo aep =
           let querySQL = Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggSelect selectResolved
           liftEitherM $ runExceptT $ runTx (_pscExecCtx srcConfig) Q.ReadOnly $ liftTx $ asSingleRowJsonResp querySQL []
     AEPAsyncMutation actionId -> pure $ (,Nothing) $ encJFromJValue $ actionIdToText actionId
+
+-- | This function is generally used on the result of 'selectQuerySQL',
+-- 'selectAggregateQuerySQL' or 'connectionSelectSQL' to run said query and get
+-- back the resulting JSON.
+asSingleRowJsonResp ::
+  Q.Query ->
+  [Q.PrepArg] ->
+  Q.TxE QErr EncJSON
+asSingleRowJsonResp query args =
+  encJFromBS . runIdentity . Q.getRow
+    <$> Q.rawQE dmlTxErrorHandler query args True
 
 -- | Synchronously execute webhook handler and resolve response to action "output"
 resolveActionExecution ::
