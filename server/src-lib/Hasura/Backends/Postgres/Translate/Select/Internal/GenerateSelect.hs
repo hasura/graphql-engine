@@ -3,7 +3,7 @@
 --
 -- NOTE: 'generateSQLSelect' is mutually recursive with
 -- 'connectionToSelectWith', thus these two cohabitate in this module.
-module Hasura.Backends.Postgres.Translate.Select.GenerateSelect
+module Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect
   ( generateSQLSelect,
     generateSQLSelectFromArrayNode,
     connectionToSelectWith,
@@ -14,8 +14,8 @@ import Data.HashMap.Strict qualified as HM
 import Data.List.NonEmpty qualified as NE
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
-import Hasura.Backends.Postgres.Translate.Select.Aliases (mkBaseTableAlias)
-import Hasura.Backends.Postgres.Translate.Select.Aux1
+import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases (mkBaseTableAlias)
+import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
   ( cursorIdentifier,
     cursorsSelectAliasIdentifier,
     endCursorIdentifier,

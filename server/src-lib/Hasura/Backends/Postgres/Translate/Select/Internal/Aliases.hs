@@ -1,7 +1,16 @@
-{-# OPTIONS_GHC -Wno-missing-export-lists #-}
-
 -- | Stuff gutted from Translate.Select
-module Hasura.Backends.Postgres.Translate.Select.Aliases where
+module Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
+  ( mkAggregateOrderByAlias,
+    mkAnnOrderByAlias,
+    mkArrayRelationAlias,
+    mkArrayRelationSourcePrefix,
+    mkBaseTableAlias,
+    mkBaseTableColumnAlias,
+    mkComputedFieldTableAlias,
+    mkObjectRelationTableAlias,
+    mkOrderByFieldName,
+  )
+where
 
 import Control.Monad.Writer.Strict
 import Data.HashMap.Strict qualified as HM

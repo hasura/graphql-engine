@@ -1,11 +1,26 @@
-{-# OPTIONS_GHC -Wno-missing-export-lists #-}
-
 -- | Stuff gutted from Translate.Select.
-module Hasura.Backends.Postgres.Translate.Select.Aux1 where
+module Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
+  ( mkFirstElementExp,
+    mkLastElementExp,
+    cursorIdentifier,
+    startCursorIdentifier,
+    endCursorIdentifier,
+    hasNextPageIdentifier,
+    hasPreviousPageIdentifier,
+    pageInfoSelectAliasIdentifier,
+    cursorsSelectAliasIdentifier,
+    encodeBase64,
+    fromTableRowArgs,
+    selectFromToFromItem,
+    functionToIdentifier,
+    withJsonBuildObj,
+    withForceAggregation,
+  )
+where
 
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types (Identifier (..), QualifiedFunction, qualifiedObjectToText, toIdentifier)
-import Hasura.Backends.Postgres.Translate.Select.Aliases
+import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.Types (BackendType (Postgres))

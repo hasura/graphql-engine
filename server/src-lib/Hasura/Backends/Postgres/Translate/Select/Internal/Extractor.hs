@@ -1,13 +1,19 @@
-{-# OPTIONS_GHC -Wno-missing-export-lists #-}
-
--- |  Stuff gutted from Translate.Select
-module Hasura.Backends.Postgres.Translate.Select.Extractor where
+-- | Extractors are a pair of an SQL expression and an alias; they get
+-- translated like "[SELECT ...] <expr> as <alias>"
+module Hasura.Backends.Postgres.Translate.Select.Internal.Extractor
+  ( aggregateFieldsToExtractorExps,
+    mkAggregateOrderByExtractorAndFields,
+    withJsonAggExtr,
+    asSingleRowExtr,
+    asJsonAggExtr,
+  )
+where
 
 import Control.Monad.Writer.Strict
 import Data.List.NonEmpty qualified as NE
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
-import Hasura.Backends.Postgres.Translate.Select.Aliases
+import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
 import Hasura.Backends.Postgres.Translate.Types (PermissionLimitSubQuery (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.Select

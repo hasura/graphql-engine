@@ -12,8 +12,8 @@ import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.IdentifierUniqueness (prefixNumToAliasesSelectWith)
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
-import Hasura.Backends.Postgres.Translate.Select.GenerateSelect (connectionToSelectWith)
-import Hasura.Backends.Postgres.Translate.Select.Process (processConnectionSelect)
+import Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect (connectionToSelectWith)
+import Hasura.Backends.Postgres.Translate.Select.Internal.Process (processConnectionSelect)
 import Hasura.Backends.Postgres.Translate.Types
 import Hasura.Prelude
 import Hasura.RQL.IR.Select

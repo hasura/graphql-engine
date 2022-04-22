@@ -17,8 +17,8 @@ import Hasura.Backends.Postgres.SQL.Types
   ( IsIdentifier (toIdentifier),
   )
 import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
-import Hasura.Backends.Postgres.Translate.Select.GenerateSelect (generateSQLSelectFromArrayNode)
-import Hasura.Backends.Postgres.Translate.Select.Process (processAnnAggregateSelect)
+import Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect (generateSQLSelectFromArrayNode)
+import Hasura.Backends.Postgres.Translate.Select.Internal.Process (processAnnAggregateSelect)
 import Hasura.Backends.Postgres.Translate.Types
   ( MultiRowSelectNode (MultiRowSelectNode),
     SelectNode (SelectNode),
