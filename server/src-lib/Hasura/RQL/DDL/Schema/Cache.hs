@@ -152,7 +152,6 @@ newtype CacheRWT m a
       MonadTx,
       UserInfoM,
       HasHttpManagerM,
-      HasSystemDefined,
       MonadMetadataStorage,
       MonadMetadataStorageQueryAPI,
       Tracing.MonadTrace,

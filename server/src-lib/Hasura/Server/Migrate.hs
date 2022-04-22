@@ -359,7 +359,7 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
                     _metaCronTriggers
             _ -> throw400 NotSupported "Cannot downgrade since there are more than one source"
           liftTx $ do
-            runHasSystemDefinedT (SystemDefined False) $ saveMetadataToHdbTables metadataV2
+            flip runReaderT (SystemDefined False) $ saveMetadataToHdbTables metadataV2
             -- when the graphql-engine is migrated from v1 to v2, we drop the foreign key
             -- constraint of the `hdb_catalog.hdb_cron_event` table because the cron triggers
             -- in v2 are saved in the `hdb_catalog.hdb_metadata` table. So, when a downgrade
