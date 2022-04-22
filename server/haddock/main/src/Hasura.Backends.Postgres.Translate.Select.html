@@ -2,7 +2,7 @@
 </span><span id="line-2"></span><span class="hs-comment">--</span><span>
 </span><span id="line-3"></span><span class="hs-comment">-- This module is a translation layer between IR and postgres-specific select queries.</span><span>
 </span><span id="line-4"></span><span class="hs-comment">--</span><span>
-</span><span id="line-5"></span><span class="hs-comment">-- There are three main types of selects (as distinguished from the IR):</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- There are four main types of selects (as distinguished from the IR):</span><span>
 </span><span id="line-6"></span><span class="hs-comment">--</span><span>
 </span><span id="line-7"></span><span class="hs-comment">--     * &quot;simple&quot; selects</span><span>
 </span><span id="line-8"></span><span class="hs-comment">--</span><span>
@@ -10,59 +10,23 @@
 </span><span id="line-10"></span><span class="hs-comment">--</span><span>
 </span><span id="line-11"></span><span class="hs-comment">--     * connection selects (used for relay)</span><span>
 </span><span id="line-12"></span><span class="hs-comment">--</span><span>
-</span><span id="line-13"></span><span class="hs-comment">-- Most exports from this module showcase this distinction. The &quot;interesting&quot; parts</span><span>
-</span><span id="line-14"></span><span class="hs-comment">-- of the call tree of these functions is similar:</span><span>
-</span><span id="line-15"></span><span class="hs-comment">--</span><span>
-</span><span id="line-16"></span><span class="hs-comment">--     * 'selectQuerySQL' -&gt; 'mkSQLSelect' -&gt; 'processAnnSimpleSelect' -&gt; 'processSelectParams'/'processAnnFields'</span><span>
-</span><span id="line-17"></span><span class="hs-comment">--</span><span>
-</span><span id="line-18"></span><span class="hs-comment">--     * 'selectAggregateQuerySQL' -&gt; 'mkAggregateSelect' -&gt; 'processAnnAggregateSelect' -&gt; 'processSelectParams'/'processAnnFields'</span><span>
-</span><span id="line-19"></span><span class="hs-comment">--</span><span>
-</span><span id="line-20"></span><span class="hs-comment">--     * 'connetionSelectQuerySQL' -&gt; 'mkConnectionSelect' -&gt; 'processConnectionSelection' -&gt; 'processSelectParams'</span><span>
-</span><span id="line-21"></span><span class="hs-comment">--</span><span>
-</span><span id="line-22"></span><span class="hs-comment">--</span><span>
-</span><span id="line-23"></span><span class="hs-comment">-- Random thoughts that might help when diving deeper in this module:</span><span>
-</span><span id="line-24"></span><span class="hs-comment">--</span><span>
-</span><span id="line-25"></span><span class="hs-comment">--     * Extractors are a pair of an SQL expression and an alias; they get</span><span>
-</span><span id="line-26"></span><span class="hs-comment">--         translated like &quot;[SELECT ...] &lt;expr&gt; as &lt;alias&gt;&quot;</span><span>
-</span><span id="line-27"></span><span class="hs-comment">--     * a 'SelectSource' consists of a prefix, a source, a boolean conditional</span><span>
-</span><span id="line-28"></span><span class="hs-comment">--         expression, and info on whether sorting or slicing is done</span><span>
-</span><span id="line-29"></span><span class="hs-comment">--         (needed to handle the LIMIT optimisation)</span><span>
-</span><span id="line-30"></span><span class="hs-comment">--     * For details on creating the selection tree for relationships via</span><span>
-</span><span id="line-31"></span><span class="hs-comment">--       @MonadWriter JoinTree@, see 'withWriteJoinTree'</span><span>
-</span><span id="line-32"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.Postgres.Translate.Select</span><span>
-</span><span id="line-33"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Query.html#selectQuerySQL"><span class="hs-identifier">selectQuerySQL</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-34"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Streaming.html#selectStreamQuerySQL"><span class="hs-identifier">selectStreamQuerySQL</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-35"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Aggregate.html#selectAggregateQuerySQL"><span class="hs-identifier">selectAggregateQuerySQL</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-36"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Connection.html#connectionSelectQuerySQL"><span class="hs-identifier">connectionSelectQuerySQL</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-37"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Query.html#mkSQLSelect"><span class="hs-identifier">mkSQLSelect</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-38"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Streaming.html#mkStreamSQLSelect"><span class="hs-identifier">mkStreamSQLSelect</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-39"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Aggregate.html#mkAggregateSelect"><span class="hs-identifier">mkAggregateSelect</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-40"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Connection.html#mkConnectionSelect"><span class="hs-identifier">mkConnectionSelect</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-41"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON.html#PostgresAnnotatedFieldJSON"><span class="hs-identifier">PostgresAnnotatedFieldJSON</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-42"></span><span>  </span><span class="hs-special">)</span><span>
-</span><span id="line-43"></span><span class="hs-keyword">where</span><span>
-</span><span id="line-44"></span><span>
-</span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Aggregate.html"><span class="hs-identifier">Hasura.Backends.Postgres.Translate.Select.Aggregate</span></a></span><span>
-</span><span id="line-46"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Aggregate.html#mkAggregateSelect"><span class="hs-identifier">mkAggregateSelect</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-47"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Aggregate.html#selectAggregateQuerySQL"><span class="hs-identifier">selectAggregateQuerySQL</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-48"></span><span>  </span><span class="hs-special">)</span><span>
-</span><span id="line-49"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON.html"><span class="hs-identifier">Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON</span></a></span><span>
-</span><span id="line-50"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON.html#PostgresAnnotatedFieldJSON"><span class="hs-identifier">PostgresAnnotatedFieldJSON</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-51"></span><span>  </span><span class="hs-special">)</span><span>
-</span><span id="line-52"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Connection.html"><span class="hs-identifier">Hasura.Backends.Postgres.Translate.Select.Connection</span></a></span><span>
-</span><span id="line-53"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Connection.html#connectionSelectQuerySQL"><span class="hs-identifier">connectionSelectQuerySQL</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-54"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Connection.html#mkConnectionSelect"><span class="hs-identifier">mkConnectionSelect</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-55"></span><span>  </span><span class="hs-special">)</span><span>
-</span><span id="line-56"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Query.html"><span class="hs-identifier">Hasura.Backends.Postgres.Translate.Select.Query</span></a></span><span>
-</span><span id="line-57"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Query.html#mkSQLSelect"><span class="hs-identifier">mkSQLSelect</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-58"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Query.html#selectQuerySQL"><span class="hs-identifier">selectQuerySQL</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-59"></span><span>  </span><span class="hs-special">)</span><span>
-</span><span id="line-60"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Streaming.html"><span class="hs-identifier">Hasura.Backends.Postgres.Translate.Select.Streaming</span></a></span><span>
-</span><span id="line-61"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Streaming.html#mkStreamSQLSelect"><span class="hs-identifier">mkStreamSQLSelect</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-62"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Streaming.html#selectStreamQuerySQL"><span class="hs-identifier">selectStreamQuerySQL</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-63"></span><span>  </span><span class="hs-special">)</span><span>
-</span><span id="line-64"></span><span>
-</span><span id="line-65"></span><span class="hs-comment">{- Note: [SQL generation for inherited roles]
+</span><span id="line-13"></span><span class="hs-comment">--     * streaming selects (see Hasura.Backends.Postgres.Translate.Select.Streaming for details)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.Postgres.Translate.Select</span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="hs-keyword">module</span><span> </span><span class="annot"><span class="hs-identifier">Simple</span></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="hs-keyword">module</span><span> </span><span class="annot"><span class="hs-identifier">Aggregate</span></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span class="hs-keyword">module</span><span> </span><span class="annot"><span class="hs-identifier">Connection</span></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>    </span><span class="hs-keyword">module</span><span> </span><span class="annot"><span class="hs-identifier">Streaming</span></span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON.html#PostgresAnnotatedFieldJSON"><span class="hs-identifier">PostgresAnnotatedFieldJSON</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Aggregate.html"><span class="hs-identifier">Hasura.Backends.Postgres.Translate.Select.Aggregate</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Aggregate</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON.html"><span class="hs-identifier">Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON.html#PostgresAnnotatedFieldJSON"><span class="hs-identifier">PostgresAnnotatedFieldJSON</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Connection.html"><span class="hs-identifier">Hasura.Backends.Postgres.Translate.Select.Connection</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Connection</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Simple.html"><span class="hs-identifier">Hasura.Backends.Postgres.Translate.Select.Simple</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Simple</span></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Streaming.html"><span class="hs-identifier">Hasura.Backends.Postgres.Translate.Select.Streaming</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Streaming</span></span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span class="hs-comment">{- Note: [SQL generation for inherited roles]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 When a query is executed by an inherited role, each column may contain a predicate
 (AnnColumnCaseBoolExp ('Postgres pgKind) SQLExp) along with it. The predicate is then
@@ -81,4 +45,4 @@ the schema has been generated. The SQL generated will look like this:
  where (P1 or P2)
 
 -}</span><span>
-</span><span id="line-84"></span></pre></body></html>
+</span><span id="line-48"></span></pre></body></html>

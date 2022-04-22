@@ -1,4 +1,4 @@
-This note is in [Hasura.Backends.Postgres.Translate.Select.OrderBy](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/Translate/Select/OrderBy.hs#L47).
+This note is in [Hasura.Backends.Postgres.Translate.Select.Internal.OrderBy](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/Translate/Select/Internal/OrderBy.hs#L50).
 It is referenced at:
   - line 68 of [Hasura.Backends.Postgres.Translate.Types](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/Translate/Types.hs#L68)
 

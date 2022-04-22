@@ -20098,7 +20098,7 @@ instance Data.Hashable.Class.Hashable Hasura.Backends.Postgres.Translate.Types.S
 
 
 -- | Stuff gutted from Translate.Select
-module Hasura.Backends.Postgres.Translate.Select.JoinTree
+module Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree
 
 -- | This is the lowest level function which deals with <tt>MonadWriter
 --   JoinTree</tt>, whose purpose is to essentially create the selection
@@ -23407,7 +23407,7 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 
 -- | Stuff gutted from Translate.Select
-module Hasura.Backends.Postgres.Translate.Select.Aliases
+module Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
 
 -- | Generate alias for order by extractors
 mkAnnOrderByAlias :: Identifier -> FieldName -> SimilarArrayFields -> AnnotatedOrderByElement ('Postgres pgKind) v -> Alias
@@ -23423,17 +23423,8 @@ mkArrayRelationSourcePrefix :: Identifier -> FieldName -> HashMap FieldName [Fie
 mkArrayRelationAlias :: FieldName -> HashMap FieldName [FieldName] -> FieldName -> Alias
 
 
--- | Stuff gutted from Translate.Select
-module Hasura.Backends.Postgres.Translate.Select.Extractor
-aggregateFieldsToExtractorExps :: Identifier -> AggregateFields ('Postgres pgKind) -> [(Alias, SQLExp)]
-mkAggregateOrderByExtractorAndFields :: forall pgKind. Backend ('Postgres pgKind) => AnnotatedAggregateOrderBy ('Postgres pgKind) -> (Extractor, AggregateFields ('Postgres pgKind))
-withJsonAggExtr :: PermissionLimitSubQuery -> Maybe OrderByExp -> Alias -> SQLExp
-asSingleRowExtr :: Alias -> SQLExp
-asJsonAggExtr :: JsonAggSelect -> Alias -> PermissionLimitSubQuery -> Maybe OrderByExp -> Extractor
-
-
 -- | Stuff gutted from Translate.Select.
-module Hasura.Backends.Postgres.Translate.Select.Aux1
+module Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
 
 -- | First element extractor expression from given record set For example:-
 --   To get first "id" column from given row set, the function generates
@@ -23467,25 +23458,35 @@ withJsonBuildObj :: FieldName -> [SQLExp] -> (Alias, SQLExp)
 withForceAggregation :: TypeAnn -> SQLExp -> SQLExp
 
 
--- | This module contains worker definitions pertaining to generating
---   <tt>Select</tt> AST nodes.
---   
---   NOTE: <a>generateSQLSelect</a> is mutually recursive with
---   <a>connectionToSelectWith</a>, thus these two cohabitate in this
---   module.
-module Hasura.Backends.Postgres.Translate.Select.GenerateSelect
-generateSQLSelect :: BoolExp -> SelectSource -> SelectNode -> Select
-generateSQLSelectFromArrayNode :: SelectSource -> MultiRowSelectNode -> BoolExp -> Select
-mkJoinCond :: Alias -> HashMap PGCol PGCol -> BoolExp
-connectionToSelectWith :: Alias -> ArrayConnectionSource -> MultiRowSelectNode -> SelectWithG Select
-
-
 -- | This module defines the type class <a>PostgresAnnotatedFieldJSON</a>.
 module Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
 class PostgresAnnotatedFieldJSON (pgKind :: PostgresKind)
 annRowToJson :: PostgresAnnotatedFieldJSON pgKind => FieldName -> [(FieldName, SQLExp)] -> (Alias, SQLExp)
 instance Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON.PostgresAnnotatedFieldJSON 'Hasura.SQL.Backend.Vanilla
 instance Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON.PostgresAnnotatedFieldJSON 'Hasura.SQL.Backend.Citus
+
+
+-- | This module contains worker definitions pertaining to generating
+--   <tt>Select</tt> AST nodes.
+--   
+--   NOTE: <a>generateSQLSelect</a> is mutually recursive with
+--   <a>connectionToSelectWith</a>, thus these two cohabitate in this
+--   module.
+module Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect
+generateSQLSelect :: BoolExp -> SelectSource -> SelectNode -> Select
+generateSQLSelectFromArrayNode :: SelectSource -> MultiRowSelectNode -> BoolExp -> Select
+mkJoinCond :: Alias -> HashMap PGCol PGCol -> BoolExp
+connectionToSelectWith :: Alias -> ArrayConnectionSource -> MultiRowSelectNode -> SelectWithG Select
+
+
+-- | Extractors are a pair of an SQL expression and an alias; they get
+--   translated like "[SELECT ...] <a>expr</a> as <a>alias</a>"
+module Hasura.Backends.Postgres.Translate.Select.Internal.Extractor
+aggregateFieldsToExtractorExps :: Identifier -> AggregateFields ('Postgres pgKind) -> [(Alias, SQLExp)]
+mkAggregateOrderByExtractorAndFields :: forall pgKind. Backend ('Postgres pgKind) => AnnotatedAggregateOrderBy ('Postgres pgKind) -> (Extractor, AggregateFields ('Postgres pgKind))
+withJsonAggExtr :: PermissionLimitSubQuery -> Maybe OrderByExp -> Alias -> SQLExp
+asSingleRowExtr :: Alias -> SQLExp
+asJsonAggExtr :: JsonAggSelect -> Alias -> PermissionLimitSubQuery -> Maybe OrderByExp -> Extractor
 
 
 -- | Postgres Translate Mutation
@@ -24621,7 +24622,7 @@ buildRemoteRelationship :: forall b m. (MonadWriter (Seq CollectedInfo) m, Backe
 
 
 -- | This module relates to the processing of Order-By clauses.
-module Hasura.Backends.Postgres.Translate.Select.OrderBy
+module Hasura.Backends.Postgres.Translate.Select.Internal.OrderBy
 processOrderByItems :: forall pgKind m. (MonadReader StringifyNumbers m, MonadWriter JoinTree m, Backend ('Postgres pgKind)) => Identifier -> FieldName -> SimilarArrayFields -> Maybe (NonEmpty PGCol) -> Maybe (NonEmpty (AnnotatedOrderByItem ('Postgres pgKind))) -> m ([(Alias, SQLExp)], SelectSorting, Maybe SQLExp)
 applyDistinctOnAtBase :: NonEmpty PGCol -> DistinctExpr
 applyDistinctOnAtNode :: Identifier -> NonEmpty PGCol -> (DistinctExpr, [(Alias, SQLExp)])
@@ -24633,7 +24634,26 @@ applyDistinctOnAtNode :: Identifier -> NonEmpty PGCol -> (DistinctExpr, [(Alias,
 --   NOTE: These functions <a>processAnnAggregateSelect</a>,
 --   <a>processAnnSimpleSelect</a>, <a>processConnectionSelect</a>, are all
 --   mutually recursive.
-module Hasura.Backends.Postgres.Translate.Select.Process
+--   
+--   These functions are generally called from the top level functions in
+--   Translate.Select, and the call stack looks like:
+--   
+--   <ul>
+--   <li><tt>selectQuerySQL</tt> -&gt; <tt>mkSQLSelect</tt> -&gt;
+--   <a>processAnnSimpleSelect</a> -&gt;
+--   <a>processSelectParams</a>/<a>processAnnFields</a></li>
+--   <li><tt>selectAggregateQuerySQL</tt> -&gt; <tt>mkAggregateSelect</tt>
+--   -&gt; <a>processAnnAggregateSelect</a> -&gt;
+--   <a>processSelectParams</a>/<a>processAnnFields</a></li>
+--   <li><tt>connetionSelectQuerySQL</tt> -&gt; <tt>mkConnectionSelect</tt>
+--   -&gt; <tt>processConnectionSelection</tt> -&gt;
+--   <a>processSelectParams</a></li>
+--   </ul>
+--   
+--   <a>SelectSource</a> consists of a prefix, a source, a boolean
+--   conditional expression, and info on whether sorting or slicing is done
+--   (needed to handle the LIMIT optimisation)
+module Hasura.Backends.Postgres.Translate.Select.Internal.Process
 processSelectParams :: forall pgKind m. (MonadReader StringifyNumbers m, MonadWriter JoinTree m, Backend ('Postgres pgKind)) => SourcePrefixes -> FieldName -> SimilarArrayFields -> SelectFrom ('Postgres pgKind) -> PermissionLimitSubQuery -> TablePerm ('Postgres pgKind) -> SelectArgs ('Postgres pgKind) -> m (SelectSource, [(Alias, SQLExp)], Maybe SQLExp)
 processAnnAggregateSelect :: forall pgKind m. (MonadReader StringifyNumbers m, MonadWriter JoinTree m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => SourcePrefixes -> FieldName -> AnnAggregateSelect ('Postgres pgKind) -> m (SelectSource, HashMap Alias SQLExp, Extractor)
 processAnnFields :: forall pgKind m. (MonadReader StringifyNumbers m, MonadWriter JoinTree m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => Identifier -> FieldName -> SimilarArrayFields -> AnnFields ('Postgres pgKind) -> m (Alias, SQLExp)
@@ -24646,6 +24666,13 @@ processConnectionSelect :: forall pgKind m. (MonadReader StringifyNumbers m, Mon
 
 -- | This module defines the top-level translation functions pertaining to
 --   streaming selects into Postgres AST.
+--   
+--   Streaming subscriptions are subscriptions based on a user-provided
+--   cursor column. Unlike live queries, streaming subscriptions can be
+--   used to only get the part that has changed in the query's response,
+--   although this will be dependent on the user's choice of the cursor
+--   column. The streaming starts from the initial value provided by the
+--   user.
 module Hasura.Backends.Postgres.Translate.Select.Streaming
 selectStreamQuerySQL :: forall pgKind. (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => AnnSimpleStreamSelect ('Postgres pgKind) -> Query
 mkStreamSQLSelect :: forall pgKind. (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => AnnSimpleStreamSelect ('Postgres pgKind) -> Select
@@ -24654,14 +24681,14 @@ mkStreamSQLSelect :: forall pgKind. (Backend ('Postgres pgKind), PostgresAnnotat
 -- | This module defines the top-level translation functions pertaining to
 --   queries that are not aggregation queries, i.e. so-called "simple"
 --   selects into Postgres AST.
-module Hasura.Backends.Postgres.Translate.Select.Query
-mkSQLSelect :: forall pgKind. (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => JsonAggSelect -> AnnSimpleSelect ('Postgres pgKind) -> Select
+module Hasura.Backends.Postgres.Translate.Select.Simple
 
 -- | Translates IR to Postgres queries for simple SELECTs (select queries
 --   that are not aggregations, including subscriptions).
 --   
 --   See <a>mkSQLSelect</a> for the Postgres AST.
 selectQuerySQL :: forall pgKind. (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => JsonAggSelect -> AnnSimpleSelect ('Postgres pgKind) -> Query
+mkSQLSelect :: forall pgKind. (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => JsonAggSelect -> AnnSimpleSelect ('Postgres pgKind) -> Select
 
 
 -- | This module defines the top-level translation functions pertaining to
@@ -24693,39 +24720,14 @@ mkAggregateSelect :: forall pgKind. (Backend ('Postgres pgKind), PostgresAnnotat
 --   This module is a translation layer between IR and postgres-specific
 --   select queries.
 --   
---   There are three main types of selects (as distinguished from the IR):
+--   There are four main types of selects (as distinguished from the IR):
 --   
 --   <ul>
 --   <li>"simple" selects</li>
 --   <li>aggregate selects</li>
 --   <li>connection selects (used for relay)</li>
---   </ul>
---   
---   Most exports from this module showcase this distinction. The
---   "interesting" parts of the call tree of these functions is similar:
---   
---   <ul>
---   <li><a>selectQuerySQL</a> -&gt; <a>mkSQLSelect</a> -&gt;
---   <tt>processAnnSimpleSelect</tt> -&gt;
---   <tt>processSelectParams</tt>/<tt>processAnnFields</tt></li>
---   <li><a>selectAggregateQuerySQL</a> -&gt; <a>mkAggregateSelect</a>
---   -&gt; <tt>processAnnAggregateSelect</tt> -&gt;
---   <tt>processSelectParams</tt>/<tt>processAnnFields</tt></li>
---   <li><tt>connetionSelectQuerySQL</tt> -&gt; <a>mkConnectionSelect</a>
---   -&gt; <tt>processConnectionSelection</tt> -&gt;
---   <tt>processSelectParams</tt></li>
---   </ul>
---   
---   Random thoughts that might help when diving deeper in this module:
---   
---   <ul>
---   <li>Extractors are a pair of an SQL expression and an alias; they get
---   translated like "[SELECT ...] <a>expr</a> as <a>alias</a>"</li>
---   <li>a <tt>SelectSource</tt> consists of a prefix, a source, a boolean
---   conditional expression, and info on whether sorting or slicing is done
---   (needed to handle the LIMIT optimisation)</li>
---   <li>For details on creating the selection tree for relationships via
---   <tt>MonadWriter JoinTree</tt>, see <tt>withWriteJoinTree</tt></li>
+--   <li>streaming selects (see
+--   Hasura.Backends.Postgres.Translate.Select.Streaming for details)</li>
 --   </ul>
 module Hasura.Backends.Postgres.Translate.Select
 
@@ -25037,9 +25039,9 @@ QueryParametersInfo :: !HashMap Name (ColumnValue b) -> !Seq (ColumnValue b) -> 
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> !HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_axgWS. Lens' (QueryParametersInfo b_axgWS) (Seq (ColumnValue b_axgWS))
-qpiReusableVariableValues :: forall b_axgWS. Lens' (QueryParametersInfo b_axgWS) (HashMap Name (ColumnValue b_axgWS))
-qpiReferencedSessionVariables :: forall b_axgWS. Lens' (QueryParametersInfo b_axgWS) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_axgWu. Lens' (QueryParametersInfo b_axgWu) (Seq (ColumnValue b_axgWu))
+qpiReusableVariableValues :: forall b_axgWu. Lens' (QueryParametersInfo b_axgWu) (HashMap Name (ColumnValue b_axgWu))
+qpiReferencedSessionVariables :: forall b_axgWu. Lens' (QueryParametersInfo b_axgWu) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
