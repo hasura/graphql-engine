@@ -20717,12 +20717,6 @@ askTabInfoSource :: forall b m. (QErrM m, TableInfoRM b m, Backend b) => TableNa
 --   environment that is associated with the given <a>SourceName</a> and
 --   <a>TableName</a> for a particular <a>Backend</a>.
 askTableMetadata :: forall b m. (QErrM m, MetadataM m, Backend b, BackendMetadata b) => SourceName -> TableName b -> m (TableMetadata b)
-class (Monad m) => HasSystemDefined m
-askSystemDefined :: HasSystemDefined m => m SystemDefined
-newtype HasSystemDefinedT m a
-HasSystemDefinedT :: ReaderT SystemDefined m a -> HasSystemDefinedT m a
-[unHasSystemDefinedT] :: HasSystemDefinedT m a -> ReaderT SystemDefined m a
-runHasSystemDefinedT :: SystemDefined -> HasSystemDefinedT m a -> m a
 throwTableDoesNotExist :: forall b m a. (QErrM m, Backend b) => TableName b -> m a
 findTable :: forall b m a. (QErrM m, Backend b) => TableName b -> HashMap (TableName b) a -> m a
 askTableCache :: forall b m. (QErrM m, CacheRM m, Backend b) => SourceName -> m (TableCache b)
@@ -20744,23 +20738,6 @@ askComputedFieldInfo :: MonadError QErr m => FieldInfoMap (FieldInfo backend) ->
 assertColumnExists :: forall backend m. (MonadError QErr m, Backend backend) => FieldInfoMap (FieldInfo backend) -> Text -> Column backend -> m ()
 askRelType :: MonadError QErr m => FieldInfoMap (FieldInfo backend) -> RelName -> Text -> m (RelInfo backend)
 askRemoteRel :: MonadError QErr m => FieldInfoMap (FieldInfo backend) -> RelName -> m (RemoteFieldInfo (DBJoinField backend))
-instance Hasura.Session.UserInfoM m => Hasura.Session.UserInfoM (Hasura.RQL.Types.HasSystemDefinedT m)
-instance Hasura.RQL.Types.SchemaCache.CacheRM m => Hasura.RQL.Types.SchemaCache.CacheRM (Hasura.RQL.Types.HasSystemDefinedT m)
-instance Hasura.RQL.Types.SchemaCache.TableCoreInfoRM b m => Hasura.RQL.Types.SchemaCache.TableCoreInfoRM b (Hasura.RQL.Types.HasSystemDefinedT m)
-instance Hasura.RQL.Types.SchemaCache.SourceM m => Hasura.RQL.Types.SchemaCache.SourceM (Hasura.RQL.Types.HasSystemDefinedT m)
-instance Network.HTTP.Client.Manager.HasHttpManagerM m => Network.HTTP.Client.Manager.HasHttpManagerM (Hasura.RQL.Types.HasSystemDefinedT m)
-instance Hasura.Backends.Postgres.Connection.MonadTx.MonadTx m => Hasura.Backends.Postgres.Connection.MonadTx.MonadTx (Hasura.RQL.Types.HasSystemDefinedT m)
-instance Control.Monad.Error.Class.MonadError e m => Control.Monad.Error.Class.MonadError e (Hasura.RQL.Types.HasSystemDefinedT m)
-instance Control.Monad.IO.Class.MonadIO m => Control.Monad.IO.Class.MonadIO (Hasura.RQL.Types.HasSystemDefinedT m)
-instance Control.Monad.Trans.Class.MonadTrans Hasura.RQL.Types.HasSystemDefinedT
-instance GHC.Base.Monad m => GHC.Base.Monad (Hasura.RQL.Types.HasSystemDefinedT m)
-instance GHC.Base.Applicative m => GHC.Base.Applicative (Hasura.RQL.Types.HasSystemDefinedT m)
-instance GHC.Base.Functor m => GHC.Base.Functor (Hasura.RQL.Types.HasSystemDefinedT m)
-instance GHC.Base.Monad m => Hasura.RQL.Types.HasSystemDefined (Hasura.RQL.Types.HasSystemDefinedT m)
-instance Hasura.RQL.Types.HasSystemDefined m => Hasura.RQL.Types.HasSystemDefined (Control.Monad.Trans.Reader.ReaderT r m)
-instance Hasura.RQL.Types.HasSystemDefined m => Hasura.RQL.Types.HasSystemDefined (Control.Monad.Trans.State.Strict.StateT s m)
-instance (GHC.Base.Monoid w, Hasura.RQL.Types.HasSystemDefined m) => Hasura.RQL.Types.HasSystemDefined (Control.Monad.Trans.Writer.Strict.WriterT w m)
-instance Hasura.RQL.Types.HasSystemDefined m => Hasura.RQL.Types.HasSystemDefined (Hasura.Tracing.TraceT m)
 
 
 -- | Send anonymized metrics to the telemetry server regarding usage of
@@ -21549,20 +21526,20 @@ CreateEventTriggerQuery :: !SourceName -> !TriggerName -> !TableName b -> !Maybe
 [_cetqReplace] :: CreateEventTriggerQuery (b :: BackendType) -> !Bool
 [_cetqRequestTransform] :: CreateEventTriggerQuery (b :: BackendType) -> !Maybe RequestTransform
 [_cetqResponseTrasnform] :: CreateEventTriggerQuery (b :: BackendType) -> !Maybe MetadataResponseTransform
-cetqWebhookFromEnv :: forall b_arArw. Lens' (CreateEventTriggerQuery b_arArw) (Maybe Text)
-cetqWebhook :: forall b_arArw. Lens' (CreateEventTriggerQuery b_arArw) (Maybe InputWebhook)
-cetqUpdate :: forall b_arArw. Lens' (CreateEventTriggerQuery b_arArw) (Maybe (SubscribeOpSpec b_arArw))
-cetqTable :: forall b_arArw. Lens' (CreateEventTriggerQuery b_arArw) (TableName b_arArw)
-cetqSource :: forall b_arArw. Lens' (CreateEventTriggerQuery b_arArw) SourceName
-cetqRetryConf :: forall b_arArw. Lens' (CreateEventTriggerQuery b_arArw) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_arArw. Lens' (CreateEventTriggerQuery b_arArw) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_arArw. Lens' (CreateEventTriggerQuery b_arArw) (Maybe RequestTransform)
-cetqReplace :: forall b_arArw. Lens' (CreateEventTriggerQuery b_arArw) Bool
-cetqName :: forall b_arArw. Lens' (CreateEventTriggerQuery b_arArw) TriggerName
-cetqInsert :: forall b_arArw. Lens' (CreateEventTriggerQuery b_arArw) (Maybe (SubscribeOpSpec b_arArw))
-cetqHeaders :: forall b_arArw. Lens' (CreateEventTriggerQuery b_arArw) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_arArw. Lens' (CreateEventTriggerQuery b_arArw) (Maybe Bool)
-cetqDelete :: forall b_arArw. Lens' (CreateEventTriggerQuery b_arArw) (Maybe (SubscribeOpSpec b_arArw))
+cetqWebhookFromEnv :: forall b_aryXM. Lens' (CreateEventTriggerQuery b_aryXM) (Maybe Text)
+cetqWebhook :: forall b_aryXM. Lens' (CreateEventTriggerQuery b_aryXM) (Maybe InputWebhook)
+cetqUpdate :: forall b_aryXM. Lens' (CreateEventTriggerQuery b_aryXM) (Maybe (SubscribeOpSpec b_aryXM))
+cetqTable :: forall b_aryXM. Lens' (CreateEventTriggerQuery b_aryXM) (TableName b_aryXM)
+cetqSource :: forall b_aryXM. Lens' (CreateEventTriggerQuery b_aryXM) SourceName
+cetqRetryConf :: forall b_aryXM. Lens' (CreateEventTriggerQuery b_aryXM) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aryXM. Lens' (CreateEventTriggerQuery b_aryXM) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aryXM. Lens' (CreateEventTriggerQuery b_aryXM) (Maybe RequestTransform)
+cetqReplace :: forall b_aryXM. Lens' (CreateEventTriggerQuery b_aryXM) Bool
+cetqName :: forall b_aryXM. Lens' (CreateEventTriggerQuery b_aryXM) TriggerName
+cetqInsert :: forall b_aryXM. Lens' (CreateEventTriggerQuery b_aryXM) (Maybe (SubscribeOpSpec b_aryXM))
+cetqHeaders :: forall b_aryXM. Lens' (CreateEventTriggerQuery b_aryXM) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aryXM. Lens' (CreateEventTriggerQuery b_aryXM) (Maybe Bool)
+cetqDelete :: forall b_aryXM. Lens' (CreateEventTriggerQuery b_aryXM) (Maybe (SubscribeOpSpec b_aryXM))
 data DeleteEventTriggerQuery (b :: BackendType)
 DeleteEventTriggerQuery :: !SourceName -> !TriggerName -> DeleteEventTriggerQuery (b :: BackendType)
 [_detqSource] :: DeleteEventTriggerQuery (b :: BackendType) -> !SourceName
@@ -22280,7 +22257,7 @@ module Hasura.GraphQL.Execute.Subscription.Plan
 newtype ValidatedVariables f
 ValidatedVariables :: f TxtEncodedVal -> ValidatedVariables f
 [_unValidatedVariables] :: ValidatedVariables f -> f TxtEncodedVal
-unValidatedVariables :: forall f_asHUX f_asI2Y. Iso (ValidatedVariables f_asHUX) (ValidatedVariables f_asI2Y) (f_asHUX TxtEncodedVal) (f_asI2Y TxtEncodedVal)
+unValidatedVariables :: forall f_asGrd f_asGze. Iso (ValidatedVariables f_asGrd) (ValidatedVariables f_asGze) (f_asGrd TxtEncodedVal) (f_asGze TxtEncodedVal)
 type ValidatedQueryVariables = ValidatedVariables (HashMap Name)
 type ValidatedSyntheticVariables = ValidatedVariables []
 type ValidatedCursorVariables = ValidatedVariables (HashMap Name)
@@ -24575,13 +24552,13 @@ instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSO
 -- | Funtions related to <tt>hdb_catalog</tt> schema prior to metadata
 --   separation (catalog version &lt; 43).
 module Hasura.RQL.DDL.Schema.LegacyCatalog
-saveMetadataToHdbTables :: (MonadTx m, HasSystemDefined m) => MetadataNoSources -> m ()
-saveTableToCatalog :: (MonadTx m, HasSystemDefined m) => QualifiedTable -> Bool -> TableConfig ('Postgres 'Vanilla) -> m ()
-insertRelationshipToCatalog :: (MonadTx m, HasSystemDefined m, ToJSON a) => QualifiedTable -> RelType -> RelDef a -> m ()
+saveMetadataToHdbTables :: (MonadTx m, MonadReader SystemDefined m) => MetadataNoSources -> m ()
+saveTableToCatalog :: (MonadTx m, MonadReader SystemDefined m) => QualifiedTable -> Bool -> TableConfig ('Postgres 'Vanilla) -> m ()
+insertRelationshipToCatalog :: (MonadTx m, MonadReader SystemDefined m, ToJSON a) => QualifiedTable -> RelType -> RelDef a -> m ()
 addEventTriggerToCatalog :: (MonadTx m, Backend ('Postgres pgKind)) => QualifiedTable -> EventTriggerConf ('Postgres pgKind) -> m ()
 addComputedFieldToCatalog :: MonadTx m => AddComputedField ('Postgres 'Vanilla) -> m ()
 addRemoteRelationshipToCatalog :: MonadTx m => CreateFromSourceRelationship ('Postgres 'Vanilla) -> m ()
-addFunctionToCatalog :: (MonadTx m, HasSystemDefined m) => QualifiedFunction -> FunctionConfig -> m ()
+addFunctionToCatalog :: (MonadTx m, MonadReader SystemDefined m) => QualifiedFunction -> FunctionConfig -> m ()
 addRemoteSchemaToCatalog :: RemoteSchemaMetadata -> TxE QErr ()
 addCollectionToCatalog :: MonadTx m => CreateCollection -> SystemDefined -> m ()
 addCollectionToAllowlistCatalog :: MonadTx m => CollectionName -> m ()
@@ -25060,9 +25037,9 @@ QueryParametersInfo :: !HashMap Name (ColumnValue b) -> !Seq (ColumnValue b) -> 
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> !HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_axiqt. Lens' (QueryParametersInfo b_axiqt) (Seq (ColumnValue b_axiqt))
-qpiReusableVariableValues :: forall b_axiqt. Lens' (QueryParametersInfo b_axiqt) (HashMap Name (ColumnValue b_axiqt))
-qpiReferencedSessionVariables :: forall b_axiqt. Lens' (QueryParametersInfo b_axiqt) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_axgWS. Lens' (QueryParametersInfo b_axgWS) (Seq (ColumnValue b_axgWS))
+qpiReusableVariableValues :: forall b_axgWS. Lens' (QueryParametersInfo b_axgWS) (HashMap Name (ColumnValue b_axgWS))
+qpiReferencedSessionVariables :: forall b_axgWS. Lens' (QueryParametersInfo b_axgWS) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
@@ -25655,7 +25632,6 @@ instance Hasura.Server.Types.HasServerConfigCtx m => Hasura.Server.Types.HasServ
 instance Hasura.Tracing.MonadTrace m => Hasura.Tracing.MonadTrace (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
 instance Hasura.Metadata.Class.MonadMetadataStorageQueryAPI m => Hasura.Metadata.Class.MonadMetadataStorageQueryAPI (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
 instance Hasura.Metadata.Class.MonadMetadataStorage m => Hasura.Metadata.Class.MonadMetadataStorage (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
-instance Hasura.RQL.Types.HasSystemDefined m => Hasura.RQL.Types.HasSystemDefined (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
 instance Network.HTTP.Client.Manager.HasHttpManagerM m => Network.HTTP.Client.Manager.HasHttpManagerM (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
 instance Hasura.Session.UserInfoM m => Hasura.Session.UserInfoM (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
 instance Hasura.Backends.Postgres.Connection.MonadTx.MonadTx m => Hasura.Backends.Postgres.Connection.MonadTx.MonadTx (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
