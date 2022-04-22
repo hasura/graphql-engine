@@ -909,6 +909,7 @@ test-suite graphql-engine-tests
     Data.Parser.CacheControlSpec
     Data.Parser.JSONPathSpec
     Data.Parser.URLTemplateSpec
+    Data.Parser.RemoteRelationshipSpec
     Data.Text.RawString
     Data.TimeSpec
     Data.TrieSpec
