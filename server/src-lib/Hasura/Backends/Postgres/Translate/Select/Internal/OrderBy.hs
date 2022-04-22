@@ -1,5 +1,8 @@
 -- | This module relates to the processing of Order-By clauses.
-module Hasura.Backends.Postgres.Translate.Select.OrderBy (processOrderByItems) where
+module Hasura.Backends.Postgres.Translate.Select.Internal.OrderBy
+  ( processOrderByItems,
+  )
+where
 
 import Control.Lens ((^?))
 import Data.HashMap.Strict qualified as HM
@@ -11,7 +14,7 @@ import Hasura.Backends.Postgres.SQL.Types
     PGCol (..),
   )
 import Hasura.Backends.Postgres.Translate.BoolExp (toSQLBoolExp)
-import Hasura.Backends.Postgres.Translate.Select.Aliases
+import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
   ( mkAggregateOrderByAlias,
     mkAnnOrderByAlias,
     mkArrayRelationAlias,
@@ -22,16 +25,16 @@ import Hasura.Backends.Postgres.Translate.Select.Aliases
     mkObjectRelationTableAlias,
     mkOrderByFieldName,
   )
-import Hasura.Backends.Postgres.Translate.Select.Aux1
+import Hasura.Backends.Postgres.Translate.Select.Internal.Extractor
+  ( aggregateFieldsToExtractorExps,
+    mkAggregateOrderByExtractorAndFields,
+  )
+import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
   ( fromTableRowArgs,
     functionToIdentifier,
     selectFromToFromItem,
   )
-import Hasura.Backends.Postgres.Translate.Select.Extractor
-  ( aggregateFieldsToExtractorExps,
-    mkAggregateOrderByExtractorAndFields,
-  )
-import Hasura.Backends.Postgres.Translate.Select.JoinTree
+import Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree
   ( withWriteArrayRelation,
     withWriteComputedFieldTableSet,
     withWriteObjectRelation,

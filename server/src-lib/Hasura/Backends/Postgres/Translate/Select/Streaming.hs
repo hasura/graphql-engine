@@ -1,5 +1,11 @@
 -- | This module defines the top-level translation functions pertaining to
 -- streaming selects into Postgres AST.
+--
+-- Streaming subscriptions are subscriptions based on a user-provided cursor
+-- column. Unlike live queries, streaming subscriptions can be used to only get
+-- the part that has changed in the query's response, although this will be
+-- dependent on the user's choice of the cursor column. The streaming starts
+-- from the initial value provided by the user.
 module Hasura.Backends.Postgres.Translate.Select.Streaming
   ( mkStreamSQLSelect,
     selectStreamQuerySQL,
@@ -12,11 +18,11 @@ import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.IdentifierUniqueness (prefixNumToAliases)
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.SQL.Value (withConstructorFn)
-import Hasura.Backends.Postgres.Translate.Select.Aliases (mkBaseTableColumnAlias)
 import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
-import Hasura.Backends.Postgres.Translate.Select.Extractor (asJsonAggExtr)
-import Hasura.Backends.Postgres.Translate.Select.GenerateSelect (generateSQLSelectFromArrayNode)
-import Hasura.Backends.Postgres.Translate.Select.Process (processAnnSimpleSelect)
+import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases (mkBaseTableColumnAlias)
+import Hasura.Backends.Postgres.Translate.Select.Internal.Extractor (asJsonAggExtr)
+import Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect (generateSQLSelectFromArrayNode)
+import Hasura.Backends.Postgres.Translate.Select.Internal.Process (processAnnSimpleSelect)
 import Hasura.Backends.Postgres.Translate.Types
   ( MultiRowSelectNode (MultiRowSelectNode),
     PermissionLimitSubQuery (PLSQNotRequired),

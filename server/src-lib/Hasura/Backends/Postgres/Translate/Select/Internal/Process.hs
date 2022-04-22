@@ -3,7 +3,20 @@
 --
 -- NOTE: These functions 'processAnnAggregateSelect', 'processAnnSimpleSelect',
 -- 'processConnectionSelect', are all mutually recursive.
-module Hasura.Backends.Postgres.Translate.Select.Process
+--
+-- These functions are generally called from the top level functions in
+-- Translate.Select, and the call stack looks like:
+--
+--     * 'selectQuerySQL' -> 'mkSQLSelect' -> 'processAnnSimpleSelect' -> 'processSelectParams'/'processAnnFields'
+--
+--     * 'selectAggregateQuerySQL' -> 'mkAggregateSelect' -> 'processAnnAggregateSelect' -> 'processSelectParams'/'processAnnFields'
+--
+--     * 'connetionSelectQuerySQL' -> 'mkConnectionSelect' -> 'processConnectionSelection' -> 'processSelectParams'
+--
+-- 'SelectSource' consists of a prefix, a source, a boolean conditional
+-- expression, and info on whether sorting or slicing is done (needed to handle
+-- the LIMIT optimisation)
+module Hasura.Backends.Postgres.Translate.Select.Internal.Process
   ( processAnnAggregateSelect,
     processAnnSimpleSelect,
     processConnectionSelect,
@@ -24,7 +37,8 @@ import Hasura.Backends.Postgres.SQL.Types
   )
 import Hasura.Backends.Postgres.Translate.BoolExp (toSQLBoolExp)
 import Hasura.Backends.Postgres.Translate.Column (toJSONableExp)
-import Hasura.Backends.Postgres.Translate.Select.Aliases
+import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
+import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
   ( mkAnnOrderByAlias,
     mkArrayRelationAlias,
     mkArrayRelationSourcePrefix,
@@ -34,8 +48,12 @@ import Hasura.Backends.Postgres.Translate.Select.Aliases
     mkObjectRelationTableAlias,
     mkOrderByFieldName,
   )
-import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
-import Hasura.Backends.Postgres.Translate.Select.Aux1
+import Hasura.Backends.Postgres.Translate.Select.Internal.Extractor
+  ( aggregateFieldsToExtractorExps,
+    asJsonAggExtr,
+    withJsonAggExtr,
+  )
+import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
   ( cursorIdentifier,
     cursorsSelectAliasIdentifier,
     encodeBase64,
@@ -49,18 +67,13 @@ import Hasura.Backends.Postgres.Translate.Select.Aux1
     startCursorIdentifier,
     withForceAggregation,
   )
-import Hasura.Backends.Postgres.Translate.Select.Extractor
-  ( aggregateFieldsToExtractorExps,
-    asJsonAggExtr,
-    withJsonAggExtr,
-  )
-import Hasura.Backends.Postgres.Translate.Select.JoinTree
+import Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree
   ( withWriteArrayConnection,
     withWriteArrayRelation,
     withWriteComputedFieldTableSet,
     withWriteObjectRelation,
   )
-import Hasura.Backends.Postgres.Translate.Select.OrderBy (processOrderByItems)
+import Hasura.Backends.Postgres.Translate.Select.Internal.OrderBy (processOrderByItems)
 import Hasura.Backends.Postgres.Translate.Types
 import Hasura.GraphQL.Schema.Common (currentNodeIdVersion, nodeIdVersionInt)
 import Hasura.Prelude

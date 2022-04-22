@@ -2,7 +2,7 @@
 --
 -- This module is a translation layer between IR and postgres-specific select queries.
 --
--- There are three main types of selects (as distinguished from the IR):
+-- There are four main types of selects (as distinguished from the IR):
 --
 --     * "simple" selects
 --
@@ -10,57 +10,21 @@
 --
 --     * connection selects (used for relay)
 --
--- Most exports from this module showcase this distinction. The "interesting" parts
--- of the call tree of these functions is similar:
---
---     * 'selectQuerySQL' -> 'mkSQLSelect' -> 'processAnnSimpleSelect' -> 'processSelectParams'/'processAnnFields'
---
---     * 'selectAggregateQuerySQL' -> 'mkAggregateSelect' -> 'processAnnAggregateSelect' -> 'processSelectParams'/'processAnnFields'
---
---     * 'connetionSelectQuerySQL' -> 'mkConnectionSelect' -> 'processConnectionSelection' -> 'processSelectParams'
---
---
--- Random thoughts that might help when diving deeper in this module:
---
---     * Extractors are a pair of an SQL expression and an alias; they get
---         translated like "[SELECT ...] <expr> as <alias>"
---     * a 'SelectSource' consists of a prefix, a source, a boolean conditional
---         expression, and info on whether sorting or slicing is done
---         (needed to handle the LIMIT optimisation)
---     * For details on creating the selection tree for relationships via
---       @MonadWriter JoinTree@, see 'withWriteJoinTree'
+--     * streaming selects (see Hasura.Backends.Postgres.Translate.Select.Streaming for details)
 module Hasura.Backends.Postgres.Translate.Select
-  ( selectQuerySQL,
-    selectStreamQuerySQL,
-    selectAggregateQuerySQL,
-    connectionSelectQuerySQL,
-    mkSQLSelect,
-    mkStreamSQLSelect,
-    mkAggregateSelect,
-    mkConnectionSelect,
+  ( module Simple,
+    module Aggregate,
+    module Connection,
+    module Streaming,
     PostgresAnnotatedFieldJSON,
   )
 where
 
-import Hasura.Backends.Postgres.Translate.Select.Aggregate
-  ( mkAggregateSelect,
-    selectAggregateQuerySQL,
-  )
-import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
-  ( PostgresAnnotatedFieldJSON,
-  )
-import Hasura.Backends.Postgres.Translate.Select.Connection
-  ( connectionSelectQuerySQL,
-    mkConnectionSelect,
-  )
-import Hasura.Backends.Postgres.Translate.Select.Query
-  ( mkSQLSelect,
-    selectQuerySQL,
-  )
-import Hasura.Backends.Postgres.Translate.Select.Streaming
-  ( mkStreamSQLSelect,
-    selectStreamQuerySQL,
-  )
+import Hasura.Backends.Postgres.Translate.Select.Aggregate as Aggregate
+import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON (PostgresAnnotatedFieldJSON)
+import Hasura.Backends.Postgres.Translate.Select.Connection as Connection
+import Hasura.Backends.Postgres.Translate.Select.Simple as Simple
+import Hasura.Backends.Postgres.Translate.Select.Streaming as Streaming
 
 {- Note: [SQL generation for inherited roles]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

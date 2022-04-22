@@ -1,7 +1,12 @@
-{-# OPTIONS_GHC -Wno-missing-export-lists #-}
-
 -- | Stuff gutted from Translate.Select
-module Hasura.Backends.Postgres.Translate.Select.JoinTree where
+module Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree
+  ( withWriteJoinTree,
+    withWriteObjectRelation,
+    withWriteArrayRelation,
+    withWriteArrayConnection,
+    withWriteComputedFieldTableSet,
+  )
+where
 
 import Control.Monad.Writer.Strict
 import Data.HashMap.Strict qualified as HM

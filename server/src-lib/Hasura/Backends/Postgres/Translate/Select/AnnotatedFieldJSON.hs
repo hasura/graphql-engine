@@ -6,7 +6,7 @@ where
 
 import Data.Text qualified as T
 import Hasura.Backends.Postgres.SQL.DML qualified as S
-import Hasura.Backends.Postgres.Translate.Select.Aux1 (withJsonBuildObj)
+import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (withJsonBuildObj)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (FieldName (getFieldNameTxt))
 import Hasura.SQL.Backend (PostgresKind (..))
