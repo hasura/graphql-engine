@@ -7,8 +7,8 @@
 </span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Metadata.Backend</span></a></span><span>
 </span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
 </span><span id="line-9"></span><span>
-</span><span id="line-10"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688485841"><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-11"></span><span>  </span><span id="local-6989586621688485839"><span class="annot"><span class="annottext">buildComputedFieldInfo :: HashSet (TableName 'MySQL)
+</span><span id="line-10"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688484743"><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-11"></span><span>  </span><span id="local-6989586621688484741"><span class="annot"><span class="annottext">buildComputedFieldInfo :: HashSet (TableName 'MySQL)
 -&gt; TableName 'MySQL
 -&gt; ComputedFieldName
 -&gt; ComputedFieldDefinition 'MySQL
@@ -26,7 +26,7 @@
 forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;buildComputedFieldInfo: MySQL backend does not support this operation yet.&quot;</span></span><span>
-</span><span id="line-12"></span><span>  </span><span id="local-6989586621688485836"><span class="annot"><span class="annottext">fetchAndValidateEnumValues :: SourceConfig 'MySQL
+</span><span id="line-12"></span><span>  </span><span id="local-6989586621688484738"><span class="annot"><span class="annottext">fetchAndValidateEnumValues :: SourceConfig 'MySQL
 -&gt; TableName 'MySQL
 -&gt; Maybe (PrimaryKey 'MySQL (RawColumnInfo 'MySQL))
 -&gt; [RawColumnInfo 'MySQL]
@@ -40,7 +40,7 @@ forall a. HasCallStack =&gt; [Char] -&gt; a
 forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;fetchAndValidateEnumValues: MySQL backend does not support this operation yet.&quot;</span></span><span>
-</span><span id="line-13"></span><span>  </span><span id="local-6989586621688485834"><span class="annot"><span class="annottext">resolveSourceConfig :: SourceName
+</span><span id="line-13"></span><span>  </span><span id="local-6989586621688484736"><span class="annot"><span class="annottext">resolveSourceConfig :: SourceName
 -&gt; SourceConnConfiguration 'MySQL
 -&gt; Environment
 -&gt; m (Either QErr (SourceConfig 'MySQL))
@@ -53,7 +53,7 @@ MonadIO m =&gt;
 SourceName
 -&gt; ConnSourceConfig -&gt; Environment -&gt; m (Either QErr SourceConfig)
 </span><a href="Hasura.Backends.MySQL.Connection.html#resolveSourceConfig"><span class="hs-identifier hs-var">MySQL.resolveSourceConfig</span></a></span><span>
-</span><span id="line-14"></span><span>  </span><span id="local-6989586621688485831"><span class="annot"><span class="annottext">resolveDatabaseMetadata :: SourceMetadata 'MySQL
+</span><span id="line-14"></span><span>  </span><span id="local-6989586621688484733"><span class="annot"><span class="annottext">resolveDatabaseMetadata :: SourceMetadata 'MySQL
 -&gt; SourceConfig 'MySQL
 -&gt; SourceTypeCustomization
 -&gt; m (Either QErr (ResolvedSource 'MySQL))
@@ -67,7 +67,7 @@ SourceConfig
 -&gt; SourceTypeCustomization
 -&gt; m (Either QErr (ResolvedSource 'MySQL))
 </span><a href="Hasura.Backends.MySQL.Connection.html#resolveDatabaseMetadata"><span class="hs-identifier hs-var">MySQL.resolveDatabaseMetadata</span></a></span><span>
-</span><span id="line-15"></span><span>  </span><span id="local-6989586621688485828"><span class="annot"><span class="annottext">parseBoolExpOperations :: ValueParser 'MySQL m v
+</span><span id="line-15"></span><span>  </span><span id="local-6989586621688484730"><span class="annot"><span class="annottext">parseBoolExpOperations :: ValueParser 'MySQL m v
 -&gt; TableName 'MySQL
 -&gt; FieldInfoMap (FieldInfo 'MySQL)
 -&gt; ColumnReference 'MySQL
@@ -83,7 +83,7 @@ SourceConfig
 forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;parseBoolExpOperations: MySQL backend does not support this operation yet.&quot;</span></span><span>
-</span><span id="line-16"></span><span>  </span><span id="local-6989586621688485826"><span class="annot"><span class="annottext">buildFunctionInfo :: SourceName
+</span><span id="line-16"></span><span>  </span><span id="local-6989586621688484728"><span class="annot"><span class="annottext">buildFunctionInfo :: SourceName
 -&gt; FunctionName 'MySQL
 -&gt; SystemDefined
 -&gt; FunctionConfig
@@ -103,7 +103,7 @@ forall a. HasCallStack =&gt; [Char] -&gt; a
 forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;buildFunctionInfo: MySQL backend does not support this operation yet.&quot;</span></span><span>
-</span><span id="line-17"></span><span>  </span><span id="local-6989586621688485824"><span class="annot"><span class="annottext">updateColumnInEventTrigger :: TableName 'MySQL
+</span><span id="line-17"></span><span>  </span><span id="local-6989586621688484726"><span class="annot"><span class="annottext">updateColumnInEventTrigger :: TableName 'MySQL
 -&gt; Column 'MySQL
 -&gt; Column 'MySQL
 -&gt; TableName 'MySQL
@@ -119,7 +119,7 @@ forall a. HasCallStack =&gt; [Char] -&gt; a
 forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;updateColumnInEventTrigger: MySQL backend does not support this operation yet.&quot;</span></span><span>
-</span><span id="line-18"></span><span>  </span><span id="local-6989586621688485822"><span class="annot"><span class="annottext">parseCollectableType :: CollectableType (ColumnType 'MySQL)
+</span><span id="line-18"></span><span>  </span><span id="local-6989586621688484724"><span class="annot"><span class="annottext">parseCollectableType :: CollectableType (ColumnType 'MySQL)
 -&gt; Value -&gt; m (PartialSQLExp 'MySQL)
 </span><a href="Hasura.RQL.Types.Metadata.Backend.html#parseCollectableType"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseCollectableType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char]
 -&gt; CollectableType (ColumnType 'MySQL)
@@ -128,7 +128,7 @@ forall a. HasCallStack =&gt; [Char] -&gt; a
 forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;parseCollectableType: MySQL backend does not support this operation yet.&quot;</span></span><span>
-</span><span id="line-19"></span><span>  </span><span id="local-6989586621688485820"><span class="annot"><span class="annottext">postDropSourceHook :: SourceConfig 'MySQL -&gt; m ()
+</span><span id="line-19"></span><span>  </span><span id="local-6989586621688484722"><span class="annot"><span class="annottext">postDropSourceHook :: SourceConfig 'MySQL -&gt; m ()
 </span><a href="Hasura.RQL.Types.Metadata.Backend.html#postDropSourceHook"><span class="hs-identifier hs-var hs-var hs-var hs-var">postDropSourceHook</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MySQL -&gt; m ()
 forall (m :: * -&gt; *). MonadIO m =&gt; SourceConfig -&gt; m ()
 </span><a href="Hasura.Backends.MySQL.Connection.html#postDropSourceHook"><span class="hs-identifier hs-var">MySQL.postDropSourceHook</span></a></span><span>
