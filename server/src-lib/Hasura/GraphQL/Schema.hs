@@ -43,6 +43,7 @@ import Hasura.RQL.IR
 import Hasura.RQL.Types
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Tag (HasTag)
+import Hasura.Server.Types
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 

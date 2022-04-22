@@ -58,6 +58,7 @@ import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.RemoteSchema (RemoteSchemaName)
 import Hasura.RQL.Types.SchemaCache
+import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing (TraceT)
 import Hasura.Tracing qualified as Tracing
@@ -291,6 +292,9 @@ instance (HasHttpManagerM m) => HasHttpManagerM (MetadataT m) where
 
 instance (UserInfoM m) => UserInfoM (MetadataT m) where
   askUserInfo = lift askUserInfo
+
+instance HasServerConfigCtx m => HasServerConfigCtx (MetadataT m) where
+  askServerConfigCtx = lift askServerConfigCtx
 
 runMetadataT :: Metadata -> MetadataT m a -> m (a, Metadata)
 runMetadataT metadata (MetadataT m) =

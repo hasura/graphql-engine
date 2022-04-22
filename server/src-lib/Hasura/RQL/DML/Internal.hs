@@ -48,6 +48,7 @@ import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types
 import Hasura.SQL.Types
+import Hasura.Server.Types
 import Hasura.Session
 
 newtype DMLP1T m a = DMLP1T {unDMLP1T :: StateT (DS.Seq Q.PrepArg) m a}

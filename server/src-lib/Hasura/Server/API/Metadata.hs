@@ -51,7 +51,7 @@ import Hasura.SQL.AnyBackend
 import Hasura.SQL.Tag
 import Hasura.Server.API.Backend
 import Hasura.Server.API.Instances ()
-import Hasura.Server.Types (InstanceId (..), MaintenanceMode (..), ReadOnlyMode (..))
+import Hasura.Server.Types
 import Hasura.Server.Utils (APIVersion (..))
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing

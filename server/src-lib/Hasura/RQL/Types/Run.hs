@@ -11,7 +11,8 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Hasura.Base.Error
 import Hasura.Metadata.Class
 import Hasura.Prelude
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Source
+import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Manager qualified as HTTP

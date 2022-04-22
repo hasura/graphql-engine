@@ -156,6 +156,7 @@ import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing (TraceT)
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -460,6 +461,9 @@ instance (Monad m, Backend b) => TableCoreInfoRM b (TableCacheRT b m) where
 instance (Monad m, Backend b) => TableInfoRM b (TableCacheRT b m) where
   lookupTableInfo tableName =
     TableCacheRT (pure . M.lookup tableName . snd)
+
+instance (HasServerConfigCtx m) => HasServerConfigCtx (TableCacheRT b m) where
+  askServerConfigCtx = lift askServerConfigCtx
 
 class (Monad m) => CacheRM m where
   askSchemaCache :: m SchemaCache

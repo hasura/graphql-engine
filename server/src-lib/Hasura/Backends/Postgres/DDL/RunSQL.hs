@@ -44,6 +44,7 @@ import Hasura.RQL.Types hiding
     tmTable,
   )
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Server.Types
 import Hasura.Server.Utils (quoteRegex)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing

@@ -7,6 +7,7 @@ module Hasura.Server.Types
     PGVersion (PGVersion),
     RequestId (..),
     ServerConfigCtx (..),
+    HasServerConfigCtx (..),
     getRequestId,
   )
 where
@@ -93,3 +94,15 @@ data ServerConfigCtx = ServerConfigCtx
     _sccReadOnlyMode :: ReadOnlyMode
   }
   deriving (Show, Eq)
+
+class (Monad m) => HasServerConfigCtx m where
+  askServerConfigCtx :: m ServerConfigCtx
+
+instance HasServerConfigCtx m => HasServerConfigCtx (ReaderT r m) where
+  askServerConfigCtx = lift askServerConfigCtx
+
+instance HasServerConfigCtx m => HasServerConfigCtx (ExceptT e m) where
+  askServerConfigCtx = lift askServerConfigCtx
+
+instance HasServerConfigCtx m => HasServerConfigCtx (StateT s m) where
+  askServerConfigCtx = lift askServerConfigCtx

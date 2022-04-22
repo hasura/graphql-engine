@@ -73,10 +73,6 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Tag
 import Hasura.SQL.Tag qualified as Tag
 import Hasura.Server.Types
-  ( EventingMode (..),
-    MaintenanceMode (..),
-    ReadOnlyMode (..),
-  )
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
