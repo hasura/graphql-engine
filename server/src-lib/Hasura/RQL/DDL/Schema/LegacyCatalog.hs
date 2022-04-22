@@ -34,7 +34,7 @@ import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.Types
 
 saveMetadataToHdbTables ::
-  (MonadTx m, HasSystemDefined m) => MetadataNoSources -> m ()
+  (MonadTx m, MonadReader SystemDefined m) => MetadataNoSources -> m ()
 saveMetadataToHdbTables
   ( MetadataNoSources
       tables
@@ -89,7 +89,7 @@ saveMetadataToHdbTables
         \(FunctionMetadata function config _ _) -> addFunctionToCatalog function config
 
     -- query collections
-    systemDefined <- askSystemDefined
+    systemDefined <- ask
     withPathK "query_collections" $
       indexedForM_ collections $ \c -> liftTx $ addCollectionToCatalog c systemDefined
 
@@ -132,13 +132,13 @@ saveMetadataToHdbTables
             addActionPermissionToCatalog createActionPermission
     where
       processPerms tableName perms = indexedForM_ perms $ \perm -> do
-        systemDefined <- askSystemDefined
+        systemDefined <- ask
         liftTx $ addPermissionToCatalog tableName perm systemDefined
 
 saveTableToCatalog ::
-  (MonadTx m, HasSystemDefined m) => QualifiedTable -> Bool -> TableConfig ('Postgres 'Vanilla) -> m ()
+  (MonadTx m, MonadReader SystemDefined m) => QualifiedTable -> Bool -> TableConfig ('Postgres 'Vanilla) -> m ()
 saveTableToCatalog (QualifiedObject sn tn) isEnum config = do
-  systemDefined <- askSystemDefined
+  systemDefined <- ask
   liftTx $
     Q.unitQE
       defaultTxErrorHandler
@@ -153,13 +153,13 @@ saveTableToCatalog (QualifiedObject sn tn) isEnum config = do
     configVal = Q.AltJ $ toJSON config
 
 insertRelationshipToCatalog ::
-  (MonadTx m, HasSystemDefined m, ToJSON a) =>
+  (MonadTx m, MonadReader SystemDefined m, ToJSON a) =>
   QualifiedTable ->
   RelType ->
   RelDef a ->
   m ()
 insertRelationshipToCatalog (QualifiedObject schema table) relType (RelDef name using comment) = do
-  systemDefined <- askSystemDefined
+  systemDefined <- ask
   let args = (schema, table, name, relTypeToTxt relType, Q.AltJ using, comment, systemDefined)
   liftTx $ Q.unitQE defaultTxErrorHandler query args True
   where
@@ -225,12 +225,12 @@ addRemoteRelationshipToCatalog CreateFromSourceRelationship {..} =
     QualifiedObject schemaName tableName = _crrTable
 
 addFunctionToCatalog ::
-  (MonadTx m, HasSystemDefined m) =>
+  (MonadTx m, MonadReader SystemDefined m) =>
   QualifiedFunction ->
   FunctionConfig ->
   m ()
 addFunctionToCatalog (QualifiedObject sn fn) config = do
-  systemDefined <- askSystemDefined
+  systemDefined <- ask
   liftTx $
     Q.unitQE
       defaultTxErrorHandler
@@ -732,7 +732,7 @@ addCronTriggerForeignKeyConstraint =
 recreateSystemMetadata :: (MonadTx m) => m ()
 recreateSystemMetadata = do
   () <- liftTx $ Q.multiQE defaultTxErrorHandler $(makeRelativeToProject "src-rsr/clear_system_metadata.sql" >>= Q.sqlFromFile)
-  runHasSystemDefinedT (SystemDefined True) $ for_ systemMetadata \(tableName, tableRels) -> do
+  flip runReaderT (SystemDefined True) $ for_ systemMetadata \(tableName, tableRels) -> do
     saveTableToCatalog tableName False emptyTableConfig
     for_ tableRels \case
       Left relDef -> insertRelationshipToCatalog tableName ObjRel relDef
