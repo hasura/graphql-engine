@@ -24491,6 +24491,7 @@ addActionToCatalog :: MonadTx m => CreateAction -> m ()
 addActionPermissionToCatalog :: MonadTx m => CreateActionPermission -> m ()
 addPermissionToCatalog :: (MonadTx m, Backend b) => QualifiedTable -> PermDef b a -> SystemDefined -> m ()
 addCronTriggerToCatalog :: MonadTx m => CronTriggerMetadata -> m ()
+parseLegacyRemoteRelationshipDefinition :: MonadError QErr m => Value -> m RemoteRelationshipDefinition
 fetchMetadataFromHdbTables :: MonadTx m => m MetadataNoSources
 addCronTriggerForeignKeyConstraint :: MonadTx m => m ()
 
@@ -25016,9 +25017,9 @@ QueryParametersInfo :: !HashMap Name (ColumnValue b) -> !Seq (ColumnValue b) -> 
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> !HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_axizW. Lens' (QueryParametersInfo b_axizW) (Seq (ColumnValue b_axizW))
-qpiReusableVariableValues :: forall b_axizW. Lens' (QueryParametersInfo b_axizW) (HashMap Name (ColumnValue b_axizW))
-qpiReferencedSessionVariables :: forall b_axizW. Lens' (QueryParametersInfo b_axizW) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_axiBa. Lens' (QueryParametersInfo b_axiBa) (Seq (ColumnValue b_axiBa))
+qpiReusableVariableValues :: forall b_axiBa. Lens' (QueryParametersInfo b_axiBa) (HashMap Name (ColumnValue b_axiBa))
+qpiReferencedSessionVariables :: forall b_axiBa. Lens' (QueryParametersInfo b_axiBa) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
