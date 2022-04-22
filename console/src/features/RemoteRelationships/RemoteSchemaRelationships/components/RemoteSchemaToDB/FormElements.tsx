@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useRemoteSchema } from '@/features/MetadataAPI';
-// eslint-disable-next-line no-restricted-imports
-import { useTableColumns } from '@/features/SqlQueries/hooks/useTableColumns';
+import { useTableColumns } from '@/features/SqlQueries';
 import { InputField, Select } from '@/new-components/Form';
 import { MapSelector } from '@/new-components/MapSelector';
 import {

@@ -6,7 +6,7 @@ import {
   useFeatureFlags,
   availableFeatureFlagIds,
 } from '@/features/FeatureFlags';
-import { DatabaseRelationshipsTab } from '@/features/DatabaseRelationshipsTab';
+import { DatabaseRelationshipsTab } from '@/features/DataRelationships';
 import TableHeader from '../TableCommon/TableHeader';
 import {
   addNewRelClicked,

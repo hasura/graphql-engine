@@ -9,7 +9,7 @@ import {
   relSetType,
   relSetColumns,
 } from './state';
-import { useTableColumns } from '@/features/SqlQueries/hooks/useTableColumns';
+import { useTableColumns } from '@/features/SqlQueries';
 import { getColumnNameArrayFromHookData } from './utils';
 import { MetadataSelector, useMetadata } from '@/features/MetadataAPI';
 

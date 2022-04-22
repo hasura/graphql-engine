@@ -3,7 +3,12 @@ import { rest } from 'msw';
 import { schema } from './schema';
 import { countries } from './countries_schema';
 import { metadata } from './metadata';
-import { tableColumnsResult } from './tables';
+import {
+  albumTableColumnsResult,
+  userAddressTableColumnsResult,
+  userInfoTableColumnsResult,
+  artistTableColumnsResult,
+} from './tables';
 
 const baseUrl = 'http://localhost:8080';
 
@@ -55,10 +60,26 @@ export const handlers = (url = baseUrl) => [
       return res(ctx.json({ message: 'success' }));
     }
 
+    if (body.type === 'pg_create_object_relationship') {
+      return res(ctx.json({ message: 'success' }));
+    }
+
+    if (body.type === 'pg_create_array_relationship') {
+      return res(ctx.json({ message: 'success' }));
+    }
+
     return res(ctx.json([{ message: 'success' }]));
   }),
 
   rest.post(`${url}/v2/query`, (req, res, ctx) => {
-    return res(ctx.json(tableColumnsResult));
+    const reqSql: string = (req?.body as Record<string, any>)?.args?.sql;
+    if (reqSql.toLowerCase().includes('album')) {
+      return res(ctx.json(albumTableColumnsResult));
+    } else if (reqSql.toLowerCase().includes('address')) {
+      return res(ctx.json(userAddressTableColumnsResult));
+    } else if (reqSql.toLowerCase().includes('artist')) {
+      return res(ctx.json(artistTableColumnsResult));
+    }
+    return res(ctx.json(userInfoTableColumnsResult));
   }),
 ];

@@ -33,6 +33,7 @@ export const Select = ({
       )}
       disabled={disabled}
       value={props.value}
+      id={props.name}
     >
       {placeholder ? (
         <option disabled value="">

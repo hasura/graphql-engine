@@ -5,7 +5,7 @@ import React from 'react';
 import { DatabaseRelationshipsTab } from './DatabaseRelationshipsTab';
 
 export default {
-  title: 'Relationships / Database Relationships Tab',
+  title: 'Data Relationships/Database Relationships Tab',
   component: DatabaseRelationshipsTab,
   decorators: [ReactQueryDecorator()],
 } as ComponentMeta<typeof DatabaseRelationshipsTab>;
