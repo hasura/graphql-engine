@@ -729,7 +729,10 @@ func (ec *ExecutionContext) Validate() error {
 		ec.HasMetadataV3 = true
 	}
 	if ec.Config.Version >= V3 && !ec.HasMetadataV3 {
-		return fmt.Errorf("config v3 can only be used with servers having metadata version >= 3")
+		return fmt.Errorf(`config v3 can only be used with servers having metadata version >= 3
+You could fix this problem by taking one of the following actions:
+1. Upgrade your Hasura server to a newer version (>= v2.0.0) ie upgrade to a version which supports metadata v3
+2. Force CLI to use an older config version via the --version <VERSION> flag`)
 	}
 
 	ec.APIClient = &hasura.Client{

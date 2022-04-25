@@ -95,7 +95,7 @@ func (m *mockDriver) Squash(list *CustomList, ret chan<- interface{}) {
 func (m *mockDriver) EnableCheckMetadataConsistency(enabled bool) {
 }
 
-func (m *mockDriver) ExportSchemaDump(schemaName []string, sourceName string, sourceKind hasura.SourceKind) ([]byte, error) {
+func (m *mockDriver) ExportSchemaDump(includeSchemas []string, excludeSchemas []string, sourceName string, sourceKind hasura.SourceKind) ([]byte, error) {
 	return nil, nil
 }
 

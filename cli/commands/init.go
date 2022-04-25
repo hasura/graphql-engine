@@ -381,8 +381,7 @@ func (a *failedValidatingEndpointAction) Execute(ctx fsm.EventContext) eventType
 	context := ctx.(*initCtx)
 	context.logger.Debug(failedValidatingEndpoint)
 	if context.err != nil {
-		context.logger.Debug(context.err)
-		context.logger.Infoln("validating endpoint failed, server not reachable")
+		context.logger.Errorf("validating server failed: %v", context.err)
 	}
 	return gotoEndstate
 }
@@ -427,9 +426,10 @@ type creatingMigrationAction struct{}
 func (a *creatingMigrationAction) Execute(ctx fsm.EventContext) eventType {
 	context := ctx.(*initCtx)
 	opts := migrateCreateOptions{
-		EC:         context.ec,
-		name:       "init",
-		fromServer: true,
+		EC:             context.ec,
+		name:           "init",
+		fromServer:     true,
+		excludeSchemas: []string{"hdb_catalog", "hdb_views"},
 	}
 	context.logger.Debug(creatingMigration)
 	if err := context.ec.Validate(); err != nil {
