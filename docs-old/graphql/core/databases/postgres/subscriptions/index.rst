@@ -9,7 +9,7 @@ Postgres: Subscriptions
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 Introduction
@@ -21,38 +21,99 @@ changes upstream.
 Subscriptions are supported for all kinds of queries. All the concepts of
 :ref:`queries <pg_queries>` hold true for subscriptions as well.
 
-Implementation
---------------
-
-The Hasura GraphQL engine subscriptions are actually **live queries**, i.e. a subscription will return the
-latest result of the query being made and not necessarily all the individual events leading up to the result.
-By default, updates are delivered to clients every **1 sec**.
-
-See more details on :ref:`subscriptions execution and performance <pg_subscriptions_execution_and_performance>`.
-
-Convert a query to a subscription
----------------------------------
-
-You can turn any query into a subscription by simply replacing ``query`` with ``subscription`` as the operation type.
-
 .. admonition:: Caveat
 
   Hasura follows the `GraphQL spec <https://graphql.github.io/graphql-spec/June2018/#sec-Single-root-field>`__ which
   allows for only one root field in a subscription.
 
-Use cases
----------
+Types of subscriptions
+----------------------
 
-- :ref:`pg_subscribe_field`
-- :ref:`pg_subscribe_table`
-- :ref:`pg_subscribe_derived`
+The Hasura GraphQL engine supports two kind of subscriptions:
+
+Live queries
+^^^^^^^^^^^^
+
+A live query subscription will return the latest result of the query being made
+and not necessarily all the individual events leading up to the result.
+By default, updates are delivered to clients every **1 sec**.
+
+See more details :ref:`here <pg_live_query_subscriptions>`.
+
+Streaming subscriptions
+^^^^^^^^^^^^^^^^^^^^^^^
+
+A streaming subscription streams the response according to the cursor input
+by the user. A streaming subscription is different from a live query as it sends individual rows
+at a time and not the entire result set.
+
+See more details :ref:`here <pg_streaming_subscriptions>`
+
+Live query vs Streaming subscriptions
+-------------------------------------
+
+Suppose we need to display the messages of a group chat on a page, this can be done either via
+live queries or streaming subscriptions. Let's see how they can be used and how they differ from each other.
+
+1. Using **live query**
+
+   With live query, we'll make the following query:
+
+   .. code-block:: graphql
+
+      subscription {
+        messages (
+          where: {group_id: 1},
+          order_by: {created_at: asc}
+        ) {
+          id
+          sender
+          reciever
+          content
+          created_at
+          edited_at
+        }
+      }
+
+   The initial response for this subscription will be all the messages of the group. Let's say the initial
+   response contained 100 messages. Now, if there is one more message sent to the group, then all 101 messages
+   will be sent in a new response.
+
+
+2. Using **streaming subscriptions**
+
+   With streaming subscriptions, we'll make the following query:
+
+   .. code-block:: graphql
+
+      subscription {
+        messages_stream (
+          where: {group_id: 1},
+          cursor: {initial_value: {created_at: now}},
+          batch_size: 10
+        ) {
+          id
+          sender
+          reciever
+          content
+          created_at
+          edited_at
+        }
+      }
+
+   Here, we'll start getting all messages of the group in batches given by ``batch_size`` with ``created_at``
+   greater than ``now``.
+
+   Following the example of the live query, if we have 100 messages corresponding to the group and only
+   5 messages with ``created_at`` greater than the current value of the cursor maintained by the cursor, then
+   we will get only the 5 messages.
 
 Communication protocol
 ----------------------
 
 Hasura GraphQL engine uses the `GraphQL over WebSocket Protocol
 <https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md>`__ by the
-`apollographql/subscriptions-transport-ws <https://github.com/apollographql/subscriptions-transport-ws>`__ library and the 
+`apollographql/subscriptions-transport-ws <https://github.com/apollographql/subscriptions-transport-ws>`__ library and the
 `GraphQL over WebSocket Protocol <https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md>`__
 by the `graphql-ws <https://github.com/enisdenjo/graphql-ws>`__ library for sending and receiving events.
 The GraphQL engine uses the ``Sec-WebSocket-Protocol`` header to determine
@@ -112,5 +173,5 @@ It uses the provided CORS configuration (as per :ref:`configure-cors`).
   :maxdepth: 1
   :hidden:
 
-  Sample use cases <use-cases>
-  Execution and performance <execution-and-performance>
+  Live queries <livequery/index>
+  Streaming subscriptions <streaming/index>
