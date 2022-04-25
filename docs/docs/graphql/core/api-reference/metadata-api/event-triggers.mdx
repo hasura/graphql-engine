@@ -252,7 +252,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-    "type" : "pg_delete_event_trigger",
+    "type" : "mssql_delete_event_trigger",
     "args" : {
         "name": "sample_trigger",
         "source": "default"
@@ -269,8 +269,8 @@ X-Hasura-Role: admin
 
 ## mssql_redeliver_event {#metadata-mssql-redeliver-event}
 
-`redeliver_event` is used to redeliver an existing event. For example,
-if an event is marked as error ( say it did not succeed after retries),
+`mssql_redeliver_event` is used to redeliver an existing event. For example,
+if an event is marked as error (say it did not succeed after retries),
 you can redeliver it using this API. Note that this will reset the count
 of retries so far. If the event fails to deliver, it will be retried
 automatically according to its `retry_conf`.
