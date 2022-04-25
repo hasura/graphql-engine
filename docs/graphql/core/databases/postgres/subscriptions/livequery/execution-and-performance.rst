@@ -25,6 +25,8 @@ latest result of the query being made and not the individual events leading up t
 
 Subscriptions, on start, will emit the result of the underlying query. Subsequently, results will be emitted only if the result of the query changes underneath (via insert/update/delete on the subscribed resource).
 
+.. _subscription_multiplexing:
+
 Subscription multiplexing
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 

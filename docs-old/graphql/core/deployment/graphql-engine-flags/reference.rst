@@ -241,6 +241,15 @@ For the ``serve`` sub-command these are the available flags and environment vari
      - ``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE``
      - Multiplexed live queries are split into batches of the specified size. Default: 100
 
+   * - ``--streaming-queries-multiplexed-refetch-interval``
+     - ``HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_REFETCH_INTERVAL``
+     - Updated results (if any) will be sent at most once in this interval (in milliseconds) for streaming queries
+       which can be multiplexed. Default: 1000 (1sec)
+
+   * - ``--streaming-queries-multiplexed-batch-size``
+     - ``HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_BATCH_SIZE``
+     - Multiplexed streaming queries are split into batches of the specified size. Default: 100
+
    * - ``--enable-allowlist``
      - ``HASURA_GRAPHQL_ENABLE_ALLOWLIST``
      - Restrict queries allowed to be executed by the GraphQL engine to those that are part of the configured
@@ -300,7 +309,8 @@ For the ``serve`` sub-command these are the available flags and environment vari
 
    * - ``--experimental-features``
      - ``HASURA_GRAPHQL_EXPERIMENTAL_FEATURES``
-     - List of experimental features to be enabled. A comma separated value is expected. Options: ``inherited_roles``.
+     - List of experimental features to be enabled. A comma separated value is expected.
+       Options: ``inherited_roles, optimize_permission_filters, streaming_subscriptions``. (default: None)
 
        *(Available for versions > v2.0.0)*
 
@@ -332,7 +342,7 @@ For the ``serve`` sub-command these are the available flags and environment vari
        (default: ``5``)
 
        *(Available for versions > v2.0.0)*
-   
+
    * - ``--websocket-connection-init-timeout <SECONDS>``
      - ``HASURA_GRAPHQL_WEBSOCKET_CONNECTION_INIT_TIMEOUT``
      - Used to set the connection initialisation timeout for ``graphql-ws`` clients. This is ignored

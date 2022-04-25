@@ -4,8 +4,8 @@
 
 .. _pg_subscription_use_cases:
 
-Subscriptions sample use cases
-==============================
+Live query subscriptions sample use cases
+=========================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -15,7 +15,7 @@ Subscriptions sample use cases
 Introduction
 ------------
 
-The following are a few use cases for using subscriptions:
+The following are a few use cases for using live query subscriptions:
 
 .. _pg_subscribe_field:
 
@@ -91,7 +91,7 @@ Subscribe to changes to a table's entries
 -----------------------------------------
 
 In case you are interested in all the additions/changes to a table's entries, you can use subscriptions to fetch the
-table rows and get updates whenever there are any additions/changes to the table.
+table rows and get livequeryupdates whenever there are any additions/changes to the table.
 
 Example: Chat app
 ^^^^^^^^^^^^^^^^^
