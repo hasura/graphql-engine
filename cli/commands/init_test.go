@@ -98,6 +98,10 @@ var _ = Describe("hasura init --endpoint (config v3)", func() {
 			fileInfos, err := os.ReadDir(filepath.Join(projectDirectory, "migrations", sourceName))
 			Expect(err).To(BeNil())
 			Expect(len(fileInfos)).Should(BeEquivalentTo(1))
+			upMigrationsContent, err := ioutil.ReadFile(filepath.Join(projectDirectory, "migrations", sourceName, fileInfos[0].Name(), "up.sql"))
+			Expect(err).To(BeNil())
+			Expect(upMigrationsContent).ShouldNot(ContainSubstring("hdb_catalog"))
+			Expect(upMigrationsContent).ShouldNot(ContainSubstring("hdb_views"))
 		})
 
 	})
@@ -185,6 +189,10 @@ var _ = Describe("hasura init --endpoint (config v2)", func() {
 			fileInfos, err := os.ReadDir(filepath.Join(projectDirectory, "migrations"))
 			Expect(err).To(BeNil())
 			Expect(len(fileInfos)).Should(BeEquivalentTo(1))
+			upMigrationsContent, err := ioutil.ReadFile(filepath.Join(projectDirectory, "migrations", fileInfos[0].Name(), "up.sql"))
+			Expect(err).To(BeNil())
+			Expect(string(upMigrationsContent)).ShouldNot(ContainSubstring("hdb_catalog"))
+			Expect(string(upMigrationsContent)).ShouldNot(ContainSubstring("hdb_views"))
 		})
 
 	})

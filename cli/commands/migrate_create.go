@@ -102,7 +102,7 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.BoolVar(&opts.fromServer, "from-server", false, "take pg_dump of schema (default: public) and Hasura metadata from the server")
 	f.StringVar(&opts.sqlFile, "sql-from-file", "", "path to an SQL file which contains the SQL statements")
 	f.BoolVar(&opts.sqlServer, "sql-from-server", false, "take pg_dump from the server (default: public) and save it as a migration")
-	f.StringSliceVar(&opts.schemaNames, "schema", []string{"public"}, "name of Postgres schema to export as a migration. provide multiple schemas with a comma separated list e.g. --schema public,user")
+	f.StringSliceVar(&opts.includeSchemas, "schema", []string{"public"}, "name of Postgres schema to export as a migration. provide multiple schemas with a comma separated list e.g. --schema public,user")
 	f.StringVar(&opts.metaDataFile, "metadata-from-file", "", "path to a hasura metadata file to be used for up actions")
 	f.BoolVar(&opts.metaDataServer, "metadata-from-server", false, "take metadata from the server and write it as an up migration file")
 	f.StringVar(&opts.upSQL, "up-sql", "", "sql string/query that is to be used to create an up migration")
@@ -133,7 +133,8 @@ type migrateCreateOptions struct {
 	sqlServer      bool
 	metaDataFile   string
 	metaDataServer bool
-	schemaNames    []string
+	includeSchemas []string
+	excludeSchemas []string
 	upSQL          string
 	upSQLChanged   bool
 	downSQLChanged bool
@@ -167,7 +168,7 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 		}
 	}
 	if o.sqlServer {
-		data, err := migrateDrv.ExportSchemaDump(o.schemaNames, o.Source.Name, o.Source.Kind)
+		data, err := migrateDrv.ExportSchemaDump(o.includeSchemas, o.excludeSchemas, o.Source.Name, o.Source.Kind)
 		if err != nil {
 			return 0, fmt.Errorf("cannot fetch schema dump: %w", err)
 		}
