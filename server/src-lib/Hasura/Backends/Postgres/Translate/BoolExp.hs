@@ -11,7 +11,7 @@ module Hasura.Backends.Postgres.Translate.BoolExp
 where
 
 import Data.HashMap.Strict qualified as M
-import Data.Text.Extended (ToTxt)
+import Data.Text.Extended (ToTxt, (<<>))
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import Hasura.Backends.Postgres.Types.BoolExp
@@ -336,3 +336,16 @@ mkFieldCompExp rootReference currTableReference lhsField = mkCompExp qLhsField
              in sqlAll $ map (mkCompExp (S.SETyAnn lhs targetAnn)) operations
 
         sqlAll = foldr (S.BEBin S.AndOp) (S.BELit True)
+
+-------------------------------------------------------------------------------
+
+-- | Asking for a table's fields info without explicit @'SourceName' argument.
+-- The source name is implicitly inferred from @'SourceM' via @'TableCoreInfoRM'.
+askFieldInfoMapSource ::
+  (QErrM m, Backend b, TableCoreInfoRM b m) =>
+  TableName b ->
+  m (FieldInfoMap (FieldInfo b))
+askFieldInfoMapSource tableName = do
+  fmap _tciFieldInfoMap $
+    onNothingM (lookupTableCoreInfo tableName) $
+      throw400 NotExists $ "table " <> tableName <<> " does not exist"

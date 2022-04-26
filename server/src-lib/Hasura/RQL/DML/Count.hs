@@ -75,7 +75,7 @@ validateCountQWith ::
   CountQuery ->
   m CountQueryP1
 validateCountQWith sessVarBldr prepValBldr (CountQuery qt _ mDistCols mWhere) = do
-  tableInfo <- askTabInfoSource qt
+  tableInfo <- askTableInfoSource qt
 
   -- Check if select is allowed
   selPerm <-
@@ -118,7 +118,7 @@ validateCountQ ::
   m (CountQueryP1, DS.Seq Q.PrepArg)
 validateCountQ query = do
   let source = cqSource query
-  tableCache :: TableCache ('Postgres 'Vanilla) <- askTableCache source
+  tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache source
   flip runTableCacheRT (source, tableCache) $
     runDMLP1T $
       validateCountQWith sessVarFromCurrentSetting binRHSBuilder query

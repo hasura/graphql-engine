@@ -29,7 +29,7 @@ import Hasura.RQL.Types.Relationships.ToSchema
 import Hasura.RQL.Types.Relationships.ToSchema qualified as Remote
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.ResultCustomization
-import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.SourceCustomization (mkCustomizedTypename)
 import Hasura.SQL.AnyBackend
 import Hasura.Session

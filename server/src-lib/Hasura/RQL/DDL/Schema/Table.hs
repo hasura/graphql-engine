@@ -254,7 +254,7 @@ runTrackTableV2Q (TrackTableV2 (TrackTable source qt isEnum) config) = do
 
 runSetExistingTableIsEnumQ :: (MonadError QErr m, CacheRWM m, MetadataM m) => SetTableIsEnum -> m EncJSON
 runSetExistingTableIsEnumQ (SetTableIsEnum source tableName isEnum) = do
-  void $ askTabInfo @('Postgres 'Vanilla) source tableName -- assert that table is tracked
+  void $ askTableInfo @('Postgres 'Vanilla) source tableName -- assert that table is tracked
   buildSchemaCacheFor
     (MOSourceObjId source $ AB.mkAnyBackend $ SMOTable @('Postgres 'Vanilla) tableName)
     $ MetadataModifier $
@@ -294,7 +294,7 @@ instance FromJSON SetTableCustomFields where
 runSetTableCustomFieldsQV2 ::
   (QErrM m, CacheRWM m, MetadataM m) => SetTableCustomFields -> m EncJSON
 runSetTableCustomFieldsQV2 (SetTableCustomFields source tableName rootFields columnNames) = do
-  void $ askTabInfo @('Postgres 'Vanilla) source tableName -- assert that table is tracked
+  void $ askTableInfo @('Postgres 'Vanilla) source tableName -- assert that table is tracked
   let columnConfig = (\name -> mempty {_ccfgCustomName = Just name}) <$> columnNames
   let tableConfig = TableConfig @('Postgres 'Vanilla) rootFields columnConfig Nothing Automatic
   buildSchemaCacheFor
@@ -309,7 +309,7 @@ runSetTableCustomization ::
   SetTableCustomization b ->
   m EncJSON
 runSetTableCustomization (SetTableCustomization source table config) = do
-  void $ askTabInfo @b source table
+  void $ askTableInfo @b source table
   buildSchemaCacheFor
     (MOSourceObjId source $ AB.mkAnyBackend $ SMOTable @b table)
     $ MetadataModifier $
@@ -368,7 +368,7 @@ unTrackExistingTableOrViewP2 (UntrackTable source qtn cascade) = withNewInconsis
       -- A remote schema can have a remote relationship with a table. So when a
       -- table is dropped, the remote relationship in remote schema also needs to
       -- be removed.
-      sourceObj@(SORemoteSchemaRemoteRelationship _ _ _) -> Just sourceObj
+      sourceObj@(SORemoteSchemaRemoteRelationship {}) -> Just sourceObj
       _ -> Nothing
 
 runUntrackTableQ ::

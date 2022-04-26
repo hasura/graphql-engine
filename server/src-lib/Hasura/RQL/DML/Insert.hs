@@ -142,7 +142,7 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName _ val oC mR
   insObjs <- objsParser val
 
   -- Get the current table information
-  tableInfo <- askTabInfoSource tableName
+  tableInfo <- askTableInfoSource tableName
   let coreInfo = _tiCoreInfo tableInfo
 
   -- If table is view then check if it is insertable
@@ -221,7 +221,7 @@ convInsQ ::
   m (InsertQueryP1 ('Postgres 'Vanilla), DS.Seq Q.PrepArg)
 convInsQ query = do
   let source = iqSource query
-  tableCache :: TableCache ('Postgres 'Vanilla) <- askTableCache source
+  tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache source
   flip runTableCacheRT (source, tableCache) $
     runDMLP1T $
       convInsertQuery

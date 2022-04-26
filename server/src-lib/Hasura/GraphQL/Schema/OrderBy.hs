@@ -1,5 +1,5 @@
 {-# LANGUAGE ApplicativeDo #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskellQuotes #-}
 
 module Hasura.GraphQL.Schema.OrderBy
   ( orderByExp,
@@ -23,7 +23,7 @@ import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
 import Hasura.RQL.IR.OrderBy qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
-import Hasura.RQL.Types
+import Hasura.RQL.Types hiding (askTableInfo)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Corresponds to an object type for an order by.

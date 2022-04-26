@@ -4,6 +4,7 @@ module Hasura.RQL.DML.Internal
     askInsPermInfo,
     askPermInfo,
     askSelPermInfo,
+    askTableInfoSource,
     askUpdPermInfo,
     binRHSBuilder,
     checkPermOnCol,
@@ -226,7 +227,16 @@ fetchRelTabInfo ::
 fetchRelTabInfo refTabName =
   -- Internal error
   modifyErrAndSet500 ("foreign " <>) $
-    askTabInfoSource refTabName
+    askTableInfoSource refTabName
+
+askTableInfoSource ::
+  forall b m.
+  (QErrM m, TableInfoRM b m, Backend b) =>
+  TableName b ->
+  m (TableInfo b)
+askTableInfoSource tableName = do
+  onNothingM (lookupTableInfo tableName) $
+    throw400 NotExists $ "table " <> tableName <<> " does not exist"
 
 data SessionVariableBuilder b m = SessionVariableBuilder
   { _svbCurrentSession :: !(SQLExpression b),
@@ -281,7 +291,7 @@ checkOnColExp spi sessVarBldr annFld = case annFld of
         checkSelectPermOnScalarComputedField spi fieldName
         pure annFld
       CFBETable table nesBoolExp -> do
-        tableInfo <- modifyErrAndSet500 ("function " <>) $ askTabInfoSource table
+        tableInfo <- modifyErrAndSet500 ("function " <>) $ askTableInfoSource table
         let errMsg _ =
               "role " <> roleName <<> " does not have permission to read "
                 <> " computed field "
