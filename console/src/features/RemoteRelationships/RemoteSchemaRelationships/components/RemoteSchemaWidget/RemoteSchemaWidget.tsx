@@ -70,7 +70,7 @@ export const RemoteSchemaWidget = ({
     <div className="grid gap-4 border border-gray-300 rounded shadow-sm p-4 bg-gray-50">
       <div className="grid gap-4 w-full">
         <label className="block ">
-          <span className="text-gray-600 mb-xs font-semibold">Result Set</span>
+          <span className="text-gray-600 mb-xs font-semibold">Mapping</span>
           <input
             type="text"
             className="mt-xs block h-input w-full shadow-sm rounded cursor-not-allowed bg-gray-100 border border-gray-300"

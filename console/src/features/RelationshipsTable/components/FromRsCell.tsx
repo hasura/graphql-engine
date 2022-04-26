@@ -4,7 +4,10 @@ import { FiType } from 'react-icons/fi';
 
 const RsLeafCell = ({ leafName }: { leafName: ReactText }) => (
   <>
-    <FaFont className="fill-current text-sm text-muted mr-1 p-0" />
+    <FaFont
+      className="fill-current text-sm text-muted mr-1 p-0"
+      title="Field"
+    />
     <span className="mr-2">{leafName}</span>
   </>
 );
@@ -23,6 +26,7 @@ const FromRsCell = ({
     <div className="flex items-center">
       <FiType
         className="fill-current text-sm text-muted mr-1 p-0"
+        title="Type"
         style={{ strokeWidth: 4.5 }}
       />
       {rsName}

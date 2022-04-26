@@ -32,6 +32,7 @@ export const allowedMetadataTypesArr = [
   'mssql_drop_delete_permission',
   'mssql_set_permission_comment',
   'create_remote_schema_remote_relationship',
+  'update_remote_schema_remote_relationship',
   'delete_remote_schema_remote_relationship',
   'bulk',
 ] as const;
