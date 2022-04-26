@@ -40,7 +40,10 @@ const RelationshipDestinationCell = ({
     const columns = Object.values(
       relationship?.definition?.to_source?.field_mapping ?? {}
     ) as string[];
-    return <TableCell tableName={relationship?.name} cols={columns} />;
+    const tableName =
+      relationship?.definition?.to_source?.table?.name ??
+      relationship?.definition?.to_source?.table;
+    return <TableCell tableName={tableName} cols={columns} />;
   }
 
   if (sourceType === 'local_object') {

@@ -69,7 +69,7 @@ export const FormElements = ({
     );
 
   const remoteSchemaTypes = getTypesFromIntrospection(data);
-  console.log('form!!');
+
   return (
     <>
       <div className="w-full sm:w-6/12 my-md">
@@ -106,7 +106,7 @@ export const FormElements = ({
       <div className="grid grid-cols-12">
         <div className="col-span-5">
           <RsSourceTypeSelector
-            types={remoteSchemaTypes.map(t => t.typeName)}
+            types={remoteSchemaTypes.map(t => t.typeName).sort()}
             sourceTypeKey="typeName"
           />
         </div>

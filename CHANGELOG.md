@@ -12,6 +12,7 @@
 - server: fixes remote relationships on actions (fix #8399)
 - server: update pg_dump to be compatible with postgres 14 (#7676)
 - console: add remote database relationships for views
+- console: bug fixes for RS-to-RS relationships
 - cli: fix performance regression in `migrate status` command (fix #8398)
 
 ## v2.6.0-beta.1

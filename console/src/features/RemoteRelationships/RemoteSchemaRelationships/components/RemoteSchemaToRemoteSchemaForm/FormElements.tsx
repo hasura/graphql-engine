@@ -78,6 +78,7 @@ const useLoadData = (sourceRemoteSchema: string) => {
 
 export const FormElements = ({
   sourceRemoteSchema,
+  existingRelationshipName,
 }: RemoteSchemaToRemoteSchemaFormProps) => {
   const {
     data: {
@@ -110,13 +111,14 @@ export const FormElements = ({
           label="Name"
           placeholder="Relationship name"
           dataTest="rs-to-rs-rel-name"
+          disabled={!!existingRelationshipName}
         />
       </div>
 
       <div className="grid grid-cols-12">
         <div className="col-span-5">
           <RsSourceTypeSelector
-            types={remoteSchemaTypes.map(t => t.typeName)}
+            types={remoteSchemaTypes.map(t => t.typeName).sort()}
             sourceTypeKey={rsSourceTypeKey}
           />
         </div>
