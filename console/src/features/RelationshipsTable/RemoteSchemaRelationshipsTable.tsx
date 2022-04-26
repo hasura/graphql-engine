@@ -78,7 +78,7 @@ export const RemoteSchemaRelationshipTable = ({
               sourceType={sourceType}
             />,
           ];
-          if (showActionCell && relType === 'to_source') {
+          if (showActionCell) {
             value.push(
               <ModifyActions
                 onEdit={() =>

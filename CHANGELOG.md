@@ -10,6 +10,7 @@
 - server: Don't drop nested typed null fields in actions (fix #8237)
 - server: fixes remote relationships on actions (fix #8399)
 - console: add remote database relationships for views
+- console: bug fixes for RS-to-RS relationships
 - cli: avoid exporting hasura-specific schemas during hasura init (#8352)
 - cli: fix performance regression in `migrate status` command (fix #8398)
 

@@ -70,23 +70,26 @@ export const RemoteSchemaToDbForm = ({
   onSuccess,
   relModeHandler,
 }: RemoteSchemaToDbFormProps) => {
-  const mutation = useMetadataMigration({
-    onSuccess: () => {
-      fireNotification({
-        title: 'Success!',
-        message: 'Relationship saved successfully',
-        type: 'success',
-      });
-      if (onSuccess) onSuccess();
+  const mutation = useMetadataMigration(
+    {
+      onSuccess: () => {
+        fireNotification({
+          title: 'Success!',
+          message: 'Relationship saved successfully',
+          type: 'success',
+        });
+        if (onSuccess) onSuccess();
+      },
+      onError: (error: Error) => {
+        fireNotification({
+          title: 'Error',
+          message: error?.message ?? 'Error while creating the relationship',
+          type: 'error',
+        });
+      },
     },
-    onError: () => {
-      fireNotification({
-        title: 'Error',
-        message: 'Error while creating the relationship',
-        type: 'error',
-      });
-    },
-  });
+    true
+  );
 
   const submit = (values: Schema) => {
     const field_mapping: Record<string, string> = values.mapping.reduce(
@@ -142,16 +145,20 @@ export const RemoteSchemaToDbForm = ({
                 Cancel
               </Button>
               <span className="font-semibold text-muted ml-sm">
-                Create New Relationship
+                {existingRelationshipName
+                  ? 'Edit Relationship'
+                  : 'Create New Relationship'}
               </span>
             </div>
             <hr className="mb-md border-gray-300" />
 
             {/* relationship meta */}
-            <RelationshipTypeCardRadioGroup
-              value="remoteDB"
-              onChange={relModeHandler}
-            />
+            {existingRelationshipName ? null : (
+              <RelationshipTypeCardRadioGroup
+                value="remoteDB"
+                onChange={relModeHandler}
+              />
+            )}
 
             <FormElements
               sourceRemoteSchema={sourceRemoteSchema}

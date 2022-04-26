@@ -3,7 +3,10 @@ import { FaProjectDiagram, FaFont } from 'react-icons/fa';
 
 const RsLeafCell = ({ leafName }: { leafName: ReactText }) => (
   <>
-    <FaFont className="fill-current text-sm text-muted mr-1 p-0" />
+    <FaFont
+      className="fill-current text-sm text-muted mr-1 p-0"
+      title="Field"
+    />
     <span className="mr-2">{leafName}</span>
   </>
 );
@@ -20,7 +23,10 @@ const ToRsCell = ({
 }) => (
   <>
     <div className="flex items-center">
-      <FaProjectDiagram className="fill-current text-sm text-muted mr-1 p-0" />
+      <FaProjectDiagram
+        className="fill-current text-sm text-muted mr-1 p-0"
+        title="Remote schema"
+      />
       {rsName}
       <span className="px-2">/</span>
       {leafs.map(i => (

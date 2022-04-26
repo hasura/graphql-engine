@@ -74,23 +74,26 @@ export const RemoteSchemaToRemoteSchemaForm = (
     closeHandler,
     relModeHandler,
   } = props;
-  const mutation = useMetadataMigration({
-    onSuccess: () => {
-      fireNotification({
-        title: 'Success!',
-        message: 'Relationship saved successfully',
-        type: 'success',
-      });
-      if (closeHandler) closeHandler();
+  const mutation = useMetadataMigration(
+    {
+      onSuccess: () => {
+        fireNotification({
+          title: 'Success!',
+          message: 'Relationship saved successfully',
+          type: 'success',
+        });
+        if (closeHandler) closeHandler();
+      },
+      onError: (error: Error) => {
+        fireNotification({
+          title: 'Error',
+          message: error?.message ?? 'Error while creating the relationship',
+          type: 'error',
+        });
+      },
     },
-    onError: () => {
-      fireNotification({
-        title: 'Error',
-        message: 'Error while creating the relationship',
-        type: 'error',
-      });
-    },
-  });
+    true
+  );
 
   const submit = (values: RsToRsSchema) => {
     const lhs_fields = generateLhsFields(
@@ -138,15 +141,21 @@ export const RemoteSchemaToRemoteSchemaForm = (
               <Button type="button" size="sm" onClick={closeHandler}>
                 Cancel
               </Button>
-              <p className="font-semibold m-0">Create New Relationship</p>
+              <p className="font-semibold m-0">
+                {existingRelationshipName
+                  ? 'Edit Relationship'
+                  : 'Create New Relationship'}
+              </p>
             </div>
 
             <hr className="mb-md border-gray-300" />
 
-            <RelationshipTypeCardRadioGroup
-              value="remoteSchema"
-              onChange={relModeHandler}
-            />
+            {existingRelationshipName ? null : (
+              <RelationshipTypeCardRadioGroup
+                value="remoteSchema"
+                onChange={relModeHandler}
+              />
+            )}
 
             <FormElements
               sourceRemoteSchema={sourceRemoteSchema}
