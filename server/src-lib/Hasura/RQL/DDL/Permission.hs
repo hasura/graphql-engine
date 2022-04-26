@@ -370,7 +370,7 @@ runSetPermComment ::
   SetPermComment b ->
   m EncJSON
 runSetPermComment (SetPermComment source table roleName permType comment) = do
-  tableInfo <- askTabInfo @b source table
+  tableInfo <- askTableInfo @b source table
 
   -- assert permission exists and return appropriate permission modifier
   permModifier <- case permType of

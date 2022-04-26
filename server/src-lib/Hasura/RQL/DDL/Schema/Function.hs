@@ -6,7 +6,6 @@ module Hasura.RQL.DDL.Schema.Function
     TrackFunction (..),
     TrackFunctionV2 (..),
     UnTrackFunction (..),
-    askFunctionInfo,
     doesFunctionPermissionExist,
     dropFunctionInMetadata,
     dropFunctionPermissionInMetadata,
@@ -164,17 +163,6 @@ instance (Backend b) => FromJSON (UnTrackFunction b) where
       Just src -> flip UnTrackFunction src <$> o .: "function"
       Nothing -> UnTrackFunction <$> parseJSON v <*> pure defaultSource
 
-askFunctionInfo ::
-  forall b m.
-  (CacheRM m, MonadError QErr m, Backend b) =>
-  SourceName ->
-  FunctionName b ->
-  m (FunctionInfo b)
-askFunctionInfo source functionName = do
-  sourceCache <- scSources <$> askSchemaCache
-  unsafeFunctionInfo @b source functionName sourceCache
-    `onNothing` throw400 NotExists ("function " <> functionName <<> " not found in the cache")
-
 runUntrackFunc ::
   forall b m.
   (CacheRWM m, MonadError QErr m, MetadataM m, BackendMetadata b) =>
@@ -327,7 +315,7 @@ runSetFunctionCustomization ::
   SetFunctionCustomization b ->
   m EncJSON
 runSetFunctionCustomization (SetFunctionCustomization source function config) = do
-  void $ askFunInfo @b source function
+  void $ askFunctionInfo @b source function
   buildSchemaCacheFor
     (MOSourceObjId source $ AB.mkAnyBackend $ SMOFunction @b function)
     $ MetadataModifier $

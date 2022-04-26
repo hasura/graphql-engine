@@ -43,7 +43,6 @@ import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Data.Text.NonEmpty (unNonEmptyText)
 import Data.Trie qualified as Trie
-import Database.MSSQL.Transaction qualified as MSSQL
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
@@ -238,28 +237,6 @@ instance (CacheRWM m) => CacheRWM (TraceT m) where
 instance (CacheRWM m) => CacheRWM (Q.TxET QErr m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
   setMetadataResourceVersionInSchemaCache = lift . setMetadataResourceVersionInSchemaCache
-
--- | A simple monad class which enables fetching and setting @'Metadata'
--- in the state.
-class (Monad m) => MetadataM m where
-  getMetadata :: m Metadata
-  putMetadata :: Metadata -> m ()
-
-instance (MetadataM m) => MetadataM (ReaderT r m) where
-  getMetadata = lift getMetadata
-  putMetadata = lift . putMetadata
-
-instance (MetadataM m) => MetadataM (StateT r m) where
-  getMetadata = lift getMetadata
-  putMetadata = lift . putMetadata
-
-instance (MetadataM m) => MetadataM (TraceT m) where
-  getMetadata = lift getMetadata
-  putMetadata = lift . putMetadata
-
-instance (MetadataM m) => MetadataM (MSSQL.TxET e m) where
-  getMetadata = lift getMetadata
-  putMetadata = lift . putMetadata
 
 newtype MetadataT m a = MetadataT {unMetadataT :: StateT Metadata m a}
   deriving

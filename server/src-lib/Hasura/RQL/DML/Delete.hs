@@ -39,7 +39,7 @@ validateDeleteQWith
   sessVarBldr
   prepValBldr
   (DeleteQuery tableName _ rqlBE mRetCols) = do
-    tableInfo <- askTabInfoSource tableName
+    tableInfo <- askTableInfoSource tableName
     let coreInfo = _tiCoreInfo tableInfo
 
     -- If table is view then check if it deletable
@@ -94,7 +94,7 @@ validateDeleteQ ::
   m (AnnDel ('Postgres 'Vanilla), DS.Seq Q.PrepArg)
 validateDeleteQ query = do
   let source = doSource query
-  tableCache :: TableCache ('Postgres 'Vanilla) <- askTableCache source
+  tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache source
   flip runTableCacheRT (source, tableCache) $
     runDMLP1T $
       validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder query

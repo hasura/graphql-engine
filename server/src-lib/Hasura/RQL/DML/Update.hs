@@ -102,7 +102,7 @@ validateUpdateQueryWith ::
   m (AnnotatedUpdate ('Postgres 'Vanilla))
 validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   let tableName = uqTable uq
-  tableInfo <- withPathK "table" $ askTabInfoSource tableName
+  tableInfo <- withPathK "table" $ askTableInfoSource tableName
   let coreInfo = _tiCoreInfo tableInfo
 
   -- If it is view then check if it is updatable
@@ -198,7 +198,7 @@ validateUpdateQuery ::
   m (AnnotatedUpdate ('Postgres 'Vanilla), DS.Seq Q.PrepArg)
 validateUpdateQuery query = do
   let source = uqSource query
-  tableCache :: TableCache ('Postgres 'Vanilla) <- askTableCache source
+  tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache source
   flip runTableCacheRT (source, tableCache) $
     runDMLP1T $
       validateUpdateQueryWith sessVarFromCurrentSetting (valueParserWithCollectableType binRHSBuilder) query

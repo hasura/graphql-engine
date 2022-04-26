@@ -16,6 +16,7 @@ module Hasura.RQL.Types.Metadata
     GetCatalogState (..),
     InheritedRoles,
     Metadata (..),
+    MetadataM (..),
     MetadataModifier (..),
     MetadataNoSources (..),
     MetadataVersion (..),
@@ -139,6 +140,7 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag
 import Hasura.Session
+import Hasura.Tracing (TraceT)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Parse a list of objects into a map from a derived key,
@@ -628,6 +630,24 @@ functionMetadataSetter ::
   ASetter' Metadata (FunctionMetadata b)
 functionMetadataSetter source function =
   metaSources . ix source . toSourceMetadata . smFunctions . ix function
+
+-- | A simple monad class which enables fetching and setting @'Metadata'
+-- in the state.
+class (Monad m) => MetadataM m where
+  getMetadata :: m Metadata
+  putMetadata :: Metadata -> m ()
+
+instance (MetadataM m) => MetadataM (ReaderT r m) where
+  getMetadata = lift getMetadata
+  putMetadata = lift . putMetadata
+
+instance (MetadataM m) => MetadataM (StateT r m) where
+  getMetadata = lift getMetadata
+  putMetadata = lift . putMetadata
+
+instance (MetadataM m) => MetadataM (TraceT m) where
+  getMetadata = lift getMetadata
+  putMetadata = lift . putMetadata
 
 data MetadataNoSources = MetadataNoSources
   { _mnsTables :: !(Tables ('Postgres 'Vanilla)),

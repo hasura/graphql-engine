@@ -322,7 +322,7 @@ convSelectQuery ::
   SelectQuery ->
   m (AnnSimpleSelect ('Postgres 'Vanilla))
 convSelectQuery sessVarBldr prepArgBuilder (DMLQuery _ qt selQ) = do
-  tabInfo <- withPathK "table" $ askTabInfoSource qt
+  tabInfo <- withPathK "table" $ askTableInfoSource qt
   selPermInfo <- askSelPermInfo tabInfo
   let fieldInfo = _tciFieldInfoMap $ _tiCoreInfo tabInfo
   extSelQ <- resolveStar fieldInfo selPermInfo selQ
@@ -342,7 +342,7 @@ phaseOne ::
   m (AnnSimpleSelect ('Postgres 'Vanilla), DS.Seq Q.PrepArg)
 phaseOne query = do
   let sourceName = getSourceDMLQuery query
-  tableCache :: TableCache ('Postgres 'Vanilla) <- askTableCache sourceName
+  tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache sourceName
   flip runTableCacheRT (sourceName, tableCache) $
     runDMLP1T $
       convSelectQuery sessVarFromCurrentSetting (valueParserWithCollectableType binRHSBuilder) query

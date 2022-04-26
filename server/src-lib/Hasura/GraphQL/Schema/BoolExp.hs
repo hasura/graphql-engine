@@ -1,5 +1,5 @@
 {-# LANGUAGE ApplicativeDo #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskellQuotes #-}
 
 module Hasura.GraphQL.Schema.BoolExp
   ( boolExp,
@@ -23,7 +23,7 @@ import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common (askTableInfo, partialSQLExpToUnpreparedValue)
 import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
-import Hasura.RQL.Types
+import Hasura.RQL.Types hiding (askTableInfo)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- |

@@ -17,6 +17,7 @@ module Hasura.GraphQL.Schema.Common
     SelectExp,
     StreamSelectExp,
     TablePerms,
+    getTableRoles,
     askTableInfo,
     comparisonAggOperators,
     currentNodeIdVersion,
@@ -58,7 +59,7 @@ import Hasura.RQL.IR.Action qualified as IR
 import Hasura.RQL.IR.RemoteSchema qualified as IR
 import Hasura.RQL.IR.Root qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
-import Hasura.RQL.Types
+import Hasura.RQL.Types hiding (askTableInfo)
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session (RoleName)
 import Language.GraphQL.Draft.Syntax as G
@@ -120,9 +121,15 @@ data QueryContext = QueryContext
     qcOptimizePermissionFilters :: Bool
   }
 
+getTableRoles :: BackendSourceInfo -> [RoleName]
+getTableRoles bsi = AB.dispatchAnyBackend @Backend bsi go
+  where
+    go si = Map.keys . _tiRolePermInfoMap =<< Map.elems (_siTables si)
+
 -- | Looks up table information for the given table name. This function
 -- should never fail, since the schema cache construction process is
 -- supposed to ensure all dependencies are resolved.
+-- TODO: deduplicate this with `CacheRM`.
 askTableInfo ::
   forall b r m.
   (Backend b, MonadError QErr m, MonadReader r m, Has SourceCache r) =>

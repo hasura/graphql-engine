@@ -19,6 +19,14 @@ module Hasura.RQL.Types.SchemaCache
     unsafeFunctionInfo,
     unsafeTableCache,
     unsafeTableInfo,
+    askSourceInfo,
+    askSourceConfig,
+    askTableCache,
+    askTableInfo,
+    askTableCoreInfo,
+    askTableFieldInfoMap,
+    askTableMetadata,
+    askFunctionInfo,
     TableCoreCache,
     TableCache,
     ActionCache,
@@ -112,13 +120,14 @@ module Hasura.RQL.Types.SchemaCache
   )
 where
 
-import Control.Lens (makeLenses)
+import Control.Lens (Traversal', at, makeLenses, preview, (^.))
 import Data.Aeson
 import Data.Aeson.TH
 import Data.ByteString.Lazy qualified as BL
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as HS
 import Data.Int (Int64)
+import Data.Text.Extended
 import Database.MSSQL.Transaction qualified as MSSQL
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection qualified as PG
@@ -145,6 +154,7 @@ import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
+import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Network (TlsAllow)
 import Hasura.RQL.Types.QueryCollection
@@ -290,27 +300,192 @@ incSchemaCacheVer (SchemaCacheVer prev) =
 
 type ActionCache = M.HashMap ActionName ActionInfo -- info of all actions
 
-unsafeFunctionCache ::
-  forall b. Backend b => SourceName -> SourceCache -> Maybe (FunctionCache b)
-unsafeFunctionCache sourceName cache =
-  unsafeSourceFunctions @b =<< M.lookup sourceName cache
-
-unsafeFunctionInfo ::
-  forall b. Backend b => SourceName -> FunctionName b -> SourceCache -> Maybe (FunctionInfo b)
-unsafeFunctionInfo sourceName functionName cache =
-  M.lookup functionName =<< unsafeFunctionCache @b sourceName cache
-
 type InheritedRolesCache = M.HashMap RoleName (HashSet RoleName)
 
+-------------------------------------------------------------------------------
+
+-- | Retrieves the source info for a given source name.
+--
+-- This function retrieves the schema cache from the monadic context, and
+-- attempts to look the corresponding source up in the source cache. This
+-- function must be used with a _type annotation_, such as `askSourceInfo
+-- @('Postgres 'Vanilla)`. It throws an error if it fails to find that source,
+-- in which case it looks that source up in the metadata, to differentiate
+-- between the source not existing or the type of the source not matching.
+askSourceInfo ::
+  forall b m.
+  (CacheRM m, MetadataM m, MonadError QErr m, Backend b) =>
+  SourceName ->
+  m (SourceInfo b)
+askSourceInfo sourceName = do
+  sources <- scSources <$> askSchemaCache
+  onNothing (unsafeSourceInfo @b =<< M.lookup sourceName sources) do
+    metadata <- getMetadata
+    case metadata ^. metaSources . at sourceName of
+      Nothing ->
+        throw400 NotExists $ "source with name " <> sourceName <<> " does not exist"
+      Just _ ->
+        throw400 Unexpected $ "source with name " <> sourceName <<> " is inconsistent"
+
+-- | Retrieves the source config for a given source name.
+--
+-- This function relies on 'askSourceInfo' and similarly throws an error if the
+-- source isn't found.
+askSourceConfig ::
+  forall b m.
+  (CacheRM m, MonadError QErr m, Backend b, MetadataM m) =>
+  SourceName ->
+  m (SourceConfig b)
+askSourceConfig = fmap _siConfiguration . askSourceInfo @b
+
+-- | Retrieves the table cache for a given source cache and source name.
+--
+-- This function must be used with a _type annotation_, such as
+-- `unsafeTableCache @('Postgres 'Vanilla)`. It returns @Nothing@ if it fails to
+-- find that source or if the kind of the source does not match the type
+-- annotation, and does not distinguish between the two cases.
 unsafeTableCache ::
   forall b. Backend b => SourceName -> SourceCache -> Maybe (TableCache b)
 unsafeTableCache sourceName cache = do
   unsafeSourceTables @b =<< M.lookup sourceName cache
 
+-- | Retrieves the table cache for a given source name.
+--
+-- This function retrieves the schema cache from the monadic context, and
+-- attempts to look the corresponding source up in the source cache. It must be
+-- used with a _type annotation_, such as `unsafeTableCache @('Postgres
+-- 'Vanilla)`. It returns @Nothing@ if it fails to find that source or if the
+-- kind of the source does not match the type annotation, and does not
+-- distinguish between the two cases.
+askTableCache ::
+  forall b m.
+  (Backend b, CacheRM m) =>
+  SourceName ->
+  m (Maybe (TableCache b))
+askTableCache sourceName = do
+  sources <- scSources <$> askSchemaCache
+  pure $ unsafeSourceTables =<< M.lookup sourceName sources
+
+-- | Retrieves the information about a table from the source cache, the source
+-- name, and the table name.
+--
+-- This function returns @Nothing@ if it fails to find that source or if the
+-- kind of the source does not match the type annotation, and does not
+-- distinguish between the two cases.
 unsafeTableInfo ::
   forall b. Backend b => SourceName -> TableName b -> SourceCache -> Maybe (TableInfo b)
 unsafeTableInfo sourceName tableName cache =
   M.lookup tableName =<< unsafeTableCache @b sourceName cache
+
+-- | Retrieves the information about a table for a given source name and table
+-- name.
+--
+-- This function retrieves the schema cache from the monadic context, and
+-- attempts to look the corresponding source up in the source cache. it throws
+-- an error if it fails to find that source, in which case it looks that source
+-- up in the metadata, to differentiate between the source not existing or the
+-- type of the source not matching.
+askTableInfo ::
+  forall b m.
+  (QErrM m, CacheRM m, Backend b) =>
+  SourceName ->
+  TableName b ->
+  m (TableInfo b)
+askTableInfo sourceName tableName = do
+  rawSchemaCache <- askSchemaCache
+  onNothing (unsafeTableInfo sourceName tableName $ scSources rawSchemaCache) $
+    throw400 NotExists $ "table " <> tableName <<> " does not exist in source: " <> sourceNameToText sourceName
+
+-- | Similar to 'askTableInfo', but drills further down to extract the
+-- underlying core info.
+askTableCoreInfo ::
+  forall b m.
+  (QErrM m, CacheRM m, Backend b) =>
+  SourceName ->
+  TableName b ->
+  m (TableCoreInfo b)
+askTableCoreInfo sourceName tableName =
+  _tiCoreInfo <$> askTableInfo sourceName tableName
+
+-- | Similar to 'askTableCoreInfo', but drills further down to extract the
+-- underlying field info map.
+askTableFieldInfoMap ::
+  forall b m.
+  (QErrM m, CacheRM m, Backend b) =>
+  SourceName ->
+  TableName b ->
+  m (FieldInfoMap (FieldInfo b))
+askTableFieldInfoMap sourceName tableName =
+  _tciFieldInfoMap <$> askTableCoreInfo sourceName tableName
+
+-- | Retrieves the metadata information about a table for a given source name
+-- and table name.
+--
+-- Unlike most other @ask@ functions in this module, this function does not
+-- drill through the schema cache, and instead inspects the metadata. Like most
+-- others, it throws an error if it fails to find that source, in which case it
+-- looks that source up in the metadata, to differentiate between the source not
+-- existing or the type of the source not matching.
+askTableMetadata ::
+  forall b m.
+  (QErrM m, MetadataM m, Backend b) =>
+  SourceName ->
+  TableName b ->
+  m (TableMetadata b)
+askTableMetadata sourceName tableName = do
+  onNothingM (getMetadata <&> preview focusTableMetadata) $
+    throw400 NotExists $ "table " <> tableName <<> " does not exist in source: " <> sourceNameToText sourceName
+  where
+    focusTableMetadata :: Traversal' Metadata (TableMetadata b)
+    focusTableMetadata =
+      metaSources
+        . ix sourceName
+        . toSourceMetadata @b
+        . smTables
+        . ix tableName
+
+-- | Retrieves the function cache for a given source cache and source name.
+--
+-- This function must be used with a _type annotation_, such as
+-- `unsafeFunctionCache @('Postgres 'Vanilla)`. It returns @Nothing@ if it fails
+-- to find that source or if the kind of the source does not match the type
+-- annotation, and does not distinguish between the two cases.
+unsafeFunctionCache ::
+  forall b. Backend b => SourceName -> SourceCache -> Maybe (FunctionCache b)
+unsafeFunctionCache sourceName cache =
+  unsafeSourceFunctions @b =<< M.lookup sourceName cache
+
+-- | Retrieves the information about a function from the source cache, the
+-- source name, and the function name.
+--
+-- This function returns @Nothing@ if it fails to find that source or if the
+-- kind of the source does not match the type annotation, and does not
+-- distinguish between the two cases.
+unsafeFunctionInfo ::
+  forall b. Backend b => SourceName -> FunctionName b -> SourceCache -> Maybe (FunctionInfo b)
+unsafeFunctionInfo sourceName functionName cache =
+  M.lookup functionName =<< unsafeFunctionCache @b sourceName cache
+
+-- | Retrieves the information about a function cache for a given source name
+-- and function name.
+--
+-- This function retrieves the schema cache from the monadic context, and
+-- attempts to look the corresponding source up in the source cache. It throws
+-- an error if it fails to find that source, in which case it looks that source
+-- up in the metadata, to differentiate between the source not existing or the
+-- type of the source not matching.
+askFunctionInfo ::
+  forall b m.
+  (QErrM m, CacheRM m, Backend b) =>
+  SourceName ->
+  FunctionName b ->
+  m (FunctionInfo b)
+askFunctionInfo sourceName functionName = do
+  rawSchemaCache <- askSchemaCache
+  onNothing (unsafeFunctionInfo sourceName functionName $ scSources rawSchemaCache) $
+    throw400 NotExists $ "function " <> functionName <<> " does not exist in source: " <> sourceNameToText sourceName
+
+-------------------------------------------------------------------------------
 
 data SchemaCache = SchemaCache
   { scSources :: !SourceCache,

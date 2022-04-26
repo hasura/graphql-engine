@@ -68,7 +68,7 @@ inconsistent_objects:
       name: author
   name: array_relation articles in table author in source default
   reason: >-
-    Inconsistent object: in table "author": in relationship "articles": table "article" does not exist
+    Inconsistent object: in table "author": in relationship "articles": table "article" does not exist in source: default
   type: array_relation
 
 # Teardown

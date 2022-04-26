@@ -1,5 +1,5 @@
 {-# LANGUAGE ApplicativeDo #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskellQuotes #-}
 
 module Hasura.GraphQL.Schema.Mutation
   ( insertIntoTable,
@@ -36,7 +36,7 @@ import Hasura.RQL.IR.Delete qualified as IR
 import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Returning qualified as IR
 import Hasura.RQL.IR.Root qualified as IR
-import Hasura.RQL.Types
+import Hasura.RQL.Types hiding (askTableInfo)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- insert

@@ -250,7 +250,7 @@ updateRelDefs ::
   RenameTable b ->
   m ()
 updateRelDefs source qt rn renameTable = do
-  fim <- askFieldInfoMap @b source qt
+  fim <- askTableFieldInfoMap @b source qt
   ri <- askRelType fim rn ""
   tell $
     MetadataModifier $
@@ -293,7 +293,7 @@ updatePermFlds ::
   Rename b ->
   m ()
 updatePermFlds source refQT rn pt rename = do
-  tables <- askTableCache source
+  tables <- fold <$> askTableCache source
   let withTables :: Reader (TableCache b) a -> a
       withTables = flip runReader tables
   tell $
@@ -483,7 +483,7 @@ updateColInRel ::
   RenameCol b ->
   m ()
 updateColInRel source fromQT rn rnCol = do
-  tables <- askSourceTables @b source
+  tables <- fold <$> askTableCache @b source
   let maybeRelInfo =
         tables ^? ix fromQT . tiCoreInfo . tciFieldInfoMap . ix (fromRel rn) . _FIRelationship
   forM_ maybeRelInfo $ \relInfo ->

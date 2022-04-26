@@ -14,9 +14,9 @@ where
 
 import Control.Lens ((.~))
 import Data.Aeson.Types
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
-import Data.HashSet qualified as HS
+import Data.HashSet qualified as Set
 import Data.Text.Extended
 import Data.Tuple (swap)
 import Hasura.Base.Error
@@ -45,7 +45,7 @@ runCreateRelationship relType (WithTable source tableName relDef) = do
   let relName = _rdName relDef
   -- Check if any field with relationship name already exists in the table
   tableFields <- _tciFieldInfoMap <$> askTableCoreInfo @b source tableName
-  onJust (HM.lookup (fromRel relName) tableFields) $
+  onJust (Map.lookup (fromRel relName) tableFields) $
     const $
       throw400 AlreadyExists $
         "field with name " <> relName <<> " already exists in table " <>> tableName
@@ -94,7 +94,7 @@ objRelP2Setup ::
 objRelP2Setup source qt foreignKeys (RelDef rn ru _) = case ru of
   RUManual rm -> do
     let refqt = rmTable rm
-        (lCols, rCols) = unzip $ HM.toList $ rmColumns rm
+        (lCols, rCols) = unzip $ Map.toList $ rmColumns rm
         io = fromMaybe BeforeParent $ rmInsertOrder rm
         mkDependency tableName reason col =
           SchemaDependency
@@ -109,8 +109,10 @@ objRelP2Setup source qt foreignKeys (RelDef rn ru _) = case ru of
             <> map (mkDependency refqt DRRightColumn) rCols
     pure (RelInfo rn ObjRel (rmColumns rm) refqt True io, dependencies)
   RUFKeyOn (SameTable columns) -> do
-    foreignTableForeignKeys <- findTable @b qt foreignKeys
-    ForeignKey constraint foreignTable colMap <- getRequiredFkey columns (HS.toList foreignTableForeignKeys)
+    foreignTableForeignKeys <-
+      Map.lookup qt foreignKeys
+        `onNothing` throw400 NotFound ("table " <> qt <<> " does not exist in source: " <> sourceNameToText source)
+    ForeignKey constraint foreignTable colMap <- getRequiredFkey columns (Set.toList foreignTableForeignKeys)
     let dependencies =
           [ SchemaDependency
               ( SOSourceObj source $
@@ -144,7 +146,7 @@ arrRelP2Setup ::
 arrRelP2Setup foreignKeys source qt (RelDef rn ru _) = case ru of
   RUManual rm -> do
     let refqt = rmTable rm
-        (lCols, rCols) = unzip $ HM.toList $ rmColumns rm
+        (lCols, rCols) = unzip $ Map.toList $ rmColumns rm
         deps =
           map
             ( \c ->
@@ -186,8 +188,10 @@ mkFkeyRel ::
   HashMap (TableName b) (HashSet (ForeignKey b)) ->
   m (RelInfo b, [SchemaDependency])
 mkFkeyRel relType io source rn sourceTable remoteTable remoteColumns foreignKeys = do
-  foreignTableForeignKeys <- findTable @b remoteTable foreignKeys
-  let keysThatReferenceUs = filter ((== sourceTable) . _fkForeignTable) (HS.toList foreignTableForeignKeys)
+  foreignTableForeignKeys <-
+    Map.lookup remoteTable foreignKeys
+      `onNothing` throw400 NotFound ("table " <> remoteTable <<> " does not exist in source: " <> sourceNameToText source)
+  let keysThatReferenceUs = filter ((== sourceTable) . _fkForeignTable) (Set.toList foreignTableForeignKeys)
   ForeignKey constraint _foreignTable colMap <- getRequiredFkey remoteColumns keysThatReferenceUs
   let dependencies =
         [ SchemaDependency
@@ -205,10 +209,10 @@ mkFkeyRel relType io source rn sourceTable remoteTable remoteColumns foreignKeys
             DRRemoteTable
         ]
           <> fmap (drUsingColumnDep @b source remoteTable) (toList remoteColumns)
-  pure (RelInfo rn relType (reverseHM colMap) remoteTable False io, dependencies)
+  pure (RelInfo rn relType (reverseMap colMap) remoteTable False io, dependencies)
   where
-    reverseHM :: Eq y => Hashable y => HashMap x y -> HashMap y x
-    reverseHM = HM.fromList . fmap swap . HM.toList
+    reverseMap :: Eq y => Hashable y => HashMap x y -> HashMap y x
+    reverseMap = Map.fromList . fmap swap . Map.toList
 
 -- | Try to find a foreign key constraint, identifying a constraint by its set of columns
 getRequiredFkey ::
@@ -222,7 +226,7 @@ getRequiredFkey cols fkeys =
     [] -> throw400 ConstraintError "no foreign constraint exists on the given column(s)"
     _ -> throw400 ConstraintError "more than one foreign key constraint exists on the given column(s)"
   where
-    filteredFkeys = filter ((== HS.fromList (toList cols)) . HM.keysSet . _fkColumnMapping) fkeys
+    filteredFkeys = filter ((== Set.fromList (toList cols)) . Map.keysSet . _fkColumnMapping) fkeys
 
 drUsingColumnDep ::
   forall b.

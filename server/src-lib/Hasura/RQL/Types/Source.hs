@@ -10,7 +10,6 @@ module Hasura.RQL.Types.Source
     SourceInfo (..),
     SourceResolver,
     SourceTables,
-    getTableRoles,
     siConfiguration,
     siFunctions,
     siName,
@@ -27,7 +26,6 @@ where
 
 import Control.Lens hiding ((.=))
 import Data.Aeson.Extended
-import Data.HashMap.Strict qualified as M
 import Database.PG.Query qualified as Q
 import Hasura.Base.Error
 import Hasura.Logging qualified as L
@@ -43,7 +41,6 @@ import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag
-import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 
 data SourceInfo b = SourceInfo
@@ -88,11 +85,6 @@ unsafeSourceFunctions = fmap _siFunctions . unsafeSourceInfo @b
 
 unsafeSourceConfiguration :: forall b. HasTag b => BackendSourceInfo -> Maybe (SourceConfig b)
 unsafeSourceConfiguration = fmap _siConfiguration . unsafeSourceInfo @b
-
-getTableRoles :: BackendSourceInfo -> [RoleName]
-getTableRoles bsi = AB.dispatchAnyBackend @Backend bsi go
-  where
-    go si = M.keys . _tiRolePermInfoMap =<< M.elems (_siTables si)
 
 -- | Contains Postgres connection configuration and essential metadata from the
 -- database to build schema cache for tables and function.

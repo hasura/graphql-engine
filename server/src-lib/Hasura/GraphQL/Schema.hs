@@ -40,7 +40,7 @@ import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
 import Hasura.RQL.IR
-import Hasura.RQL.Types
+import Hasura.RQL.Types hiding (askTableInfo)
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Tag (HasTag)
 import Hasura.Server.Types

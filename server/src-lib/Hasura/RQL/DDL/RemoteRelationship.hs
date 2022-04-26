@@ -112,7 +112,7 @@ runCreateRemoteRelationship ::
   CreateFromSourceRelationship b ->
   m EncJSON
 runCreateRemoteRelationship CreateFromSourceRelationship {..} = do
-  void $ askTabInfo @b _crrSource _crrTable
+  void $ askTableInfo @b _crrSource _crrTable
   let metadataObj =
         MOSourceObjId _crrSource $
           AB.mkAnyBackend $
@@ -130,7 +130,7 @@ runUpdateRemoteRelationship ::
   CreateFromSourceRelationship b ->
   m EncJSON
 runUpdateRemoteRelationship CreateFromSourceRelationship {..} = do
-  fieldInfoMap <- askFieldInfoMap @b _crrSource _crrTable
+  fieldInfoMap <- askTableFieldInfoMap @b _crrSource _crrTable
   let metadataObj =
         MOSourceObjId _crrSource $
           AB.mkAnyBackend $
@@ -166,7 +166,7 @@ runDeleteRemoteRelationship ::
   DeleteFromSourceRelationship b ->
   m EncJSON
 runDeleteRemoteRelationship (DeleteFromSourceRelationship source table relName) = do
-  fieldInfoMap <- askFieldInfoMap @b source table
+  fieldInfoMap <- askTableFieldInfoMap @b source table
   void $ askRemoteRel fieldInfoMap relName
   let metadataObj =
         MOSourceObjId source $
@@ -319,7 +319,8 @@ buildRemoteFieldInfo lhsIdentifier lhsJoinFields RemoteRelationship {..} allSour
         (targetTable :: TableName b') <- runAesonParser J.parseJSON _tsrdTable
         targetColumns <-
           fmap _tciFieldInfoMap $
-            onNothing (Map.lookup targetTable targetTablesInfo) $ throwTableDoesNotExist @b' targetTable
+            onNothing (Map.lookup targetTable targetTablesInfo) $
+              throw400 NotExists $ "table " <> targetTable <<> " does not exist in source: " <> sourceNameToText _tsrdSource
         -- TODO: rhs fields should also ideally be DBJoinFields
         columnPairs <- for (Map.toList _tsrdFieldMapping) \(srcFieldName, tgtFieldName) -> do
           lhsJoinField <- askFieldInfo lhsJoinFields srcFieldName

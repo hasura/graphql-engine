@@ -30,6 +30,10 @@ module Hasura.RQL.Types.Table
     askColInfo,
     askColumnType,
     askFieldInfo,
+    assertColumnExists,
+    askRelType,
+    askComputedFieldInfo,
+    askRemoteRel,
     combinedSelPermInfoToSelPermInfo,
     emptyCustomRootFields,
     emptyTableConfig,
@@ -940,6 +944,72 @@ askColInfo m c msg = do
               c <<> " is a " <> fieldType <> "; ",
               msg
             ]
+
+askComputedFieldInfo ::
+  (MonadError QErr m) =>
+  FieldInfoMap (FieldInfo backend) ->
+  ComputedFieldName ->
+  m (ComputedFieldInfo backend)
+askComputedFieldInfo fields computedField = do
+  fieldInfo <-
+    modifyErr ("computed field " <>) $
+      askFieldInfo fields $ fromComputedField computedField
+  case fieldInfo of
+    (FIColumn _) -> throwErr "column"
+    (FIRelationship _) -> throwErr "relationship"
+    (FIRemoteRelationship _) -> throwErr "remote relationship"
+    (FIComputedField cci) -> pure cci
+  where
+    throwErr fieldType =
+      throwError $
+        err400 UnexpectedPayload $
+          mconcat
+            [ "expecting a computed field; but, ",
+              computedField <<> " is a " <> fieldType <> "; "
+            ]
+
+assertColumnExists ::
+  forall backend m.
+  (MonadError QErr m, Backend backend) =>
+  FieldInfoMap (FieldInfo backend) ->
+  Text ->
+  Column backend ->
+  m ()
+assertColumnExists m msg c = do
+  void $ askColInfo m c msg
+
+askRelType ::
+  (MonadError QErr m) =>
+  FieldInfoMap (FieldInfo backend) ->
+  RelName ->
+  Text ->
+  m (RelInfo backend)
+askRelType m r msg = do
+  colInfo <-
+    modifyErr ("relationship " <>) $
+      askFieldInfo m (fromRel r)
+  case colInfo of
+    (FIRelationship relInfo) -> return relInfo
+    _ ->
+      throwError $
+        err400 UnexpectedPayload $
+          mconcat
+            [ "expecting a relationship; but, ",
+              r <<> " is a postgres column; ",
+              msg
+            ]
+
+askRemoteRel ::
+  (MonadError QErr m) =>
+  FieldInfoMap (FieldInfo backend) ->
+  RelName ->
+  m (RemoteFieldInfo (DBJoinField backend))
+askRemoteRel fieldInfoMap relName = do
+  fieldInfo <- askFieldInfo fieldInfoMap (fromRemoteRelationship relName)
+  case fieldInfo of
+    (FIRemoteRelationship remoteFieldInfo) -> return remoteFieldInfo
+    _ ->
+      throw400 UnexpectedPayload "expecting a remote relationship"
 
 mkAdminRolePermInfo :: Backend b => TableCoreInfo b -> RolePermInfo b
 mkAdminRolePermInfo ti =
