@@ -11,11 +11,11 @@ keywords:
 
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
-# Subscriptions sample use cases
+# Live query subscriptions sample use cases
 
 ## Introduction
 
-The following are a few use cases for using subscriptions:
+The following are a few use cases for using live query subscriptions:
 
 ## Subscribe to the latest value of a particular field {#pg-subscribe-field}
 
@@ -84,7 +84,7 @@ variables={`{
 
 In case you are interested in all the additions/changes to a table's
 entries, you can use subscriptions to fetch the table rows and get
-updates whenever there are any additions/changes to the table.
+live query updates whenever there are any additions/changes to the table.
 
 ### Example: Chat app
 
@@ -227,7 +227,7 @@ subscription getResult($pollId: Int!) {
   ) {
     poll_id
     poll {
-      question    
+      question
     }
     option {
       texts
@@ -278,7 +278,7 @@ response={`{
         },
         "option": {
           "texts": "Burger"
-        },           
+        },
         "votes": 3
       },
       {

@@ -223,7 +223,7 @@ Enable the Hasura Console (served by the server on `/` and `/console`) (default:
 </td>
 <td>
 
-A JSON string containing type and the JWK used for verifying (and other optional details). Example: 
+A JSON string containing type and the JWK used for verifying (and other optional details). Example:
 `{"type": "HS256", "key": "3bd561c37d214b4496d09049fadc542c"}`. See the JWT docs for more details.
 
 </td>
@@ -242,9 +242,9 @@ A JSON string containing type and the JWK used for verifying (and other optional
 </td>
 <td>
 
-Unauthorized role, used when access-key is not sent in access-key only mode or the 
+Unauthorized role, used when access-key is not sent in access-key only mode or the
 `Authorization` header is absent in JWT mode. Example: `anonymous`. Now whenever the
-"authorization" header is absent, the request's role will default to 
+"authorization" header is absent, the request's role will default to
 `anonymous`.
 
 </td>
@@ -358,7 +358,7 @@ Maximum number of events to be fetched from the DB in a single batch (default: 1
 </td>
 <td>
 
-Interval in milliseconds to sleep before trying to fetch async actions again after a fetch returned no async actions from metadata storage. Value 
+Interval in milliseconds to sleep before trying to fetch async actions again after a fetch returned no async actions from metadata storage. Value
 `0` implies completely disable fetching async actions from the storage.
 
 <em>(Available for versions > v2.0.0)</em>
@@ -505,7 +505,7 @@ Time from connection creation after which the connection should be destroyed and
 </td>
 <td>
 
-Stringify certain Postgres numeric types, specifically 
+Stringify certain Postgres numeric types, specifically
 `bigint` ,`numeric` ,`decimal` and `double precision` as they don't fit into the `IEEE-754`
 spec for JSON encoding-decoding. (default: false)
 
@@ -558,6 +558,32 @@ Comma separated list of APIs (options: `metadata`, `graphql`, `pgdump`, `config`
 <tr>
 <td>
 
+`--streaming-queries-multiplexed-refetch-interval`
+
+</td>
+<td>
+
+`HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_REFETCH_INTERVAL`
+
+</td>
+<td>Updated results (if any) will be sent at most once in this interval (in milliseconds) for streaming queries which can be multiplexed. Default: 1000 (1sec)</td>
+</tr>
+<tr>
+<td>
+
+`--streaming-queries-multiplexed-batch-size`
+
+</td>
+<td>
+
+`HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_BATCH_SIZE`
+
+</td>
+<td>Multiplexed streaming queries are split into batches of the specified size. Default: 100</td>
+</tr>
+<tr>
+<td>
+
 `--enable-allowlist`
 
 </td>
@@ -603,7 +629,7 @@ Set the value to `/srv/console-assets` for the console to load assets from the s
 </td>
 <td>
 
-Set the enabled log types. This is a comma-separated list of log-types to enable. Default: 
+Set the enabled log types. This is a comma-separated list of log-types to enable. Default:
 `startup, http-log, webhook-log, websocket-log`.
 See [log types](/graphql/core/deployment/logging.mdx#log-types) for more details.
 
@@ -639,7 +665,7 @@ Set the logging level. Default: `info`. Options: `debug`, `info`, `warn`, `error
 </td>
 <td>
 
-Set dev mode for GraphQL requests; include the 
+Set dev mode for GraphQL requests; include the
 `internal` key in the errors extensions of the response (if required).
 
 <em>(Available for versions > v1.2.0)</em>
@@ -696,7 +722,7 @@ Enable remote schema permissions (default: `false`)
 </td>
 <td>
 
-When the `--infer-function-permissions` flag is set to `false`, a function `f`, stable, immutable or volatile is only exposed for a role 
+When the `--infer-function-permissions` flag is set to `false`, a function `f`, stable, immutable or volatile is only exposed for a role
 `r` if there is a permission defined on the function `f` for the role `r`, creating a function permission will only be allowed if there is a select permission on the table type.
 When the `--infer-function-permissions` flag is set to `true` or the flag is omitted (defaults to `true`), the permission of the function is inferred from the select permissions from the target table of the function, only for stable/immutable functions. Volatile functions are not exposed to any of the roles in this case.
 
@@ -732,8 +758,8 @@ When the `--infer-function-permissions` flag is set to `true` or the flag is omi
 </td>
 <td>
 
-List of experimental features to be enabled. A comma separated value is expected. Options: 
-`inherited_roles`.
+List of experimental features to be enabled. A comma separated value is expected. Options:
+`inherited_roles, optimize_permission_filters, streaming_subscriptions`.
 
 <em>(Available for versions > v2.0.0)</em>
 
@@ -801,8 +827,8 @@ Disable updating of metadata on the server (default: `false`)
 </td>
 <td>
 
-Used to set the `Keep Alive` delay for client that use the 
-`subscription-transport-ws` (Apollo) protocol. For `graphql-ws` clients the graphql-engine sends 
+Used to set the `Keep Alive` delay for client that use the
+`subscription-transport-ws` (Apollo) protocol. For `graphql-ws` clients the graphql-engine sends
 `PING` messages instead.
 
 (default: `5`)
@@ -824,8 +850,8 @@ Used to set the `Keep Alive` delay for client that use the
 </td>
 <td>
 
-Used to set the connection initialisation timeout for 
-`graphql-ws` clients. This is ignored for 
+Used to set the connection initialisation timeout for
+`graphql-ws` clients. This is ignored for
 `subscription-transport-ws` (Apollo) clients.
 
 (default: `3`)
