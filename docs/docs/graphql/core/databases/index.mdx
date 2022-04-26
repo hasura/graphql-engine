@@ -32,6 +32,56 @@ Hasura GraphQL engine supports:
 - [BigQuery](/graphql/core/databases/bigquery/index.mdx)
 - **MySQL** (in preview) - See the [preview guide](/graphql/core/guides/mysql-preview.mdx)
 
+### Feature support
+
+The below matrices show the database wise support for the different GraphQL features under schema, queries, mutations and subscriptions.
+
+#### Schema
+
+|                      | Postgres | Citus | SQL Server | BigQuery |
+| -------------------- | -------- | ----- | ---------- | -------- |
+| Table Relationships  | ✅       | ✅    | ✅         | ✅       |
+| Remote Relationships | ✅       | ✅    | ✅         | ✅       |
+| Views                | ✅       | ✅    | ✅         | ❌       |
+| Functions            | ✅       | ✅    | ❌         | ❌       |
+| Enums                | ✅       | ✅    | ❌         | ❌       |
+| Computed Fields      | ✅       | ✅    | ❌         | ❌       |
+| Data Validations     | ✅       | ✅    | ✅         | ✅       |
+| Relay Schema         | ✅       | ✅    | ❌         | ❌       |
+
+#### Queries
+
+|                                 | Postgres | Citus | SQL Server | BigQuery |
+| ------------------------------- | -------- | ----- | ---------- | -------- |
+| Simple                          | ✅       | ✅    | ✅         | ✅       |
+| Nested Object                   | ✅       | ✅    | ✅         | ✅       |
+| Aggregation                     | ✅       | ✅    | ✅         | ✅       |
+| Filter / Search                 | ✅       | ✅    | ✅         | ✅       |
+| Sort                            | ✅       | ✅    | ✅         | ✅       |
+| Distinct                        | ✅       | ✅    | ✅         | ✅       |
+| Paginate                        | ✅       | ✅    | ✅         | ✅       |
+| Multiple Args                   | ✅       | ✅    | ✅         | ✅       |
+| Multiple Queries                | ✅       | ✅    | ✅         | ✅       |
+| Variables / Aliases / Fragments | ✅       | ✅    | ✅         | ✅       |
+
+#### Mutations
+
+|                      | Postgres | Citus | SQL Server | BigQuery |
+| -------------------- | -------- | ----- | ---------- | -------- |
+| Insert               | ✅       | ✅    | ✅         | ❌       |
+| Upsert               | ✅       | ✅    | ✅         | ❌       |
+| Update               | ✅       | ✅    | ✅         | ❌       |
+| Delete               | ✅       | ✅    | ✅         | ❌       |
+| Multiple per Request | ✅       | ✅    | ❌         | ❌       |
+
+#### Subscriptions
+
+|                        | Postgres | Citus | SQL Server | BigQuery |
+| ---------------------- | -------- | ----- | ---------- | -------- |
+| Value of Field         | ✅       | ✅    | ✅         | ❌       |
+| Updates to Rows        | ✅       | ✅    | ❌         | ❌       |
+| Value of Derived Field | ✅       | ✅    | ✅         | ❌       |
+
 :::info Additional Resources
 
 Get Started with Hasura today - [Watch video guide](https://hasura.io/events/webinar/get-started-with-hasura/?pg=docs&plcmt=body&cta=getting-started&tech=).
