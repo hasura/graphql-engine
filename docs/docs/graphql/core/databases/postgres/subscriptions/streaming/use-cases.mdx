@@ -1,39 +1,32 @@
-.. meta::
-   :description: Use cases for Hasura streaming subscriptions
-   :keywords: hasura, docs, subscription, use case, streaming
+---
+description: Use cases for Hasura streaming subscriptions
+sidebar_label: Sample use cases
+sidebar_position: 1
+keywords:
+  - hasura
+  - docs
+  - subscription
+  - streaming
+  - use cases
+  - postgres
+---
 
-.. _pg_streaming_subscriptions_use_cases:
+# Streaming subscriptions sample use cases
 
-Streaming subscriptions sample use cases
-========================================
-
-.. contents:: Table of contents
-  :backlinks: none
-  :depth: 1
-  :local:
-
-Introduction
-------------
+## Introduction
 
 The following are a few use cases for using streaming subscriptions:
 
-.. _pg_streaming_changed_events:
-
-Subscribing only to the events that have been changed
------------------------------------------------------
+### Subscribing only to the events that have been changed
 
 In case you are interested only in the latest events, you can use streaming subscriptions
 to fetch those events.
 
-.. _pg_get_undelivered_messages:
-
-Get the undelivered messages in a chat application
---------------------------------------------------
+### Get the undelivered messages in a chat application
 
 Consider the following schema:
 
-.. code-block:: sql
-
+```sql
    messages (
      id serial primary key,
      from_id uuid references users(id),
@@ -49,11 +42,11 @@ Consider the following schema:
      last_name text,
      created_at timestamptz default current_timestamp
    )
+```
 
 and the following messages need to be streamed:
 
-.. code-block:: json
-
+```json
      [
        {
          "id": 432432,
@@ -100,11 +93,11 @@ and the following messages need to be streamed:
          "created_at": "2020-01-01 01:01:20"
        }
      ]
+```
 
 To stream the latest undelivered messages:
 
-.. code-block:: graphql
-
+```graphql
     subscription getUndeliveredMessages {
        # will get all the messages that have `created_at > 2022-01-01` in batches of 100 rows
        messages_stream(cursor: {created_at: "2022-01-01", ordering: ASC}, batch_size: 2) {
@@ -119,11 +112,11 @@ To stream the latest undelivered messages:
          created_at
        }
      }
+```
 
 The first response sent will be:
 
-.. code-block:: json
-
+```json
       {
         "data": {
            "messages_stream": [
@@ -152,12 +145,13 @@ The first response sent will be:
            ]
         }
       }
+```
 
 The next response sent will be the following, note that the messages sent
 have ``created_at > 2020-01-01 01:01:20``, the greatest value of the cursor
 column sent in the previous response.
 
-.. code-block:: json
+```json
 
       {
         "data": {
@@ -187,7 +181,4 @@ column sent in the previous response.
            ]
         }
       }
-
-.. toctree::
-   :maxdepth: 1
-   :hidden:
+```

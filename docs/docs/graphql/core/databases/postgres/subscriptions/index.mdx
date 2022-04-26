@@ -18,21 +18,6 @@ an update whenever the value of any field changes upstream.
 Subscriptions are supported for all kinds of queries. All the concepts
 of [queries](/graphql/core/databases/postgres/queries/index.mdx) hold true for subscriptions as well.
 
-## Implementation
-
-The Hasura GraphQL engine subscriptions are actually **live queries**,
-i.e. a subscription will return the latest result of the query being
-made and not necessarily all the individual events leading up to the
-result. By default, updates are delivered to clients every **1 sec**.
-
-See more details on
-`subscriptions execution and performance [subscriptions execution and performance](/graphql/core/databases/postgres/subscriptions/execution-and-performance.mdx).
-
-## Convert a query to a subscription
-
-You can turn any query into a subscription by simply replacing `query`
-with `subscription` as the operation type.
-
 :::info Caveat
 
 Hasura follows the [GraphQL spec](https://graphql.github.io/graphql-spec/June2018/#sec-Single-root-field)
@@ -40,11 +25,84 @@ which allows for only one root field in a subscription.
 
 :::
 
-## Use cases
+## Types of subscriptions
 
-- [Subscribe to the latest value of a particular field](/graphql/core/databases/postgres/subscriptions/use-cases.mdx#pg-subscribe-field)
-- [Subscribe to changes to a table’s entries](/graphql/core/databases/postgres/subscriptions/use-cases.mdx#pg-subscribe-table)
-- [Subscribe to the latest value of some derived data](/graphql/core/databases/postgres/subscriptions/use-cases.mdx#pg-subscribe-derived)
+### Live queries
+
+
+A live query subscription will return the latest result of the query being made
+and not necessarily all the individual events leading up to the result.
+By default, updates are delivered to clients every **1 sec**.
+
+See more details [here](/graphql/core/databases/postgres/subscriptions/livequery/index.mdx).
+
+### Streaming subscriptions
+
+A streaming subscription streams the response according to the cursor input
+by the user. A streaming subscription is different from a live query as it sends individual rows
+at a time and not the entire result set.
+
+See more details [here](/graphql/core/databases/postgres/subscriptions/streaming/index.mdx).
+
+### Live query vs Streaming subscriptions
+
+Suppose we need to display the messages of a group chat on a page, this can be done either via
+live queries or streaming subscriptions. Let's see how they can be used and how they differ from each other.
+
+1. Using **live query**
+
+   With live query, we'll make the following query:
+
+   ```graphql
+
+      subscription {
+        messages (
+          where: {group_id: 1},
+          order_by: {created_at: asc}
+        ) {
+          id
+          sender
+          reciever
+          content
+          created_at
+          edited_at
+        }
+      }
+   ```
+
+   The initial response for this subscription will be all the messages of the group. Let's say the initial
+   response contained 100 messages. Now, if there is one more message sent to the group, then all 101 messages
+   will be sent in a new response.
+
+
+2. Using **streaming subscriptions**
+
+   With streaming subscriptions, we'll make the following query:
+
+   ```graphql
+
+      subscription {
+        messages_stream (
+          where: {group_id: 1},
+          cursor: {initial_value: {created_at: now}},
+          batch_size: 10
+        ) {
+          id
+          sender
+          reciever
+          content
+          created_at
+          edited_at
+        }
+      }
+   ```
+
+   Here, we'll start getting all messages of the group in batches given by ``batch_size`` with ``created_at``
+   greater than ``now``.
+
+   Following the example of the live query, if we have 100 messages corresponding to the group and only
+   5 messages with ``created_at`` greater than the current value of the cursor maintained by the cursor, then
+   we will get only the 5 messages.
 
 ## Communication protocol
 
