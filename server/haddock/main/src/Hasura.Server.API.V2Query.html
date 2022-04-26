@@ -50,7 +50,7 @@
 </span><span id="line-50"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RQBigqueryDatabaseInspection"><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQBigqueryDatabaseInspection"><span class="hs-identifier hs-var">RQBigqueryDatabaseInspection</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.RunSQL.html#BigQueryRunSQL"><span class="hs-identifier hs-type">BigQuery.BigQueryRunSQL</span></a></span><span>
 </span><span id="line-51"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RQBulk"><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQBulk"><span class="hs-identifier hs-var">RQBulk</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQLQuery"><span class="hs-identifier hs-type">RQLQuery</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-52"></span><span>
-</span><span id="line-53"></span><span class="hs-special">$(</span><span> </span><span id="local-6989586621688574368"><span id="local-6989586621688574370"><span class="hs-identifier">deriveFromJSON</span><span>
+</span><span id="line-53"></span><span class="hs-special">$(</span><span> </span><span id="local-6989586621688568853"><span id="local-6989586621688568855"><span class="hs-identifier">deriveFromJSON</span><span>
 </span><span id="line-54"></span><span>     </span><span class="hs-identifier">defaultOptions</span><span>
 </span><span id="line-55"></span><span>       </span><span class="hs-special">{</span><span> </span><span class="hs-identifier">constructorTagModifier</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">snakeCase</span><span> </span><span class="hs-operator">.</span><span> </span><span class="hs-identifier">drop</span><span> </span><span class="hs-number">2</span><span class="hs-special">,</span><span>
 </span><span id="line-56"></span><span>         </span><span class="hs-identifier">sumEncoding</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">TaggedObject</span><span> </span><span class="hs-string">&quot;type&quot;</span><span> </span><span class="hs-string">&quot;args&quot;</span><span>
@@ -58,13 +58,13 @@
 </span><span id="line-58"></span><span>     </span><span class="hs-special">''</span><span class="hs-identifier">RQLQuery</span></span></span><span>
 </span><span id="line-59"></span><span> </span><span class="hs-special">)</span><span>
 </span><span id="line-60"></span><span>
-</span><span id="line-61"></span><span id="local-6989586621688574365"><span class="annot"><a href="Hasura.Server.API.V2Query.html#runQuery"><span class="hs-identifier hs-type">runQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-62"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688574365"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-63"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688574365"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-64"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.html#MonadTrace"><span class="hs-identifier hs-type">Tracing.MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688574365"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-65"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorage"><span class="hs-identifier hs-type">MonadMetadataStorage</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688574365"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-66"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#MonadResolveSource"><span class="hs-identifier hs-type">MonadResolveSource</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688574365"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-67"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#MonadQueryTags"><span class="hs-identifier hs-type">MonadQueryTags</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688574365"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-61"></span><span id="local-6989586621688568850"><span class="annot"><a href="Hasura.Server.API.V2Query.html#runQuery"><span class="hs-identifier hs-type">runQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688568850"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-63"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688568850"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-64"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.html#MonadTrace"><span class="hs-identifier hs-type">Tracing.MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688568850"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-65"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorage"><span class="hs-identifier hs-type">MonadMetadataStorage</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688568850"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-66"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#MonadResolveSource"><span class="hs-identifier hs-type">MonadResolveSource</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688568850"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-67"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#MonadQueryTags"><span class="hs-identifier hs-type">MonadQueryTags</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688568850"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-68"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-69"></span><span>  </span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-70"></span><span>  </span><span class="annot"><a href="Hasura.Server.Types.html#InstanceId"><span class="hs-identifier hs-type">InstanceId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -73,7 +73,7 @@
 </span><span id="line-73"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HTTP.Manager</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-74"></span><span>  </span><span class="annot"><a href="Hasura.Server.Types.html#ServerConfigCtx"><span class="hs-identifier hs-type">ServerConfigCtx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-75"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQLQuery"><span class="hs-identifier hs-type">RQLQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-76"></span><span>  </span><span class="annot"><a href="#local-6989586621688574365"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#RebuildableSchemaCache"><span class="hs-identifier hs-type">RebuildableSchemaCache</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-76"></span><span>  </span><span class="annot"><a href="#local-6989586621688568850"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#RebuildableSchemaCache"><span class="hs-identifier hs-type">RebuildableSchemaCache</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-77"></span><span id="runQuery"><span class="annot"><span class="annottext">runQuery :: Environment
 -&gt; InstanceId
 -&gt; UserInfo
@@ -82,25 +82,25 @@
 -&gt; ServerConfigCtx
 -&gt; RQLQuery
 -&gt; m (EncJSON, RebuildableSchemaCache)
-</span><a href="Hasura.Server.API.V2Query.html#runQuery"><span class="hs-identifier hs-var hs-var">runQuery</span></a></span></span><span> </span><span id="local-6989586621688574363"><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621688574363"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621688574362"><span class="annot"><span class="annottext">InstanceId
-</span><a href="#local-6989586621688574362"><span class="hs-identifier hs-var">instanceId</span></a></span></span><span> </span><span id="local-6989586621688574361"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621688574361"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621688574360"><span class="annot"><span class="annottext">RebuildableSchemaCache
-</span><a href="#local-6989586621688574360"><span class="hs-identifier hs-var">schemaCache</span></a></span></span><span> </span><span id="local-6989586621688574359"><span class="annot"><span class="annottext">Manager
-</span><a href="#local-6989586621688574359"><span class="hs-identifier hs-var">httpManager</span></a></span></span><span> </span><span id="local-6989586621688574358"><span class="annot"><span class="annottext">ServerConfigCtx
-</span><a href="#local-6989586621688574358"><span class="hs-identifier hs-var">serverConfigCtx</span></a></span></span><span> </span><span id="local-6989586621688574357"><span class="annot"><span class="annottext">RQLQuery
-</span><a href="#local-6989586621688574357"><span class="hs-identifier hs-var">rqlQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="Hasura.Server.API.V2Query.html#runQuery"><span class="hs-identifier hs-var hs-var">runQuery</span></a></span></span><span> </span><span id="local-6989586621688568848"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621688568848"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621688568847"><span class="annot"><span class="annottext">InstanceId
+</span><a href="#local-6989586621688568847"><span class="hs-identifier hs-var">instanceId</span></a></span></span><span> </span><span id="local-6989586621688568846"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621688568846"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621688568845"><span class="annot"><span class="annottext">RebuildableSchemaCache
+</span><a href="#local-6989586621688568845"><span class="hs-identifier hs-var">schemaCache</span></a></span></span><span> </span><span id="local-6989586621688568844"><span class="annot"><span class="annottext">Manager
+</span><a href="#local-6989586621688568844"><span class="hs-identifier hs-var">httpManager</span></a></span></span><span> </span><span id="local-6989586621688568843"><span class="annot"><span class="annottext">ServerConfigCtx
+</span><a href="#local-6989586621688568843"><span class="hs-identifier hs-var">serverConfigCtx</span></a></span></span><span> </span><span id="local-6989586621688568842"><span class="annot"><span class="annottext">RQLQuery
+</span><a href="#local-6989586621688568842"><span class="hs-identifier hs-var">rqlQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-78"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">ServerConfigCtx -&gt; ReadOnlyMode
 </span><a href="Hasura.Server.Types.html#_sccReadOnlyMode"><span class="hs-identifier hs-var hs-var">_sccReadOnlyMode</span></a></span><span> </span><span class="annot"><span class="annottext">ServerConfigCtx
-</span><a href="#local-6989586621688574358"><span class="hs-identifier hs-var">serverConfigCtx</span></a></span><span> </span><span class="annot"><span class="annottext">ReadOnlyMode -&gt; ReadOnlyMode -&gt; Bool
+</span><a href="#local-6989586621688568843"><span class="hs-identifier hs-var">serverConfigCtx</span></a></span><span> </span><span class="annot"><span class="annottext">ReadOnlyMode -&gt; ReadOnlyMode -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">ReadOnlyMode
 </span><a href="Hasura.Server.Types.html#ReadOnlyModeEnabled"><span class="hs-identifier hs-var">ReadOnlyModeEnabled</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">RQLQuery -&gt; Bool
 </span><a href="Hasura.Server.API.V2Query.html#queryModifiesUserDB"><span class="hs-identifier hs-var">queryModifiesUserDB</span></a></span><span> </span><span class="annot"><span class="annottext">RQLQuery
-</span><a href="#local-6989586621688574357"><span class="hs-identifier hs-var">rqlQuery</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+</span><a href="#local-6989586621688568842"><span class="hs-identifier hs-var">rqlQuery</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-79"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
@@ -109,15 +109,15 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Cannot run write queries when read-only mode is enabled&quot;</span></span><span>
 </span><span id="line-80"></span><span>
-</span><span id="line-81"></span><span>  </span><span class="hs-special">(</span><span id="local-6989586621688574349"><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621688574349"><span class="hs-identifier hs-var">metadata</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688574348"><span class="annot"><span class="annottext">MetadataResourceVersion
-</span><a href="#local-6989586621688574348"><span class="hs-identifier hs-var">currentResourceVersion</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (Metadata, MetadataResourceVersion)
+</span><span id="line-81"></span><span>  </span><span class="hs-special">(</span><span id="local-6989586621688568834"><span class="annot"><span class="annottext">Metadata
+</span><a href="#local-6989586621688568834"><span class="hs-identifier hs-var">metadata</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688568833"><span class="annot"><span class="annottext">MetadataResourceVersion
+</span><a href="#local-6989586621688568833"><span class="hs-identifier hs-var">currentResourceVersion</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (Metadata, MetadataResourceVersion)
 forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
 m (Metadata, MetadataResourceVersion)
 </span><a href="Hasura.Metadata.Class.html#fetchMetadata"><span class="hs-identifier hs-var">fetchMetadata</span></a></span><span>
-</span><span id="line-82"></span><span>  </span><span id="local-6989586621688574346"><span class="annot"><span class="annottext">(EncJSON, RebuildableSchemaCache, CacheInvalidations, Metadata)
-</span><a href="#local-6989586621688574346"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-82"></span><span>  </span><span id="local-6989586621688568831"><span class="annot"><span class="annottext">(EncJSON, RebuildableSchemaCache, CacheInvalidations, Metadata)
+</span><a href="#local-6989586621688568831"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-83"></span><span>    </span><span class="annot"><span class="annottext">Environment -&gt; RQLQuery -&gt; MetadataT (CacheRWT (RunT m)) EncJSON
 forall (m :: * -&gt; *).
 (MonadError QErr m, MonadIO m, MonadBaseControl IO m, UserInfoM m,
@@ -125,23 +125,23 @@ forall (m :: * -&gt; *).
  MonadQueryTags m) =&gt;
 Environment -&gt; RQLQuery -&gt; m EncJSON
 </span><a href="Hasura.Server.API.V2Query.html#runQueryM"><span class="hs-identifier hs-var">runQueryM</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621688574363"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">RQLQuery
-</span><a href="#local-6989586621688574357"><span class="hs-identifier hs-var">rqlQuery</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataT (CacheRWT (RunT m)) EncJSON
+</span><a href="#local-6989586621688568848"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">RQLQuery
+</span><a href="#local-6989586621688568842"><span class="hs-identifier hs-var">rqlQuery</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataT (CacheRWT (RunT m)) EncJSON
 -&gt; (MetadataT (CacheRWT (RunT m)) EncJSON
     -&gt; m (EncJSON, RebuildableSchemaCache, CacheInvalidations,
           Metadata))
 -&gt; m (EncJSON, RebuildableSchemaCache, CacheInvalidations,
       Metadata)
 forall a b. a -&gt; (a -&gt; b) -&gt; b
-</span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688574343"><span class="annot"><span class="annottext">MetadataT (CacheRWT (RunT m)) EncJSON
-</span><a href="#local-6989586621688574343"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-84"></span><span>      </span><span class="hs-special">(</span><span class="hs-special">(</span><span id="local-6989586621688574342"><span class="annot"><span class="annottext">EncJSON
-</span><a href="#local-6989586621688574342"><span class="hs-identifier hs-var">js</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688574341"><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621688574341"><span class="hs-identifier hs-var">meta</span></a></span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span id="local-6989586621688574340"><span class="annot"><span class="annottext">RebuildableSchemaCache
-</span><a href="#local-6989586621688574340"><span class="hs-identifier hs-var">rsc</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688574339"><span class="annot"><span class="annottext">CacheInvalidations
-</span><a href="#local-6989586621688574339"><span class="hs-identifier hs-var">ci</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688568828"><span class="annot"><span class="annottext">MetadataT (CacheRWT (RunT m)) EncJSON
+</span><a href="#local-6989586621688568828"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-84"></span><span>      </span><span class="hs-special">(</span><span class="hs-special">(</span><span id="local-6989586621688568827"><span class="annot"><span class="annottext">EncJSON
+</span><a href="#local-6989586621688568827"><span class="hs-identifier hs-var">js</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688568826"><span class="annot"><span class="annottext">Metadata
+</span><a href="#local-6989586621688568826"><span class="hs-identifier hs-var">meta</span></a></span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span id="local-6989586621688568825"><span class="annot"><span class="annottext">RebuildableSchemaCache
+</span><a href="#local-6989586621688568825"><span class="hs-identifier hs-var">rsc</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688568824"><span class="annot"><span class="annottext">CacheInvalidations
+</span><a href="#local-6989586621688568824"><span class="hs-identifier hs-var">ci</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-85"></span><span>        </span><span class="annot"><span class="annottext">MetadataT (CacheRWT (RunT m)) EncJSON
-</span><a href="#local-6989586621688574343"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataT (CacheRWT (RunT m)) EncJSON
+</span><a href="#local-6989586621688568828"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataT (CacheRWT (RunT m)) EncJSON
 -&gt; (MetadataT (CacheRWT (RunT m)) EncJSON
     -&gt; CacheRWT (RunT m) (EncJSON, Metadata))
 -&gt; CacheRWT (RunT m) (EncJSON, Metadata)
@@ -152,7 +152,7 @@ forall a b. a -&gt; (a -&gt; b) -&gt; b
 forall (m :: * -&gt; *) a.
 Metadata -&gt; MetadataT m a -&gt; m (a, Metadata)
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#runMetadataT"><span class="hs-identifier hs-var">runMetadataT</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621688574349"><span class="hs-identifier hs-var">metadata</span></a></span><span>
+</span><a href="#local-6989586621688568834"><span class="hs-identifier hs-var">metadata</span></a></span><span>
 </span><span id="line-86"></span><span>          </span><span class="annot"><span class="annottext">CacheRWT (RunT m) (EncJSON, Metadata)
 -&gt; (CacheRWT (RunT m) (EncJSON, Metadata)
     -&gt; RunT
@@ -171,7 +171,7 @@ RebuildableSchemaCache
 -&gt; CacheRWT m a
 -&gt; m (a, RebuildableSchemaCache, CacheInvalidations)
 </span><a href="Hasura.RQL.DDL.Schema.Cache.html#runCacheRWT"><span class="hs-identifier hs-var">runCacheRWT</span></a></span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache
-</span><a href="#local-6989586621688574360"><span class="hs-identifier hs-var">schemaCache</span></a></span><span>
+</span><a href="#local-6989586621688568845"><span class="hs-identifier hs-var">schemaCache</span></a></span><span>
 </span><span id="line-87"></span><span>          </span><span class="annot"><span class="annottext">RunT
   m ((EncJSON, Metadata), RebuildableSchemaCache, CacheInvalidations)
 -&gt; (RunT
@@ -194,7 +194,7 @@ forall a b. a -&gt; (a -&gt; b) -&gt; b
      ((EncJSON, Metadata), RebuildableSchemaCache, CacheInvalidations)
 forall (m :: * -&gt; *) a. RunCtx -&gt; RunT m a -&gt; ExceptT QErr m a
 </span><a href="Hasura.RQL.Types.Run.html#peelRun"><span class="hs-identifier hs-var">peelRun</span></a></span><span> </span><span class="annot"><span class="annottext">RunCtx
-</span><a href="#local-6989586621688574335"><span class="hs-identifier hs-var">runCtx</span></a></span><span>
+</span><a href="#local-6989586621688568820"><span class="hs-identifier hs-var">runCtx</span></a></span><span>
 </span><span id="line-88"></span><span>          </span><span class="annot"><span class="annottext">ExceptT
   QErr
   m
@@ -242,63 +242,63 @@ forall e (m :: * -&gt; *) a. MonadError e m =&gt; m (Either e a) -&gt; m a
       Metadata)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">EncJSON
-</span><a href="#local-6989586621688574342"><span class="hs-identifier hs-var">js</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache
-</span><a href="#local-6989586621688574340"><span class="hs-identifier hs-var">rsc</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">CacheInvalidations
-</span><a href="#local-6989586621688574339"><span class="hs-identifier hs-var">ci</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621688574341"><span class="hs-identifier hs-var">meta</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688568827"><span class="hs-identifier hs-var">js</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache
+</span><a href="#local-6989586621688568825"><span class="hs-identifier hs-var">rsc</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">CacheInvalidations
+</span><a href="#local-6989586621688568824"><span class="hs-identifier hs-var">ci</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Metadata
+</span><a href="#local-6989586621688568826"><span class="hs-identifier hs-var">meta</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-91"></span><span>  </span><span class="annot"><span class="annottext">MetadataResourceVersion
 -&gt; (EncJSON, RebuildableSchemaCache, CacheInvalidations, Metadata)
 -&gt; m (EncJSON, RebuildableSchemaCache)
-</span><a href="#local-6989586621688574332"><span class="hs-identifier hs-var">withReload</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
-</span><a href="#local-6989586621688574348"><span class="hs-identifier hs-var">currentResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">(EncJSON, RebuildableSchemaCache, CacheInvalidations, Metadata)
-</span><a href="#local-6989586621688574346"><span class="hs-identifier hs-var">result</span></a></span><span>
+</span><a href="#local-6989586621688568817"><span class="hs-identifier hs-var">withReload</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
+</span><a href="#local-6989586621688568833"><span class="hs-identifier hs-var">currentResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">(EncJSON, RebuildableSchemaCache, CacheInvalidations, Metadata)
+</span><a href="#local-6989586621688568831"><span class="hs-identifier hs-var">result</span></a></span><span>
 </span><span id="line-92"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-93"></span><span>    </span><span id="local-6989586621688574335"><span class="annot"><span class="annottext">runCtx :: RunCtx
-</span><a href="#local-6989586621688574335"><span class="hs-identifier hs-var hs-var">runCtx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UserInfo -&gt; Manager -&gt; ServerConfigCtx -&gt; RunCtx
+</span><span id="line-93"></span><span>    </span><span id="local-6989586621688568820"><span class="annot"><span class="annottext">runCtx :: RunCtx
+</span><a href="#local-6989586621688568820"><span class="hs-identifier hs-var hs-var">runCtx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UserInfo -&gt; Manager -&gt; ServerConfigCtx -&gt; RunCtx
 </span><a href="Hasura.RQL.Types.Run.html#RunCtx"><span class="hs-identifier hs-var">RunCtx</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621688574361"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Manager
-</span><a href="#local-6989586621688574359"><span class="hs-identifier hs-var">httpManager</span></a></span><span> </span><span class="annot"><span class="annottext">ServerConfigCtx
-</span><a href="#local-6989586621688574358"><span class="hs-identifier hs-var">serverConfigCtx</span></a></span><span>
+</span><a href="#local-6989586621688568846"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Manager
+</span><a href="#local-6989586621688568844"><span class="hs-identifier hs-var">httpManager</span></a></span><span> </span><span class="annot"><span class="annottext">ServerConfigCtx
+</span><a href="#local-6989586621688568843"><span class="hs-identifier hs-var">serverConfigCtx</span></a></span><span>
 </span><span id="line-94"></span><span>
-</span><span id="line-95"></span><span>    </span><span id="local-6989586621688574332"><span class="annot"><span class="annottext">withReload :: MetadataResourceVersion
+</span><span id="line-95"></span><span>    </span><span id="local-6989586621688568817"><span class="annot"><span class="annottext">withReload :: MetadataResourceVersion
 -&gt; (EncJSON, RebuildableSchemaCache, CacheInvalidations, Metadata)
 -&gt; m (EncJSON, RebuildableSchemaCache)
-</span><a href="#local-6989586621688574332"><span class="hs-identifier hs-var hs-var">withReload</span></a></span></span><span> </span><span id="local-6989586621688574330"><span class="annot"><span class="annottext">MetadataResourceVersion
-</span><a href="#local-6989586621688574330"><span class="hs-identifier hs-var">currentResourceVersion</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688574329"><span class="annot"><span class="annottext">EncJSON
-</span><a href="#local-6989586621688574329"><span class="hs-identifier hs-var">result</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688574328"><span class="annot"><span class="annottext">RebuildableSchemaCache
-</span><a href="#local-6989586621688574328"><span class="hs-identifier hs-var">updatedCache</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688574327"><span class="annot"><span class="annottext">CacheInvalidations
-</span><a href="#local-6989586621688574327"><span class="hs-identifier hs-var">invalidations</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688574326"><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621688574326"><span class="hs-identifier hs-var">updatedMetadata</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621688568817"><span class="hs-identifier hs-var hs-var">withReload</span></a></span></span><span> </span><span id="local-6989586621688568815"><span class="annot"><span class="annottext">MetadataResourceVersion
+</span><a href="#local-6989586621688568815"><span class="hs-identifier hs-var">currentResourceVersion</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688568814"><span class="annot"><span class="annottext">EncJSON
+</span><a href="#local-6989586621688568814"><span class="hs-identifier hs-var">result</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688568813"><span class="annot"><span class="annottext">RebuildableSchemaCache
+</span><a href="#local-6989586621688568813"><span class="hs-identifier hs-var">updatedCache</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688568812"><span class="annot"><span class="annottext">CacheInvalidations
+</span><a href="#local-6989586621688568812"><span class="hs-identifier hs-var">invalidations</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688568811"><span class="annot"><span class="annottext">Metadata
+</span><a href="#local-6989586621688568811"><span class="hs-identifier hs-var">updatedMetadata</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-96"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RQLQuery -&gt; Bool
 </span><a href="Hasura.Server.API.V2Query.html#queryModifiesSchema"><span class="hs-identifier hs-var">queryModifiesSchema</span></a></span><span> </span><span class="annot"><span class="annottext">RQLQuery
-</span><a href="#local-6989586621688574357"><span class="hs-identifier hs-var">rqlQuery</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+</span><a href="#local-6989586621688568842"><span class="hs-identifier hs-var">rqlQuery</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-97"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ServerConfigCtx -&gt; MaintenanceMode
 </span><a href="Hasura.Server.Types.html#_sccMaintenanceMode"><span class="hs-identifier hs-var hs-var">_sccMaintenanceMode</span></a></span><span> </span><span class="annot"><span class="annottext">ServerConfigCtx
-</span><a href="#local-6989586621688574358"><span class="hs-identifier hs-var">serverConfigCtx</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688568843"><span class="hs-identifier hs-var">serverConfigCtx</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-98"></span><span>          </span><span class="annot"><span class="annottext">MaintenanceMode
 </span><a href="Hasura.Server.Types.html#MaintenanceModeDisabled"><span class="hs-identifier hs-var">MaintenanceModeDisabled</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-99"></span><span>            </span><span class="hs-comment">-- set modified metadata in storage</span><span>
-</span><span id="line-100"></span><span>            </span><span id="local-6989586621688574323"><span class="annot"><span class="annottext">MetadataResourceVersion
-</span><a href="#local-6989586621688574323"><span class="hs-identifier hs-var">newResourceVersion</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; Metadata -&gt; m MetadataResourceVersion
+</span><span id="line-100"></span><span>            </span><span id="local-6989586621688568808"><span class="annot"><span class="annottext">MetadataResourceVersion
+</span><a href="#local-6989586621688568808"><span class="hs-identifier hs-var">newResourceVersion</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; Metadata -&gt; m MetadataResourceVersion
 forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
 MetadataResourceVersion -&gt; Metadata -&gt; m MetadataResourceVersion
 </span><a href="Hasura.Metadata.Class.html#setMetadata"><span class="hs-identifier hs-var">setMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
-</span><a href="#local-6989586621688574330"><span class="hs-identifier hs-var">currentResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621688574326"><span class="hs-identifier hs-var">updatedMetadata</span></a></span><span>
+</span><a href="#local-6989586621688568815"><span class="hs-identifier hs-var">currentResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata
+</span><a href="#local-6989586621688568811"><span class="hs-identifier hs-var">updatedMetadata</span></a></span><span>
 </span><span id="line-101"></span><span>            </span><span class="hs-comment">-- notify schema cache sync</span><span>
 </span><span id="line-102"></span><span>            </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; InstanceId -&gt; CacheInvalidations -&gt; m ()
 forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
 MetadataResourceVersion -&gt; InstanceId -&gt; CacheInvalidations -&gt; m ()
 </span><a href="Hasura.Metadata.Class.html#notifySchemaCacheSync"><span class="hs-identifier hs-var">notifySchemaCacheSync</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
-</span><a href="#local-6989586621688574323"><span class="hs-identifier hs-var">newResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">InstanceId
-</span><a href="#local-6989586621688574362"><span class="hs-identifier hs-var">instanceId</span></a></span><span> </span><span class="annot"><span class="annottext">CacheInvalidations
-</span><a href="#local-6989586621688574327"><span class="hs-identifier hs-var">invalidations</span></a></span><span>
+</span><a href="#local-6989586621688568808"><span class="hs-identifier hs-var">newResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">InstanceId
+</span><a href="#local-6989586621688568847"><span class="hs-identifier hs-var">instanceId</span></a></span><span> </span><span class="annot"><span class="annottext">CacheInvalidations
+</span><a href="#local-6989586621688568812"><span class="hs-identifier hs-var">invalidations</span></a></span><span>
 </span><span id="line-103"></span><span>          </span><span class="annot"><span class="annottext">MaintenanceMode
 </span><a href="Hasura.Server.Types.html#MaintenanceModeEnabled"><span class="hs-identifier hs-var">MaintenanceModeEnabled</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-104"></span><span>            </span><span class="annot"><span class="annottext">Text -&gt; m ()
@@ -309,8 +309,8 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 -&gt; m (EncJSON, RebuildableSchemaCache)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">EncJSON
-</span><a href="#local-6989586621688574329"><span class="hs-identifier hs-var">result</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache
-</span><a href="#local-6989586621688574328"><span class="hs-identifier hs-var">updatedCache</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688568814"><span class="hs-identifier hs-var">result</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache
+</span><a href="#local-6989586621688568813"><span class="hs-identifier hs-var">updatedCache</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-106"></span><span>
 </span><span id="line-107"></span><span class="annot"><a href="Hasura.Server.API.V2Query.html#queryModifiesSchema"><span class="hs-identifier hs-type">queryModifiesSchema</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQLQuery"><span class="hs-identifier hs-type">RQLQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-108"></span><span id="queryModifiesSchema"><span class="annot"><span class="annottext">queryModifiesSchema :: RQLQuery -&gt; Bool
@@ -330,18 +330,18 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span id="line-113"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQCount"><span class="hs-identifier hs-type">RQCount</span></a></span><span> </span><span class="annot"><span class="annottext">CountQuery
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
-</span><span id="line-114"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQRunSql"><span class="hs-identifier hs-type">RQRunSql</span></a></span><span> </span><span id="local-6989586621688574318"><span class="annot"><span class="annottext">RunSQL
-</span><a href="#local-6989586621688574318"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RunSQL -&gt; Bool
+</span><span id="line-114"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQRunSql"><span class="hs-identifier hs-type">RQRunSql</span></a></span><span> </span><span id="local-6989586621688568803"><span class="annot"><span class="annottext">RunSQL
+</span><a href="#local-6989586621688568803"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RunSQL -&gt; Bool
 </span><a href="Hasura.Backends.Postgres.DDL.RunSQL.html#isSchemaCacheBuildRequiredRunSQL"><span class="hs-identifier hs-var">Postgres.isSchemaCacheBuildRequiredRunSQL</span></a></span><span> </span><span class="annot"><span class="annottext">RunSQL
-</span><a href="#local-6989586621688574318"><span class="hs-identifier hs-var">q</span></a></span><span>
-</span><span id="line-115"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQCitusRunSql"><span class="hs-identifier hs-type">RQCitusRunSql</span></a></span><span> </span><span id="local-6989586621688574316"><span class="annot"><span class="annottext">RunSQL
-</span><a href="#local-6989586621688574316"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RunSQL -&gt; Bool
+</span><a href="#local-6989586621688568803"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><span id="line-115"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQCitusRunSql"><span class="hs-identifier hs-type">RQCitusRunSql</span></a></span><span> </span><span id="local-6989586621688568801"><span class="annot"><span class="annottext">RunSQL
+</span><a href="#local-6989586621688568801"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RunSQL -&gt; Bool
 </span><a href="Hasura.Backends.Postgres.DDL.RunSQL.html#isSchemaCacheBuildRequiredRunSQL"><span class="hs-identifier hs-var">Postgres.isSchemaCacheBuildRequiredRunSQL</span></a></span><span> </span><span class="annot"><span class="annottext">RunSQL
-</span><a href="#local-6989586621688574316"><span class="hs-identifier hs-var">q</span></a></span><span>
-</span><span id="line-116"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQMssqlRunSql"><span class="hs-identifier hs-type">RQMssqlRunSql</span></a></span><span> </span><span id="local-6989586621688574315"><span class="annot"><span class="annottext">MSSQLRunSQL
-</span><a href="#local-6989586621688574315"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MSSQLRunSQL -&gt; Bool
+</span><a href="#local-6989586621688568801"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><span id="line-116"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQMssqlRunSql"><span class="hs-identifier hs-type">RQMssqlRunSql</span></a></span><span> </span><span id="local-6989586621688568800"><span class="annot"><span class="annottext">MSSQLRunSQL
+</span><a href="#local-6989586621688568800"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MSSQLRunSQL -&gt; Bool
 </span><a href="Hasura.Backends.MSSQL.DDL.RunSQL.html#isSchemaCacheBuildRequiredRunSQL"><span class="hs-identifier hs-var">MSSQL.isSchemaCacheBuildRequiredRunSQL</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLRunSQL
-</span><a href="#local-6989586621688574315"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><a href="#local-6989586621688568800"><span class="hs-identifier hs-var">q</span></a></span><span>
 </span><span id="line-117"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQMysqlRunSql"><span class="hs-identifier hs-type">RQMysqlRunSql</span></a></span><span> </span><span class="annot"><span class="annottext">RunSQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
@@ -351,72 +351,72 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span id="line-119"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQBigqueryDatabaseInspection"><span class="hs-identifier hs-type">RQBigqueryDatabaseInspection</span></a></span><span> </span><span class="annot"><span class="annottext">BigQueryRunSQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
-</span><span id="line-120"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQBulk"><span class="hs-identifier hs-type">RQBulk</span></a></span><span> </span><span id="local-6989586621688574313"><span class="annot"><span class="annottext">[RQLQuery]
-</span><a href="#local-6989586621688574313"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(RQLQuery -&gt; Bool) -&gt; [RQLQuery] -&gt; Bool
+</span><span id="line-120"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQBulk"><span class="hs-identifier hs-type">RQBulk</span></a></span><span> </span><span id="local-6989586621688568798"><span class="annot"><span class="annottext">[RQLQuery]
+</span><a href="#local-6989586621688568798"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(RQLQuery -&gt; Bool) -&gt; [RQLQuery] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">any</span></span><span> </span><span class="annot"><span class="annottext">RQLQuery -&gt; Bool
 </span><a href="Hasura.Server.API.V2Query.html#queryModifiesSchema"><span class="hs-identifier hs-var">queryModifiesSchema</span></a></span><span> </span><span class="annot"><span class="annottext">[RQLQuery]
-</span><a href="#local-6989586621688574313"><span class="hs-identifier hs-var">l</span></a></span><span>
+</span><a href="#local-6989586621688568798"><span class="hs-identifier hs-var">l</span></a></span><span>
 </span><span id="line-121"></span><span>
-</span><span id="line-122"></span><span id="local-6989586621688574449"><span class="annot"><a href="Hasura.Server.API.V2Query.html#runQueryM"><span class="hs-identifier hs-type">runQueryM</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-123"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688574449"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-124"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688574449"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-125"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688574449"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-126"></span><span>    </span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688574449"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-127"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688574449"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-128"></span><span>    </span><span class="annot"><a href="Hasura.Server.Types.html#HasServerConfigCtx"><span class="hs-identifier hs-type">HasServerConfigCtx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688574449"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-129"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.html#MonadTrace"><span class="hs-identifier hs-type">Tracing.MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688574449"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-130"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688574449"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-131"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#MonadQueryTags"><span class="hs-identifier hs-type">MonadQueryTags</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688574449"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-122"></span><span id="local-6989586621688568934"><span class="annot"><a href="Hasura.Server.API.V2Query.html#runQueryM"><span class="hs-identifier hs-type">runQueryM</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-123"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688568934"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-124"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688568934"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-125"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688568934"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-126"></span><span>    </span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688568934"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-127"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688568934"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-128"></span><span>    </span><span class="annot"><a href="Hasura.Server.Types.html#HasServerConfigCtx"><span class="hs-identifier hs-type">HasServerConfigCtx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688568934"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-129"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.html#MonadTrace"><span class="hs-identifier hs-type">Tracing.MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688568934"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-130"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688568934"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-131"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#MonadQueryTags"><span class="hs-identifier hs-type">MonadQueryTags</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688568934"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-132"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-133"></span><span>  </span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-134"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQLQuery"><span class="hs-identifier hs-type">RQLQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-135"></span><span>  </span><span class="annot"><a href="#local-6989586621688574449"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-135"></span><span>  </span><span class="annot"><a href="#local-6989586621688568934"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
 </span><span id="line-136"></span><span id="runQueryM"><span class="annot"><span class="annottext">runQueryM :: Environment -&gt; RQLQuery -&gt; m EncJSON
-</span><a href="Hasura.Server.API.V2Query.html#runQueryM"><span class="hs-identifier hs-var hs-var">runQueryM</span></a></span></span><span> </span><span id="local-6989586621688574311"><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621688574311"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-137"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQInsert"><span class="hs-identifier hs-type">RQInsert</span></a></span><span> </span><span id="local-6989586621688574310"><span class="annot"><span class="annottext">InsertQuery
-</span><a href="#local-6989586621688574310"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InsertQuery -&gt; m EncJSON
+</span><a href="Hasura.Server.API.V2Query.html#runQueryM"><span class="hs-identifier hs-var hs-var">runQueryM</span></a></span></span><span> </span><span id="local-6989586621688568796"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621688568796"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-137"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQInsert"><span class="hs-identifier hs-type">RQInsert</span></a></span><span> </span><span id="local-6989586621688568795"><span class="annot"><span class="annottext">InsertQuery
+</span><a href="#local-6989586621688568795"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InsertQuery -&gt; m EncJSON
 forall (m :: * -&gt; *).
 (QErrM m, UserInfoM m, CacheRM m, HasServerConfigCtx m, MonadIO m,
  MonadTrace m, MonadBaseControl IO m, MetadataM m) =&gt;
 InsertQuery -&gt; m EncJSON
 </span><a href="Hasura.RQL.DML.Insert.html#runInsert"><span class="hs-identifier hs-var">runInsert</span></a></span><span> </span><span class="annot"><span class="annottext">InsertQuery
-</span><a href="#local-6989586621688574310"><span class="hs-identifier hs-var">q</span></a></span><span>
-</span><span id="line-138"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQSelect"><span class="hs-identifier hs-type">RQSelect</span></a></span><span> </span><span id="local-6989586621688574308"><span class="annot"><span class="annottext">SelectQuery
-</span><a href="#local-6989586621688574308"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SelectQuery -&gt; m EncJSON
+</span><a href="#local-6989586621688568795"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><span id="line-138"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQSelect"><span class="hs-identifier hs-type">RQSelect</span></a></span><span> </span><span id="local-6989586621688568793"><span class="annot"><span class="annottext">SelectQuery
+</span><a href="#local-6989586621688568793"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SelectQuery -&gt; m EncJSON
 forall (m :: * -&gt; *).
 (QErrM m, UserInfoM m, CacheRM m, HasServerConfigCtx m, MonadIO m,
  MonadBaseControl IO m, MonadTrace m, MetadataM m) =&gt;
 SelectQuery -&gt; m EncJSON
 </span><a href="Hasura.RQL.DML.Select.html#runSelect"><span class="hs-identifier hs-var">runSelect</span></a></span><span> </span><span class="annot"><span class="annottext">SelectQuery
-</span><a href="#local-6989586621688574308"><span class="hs-identifier hs-var">q</span></a></span><span>
-</span><span id="line-139"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQUpdate"><span class="hs-identifier hs-type">RQUpdate</span></a></span><span> </span><span id="local-6989586621688574306"><span class="annot"><span class="annottext">UpdateQuery
-</span><a href="#local-6989586621688574306"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">UpdateQuery -&gt; m EncJSON
+</span><a href="#local-6989586621688568793"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><span id="line-139"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQUpdate"><span class="hs-identifier hs-type">RQUpdate</span></a></span><span> </span><span id="local-6989586621688568791"><span class="annot"><span class="annottext">UpdateQuery
+</span><a href="#local-6989586621688568791"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">UpdateQuery -&gt; m EncJSON
 forall (m :: * -&gt; *).
 (QErrM m, UserInfoM m, CacheRM m, HasServerConfigCtx m,
  MonadBaseControl IO m, MonadIO m, MonadTrace m, MetadataM m) =&gt;
 UpdateQuery -&gt; m EncJSON
 </span><a href="Hasura.RQL.DML.Update.html#runUpdate"><span class="hs-identifier hs-var">runUpdate</span></a></span><span> </span><span class="annot"><span class="annottext">UpdateQuery
-</span><a href="#local-6989586621688574306"><span class="hs-identifier hs-var">q</span></a></span><span>
-</span><span id="line-140"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQDelete"><span class="hs-identifier hs-type">RQDelete</span></a></span><span> </span><span id="local-6989586621688574304"><span class="annot"><span class="annottext">DeleteQuery
-</span><a href="#local-6989586621688574304"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DeleteQuery -&gt; m EncJSON
+</span><a href="#local-6989586621688568791"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><span id="line-140"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQDelete"><span class="hs-identifier hs-type">RQDelete</span></a></span><span> </span><span id="local-6989586621688568789"><span class="annot"><span class="annottext">DeleteQuery
+</span><a href="#local-6989586621688568789"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DeleteQuery -&gt; m EncJSON
 forall (m :: * -&gt; *).
 (QErrM m, UserInfoM m, CacheRM m, HasServerConfigCtx m, MonadIO m,
  MonadTrace m, MonadBaseControl IO m, MetadataM m) =&gt;
 DeleteQuery -&gt; m EncJSON
 </span><a href="Hasura.RQL.DML.Delete.html#runDelete"><span class="hs-identifier hs-var">runDelete</span></a></span><span> </span><span class="annot"><span class="annottext">DeleteQuery
-</span><a href="#local-6989586621688574304"><span class="hs-identifier hs-var">q</span></a></span><span>
-</span><span id="line-141"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQCount"><span class="hs-identifier hs-type">RQCount</span></a></span><span> </span><span id="local-6989586621688574302"><span class="annot"><span class="annottext">CountQuery
-</span><a href="#local-6989586621688574302"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">CountQuery -&gt; m EncJSON
+</span><a href="#local-6989586621688568789"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><span id="line-141"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQCount"><span class="hs-identifier hs-type">RQCount</span></a></span><span> </span><span id="local-6989586621688568787"><span class="annot"><span class="annottext">CountQuery
+</span><a href="#local-6989586621688568787"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">CountQuery -&gt; m EncJSON
 forall (m :: * -&gt; *).
 (QErrM m, UserInfoM m, CacheRM m, MonadIO m, MonadBaseControl IO m,
  MonadTrace m, MetadataM m) =&gt;
 CountQuery -&gt; m EncJSON
 </span><a href="Hasura.RQL.DML.Count.html#runCount"><span class="hs-identifier hs-var">runCount</span></a></span><span> </span><span class="annot"><span class="annottext">CountQuery
-</span><a href="#local-6989586621688574302"><span class="hs-identifier hs-var">q</span></a></span><span>
-</span><span id="line-142"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQRunSql"><span class="hs-identifier hs-type">RQRunSql</span></a></span><span> </span><span id="local-6989586621688574300"><span class="annot"><span class="annottext">RunSQL
-</span><a href="#local-6989586621688574300"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RunSQL -&gt; m EncJSON
+</span><a href="#local-6989586621688568787"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><span id="line-142"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQRunSql"><span class="hs-identifier hs-type">RQRunSql</span></a></span><span> </span><span id="local-6989586621688568785"><span class="annot"><span class="annottext">RunSQL
+</span><a href="#local-6989586621688568785"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RunSQL -&gt; m EncJSON
 forall (pgKind :: PostgresKind) (m :: * -&gt; *).
 (BackendMetadata ('Postgres pgKind), ToMetadataFetchQuery pgKind,
  CacheRWM m, HasServerConfigCtx m, MetadataM m,
@@ -424,24 +424,24 @@ forall (pgKind :: PostgresKind) (m :: * -&gt; *).
  UserInfoM m) =&gt;
 RunSQL -&gt; m EncJSON
 </span><a href="Hasura.Backends.Postgres.DDL.RunSQL.html#runRunSQL"><span class="hs-identifier hs-var">Postgres.runRunSQL</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span> </span><span class="annot"><span class="annottext">RunSQL
-</span><a href="#local-6989586621688574300"><span class="hs-identifier hs-var">q</span></a></span><span>
-</span><span id="line-143"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQMssqlRunSql"><span class="hs-identifier hs-type">RQMssqlRunSql</span></a></span><span> </span><span id="local-6989586621688574297"><span class="annot"><span class="annottext">MSSQLRunSQL
-</span><a href="#local-6989586621688574297"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MSSQLRunSQL -&gt; m EncJSON
+</span><a href="#local-6989586621688568785"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><span id="line-143"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQMssqlRunSql"><span class="hs-identifier hs-type">RQMssqlRunSql</span></a></span><span> </span><span id="local-6989586621688568782"><span class="annot"><span class="annottext">MSSQLRunSQL
+</span><a href="#local-6989586621688568782"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MSSQLRunSQL -&gt; m EncJSON
 forall (m :: * -&gt; *).
 (MonadIO m, MonadBaseControl IO m, CacheRWM m, MonadError QErr m,
  MetadataM m) =&gt;
 MSSQLRunSQL -&gt; m EncJSON
 </span><a href="Hasura.Backends.MSSQL.DDL.RunSQL.html#runSQL"><span class="hs-identifier hs-var">MSSQL.runSQL</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLRunSQL
-</span><a href="#local-6989586621688574297"><span class="hs-identifier hs-var">q</span></a></span><span>
-</span><span id="line-144"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQMysqlRunSql"><span class="hs-identifier hs-type">RQMysqlRunSql</span></a></span><span> </span><span id="local-6989586621688574295"><span class="annot"><span class="annottext">RunSQL
-</span><a href="#local-6989586621688574295"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RunSQL -&gt; m EncJSON
+</span><a href="#local-6989586621688568782"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><span id="line-144"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQMysqlRunSql"><span class="hs-identifier hs-type">RQMysqlRunSql</span></a></span><span> </span><span id="local-6989586621688568780"><span class="annot"><span class="annottext">RunSQL
+</span><a href="#local-6989586621688568780"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RunSQL -&gt; m EncJSON
 forall (m :: * -&gt; *).
 (MonadIO m, CacheRWM m, MonadError QErr m, MetadataM m) =&gt;
 RunSQL -&gt; m EncJSON
 </span><a href="Hasura.Backends.MySQL.SQL.html#runSQL"><span class="hs-identifier hs-var">MySQL.runSQL</span></a></span><span> </span><span class="annot"><span class="annottext">RunSQL
-</span><a href="#local-6989586621688574295"><span class="hs-identifier hs-var">q</span></a></span><span>
-</span><span id="line-145"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQCitusRunSql"><span class="hs-identifier hs-type">RQCitusRunSql</span></a></span><span> </span><span id="local-6989586621688574293"><span class="annot"><span class="annottext">RunSQL
-</span><a href="#local-6989586621688574293"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RunSQL -&gt; m EncJSON
+</span><a href="#local-6989586621688568780"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><span id="line-145"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQCitusRunSql"><span class="hs-identifier hs-type">RQCitusRunSql</span></a></span><span> </span><span id="local-6989586621688568778"><span class="annot"><span class="annottext">RunSQL
+</span><a href="#local-6989586621688568778"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RunSQL -&gt; m EncJSON
 forall (pgKind :: PostgresKind) (m :: * -&gt; *).
 (BackendMetadata ('Postgres pgKind), ToMetadataFetchQuery pgKind,
  CacheRWM m, HasServerConfigCtx m, MetadataM m,
@@ -449,23 +449,23 @@ forall (pgKind :: PostgresKind) (m :: * -&gt; *).
  UserInfoM m) =&gt;
 RunSQL -&gt; m EncJSON
 </span><a href="Hasura.Backends.Postgres.DDL.RunSQL.html#runRunSQL"><span class="hs-identifier hs-var">Postgres.runRunSQL</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Citus"><span class="hs-identifier hs-type">Citus</span></a></span><span> </span><span class="annot"><span class="annottext">RunSQL
-</span><a href="#local-6989586621688574293"><span class="hs-identifier hs-var">q</span></a></span><span>
-</span><span id="line-146"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQBigqueryRunSql"><span class="hs-identifier hs-type">RQBigqueryRunSql</span></a></span><span> </span><span id="local-6989586621688574291"><span class="annot"><span class="annottext">BigQueryRunSQL
-</span><a href="#local-6989586621688574291"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">BigQueryRunSQL -&gt; m EncJSON
+</span><a href="#local-6989586621688568778"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><span id="line-146"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQBigqueryRunSql"><span class="hs-identifier hs-type">RQBigqueryRunSql</span></a></span><span> </span><span id="local-6989586621688568776"><span class="annot"><span class="annottext">BigQueryRunSQL
+</span><a href="#local-6989586621688568776"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">BigQueryRunSQL -&gt; m EncJSON
 forall (m :: * -&gt; *).
 (MonadIO m, CacheRWM m, MonadError QErr m, MetadataM m) =&gt;
 BigQueryRunSQL -&gt; m EncJSON
 </span><a href="Hasura.Backends.BigQuery.DDL.RunSQL.html#runSQL"><span class="hs-identifier hs-var">BigQuery.runSQL</span></a></span><span> </span><span class="annot"><span class="annottext">BigQueryRunSQL
-</span><a href="#local-6989586621688574291"><span class="hs-identifier hs-var">q</span></a></span><span>
-</span><span id="line-147"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQBigqueryDatabaseInspection"><span class="hs-identifier hs-type">RQBigqueryDatabaseInspection</span></a></span><span> </span><span id="local-6989586621688574289"><span class="annot"><span class="annottext">BigQueryRunSQL
-</span><a href="#local-6989586621688574289"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">BigQueryRunSQL -&gt; m EncJSON
+</span><a href="#local-6989586621688568776"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><span id="line-147"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQBigqueryDatabaseInspection"><span class="hs-identifier hs-type">RQBigqueryDatabaseInspection</span></a></span><span> </span><span id="local-6989586621688568774"><span class="annot"><span class="annottext">BigQueryRunSQL
+</span><a href="#local-6989586621688568774"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">BigQueryRunSQL -&gt; m EncJSON
 forall (m :: * -&gt; *).
 (MonadIO m, CacheRWM m, MonadError QErr m, MetadataM m) =&gt;
 BigQueryRunSQL -&gt; m EncJSON
 </span><a href="Hasura.Backends.BigQuery.DDL.RunSQL.html#runDatabaseInspection"><span class="hs-identifier hs-var">BigQuery.runDatabaseInspection</span></a></span><span> </span><span class="annot"><span class="annottext">BigQueryRunSQL
-</span><a href="#local-6989586621688574289"><span class="hs-identifier hs-var">q</span></a></span><span>
-</span><span id="line-148"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQBulk"><span class="hs-identifier hs-type">RQBulk</span></a></span><span> </span><span id="local-6989586621688574287"><span class="annot"><span class="annottext">[RQLQuery]
-</span><a href="#local-6989586621688574287"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[EncJSON] -&gt; EncJSON
+</span><a href="#local-6989586621688568774"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><span id="line-148"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQBulk"><span class="hs-identifier hs-type">RQBulk</span></a></span><span> </span><span id="local-6989586621688568772"><span class="annot"><span class="annottext">[RQLQuery]
+</span><a href="#local-6989586621688568772"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[EncJSON] -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromList"><span class="hs-identifier hs-var">encJFromList</span></a></span><span> </span><span class="annot"><span class="annottext">([EncJSON] -&gt; EncJSON) -&gt; m [EncJSON] -&gt; m EncJSON
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(RQLQuery -&gt; m EncJSON) -&gt; [RQLQuery] -&gt; m [EncJSON]
@@ -477,8 +477,8 @@ forall (m :: * -&gt; *).
  MonadQueryTags m) =&gt;
 Environment -&gt; RQLQuery -&gt; m EncJSON
 </span><a href="Hasura.Server.API.V2Query.html#runQueryM"><span class="hs-identifier hs-var">runQueryM</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621688574311"><span class="hs-identifier hs-var">env</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[RQLQuery]
-</span><a href="#local-6989586621688574287"><span class="hs-identifier hs-var">l</span></a></span><span>
+</span><a href="#local-6989586621688568796"><span class="hs-identifier hs-var">env</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[RQLQuery]
+</span><a href="#local-6989586621688568772"><span class="hs-identifier hs-var">l</span></a></span><span>
 </span><span id="line-149"></span><span>
 </span><span id="line-150"></span><span class="annot"><a href="Hasura.Server.API.V2Query.html#queryModifiesUserDB"><span class="hs-identifier hs-type">queryModifiesUserDB</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQLQuery"><span class="hs-identifier hs-type">RQLQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-151"></span><span id="queryModifiesUserDB"><span class="annot"><span class="annottext">queryModifiesUserDB :: RQLQuery -&gt; Bool
@@ -516,10 +516,10 @@ Environment -&gt; RQLQuery -&gt; m EncJSON
 </span><span id="line-162"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQBigqueryDatabaseInspection"><span class="hs-identifier hs-type">RQBigqueryDatabaseInspection</span></a></span><span> </span><span class="annot"><span class="annottext">BigQueryRunSQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
-</span><span id="line-163"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQBulk"><span class="hs-identifier hs-type">RQBulk</span></a></span><span> </span><span id="local-6989586621688574283"><span class="annot"><span class="annottext">[RQLQuery]
-</span><a href="#local-6989586621688574283"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(RQLQuery -&gt; Bool) -&gt; [RQLQuery] -&gt; Bool
+</span><span id="line-163"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.V2Query.html#RQBulk"><span class="hs-identifier hs-type">RQBulk</span></a></span><span> </span><span id="local-6989586621688568768"><span class="annot"><span class="annottext">[RQLQuery]
+</span><a href="#local-6989586621688568768"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(RQLQuery -&gt; Bool) -&gt; [RQLQuery] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">any</span></span><span> </span><span class="annot"><span class="annottext">RQLQuery -&gt; Bool
 </span><a href="Hasura.Server.API.V2Query.html#queryModifiesUserDB"><span class="hs-identifier hs-var">queryModifiesUserDB</span></a></span><span> </span><span class="annot"><span class="annottext">[RQLQuery]
-</span><a href="#local-6989586621688574283"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><a href="#local-6989586621688568768"><span class="hs-identifier hs-var">q</span></a></span><span>
 </span><span id="line-164"></span></pre></body></html>
