@@ -17,11 +17,12 @@ import Data.Aeson (Value)
 import Data.Aeson qualified
 import Data.Aeson qualified as Aeson
 import Data.Aeson.Text qualified as Aeson.Text
-import Data.ByteString.Char8 qualified as BS8
 import Data.Conduit (runConduitRes, (.|))
 import Data.Conduit.List qualified as CL
 import Data.HashMap.Strict qualified as HashMap
-import Data.Text.Encoding.Error qualified as T
+import Data.Text qualified as T
+import Data.Text.Encoding (decodeUtf8With, encodeUtf8)
+import Data.Text.Encoding.Error qualified as TE
 import Data.Text.Lazy qualified as LT
 import Data.Vector qualified as Vector
 import Data.Yaml qualified
@@ -138,7 +139,7 @@ templateYaml inputString = do
       )
     |]
   where
-    inputBytes = BS8.pack inputString
+    inputBytes = encodeUtf8 $ T.pack inputString
 
 -- | Process the events as they come in, potentially expanding any
 -- aliases to objects.
@@ -167,7 +168,7 @@ processor =
 -- | Exceptions that will be thrown mercilessly.
 data YamlTemplateException
   = AnchorsAreDisabled
-  | YamlEncodingProblem T.UnicodeException
+  | YamlEncodingProblem TE.UnicodeException
   deriving stock (Show)
   deriving anyclass (Exception)
 
@@ -187,4 +188,4 @@ newtype Visual = Visual {unVisual :: Value}
   deriving stock (Eq)
 
 instance Show Visual where
-  show = BS8.unpack . Data.Yaml.encode . unVisual
+  show = T.unpack . decodeUtf8With TE.lenientDecode . Data.Yaml.encode . unVisual

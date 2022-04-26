@@ -23,7 +23,7 @@ import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Prelude
 
 trueExpression :: Expression
-trueExpression = ValueExpression (ODBC.BoolValue True)
+trueExpression = ValueExpression $ ODBC.BoolValue True
 
 nullExpression :: Expression
 nullExpression = ValueExpression $ ODBC.TextValue "null"

@@ -1125,6 +1125,7 @@ test-suite tests-hspec
     Test.RunSQLSpec
     Test.InsertCheckPermissionSpec
     Test.InsertEnumColumnSpec
+    Test.SQLServer.InsertVarcharColumnSpec
 
 test-suite tests-gdw-api
   import: common-all, common-exe

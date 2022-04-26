@@ -10,7 +10,6 @@ module Hasura.Backends.MSSQL.Instances.Schema () where
 import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.List.NonEmpty qualified as NE
-import Data.Text.Encoding (encodeUtf8)
 import Data.Text.Extended
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Schema.IfMatched
@@ -239,10 +238,9 @@ msColumnParser columnType (G.Nullability isNullable) =
     -- incorrect, similarly exposing all the integer types as a GraphQL Int
     ColumnScalar scalarType ->
       possiblyNullable scalarType <$> case scalarType of
-        -- bytestring
-        MSSQL.CharType -> pure $ ODBC.ByteStringValue . encodeUtf8 <$> P.string
-        MSSQL.VarcharType -> pure $ ODBC.ByteStringValue . encodeUtf8 <$> P.string
         -- text
+        MSSQL.CharType -> pure $ ODBC.TextValue <$> P.string
+        MSSQL.VarcharType -> pure $ ODBC.TextValue <$> P.string
         MSSQL.WcharType -> pure $ ODBC.TextValue <$> P.string
         MSSQL.WvarcharType -> pure $ ODBC.TextValue <$> P.string
         MSSQL.WtextType -> pure $ ODBC.TextValue <$> P.string
