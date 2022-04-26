@@ -25,9 +25,11 @@
 </span><span id="line-25"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#trueExpression"><span class="hs-identifier hs-type">trueExpression</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span>
 </span><span id="line-26"></span><span id="trueExpression"><span class="annot"><span class="annottext">trueExpression :: Expression
 </span><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#trueExpression"><span class="hs-identifier hs-var hs-var">trueExpression</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Expression
-</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ValueExpression"><span class="hs-identifier hs-var">ValueExpression</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Value
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ValueExpression"><span class="hs-identifier hs-var">ValueExpression</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Expression) -&gt; Value -&gt; Expression
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
 </span><span class="hs-identifier hs-var">ODBC.BoolValue</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var">True</span></span><span>
 </span><span id="line-27"></span><span>
 </span><span id="line-28"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#nullExpression"><span class="hs-identifier hs-type">nullExpression</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span>
 </span><span id="line-29"></span><span id="nullExpression"><span class="annot"><span class="annottext">nullExpression :: Expression
