@@ -88,7 +88,7 @@ fromExpression =
     JsonQueryExpression e -> "JSON_QUERY(" <+> fromExpression e <+> ")"
     JsonValueExpression e path ->
       "JSON_VALUE(" <+> fromExpression e <+> fromPath path <+> ")"
-    ValueExpression value -> QueryPrinter (toSql value)
+    ValueExpression value -> QueryPrinter $ toSql value
     AndExpression xs ->
       case xs of
         [] -> truePrinter

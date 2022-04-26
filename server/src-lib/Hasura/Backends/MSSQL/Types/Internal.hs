@@ -99,7 +99,6 @@ module Hasura.Backends.MSSQL.Types.Internal
 where
 
 import Data.Aeson qualified as J
-import Data.Text.Encoding (encodeUtf8)
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Base.Error
 import Hasura.Incremental (Cacheable)
@@ -595,10 +594,9 @@ mkMSSQLScalarTypeName = \case
 
 parseScalarValue :: ScalarType -> J.Value -> Either QErr Value
 parseScalarValue scalarType jValue = case scalarType of
-  -- bytestring
-  CharType -> ODBC.ByteStringValue . encodeUtf8 <$> parseJValue jValue
-  VarcharType -> ODBC.ByteStringValue . encodeUtf8 <$> parseJValue jValue
   -- text
+  CharType -> ODBC.TextValue <$> parseJValue jValue
+  VarcharType -> ODBC.TextValue <$> parseJValue jValue
   TextType -> ODBC.TextValue <$> parseJValue jValue
   WcharType -> ODBC.TextValue <$> parseJValue jValue
   WvarcharType -> ODBC.TextValue <$> parseJValue jValue
