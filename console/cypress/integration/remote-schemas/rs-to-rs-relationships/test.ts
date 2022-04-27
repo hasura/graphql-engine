@@ -62,7 +62,7 @@ describe('check if remote schema to db relationships are created properly', () =
     cy.get('.ant-tree-switcher').eq(1).click();
     cy.get('.ant-tree-checkbox').eq(1).click();
     cy.get(getElementFromAlias('select-argument')).select('Source Field');
-    cy.get(getElementFromAlias('selet-source-field')).select('id');
+    cy.get(getElementFromAlias('select-source-field')).select('id');
     cy.get(getElementFromAlias('add-rs-relationship')).click();
     cy.get(getElementFromAlias('remote-schema-relationships-table')).should(
       'exist'

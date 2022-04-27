@@ -129,15 +129,18 @@ export const ArgValueForm = ({
         <div>
           {localArgValue.kind === 'field' ? (
             <>
-              <p className="mb-xs text-muted font-semibold">
-                <FaCircle className="text-green-600 mr-2 mb-1" />
-                From Field
-              </p>
+              <label htmlFor="fromField">
+                <p className="mb-xs text-muted font-semibold">
+                  <FaCircle className="text-green-600 mr-2 mb-1" />
+                  From Field
+                </p>
+              </label>
               <select
                 className={fieldStyle}
                 value={localArgValue.value as string | number}
                 onChange={changeInputColumnValue}
-                data-test="selet-source-field"
+                data-test="select-source-field"
+                id="fromField"
               >
                 <option value="" disabled>
                   Select Field...
