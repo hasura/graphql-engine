@@ -23659,7 +23659,7 @@ DMLP1T :: StateT (Seq PrepArg) m a -> DMLP1T m a
 runDMLP1T :: DMLP1T m a -> m (a, Seq PrepArg)
 askPermInfo :: UserInfoM m => Lens' (RolePermInfo b) (Maybe c) -> TableInfo b -> m (Maybe c)
 getPermInfoMaybe :: RoleName -> Lens' (RolePermInfo b) (Maybe c) -> TableInfo b -> Maybe c
-getRolePermInfo :: RoleName -> TableInfo b -> Maybe (RolePermInfo b)
+getRolePermInfo :: RoleName -> TableInfo b -> RolePermInfo b
 assertAskPermInfo :: (UserInfoM m, QErrM m, Backend b) => PermType -> Lens' (RolePermInfo b) (Maybe c) -> TableInfo b -> m c
 isTabUpdatable :: RoleName -> TableInfo ('Postgres pgKind) -> Bool
 askInsPermInfo :: (UserInfoM m, QErrM m, Backend b) => TableInfo b -> m (InsPermInfo b)
@@ -23737,7 +23737,7 @@ tableSelectColumnsEnum :: forall b r m n. MonadBuildSchema b r m n => SourceName
 --   to the table_update_column object.
 tableUpdateColumnsEnum :: forall b r m n. MonadBuildSchema b r m n => TableInfo b -> m (Maybe (Parser 'Both n (Column b)))
 updateColumnsPlaceholderParser :: MonadBuildSchema backend r m n => TableInfo backend -> m (Parser 'Both n (Maybe (Column backend)))
-tablePermissions :: forall b r m. (MonadReader r m, Has RoleName r) => TableInfo b -> m (Maybe (RolePermInfo b))
+tablePermissions :: forall b r m. (MonadReader r m, Has RoleName r) => TableInfo b -> m (RolePermInfo b)
 tableSelectPermissions :: forall b r m. (MonadReader r m, Has RoleName r) => TableInfo b -> m (Maybe (SelPermInfo b))
 tableSelectFields :: forall b r m. (Backend b, MonadError QErr m, MonadReader r m, Has SourceCache r, Has RoleName r) => SourceName -> TableInfo b -> m [FieldInfo b]
 tableColumns :: forall b. TableInfo b -> [ColumnInfo b]
@@ -25188,9 +25188,9 @@ QueryParametersInfo :: !HashMap Name (ColumnValue b) -> !Seq (ColumnValue b) -> 
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> !HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_axmCq. Lens' (QueryParametersInfo b_axmCq) (Seq (ColumnValue b_axmCq))
-qpiReusableVariableValues :: forall b_axmCq. Lens' (QueryParametersInfo b_axmCq) (HashMap Name (ColumnValue b_axmCq))
-qpiReferencedSessionVariables :: forall b_axmCq. Lens' (QueryParametersInfo b_axmCq) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_axmsh. Lens' (QueryParametersInfo b_axmsh) (Seq (ColumnValue b_axmsh))
+qpiReusableVariableValues :: forall b_axmsh. Lens' (QueryParametersInfo b_axmsh) (HashMap Name (ColumnValue b_axmsh))
+qpiReferencedSessionVariables :: forall b_axmsh. Lens' (QueryParametersInfo b_axmsh) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
