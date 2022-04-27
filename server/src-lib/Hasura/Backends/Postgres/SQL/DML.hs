@@ -90,7 +90,6 @@ module Hasura.Backends.Postgres.SQL.DML
     textArrTypeAnn,
     textTypeAnn,
     toAlias,
-    withTyAnn,
   )
 where
 
@@ -458,9 +457,6 @@ instance NFData SQLExp
 instance Cacheable SQLExp
 
 instance Hashable SQLExp
-
-withTyAnn :: PGScalarType -> SQLExp -> SQLExp
-withTyAnn colTy v = SETyAnn v . mkTypeAnn $ CollectableTypeScalar colTy
 
 instance J.ToJSON SQLExp where
   toJSON = J.toJSON . toSQLTxt

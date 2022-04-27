@@ -11,7 +11,6 @@ module Hasura.Backends.Postgres.Translate.Returning
     mkMutationOutputExp,
     checkConstraintIdentifier,
     asCheckErrorExtractor,
-    checkRetCols,
   )
 where
 
@@ -19,19 +18,15 @@ import Data.Coerce
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.Select
-import Hasura.Base.Error
 import Hasura.Prelude
-import Hasura.RQL.DML.Internal
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Returning
 import Hasura.RQL.IR.Select
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
-import Hasura.Session
 
 -- | The postgres common table expression (CTE) for mutation queries.
 -- This CTE expression is used to generate mutation field output expression,
@@ -204,15 +199,3 @@ checkConstraintIdentifier = Identifier "check__constraint"
 asCheckErrorExtractor :: S.SQLExp -> S.Extractor
 asCheckErrorExtractor s =
   S.Extractor s $ Just $ S.Alias checkConstraintIdentifier
-
-checkRetCols ::
-  (Backend ('Postgres pgKind), UserInfoM m, QErrM m) =>
-  FieldInfoMap (FieldInfo ('Postgres pgKind)) ->
-  SelPermInfo ('Postgres pgKind) ->
-  [PGCol] ->
-  m [ColumnInfo ('Postgres pgKind)]
-checkRetCols fieldInfoMap selPermInfo cols = do
-  mapM_ (checkSelOnCol selPermInfo) cols
-  forM cols $ \col -> askColInfo fieldInfoMap col relInRetErr
-  where
-    relInRetErr = "Relationships can't be used in \"returning\"."

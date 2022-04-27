@@ -57,6 +57,7 @@ module Hasura.RQL.Types.Table
     pkConstraint,
     sortCols,
     tableInfoName,
+    getRolePermInfo,
     tcCustomName,
     tcCustomRootFields,
     tcComment,
@@ -835,6 +836,14 @@ tiName = tiCoreInfo . tciName
 
 tableInfoName :: TableInfo b -> TableName b
 tableInfoName = view tiName
+
+getRolePermInfo :: RoleName -> TableInfo b -> RolePermInfo b
+getRolePermInfo role tableInfo
+  | role == adminRoleName = _tiAdminRolePermInfo tableInfo
+  | otherwise =
+    fromMaybe
+      (RolePermInfo Nothing Nothing Nothing Nothing)
+      (M.lookup role $ _tiRolePermInfoMap tableInfo)
 
 type TableCoreCache b = M.HashMap (TableName b) (TableCoreInfo b)
 

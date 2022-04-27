@@ -8,17 +8,14 @@ module Hasura.RQL.DML.Internal
     askUpdPermInfo,
     binRHSBuilder,
     checkPermOnCol,
+    checkRetCols,
     checkSelOnCol,
     convAnnBoolExpPartialSQL,
     convAnnColumnCaseBoolExpPartialSQL,
     convBoolExp,
     convPartialSQLExp,
-    dmlTxErrorHandler,
     fetchRelDet,
     fetchRelTabInfo,
-    fromCurrentSession,
-    getPermInfoMaybe,
-    getRolePermInfo,
     isTabUpdatable,
     onlyPositiveInt,
     runDMLP1T,
@@ -26,7 +23,6 @@ module Hasura.RQL.DML.Internal
     validateHeaders,
     valueParserWithCollectableType,
     verifyAsrns,
-    withTypeAnn,
   )
 where
 
@@ -38,9 +34,7 @@ import Data.Sequence qualified as DS
 import Data.Text qualified as T
 import Data.Text.Extended
 import Database.PG.Query qualified as Q
-import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Backends.Postgres.SQL.DML qualified as S
-import Hasura.Backends.Postgres.SQL.Error
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Backends.Postgres.Translate.BoolExp
@@ -96,14 +90,6 @@ getPermInfoMaybe ::
 getPermInfoMaybe role pa tableInfo =
   getRolePermInfo role tableInfo ^. pa
 
-getRolePermInfo ::
-  RoleName -> TableInfo b -> RolePermInfo b
-getRolePermInfo role tableInfo
-  | role == adminRoleName = _tiAdminRolePermInfo tableInfo
-  | otherwise =
-    fromMaybe (RolePermInfo Nothing Nothing Nothing Nothing) $
-      M.lookup role (_tiRolePermInfoMap tableInfo)
-
 assertAskPermInfo ::
   (UserInfoM m, QErrM m, Backend b) =>
   PermType ->
@@ -154,6 +140,18 @@ askDelPermInfo = assertAskPermInfo PTDelete permDel
 
 verifyAsrns :: (MonadError QErr m) => [a -> m ()] -> [a] -> m ()
 verifyAsrns preds xs = indexedForM_ xs $ \a -> mapM_ ($ a) preds
+
+checkRetCols ::
+  (Backend ('Postgres pgKind), UserInfoM m, QErrM m) =>
+  FieldInfoMap (FieldInfo ('Postgres pgKind)) ->
+  SelPermInfo ('Postgres pgKind) ->
+  [PGCol] ->
+  m [ColumnInfo ('Postgres pgKind)]
+checkRetCols fieldInfoMap selPermInfo cols = do
+  mapM_ (checkSelOnCol selPermInfo) cols
+  forM cols $ \col -> askColInfo fieldInfoMap col relInRetErr
+  where
+    relInRetErr = "Relationships can't be used in \"returning\"."
 
 checkSelOnCol ::
   forall b m.
@@ -349,12 +347,6 @@ sessVarFromCurrentSetting' :: CollectableType PGScalarType -> SessionVariable ->
 sessVarFromCurrentSetting' ty sessVar =
   withTypeAnn ty $ fromCurrentSession currentSession sessVar
 
-withTypeAnn :: CollectableType PGScalarType -> S.SQLExp -> S.SQLExp
-withTypeAnn ty sessVarVal = flip S.SETyAnn (S.mkTypeAnn ty) $
-  case ty of
-    CollectableTypeScalar baseTy -> withConstructorFn baseTy sessVarVal
-    CollectableTypeArray _ -> sessVarVal
-
 fromCurrentSession ::
   S.SQLExp ->
   SessionVariable ->
@@ -389,17 +381,6 @@ convBoolExp cim spi be sessVarBldr rootTable rhsParser = do
   let boolExpRHSParser = BoolExpRHSParser rhsParser $ _svbCurrentSession sessVarBldr
   abe <- annBoolExp boolExpRHSParser rootTable cim $ unBoolExp be
   checkSelPerm spi sessVarBldr abe
-
-dmlTxErrorHandler :: Q.PGTxErr -> QErr
-dmlTxErrorHandler = mkTxErrorHandler $ \case
-  PGIntegrityConstraintViolation _ -> True
-  PGDataException _ -> True
-  PGSyntaxErrorOrAccessRuleViolation (Just (PGErrorSpecific code)) ->
-    code
-      `elem` [ PGUndefinedObject,
-               PGInvalidColumnReference
-             ]
-  _ -> False
 
 -- validate headers
 validateHeaders :: (UserInfoM m, QErrM m) => HashSet Text -> m ()

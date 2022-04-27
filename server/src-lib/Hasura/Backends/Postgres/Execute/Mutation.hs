@@ -33,7 +33,6 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
 import Hasura.QueryTags
-import Hasura.RQL.DML.Internal
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Delete
 import Hasura.RQL.IR.Insert
