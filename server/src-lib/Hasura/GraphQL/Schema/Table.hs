@@ -132,7 +132,7 @@ tablePermissions ::
   forall b r m.
   (MonadReader r m, Has RoleName r) =>
   TableInfo b ->
-  m (Maybe (RolePermInfo b))
+  m (RolePermInfo b)
 tablePermissions tableInfo = do
   roleName <- asks getter
   pure $ getRolePermInfo roleName tableInfo
@@ -142,7 +142,7 @@ tableSelectPermissions ::
   (MonadReader r m, Has RoleName r) =>
   TableInfo b ->
   m (Maybe (SelPermInfo b))
-tableSelectPermissions tableInfo = (_permSel =<<) <$> tablePermissions tableInfo
+tableSelectPermissions tableInfo = _permSel <$> tablePermissions tableInfo
 
 tableSelectFields ::
   forall b r m.
@@ -214,7 +214,7 @@ tableUpdateColumns ::
   TableInfo b ->
   m [ColumnInfo b]
 tableUpdateColumns tableInfo = do
-  permissions <- (_permUpd =<<) <$> tablePermissions tableInfo
+  permissions <- _permUpd <$> tablePermissions tableInfo
   pure $ filter (isUpdatable permissions) $ tableColumns tableInfo
   where
     isUpdatable :: Maybe (UpdPermInfo b) -> ColumnInfo b -> Bool

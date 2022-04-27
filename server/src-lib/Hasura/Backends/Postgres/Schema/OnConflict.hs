@@ -50,7 +50,7 @@ onConflictFieldParser ::
   TableInfo ('Postgres pgKind) ->
   m (InputFieldsParser n (Maybe (IR.OnConflictClause ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind)))))
 onConflictFieldParser sourceName tableInfo = do
-  updatePerms <- (_permUpd =<<) <$> tablePermissions tableInfo
+  updatePerms <- _permUpd <$> tablePermissions tableInfo
   let maybeConstraints = tciUniqueOrPrimaryKeyConstraints . _tiCoreInfo $ tableInfo
   let maybeConflictObject = conflictObjectParser sourceName tableInfo <$> maybeConstraints <*> updatePerms
   case maybeConflictObject of

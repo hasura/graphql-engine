@@ -65,7 +65,7 @@ ifMatchedObjectParser ::
   m (Maybe (Parser 'Input n (IfMatched (UnpreparedValue 'MSSQL))))
 ifMatchedObjectParser sourceName tableInfo = runMaybeT do
   -- Short-circuit if we don't have sufficient permissions.
-  updatePerms <- MaybeT $ (_permUpd =<<) <$> tablePermissions tableInfo
+  updatePerms <- MaybeT $ _permUpd <$> tablePermissions tableInfo
   matchColumnsEnum <- MaybeT $ tableInsertMatchColumnsEnum sourceName tableInfo
   lift do
     updateColumnsEnum <- updateColumnsPlaceholderParser tableInfo

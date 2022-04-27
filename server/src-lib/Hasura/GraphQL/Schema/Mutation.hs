@@ -63,11 +63,11 @@ insertIntoTable ::
 insertIntoTable backendInsertAction scenario sourceName tableInfo fieldName description = runMaybeT $ do
   let viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsInsertable viewInfo
-  insertPerms <- MaybeT $ (_permIns =<<) <$> tablePermissions tableInfo
+  insertPerms <- MaybeT $ _permIns <$> tablePermissions tableInfo
   -- If we're in a frontend scenario, we should not include backend_only inserts
   guard $ not $ scenario == Frontend && ipiBackendOnly insertPerms
   lift do
-    updatePerms <- (_permUpd =<<) <$> tablePermissions tableInfo
+    updatePerms <- _permUpd <$> tablePermissions tableInfo
     -- objects [{ ... }]
     objectParser <- tableFieldsInput sourceName tableInfo
     backendInsertParser <- backendInsertAction sourceName tableInfo
@@ -109,12 +109,12 @@ insertOneIntoTable ::
 insertOneIntoTable backendInsertAction scenario sourceName tableInfo fieldName description = runMaybeT do
   let viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsInsertable viewInfo
-  insertPerms <- MaybeT $ (_permIns =<<) <$> tablePermissions tableInfo
+  insertPerms <- MaybeT $ _permIns <$> tablePermissions tableInfo
   -- If we're in a frontend scenario, we should not include backend_only inserts
   guard $ not $ scenario == Frontend && ipiBackendOnly insertPerms
   selectionParser <- MaybeT $ tableSelectionSet sourceName tableInfo
   lift do
-    updatePerms <- (_permUpd =<<) <$> tablePermissions tableInfo
+    updatePerms <- _permUpd <$> tablePermissions tableInfo
     objectParser <- tableFieldsInput sourceName tableInfo
     backendInsertParser <- backendInsertAction sourceName tableInfo
     let argsParser = do
@@ -191,7 +191,7 @@ tableFieldsInput sourceName tableInfo =
       ColumnInfo b ->
       m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (UnpreparedValue b)))))
     mkColumnParser columnInfo = runMaybeT $ do
-      insertPerms <- MaybeT $ (_permIns =<<) <$> tablePermissions tableInfo
+      insertPerms <- MaybeT $ _permIns <$> tablePermissions tableInfo
       let columnName = ciName columnInfo
           columnDesc = ciDescription columnInfo
           isAllowed = Set.member (ciColumn columnInfo) (ipiCols insertPerms)
@@ -244,10 +244,10 @@ objectRelationshipInput ::
   TableInfo b ->
   m (Maybe (Parser 'Input n (IR.SingleObjectInsert b (UnpreparedValue b))))
 objectRelationshipInput backendInsertAction sourceName tableInfo = runMaybeT $ do
-  insertPerms <- MaybeT $ (_permIns =<<) <$> tablePermissions tableInfo
+  insertPerms <- MaybeT $ _permIns <$> tablePermissions tableInfo
   lift $ memoizeOn 'objectRelationshipInput (sourceName, tableName) do
-    updatePerms <- (_permUpd =<<) <$> tablePermissions tableInfo
-    _selectPerms <- (_permSel =<<) <$> tablePermissions tableInfo
+    updatePerms <- _permUpd <$> tablePermissions tableInfo
+    _selectPerms <- _permSel <$> tablePermissions tableInfo
     tableGQLName <- getTableGQLName tableInfo
     objectParser <- tableFieldsInput sourceName tableInfo
     backendInsertParser <- backendInsertAction sourceName tableInfo
@@ -277,10 +277,10 @@ arrayRelationshipInput ::
   TableInfo b ->
   m (Maybe (Parser 'Input n (IR.MultiObjectInsert b (UnpreparedValue b))))
 arrayRelationshipInput backendInsertAction sourceName tableInfo = runMaybeT $ do
-  insertPerms <- MaybeT $ (_permIns =<<) <$> tablePermissions tableInfo
+  insertPerms <- MaybeT $ _permIns <$> tablePermissions tableInfo
   lift $ memoizeOn 'arrayRelationshipInput (sourceName, tableName) do
-    updatePerms <- (_permUpd =<<) <$> tablePermissions tableInfo
-    _selectPerms <- (_permSel =<<) <$> tablePermissions tableInfo
+    updatePerms <- _permUpd <$> tablePermissions tableInfo
+    _selectPerms <- _permSel <$> tablePermissions tableInfo
     tableGQLName <- getTableGQLName tableInfo
     objectParser <- tableFieldsInput sourceName tableInfo
     backendInsertParser <- backendInsertAction sourceName tableInfo
@@ -340,7 +340,7 @@ deleteFromTable ::
 deleteFromTable sourceName tableInfo fieldName description = runMaybeT $ do
   let viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsInsertable viewInfo
-  deletePerms <- MaybeT $ (_permDel =<<) <$> tablePermissions tableInfo
+  deletePerms <- MaybeT $ _permDel <$> tablePermissions tableInfo
   lift do
     let whereName = G._where
         whereDesc = "filter the rows which have to be deleted"
@@ -370,7 +370,7 @@ deleteFromTableByPk sourceName tableInfo fieldName description = runMaybeT $ do
   let viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsInsertable viewInfo
   pkArgs <- MaybeT $ primaryKeysArguments tableInfo
-  deletePerms <- MaybeT $ (_permDel =<<) <$> tablePermissions tableInfo
+  deletePerms <- MaybeT $ _permDel <$> tablePermissions tableInfo
   selection <- MaybeT $ tableSelectionSet sourceName tableInfo
   let columns = tableColumns tableInfo
   pure $
