@@ -1,0 +1,383 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# OPTIONS_GHC -fno-warn-orphans #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.DataWrapper.Adapter.Schema</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#BackendSchema"><span class="hs-identifier">BackendSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier">MonadBuildSchema</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Build.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Build</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">GSB</span></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.html"><span class="hs-identifier">Hasura.RQL.Types</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">RQL</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier">BackendType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataWrapper"><span class="hs-identifier">DataWrapper</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">GraphQL</span></span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-15"></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688500405"><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#BackendSchema"><span class="hs-identifier hs-type">BackendSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataWrapper"><span class="hs-identifier hs-type">DataWrapper</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-comment">-- top level parsers</span><span>
+</span><span id="line-18"></span><span>  </span><span id="local-6989586621688500392"><span class="annot"><span class="annottext">buildTableQueryFields :: SourceName
+-&gt; TableName 'DataWrapper
+-&gt; TableInfo 'DataWrapper
+-&gt; Name
+-&gt; m [FieldParser
+        n
+        (QueryDB
+           'DataWrapper
+           (RemoteRelationshipField UnpreparedValue)
+           (UnpreparedValue 'DataWrapper))]
+</span><a href="Hasura.GraphQL.Schema.Backend.html#buildTableQueryFields"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildTableQueryFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceName
+-&gt; TableName 'DataWrapper
+-&gt; TableInfo 'DataWrapper
+-&gt; Name
+-&gt; m [FieldParser
+        n
+        (QueryDB
+           'DataWrapper
+           (RemoteRelationshipField UnpreparedValue)
+           (UnpreparedValue 'DataWrapper))]
+forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
+MonadBuildSchema b r m n =&gt;
+SourceName
+-&gt; TableName b
+-&gt; TableInfo b
+-&gt; Name
+-&gt; m [FieldParser
+        n
+        (QueryDB
+           b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+</span><a href="Hasura.GraphQL.Schema.Build.html#buildTableQueryFields"><span class="hs-identifier hs-var">GSB.buildTableQueryFields</span></a></span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span>  </span><span id="local-6989586621688500389"><span class="annot"><span class="annottext">buildTableRelayQueryFields :: SourceName
+-&gt; TableName 'DataWrapper
+-&gt; TableInfo 'DataWrapper
+-&gt; Name
+-&gt; NESeq (ColumnInfo 'DataWrapper)
+-&gt; m [FieldParser
+        n
+        (QueryDB
+           'DataWrapper
+           (RemoteRelationshipField UnpreparedValue)
+           (UnpreparedValue 'DataWrapper))]
+</span><a href="Hasura.GraphQL.Schema.Backend.html#buildTableRelayQueryFields"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildTableRelayQueryFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceName
+-&gt; TableName 'DataWrapper
+-&gt; TableInfo 'DataWrapper
+-&gt; Name
+-&gt; NESeq (ColumnInfo 'DataWrapper)
+-&gt; m [FieldParser
+        n
+        (QueryDB
+           'DataWrapper
+           (RemoteRelationshipField UnpreparedValue)
+           (UnpreparedValue 'DataWrapper))]
+forall r (m :: * -&gt; *) (n :: * -&gt; *) a.
+MonadBuildSchema 'DataWrapper r m n =&gt;
+SourceName
+-&gt; TableName 'DataWrapper
+-&gt; TableInfo 'DataWrapper
+-&gt; Name
+-&gt; NESeq (ColumnInfo 'DataWrapper)
+-&gt; m [a]
+</span><a href="Hasura.Backends.DataWrapper.Adapter.Schema.html#experimentalBuildTableRelayQueryFields"><span class="hs-identifier hs-var">experimentalBuildTableRelayQueryFields</span></a></span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span>  </span><span id="local-6989586621688500386"><span class="annot"><span class="annottext">buildFunctionQueryFields :: SourceName
+-&gt; FunctionName 'DataWrapper
+-&gt; FunctionInfo 'DataWrapper
+-&gt; TableName 'DataWrapper
+-&gt; m [FieldParser
+        n
+        (QueryDB
+           'DataWrapper
+           (RemoteRelationshipField UnpreparedValue)
+           (UnpreparedValue 'DataWrapper))]
+</span><a href="Hasura.GraphQL.Schema.Backend.html#buildFunctionQueryFields"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildFunctionQueryFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><span class="annottext">[Char]
+-&gt; SourceName
+-&gt; Name
+-&gt; FunctionInfo 'DataWrapper
+-&gt; Name
+-&gt; m [FieldParser
+        n
+        (QueryDB
+           'DataWrapper
+           (RemoteRelationshipField UnpreparedValue)
+           (UnpreparedValue 'DataWrapper))]
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;buildFunctionQueryFields: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-24"></span><span>  </span><span id="local-6989586621688500383"><span class="annot"><span class="annottext">buildFunctionRelayQueryFields :: SourceName
+-&gt; FunctionName 'DataWrapper
+-&gt; FunctionInfo 'DataWrapper
+-&gt; TableName 'DataWrapper
+-&gt; NESeq (ColumnInfo 'DataWrapper)
+-&gt; m [FieldParser
+        n
+        (QueryDB
+           'DataWrapper
+           (RemoteRelationshipField UnpreparedValue)
+           (UnpreparedValue 'DataWrapper))]
+</span><a href="Hasura.GraphQL.Schema.Backend.html#buildFunctionRelayQueryFields"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildFunctionRelayQueryFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-25"></span><span>    </span><span class="annot"><span class="annottext">[Char]
+-&gt; SourceName
+-&gt; Name
+-&gt; FunctionInfo 'DataWrapper
+-&gt; Name
+-&gt; NESeq (ColumnInfo 'DataWrapper)
+-&gt; m [FieldParser
+        n
+        (QueryDB
+           'DataWrapper
+           (RemoteRelationshipField UnpreparedValue)
+           (UnpreparedValue 'DataWrapper))]
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;buildFunctionRelayQueryFields: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-26"></span><span>  </span><span id="local-6989586621688500381"><span class="annot"><span class="annottext">buildFunctionMutationFields :: SourceName
+-&gt; FunctionName 'DataWrapper
+-&gt; FunctionInfo 'DataWrapper
+-&gt; TableName 'DataWrapper
+-&gt; m [FieldParser
+        n
+        (MutationDB
+           'DataWrapper
+           (RemoteRelationshipField UnpreparedValue)
+           (UnpreparedValue 'DataWrapper))]
+</span><a href="Hasura.GraphQL.Schema.Backend.html#buildFunctionMutationFields"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildFunctionMutationFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-27"></span><span>    </span><span class="annot"><span class="annottext">[Char]
+-&gt; SourceName
+-&gt; Name
+-&gt; FunctionInfo 'DataWrapper
+-&gt; Name
+-&gt; m [FieldParser
+        n
+        (MutationDB
+           'DataWrapper
+           (RemoteRelationshipField UnpreparedValue)
+           (UnpreparedValue 'DataWrapper))]
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;buildFunctionMutationFields: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-28"></span><span>  </span><span id="local-6989586621688500379"><span class="annot"><span class="annottext">buildTableInsertMutationFields :: Scenario
+-&gt; SourceName
+-&gt; TableName 'DataWrapper
+-&gt; TableInfo 'DataWrapper
+-&gt; Name
+-&gt; m [FieldParser
+        n
+        (AnnotatedInsert
+           'DataWrapper
+           (RemoteRelationshipField UnpreparedValue)
+           (UnpreparedValue 'DataWrapper))]
+</span><a href="Hasura.GraphQL.Schema.Backend.html#buildTableInsertMutationFields"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildTableInsertMutationFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><span class="annottext">[Char]
+-&gt; Scenario
+-&gt; SourceName
+-&gt; Name
+-&gt; TableInfo 'DataWrapper
+-&gt; Name
+-&gt; m [FieldParser
+        n
+        (AnnotatedInsert
+           'DataWrapper
+           (RemoteRelationshipField UnpreparedValue)
+           (UnpreparedValue 'DataWrapper))]
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;buildTableInsertMutationFields: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-30"></span><span>  </span><span id="local-6989586621688500377"><span class="annot"><span class="annottext">buildTableUpdateMutationFields :: SourceName
+-&gt; TableName 'DataWrapper
+-&gt; TableInfo 'DataWrapper
+-&gt; Name
+-&gt; m [FieldParser
+        n
+        (AnnotatedUpdateG
+           'DataWrapper
+           (RemoteRelationshipField UnpreparedValue)
+           (UnpreparedValue 'DataWrapper))]
+</span><a href="Hasura.GraphQL.Schema.Backend.html#buildTableUpdateMutationFields"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildTableUpdateMutationFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-31"></span><span>    </span><span class="annot"><span class="annottext">[Char]
+-&gt; SourceName
+-&gt; Name
+-&gt; TableInfo 'DataWrapper
+-&gt; Name
+-&gt; m [FieldParser
+        n
+        (AnnotatedUpdateG
+           'DataWrapper
+           (RemoteRelationshipField UnpreparedValue)
+           (UnpreparedValue 'DataWrapper))]
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;buildTableUpdateMutationFields: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-32"></span><span>  </span><span id="local-6989586621688500375"><span class="annot"><span class="annottext">buildTableDeleteMutationFields :: SourceName
+-&gt; TableName 'DataWrapper
+-&gt; TableInfo 'DataWrapper
+-&gt; Name
+-&gt; m [FieldParser
+        n
+        (AnnDelG
+           'DataWrapper
+           (RemoteRelationshipField UnpreparedValue)
+           (UnpreparedValue 'DataWrapper))]
+</span><a href="Hasura.GraphQL.Schema.Backend.html#buildTableDeleteMutationFields"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildTableDeleteMutationFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-33"></span><span>    </span><span class="annot"><span class="annottext">[Char]
+-&gt; SourceName
+-&gt; Name
+-&gt; TableInfo 'DataWrapper
+-&gt; Name
+-&gt; m [FieldParser
+        n
+        (AnnDelG
+           'DataWrapper
+           (RemoteRelationshipField UnpreparedValue)
+           (UnpreparedValue 'DataWrapper))]
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;buildTableDeleteMutationFields: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-comment">-- backend extensions</span><span>
+</span><span id="line-36"></span><span>  </span><span id="local-6989586621688500373"><span class="annot"><span class="annottext">relayExtension :: Maybe (XRelay 'DataWrapper)
+</span><a href="Hasura.GraphQL.Schema.Backend.html#relayExtension"><span class="hs-identifier hs-var hs-var hs-var hs-var">relayExtension</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (XRelay 'DataWrapper)
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-37"></span><span>  </span><span id="local-6989586621688500371"><span class="annot"><span class="annottext">nodesAggExtension :: Maybe (XNodesAgg 'DataWrapper)
+</span><a href="Hasura.GraphQL.Schema.Backend.html#nodesAggExtension"><span class="hs-identifier hs-var hs-var hs-var hs-var">nodesAggExtension</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (XNodesAgg 'DataWrapper)
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-comment">-- table arguments</span><span>
+</span><span id="line-40"></span><span>  </span><span id="local-6989586621688500369"><span class="annot"><span class="annottext">tableArguments :: SourceName
+-&gt; TableInfo 'DataWrapper
+-&gt; m (InputFieldsParser
+        n (SelectArgsG 'DataWrapper (UnpreparedValue 'DataWrapper)))
+</span><a href="Hasura.GraphQL.Schema.Backend.html#tableArguments"><span class="hs-identifier hs-var hs-var hs-var hs-var">tableArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-41"></span><span>    </span><span class="annot"><span class="annottext">[Char]
+-&gt; SourceName
+-&gt; TableInfo 'DataWrapper
+-&gt; m (InputFieldsParser
+        n (SelectArgsG 'DataWrapper (UnpreparedValue 'DataWrapper)))
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;tableArguments: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-42"></span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-comment">-- indivdual components</span><span>
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621688500367"><span class="annot"><span class="annottext">columnParser :: ColumnType 'DataWrapper
+-&gt; Nullability
+-&gt; m (Parser 'Both n (ValueWithOrigin (ColumnValue 'DataWrapper)))
+</span><a href="Hasura.GraphQL.Schema.Backend.html#columnParser"><span class="hs-identifier hs-var hs-var hs-var hs-var">columnParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-45"></span><span>    </span><span class="annot"><span class="annottext">[Char]
+-&gt; ColumnType 'DataWrapper
+-&gt; Nullability
+-&gt; m (Parser 'Both n (ValueWithOrigin (ColumnValue 'DataWrapper)))
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;columnParser: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-46"></span><span>  </span><span id="local-6989586621688500365"><span class="annot"><span class="annottext">jsonPathArg :: ColumnType 'DataWrapper
+-&gt; InputFieldsParser n (Maybe (ColumnOp 'DataWrapper))
+</span><a href="Hasura.GraphQL.Schema.Backend.html#jsonPathArg"><span class="hs-identifier hs-var hs-var hs-var hs-var">jsonPathArg</span></a></span></span><span> </span><span class="annot"><span class="annottext">ColumnType 'DataWrapper
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (ColumnOp 'DataWrapper)
+-&gt; InputFieldsParser n (Maybe (ColumnOp 'DataWrapper))
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe (ColumnOp 'DataWrapper)
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-47"></span><span>  </span><span id="local-6989586621688500363"><span class="annot"><span class="annottext">orderByOperators :: NonEmpty
+  (Definition EnumValueInfo,
+   (BasicOrderType 'DataWrapper, NullsOrderType 'DataWrapper))
+</span><a href="Hasura.GraphQL.Schema.Backend.html#orderByOperators"><span class="hs-identifier hs-var hs-var hs-var hs-var">orderByOperators</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-48"></span><span>    </span><span class="annot"><span class="annottext">[Char]
+-&gt; NonEmpty (Definition EnumValueInfo, (OrderType, Unimplemented))
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;orderByOperators: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-49"></span><span>  </span><span id="local-6989586621688500361"><span class="annot"><span class="annottext">comparisonExps :: ColumnType 'DataWrapper
+-&gt; m (Parser 'Input n [ComparisonExp 'DataWrapper])
+</span><a href="Hasura.GraphQL.Schema.Backend.html#comparisonExps"><span class="hs-identifier hs-var hs-var hs-var hs-var">comparisonExps</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-50"></span><span>    </span><span class="annot"><span class="annottext">[Char]
+-&gt; ColumnType 'DataWrapper
+-&gt; m (Parser 'Input n [ComparisonExp 'DataWrapper])
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;comparisonExps: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span>  </span><span id="local-6989586621688500359"><span class="annot"><span class="annottext">countTypeInput :: Maybe (Parser 'Both n (Column 'DataWrapper))
+-&gt; InputFieldsParser n (CountDistinct -&gt; CountType 'DataWrapper)
+</span><a href="Hasura.GraphQL.Schema.Backend.html#countTypeInput"><span class="hs-identifier hs-var hs-var hs-var hs-var">countTypeInput</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-53"></span><span>    </span><span class="annot"><span class="annottext">[Char]
+-&gt; Maybe (Parser 'Both n Name)
+-&gt; InputFieldsParser n (CountDistinct -&gt; Unimplemented)
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;countTypeInput: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-54"></span><span>  </span><span id="local-6989586621688500357"><span class="annot"><span class="annottext">aggregateOrderByCountType :: ScalarType 'DataWrapper
+</span><a href="Hasura.GraphQL.Schema.Backend.html#aggregateOrderByCountType"><span class="hs-identifier hs-var hs-var hs-var hs-var">aggregateOrderByCountType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-55"></span><span>    </span><span class="annot"><span class="annottext">[Char] -&gt; Type
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;aggregateOrderByCountType: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-56"></span><span>  </span><span id="local-6989586621688500355"><span class="annot"><span class="annottext">computedField :: SourceName
+-&gt; ComputedFieldInfo 'DataWrapper
+-&gt; TableName 'DataWrapper
+-&gt; TableInfo 'DataWrapper
+-&gt; m (Maybe (FieldParser n (AnnotatedField 'DataWrapper)))
+</span><a href="Hasura.GraphQL.Schema.Backend.html#computedField"><span class="hs-identifier hs-var hs-var hs-var hs-var">computedField</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-57"></span><span>    </span><span class="annot"><span class="annottext">[Char]
+-&gt; SourceName
+-&gt; ComputedFieldInfo 'DataWrapper
+-&gt; Name
+-&gt; TableInfo 'DataWrapper
+-&gt; m (Maybe (FieldParser n (AnnotatedField 'DataWrapper)))
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;computedField: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-58"></span><span>  </span><span id="local-6989586621688500353"><span class="annot"><span class="annottext">node :: m (Parser
+     'Output
+     n
+     (HashMap
+        (TableName 'DataWrapper)
+        (SourceName, SourceConfig 'DataWrapper, SelPermInfo 'DataWrapper,
+         NESeq (ColumnInfo 'DataWrapper), AnnotatedFields 'DataWrapper)))
+</span><a href="Hasura.GraphQL.Schema.Backend.html#node"><span class="hs-identifier hs-var hs-var hs-var hs-var">node</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-59"></span><span>    </span><span class="annot"><span class="annottext">[Char]
+-&gt; m (Parser
+        'Output
+        n
+        (HashMap
+           Name
+           (SourceName, SourceConfig, SelPermInfo 'DataWrapper,
+            NESeq (ColumnInfo 'DataWrapper), AnnotatedFields 'DataWrapper)))
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;node: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-60"></span><span>  </span><span id="local-6989586621688500351"><span class="annot"><span class="annottext">columnDefaultValue :: Column 'DataWrapper -&gt; SQLExpression 'DataWrapper
+</span><a href="Hasura.GraphQL.Schema.Backend.html#columnDefaultValue"><span class="hs-identifier hs-var hs-var hs-var hs-var">columnDefaultValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-61"></span><span>    </span><span class="annot"><span class="annottext">[Char] -&gt; Name -&gt; Expression
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;columnDefaultValue: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-64"></span><span>
+</span><span id="line-65"></span><span id="local-6989586621688500458"><span id="local-6989586621688500459"><span id="local-6989586621688500460"><span id="local-6989586621688500461"><span class="annot"><a href="Hasura.Backends.DataWrapper.Adapter.Schema.html#experimentalBuildTableRelayQueryFields"><span class="hs-identifier hs-type">experimentalBuildTableRelayQueryFields</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-66"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataWrapper"><span class="hs-identifier hs-type">DataWrapper</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688500461"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688500460"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688500459"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-67"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">RQL.SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-68"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">RQL.TableName</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataWrapper"><span class="hs-identifier hs-type">DataWrapper</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-69"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">RQL.TableInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataWrapper"><span class="hs-identifier hs-type">DataWrapper</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-70"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">GraphQL.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-71"></span><span>  </span><span class="annot"><a href="Data.Sequence.NonEmpty.html#NESeq"><span class="hs-identifier hs-type">NESeq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">RQL.ColumnInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataWrapper"><span class="hs-identifier hs-type">DataWrapper</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-72"></span><span>  </span><span class="annot"><a href="#local-6989586621688500460"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621688500458"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span></span></span></span></span><span>
+</span><span id="line-73"></span><span id="experimentalBuildTableRelayQueryFields"><span class="annot"><span class="annottext">experimentalBuildTableRelayQueryFields :: SourceName
+-&gt; TableName 'DataWrapper
+-&gt; TableInfo 'DataWrapper
+-&gt; Name
+-&gt; NESeq (ColumnInfo 'DataWrapper)
+-&gt; m [a]
+</span><a href="Hasura.Backends.DataWrapper.Adapter.Schema.html#experimentalBuildTableRelayQueryFields"><span class="hs-identifier hs-var hs-var">experimentalBuildTableRelayQueryFields</span></a></span></span><span> </span><span id="local-6989586621688500349"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688500349"><span class="hs-identifier hs-var">_sourceName</span></a></span></span><span> </span><span id="local-6989586621688500348"><span class="annot"><span class="annottext">TableName 'DataWrapper
+</span><a href="#local-6989586621688500348"><span class="hs-identifier hs-var">_tableName</span></a></span></span><span> </span><span id="local-6989586621688500347"><span class="annot"><span class="annottext">TableInfo 'DataWrapper
+</span><a href="#local-6989586621688500347"><span class="hs-identifier hs-var">_tableInfo</span></a></span></span><span> </span><span id="local-6989586621688500346"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688500346"><span class="hs-identifier hs-var">_gqlName</span></a></span></span><span> </span><span id="local-6989586621688500345"><span class="annot"><span class="annottext">NESeq (ColumnInfo 'DataWrapper)
+</span><a href="#local-6989586621688500345"><span class="hs-identifier hs-var">_pkeyColumns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-74"></span><span>  </span><span class="annot"><span class="annottext">[a] -&gt; m [a]
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-75"></span></pre></body></html>
