@@ -4,6 +4,54 @@
 
 ### Bug fixes and improvements
 
+## v2.6.0
+
+### Breaking changes
+
+- The `query` and `raw-query` field from http-logs for metadata requests are removed by default. Use
+  `HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING` to renable those fields.
+
+### Bug fixes and improvements
+
+- server: remove 'query' and 'raw-query' field from logs for metadata queries by default. Use `HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING` to renable those fields.
+- server: `clear_metadata` now correctly archives event triggers and the drop source API drops indirect dependencies created by remote relationships when the dependent source is dropped.
+- server: fix inserting values into columns with case sensitive enum types for PostgreSQL/Citus backends (fix #4014)
+- server: remote relationships can be defined _on_ and _to_ Microsoft SQL Server tables
+- server: fix issues with JSON key encoding for remote schemas (fixes #7543 and #8200)
+- server: fix Microsoft SQL Server insert mutation when relationships are used in check permissions (fix #8225)
+- server: refactor GraphQL query static analysis and improve OpenAPI warning messages
+- server: avoid a resource leak when connecting to PostgreSQL fails
+- server: fix parsing remote relationship json definition from 1.x server catalog on migration (fix #7906)
+- server: Don't drop nested typed null fields in actions (fix #8237)
+- server: fixes remote relationships on actions (fix #8399)
+- server: update pg_dump to be compatible with postgres 14 (#7676)
+- console: add support for setting aggregation query permissions for Microsoft SQL Server
+- console: add support for RS-to-DB and RS-to-RS joins to Remote Schemas tab
+- console: removed the need for clicking the Modify btn before editing a remote schema (#1193, #8262)
+- console: add remote database relationships for views
+- console: bug fixes for RS-to-RS relationships
+- cli: fix remote schema metadata formatting issues (#7608)
+- cli: fix query collections metadata formatting issues (#7616)
+- cli: fix performance regression in `migrate status` command (fix #8398)
+- docs: support for `graphql-ws` is considered GA
+
+## v2.5.1
+
+### Bug fixes and improvements
+- server: fixes remote relationships on actions (fix #8399)
+- server: validate top level fragments in GQL query
+- cli: fix performance regression in `migrate status` command (fix #8398)
+
+## v2.6.0-beta.2
+
+### Bug fixes and improvements
+- server: fix parsing remote relationship json definition from 1.x server catalog on migration (fix #7906)
+- server: Don't drop nested typed null fields in actions (fix #8237)
+- server: fixes remote relationships on actions (fix #8399)
+- server: update pg_dump to be compatible with postgres 14 (#7676)
+- console: add remote database relationships for views
+- cli: fix performance regression in `migrate status` command (fix #8398)
+
 ## v2.6.0-beta.1
 
 ### Breaking changes
