@@ -1223,7 +1223,7 @@ backend-mssql)
 	add_mssql_source 8080 "$HASURA_GRAPHQL_MSSQL_SOURCE_URL"
 
 	# See note [Specifying Pytests with -k flag]
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --backend mssql -k "MSSQL or Common"
+	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --backend mssql -k "MSSQL"
 
 	# start inherited roles test
 	echo -e "\n$(time_elapsed): <########## TEST INHERITED-ROLES WITH SQL SERVER BACKEND ###########################################>\n"
@@ -1244,7 +1244,7 @@ backend-citus)
 	add_citus_source 8080 "$HASURA_GRAPHQL_CITUS_SOURCE_URL"
 
 	# See note [Specifying Pytests with -k flag]
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --backend citus -k "Citus or Common"
+	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --backend citus -k "Citus"
 
 	kill_hge_servers
 	;;
@@ -1260,7 +1260,7 @@ backend-bigquery)
 	add_bigquery_source 8080
 
 	# See note [Specifying Pytests with -k flag]
-	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --backend bigquery -k "Bigquery or Common"
+	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --backend bigquery -k "Bigquery"
 
 	kill_hge_servers
 	;;

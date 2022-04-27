@@ -682,7 +682,7 @@ class TestSubscriptionUDFWithSessionArg:
 
 @pytest.mark.parametrize("backend", ['mssql', 'postgres'])
 @usefixtures('per_class_tests_db_state', 'ws_conn_init')
-class TestSubscriptionCustomizedSourceCommon:
+class TestSubscriptionCustomizedSourceMSSQLPostgres:
     @classmethod
     def dir(cls):
         return 'queries/subscriptions/customized_source'

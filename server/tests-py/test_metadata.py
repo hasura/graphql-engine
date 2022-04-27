@@ -454,7 +454,7 @@ class TestMetadataOrder:
 
 @pytest.mark.parametrize("backend", ['citus', 'mssql', 'postgres', 'bigquery'])
 @usefixtures('per_class_tests_db_state')
-class TestSetTableCustomizationCommon:
+class TestSetTableCustomizationPostgresMSSQLCitusBigquery:
 
     @classmethod
     def dir(cls):
