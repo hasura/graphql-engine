@@ -40,20 +40,20 @@ We can't support multiple async query fields of different kinds in a single subs
 </span><span id="line-40"></span><span>
 </span><span id="line-41"></span><span class="hs-comment">-- | A forever running thread which processes async action subscriptions.</span><span>
 </span><span id="line-42"></span><span class="hs-comment">-- See Note [Async action subscriptions]</span><span>
-</span><span id="line-43"></span><span id="local-6989586621688577928"><span id="local-6989586621688577929"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Subscription.html#asyncActionSubscriptionsProcessor"><span class="hs-identifier hs-type">asyncActionSubscriptionsProcessor</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-44"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688577929"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-45"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorage"><span class="hs-identifier hs-type">MonadMetadataStorage</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.Class.html#MetadataStorageT"><span class="hs-identifier hs-type">MetadataStorageT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688577929"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span id="local-6989586621688577819"><span id="local-6989586621688577820"><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Subscription.html#asyncActionSubscriptionsProcessor"><span class="hs-identifier hs-type">asyncActionSubscriptionsProcessor</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688577820"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorage"><span class="hs-identifier hs-type">MonadMetadataStorage</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.Class.html#MetadataStorageT"><span class="hs-identifier hs-type">MetadataStorageT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688577820"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-46"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-47"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.State.html#AsyncActionSubscriptionState"><span class="hs-identifier hs-type">AsyncActionSubscriptionState</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-48"></span><span>  </span><span class="annot"><a href="#local-6989586621688577929"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688577928"><span class="hs-identifier hs-type">void</span></a></span></span></span><span>
+</span><span id="line-48"></span><span>  </span><span class="annot"><a href="#local-6989586621688577820"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688577819"><span class="hs-identifier hs-type">void</span></a></span></span></span><span>
 </span><span id="line-49"></span><span id="asyncActionSubscriptionsProcessor"><span class="annot"><span class="annottext">asyncActionSubscriptionsProcessor :: AsyncActionSubscriptionState -&gt; m void
-</span><a href="Hasura.GraphQL.Execute.Action.Subscription.html#asyncActionSubscriptionsProcessor"><span class="hs-identifier hs-var hs-var">asyncActionSubscriptionsProcessor</span></a></span></span><span> </span><span id="local-6989586621688577927"><span class="annot"><span class="annottext">AsyncActionSubscriptionState
-</span><a href="#local-6989586621688577927"><span class="hs-identifier hs-var">subsState</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m () -&gt; m void
+</span><a href="Hasura.GraphQL.Execute.Action.Subscription.html#asyncActionSubscriptionsProcessor"><span class="hs-identifier hs-var hs-var">asyncActionSubscriptionsProcessor</span></a></span></span><span> </span><span id="local-6989586621688577818"><span class="annot"><span class="annottext">AsyncActionSubscriptionState
+</span><a href="#local-6989586621688577818"><span class="hs-identifier hs-var">subsState</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m () -&gt; m void
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">forever</span></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-50"></span><span>  </span><span class="hs-comment">-- Collect all active async query subscription operations</span><span>
-</span><span id="line-51"></span><span>  </span><span id="local-6989586621688577925"><span class="annot"><span class="annottext">NonEmpty (OperationId, AsyncActionQueryLive)
-</span><a href="#local-6989586621688577925"><span class="hs-identifier hs-var">opList</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (NonEmpty (OperationId, AsyncActionQueryLive))
+</span><span id="line-51"></span><span>  </span><span id="local-6989586621688577816"><span class="annot"><span class="annottext">NonEmpty (OperationId, AsyncActionQueryLive)
+</span><a href="#local-6989586621688577816"><span class="hs-identifier hs-var">opList</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (NonEmpty (OperationId, AsyncActionQueryLive))
 -&gt; m (NonEmpty (OperationId, AsyncActionQueryLive))
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (NonEmpty (OperationId, AsyncActionQueryLive))
@@ -65,12 +65,12 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; IO (NonEmpty (OperationId, AsyncActionQueryLive))
 forall a. STM a -&gt; IO a
 </span><span class="hs-identifier hs-var">STM.atomically</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-52"></span><span>    </span><span id="local-6989586621688577922"><span class="annot"><span class="annottext">[(OperationId, AsyncActionQueryLive)]
-</span><a href="#local-6989586621688577922"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">AsyncActionSubscriptionState
+</span><span id="line-52"></span><span>    </span><span id="local-6989586621688577813"><span class="annot"><span class="annottext">[(OperationId, AsyncActionQueryLive)]
+</span><a href="#local-6989586621688577813"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">AsyncActionSubscriptionState
 -&gt; STM [(OperationId, AsyncActionQueryLive)]
 forall k v. TMap k v -&gt; STM [(k, v)]
 </span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#toList"><span class="hs-identifier hs-var">TMap.toList</span></a></span><span> </span><span class="annot"><span class="annottext">AsyncActionSubscriptionState
-</span><a href="#local-6989586621688577927"><span class="hs-identifier hs-var">subsState</span></a></span><span>
+</span><a href="#local-6989586621688577818"><span class="hs-identifier hs-var">subsState</span></a></span><span>
 </span><span id="line-53"></span><span>    </span><span class="annot"><span class="annottext">Maybe (NonEmpty (OperationId, AsyncActionQueryLive))
 -&gt; STM (NonEmpty (OperationId, AsyncActionQueryLive))
 -&gt; STM (NonEmpty (OperationId, AsyncActionQueryLive))
@@ -79,7 +79,7 @@ forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 -&gt; Maybe (NonEmpty (OperationId, AsyncActionQueryLive))
 forall a. [a] -&gt; Maybe (NonEmpty a)
 </span><span class="hs-identifier hs-var">NE.nonEmpty</span></span><span> </span><span class="annot"><span class="annottext">[(OperationId, AsyncActionQueryLive)]
-</span><a href="#local-6989586621688577922"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">STM (NonEmpty (OperationId, AsyncActionQueryLive))
+</span><a href="#local-6989586621688577813"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">STM (NonEmpty (OperationId, AsyncActionQueryLive))
 forall a. STM a
 </span><span class="hs-identifier hs-var">STM.retry</span></span><span> </span><span class="hs-comment">-- Continue only if there are any active subscription operations</span><span>
 </span><span id="line-54"></span><span>  </span><span class="annot"><span class="annottext">NonEmpty (OperationId, AsyncActionQueryLive)
@@ -88,17 +88,17 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Foldable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><span class="hs-identifier hs-var">for_</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty (OperationId, AsyncActionQueryLive)
-</span><a href="#local-6989586621688577925"><span class="hs-identifier hs-var">opList</span></a></span><span> </span><span class="annot"><span class="annottext">(((OperationId, AsyncActionQueryLive) -&gt; m ()) -&gt; m ())
+</span><a href="#local-6989586621688577816"><span class="hs-identifier hs-var">opList</span></a></span><span> </span><span class="annot"><span class="annottext">(((OperationId, AsyncActionQueryLive) -&gt; m ()) -&gt; m ())
 -&gt; ((OperationId, AsyncActionQueryLive) -&gt; m ()) -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621688577916"><span class="annot"><span class="annottext">OperationId
-</span><a href="#local-6989586621688577916"><span class="hs-identifier hs-var">opId</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.State.html#AsyncActionQueryLive"><span class="hs-identifier hs-type">AsyncActionQueryLive</span></a></span><span> </span><span id="local-6989586621688577914"><span class="annot"><span class="annottext">NonEmpty ActionId
-</span><a href="#local-6989586621688577914"><span class="hs-identifier hs-var">actionIds</span></a></span></span><span> </span><span id="local-6989586621688577913"><span class="annot"><span class="annottext">QErr -&gt; IO ()
-</span><a href="#local-6989586621688577913"><span class="hs-identifier hs-var">onError</span></a></span></span><span> </span><span id="local-6989586621688577912"><span class="annot"><span class="annottext">LiveAsyncActionQuery
-</span><a href="#local-6989586621688577912"><span class="hs-identifier hs-var">op</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621688577807"><span class="annot"><span class="annottext">OperationId
+</span><a href="#local-6989586621688577807"><span class="hs-identifier hs-var">opId</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.State.html#AsyncActionQueryLive"><span class="hs-identifier hs-type">AsyncActionQueryLive</span></a></span><span> </span><span id="local-6989586621688577805"><span class="annot"><span class="annottext">NonEmpty ActionId
+</span><a href="#local-6989586621688577805"><span class="hs-identifier hs-var">actionIds</span></a></span></span><span> </span><span id="local-6989586621688577804"><span class="annot"><span class="annottext">QErr -&gt; IO ()
+</span><a href="#local-6989586621688577804"><span class="hs-identifier hs-var">onError</span></a></span></span><span> </span><span id="local-6989586621688577803"><span class="annot"><span class="annottext">LiveAsyncActionQuery
+</span><a href="#local-6989586621688577803"><span class="hs-identifier hs-var">op</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-55"></span><span>    </span><span class="hs-comment">-- Fetch action webhook responses from the metadata storage</span><span>
-</span><span id="line-56"></span><span>    </span><span id="local-6989586621688577911"><span class="annot"><span class="annottext">Either QErr (ActionLogResponseMap, Bool)
-</span><a href="#local-6989586621688577911"><span class="hs-identifier hs-var">actionLogMapE</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ExceptT QErr m (ActionLogResponseMap, Bool)
+</span><span id="line-56"></span><span>    </span><span id="local-6989586621688577802"><span class="annot"><span class="annottext">Either QErr (ActionLogResponseMap, Bool)
+</span><a href="#local-6989586621688577802"><span class="hs-identifier hs-var">actionLogMapE</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ExceptT QErr m (ActionLogResponseMap, Bool)
 -&gt; m (Either QErr (ActionLogResponseMap, Bool))
 forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
 </span><span class="hs-identifier hs-var">runExceptT</span></span><span> </span><span class="annot"><span class="annottext">(ExceptT QErr m (ActionLogResponseMap, Bool)
@@ -117,85 +117,85 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty ActionId -&gt; [ActionId]
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 </span><span class="hs-identifier hs-var">toList</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty ActionId
-</span><a href="#local-6989586621688577914"><span class="hs-identifier hs-var">actionIds</span></a></span><span>
+</span><a href="#local-6989586621688577805"><span class="hs-identifier hs-var">actionIds</span></a></span><span>
 </span><span id="line-57"></span><span>    </span><span class="annot"><span class="annottext">IO () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Either QErr (ActionLogResponseMap, Bool)
-</span><a href="#local-6989586621688577911"><span class="hs-identifier hs-var">actionLogMapE</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-58"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621688577907"><span class="annot"><span class="annottext">QErr
-</span><a href="#local-6989586621688577907"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621688577802"><span class="hs-identifier hs-var">actionLogMapE</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-58"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621688577798"><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621688577798"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-59"></span><span>        </span><span class="annot"><span class="annottext">QErr -&gt; IO ()
-</span><a href="#local-6989586621688577913"><span class="hs-identifier hs-var">onError</span></a></span><span> </span><span class="annot"><span class="annottext">QErr
-</span><a href="#local-6989586621688577907"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><a href="#local-6989586621688577804"><span class="hs-identifier hs-var">onError</span></a></span><span> </span><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621688577798"><span class="hs-identifier hs-var">err</span></a></span><span>
 </span><span id="line-60"></span><span>        </span><span class="annot"><span class="annottext">AsyncActionSubscriptionState -&gt; OperationId -&gt; IO ()
 </span><a href="Hasura.GraphQL.Execute.Subscription.State.html#removeAsyncActionLiveQuery"><span class="hs-identifier hs-var">removeAsyncActionLiveQuery</span></a></span><span> </span><span class="annot"><span class="annottext">AsyncActionSubscriptionState
-</span><a href="#local-6989586621688577927"><span class="hs-identifier hs-var">subsState</span></a></span><span> </span><span class="annot"><span class="annottext">OperationId
-</span><a href="#local-6989586621688577916"><span class="hs-identifier hs-var">opId</span></a></span><span>
-</span><span id="line-61"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688577905"><span class="annot"><span class="annottext">ActionLogResponseMap
-</span><a href="#local-6989586621688577905"><span class="hs-identifier hs-var">actionLogMap</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688577904"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688577904"><span class="hs-identifier hs-var">actionsComplete</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621688577818"><span class="hs-identifier hs-var">subsState</span></a></span><span> </span><span class="annot"><span class="annottext">OperationId
+</span><a href="#local-6989586621688577807"><span class="hs-identifier hs-var">opId</span></a></span><span>
+</span><span id="line-61"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688577796"><span class="annot"><span class="annottext">ActionLogResponseMap
+</span><a href="#local-6989586621688577796"><span class="hs-identifier hs-var">actionLogMap</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688577795"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688577795"><span class="hs-identifier hs-var">actionsComplete</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-62"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">LiveAsyncActionQuery
-</span><a href="#local-6989586621688577912"><span class="hs-identifier hs-var">op</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-63"></span><span>          </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.State.html#LAAQNoRelationships"><span class="hs-identifier hs-type">LAAQNoRelationships</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.State.html#LiveAsyncActionQueryWithNoRelationships"><span class="hs-identifier hs-type">LiveAsyncActionQueryWithNoRelationships</span></a></span><span> </span><span id="local-6989586621688577901"><span class="annot"><span class="annottext">ActionLogResponseMap -&gt; IO ()
-</span><a href="#local-6989586621688577901"><span class="hs-identifier hs-var">sendResp</span></a></span></span><span> </span><span id="local-6989586621688577900"><span class="annot"><span class="annottext">IO ()
-</span><a href="#local-6989586621688577900"><span class="hs-identifier hs-var">sendCompleted</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621688577803"><span class="hs-identifier hs-var">op</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-63"></span><span>          </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.State.html#LAAQNoRelationships"><span class="hs-identifier hs-type">LAAQNoRelationships</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.State.html#LiveAsyncActionQueryWithNoRelationships"><span class="hs-identifier hs-type">LiveAsyncActionQueryWithNoRelationships</span></a></span><span> </span><span id="local-6989586621688577792"><span class="annot"><span class="annottext">ActionLogResponseMap -&gt; IO ()
+</span><a href="#local-6989586621688577792"><span class="hs-identifier hs-var">sendResp</span></a></span></span><span> </span><span id="local-6989586621688577791"><span class="annot"><span class="annottext">IO ()
+</span><a href="#local-6989586621688577791"><span class="hs-identifier hs-var">sendCompleted</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-64"></span><span>            </span><span class="annot"><span class="annottext">ActionLogResponseMap -&gt; IO ()
-</span><a href="#local-6989586621688577901"><span class="hs-identifier hs-var">sendResp</span></a></span><span> </span><span class="annot"><span class="annottext">ActionLogResponseMap
-</span><a href="#local-6989586621688577905"><span class="hs-identifier hs-var">actionLogMap</span></a></span><span>
+</span><a href="#local-6989586621688577792"><span class="hs-identifier hs-var">sendResp</span></a></span><span> </span><span class="annot"><span class="annottext">ActionLogResponseMap
+</span><a href="#local-6989586621688577796"><span class="hs-identifier hs-var">actionLogMap</span></a></span><span>
 </span><span id="line-65"></span><span>            </span><span class="annot"><span class="annottext">Bool -&gt; IO () -&gt; IO ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688577904"><span class="hs-identifier hs-var">actionsComplete</span></a></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
+</span><a href="#local-6989586621688577795"><span class="hs-identifier hs-var">actionsComplete</span></a></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-66"></span><span>              </span><span class="annot"><span class="annottext">IO ()
-</span><a href="#local-6989586621688577900"><span class="hs-identifier hs-var">sendCompleted</span></a></span><span>
+</span><a href="#local-6989586621688577791"><span class="hs-identifier hs-var">sendCompleted</span></a></span><span>
 </span><span id="line-67"></span><span>              </span><span class="annot"><span class="annottext">AsyncActionSubscriptionState -&gt; OperationId -&gt; IO ()
 </span><a href="Hasura.GraphQL.Execute.Subscription.State.html#removeAsyncActionLiveQuery"><span class="hs-identifier hs-var">removeAsyncActionLiveQuery</span></a></span><span> </span><span class="annot"><span class="annottext">AsyncActionSubscriptionState
-</span><a href="#local-6989586621688577927"><span class="hs-identifier hs-var">subsState</span></a></span><span> </span><span class="annot"><span class="annottext">OperationId
-</span><a href="#local-6989586621688577916"><span class="hs-identifier hs-var">opId</span></a></span><span>
-</span><span id="line-68"></span><span>          </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.State.html#LAAQOnSourceDB"><span class="hs-identifier hs-type">LAAQOnSourceDB</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.State.html#LiveAsyncActionQueryOnSource"><span class="hs-identifier hs-type">LiveAsyncActionQueryOnSource</span></a></span><span> </span><span id="local-6989586621688577896"><span class="annot"><span class="annottext">LiveQuerySubscriberDetails
-</span><a href="#local-6989586621688577896"><span class="hs-identifier hs-var">currLqId</span></a></span></span><span> </span><span id="local-6989586621688577895"><span class="annot"><span class="annottext">ActionLogResponseMap
-</span><a href="#local-6989586621688577895"><span class="hs-identifier hs-var">prevLogMap</span></a></span></span><span> </span><span id="local-6989586621688577894"><span class="annot"><span class="annottext">LiveQuerySubscriberDetails
+</span><a href="#local-6989586621688577818"><span class="hs-identifier hs-var">subsState</span></a></span><span> </span><span class="annot"><span class="annottext">OperationId
+</span><a href="#local-6989586621688577807"><span class="hs-identifier hs-var">opId</span></a></span><span>
+</span><span id="line-68"></span><span>          </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.State.html#LAAQOnSourceDB"><span class="hs-identifier hs-type">LAAQOnSourceDB</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.State.html#LiveAsyncActionQueryOnSource"><span class="hs-identifier hs-type">LiveAsyncActionQueryOnSource</span></a></span><span> </span><span id="local-6989586621688577787"><span class="annot"><span class="annottext">LiveQuerySubscriberDetails
+</span><a href="#local-6989586621688577787"><span class="hs-identifier hs-var">currLqId</span></a></span></span><span> </span><span id="local-6989586621688577786"><span class="annot"><span class="annottext">ActionLogResponseMap
+</span><a href="#local-6989586621688577786"><span class="hs-identifier hs-var">prevLogMap</span></a></span></span><span> </span><span id="local-6989586621688577785"><span class="annot"><span class="annottext">LiveQuerySubscriberDetails
 -&gt; ActionLogResponseMap -&gt; IO (Maybe LiveQuerySubscriberDetails)
-</span><a href="#local-6989586621688577894"><span class="hs-identifier hs-var">lqRestarter</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621688577785"><span class="hs-identifier hs-var">lqRestarter</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-69"></span><span>            </span><span class="hs-comment">-- Actions webhook responses aren't updated in metadata storage, hence no need to restart the live query</span><span>
 </span><span id="line-70"></span><span>            </span><span class="annot"><span class="annottext">Bool -&gt; IO () -&gt; IO ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ActionLogResponseMap
-</span><a href="#local-6989586621688577895"><span class="hs-identifier hs-var">prevLogMap</span></a></span><span> </span><span class="annot"><span class="annottext">ActionLogResponseMap -&gt; ActionLogResponseMap -&gt; Bool
+</span><a href="#local-6989586621688577786"><span class="hs-identifier hs-var">prevLogMap</span></a></span><span> </span><span class="annot"><span class="annottext">ActionLogResponseMap -&gt; ActionLogResponseMap -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">ActionLogResponseMap
-</span><a href="#local-6989586621688577905"><span class="hs-identifier hs-var">actionLogMap</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
+</span><a href="#local-6989586621688577796"><span class="hs-identifier hs-var">actionLogMap</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-71"></span><span>              </span><span id="local-6989586621688577892"><span class="annot"><span class="annottext">Maybe LiveQuerySubscriberDetails
-</span><a href="#local-6989586621688577892"><span class="hs-identifier hs-var">maybeNewLqId</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">LiveQuerySubscriberDetails
+</span><span id="line-71"></span><span>              </span><span id="local-6989586621688577783"><span class="annot"><span class="annottext">Maybe LiveQuerySubscriberDetails
+</span><a href="#local-6989586621688577783"><span class="hs-identifier hs-var">maybeNewLqId</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">LiveQuerySubscriberDetails
 -&gt; ActionLogResponseMap -&gt; IO (Maybe LiveQuerySubscriberDetails)
-</span><a href="#local-6989586621688577894"><span class="hs-identifier hs-var">lqRestarter</span></a></span><span> </span><span class="annot"><span class="annottext">LiveQuerySubscriberDetails
-</span><a href="#local-6989586621688577896"><span class="hs-identifier hs-var">currLqId</span></a></span><span> </span><span class="annot"><span class="annottext">ActionLogResponseMap
-</span><a href="#local-6989586621688577905"><span class="hs-identifier hs-var">actionLogMap</span></a></span><span>
+</span><a href="#local-6989586621688577785"><span class="hs-identifier hs-var">lqRestarter</span></a></span><span> </span><span class="annot"><span class="annottext">LiveQuerySubscriberDetails
+</span><a href="#local-6989586621688577787"><span class="hs-identifier hs-var">currLqId</span></a></span><span> </span><span class="annot"><span class="annottext">ActionLogResponseMap
+</span><a href="#local-6989586621688577796"><span class="hs-identifier hs-var">actionLogMap</span></a></span><span>
 </span><span id="line-72"></span><span>              </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688577904"><span class="hs-identifier hs-var">actionsComplete</span></a></span><span>
+</span><a href="#local-6989586621688577795"><span class="hs-identifier hs-var">actionsComplete</span></a></span><span>
 </span><span id="line-73"></span><span>                </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">AsyncActionSubscriptionState -&gt; OperationId -&gt; IO ()
 </span><a href="Hasura.GraphQL.Execute.Subscription.State.html#removeAsyncActionLiveQuery"><span class="hs-identifier hs-var">removeAsyncActionLiveQuery</span></a></span><span> </span><span class="annot"><span class="annottext">AsyncActionSubscriptionState
-</span><a href="#local-6989586621688577927"><span class="hs-identifier hs-var">subsState</span></a></span><span> </span><span class="annot"><span class="annottext">OperationId
-</span><a href="#local-6989586621688577916"><span class="hs-identifier hs-var">opId</span></a></span><span>
+</span><a href="#local-6989586621688577818"><span class="hs-identifier hs-var">subsState</span></a></span><span> </span><span class="annot"><span class="annottext">OperationId
+</span><a href="#local-6989586621688577807"><span class="hs-identifier hs-var">opId</span></a></span><span>
 </span><span id="line-74"></span><span>                </span><span class="hs-keyword">else</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-75"></span><span>                  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe LiveQuerySubscriberDetails
-</span><a href="#local-6989586621688577892"><span class="hs-identifier hs-var">maybeNewLqId</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688577783"><span class="hs-identifier hs-var">maybeNewLqId</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-76"></span><span>                    </span><span class="annot"><span class="annottext">Maybe LiveQuerySubscriberDetails
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-77"></span><span>                      </span><span class="hs-comment">-- Happens only when restarting a live query fails.</span><span>
 </span><span id="line-78"></span><span>                      </span><span class="hs-comment">-- There's no point in holding the operation in the state.</span><span>
 </span><span id="line-79"></span><span>                      </span><span class="annot"><span class="annottext">AsyncActionSubscriptionState -&gt; OperationId -&gt; IO ()
 </span><a href="Hasura.GraphQL.Execute.Subscription.State.html#removeAsyncActionLiveQuery"><span class="hs-identifier hs-var">removeAsyncActionLiveQuery</span></a></span><span> </span><span class="annot"><span class="annottext">AsyncActionSubscriptionState
-</span><a href="#local-6989586621688577927"><span class="hs-identifier hs-var">subsState</span></a></span><span> </span><span class="annot"><span class="annottext">OperationId
-</span><a href="#local-6989586621688577916"><span class="hs-identifier hs-var">opId</span></a></span><span>
-</span><span id="line-80"></span><span>                    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688577891"><span class="annot"><span class="annottext">LiveQuerySubscriberDetails
-</span><a href="#local-6989586621688577891"><span class="hs-identifier hs-var">newLqId</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621688577818"><span class="hs-identifier hs-var">subsState</span></a></span><span> </span><span class="annot"><span class="annottext">OperationId
+</span><a href="#local-6989586621688577807"><span class="hs-identifier hs-var">opId</span></a></span><span>
+</span><span id="line-80"></span><span>                    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688577782"><span class="annot"><span class="annottext">LiveQuerySubscriberDetails
+</span><a href="#local-6989586621688577782"><span class="hs-identifier hs-var">newLqId</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-81"></span><span>                      </span><span class="annot"><span class="annottext">AsyncActionSubscriptionState
 -&gt; OperationId
 -&gt; NonEmpty ActionId
@@ -203,10 +203,10 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; LiveAsyncActionQuery
 -&gt; IO ()
 </span><a href="Hasura.GraphQL.Execute.Subscription.State.html#addAsyncActionLiveQuery"><span class="hs-identifier hs-var">addAsyncActionLiveQuery</span></a></span><span> </span><span class="annot"><span class="annottext">AsyncActionSubscriptionState
-</span><a href="#local-6989586621688577927"><span class="hs-identifier hs-var">subsState</span></a></span><span> </span><span class="annot"><span class="annottext">OperationId
-</span><a href="#local-6989586621688577916"><span class="hs-identifier hs-var">opId</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty ActionId
-</span><a href="#local-6989586621688577914"><span class="hs-identifier hs-var">actionIds</span></a></span><span> </span><span class="annot"><span class="annottext">QErr -&gt; IO ()
-</span><a href="#local-6989586621688577913"><span class="hs-identifier hs-var">onError</span></a></span><span> </span><span class="annot"><span class="annottext">(LiveAsyncActionQuery -&gt; IO ()) -&gt; LiveAsyncActionQuery -&gt; IO ()
+</span><a href="#local-6989586621688577818"><span class="hs-identifier hs-var">subsState</span></a></span><span> </span><span class="annot"><span class="annottext">OperationId
+</span><a href="#local-6989586621688577807"><span class="hs-identifier hs-var">opId</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty ActionId
+</span><a href="#local-6989586621688577805"><span class="hs-identifier hs-var">actionIds</span></a></span><span> </span><span class="annot"><span class="annottext">QErr -&gt; IO ()
+</span><a href="#local-6989586621688577804"><span class="hs-identifier hs-var">onError</span></a></span><span> </span><span class="annot"><span class="annottext">(LiveAsyncActionQuery -&gt; IO ()) -&gt; LiveAsyncActionQuery -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-82"></span><span>                        </span><span class="annot"><span class="annottext">LiveAsyncActionQueryOnSource -&gt; LiveAsyncActionQuery
@@ -219,10 +219,10 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
     -&gt; ActionLogResponseMap -&gt; IO (Maybe LiveQuerySubscriberDetails))
 -&gt; LiveAsyncActionQueryOnSource
 </span><a href="Hasura.GraphQL.Execute.Subscription.State.html#LiveAsyncActionQueryOnSource"><span class="hs-identifier hs-var">LiveAsyncActionQueryOnSource</span></a></span><span> </span><span class="annot"><span class="annottext">LiveQuerySubscriberDetails
-</span><a href="#local-6989586621688577891"><span class="hs-identifier hs-var">newLqId</span></a></span><span> </span><span class="annot"><span class="annottext">ActionLogResponseMap
-</span><a href="#local-6989586621688577905"><span class="hs-identifier hs-var">actionLogMap</span></a></span><span> </span><span class="annot"><span class="annottext">LiveQuerySubscriberDetails
+</span><a href="#local-6989586621688577782"><span class="hs-identifier hs-var">newLqId</span></a></span><span> </span><span class="annot"><span class="annottext">ActionLogResponseMap
+</span><a href="#local-6989586621688577796"><span class="hs-identifier hs-var">actionLogMap</span></a></span><span> </span><span class="annot"><span class="annottext">LiveQuerySubscriberDetails
 -&gt; ActionLogResponseMap -&gt; IO (Maybe LiveQuerySubscriberDetails)
-</span><a href="#local-6989586621688577894"><span class="hs-identifier hs-var">lqRestarter</span></a></span><span>
+</span><a href="#local-6989586621688577785"><span class="hs-identifier hs-var">lqRestarter</span></a></span><span>
 </span><span id="line-83"></span><span>  </span><span class="hs-comment">-- Sleep for a second</span><span>
 </span><span id="line-84"></span><span>  </span><span class="annot"><span class="annottext">IO () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
