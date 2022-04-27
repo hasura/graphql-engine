@@ -7,6 +7,8 @@ import {
   LinkBlockHorizontal,
   LinkBlockVertical,
 } from '@/new-components/LinkBlock';
+import { FaCircle } from 'react-icons/fa';
+
 import { Schema } from './schema';
 
 export const FormElements = () => {
@@ -78,28 +80,25 @@ export const FormElements = () => {
 
       <LinkBlockVertical title="Columns Mapped To" />
 
-      <Controller
-        control={control}
+      <ListMap
+        from={{
+          label: 'Source Column',
+          options: sourceColumnData
+            ? sourceColumnData?.slice(1).map((x: string[]) => x[3])
+            : [],
+          placeholder: 'Select Source Column',
+          icon: <FaCircle className="text-green-600" />,
+        }}
+        to={{
+          type: 'array',
+          label: 'Reference Column',
+          options: referenceColumnData
+            ? referenceColumnData?.slice(1).map((x: string[]) => x[3])
+            : [],
+          placeholder: 'Select Reference Column',
+          icon: <FaCircle className="text-indigo-600" />,
+        }}
         name="mapping"
-        render={({ field: { onChange, value } }) => (
-          <ListMap
-            onChange={onChange}
-            fromLabel="Source Column"
-            toLabel="Reference Column"
-            maps={value}
-            fromOptions={
-              sourceColumnData
-                ? sourceColumnData?.slice(1).map((x: string[]) => x[3])
-                : []
-            }
-            toOptions={
-              referenceColumnData
-                ? referenceColumnData?.slice(1).map((x: string[]) => x[3])
-                : []
-            }
-            name="mapping"
-          />
-        )}
       />
     </>
   );
