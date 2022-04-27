@@ -15,6 +15,8 @@ module Hasura.Backends.Postgres.SQL.Value
     binEncoder,
     txtEncoder,
     toPrepParam,
+    withScalarTypeAnn,
+    withTypeAnn,
   )
 where
 
@@ -38,6 +40,7 @@ import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Prelude
 import Hasura.SQL.GeoJSON
 import Hasura.SQL.Time
+import Hasura.SQL.Types
 import Hasura.SQL.Value (TxtEncodedVal (..))
 import PostgreSQL.Binary.Encoding qualified as PE
 
@@ -142,6 +145,16 @@ withConstructorFn ty v
   | isGeoType ty = S.SEFnApp "ST_GeomFromGeoJSON" [v] Nothing
   | ty == PGRaster = S.SEFnApp "ST_RastFromHexWKB" [v] Nothing
   | otherwise = v
+
+-- FIXME: shouldn't this also use 'withConstructorFn'?
+withScalarTypeAnn :: PGScalarType -> S.SQLExp -> S.SQLExp
+withScalarTypeAnn colTy v = S.SETyAnn v . S.mkTypeAnn $ CollectableTypeScalar colTy
+
+withTypeAnn :: CollectableType PGScalarType -> S.SQLExp -> S.SQLExp
+withTypeAnn ty expr = flip S.SETyAnn (S.mkTypeAnn ty) $
+  case ty of
+    CollectableTypeScalar baseTy -> withConstructorFn baseTy expr
+    CollectableTypeArray _ -> expr
 
 -- TODO: those two functions are useful outside of Postgres, and
 -- should be moved to a common place of the code. Perhaps the Prelude?
@@ -336,4 +349,4 @@ Also see https://github.com/hasura/graphql-engine/issues/2818
 toPrepParam :: Int -> PGScalarType -> S.SQLExp
 toPrepParam i ty =
   -- See Note [Type casting prepared params] above
-  S.withTyAnn ty . withConstructorFn ty $ S.SEPrep i
+  withScalarTypeAnn ty . withConstructorFn ty $ S.SEPrep i

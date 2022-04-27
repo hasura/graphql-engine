@@ -18,7 +18,7 @@ import Hasura.SQL.Backend
 
 toTxtValue :: ColumnValue ('Postgres pgKind) -> SQLExp
 toTxtValue ColumnValue {..} =
-  withTyAnn ty . withConstructorFn ty $ txtEncoder cvValue
+  withScalarTypeAnn ty . withConstructorFn ty $ txtEncoder cvValue
   where
     ty = unsafePGColumnToBackend cvType
 

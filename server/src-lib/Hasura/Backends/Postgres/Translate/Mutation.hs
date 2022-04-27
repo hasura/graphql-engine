@@ -67,4 +67,4 @@ mkSelectExpFromColumnValues qt allCols = \case
     txtEncodedToSQLExp colTy = \case
       TENull -> S.SENull
       TELit textValue ->
-        S.withTyAnn (unsafePGColumnToBackend colTy) $ S.SELit textValue
+        withScalarTypeAnn (unsafePGColumnToBackend colTy) $ S.SELit textValue

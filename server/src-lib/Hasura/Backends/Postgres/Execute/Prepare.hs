@@ -34,7 +34,6 @@ import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Parser.Column
 import Hasura.GraphQL.Parser.Schema
 import Hasura.Prelude
-import Hasura.RQL.DML.Internal (fromCurrentSession, withTypeAnn)
 import Hasura.RQL.Types.Column
 import Hasura.SQL.Backend
 import Hasura.Session
@@ -76,7 +75,10 @@ prepareWithPlan userInfo = \case
         `onNothing` throw400
           NotFound
           ("missing session variable: " <>> sessionVariableToText sessVar)
-    let sessVarVal = fromCurrentSession currentSessionExp sessVar
+    let sessVarVal =
+          S.SEOpApp
+            (S.SQLOp "->>")
+            [currentSessionExp, S.SELit $ sessionVariableToText sessVar]
     pure $ withTypeAnn ty sessVarVal
   UVLiteral sqlExp -> pure sqlExp
   UVSession -> pure currentSessionExp

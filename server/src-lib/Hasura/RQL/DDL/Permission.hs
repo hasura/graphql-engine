@@ -37,7 +37,6 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission.Internal
-import Hasura.RQL.DML.Internal
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
@@ -286,7 +285,9 @@ buildSelPermInfo source tn fieldInfoMap sp = withPathK "permission" $ do
       depHeaders = getDependentHeaders $ spFilter sp
       mLimit = spLimit sp
 
-  withPathK "limit" $ mapM_ onlyPositiveInt mLimit
+  withPathK "limit" $ for_ mLimit \value ->
+    when (value < 0) $
+      throw400 NotSupported "unexpected negative value"
 
   let pgColsWithFilter = HM.fromList $ map (,Nothing) pgCols
       scalarComputedFieldsWithFilter = HS.toMap (HS.fromList scalarComputedFields) $> Nothing

@@ -5,8 +5,9 @@
 module Hasura.Backends.Postgres.Execute.Types
   ( PGExecCtx (..),
     mkPGExecCtx,
-    defaultTxErrorHandler,
     mkTxErrorHandler,
+    defaultTxErrorHandler,
+    dmlTxErrorHandler,
 
     -- * Execution in a Postgres Source
     PGSourceConfig (..),
@@ -53,6 +54,18 @@ mkPGExecCtx isoLevel pool =
 defaultTxErrorHandler :: Q.PGTxErr -> QErr
 defaultTxErrorHandler = mkTxErrorHandler $ \case
   PGTransactionRollback _ -> True
+  _ -> False
+
+-- | Constructs a transaction error handler tailored for the needs of RQL's DML.
+dmlTxErrorHandler :: Q.PGTxErr -> QErr
+dmlTxErrorHandler = mkTxErrorHandler $ \case
+  PGIntegrityConstraintViolation _ -> True
+  PGDataException _ -> True
+  PGSyntaxErrorOrAccessRuleViolation (Just (PGErrorSpecific code)) ->
+    code
+      `elem` [ PGUndefinedObject,
+               PGInvalidColumnReference
+             ]
   _ -> False
 
 -- | Constructs a transaction error handler given a predicate that determines which errors are

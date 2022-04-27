@@ -33,7 +33,7 @@ import Hasura.Backends.Postgres.Execute.Prepare
     withUserVars,
   )
 import Hasura.Backends.Postgres.Execute.Subscription qualified as PGL
-import Hasura.Backends.Postgres.Execute.Types (PGSourceConfig (..))
+import Hasura.Backends.Postgres.Execute.Types (PGSourceConfig (..), dmlTxErrorHandler)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Backends.Postgres.SQL.Value qualified as PG
@@ -68,7 +68,6 @@ import Hasura.QueryTags
   ( QueryTagsComment (..),
     emptyQueryTagsComment,
   )
-import Hasura.RQL.DML.Internal (dmlTxErrorHandler)
 import Hasura.RQL.IR (MutationDB (..), QueryDB (..))
 import Hasura.RQL.IR.Delete qualified as IR
 import Hasura.RQL.IR.Insert qualified as IR

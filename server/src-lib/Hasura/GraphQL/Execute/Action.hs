@@ -57,7 +57,6 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.DDL.Webhook.Transform.Class (mkReqTransformCtx)
-import Hasura.RQL.DML.Internal (dmlTxErrorHandler)
 import Hasura.RQL.IR.Action qualified as RA
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Select qualified as RS
