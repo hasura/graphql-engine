@@ -23,7 +23,12 @@ import Hasura.QueryTags
 import Hasura.RQL.DML.Internal
 import Hasura.RQL.DML.Types
 import Hasura.RQL.IR.Insert
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.Table
+import Hasura.SQL.Backend
 import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing

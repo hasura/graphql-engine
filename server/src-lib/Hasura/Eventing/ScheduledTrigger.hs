@@ -127,6 +127,7 @@ import Data.Set qualified as Set
 import Data.TByteString qualified as TBS
 import Data.Time.Clock
 import Database.PG.Query qualified as Q
+import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Base.Error
@@ -140,7 +141,12 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.EventTrigger (getHeaderInfosFromConf)
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Action
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.EventTrigger
+import Hasura.RQL.Types.Eventing
+import Hasura.RQL.Types.ScheduledTrigger
+import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.Types
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP

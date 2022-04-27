@@ -26,7 +26,16 @@ import Hasura.EncJSON
 import Hasura.GraphQL.Schema.Common (getIndirectDependencies, purgeDependencies)
 import Hasura.Logging qualified as L
 import Hasura.Prelude
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Metadata.Backend
+import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCache.Build
+import Hasura.RQL.Types.SchemaCacheTypes
+import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Logging (MetadataLog (..))
 

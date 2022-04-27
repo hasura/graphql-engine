@@ -6,7 +6,9 @@ import Data.Text qualified as Text
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.QuickCheck.Instances ()
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.SchemaCache.Build
 import Network.URI (isAbsoluteURI)
 import Test.Hspec
 import Test.Hspec.QuickCheck (prop)

@@ -21,7 +21,14 @@ import Data.Text.Extended
 import Hasura.Backends.Postgres.Translate.BoolExp
 import Hasura.Base.Error
 import Hasura.Prelude
-import Hasura.RQL.Types
+import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Metadata.Backend
+import Hasura.RQL.Types.Permission
+import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.Table
 import Hasura.Server.Utils
 import Hasura.Session
 

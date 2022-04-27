@@ -17,7 +17,7 @@ import Hasura.RQL.IR.Generator
     genIdentifier,
   )
 import Hasura.RQL.IR.Select (SelectFromG (..))
-import Hasura.RQL.Types (BackendType (..))
+import Hasura.SQL.Backend (BackendType (..))
 import Hedgehog (MonadGen)
 import Hedgehog.Gen (choice, list, maybe)
 

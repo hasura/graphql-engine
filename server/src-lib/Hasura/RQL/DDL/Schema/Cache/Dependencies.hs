@@ -17,8 +17,24 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Network
 import Hasura.RQL.DDL.Permission.Internal (permissionIsDefined)
 import Hasura.RQL.DDL.Schema.Cache.Common
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Action
+import Hasura.RQL.Types.Allowlist
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Endpoint
+import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.Permission
+import Hasura.RQL.Types.QueryCollection
+import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCacheTypes
+import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Language.GraphQL.Draft.Syntax qualified as G
 

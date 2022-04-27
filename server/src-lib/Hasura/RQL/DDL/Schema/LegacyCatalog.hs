@@ -31,7 +31,21 @@ import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ComputedField
 import Hasura.RQL.DDL.Permission
 import Hasura.RQL.DDL.RemoteRelationship
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Action
+import Hasura.RQL.Types.Allowlist
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.CustomTypes
+import Hasura.RQL.Types.EventTrigger
+import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Permission
+import Hasura.RQL.Types.QueryCollection
+import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Relationships.Remote
+import Hasura.RQL.Types.ScheduledTrigger
+import Hasura.RQL.Types.SchemaCache
+import Hasura.SQL.Backend
 
 saveMetadataToHdbTables ::
   (MonadTx m, MonadReader SystemDefined m) => MetadataNoSources -> m ()

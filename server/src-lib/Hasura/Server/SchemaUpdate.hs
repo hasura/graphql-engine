@@ -27,8 +27,10 @@ import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema (runCacheRWT)
 import Hasura.RQL.DDL.Schema.Catalog
-import Hasura.RQL.Types
 import Hasura.RQL.Types.Run
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCache.Build
+import Hasura.RQL.Types.Source
 import Hasura.Server.Logging
 import Hasura.Server.SchemaCacheRef
   ( SchemaCacheRef,

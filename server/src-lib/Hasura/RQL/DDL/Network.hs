@@ -12,8 +12,11 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Metadata.Class ()
 import Hasura.Prelude
-import Hasura.RQL.Types
-import Hasura.RQL.Types.Network ()
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.Network
+import Hasura.RQL.Types.SchemaCache.Build
 
 runAddHostToTLSAllowlist ::
   (QErrM m, CacheRWM m, MetadataM m) =>

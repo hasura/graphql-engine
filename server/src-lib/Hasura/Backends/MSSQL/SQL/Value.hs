@@ -10,6 +10,7 @@ import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.GraphQL.Execute.Subscription.Plan ()
 import Hasura.Prelude
 import Hasura.RQL.Types.Column qualified as RQL
+import Hasura.RQL.Types.Metadata.Instances ()
 import Hasura.SQL.Backend
 import Hasura.SQL.Value (TxtEncodedVal (..))
 

@@ -42,7 +42,10 @@ import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Transport.HTTP.Protocol (GQLReq (..), GQLReqOutgoing)
 import Hasura.Prelude
 import Hasura.RQL.IR.RemoteSchema (convertSelectionSet)
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Relationships.ToSchema
+import Hasura.RQL.Types.RemoteSchema
+import Hasura.RQL.Types.ResultCustomization
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 

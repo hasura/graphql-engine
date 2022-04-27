@@ -20,7 +20,16 @@ import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.CustomTypes
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.SchemaCache.Build
+import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.Table
+import Hasura.SQL.Backend
 import Hasura.SQL.Tag
 import Language.GraphQL.Draft.Syntax qualified as G
 

@@ -25,7 +25,13 @@ import Hasura.EncJSON
 import Hasura.GraphQL.RemoteServer
 import Hasura.Prelude
 import Hasura.RQL.DDL.RemoteSchema.Permission
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.RemoteSchema
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCache.Build
+import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing

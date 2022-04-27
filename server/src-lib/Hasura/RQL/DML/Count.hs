@@ -12,6 +12,8 @@ import Data.Aeson
 import Data.ByteString.Builder qualified as BB
 import Data.Sequence qualified as DS
 import Database.PG.Query qualified as Q
+import Hasura.Backends.Postgres.Connection.MonadTx
+import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.BoolExp
@@ -21,7 +23,12 @@ import Hasura.Prelude
 import Hasura.RQL.DML.Internal
 import Hasura.RQL.DML.Types
 import Hasura.RQL.IR.BoolExp
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Metadata.Instances ()
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.Table
+import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing

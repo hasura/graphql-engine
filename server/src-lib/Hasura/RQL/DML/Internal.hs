@@ -38,6 +38,7 @@ import Data.Sequence qualified as DS
 import Data.Text qualified as T
 import Data.Text.Extended
 import Database.PG.Query qualified as Q
+import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Error
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
@@ -47,7 +48,17 @@ import Hasura.Backends.Postgres.Translate.Column
 import Hasura.Backends.Postgres.Types.Column
 import Hasura.Base.Error
 import Hasura.Prelude
-import Hasura.RQL.Types
+import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.Metadata.Backend
+import Hasura.RQL.Types.Permission
+import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.Table
+import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Server.Types
 import Hasura.Session

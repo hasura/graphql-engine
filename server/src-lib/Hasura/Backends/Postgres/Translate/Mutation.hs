@@ -18,7 +18,9 @@ import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Backends.Postgres.Types.Column
 import Hasura.Base.Error
 import Hasura.Prelude
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Table
+import Hasura.SQL.Backend
 import Hasura.SQL.Types
 
 -- | Note:- Using sorted columns is necessary to enable casting the rows returned by VALUES expression to table type.

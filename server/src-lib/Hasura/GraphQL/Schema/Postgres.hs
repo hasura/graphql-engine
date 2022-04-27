@@ -13,7 +13,9 @@ import Hasura.GraphQL.Schema.Action
 import Hasura.GraphQL.Schema.Backend (MonadBuildSchema)
 import Hasura.Prelude
 import Hasura.RQL.IR
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Action
+import Hasura.RQL.Types.CustomTypes
+import Hasura.SQL.Backend
 
 buildActionQueryFields ::
   MonadBuildSchema ('Postgres 'Vanilla) r m n =>

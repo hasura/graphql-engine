@@ -36,7 +36,9 @@ import Data.TByteString qualified as TBS
 import Data.Text.Extended
 import Data.Text.NonEmpty
 import Database.PG.Query qualified as Q
+import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Execute.Prepare
+import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.SQL.Value (PGScalarValue (..))
@@ -57,8 +59,16 @@ import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.DDL.Webhook.Transform.Class (mkReqTransformCtx)
 import Hasura.RQL.DML.Internal (dmlTxErrorHandler)
 import Hasura.RQL.IR.Action qualified as RA
+import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Select qualified as RS
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Action
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.CustomTypes
+import Hasura.RQL.Types.Eventing
+import Hasura.RQL.Types.SchemaCache
+import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Server.Utils
   ( mkClientHeadersForward,

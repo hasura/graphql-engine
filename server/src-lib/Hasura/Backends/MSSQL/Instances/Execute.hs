@@ -42,10 +42,11 @@ import Hasura.GraphQL.Namespace (RootFieldAlias (..), RootFieldMap)
 import Hasura.GraphQL.Parser
 import Hasura.Prelude
 import Hasura.RQL.IR
-import Hasura.RQL.Types
-import Hasura.RQL.Types qualified as RQLTypes
+import Hasura.RQL.Types.Backend as RQLTypes
 import Hasura.RQL.Types.Column qualified as RQLColumn
+import Hasura.RQL.Types.Common as RQLTypes
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 

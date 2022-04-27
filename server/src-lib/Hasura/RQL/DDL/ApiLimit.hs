@@ -8,7 +8,10 @@ import Control.Lens ((.~))
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
-import Hasura.RQL.Types
+import Hasura.RQL.Types.ApiLimit
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.SchemaCache.Build
 
 runSetApiLimits ::
   (MonadError QErr m, MetadataM m, CacheRWM m) =>

@@ -7,8 +7,6 @@ module Hasura.GraphQL.Schema.Introspect
   )
 where
 
--- import qualified Hasura.RQL.Types
-
 import Data.Aeson.Ordered qualified as J
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap

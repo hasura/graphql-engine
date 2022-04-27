@@ -11,8 +11,10 @@ where
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.Translate.BoolExp
 import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Delete
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Backend
+import Hasura.SQL.Backend
 
 mkDelete ::
   Backend ('Postgres pgKind) =>

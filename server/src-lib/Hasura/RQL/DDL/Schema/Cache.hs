@@ -65,10 +65,33 @@ import Hasura.RQL.DDL.Schema.Cache.Fields
 import Hasura.RQL.DDL.Schema.Cache.Permission
 import Hasura.RQL.DDL.Schema.Function
 import Hasura.RQL.DDL.Schema.Table
-import Hasura.RQL.Types hiding (fmFunction, tmTable)
+import Hasura.RQL.Types.Action
+import Hasura.RQL.Types.Allowlist
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Endpoint
+import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing.Backend
+import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.Metadata hiding (fmFunction, tmTable)
+import Hasura.RQL.Types.Metadata.Backend
+import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.Network
+import Hasura.RQL.Types.QueryCollection
+import Hasura.RQL.Types.Relationships.Remote
+import Hasura.RQL.Types.Relationships.ToSchema
+import Hasura.RQL.Types.RemoteSchema
+import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.Roles.Internal (CheckPermission (..))
+import Hasura.RQL.Types.ScheduledTrigger
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCache.Build
+import Hasura.RQL.Types.SchemaCacheTypes
+import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization
+import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Tag
 import Hasura.SQL.Tag qualified as Tag

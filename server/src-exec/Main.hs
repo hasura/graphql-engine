@@ -16,11 +16,12 @@ import Data.Time.Clock.POSIX (getPOSIXTime)
 import Database.PG.Query qualified as Q
 import GHC.TypeLits (Symbol)
 import Hasura.App
+import Hasura.Backends.Postgres.Connection.MonadTx
+import Hasura.Backends.Postgres.Connection.Settings
 import Hasura.GC qualified as GC
 import Hasura.Logging (Hasura, LogLevel (..), defaultEnabledEngineLogTypes)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema
-import Hasura.RQL.Types
 import Hasura.Server.Init
 import Hasura.Server.Metrics (ServerMetricsSpec, createServerMetrics)
 import Hasura.Server.Migrate (downgradeCatalog)

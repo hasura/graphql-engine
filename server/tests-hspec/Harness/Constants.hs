@@ -46,11 +46,9 @@ import Database.PG.Query qualified as Q
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.Logging qualified as L
 import Hasura.Prelude
-import Hasura.RQL.Types
-  ( FunctionPermissionsCtx (FunctionPermissionsInferred),
-    RemoteSchemaPermsCtx (RemoteSchemaPermsDisabled),
-  )
 import Hasura.RQL.Types.Common (StringifyNumbers (..))
+import Hasura.RQL.Types.Function (FunctionPermissionsCtx (FunctionPermissionsInferred))
+import Hasura.RQL.Types.RemoteSchema (RemoteSchemaPermsCtx (RemoteSchemaPermsDisabled))
 import Hasura.Server.Cors (CorsConfig (CCAllowAll))
 import Hasura.Server.Init
   ( API (CONFIG, DEVELOPER, GRAPHQL, METADATA),

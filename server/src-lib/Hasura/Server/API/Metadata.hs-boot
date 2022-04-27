@@ -15,9 +15,20 @@ import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Source
 import Hasura.RQL.DDL.Webhook.Transform.Validation
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Allowlist
+import Hasura.RQL.Types.ApiLimit
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Endpoint
+import Hasura.RQL.Types.GraphqlSchemaIntrospection
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Network
+import Hasura.RQL.Types.QueryCollection
+import Hasura.RQL.Types.RemoteSchema
+import Hasura.RQL.Types.Roles
+import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.SQL.AnyBackend
+import Hasura.SQL.Backend
 
 data RQLMetadataV1
   = -- Sources

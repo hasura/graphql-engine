@@ -12,10 +12,8 @@ import Data.Aeson.TH
 import Data.HashSet qualified as Set
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.Prelude
-import Hasura.RQL.Types
-  ( FunctionPermissionsCtx,
-    RemoteSchemaPermsCtx,
-  )
+import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.RemoteSchema
 import Hasura.Server.Auth
 import Hasura.Server.Auth.JWT
 import Hasura.Server.Types (ExperimentalFeature)

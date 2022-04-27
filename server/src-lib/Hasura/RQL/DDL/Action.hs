@@ -37,7 +37,13 @@ import Hasura.EncJSON
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.CustomTypes (lookupPGScalar)
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Action
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.CustomTypes
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.Tag
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G

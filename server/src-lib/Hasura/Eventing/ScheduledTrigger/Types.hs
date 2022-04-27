@@ -17,7 +17,8 @@ import Hasura.Eventing.HTTP
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
-import Hasura.RQL.Types
+import Hasura.RQL.Types.EventTrigger
+import Hasura.RQL.Types.ScheduledTrigger
 
 newtype ScheduledTriggerInternalErr
   = ScheduledTriggerInternalErr QErr

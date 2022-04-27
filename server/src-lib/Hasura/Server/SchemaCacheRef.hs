@@ -19,7 +19,8 @@ import Data.IORef
 import Hasura.Logging qualified as L
 import Hasura.Prelude hiding (get, put)
 import Hasura.RQL.DDL.Schema
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.SchemaCache
 import Hasura.Server.Logging
 import Hasura.Server.Metrics
   ( ServerMetrics (smSchemaCacheMetadataResourceVersion),

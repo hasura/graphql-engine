@@ -35,14 +35,23 @@ import Data.Text qualified as T
 import Data.Text.IO qualified as TIO
 import Data.Time.Clock (UTCTime)
 import Database.PG.Query qualified as Q
+import Hasura.Backends.Postgres.Connection.MonadTx
+import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Base.Error
 import Hasura.Logging (Hasura, LogLevel (..), ToEngineLog (..))
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.LegacyCatalog
-import Hasura.RQL.Types
+import Hasura.RQL.Types.ApiLimit
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.CustomTypes
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Network
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend
 import Hasura.Server.Init (DowngradeOptions (..), databaseUrlEnv)
 import Hasura.Server.Logging (StartupLog (..))
 import Hasura.Server.Migrate.Internal

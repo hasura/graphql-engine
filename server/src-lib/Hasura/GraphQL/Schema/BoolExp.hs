@@ -23,7 +23,13 @@ import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common (askTableInfo, partialSQLExpToUnpreparedValue)
 import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
-import Hasura.RQL.Types hiding (askTableInfo)
+import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
+import Hasura.RQL.Types.Table
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- |

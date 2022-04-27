@@ -22,9 +22,15 @@ import Hasura.Backends.Postgres.Translate.Select
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.DML.Internal
+import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Returning
 import Hasura.RQL.IR.Select
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.Table
+import Hasura.SQL.Backend
 import Hasura.Session
 
 -- | The postgres common table expression (CTE) for mutation queries.

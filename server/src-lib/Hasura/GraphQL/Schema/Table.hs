@@ -25,7 +25,14 @@ import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
 import Hasura.Prelude
 import Hasura.RQL.DML.Internal (getRolePermInfo)
-import Hasura.RQL.Types hiding (askTableInfo)
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
+import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.Table
 import Hasura.Session (RoleName)
 import Language.GraphQL.Draft.Syntax qualified as G
 

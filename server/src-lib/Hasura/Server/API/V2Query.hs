@@ -29,8 +29,11 @@ import Hasura.RQL.DML.Insert
 import Hasura.RQL.DML.Select
 import Hasura.RQL.DML.Types
 import Hasura.RQL.DML.Update
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Run
+import Hasura.RQL.Types.SchemaCache.Build
+import Hasura.RQL.Types.Source
+import Hasura.SQL.Backend
 import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing

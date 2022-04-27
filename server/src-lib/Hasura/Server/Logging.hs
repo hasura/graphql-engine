@@ -49,7 +49,9 @@ import Hasura.HTTP
 import Hasura.Logging
 import Hasura.Metadata.Class
 import Hasura.Prelude
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.Source
 import Hasura.Server.Compression
 import Hasura.Server.Types
 import Hasura.Server.Utils

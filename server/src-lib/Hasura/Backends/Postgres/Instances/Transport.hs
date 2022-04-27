@@ -15,7 +15,9 @@ import Data.ByteString qualified as B
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text.Extended
 import Database.PG.Query qualified as Q
+import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Execute.Subscription qualified as PGL
+import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Backends.Postgres.Instances.Execute qualified as EQ
 import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Backends.Postgres.Translate.Select (PostgresAnnotatedFieldJSON)
@@ -34,7 +36,8 @@ import Hasura.GraphQL.Transport.Backend
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Logging qualified as L
 import Hasura.Prelude
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Backend
+import Hasura.SQL.Backend
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
 import Hasura.Tracing

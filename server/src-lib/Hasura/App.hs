@@ -98,9 +98,17 @@ import Hasura.QueryTags
 import Hasura.RQL.DDL.Schema.Cache
 import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.DDL.Schema.Catalog
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Allowlist
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Eventing.Backend
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Network
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCache.Build
+import Hasura.RQL.Types.Source
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend
 import Hasura.Server.API.Query (requiresAdmin)
 import Hasura.Server.App
 import Hasura.Server.Auth
@@ -791,7 +799,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
           runMetadataStorageT getDatabaseUid
             >>= (`onLeft` throwErrJExit DatabaseMigrationError)
         pgVersion <-
-          (liftIO $ runExceptT $ Q.runTx _scMetadataDbPool (Q.ReadCommitted, Nothing) $ getPgVersion)
+          liftIO (runExceptT $ Q.runTx _scMetadataDbPool (Q.ReadCommitted, Nothing) $ getPgVersion)
             >>= (`onLeft` throwErrJExit DatabaseMigrationError)
 
         telemetryThread <-

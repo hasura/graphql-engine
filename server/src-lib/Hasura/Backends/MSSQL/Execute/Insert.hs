@@ -29,7 +29,10 @@ import Hasura.EncJSON
 import Hasura.GraphQL.Parser
 import Hasura.Prelude
 import Hasura.RQL.IR
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
+import Hasura.SQL.Backend
 import Hasura.Session
 
 -- | Execute and insert/upsert mutation against MS SQL Server.

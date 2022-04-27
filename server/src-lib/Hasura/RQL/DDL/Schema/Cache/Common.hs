@@ -53,8 +53,27 @@ import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.Incremental qualified as Inc
 import Hasura.Prelude
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Allowlist
+import Hasura.RQL.Types.ApiLimit
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Endpoint
+import Hasura.RQL.Types.EventTrigger
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Metadata.Instances ()
+import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.Network
+import Hasura.RQL.Types.Permission
+import Hasura.RQL.Types.QueryCollection
+import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Relationships.Remote
+import Hasura.RQL.Types.RemoteSchema
+import Hasura.RQL.Types.Roles
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCache.Build
+import Hasura.RQL.Types.Source
+import Hasura.SQL.Backend
 import Hasura.Server.Types
 import Hasura.Session
 import Network.HTTP.Client.Manager (HasHttpManagerM (..))

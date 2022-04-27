@@ -21,7 +21,11 @@ import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.Types
 import Hasura.Prelude
 import Hasura.RQL.IR.Select
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.Relationships.Local
+import Hasura.SQL.Backend
 
 -- | Generate alias for order by extractors
 mkAnnOrderByAlias ::

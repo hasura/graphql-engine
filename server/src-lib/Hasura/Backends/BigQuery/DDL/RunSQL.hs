@@ -33,7 +33,10 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema (RunSQLRes (..))
-import Hasura.RQL.Types (CacheRWM, MetadataM, SourceName, askSourceConfig)
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.Backend
 
 data BigQueryRunSQL = BigQueryRunSQL

@@ -24,6 +24,7 @@ import Data.HashMap.Strict qualified as Map
 import Data.IntMap qualified as IntMap
 import Data.Text.Extended
 import Database.PG.Query qualified as Q
+import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Backends.Postgres.Translate.Column
@@ -34,7 +35,8 @@ import Hasura.GraphQL.Parser.Column
 import Hasura.GraphQL.Parser.Schema
 import Hasura.Prelude
 import Hasura.RQL.DML.Internal (fromCurrentSession, withTypeAnn)
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Column
+import Hasura.SQL.Backend
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 

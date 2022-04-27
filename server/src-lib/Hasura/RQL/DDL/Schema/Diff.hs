@@ -25,8 +25,18 @@ import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Rename
 import Hasura.RQL.DDL.Schema.Table
-import Hasura.RQL.Types hiding (fmFunction, tmComputedFields, tmTable)
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.Metadata hiding (fmFunction, tmComputedFields, tmTable)
+import Hasura.RQL.Types.Metadata.Backend
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCacheTypes
+import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data FunctionMeta b = FunctionMeta

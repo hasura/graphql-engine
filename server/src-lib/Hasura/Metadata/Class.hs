@@ -17,7 +17,14 @@ import Database.PG.Query qualified as Q
 import Hasura.Base.Error
 import Hasura.Eventing.ScheduledTrigger.Types
 import Hasura.Prelude
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Action
+import Hasura.RQL.Types.EventTrigger
+import Hasura.RQL.Types.Eventing
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.ScheduledTrigger
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCache.Build
+import Hasura.RQL.Types.Source
 import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing

@@ -56,7 +56,9 @@ import Database.PG.Query qualified as Q
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.Logging qualified as L
 import Hasura.Prelude
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.RemoteSchema
 import Hasura.Server.Auth
 import Hasura.Server.Cors
 import Hasura.Server.Logging

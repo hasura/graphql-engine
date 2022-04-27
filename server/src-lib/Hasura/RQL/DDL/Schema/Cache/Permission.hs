@@ -25,12 +25,23 @@ import Hasura.Incremental qualified as Inc
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission
 import Hasura.RQL.DDL.Schema.Cache.Common
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Metadata.Backend
+import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.Permission
+import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.RemoteSchema
+import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.Roles.Internal
   ( CheckPermission (..),
     CombineRolePermInfo (..),
     rolePermInfoToCombineRolePermInfo,
   )
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCache.Build
+import Hasura.RQL.Types.SchemaCacheTypes
+import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session
 

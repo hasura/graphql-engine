@@ -24,8 +24,10 @@ import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Parser
 import Hasura.Prelude hiding (first, second)
 import Hasura.RQL.IR
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 

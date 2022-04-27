@@ -40,7 +40,18 @@ import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
 import Hasura.RQL.IR
-import Hasura.RQL.Types hiding (askTableInfo)
+import Hasura.RQL.Types.Action
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.CustomTypes
+import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.QueryTags
+import Hasura.RQL.Types.RemoteSchema
+import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
+import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization
+import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Tag (HasTag)
 import Hasura.Server.Types
