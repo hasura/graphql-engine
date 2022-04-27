@@ -175,7 +175,7 @@ class TestEventCreateAndDeleteMSSQL:
 #   HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE=100  (the default)
 @pytest.mark.parametrize("backend", ['mssql','postgres'])
 @usefixtures("per_method_tests_db_state")
-class TestEventFloodCommon(object):
+class TestEventFloodPostgresMSSQL(object):
 
     @classmethod
     def dir(cls):
@@ -376,7 +376,7 @@ class TestEventDataFormatGeoJSONMSSQL(object):
 
 @pytest.mark.parametrize("backend", ['mssql','postgres'])
 @usefixtures("per_class_tests_db_state")
-class TestCreateEventQueryCommon(object):
+class TestCreateEventQueryPostgresMSSQL(object):
 
     @classmethod
     def dir(cls):
@@ -458,7 +458,7 @@ class TestCreateEventQueryCommon(object):
 
 @pytest.mark.parametrize("backend", ['mssql','postgres'])
 @usefixtures('per_method_tests_db_state')
-class TestEventRetryConfCommon(object):
+class TestEventRetryConfPostgresMSSQL(object):
 
     @classmethod
     def dir(cls):
@@ -541,7 +541,7 @@ class TestEventRetryConfCommon(object):
 
 @pytest.mark.parametrize("backend", ['mssql','postgres'])
 @usefixtures('per_method_tests_db_state')
-class TestEventHeadersCommon(object):
+class TestEventHeadersPostgresMSSQL(object):
 
     @classmethod
     def dir(cls):
@@ -1663,7 +1663,7 @@ class TestManualEventsMSSQL(object):
 
 @pytest.mark.parametrize("backend", ['mssql','postgres'])
 @usefixtures('per_method_tests_db_state')
-class TestEventsAsynchronousExecutionCommon(object):
+class TestEventsAsynchronousExecutionPostgresMSSQL(object):
 
     @classmethod
     def dir(cls):

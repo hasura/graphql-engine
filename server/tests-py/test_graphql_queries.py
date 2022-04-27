@@ -248,7 +248,7 @@ class TestGraphQLQueryBoolExpSearchBigquery:
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.parametrize("backend", ['citus', 'mssql', 'postgres'])
 @usefixtures('per_class_tests_db_state')
-class TestGraphQLQueryBasicCommon:
+class TestGraphQLQueryBasicPostgresMSSQLCitus:
     # This also exercises support for multiple operations in a document:
     def test_select_query_author(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author.yaml', transport)
@@ -439,7 +439,7 @@ class TestGraphQLQueryBasicCitus:
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.parametrize("backend", ['citus', 'postgres'])
 @usefixtures('per_class_tests_db_state')
-class TestGraphQLQueryFragmentsCommon:
+class TestGraphQLQueryFragmentsPostgresCitus:
 
     def test_select_query_top_level_fragment(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_top_level_fragment.yaml', transport)
@@ -484,7 +484,7 @@ class TestGraphQLQueryAgg:
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @pytest.mark.parametrize("backend", ['mssql', 'postgres'])
 @usefixtures('per_class_tests_db_state')
-class TestGraphQLQueryAggPermCommon:
+class TestGraphQLQueryAggPermPostgresMSSQL:
 
     def test_author_agg_articles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/author_agg_articles.yaml', transport)
@@ -576,7 +576,7 @@ class TestGraphQLQueryOffsets:
 @pytest.mark.parametrize("transport", ['http', 'websocket', 'subscription'])
 @pytest.mark.parametrize("backend", ['mssql', 'postgres'])
 @usefixtures('per_class_tests_db_state')
-class TestGraphQLQueryBoolExpBasicCommon:
+class TestGraphQLQueryBoolExpBasicPostgresMSSQL:
     def test_order_delivered_at_is_null(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_order_delivered_at_is_null.yaml', transport)
 
@@ -864,25 +864,16 @@ class TestGraphQLInheritedRolesMSSQL:
     def test_inherited_role_when_some_roles_may_not_have_permission_configured(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/inherited_role_with_some_roles_having_no_permissions.yaml')
 
-@pytest.mark.parametrize("transport", ['http', 'websocket', 'subscription'])
-@pytest.mark.parametrize("backend", ['postgres', 'mssql'])
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("backend", ['postgres'])
 @usefixtures('per_class_tests_db_state')
-class TestGraphQLQueryBoolExpSearchCommon:
+class TestGraphQLQueryBoolExpSearchPostgres:
 
     def test_city_where_like(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_city_where_like.yaml', transport)
 
     def test_city_where_not_like(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_city_where_nlike.yaml', transport)
-
-    @classmethod
-    def dir(cls):
-        return 'queries/graphql_query/boolexp/search'
-
-@pytest.mark.parametrize("transport", ['http', 'websocket'])
-@pytest.mark.parametrize("backend", ['postgres'])
-@usefixtures('per_class_tests_db_state')
-class TestGraphQLQueryBoolExpSearchPostgres:
 
     def test_city_where_ilike(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_city_where_ilike_postgres.yaml', transport)
@@ -915,7 +906,7 @@ class TestGraphQLQueryBoolExpSearchPostgres:
     def dir(cls):
         return 'queries/graphql_query/boolexp/search'
 
-@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@pytest.mark.parametrize("transport", ['http', 'websocket', 'subscription'])
 @pytest.mark.parametrize("backend", ['mssql'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpSearchMSSQL:
@@ -1276,7 +1267,7 @@ class TestMissingUnauthorizedRoleAndCookie:
         check_query_f(hge_ctx, self.dir() + '/cookie_header_absent_unauth_role_not_set.yaml', transport, add_auth=False)
 
 @usefixtures('per_class_tests_db_state')
-class TestGraphQLExplainCommon:
+class TestGraphQLExplainPostgresMSSQLMySQL:
     @classmethod
     def dir(cls):
         return 'queries/explain'
