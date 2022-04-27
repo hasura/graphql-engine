@@ -108,8 +108,7 @@ msBuildTableUpdateMutationFields ::
   m [FieldParser n (AnnotatedUpdateG 'MSSQL (RemoteRelationshipField UnpreparedValue) (UnpreparedValue 'MSSQL))]
 msBuildTableUpdateMutationFields sourceName tableName tableInfo gqlName = do
   fieldParsers <- runMaybeT do
-    tablePerms <- MaybeT $ tablePermissions tableInfo
-    updatePerms <- hoistMaybe $ _permUpd tablePerms
+    updatePerms <- MaybeT $ _permUpd <$> tablePermissions tableInfo
     let mkBackendUpdate backendUpdateTableInfo =
           (fmap . fmap) BackendUpdate $
             SU.buildUpdateOperators

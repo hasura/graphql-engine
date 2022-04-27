@@ -203,7 +203,7 @@ pgkBuildTableUpdateMutationFields ::
   m [FieldParser n (IR.AnnotatedUpdateG ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
 pgkBuildTableUpdateMutationFields sourceName tableName tableInfo gqlName =
   concat . maybeToList <$> runMaybeT do
-    updatePerms <- MaybeT $ (_permUpd =<<) <$> tablePermissions tableInfo
+    updatePerms <- MaybeT $ _permUpd <$> tablePermissions tableInfo
     lift $
       GSB.buildTableUpdateMutationFields
         -- TODO: https://github.com/hasura/graphql-engine-mono/issues/2955

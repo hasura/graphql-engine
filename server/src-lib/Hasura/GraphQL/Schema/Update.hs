@@ -276,7 +276,7 @@ updateTable backendUpdate sourceName tableInfo fieldName description = runMaybeT
       whereDesc = "filter the rows which have to be updated"
       viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsUpdatable viewInfo
-  updatePerms <- MaybeT $ (_permUpd =<<) <$> tablePermissions tableInfo
+  updatePerms <- MaybeT $ _permUpd <$> tablePermissions tableInfo
   whereArg <- lift $ P.field whereName (Just whereDesc) <$> boolExp sourceName tableInfo
   selection <- lift $ mutationSelectionSet sourceName tableInfo
   let argsParser = liftA2 (,) backendUpdate whereArg
@@ -307,7 +307,7 @@ updateTableByPk backendUpdate sourceName tableInfo fieldName description = runMa
       tableName = tableInfoName tableInfo
       viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsUpdatable viewInfo
-  updatePerms <- MaybeT $ (_permUpd =<<) <$> tablePermissions tableInfo
+  updatePerms <- MaybeT $ _permUpd <$> tablePermissions tableInfo
   pkArgs <- MaybeT $ primaryKeysArguments tableInfo
   selection <- MaybeT $ tableSelectionSet sourceName tableInfo
   lift $ do

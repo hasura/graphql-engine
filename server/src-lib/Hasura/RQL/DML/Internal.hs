@@ -83,15 +83,15 @@ askPermInfo pa tableInfo = do
 getPermInfoMaybe ::
   RoleName -> Lens' (RolePermInfo b) (Maybe c) -> TableInfo b -> Maybe c
 getPermInfoMaybe role pa tableInfo =
-  getRolePermInfo role tableInfo >>= (^. pa)
+  getRolePermInfo role tableInfo ^. pa
 
 getRolePermInfo ::
-  RoleName -> TableInfo b -> Maybe (RolePermInfo b)
+  RoleName -> TableInfo b -> RolePermInfo b
 getRolePermInfo role tableInfo
-  | role == adminRoleName =
-    Just $ _tiAdminRolePermInfo tableInfo
+  | role == adminRoleName = _tiAdminRolePermInfo tableInfo
   | otherwise =
-    M.lookup role (_tiRolePermInfoMap tableInfo)
+    fromMaybe (RolePermInfo Nothing Nothing Nothing Nothing) $
+      M.lookup role (_tiRolePermInfoMap tableInfo)
 
 assertAskPermInfo ::
   (UserInfoM m, QErrM m, Backend b) =>
