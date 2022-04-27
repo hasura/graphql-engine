@@ -40,8 +40,23 @@ import Hasura.RQL.DDL.RemoteRelationship.Validate
   ( errorToText,
     validateToSchemaRelationship,
   )
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Metadata.Backend
+import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.Relationships.Remote
+import Hasura.RQL.Types.Relationships.ToSchema
+import Hasura.RQL.Types.Relationships.ToSource
+import Hasura.RQL.Types.RemoteSchema
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCache.Build
+import Hasura.RQL.Types.SchemaCacheTypes
+import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 --------------------------------------------------------------------------------

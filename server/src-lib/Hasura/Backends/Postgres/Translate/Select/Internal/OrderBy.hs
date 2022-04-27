@@ -45,7 +45,12 @@ import Hasura.RQL.IR.OrderBy
   ( OrderByItemG (OrderByItemG, obiColumn),
   )
 import Hasura.RQL.IR.Select
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.Relationships.Local
+import Hasura.SQL.Backend
 
 {- Note [Optimizing queries using limit/offset]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

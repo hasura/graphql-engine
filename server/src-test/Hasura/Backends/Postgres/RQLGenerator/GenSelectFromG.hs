@@ -8,7 +8,7 @@ import Hasura.Generator.Common (defaultRange)
 import Hasura.Prelude hiding (choice, maybe)
 import Hasura.RQL.IR.Generator (genArgumentExp, genFunctionArgsExpG, genIdentifier)
 import Hasura.RQL.IR.Select (SelectFromG (..))
-import Hasura.RQL.Types (BackendType (..), PostgresKind (..))
+import Hasura.SQL.Backend (BackendType (..), PostgresKind (..))
 import Hedgehog (MonadGen)
 import Hedgehog.Gen qualified as Gen
 

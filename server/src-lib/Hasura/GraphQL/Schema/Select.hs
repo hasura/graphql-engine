@@ -70,8 +70,20 @@ import {-# SOURCE #-} Hasura.GraphQL.Schema.RemoteRelationship
 import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
-import Hasura.RQL.Types hiding (askTableInfo)
+import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Relationships.Remote
+import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
+import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization
+import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend
 import Hasura.Server.Utils (executeJSONPath)
 import Language.GraphQL.Draft.Syntax qualified as G
 

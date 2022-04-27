@@ -15,6 +15,7 @@ import Hasura.Backends.Postgres.RQLGenerator.GenAssociatedTypes
 import Hasura.Backends.Postgres.SQL.DML (NullsOrder (..), OrderType (..))
 import Hasura.Generator.Common (defaultRange)
 import Hasura.Prelude hiding (maybe, nonEmpty)
+import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Generator
   ( genAnnBoolExp,
     genAnnBoolExpFld,
@@ -22,7 +23,8 @@ import Hasura.RQL.IR.Generator
     genAnnotatedOrderByItemG,
   )
 import Hasura.RQL.IR.Select (AnnotatedOrderByItemG, SelectArgsG (..))
-import Hasura.RQL.Types (AnnBoolExp, BackendType (Postgres), BasicOrderType, Column, NullsOrderType, PostgresKind (Vanilla))
+import Hasura.RQL.Types.Backend
+import Hasura.SQL.Backend
 import Hedgehog (MonadGen)
 import Hedgehog.Gen qualified as Gen
 

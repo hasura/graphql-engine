@@ -59,10 +59,23 @@ import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Source
 import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.DDL.Webhook.Transform.Class (mkReqTransformCtx)
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Allowlist
+import Hasura.RQL.Types.ApiLimit
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Endpoint
+import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.EventTrigger qualified as ET
 import Hasura.RQL.Types.Eventing.Backend (BackendEventTrigger (..))
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Metadata.Backend
+import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.Network
+import Hasura.RQL.Types.QueryCollection
+import Hasura.RQL.Types.ScheduledTrigger
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCache.Build
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend qualified as AB
 import Network.HTTP.Client.Transformable qualified as HTTP
 

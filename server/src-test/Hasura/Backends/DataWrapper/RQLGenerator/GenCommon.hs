@@ -14,9 +14,11 @@ import Hasura.Backends.DataWrapper.IR.Name qualified as Name
 import Hasura.Backends.DataWrapper.IR.Scalar.Type qualified as ScalarType
 import Hasura.Generator.Common (defaultRange, genArbitraryUnicodeText, genHashMap)
 import Hasura.Prelude (coerce, fmap, pure, ($), (<$>), (<*>))
-import Hasura.RQL.IR (AnnBoolExpFld, AnnotatedOrderByElement (..), OpExpG (..), RootOrCurrent (..), RootOrCurrentColumn (RootOrCurrentColumn))
+import Hasura.RQL.IR
 import Hasura.RQL.IR.Generator (genAnnBoolExp, genAnnotatedAggregateOrderBy, genColumnInfo, genInsertOrder, genRelName, genRelType)
-import Hasura.RQL.Types (AnnBoolExpFld (..), BackendType (DataWrapper), Column, FunctionName, RelInfo (RelInfo), ScalarType, TableName)
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Relationships.Local
+import Hasura.SQL.Backend
 import Hedgehog (MonadGen)
 import Hedgehog.Gen (bool_, choice, element, list)
 

@@ -24,6 +24,7 @@ import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as HS
 import Data.Tagged qualified as Tagged
+import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Context qualified as C
@@ -48,8 +49,14 @@ import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.IR qualified as IR
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Action
+import Hasura.RQL.Types.Allowlist
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.Subscription
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend
 import Hasura.Server.Types (ReadOnlyMode (..), RequestId (..))
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing

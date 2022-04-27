@@ -23,7 +23,15 @@ import Data.Text.Conversions (UTF8 (..), decodeText)
 import Hasura.HTTP
 import Hasura.Logging
 import Hasura.Prelude
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Action
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.CustomTypes
+import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.Metadata.Instances ()
+import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.Table
+import Hasura.SQL.Backend
 import Hasura.Server.Telemetry.Counters
 import Hasura.Server.Types
 import Hasura.Server.Version

@@ -47,7 +47,10 @@ import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.Prelude
-import Hasura.RQL.Types hiding (GraphQLType, defaultScalars)
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Metadata.Instances ()
+import Hasura.RQL.Types.RemoteSchema
+import Hasura.RQL.Types.SchemaCache
 import Hasura.Server.Utils (englishList, isSessionVariable)
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G

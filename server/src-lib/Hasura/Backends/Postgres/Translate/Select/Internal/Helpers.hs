@@ -23,8 +23,8 @@ import Hasura.Backends.Postgres.SQL.Types (Identifier (..), QualifiedFunction, q
 import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
 import Hasura.Prelude
 import Hasura.RQL.IR
-import Hasura.RQL.Types (BackendType (Postgres))
 import Hasura.RQL.Types.Common (FieldName)
+import Hasura.SQL.Backend
 
 -- | First element extractor expression from given record set
 -- For example:- To get first "id" column from given row set,

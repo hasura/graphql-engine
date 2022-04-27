@@ -8,7 +8,8 @@ import Data.Time.Clock
 import Hasura.Eventing.EventTrigger
 import Hasura.Eventing.ScheduledTrigger
 import Hasura.Prelude
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Eventing
 import System.Cron.Parser
 import Test.Hspec
 

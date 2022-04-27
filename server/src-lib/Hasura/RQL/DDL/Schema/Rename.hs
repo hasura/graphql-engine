@@ -18,8 +18,22 @@ import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission
-import Hasura.RQL.Types
+import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Metadata.Backend
+import Hasura.RQL.Types.Permission
+import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Relationships.Remote
+import Hasura.RQL.Types.Relationships.ToSchema
+import Hasura.RQL.Types.Relationships.ToSource
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCacheTypes
+import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 

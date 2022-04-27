@@ -34,12 +34,16 @@ import Hasura.EncJSON
 import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.DML.Internal
+import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Delete
 import Hasura.RQL.IR.Insert
 import Hasura.RQL.IR.Returning
 import Hasura.RQL.IR.Select
 import Hasura.RQL.IR.Update
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
+import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Session
 

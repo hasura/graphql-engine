@@ -17,7 +17,10 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
 import Hasura.Backends.Postgres.Translate.Types (PermissionLimitSubQuery (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.Select
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
+import Hasura.SQL.Backend
 
 aggregateFieldsToExtractorExps ::
   Identifier -> AggregateFields ('Postgres pgKind) -> [(S.Alias, S.SQLExp)]

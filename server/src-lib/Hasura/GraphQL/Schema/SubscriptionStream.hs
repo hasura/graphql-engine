@@ -25,7 +25,11 @@ import Hasura.GraphQL.Schema.Select (tablePermissionsInfo, tableSelectionList, t
 import Hasura.GraphQL.Schema.Table (getTableGQLName, tableSelectColumns, tableSelectPermissions)
 import Hasura.Prelude
 import Hasura.RQL.IR.Select qualified as IR
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.Subscription
+import Hasura.RQL.Types.Table
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Argument to limit the maximum number of results returned in a single batch.

@@ -9,9 +9,11 @@ import Hasura.Backends.DataWrapper.IR.OrderBy qualified as IR
 import Hasura.Backends.DataWrapper.RQLGenerator.GenCommon (genAnnBoolExpFld, genAnnotatedOrderByElement, genColumn, genTableName)
 import Hasura.Generator.Common (defaultRange)
 import Hasura.Prelude (Int, Maybe, NonEmpty, pure, ($), (.))
+import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Generator (genAnnBoolExp, genAnnotatedOrderByItemG)
 import Hasura.RQL.IR.Select (AnnotatedOrderByItemG, SelectArgsG (..))
-import Hasura.RQL.Types (AnnBoolExp, Backend (BasicOrderType, Column, NullsOrderType), BackendType (DataWrapper))
+import Hasura.RQL.Types.Backend
+import Hasura.SQL.Backend (BackendType (DataWrapper))
 import Hedgehog (MonadGen)
 import Hedgehog.Gen (element, maybe, nonEmpty)
 import Hedgehog.Internal.Gen (integral)

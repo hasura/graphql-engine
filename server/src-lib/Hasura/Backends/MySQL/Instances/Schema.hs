@@ -24,7 +24,12 @@ import Hasura.GraphQL.Schema.Select
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.IR.Select qualified as IR
-import Hasura.RQL.Types as RQL
+import Hasura.RQL.Types.Backend as RQL
+import Hasura.RQL.Types.Column as RQL
+import Hasura.RQL.Types.Common as RQL
+import Hasura.RQL.Types.Function as RQL
+import Hasura.RQL.Types.SchemaCache as RQL
+import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 instance BackendSchema 'MySQL where

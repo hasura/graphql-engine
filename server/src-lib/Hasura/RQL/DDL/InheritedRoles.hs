@@ -12,7 +12,12 @@ import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.Roles
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.Session
 
 runAddInheritedRole ::

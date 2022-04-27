@@ -22,7 +22,11 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema (RunSQLRes (..))
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCache.Build
+import Hasura.SQL.Backend
 
 data RunSQL = RunSQL
   { _Sql :: !Text,

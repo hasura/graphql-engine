@@ -11,9 +11,9 @@ import Data.Text.NonEmpty (mkNonEmptyText)
 import Hasura.Backends.Postgres.SQL.Types (unsafePGCol)
 import Hasura.Prelude
 import Hasura.QuickCheck.Instances ()
-import Hasura.RQL.Types (BackendType (Postgres), Comment (..))
+import Hasura.RQL.Types.Common (Comment (..))
 import Hasura.RQL.Types.Table (ColumnConfig (..), CustomRootField (..), TableConfig (..), TableCustomRootFields (..), emptyCustomRootFields, emptyTableConfig)
-import Hasura.SQL.Backend (PostgresKind (Vanilla))
+import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Vanilla))
 import Language.GraphQL.Draft.Syntax qualified as G
 import Test.Hspec
 import Test.Hspec.QuickCheck

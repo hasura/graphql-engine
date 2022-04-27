@@ -20,7 +20,7 @@ import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.IntMap qualified as IntMap
 import Data.Sequence qualified as Seq
 import Database.PG.Query qualified as Q
-import Hasura.Backends.Postgres.Connection (runTx)
+import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Execute.Insert (convertToSQLTransaction)
 import Hasura.Backends.Postgres.Execute.Mutation qualified as PGE
 import Hasura.Backends.Postgres.Execute.Prepare
@@ -75,15 +75,11 @@ import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Returning qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Update qualified as IR
-import Hasura.RQL.Types
-  ( Backend (..),
-    BackendType (Postgres),
-    ColumnInfo (..),
-    liftTx,
-  )
+import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
   ( ColumnType (..),
     ColumnValue (..),
+    ciName,
   )
 import Hasura.RQL.Types.Common
   ( FieldName (..),
@@ -92,6 +88,7 @@ import Hasura.RQL.Types.Common
     StringifyNumbers,
   )
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend
 import Hasura.Session (UserInfo (..))
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G

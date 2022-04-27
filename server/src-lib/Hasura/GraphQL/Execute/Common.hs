@@ -9,7 +9,8 @@ import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Metadata.Class
 import Hasura.Prelude
-import Hasura.RQL.Types
+import Hasura.RQL.Types.GraphqlSchemaIntrospection
+import Hasura.RQL.Types.SchemaCache
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing

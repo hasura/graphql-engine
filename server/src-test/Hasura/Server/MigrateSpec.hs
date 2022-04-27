@@ -20,7 +20,10 @@ import Hasura.RQL.DDL.Metadata (ClearMetadata (..), runClearMetadata)
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.DDL.Schema.LegacyCatalog (recreateSystemMetadata)
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCache.Build
+import Hasura.RQL.Types.Source
 import Hasura.Server.API.PGDump
 import Hasura.Server.Init (DowngradeOptions (..))
 import Hasura.Server.Migrate

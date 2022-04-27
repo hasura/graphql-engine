@@ -33,8 +33,18 @@ import Hasura.GraphQL.Schema.Select
 import Hasura.Prelude
 import Hasura.RQL.IR.Action qualified as RQL
 import Hasura.RQL.IR.Root qualified as RQL
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Action
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.CustomTypes
+import Hasura.RQL.Types.Relationships.Remote
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization
+import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 

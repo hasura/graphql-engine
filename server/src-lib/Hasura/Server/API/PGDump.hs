@@ -15,7 +15,7 @@ import Data.Text.Conversions
 import Database.PG.Query qualified as Q
 import Hasura.Base.Error qualified as RTE
 import Hasura.Prelude
-import Hasura.RQL.Types (SourceName, defaultSource)
+import Hasura.RQL.Types.Common
 import System.Exit
 import System.Process
 import Text.Regex.TDFA qualified as TDFA

@@ -28,7 +28,11 @@ import Hasura.Eventing.EventTrigger (defaultFetchBatchSize)
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.Logging qualified as L
 import Hasura.Prelude
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Action
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.RemoteSchema
+import Hasura.RQL.Types.SchemaCache
 import Hasura.Server.Auth
 import Hasura.Server.Cors
 import Hasura.Server.Init.Config
@@ -199,7 +203,7 @@ mkServeOptions rso = do
   enableTelemetry <-
     fromMaybe True
       <$> withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
-  strfyNum <- bool LeaveNumbersAlone StringifyNumbers <$> (withEnvBool (rsoStringifyNum rso) $ fst stringifyNumEnv)
+  strfyNum <- bool LeaveNumbersAlone StringifyNumbers <$> withEnvBool (rsoStringifyNum rso) (fst stringifyNumEnv)
   dangerousBooleanCollapse <-
     fromMaybe False <$> withEnv (rsoDangerousBooleanCollapse rso) (fst dangerousBooleanCollapseEnv)
   enabledAPIs <-

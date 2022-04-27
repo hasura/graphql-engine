@@ -65,7 +65,12 @@ import Hasura.GraphQL.Schema.SubscriptionStream (selectStreamTable)
 import Hasura.GraphQL.Schema.Update (updateTable, updateTableByPk)
 import Hasura.Prelude
 import Hasura.RQL.IR
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SourceCustomization
+import Hasura.RQL.Types.Table
 import Language.GraphQL.Draft.Syntax qualified as G
 
 buildTableQueryFields ::
@@ -110,7 +115,7 @@ buildTableStreamingSubscriptionFields sourceName tableName tableInfo gqlName = d
   let customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
       selectDesc = Just $ G.Description $ "fetch data from the table in a streaming manner : " <>> tableName
   selectStreamName <-
-    mkRootFieldName $ (fromMaybe gqlName $ _crfName $ _tcrfSelect customRootFields) <> G._stream
+    mkRootFieldName $ fromMaybe gqlName (_crfName $ _tcrfSelect customRootFields) <> G._stream
   catMaybes
     <$> sequenceA
       [ optionalFieldParser QDBStreamMultipleRows $ selectStreamTable sourceName tableInfo selectStreamName selectDesc

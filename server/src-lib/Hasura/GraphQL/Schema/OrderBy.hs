@@ -23,7 +23,13 @@ import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
 import Hasura.RQL.IR.OrderBy qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
-import Hasura.RQL.Types hiding (askTableInfo)
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
+import Hasura.RQL.Types.Table
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Corresponds to an object type for an order by.

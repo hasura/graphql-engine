@@ -30,6 +30,9 @@ import Hasura.AppSpec qualified as AppSpec
 import Hasura.Backends.DataWrapper.API.V0Spec qualified as DataWrapper.API.V0Spec
 import Hasura.Backends.MSSQL.ErrorSpec qualified as MSSQLErrorSpec
 import Hasura.Backends.MySQL.DataLoader.ExecuteTests qualified as MySQLDataLoader
+import Hasura.Backends.Postgres.Connection.MonadTx
+import Hasura.Backends.Postgres.Connection.Settings
+import Hasura.Backends.Postgres.Execute.Types
 import Hasura.EventingSpec qualified as EventingSpec
 import Hasura.GraphQL.NamespaceSpec qualified as NamespaceSpec
 import Hasura.GraphQL.Parser.DirectivesTest qualified as GraphQLDirectivesSpec
@@ -43,10 +46,14 @@ import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.IR.SelectSpec qualified as SelectSpec
 import Hasura.RQL.MetadataSpec qualified as MetadataSpec
 import Hasura.RQL.PermissionSpec qualified as PermSpec
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.AllowlistSpec qualified as AllowlistSpec
+import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CommonSpec qualified as CommonTypesSpec
 import Hasura.RQL.Types.EndpointSpec qualified as EndpointSpec
+import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.RemoteSchema
+import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.TableSpec qualified as TableSpec
 import Hasura.RQL.WebhookTransformsSpec qualified as WebhookTransformsSpec
 import Hasura.SQL.WKTSpec qualified as WKTSpec

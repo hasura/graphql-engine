@@ -23,7 +23,13 @@ import Hasura.Eventing.ScheduledTrigger
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.EventTrigger (getHeaderInfosFromConf)
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.EventTrigger
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.ScheduledTrigger
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCache.Build
 import System.Cron.Types (CronSchedule)
 
 populateInitialCronTriggerEvents ::

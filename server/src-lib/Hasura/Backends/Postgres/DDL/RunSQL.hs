@@ -24,12 +24,14 @@ import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as HS
 import Data.Text.Extended
 import Database.PG.Query qualified as Q
+import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.DDL.EventTrigger
 import Hasura.Backends.Postgres.DDL.Source
   ( ToMetadataFetchQuery,
     fetchFunctionMetadata,
     fetchTableMetadata,
   )
+import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Backends.Postgres.SQL.Types hiding (FunctionName, TableName)
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -37,13 +39,24 @@ import Hasura.GraphQL.Schema.Common (purgeDependencies)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Diff
-import Hasura.RQL.Types hiding
-  ( ConstraintName,
-    fmFunction,
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.EventTrigger
+import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.Metadata hiding
+  ( fmFunction,
     tmComputedFields,
     tmTable,
   )
+import Hasura.RQL.Types.Metadata.Backend
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCache.Build
+import Hasura.RQL.Types.SchemaCacheTypes
+import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend
 import Hasura.Server.Types
 import Hasura.Server.Utils (quoteRegex)
 import Hasura.Session

@@ -8,7 +8,7 @@ import Hasura.Generator.Common (defaultRange)
 import Hasura.Prelude (pure, ($))
 import Hasura.RQL.IR.Generator (genAnnBoolExp)
 import Hasura.RQL.IR.Select (TablePermG (TablePerm))
-import Hasura.RQL.Types
+import Hasura.SQL.Backend
   ( BackendType (DataWrapper),
   )
 import Hedgehog (MonadGen)

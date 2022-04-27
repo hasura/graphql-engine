@@ -32,7 +32,10 @@ import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.IR.Select qualified as RS
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Action
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common
+import Hasura.SQL.Backend
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G

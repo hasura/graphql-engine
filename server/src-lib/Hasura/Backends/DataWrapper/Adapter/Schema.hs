@@ -18,8 +18,12 @@ import Hasura.GraphQL.Schema.Backend (BackendSchema (..), ComparisonExp, MonadBu
 import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Select qualified as GSS
 import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp as RQL
 import Hasura.RQL.IR.Select (SelectArgsG (..))
-import Hasura.RQL.Types qualified as RQL
+import Hasura.RQL.Types.Backend as RQL
+import Hasura.RQL.Types.Column as RQL
+import Hasura.RQL.Types.Common as RQL
+import Hasura.RQL.Types.SchemaCache as RQL
 import Hasura.SQL.Backend (BackendType (DataWrapper))
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax qualified as GraphQL

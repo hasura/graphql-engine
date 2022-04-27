@@ -18,7 +18,7 @@ import Hasura.Base.Error (QErr (..), QErrExtra (..))
 import Hasura.Base.Error qualified as Error
 import Hasura.GraphQL.Namespace (NamespacedField (..), namespacedField)
 import Hasura.Prelude
-import Hasura.RQL.Types (ColumnConfig (..), Comment (..), CustomRootField (..), SourceName (..), TableCustomRootFields (..), getAllCustomRootFields)
+import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Endpoint.Trie
 import Hasura.RQL.Types.Metadata.Object
   ( MetadataObjId (..),
@@ -30,7 +30,8 @@ import Hasura.RQL.Types.RemoteSchema
     RemoteSchemaName (..),
     getTypeName,
   )
-import Hasura.RQL.Types.SchemaCache (IntrospectionResult (..))
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.Table
 import Hasura.Server.Utils qualified as Utils
 import Hasura.Session (SessionVariable, mkSessionVariable)
 import Language.GraphQL.Draft.Syntax qualified as GraphQL

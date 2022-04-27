@@ -63,8 +63,13 @@ import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.IR
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Action
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.RemoteSchema
+import Hasura.RQL.Types.ResultCustomization
+import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend
 import Hasura.Server.Init.Config
 import Hasura.Server.Limits
 import Hasura.Server.Logging

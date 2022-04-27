@@ -36,7 +36,8 @@ import Hasura.GraphQL.Execute.RemoteJoin.Types
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Transport.Instances ()
 import Hasura.Prelude
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G

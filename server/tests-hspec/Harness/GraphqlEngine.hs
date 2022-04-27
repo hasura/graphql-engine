@@ -52,7 +52,7 @@ import Hasura.App (Loggers (..), ServeCtx (..))
 import Hasura.App qualified as App
 import Hasura.Logging (Hasura)
 import Hasura.Prelude
-import Hasura.RQL.Types (PGConnectionParams (..), UrlConf (..))
+import Hasura.RQL.Types.Common (PGConnectionParams (..), UrlConf (..))
 import Hasura.Server.Init (PostgresConnInfo (..), ServeOptions (..))
 import Hasura.Server.Metrics (ServerMetricsSpec, createServerMetrics)
 import Network.Socket qualified as Socket

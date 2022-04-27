@@ -20,7 +20,8 @@ import Hasura.GraphQL.Transport.WebSocket.Protocol
 import Hasura.GraphQL.Transport.WebSocket.Server qualified as WS
 import Hasura.Logging qualified as L
 import Hasura.Prelude
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.SchemaCache
 import Hasura.Server.Cors
 import Hasura.Server.Init.Config (KeepAliveDelay (..))
 import Hasura.Server.Metrics (ServerMetrics (..))

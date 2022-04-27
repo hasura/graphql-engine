@@ -56,10 +56,22 @@ import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.Prelude
 import Hasura.RQL.IR.Action qualified as IR
+import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.RemoteSchema qualified as IR
 import Hasura.RQL.IR.Root qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
-import Hasura.RQL.Types hiding (askTableInfo)
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Metadata.Backend
+import Hasura.RQL.Types.Metadata.Instances ()
+import Hasura.RQL.Types.RemoteSchema
+import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
+import Hasura.RQL.Types.SchemaCacheTypes
+import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session (RoleName)
 import Language.GraphQL.Draft.Syntax as G

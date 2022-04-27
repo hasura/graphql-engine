@@ -9,6 +9,8 @@ import Data.List.NonEmpty qualified as NE
 import Data.Sequence qualified as DS
 import Data.Text.Extended
 import Database.PG.Query qualified as Q
+import Hasura.Backends.Postgres.Connection.MonadTx
+import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import Hasura.Backends.Postgres.Translate.Select
@@ -17,9 +19,17 @@ import Hasura.EncJSON
 import Hasura.Prelude
 import Hasura.RQL.DML.Internal
 import Hasura.RQL.DML.Types
+import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy
 import Hasura.RQL.IR.Select
-import Hasura.RQL.Types
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.Table
+import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Server.Types
 import Hasura.Session

@@ -29,8 +29,17 @@ import Hasura.EncJSON
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Diff
-import Hasura.RQL.Types hiding (TableName, runTx, tmTable)
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Metadata hiding (tmTable)
+import Hasura.RQL.Types.Metadata.Backend
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCache.Build
+import Hasura.RQL.Types.SchemaCacheTypes
+import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend
 import Hasura.Server.Utils (quoteRegex)
 import Text.Regex.TDFA qualified as TDFA
 
