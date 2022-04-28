@@ -107,7 +107,7 @@ migrateCatalog ::
     MonadBaseControl IO m
   ) =>
   Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) ->
-  MaintenanceMode ->
+  MaintenanceMode () ->
   UTCTime ->
   m (MigrationResult, Metadata)
 migrateCatalog maybeDefaultSourceConfig maintenanceMode migrationTime = do
@@ -116,7 +116,7 @@ migrateCatalog maybeDefaultSourceConfig maintenanceMode migrationTime = do
   metadataTableExists <- doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_metadata")
   migrationResult <-
     if
-        | maintenanceMode == MaintenanceModeEnabled -> do
+        | maintenanceMode == (MaintenanceModeEnabled ()) -> do
           if
               | not catalogSchemaExists ->
                 throw500 "unexpected: hdb_catalog schema not found in maintenance mode"
@@ -259,7 +259,7 @@ migrations ::
   (MonadIO m, MonadTx m) =>
   Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) ->
   Bool ->
-  MaintenanceMode ->
+  MaintenanceMode () ->
   [(Float, MigrationPair m)]
 migrations maybeDefaultSourceConfig dryRun maintenanceMode =
   -- We need to build the list of migrations at compile-time so that we can compile the SQL
@@ -309,7 +309,7 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
       | otherwise = multiQ
 
     from42To43 = do
-      when (maintenanceMode == MaintenanceModeEnabled) $
+      when (maintenanceMode == MaintenanceModeEnabled ()) $
         throw500 "cannot migrate to catalog version 43 in maintenance mode"
       let query = $(makeRelativeToProject "src-rsr/migrations/42_to_43.sql" >>= Q.sqlFromFile)
       if dryRun

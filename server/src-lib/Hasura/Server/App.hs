@@ -122,7 +122,7 @@ data ServerCtx = ServerCtx
     scEnvironment :: !Env.Environment,
     scRemoteSchemaPermsCtx :: !RemoteSchemaPermsCtx,
     scFunctionPermsCtx :: !FunctionPermissionsCtx,
-    scEnableMaintenanceMode :: !MaintenanceMode,
+    scEnableMaintenanceMode :: !(MaintenanceMode ()),
     scExperimentalFeatures :: !(S.HashSet ExperimentalFeature),
     scLoggingSettings :: !LoggingSettings,
     scEventingMode :: !EventingMode,
@@ -768,7 +768,7 @@ mkWaiApp ::
   FunctionPermissionsCtx ->
   WS.ConnectionOptions ->
   KeepAliveDelay ->
-  MaintenanceMode ->
+  MaintenanceMode () ->
   EventingMode ->
   ReadOnlyMode ->
   -- | Set of the enabled experimental features

@@ -259,7 +259,7 @@ mkServeOptions rso = do
       <$> withEnv (rsoInferFunctionPermissions rso) (fst inferFunctionPermsEnv)
 
   maintenanceMode <-
-    bool MaintenanceModeDisabled MaintenanceModeEnabled
+    bool MaintenanceModeDisabled (MaintenanceModeEnabled ())
       <$> withEnvBool (rsoEnableMaintenanceMode rso) (fst maintenanceModeEnv)
 
   eventsFetchBatchSize <-

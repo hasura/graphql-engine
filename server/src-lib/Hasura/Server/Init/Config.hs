@@ -253,7 +253,7 @@ data ServeOptions impl = ServeOptions
     soConnectionOptions :: WS.ConnectionOptions,
     soWebsocketKeepAlive :: KeepAliveDelay,
     soInferFunctionPermissions :: FunctionPermissionsCtx,
-    soEnableMaintenanceMode :: MaintenanceMode,
+    soEnableMaintenanceMode :: MaintenanceMode (),
     soSchemaPollInterval :: OptionalInterval,
     soExperimentalFeatures :: Set.HashSet ExperimentalFeature,
     soEventsFetchBatchSize :: NonNegativeInt,

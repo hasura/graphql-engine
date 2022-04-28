@@ -77,7 +77,7 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
     SourceName ->
     -- | List of trigger names which exist in the metadata
     [TriggerName] ->
-    MaintenanceMode ->
+    MaintenanceMode () ->
     FetchBatchSize ->
     m [Event b]
 
@@ -89,7 +89,7 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
     SourceConfig b ->
     Event b ->
     Time.UTCTime ->
-    Maybe MaintenanceModeVersion ->
+    MaintenanceMode MaintenanceModeVersion ->
     m ()
 
   -- | @getMaintenanceModeVersion@ gets the source catalog version from the
@@ -111,7 +111,7 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
     SourceConfig b ->
     Event b ->
     Invocation 'EventType ->
-    Maybe MaintenanceModeVersion ->
+    MaintenanceMode MaintenanceModeVersion ->
     m (Either QErr ())
 
   -- | @recordError@ records an erronous event invocation, it does a couple of
@@ -127,7 +127,7 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
     Event b ->
     Invocation 'EventType ->
     ProcessEventError ->
-    Maybe MaintenanceModeVersion ->
+    MaintenanceMode MaintenanceModeVersion ->
     m (Either QErr ())
 
   -- | @recordError'@ records an erronous event invocation, it does a couple of
@@ -143,7 +143,7 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
     Event b ->
     Maybe (Invocation 'EventType) ->
     ProcessEventError ->
-    Maybe MaintenanceModeVersion ->
+    MaintenanceMode MaintenanceModeVersion ->
     m (Either QErr ())
 
   -- | @dropTriggerAndArchiveEvents@ drops the database trigger and

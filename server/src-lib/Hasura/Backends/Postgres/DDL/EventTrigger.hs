@@ -60,13 +60,13 @@ fetchUndeliveredEvents ::
   SourceConfig ('Postgres pgKind) ->
   SourceName ->
   [TriggerName] ->
-  MaintenanceMode ->
+  MaintenanceMode () ->
   FetchBatchSize ->
   m [Event ('Postgres pgKind)]
 fetchUndeliveredEvents sourceConfig sourceName triggerNames maintenanceMode fetchBatchSize = do
   fetchEventsTxE <-
     case maintenanceMode of
-      MaintenanceModeEnabled -> do
+      MaintenanceModeEnabled () -> do
         maintenanceModeVersion <- liftIO $ runPgSourceReadTx sourceConfig getMaintenanceModeVersionTx
         pure $ fmap (fetchEventsMaintenanceMode sourceName triggerNames fetchBatchSize) maintenanceModeVersion
       MaintenanceModeDisabled -> pure $ Right $ fetchEvents sourceName triggerNames fetchBatchSize
@@ -84,7 +84,7 @@ setRetry ::
   SourceConfig ('Postgres pgKind) ->
   Event ('Postgres pgKind) ->
   Time.UTCTime ->
-  Maybe MaintenanceModeVersion ->
+  MaintenanceMode MaintenanceModeVersion ->
   m ()
 setRetry sourceConfig event retryTime maintenanceModeVersion =
   liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig (setRetryTx event retryTime maintenanceModeVersion)
@@ -125,7 +125,7 @@ recordSuccess ::
   SourceConfig ('Postgres pgKind) ->
   Event ('Postgres pgKind) ->
   Invocation 'EventType ->
-  Maybe MaintenanceModeVersion ->
+  MaintenanceMode MaintenanceModeVersion ->
   m (Either QErr ())
 recordSuccess sourceConfig event invocation maintenanceModeVersion =
   liftIO $
@@ -139,7 +139,7 @@ recordError ::
   Event ('Postgres pgKind) ->
   Invocation 'EventType ->
   ProcessEventError ->
-  Maybe MaintenanceModeVersion ->
+  MaintenanceMode MaintenanceModeVersion ->
   m (Either QErr ())
 recordError sourceConfig event invocation processEventError maintenanceModeVersion =
   recordError' sourceConfig event (Just invocation) processEventError maintenanceModeVersion
@@ -150,7 +150,7 @@ recordError' ::
   Event ('Postgres pgKind) ->
   Maybe (Invocation 'EventType) ->
   ProcessEventError ->
-  Maybe MaintenanceModeVersion ->
+  MaintenanceMode MaintenanceModeVersion ->
   m (Either QErr ())
 recordError' sourceConfig event invocation processEventError maintenanceModeVersion =
   liftIO $
@@ -402,9 +402,9 @@ fetchEventsMaintenanceMode sourceName triggerNames fetchBatchSize = \case
       limit = fromIntegral (_unFetchBatchSize fetchBatchSize) :: Word64
   CurrentMMVersion -> fetchEvents sourceName triggerNames fetchBatchSize
 
-setSuccessTx :: Event ('Postgres pgKind) -> Maybe MaintenanceModeVersion -> Q.TxE QErr ()
+setSuccessTx :: Event ('Postgres pgKind) -> MaintenanceMode MaintenanceModeVersion -> Q.TxE QErr ()
 setSuccessTx e = \case
-  Just PreviousMMVersion ->
+  (MaintenanceModeEnabled PreviousMMVersion) ->
     Q.unitQE
       defaultTxErrorHandler
       [Q.sql|
@@ -414,8 +414,8 @@ setSuccessTx e = \case
     |]
       (Identity $ eId e)
       True
-  Just CurrentMMVersion -> latestVersionSetSuccess
-  Nothing -> latestVersionSetSuccess
+  (MaintenanceModeEnabled CurrentMMVersion) -> latestVersionSetSuccess
+  MaintenanceModeDisabled -> latestVersionSetSuccess
   where
     latestVersionSetSuccess =
       Q.unitQE
@@ -428,9 +428,9 @@ setSuccessTx e = \case
         (Identity $ eId e)
         True
 
-setErrorTx :: Event ('Postgres pgKind) -> Maybe MaintenanceModeVersion -> Q.TxE QErr ()
+setErrorTx :: Event ('Postgres pgKind) -> MaintenanceMode MaintenanceModeVersion -> Q.TxE QErr ()
 setErrorTx e = \case
-  Just PreviousMMVersion ->
+  (MaintenanceModeEnabled PreviousMMVersion) ->
     Q.unitQE
       defaultTxErrorHandler
       [Q.sql|
@@ -440,8 +440,8 @@ setErrorTx e = \case
     |]
       (Identity $ eId e)
       True
-  Just CurrentMMVersion -> latestVersionSetError
-  Nothing -> latestVersionSetError
+  (MaintenanceModeEnabled CurrentMMVersion) -> latestVersionSetError
+  MaintenanceModeDisabled -> latestVersionSetError
   where
     latestVersionSetError =
       Q.unitQE
@@ -454,9 +454,9 @@ setErrorTx e = \case
         (Identity $ eId e)
         True
 
-setRetryTx :: Event ('Postgres pgKind) -> Time.UTCTime -> Maybe MaintenanceModeVersion -> Q.TxE QErr ()
+setRetryTx :: Event ('Postgres pgKind) -> Time.UTCTime -> MaintenanceMode MaintenanceModeVersion -> Q.TxE QErr ()
 setRetryTx e time = \case
-  Just PreviousMMVersion ->
+  (MaintenanceModeEnabled PreviousMMVersion) ->
     Q.unitQE
       defaultTxErrorHandler
       [Q.sql|
@@ -466,8 +466,8 @@ setRetryTx e time = \case
     |]
       (time, eId e)
       True
-  Just CurrentMMVersion -> latestVersionSetRetry
-  Nothing -> latestVersionSetRetry
+  (MaintenanceModeEnabled CurrentMMVersion) -> latestVersionSetRetry
+  MaintenanceModeDisabled -> latestVersionSetRetry
   where
     latestVersionSetRetry =
       Q.unitQE

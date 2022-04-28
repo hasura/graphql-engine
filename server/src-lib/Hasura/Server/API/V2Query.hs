@@ -103,7 +103,7 @@ runQuery env instanceId userInfo schemaCache httpManager serverConfigCtx rqlQuer
             newResourceVersion <- setMetadata currentResourceVersion updatedMetadata
             -- notify schema cache sync
             notifySchemaCacheSync newResourceVersion instanceId invalidations
-          MaintenanceModeEnabled ->
+          MaintenanceModeEnabled () ->
             throw500 "metadata cannot be modified in maintenance mode"
       pure (result, updatedCache)
 

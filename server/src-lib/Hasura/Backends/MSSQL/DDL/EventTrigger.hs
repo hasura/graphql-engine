@@ -56,7 +56,7 @@ fetchUndeliveredEvents ::
   MSSQLSourceConfig ->
   SourceName ->
   [TriggerName] ->
-  MaintenanceMode ->
+  MaintenanceMode () ->
   FetchBatchSize ->
   m [Event 'MSSQL]
 fetchUndeliveredEvents sourceConfig sourceName triggerNames _ fetchBatchSize = do
@@ -70,7 +70,7 @@ setRetry ::
   MSSQLSourceConfig ->
   Event 'MSSQL ->
   UTCTime ->
-  Maybe MaintenanceModeVersion ->
+  MaintenanceMode MaintenanceModeVersion ->
   m ()
 setRetry sourceConfig event retryTime maintenanceModeVersion = do
   liftEitherM $
@@ -110,7 +110,7 @@ recordSuccess ::
   MSSQLSourceConfig ->
   Event 'MSSQL ->
   Invocation 'EventType ->
-  Maybe MaintenanceModeVersion ->
+  MaintenanceMode MaintenanceModeVersion ->
   m (Either QErr ())
 recordSuccess sourceConfig event invocation maintenanceModeVersion =
   liftIO $
@@ -124,7 +124,7 @@ recordError ::
   Event 'MSSQL ->
   Invocation 'EventType ->
   ProcessEventError ->
-  Maybe MaintenanceModeVersion ->
+  MaintenanceMode MaintenanceModeVersion ->
   m (Either QErr ())
 recordError sourceConfig event invocation processEventError maintenanceModeVersion =
   recordError' sourceConfig event (Just invocation) processEventError maintenanceModeVersion
@@ -135,12 +135,12 @@ recordError' ::
   Event 'MSSQL ->
   Maybe (Invocation 'EventType) ->
   ProcessEventError ->
-  Maybe MaintenanceModeVersion ->
+  MaintenanceMode MaintenanceModeVersion ->
   m (Either QErr ())
 recordError' sourceConfig event invocation processEventError maintenanceModeVersion =
   liftIO $
     runMSSQLSourceWriteTx sourceConfig $ do
-      onJust invocation (\inv -> insertInvocation inv)
+      onJust invocation insertInvocation
       case processEventError of
         PESetRetry retryTime -> do
           setRetryTx event retryTime maintenanceModeVersion
@@ -258,11 +258,11 @@ insertMSSQLManualEventTx (TableName tableName (SchemaName schemaName)) triggerNa
     triggerNameTxt = triggerNameToTxt triggerName
     payload = J.encode rowData
 
-setSuccessTx :: Event 'MSSQL -> Maybe MaintenanceModeVersion -> TxE QErr ()
+setSuccessTx :: Event 'MSSQL -> MaintenanceMode MaintenanceModeVersion -> TxE QErr ()
 setSuccessTx event = \case
-  Just PreviousMMVersion -> throw500 "unexpected: no previous maintenance mode version found for MSSQL source"
-  Just CurrentMMVersion -> latestVersionSetSuccess
-  Nothing -> latestVersionSetSuccess
+  (MaintenanceModeEnabled PreviousMMVersion) -> throw500 "unexpected: no previous maintenance mode version found for MSSQL source"
+  (MaintenanceModeEnabled CurrentMMVersion) -> latestVersionSetSuccess
+  MaintenanceModeDisabled -> latestVersionSetSuccess
   where
     eventId = unEventId $ eId event
 
@@ -275,11 +275,11 @@ setSuccessTx event = \case
           WHERE id = $eventId
         |]
 
-setErrorTx :: Event 'MSSQL -> Maybe MaintenanceModeVersion -> TxE QErr ()
+setErrorTx :: Event 'MSSQL -> MaintenanceMode MaintenanceModeVersion -> TxE QErr ()
 setErrorTx event = \case
-  Just PreviousMMVersion -> throw500 "unexpected: there is no previous maintenance mode version supported for MSSQL event triggers"
-  Just CurrentMMVersion -> latestVersionSetSuccess
-  Nothing -> latestVersionSetSuccess
+  (MaintenanceModeEnabled PreviousMMVersion) -> throw500 "unexpected: there is no previous maintenance mode version supported for MSSQL event triggers"
+  (MaintenanceModeEnabled CurrentMMVersion) -> latestVersionSetSuccess
+  MaintenanceModeDisabled -> latestVersionSetSuccess
   where
     eventId = unEventId $ eId event
 
@@ -293,13 +293,13 @@ setErrorTx event = \case
         |]
 
 -- See Note [UTCTIME not supported in SQL Server]
-setRetryTx :: Event 'MSSQL -> UTCTime -> Maybe MaintenanceModeVersion -> TxE QErr ()
+setRetryTx :: Event 'MSSQL -> UTCTime -> MaintenanceMode MaintenanceModeVersion -> TxE QErr ()
 setRetryTx event utcTime maintenanceMode = do
   time <- convertUTCToDatetime2 utcTime
   case maintenanceMode of
-    Just PreviousMMVersion -> throw500 "unexpected: there is no previous maintenance mode version supported for MSSQL event triggers"
-    Just CurrentMMVersion -> latestVersionSetRetry time
-    Nothing -> latestVersionSetRetry time
+    (MaintenanceModeEnabled PreviousMMVersion) -> throw500 "unexpected: there is no previous maintenance mode version supported for MSSQL event triggers"
+    (MaintenanceModeEnabled CurrentMMVersion) -> latestVersionSetRetry time
+    MaintenanceModeDisabled -> latestVersionSetRetry time
   where
     eventId = unEventId $ eId event
     -- NOTE: Naveen: The following method to convert from Datetime to Datetimeoffset  was

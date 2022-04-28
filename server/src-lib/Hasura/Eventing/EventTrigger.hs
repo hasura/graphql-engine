@@ -225,7 +225,7 @@ processEventQueue ::
   EventEngineCtx ->
   LockedEventsCtx ->
   ServerMetrics ->
-  MaintenanceMode ->
+  MaintenanceMode () ->
   m (Forever m)
 processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx {..} LockedEventsCtx {leEvents} serverMetrics maintenanceMode = do
   events0 <- popEventsBatch
@@ -369,13 +369,13 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx {..} 
               Tracing.runTraceTInContext
               tracingCtx
 
-      maintenanceModeVersionEither :: Either QErr (Maybe MaintenanceModeVersion) <-
+      maintenanceModeVersionEither :: Either QErr (MaintenanceMode MaintenanceModeVersion) <-
         case maintenanceMode of
-          MaintenanceModeEnabled -> do
+          MaintenanceModeEnabled () -> do
             runExceptT (getMaintenanceModeVersion @b sourceConfig) <&> \case
               Left err -> Left err
-              Right maintenanceModeVersion -> Right $ Just maintenanceModeVersion
-          MaintenanceModeDisabled -> return $ Right Nothing
+              Right maintenanceModeVersion -> Right $ (MaintenanceModeEnabled maintenanceModeVersion)
+          MaintenanceModeDisabled -> return $ Right MaintenanceModeDisabled
 
       case maintenanceModeVersionEither of
         Left maintenanceModeVersionErr -> logQErr maintenanceModeVersionErr
@@ -454,7 +454,7 @@ processSuccess ::
   Event b ->
   [HeaderConf] ->
   J.Value ->
-  Maybe MaintenanceModeVersion ->
+  MaintenanceMode MaintenanceModeVersion ->
   HTTPResp a ->
   m (Either QErr ())
 processSuccess sourceConfig e reqHeaders ep maintenanceModeVersion resp = do
@@ -475,7 +475,7 @@ processError ::
   RetryConf ->
   [HeaderConf] ->
   J.Value ->
-  Maybe MaintenanceModeVersion ->
+  MaintenanceMode MaintenanceModeVersion ->
   HTTPErr a ->
   m (Either QErr ())
 processError sourceConfig e retryConf reqHeaders ep maintenanceModeVersion err = do
