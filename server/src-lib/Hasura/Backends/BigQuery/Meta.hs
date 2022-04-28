@@ -9,6 +9,13 @@ module Hasura.Backends.BigQuery.Meta
     RestFieldSchema (..),
     RestType (..),
     Mode (..),
+    RestRoutineType (..),
+    RestArgument (..),
+    RestStandardSqlField (..),
+    RestStandardSqlTableType (..),
+    RestRoutineReference (..),
+    RestRoutine (..),
+    getRoutine,
   )
 where
 
@@ -25,6 +32,7 @@ import Data.Text qualified as T
 import GHC.Generics
 import Hasura.Backends.BigQuery.Connection
 import Hasura.Backends.BigQuery.Source
+import Hasura.Prelude (hasuraJSON)
 import Network.HTTP.Simple
 import Network.HTTP.Types
 import Prelude
@@ -39,8 +47,10 @@ data MetadataError
 data RestProblem
   = GetTablesProblem SomeException
   | GetTableProblem SomeException
+  | GetRoutineProblem SomeException
   | GetMetaDecodeProblem String
   | GetTablesBigQueryProblem BigQueryProblem
+  | GetRoutinesBigQueryProblem BigQueryProblem
   | RESTRequestNonOK Status
   deriving (Show)
 
@@ -276,3 +286,109 @@ getTable conn dataSet tableId = do
 
 encodeParams :: [(Text, Text)] -> Text
 encodeParams = T.intercalate "&" . map (\(k, v) -> k <> "=" <> v)
+
+-- Routines related
+
+-- | The fine-grained type of the routine
+-- Ref: https://cloud.google.com/bigquery/docs/reference/rest/v2/routines#RoutineType
+data RestRoutineType
+  = ROUTINE_TYPE_UNSPECIFIED
+  | SCALAR_FUNCTION
+  | PROCEDURE
+  | TABLE_VALUED_FUNCTION
+  deriving (Show, Generic)
+
+instance FromJSON RestRoutineType
+
+-- | Input argument of a function/routine.
+-- Ref: https://cloud.google.com/bigquery/docs/reference/rest/v2/routines#Argument
+data RestArgument = RestArgument
+  { -- | The name of this argument. Can be absent for function return argument.
+    _raName :: Maybe Text
+  }
+  deriving (Show, Generic)
+
+instance FromJSON RestArgument where
+  parseJSON = genericParseJSON hasuraJSON
+
+-- | A field or a column.
+-- Ref: https://cloud.google.com/bigquery/docs/reference/rest/v2/StandardSqlField
+data RestStandardSqlField = RestStandardSqlField
+  { -- | The field name is optional and is absent for fields with STRUCT type.
+    _rssfName :: Maybe Text
+  }
+  deriving (Show, Generic)
+
+instance FromJSON RestStandardSqlField where
+  parseJSON = genericParseJSON hasuraJSON
+
+-- | A table type, which has only list of columns with names and types.
+-- Ref: https://cloud.google.com/bigquery/docs/reference/rest/v2/routines#StandardSqlTableType
+data RestStandardSqlTableType = RestStandardSqlTableType
+  { _rrttColumns :: [RestStandardSqlField]
+  }
+  deriving (Show, Generic)
+
+instance FromJSON RestStandardSqlTableType where
+  parseJSON = genericParseJSON hasuraJSON
+
+-- | Id path of a routine.
+-- Ref: https://cloud.google.com/bigquery/docs/reference/rest/v2/routines#RoutineReference
+data RestRoutineReference = RestRoutineReference
+  { datasetId :: Text,
+    projectId :: Text,
+    routineId :: Text
+  }
+  deriving (Show, Generic)
+
+instance FromJSON RestRoutineReference
+
+-- | A user-defined function.
+-- Ref: https://cloud.google.com/bigquery/docs/reference/rest/v2/routines#Routine
+data RestRoutine = RestRoutine
+  { -- | Reference describing the ID of this routine
+    routineReference :: RestTableReference,
+    -- | The type of routine
+    routineType :: RestRoutineType,
+    -- | List of arguments defined
+    arguments :: Maybe [RestArgument],
+    -- | Routines defined with 'RETURNS TABLE' clause has this information
+    returnTableType :: Maybe RestStandardSqlTableType
+  }
+  deriving (Show, Generic)
+
+instance FromJSON RestRoutine
+
+-- | Fetch the routine information in a given dataset from BigQuery API
+getRoutine ::
+  MonadIO m =>
+  BigQueryConnection ->
+  Text ->
+  Text ->
+  m (Either RestProblem RestRoutine)
+getRoutine conn dataSet routineId = do
+  liftIO (catchAny run (pure . Left . GetRoutineProblem))
+  where
+    run = do
+      let req =
+            setRequestHeader "Content-Type" ["application/json"] $
+              parseRequest_ url
+      eResp <- runBigQuery conn req
+      case eResp of
+        Left e -> pure (Left (GetRoutinesBigQueryProblem e))
+        Right resp ->
+          case getResponseStatusCode resp of
+            200 ->
+              case Aeson.eitherDecode (getResponseBody resp) of
+                Left e -> pure (Left (GetMetaDecodeProblem e))
+                Right routine -> pure (Right routine)
+            _ -> pure (Left (RESTRequestNonOK (getResponseStatus resp)))
+      where
+        url =
+          "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
+            <> T.unpack (_bqProjectId conn)
+            <> "/datasets/"
+            <> T.unpack dataSet
+            <> "/routines/"
+            <> T.unpack routineId
+            <> "?alt=json"
