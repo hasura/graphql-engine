@@ -440,6 +440,7 @@ library
                      , Hasura.Backends.MSSQL.DDL.RunSQL
                      , Hasura.Backends.MSSQL.DDL.Source
                      , Hasura.Backends.MSSQL.DDL.Source.Version
+                     , Hasura.Backends.MSSQL.Execute.QueryTags
                      , Hasura.Backends.MSSQL.Execute.Delete
                      , Hasura.Backends.MSSQL.Execute.Insert
                      , Hasura.Backends.MSSQL.Execute.Update

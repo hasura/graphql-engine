@@ -16,6 +16,7 @@ import Data.Text.Extended
 import Database.MSSQL.Transaction (forJsonQueryE)
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Connection
+import Hasura.Backends.MSSQL.Execute.QueryTags (withQueryTags)
 import Hasura.Backends.MSSQL.Instances.Execute
 import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Backends.MSSQL.ToQuery
@@ -110,11 +111,16 @@ runSubscription ::
   MultiplexedQuery 'MSSQL ->
   [(CohortId, CohortVariables)] ->
   m (DiffTime, Either QErr [(CohortId, B.ByteString)])
-runSubscription sourceConfig (MultiplexedQuery' reselect) variables = do
+runSubscription sourceConfig (MultiplexedQuery' reselect queryTags) variables = do
   let mssqlExecCtx = _mscExecCtx sourceConfig
       multiplexed = multiplexRootReselect variables reselect
-      query = toQueryFlat $ fromSelect multiplexed
-  withElapsedTime $ runExceptT $ executeMultiplexedQuery mssqlExecCtx query
+      query = toQueryFlat (fromSelect multiplexed)
+      -- Append query tags comment to the query. We cannot use 'toSQL' to convert
+      -- QueryTagsComment to Query, because it escapes the query tags comment which
+      -- will create a badly formatted query. Hence we use the 'rawUnescapedText' to
+      -- append the comment without any escaping.
+      queryWithQueryTags = query `withQueryTags` queryTags
+  withElapsedTime $ runExceptT $ executeMultiplexedQuery mssqlExecCtx queryWithQueryTags
 
 executeMultiplexedQuery ::
   MonadIO m =>

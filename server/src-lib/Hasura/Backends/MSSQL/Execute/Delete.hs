@@ -11,6 +11,7 @@ where
 
 import Database.MSSQL.Transaction qualified as Tx
 import Hasura.Backends.MSSQL.Connection
+import Hasura.Backends.MSSQL.Execute.QueryTags
 import Hasura.Backends.MSSQL.FromIr as TSQL
 import Hasura.Backends.MSSQL.FromIr.Constants (tempTableNameDeleted)
 import Hasura.Backends.MSSQL.FromIr.Delete qualified as TSQL
@@ -24,6 +25,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Parser
 import Hasura.Prelude
+import Hasura.QueryTags (QueryTagsComment)
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
@@ -32,15 +34,16 @@ import Hasura.Session
 
 -- | Executes a Delete IR AST and return results as JSON.
 executeDelete ::
-  MonadError QErr m =>
+  (MonadError QErr m, MonadReader QueryTagsComment m) =>
   UserInfo ->
   StringifyNumbers ->
   SourceConfig 'MSSQL ->
   AnnDelG 'MSSQL Void (UnpreparedValue 'MSSQL) ->
   m (ExceptT QErr IO EncJSON)
 executeDelete userInfo stringifyNum sourceConfig deleteOperation = do
+  queryTags <- ask
   preparedDelete <- traverse (prepareValueQuery $ _uiSession userInfo) deleteOperation
-  pure $ mssqlRunReadWrite (_mscExecCtx sourceConfig) (buildDeleteTx preparedDelete stringifyNum)
+  pure $ mssqlRunReadWrite (_mscExecCtx sourceConfig) (buildDeleteTx preparedDelete stringifyNum queryTags)
 
 -- | Converts a Delete IR AST to a transaction of three delete sql statements.
 --
@@ -61,19 +64,20 @@ executeDelete userInfo stringifyNum sourceConfig deleteOperation = do
 buildDeleteTx ::
   AnnDel 'MSSQL ->
   StringifyNumbers ->
+  QueryTagsComment ->
   Tx.TxET QErr IO EncJSON
-buildDeleteTx deleteOperation stringifyNum = do
+buildDeleteTx deleteOperation stringifyNum queryTags = do
   let withAlias = "with_alias"
       createInsertedTempTableQuery =
         toQueryFlat $
           TQ.fromSelectIntoTempTable $
             TSQL.toSelectIntoTempTable tempTableNameDeleted (_adTable deleteOperation) (_adAllCols deleteOperation) RemoveConstraints
   -- Create a temp table
-  Tx.unitQueryE defaultMSSQLTxErrorHandler createInsertedTempTableQuery
+  Tx.unitQueryE defaultMSSQLTxErrorHandler (createInsertedTempTableQuery `withQueryTags` queryTags)
   let deleteQuery = TQ.fromDelete <$> TSQL.fromDelete deleteOperation
   deleteQueryValidated <- toQueryFlat <$> runFromIr deleteQuery
   -- Execute DELETE statement
-  Tx.unitQueryE mutationMSSQLTxErrorHandler deleteQueryValidated
+  Tx.unitQueryE mutationMSSQLTxErrorHandler (deleteQueryValidated `withQueryTags` queryTags)
   mutationOutputSelect <- runFromIr $ mkMutationOutputSelect stringifyNum withAlias $ _adOutput deleteOperation
 
   let withSelect =
@@ -84,4 +88,4 @@ buildDeleteTx deleteOperation stringifyNum = do
       finalMutationOutputSelect = mutationOutputSelect {selectWith = Just $ With $ pure $ Aliased withSelect withAlias}
       mutationOutputSelectQuery = toQueryFlat $ TQ.fromSelect finalMutationOutputSelect
   -- Execute SELECT query and fetch mutation response
-  encJFromText <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler mutationOutputSelectQuery
+  encJFromText <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler (mutationOutputSelectQuery `withQueryTags` queryTags)

@@ -12,6 +12,7 @@ where
 import Data.HashMap.Strict qualified as HM
 import Database.MSSQL.Transaction qualified as Tx
 import Hasura.Backends.MSSQL.Connection
+import Hasura.Backends.MSSQL.Execute.QueryTags (withQueryTags)
 import Hasura.Backends.MSSQL.FromIr as TSQL
 import Hasura.Backends.MSSQL.FromIr.Constants (tempTableNameInserted, tempTableNameValues)
 import Hasura.Backends.MSSQL.FromIr.Expression
@@ -28,6 +29,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Parser
 import Hasura.Prelude
+import Hasura.QueryTags (QueryTagsComment)
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
@@ -38,16 +40,17 @@ import Hasura.Session
 -- | Execute and insert/upsert mutation against MS SQL Server.
 --   See the documentation for 'buildInsertTx' to see how it's done.
 executeInsert ::
-  MonadError QErr m =>
+  (MonadError QErr m, MonadReader QueryTagsComment m) =>
   UserInfo ->
   StringifyNumbers ->
   SourceConfig 'MSSQL ->
   AnnotatedInsert 'MSSQL Void (UnpreparedValue 'MSSQL) ->
   m (ExceptT QErr IO EncJSON)
 executeInsert userInfo stringifyNum sourceConfig annInsert = do
+  queryTags <- ask
   -- Convert the leaf values from @'UnpreparedValue' to sql @'Expression'
   insert <- traverse (prepareValueQuery sessionVariables) annInsert
-  let insertTx = buildInsertTx tableName withAlias stringifyNum insert
+  let insertTx = buildInsertTx tableName withAlias stringifyNum insert queryTags
   pure $ mssqlRunReadWrite (_mscExecCtx sourceConfig) insertTx
   where
     sessionVariables = _uiSession userInfo
@@ -140,8 +143,14 @@ executeInsert userInfo stringifyNum sourceConfig annInsert = do
 --    > SELECT (<mutation_output_select>) AS [mutation_response], (<check_constraint_select>) AS [check_constraint_select]
 --
 --    When executed, the above statement returns a single row with mutation response as a string value and check constraint result as an integer value.
-buildInsertTx :: TSQL.TableName -> Text -> StringifyNumbers -> AnnotatedInsert 'MSSQL Void Expression -> Tx.TxET QErr IO EncJSON
-buildInsertTx tableName withAlias stringifyNum insert = do
+buildInsertTx ::
+  TSQL.TableName ->
+  Text ->
+  StringifyNumbers ->
+  AnnotatedInsert 'MSSQL Void Expression ->
+  QueryTagsComment ->
+  Tx.TxET QErr IO EncJSON
+buildInsertTx tableName withAlias stringifyNum insert queryTags = do
   let tableColumns = _aiTableColumns $ _aiData insert
       ifMatchedField = _biIfMatched . _aiBackendInsert . _aiData $ insert
 
@@ -151,7 +160,7 @@ buildInsertTx tableName withAlias stringifyNum insert = do
           TQ.fromSelectIntoTempTable $
             TSQL.toSelectIntoTempTable tempTableNameInserted tableName tableColumns RemoveConstraints
 
-  Tx.unitQueryE defaultMSSQLTxErrorHandler createInsertedTempTableQuery
+  Tx.unitQueryE defaultMSSQLTxErrorHandler (createInsertedTempTableQuery `withQueryTags` queryTags)
 
   -- Choose between running a regular @INSERT INTO@ statement or a @MERGE@ statement
   -- depending on the @if_matched@ field.
@@ -161,14 +170,15 @@ buildInsertTx tableName withAlias stringifyNum insert = do
     Nothing -> do
       -- Insert values into the table using INSERT query
       let insertQuery = toQueryFlat $ TQ.fromInsert $ TSQL.fromInsert insert
-      Tx.unitQueryE mutationMSSQLTxErrorHandler insertQuery
-    Just ifMatched -> buildUpsertTx tableName insert ifMatched
+      Tx.unitQueryE mutationMSSQLTxErrorHandler (insertQuery `withQueryTags` queryTags)
+    Just ifMatched -> buildUpsertTx tableName insert ifMatched queryTags
 
   -- Build a response to the user using the values in the temporary table named #inserted
-  (responseText, checkConditionInt) <- buildInsertResponseTx stringifyNum withAlias insert
+  (responseText, checkConditionInt) <- buildInsertResponseTx stringifyNum withAlias insert queryTags
 
   -- Drop the #inserted temp table
-  Tx.unitQueryE defaultMSSQLTxErrorHandler $ toQueryFlat $ dropTempTableQuery tempTableNameInserted
+  let dropInsertedTempTableQuery = toQueryFlat $ dropTempTableQuery tempTableNameInserted
+  Tx.unitQueryE defaultMSSQLTxErrorHandler (dropInsertedTempTableQuery `withQueryTags` queryTags)
 
   -- Raise an exception if the check condition is not met
   unless (checkConditionInt == 0) $
@@ -188,8 +198,13 @@ buildInsertTx tableName withAlias stringifyNum insert = do
 --      which will be used to build a "response" for the user.
 --
 --   Should be used as part of a bigger transaction in 'buildInsertTx'.
-buildUpsertTx :: TSQL.TableName -> AnnotatedInsert 'MSSQL Void Expression -> IfMatched Expression -> Tx.TxET QErr IO ()
-buildUpsertTx tableName insert ifMatched = do
+buildUpsertTx ::
+  TSQL.TableName ->
+  AnnotatedInsert 'MSSQL Void Expression ->
+  IfMatched Expression ->
+  QueryTagsComment ->
+  Tx.TxET QErr IO ()
+buildUpsertTx tableName insert ifMatched queryTags = do
   let presets = _aiPresetValues $ _aiData insert
       insertColumnNames =
         concatMap (map fst . getInsertColumns) (_aiInsertObject $ _aiData insert) <> HM.keys presets
@@ -201,26 +216,31 @@ buildUpsertTx tableName insert ifMatched = do
             -- We want to KeepConstraints here so the user can omit values for identity columns such as `id`
             TSQL.toSelectIntoTempTable tempTableNameValues tableName insertColumns KeepConstraints
   -- Create #values temporary table
-  Tx.unitQueryE defaultMSSQLTxErrorHandler createValuesTempTableQuery
+  Tx.unitQueryE defaultMSSQLTxErrorHandler (createValuesTempTableQuery `withQueryTags` queryTags)
 
   -- Store values in #values temporary table
   let insertValuesIntoTempTableQuery =
         toQueryFlat $
           TQ.fromInsertValuesIntoTempTable $
             TSQL.toInsertValuesIntoTempTable tempTableNameValues insert
-  Tx.unitQueryE mutationMSSQLTxErrorHandler insertValuesIntoTempTableQuery
+  Tx.unitQueryE mutationMSSQLTxErrorHandler (insertValuesIntoTempTableQuery `withQueryTags` queryTags)
 
   -- Run the MERGE query and store the mutated rows in #inserted temporary table
   merge <- runFromIr (toMerge tableName (_aiInsertObject $ _aiData insert) allTableColumns ifMatched)
   let mergeQuery = toQueryFlat $ TQ.fromMerge merge
-  Tx.unitQueryE mutationMSSQLTxErrorHandler mergeQuery
+  Tx.unitQueryE mutationMSSQLTxErrorHandler (mergeQuery `withQueryTags` queryTags)
 
   -- After @MERGE@ we no longer need this temporary table
-  Tx.unitQueryE defaultMSSQLTxErrorHandler $ toQueryFlat $ dropTempTableQuery tempTableNameValues
+  Tx.unitQueryE defaultMSSQLTxErrorHandler (toQueryFlat (dropTempTableQuery tempTableNameValues) `withQueryTags` queryTags)
 
 -- | Builds a response to the user using the values in the temporary table named #inserted.
-buildInsertResponseTx :: StringifyNumbers -> Text -> AnnotatedInsert 'MSSQL Void Expression -> Tx.TxET QErr IO (Text, Int)
-buildInsertResponseTx stringifyNum withAlias insert = do
+buildInsertResponseTx ::
+  StringifyNumbers ->
+  Text ->
+  AnnotatedInsert 'MSSQL Void Expression ->
+  QueryTagsComment ->
+  Tx.TxET QErr IO (Text, Int)
+buildInsertResponseTx stringifyNum withAlias insert queryTags = do
   -- Generate a SQL SELECT statement which outputs the mutation response using the #inserted
   mutationOutputSelect <- runFromIr $ mkMutationOutputSelect stringifyNum withAlias $ _aiOutput insert
 
@@ -240,4 +260,5 @@ buildInsertResponseTx stringifyNum withAlias insert = do
       finalSelect = mutationOutputCheckConstraintSelect {selectWith = Just $ With $ pure $ Aliased withSelect withAlias}
 
   -- Execute SELECT query to fetch mutation response and check constraint result
-  Tx.singleRowQueryE defaultMSSQLTxErrorHandler (toQueryFlat $ TQ.fromSelect finalSelect)
+  let selectQuery = toQueryFlat (TQ.fromSelect finalSelect)
+  Tx.singleRowQueryE defaultMSSQLTxErrorHandler (selectQuery `withQueryTags` queryTags)

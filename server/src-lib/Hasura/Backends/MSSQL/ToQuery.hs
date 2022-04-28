@@ -22,6 +22,8 @@ module Hasura.Backends.MSSQL.ToQuery
     fromSelectIntoTempTable,
     fromInsertValuesIntoTempTable,
     dropTempTableQuery,
+    fromRawUnescapedText,
+    (<+>),
     Printer (..),
   )
 where
@@ -763,6 +765,9 @@ fromColumnName (ColumnName colname) = fromNameText colname
 
 fromNameText :: Text -> Printer
 fromNameText t = QueryPrinter (rawUnescapedText ("[" <> t <> "]"))
+
+fromRawUnescapedText :: Text -> Printer
+fromRawUnescapedText t = QueryPrinter (rawUnescapedText t)
 
 truePrinter :: Printer
 truePrinter = "(1=1)"

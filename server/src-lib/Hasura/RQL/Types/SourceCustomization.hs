@@ -24,7 +24,6 @@ import Data.Monoid
 import Hasura.GraphQL.Parser.Schema
 import Hasura.Incremental.Internal.Dependency (Cacheable)
 import Hasura.Prelude
-import Hasura.RQL.Types.Instances ()
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data RootFieldsCustomization = RootFieldsCustomization
