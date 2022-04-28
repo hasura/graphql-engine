@@ -11,6 +11,7 @@ where
 
 import Database.MSSQL.Transaction qualified as Tx
 import Hasura.Backends.MSSQL.Connection
+import Hasura.Backends.MSSQL.Execute.QueryTags
 import Hasura.Backends.MSSQL.FromIr as TSQL
 import Hasura.Backends.MSSQL.FromIr.Constants (tempTableNameUpdated)
 import Hasura.Backends.MSSQL.FromIr.Expression (fromGBoolExp)
@@ -26,6 +27,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Parser
 import Hasura.Prelude
+import Hasura.QueryTags (QueryTagsComment)
 import Hasura.RQL.IR
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Backend
@@ -35,18 +37,19 @@ import Hasura.Session
 
 -- | Executes an Update IR AST and return results as JSON.
 executeUpdate ::
-  MonadError QErr m =>
+  (MonadError QErr m, MonadReader QueryTagsComment m) =>
   UserInfo ->
   StringifyNumbers ->
   SourceConfig 'MSSQL ->
   AnnotatedUpdateG 'MSSQL Void (UnpreparedValue 'MSSQL) ->
   m (ExceptT QErr IO EncJSON)
 executeUpdate userInfo stringifyNum sourceConfig updateOperation = do
+  queryTags <- ask
   let mssqlExecCtx = (_mscExecCtx sourceConfig)
   preparedUpdate <- traverse (prepareValueQuery $ _uiSession userInfo) updateOperation
   if null $ updateOperations . _auBackend $ updateOperation
     then pure $ pure $ IR.buildEmptyMutResp $ _auOutput preparedUpdate
-    else pure $ (mssqlRunReadWrite mssqlExecCtx) (buildUpdateTx preparedUpdate stringifyNum)
+    else pure $ (mssqlRunReadWrite mssqlExecCtx) (buildUpdateTx preparedUpdate stringifyNum queryTags)
 
 -- | Converts an Update IR AST to a transaction of three update sql statements.
 --
@@ -67,19 +70,20 @@ executeUpdate userInfo stringifyNum sourceConfig updateOperation = do
 buildUpdateTx ::
   AnnotatedUpdate 'MSSQL ->
   StringifyNumbers ->
+  QueryTagsComment ->
   Tx.TxET QErr IO EncJSON
-buildUpdateTx updateOperation stringifyNum = do
+buildUpdateTx updateOperation stringifyNum queryTags = do
   let withAlias = "with_alias"
       createInsertedTempTableQuery =
         toQueryFlat $
           TQ.fromSelectIntoTempTable $
             TSQL.toSelectIntoTempTable tempTableNameUpdated (_auTable updateOperation) (_auAllCols updateOperation) RemoveConstraints
   -- Create a temp table
-  Tx.unitQueryE defaultMSSQLTxErrorHandler createInsertedTempTableQuery
+  Tx.unitQueryE defaultMSSQLTxErrorHandler (createInsertedTempTableQuery `withQueryTags` queryTags)
   let updateQuery = TQ.fromUpdate <$> TSQL.fromUpdate updateOperation
   updateQueryValidated <- toQueryFlat <$> runFromIr updateQuery
   -- Execute UPDATE statement
-  Tx.unitQueryE mutationMSSQLTxErrorHandler updateQueryValidated
+  Tx.unitQueryE mutationMSSQLTxErrorHandler (updateQueryValidated `withQueryTags` queryTags)
   mutationOutputSelect <- runFromIr $ mkMutationOutputSelect stringifyNum withAlias $ _auOutput updateOperation
   let checkCondition = _auCheck updateOperation
   -- The check constraint is translated to boolean expression
@@ -94,9 +98,10 @@ buildUpdateTx updateOperation stringifyNum = do
       finalSelect = mutationOutputCheckConstraintSelect {selectWith = Just $ With $ pure $ Aliased withSelect withAlias}
 
   -- Execute SELECT query to fetch mutation response and check constraint result
-  (responseText, checkConditionInt) <- Tx.singleRowQueryE defaultMSSQLTxErrorHandler (toQueryFlat $ TQ.fromSelect finalSelect)
+  let finalSelectQuery = toQueryFlat $ TQ.fromSelect finalSelect
+  (responseText, checkConditionInt) <- Tx.singleRowQueryE defaultMSSQLTxErrorHandler (finalSelectQuery `withQueryTags` queryTags)
   -- Drop the temp table
-  Tx.unitQueryE defaultMSSQLTxErrorHandler $ toQueryFlat $ dropTempTableQuery tempTableNameUpdated
+  Tx.unitQueryE defaultMSSQLTxErrorHandler (toQueryFlat (dropTempTableQuery tempTableNameUpdated) `withQueryTags` queryTags)
   -- Raise an exception if the check condition is not met
   unless (checkConditionInt == (0 :: Int)) $
     throw400 PermissionError "check constraint of an update permission has failed"
