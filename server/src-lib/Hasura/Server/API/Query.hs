@@ -213,7 +213,7 @@ runQuery env logger instanceId userInfo sc hMgr serverConfigCtx query = do
             newResourceVersion <- setMetadata currentResourceVersion updatedMetadata
             -- notify schema cache sync
             notifySchemaCacheSync newResourceVersion instanceId invalidations
-          MaintenanceModeEnabled ->
+          MaintenanceModeEnabled () ->
             throw500 "metadata cannot be modified in maintenance mode"
       pure (result, updatedCache)
 

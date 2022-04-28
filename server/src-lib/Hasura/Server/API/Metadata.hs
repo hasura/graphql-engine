@@ -352,11 +352,11 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
             & liftEitherM
 
         pure (r, modSchemaCache')
-      (MaintenanceModeEnabled, ReadOnlyModeDisabled) ->
+      (MaintenanceModeEnabled (), ReadOnlyModeDisabled) ->
         throw500 "metadata cannot be modified in maintenance mode"
       (MaintenanceModeDisabled, ReadOnlyModeEnabled) ->
         throw400 NotSupported "metadata cannot be modified in read-only mode"
-      (MaintenanceModeEnabled, ReadOnlyModeEnabled) ->
+      (MaintenanceModeEnabled (), ReadOnlyModeEnabled) ->
         throw500 "metadata cannot be modified in maintenance mode"
     else pure (r, modSchemaCache)
 

@@ -67,16 +67,16 @@ instance ToJSON ExperimentalFeature where
     EFOptimizePermissionFilters -> "optimize_permission_filters"
     EFStreamingSubscriptions -> "streaming_subscriptions"
 
-data MaintenanceMode = MaintenanceModeEnabled | MaintenanceModeDisabled
+data MaintenanceMode a = MaintenanceModeEnabled a | MaintenanceModeDisabled
   deriving (Show, Eq)
 
-instance FromJSON MaintenanceMode where
+instance FromJSON (MaintenanceMode ()) where
   parseJSON =
     withBool "MaintenanceMode" $
-      pure . bool MaintenanceModeDisabled MaintenanceModeEnabled
+      pure . bool MaintenanceModeDisabled (MaintenanceModeEnabled ())
 
-instance ToJSON MaintenanceMode where
-  toJSON = Bool . (== MaintenanceModeEnabled)
+instance ToJSON (MaintenanceMode ()) where
+  toJSON = Bool . (== MaintenanceModeEnabled ())
 
 data StreamingSubscriptionsCtx = StreamingSubscriptionsEnabled | StreamingSubscriptionsDisabled
   deriving (Show, Eq)
@@ -95,7 +95,7 @@ data ServerConfigCtx = ServerConfigCtx
   { _sccFunctionPermsCtx :: FunctionPermissionsCtx,
     _sccRemoteSchemaPermsCtx :: RemoteSchemaPermsCtx,
     _sccSQLGenCtx :: SQLGenCtx,
-    _sccMaintenanceMode :: MaintenanceMode,
+    _sccMaintenanceMode :: MaintenanceMode (),
     _sccExperimentalFeatures :: Set.HashSet ExperimentalFeature,
     _sccEventingMode :: EventingMode,
     _sccReadOnlyMode :: ReadOnlyMode

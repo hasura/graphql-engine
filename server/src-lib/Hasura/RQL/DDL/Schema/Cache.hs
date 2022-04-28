@@ -452,7 +452,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                   -- when eventing mode is disabled, don't perform any migrations
                   | eventingMode == EventingDisabled -> pure RETDoNothing
                   -- when maintenance mode is enabled, don't perform any migrations
-                  | maintenanceMode == MaintenanceModeEnabled -> pure RETDoNothing
+                  | maintenanceMode == (MaintenanceModeEnabled ()) -> pure RETDoNothing
                   | otherwise -> do
                     let initCatalogAction =
                           case backendTag @b of
