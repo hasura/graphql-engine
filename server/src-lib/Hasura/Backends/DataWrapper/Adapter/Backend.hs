@@ -7,15 +7,14 @@ module Hasura.Backends.DataWrapper.Adapter.Backend () where
 import Data.Aeson qualified as J (Value)
 import Hasura.Backends.DataWrapper.Adapter.Types qualified as Adapter
 import Hasura.Backends.DataWrapper.Agent.Client qualified as Agent.Client
-import Hasura.Backends.DataWrapper.IR.Column qualified as Column (Name)
-import Hasura.Backends.DataWrapper.IR.Expression (Expression, Operator)
-import Hasura.Backends.DataWrapper.IR.Function qualified as Function (Name)
-import Hasura.Backends.DataWrapper.IR.Name as Name (Name (unName))
-import Hasura.Backends.DataWrapper.IR.OrderBy (OrderType)
-import Hasura.Backends.DataWrapper.IR.Scalar.Type qualified as Scalar (Type)
-import Hasura.Backends.DataWrapper.IR.Scalar.Type qualified as Scalar.Type (Type (..))
-import Hasura.Backends.DataWrapper.IR.Scalar.Value qualified as Scalar (Value)
-import Hasura.Backends.DataWrapper.IR.Table as Table (Name)
+import Hasura.Backends.DataWrapper.IR.Column qualified as IR.C
+import Hasura.Backends.DataWrapper.IR.Expression qualified as IR.E
+import Hasura.Backends.DataWrapper.IR.Function qualified as IR.F
+import Hasura.Backends.DataWrapper.IR.Name qualified as IR.N
+import Hasura.Backends.DataWrapper.IR.OrderBy qualified as IR.O
+import Hasura.Backends.DataWrapper.IR.Scalar.Type qualified as IR.S.T
+import Hasura.Backends.DataWrapper.IR.Scalar.Value qualified as IR.S.V
+import Hasura.Backends.DataWrapper.IR.Table as IR.T
 import Hasura.Base.Error (Code (ValidationFailed), QErr, throw400)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend (..), XDisable)
@@ -39,19 +38,19 @@ instance Backend 'DataWrapper where
   type SourceConfig 'DataWrapper = Adapter.SourceConfig
   type SourceConnConfiguration 'DataWrapper = Agent.Client.ConnSourceConfig
 
-  type TableName 'DataWrapper = Table.Name
-  type FunctionName 'DataWrapper = Function.Name
+  type TableName 'DataWrapper = IR.T.Name
+  type FunctionName 'DataWrapper = IR.F.Name
   type RawFunctionInfo 'DataWrapper = XDisable
   type FunctionArgType 'DataWrapper = XDisable
   type ConstraintName 'DataWrapper = Unimplemented
-  type BasicOrderType 'DataWrapper = OrderType
+  type BasicOrderType 'DataWrapper = IR.O.OrderType
   type NullsOrderType 'DataWrapper = Unimplemented
   type CountType 'DataWrapper = Unimplemented
-  type Column 'DataWrapper = Column.Name
-  type ScalarValue 'DataWrapper = Scalar.Value
-  type ScalarType 'DataWrapper = Scalar.Type
-  type SQLExpression 'DataWrapper = Expression
-  type SQLOperator 'DataWrapper = Operator
+  type Column 'DataWrapper = IR.C.Name
+  type ScalarValue 'DataWrapper = IR.S.V.Value
+  type ScalarType 'DataWrapper = IR.S.T.Type
+  type SQLExpression 'DataWrapper = IR.E.Expression
+  type SQLOperator 'DataWrapper = IR.E.Operator
   type BooleanOperators 'DataWrapper = Const XDisable
   type ExtraTableMetadata 'DataWrapper = Unimplemented
 
@@ -68,7 +67,7 @@ instance Backend 'DataWrapper where
   isComparableType = isNumType @'DataWrapper
 
   isNumType :: ScalarType 'DataWrapper -> Bool
-  isNumType Scalar.Type.Number = True
+  isNumType IR.S.T.Number = True
   isNumType _ = False
 
   textToScalarValue :: Maybe Text -> ScalarValue 'DataWrapper
@@ -89,17 +88,17 @@ instance Backend 'DataWrapper where
 
   tableGraphQLName :: TableName 'DataWrapper -> Either QErr G.Name
   tableGraphQLName name =
-    G.mkName (Name.unName name)
-      `onNothing` throw400 ValidationFailed ("TableName " <> Name.unName name <> " is not a valid GraphQL identifier")
+    G.mkName (IR.N.unName name)
+      `onNothing` throw400 ValidationFailed ("TableName " <> IR.N.unName name <> " is not a valid GraphQL identifier")
 
   functionGraphQLName :: FunctionName 'DataWrapper -> Either QErr G.Name
   functionGraphQLName = error "functionGraphQLName: not implemented for GraphQL Data Wrappers."
 
   scalarTypeGraphQLName :: ScalarType 'DataWrapper -> Either QErr G.Name
   scalarTypeGraphQLName = \case
-    Scalar.Type.String -> pure stringScalar
-    Scalar.Type.Number -> pure floatScalar
-    Scalar.Type.Bool -> pure boolScalar
+    IR.S.T.String -> pure stringScalar
+    IR.S.T.Number -> pure floatScalar
+    IR.S.T.Bool -> pure boolScalar
 
   snakeCaseTableName :: TableName 'DataWrapper -> Text
-  snakeCaseTableName = Name.unName
+  snakeCaseTableName = IR.N.unName

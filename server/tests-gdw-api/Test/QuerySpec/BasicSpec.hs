@@ -95,7 +95,7 @@ spec api = describe "Basic Queries" $ do
 
   describe "Where" $ do
     it "can filter using an equality expression" $ do
-      let where' = Equal (ValueWrapper2 (Column (ValueWrapper (ColumnName "id"))) (Literal (ValueWrapper (Number 2))))
+      let where' = ApplyOperator (ValueWrapper3 Equal (Column (ValueWrapper (ColumnName "id"))) (Literal (ValueWrapper (Number 2))))
       let query = albumsQuery {where_ = Just where'}
       receivedAlbums <- fmap (Data.sortBy "id" . getQueryResponse) $ api // _query $ query
 
@@ -105,7 +105,7 @@ spec api = describe "Basic Queries" $ do
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can filter using an inequality expression" $ do
-      let where' = NotEqual (ValueWrapper2 (Column (ValueWrapper (ColumnName "id"))) (Literal (ValueWrapper (Number 2))))
+      let where' = Not (ValueWrapper (ApplyOperator (ValueWrapper3 Equal (Column (ValueWrapper (ColumnName "id"))) (Literal (ValueWrapper (Number 2))))))
       let query = albumsQuery {where_ = Just where'}
       receivedAlbums <- fmap (Data.sortBy "id" . getQueryResponse) $ api // _query $ query
 
@@ -135,8 +135,8 @@ spec api = describe "Basic Queries" $ do
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can combine filters using an and expression" $ do
-      let where1 = Equal (ValueWrapper2 (Column (ValueWrapper (ColumnName "artist_id"))) (Literal (ValueWrapper (Number 58))))
-      let where2 = Equal (ValueWrapper2 (Column (ValueWrapper (ColumnName "title"))) (Literal (ValueWrapper (String "Stormbringer"))))
+      let where1 = ApplyOperator (ValueWrapper3 Equal (Column (ValueWrapper (ColumnName "artist_id"))) (Literal (ValueWrapper (Number 58))))
+      let where2 = ApplyOperator (ValueWrapper3 Equal (Column (ValueWrapper (ColumnName "title"))) (Literal (ValueWrapper (String "Stormbringer"))))
       let where' = And (ValueWrapper [where1, where2])
       let query = albumsQuery {where_ = Just where'}
       receivedAlbums <- fmap (Data.sortBy "id" . getQueryResponse) $ api // _query $ query
@@ -151,8 +151,8 @@ spec api = describe "Basic Queries" $ do
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can combine filters using an or expression" $ do
-      let where1 = Equal (ValueWrapper2 (Column (ValueWrapper (ColumnName "id"))) (Literal (ValueWrapper (Number 2))))
-      let where2 = Equal (ValueWrapper2 (Column (ValueWrapper (ColumnName "id"))) (Literal (ValueWrapper (Number 3))))
+      let where1 = ApplyOperator (ValueWrapper3 Equal (Column (ValueWrapper (ColumnName "id"))) (Literal (ValueWrapper (Number 2))))
+      let where2 = ApplyOperator (ValueWrapper3 Equal (Column (ValueWrapper (ColumnName "id"))) (Literal (ValueWrapper (Number 3))))
       let where' = Or (ValueWrapper [where1, where2])
       let query = albumsQuery {where_ = Just where'}
       receivedAlbums <- fmap (Data.sortBy "id" . getQueryResponse) $ api // _query $ query

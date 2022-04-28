@@ -5,34 +5,35 @@ module Hasura.Backends.DataWrapper.Adapter.Schema () where
 
 --------------------------------------------------------------------------------
 
+import Data.Has
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended ((<<>))
-import Hasura.Backends.DataWrapper.IR.OrderBy qualified as IR
-import Hasura.Backends.DataWrapper.IR.Scalar.Type qualified as Scalar.Type (Type (..))
-import Hasura.Backends.DataWrapper.IR.Scalar.Value qualified as Scalar.Value (Value (..))
+import Hasura.Backends.DataWrapper.IR.Expression qualified as IR.E
+import Hasura.Backends.DataWrapper.IR.OrderBy qualified as IR.O
+import Hasura.Backends.DataWrapper.IR.Scalar.Type qualified as IR.S.T
+import Hasura.Backends.DataWrapper.IR.Scalar.Value qualified as IR.S.V
 import Hasura.Base.Error
-import Hasura.GraphQL.Parser (Definition (..), Kind (..), Parser, ValueWithOrigin)
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend (BackendSchema (..), ComparisonExp, MonadBuildSchema)
-import Hasura.GraphQL.Schema.Build qualified as GSB
-import Hasura.GraphQL.Schema.Select qualified as GSS
+import Hasura.GraphQL.Schema.BoolExp qualified as GS.BE
+import Hasura.GraphQL.Schema.Build qualified as GS.B
+import Hasura.GraphQL.Schema.Common qualified as GS.C
+import Hasura.GraphQL.Schema.Select qualified as GS.S
 import Hasura.Prelude
-import Hasura.RQL.IR.BoolExp as RQL
 import Hasura.RQL.IR.Select (SelectArgsG (..))
-import Hasura.RQL.Types.Backend as RQL
-import Hasura.RQL.Types.Column as RQL
-import Hasura.RQL.Types.Common as RQL
+import Hasura.RQL.Types.Backend qualified as RQL
+import Hasura.RQL.Types.Column qualified as RQL
+import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.RQL.Types.SchemaCache as RQL
-import Hasura.SQL.Backend (BackendType (DataWrapper))
-import Language.GraphQL.Draft.Syntax qualified as G
-import Language.GraphQL.Draft.Syntax qualified as GraphQL
+import Hasura.SQL.Backend (BackendType (..))
+import Language.GraphQL.Draft.Syntax qualified as GQL
 
 --------------------------------------------------------------------------------
 
 instance BackendSchema 'DataWrapper where
   -- top level parsers
-  buildTableQueryFields = GSB.buildTableQueryFields
+  buildTableQueryFields = GS.B.buildTableQueryFields
 
   buildTableRelayQueryFields = experimentalBuildTableRelayQueryFields
 
@@ -74,7 +75,7 @@ experimentalBuildTableRelayQueryFields ::
   RQL.SourceName ->
   RQL.TableName 'DataWrapper ->
   RQL.TableInfo 'DataWrapper ->
-  GraphQL.Name ->
+  GQL.Name ->
   NESeq (RQL.ColumnInfo 'DataWrapper) ->
   m [a]
 experimentalBuildTableRelayQueryFields _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
@@ -83,52 +84,55 @@ experimentalBuildTableRelayQueryFields _sourceName _tableName _tableInfo _gqlNam
 columnParser' ::
   (MonadSchema n m, MonadError QErr m) =>
   RQL.ColumnType 'DataWrapper ->
-  G.Nullability ->
-  m (Parser 'Both n (ValueWithOrigin (RQL.ColumnValue 'DataWrapper)))
-columnParser' columnType (G.Nullability isNullable) = do
+  GQL.Nullability ->
+  m (P.Parser 'P.Both n (P.ValueWithOrigin (RQL.ColumnValue 'DataWrapper)))
+columnParser' columnType (GQL.Nullability isNullable) = do
   parser <- case columnType of
-    RQL.ColumnScalar Scalar.Type.String -> pure (Scalar.Value.String <$> P.string)
-    RQL.ColumnScalar Scalar.Type.Number -> pure (Scalar.Value.Number <$> P.scientific)
-    RQL.ColumnScalar Scalar.Type.Bool -> pure (Scalar.Value.Boolean <$> P.boolean)
+    RQL.ColumnScalar IR.S.T.String -> pure (IR.S.V.String <$> P.string)
+    RQL.ColumnScalar IR.S.T.Number -> pure (IR.S.V.Number <$> P.scientific)
+    RQL.ColumnScalar IR.S.T.Bool -> pure (IR.S.V.Boolean <$> P.boolean)
     _ -> throw400 NotSupported "This column type is unsupported by the dynamic backend"
   pure . P.peelWithOrigin . fmap (RQL.ColumnValue columnType) . possiblyNullable $ parser
   where
     possiblyNullable ::
       MonadParse m =>
-      Parser 'Both m Scalar.Value.Value ->
-      Parser 'Both m Scalar.Value.Value
+      P.Parser 'P.Both m IR.S.V.Value ->
+      P.Parser 'P.Both m IR.S.V.Value
     possiblyNullable
-      | isNullable = fmap (fromMaybe Scalar.Value.Null) . P.nullable
+      | isNullable = fmap (fromMaybe IR.S.V.Null) . P.nullable
       | otherwise = id
 
-orderByOperators' :: NonEmpty (Definition P.EnumValueInfo, (RQL.BasicOrderType 'DataWrapper, RQL.NullsOrderType 'DataWrapper))
+orderByOperators' :: NonEmpty (P.Definition P.EnumValueInfo, (RQL.BasicOrderType 'DataWrapper, RQL.NullsOrderType 'DataWrapper))
 orderByOperators' =
   NE.fromList
-    [ ( define $$(G.litName "asc") "in ascending order",
-        (IR.Ascending, ())
+    [ ( define $$(GQL.litName "asc") "in ascending order",
+        (IR.O.Ascending, ())
       ),
-      ( define $$(G.litName "desc") "in descending order",
-        (IR.Descending, ())
+      ( define $$(GQL.litName "desc") "in descending order",
+        (IR.O.Descending, ())
       )
     ]
   where
     define name desc = P.Definition name (Just desc) P.EnumValueInfo
 
 comparisonExps' ::
-  forall m n.
+  forall m n r.
   ( BackendSchema 'DataWrapper,
     MonadSchema n m,
-    MonadError QErr m
+    MonadError QErr m,
+    MonadReader r m,
+    Has GS.C.QueryContext r
   ) =>
   RQL.ColumnType 'DataWrapper ->
-  m (Parser 'Input n [ComparisonExp 'DataWrapper])
-comparisonExps' = P.memoize 'comparisonExps' \columnType -> do
-  typedParser <- columnParser' columnType (G.Nullability False)
-  nullableTextParser <- columnParser' (RQL.ColumnScalar Scalar.Type.String) (G.Nullability True)
-  textParser <- columnParser' (RQL.ColumnScalar Scalar.Type.String) (G.Nullability False)
-  let name = P.getName typedParser <> $$(G.litName "_Dynamic_comparison_exp")
+  m (P.Parser 'P.Input n [ComparisonExp 'DataWrapper])
+comparisonExps' = P.memoize 'comparisonExps' $ \columnType -> do
+  collapseIfNull <- asks $ GS.C.qcDangerousBooleanCollapse . getter
+  typedParser <- columnParser' columnType (GQL.Nullability False)
+  nullableTextParser <- columnParser' (RQL.ColumnScalar IR.S.T.String) (GQL.Nullability True)
+  textParser <- columnParser' (RQL.ColumnScalar IR.S.T.String) (GQL.Nullability False)
+  let name = P.getName typedParser <> $$(GQL.litName "_Dynamic_comparison_exp")
       desc =
-        G.Description $
+        GQL.Description $
           "Boolean expression to compare columns of type "
             <> P.getName typedParser
             <<> ". All fields are combined with logical 'AND'."
@@ -136,16 +140,25 @@ comparisonExps' = P.memoize 'comparisonExps' \columnType -> do
       columnListParser = fmap P.openValueOrigin <$> P.list typedParser
   pure $
     P.object name (Just desc) $
-      catMaybes
-        <$> sequenceA
-          [ P.fieldOptional $$(G.litName "_is_null") Nothing (bool RQL.ANISNOTNULL RQL.ANISNULL <$> P.boolean),
-            P.fieldOptional $$(G.litName "_eq") Nothing (RQL.AEQ True . P.mkParameter <$> typedParser),
-            P.fieldOptional $$(G.litName "_neq") Nothing (RQL.ANE True . P.mkParameter <$> typedParser),
-            P.fieldOptional $$(G.litName "_gt") Nothing (RQL.AGT . P.mkParameter <$> typedParser),
-            P.fieldOptional $$(G.litName "_lt") Nothing (RQL.ALT . P.mkParameter <$> typedParser),
-            P.fieldOptional $$(G.litName "_gte") Nothing (RQL.AGTE . P.mkParameter <$> typedParser),
-            P.fieldOptional $$(G.litName "_lte") Nothing (RQL.ALTE . P.mkParameter <$> typedParser)
-          ]
+      fmap catMaybes $
+        sequenceA $
+          concat
+            [ GS.BE.equalityOperators
+                collapseIfNull
+                (P.mkParameter <$> typedParser)
+                (mkListLiteral <$> columnListParser),
+              GS.BE.comparisonOperators
+                collapseIfNull
+                (P.mkParameter <$> typedParser)
+            ]
+  where
+    mkListLiteral :: [RQL.ColumnValue 'DataWrapper] -> P.UnpreparedValue 'DataWrapper
+    mkListLiteral columnValues =
+      P.UVLiteral $ IR.E.Array $ mapMaybe extractLiteral $ fmap (IR.E.Literal . RQL.cvValue) columnValues
+
+    extractLiteral :: IR.E.Expression -> Maybe IR.S.V.Value
+    extractLiteral (IR.E.Literal lit) = Just lit
+    extractLiteral _ = Nothing
 
 tableArgs' ::
   forall r m n.
@@ -154,8 +167,8 @@ tableArgs' ::
   RQL.TableInfo 'DataWrapper ->
   m (P.InputFieldsParser n (SelectArgsG 'DataWrapper (P.UnpreparedValue 'DataWrapper)))
 tableArgs' sourceName tableInfo = do
-  whereParser <- GSS.tableWhereArg sourceName tableInfo
-  orderByParser <- GSS.tableOrderByArg sourceName tableInfo
+  whereParser <- GS.S.tableWhereArg sourceName tableInfo
+  orderByParser <- GS.S.tableOrderByArg sourceName tableInfo
   let mkSelectArgs whereArg orderByArg limitArg offsetArg =
         SelectArgs
           { _saWhere = whereArg,
@@ -168,5 +181,5 @@ tableArgs' sourceName tableInfo = do
     mkSelectArgs
       <$> whereParser
       <*> orderByParser
-      <*> GSS.tableLimitArg
-      <*> GSS.tableOffsetArg
+      <*> GS.S.tableLimitArg
+      <*> GS.S.tableOffsetArg

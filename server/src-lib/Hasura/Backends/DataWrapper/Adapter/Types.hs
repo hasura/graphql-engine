@@ -5,14 +5,14 @@ module Hasura.Backends.DataWrapper.Adapter.Types
 where
 
 import Data.Aeson qualified as J
-import Hasura.Backends.DataWrapper.API.V0.Schema (SchemaResponse)
+import Hasura.Backends.DataWrapper.API qualified as API
 import Hasura.Incremental (Cacheable (..))
 import Hasura.Prelude
 import Network.HTTP.Client (Manager)
 
 data SourceConfig = SourceConfig
   { dscEndpoint :: Text,
-    dscSchema :: SchemaResponse,
+    dscSchema :: API.SchemaResponse,
     dscManager :: Manager
   }
 

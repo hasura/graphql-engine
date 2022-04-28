@@ -556,6 +556,7 @@ library
                      , Hasura.Backends.DataWrapper.Agent.Client
                      , Hasura.Backends.DataWrapper.IR.Column
                      , Hasura.Backends.DataWrapper.IR.Expression
+                     , Hasura.Backends.DataWrapper.IR.Export
                      , Hasura.Backends.DataWrapper.IR.Function
                      , Hasura.Backends.DataWrapper.IR.Name
                      , Hasura.Backends.DataWrapper.IR.OrderBy

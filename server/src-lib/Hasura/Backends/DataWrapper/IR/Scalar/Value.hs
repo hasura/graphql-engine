@@ -12,7 +12,7 @@ import Data.Scientific
 import Hasura.Backends.DataWrapper.API qualified as API
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
-import Witch
+import Witch qualified
 
 --------------------------------------------------------------------------------
 
@@ -28,14 +28,14 @@ data Value
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Cacheable, FromJSON, Hashable, NFData, ToJSON)
 
-instance From API.Value Value where
+instance Witch.From API.Value Value where
   from = \case
     API.String txt -> String txt
     API.Number x -> Number x
     API.Boolean p -> Boolean p
     API.Null -> Null
 
-instance From Value API.Value where
+instance Witch.From Value API.Value where
   from = \case
     String txt -> API.String txt
     Number x -> API.Number x

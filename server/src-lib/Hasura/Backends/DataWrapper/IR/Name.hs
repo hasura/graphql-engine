@@ -14,7 +14,7 @@ import Data.Text.Extended (ToTxt)
 import Hasura.Backends.DataWrapper.API qualified as API
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
-import Witch
+import Witch qualified
 
 --------------------------------------------------------------------------------
 
@@ -38,16 +38,16 @@ newtype Name ty = Name {unName :: Text}
       ToTxt
     )
 
-instance From API.TableName (Name 'Table) where
+instance Witch.From API.TableName (Name 'Table) where
   from (API.TableName n) = coerce @Text @(Name 'Table) n
 
-instance From (Name 'Table) API.TableName where
+instance Witch.From (Name 'Table) API.TableName where
   from (Name n) = API.TableName n
 
-instance From API.ColumnName (Name 'Column) where
+instance Witch.From API.ColumnName (Name 'Column) where
   from (API.ColumnName n) = coerce @Text @(Name 'Column) n
 
-instance From (Name 'Column) API.ColumnName where
+instance Witch.From (Name 'Column) API.ColumnName where
   from (Name n) = API.ColumnName n
 
 -- | The "type" of "name" that the 'Name' type is meant to provide a textual

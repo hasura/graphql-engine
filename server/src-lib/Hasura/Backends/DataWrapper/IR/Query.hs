@@ -16,15 +16,13 @@ where
 import Autodocodec.Extended (ValueWrapper (ValueWrapper))
 import Data.Aeson (ToJSON, ToJSONKey)
 import Data.Aeson qualified as J
-import Data.HashMap.Strict qualified as M
-import Data.List.NonEmpty (fromList)
 import Hasura.Backends.DataWrapper.API qualified as API
-import Hasura.Backends.DataWrapper.IR.Column qualified as Column (Name)
-import Hasura.Backends.DataWrapper.IR.Expression (Expression)
-import Hasura.Backends.DataWrapper.IR.OrderBy (OrderBy)
-import Hasura.Backends.DataWrapper.IR.Table qualified as Table (Name)
+import Hasura.Backends.DataWrapper.IR.Column qualified as IR.C
+import Hasura.Backends.DataWrapper.IR.Expression qualified as IR.E
+import Hasura.Backends.DataWrapper.IR.OrderBy qualified as IR.O
+import Hasura.Backends.DataWrapper.IR.Table qualified as IR.T
 import Hasura.Prelude
-import Witch
+import Witch qualified
 
 --------------------------------------------------------------------------------
 
@@ -35,15 +33,15 @@ data Query = Query
   { -- NOTE: We should clarify what the 'Text' key is supposed to indicate.
     fields :: HashMap Text Field,
     -- | Reference to the table these fields are in.
-    from :: Table.Name,
+    from :: IR.T.Name,
     -- | Optionally limit to N results.
     limit :: Maybe Int,
     -- | Optionally offset from the Nth result.
     offset :: Maybe Int,
     -- | Optionally constrain the results to satisfy some predicate.
-    where_ :: Maybe Expression,
+    where_ :: Maybe IR.E.Expression,
     -- | Optionally order the results by the value of one or more fields.
-    orderBy :: [OrderBy],
+    orderBy :: [IR.O.OrderBy],
     -- | The cardinality of response we expect from the Agent's response.
     cardinality :: Cardinality
   }
@@ -51,19 +49,6 @@ data Query = Query
 
 instance ToJSON Query where
   toJSON = J.genericToJSON J.defaultOptions
-
-instance From Query API.Query where
-  from Query {from = from_, ..} =
-    API.Query
-      { fields = M.mapMaybe id $ fmap fromField fields,
-        from = Witch.from from_,
-        limit = limit,
-        offset = offset,
-        where_ = fmap Witch.from where_,
-        orderBy = case orderBy of
-          [] -> Nothing
-          xs -> Just $ fromList $ fmap Witch.from xs
-      }
 
 --------------------------------------------------------------------------------
 
@@ -99,26 +84,20 @@ data Field
 instance ToJSON Field where
   toJSON = J.genericToJSON J.defaultOptions
 
-fromField :: Field -> Maybe API.Field
-fromField = \case
-  Column contents -> Just $ Witch.from contents
-  Relationship contents -> Just $ Witch.from contents
-  Literal _ -> Nothing
-
 --------------------------------------------------------------------------------
 
 -- | TODO
 --
 -- NOTE: The 'ToJSON' instance is only intended for logging purposes.
 newtype ColumnContents = ColumnContents
-  { column :: Column.Name
+  { column :: IR.C.Name
   }
   deriving stock (Data, Eq, Generic, Ord, Show)
 
 instance ToJSON ColumnContents where
   toJSON = J.genericToJSON J.defaultOptions
 
-instance From ColumnContents API.Field where
+instance Witch.From ColumnContents API.Field where
   from (ColumnContents name) = API.ColumnField $ ValueWrapper $ Witch.from name
 
 -- | A relationship consists of the following components:
@@ -141,24 +120,19 @@ data RelationshipContents = RelationshipContents
 instance ToJSON RelationshipContents where
   toJSON = J.genericToJSON J.defaultOptions
 
-instance From RelationshipContents API.Field where
-  from (RelationshipContents joinCondition query) =
-    let joinCondition' = M.mapKeys Witch.from $ fmap Witch.from joinCondition
-     in (API.RelationshipField (API.RelField joinCondition' (Witch.from query)))
-
 --------------------------------------------------------------------------------
 
 -- | TODO
 --
 -- NOTE: The 'ToJSON' instance is only intended for logging purposes.
-newtype PrimaryKey = PrimaryKey Column.Name
+newtype PrimaryKey = PrimaryKey IR.C.Name
   deriving stock (Data, Generic)
   deriving newtype (Eq, Hashable, Ord, Show, ToJSON, ToJSONKey)
 
-instance From API.PrimaryKey PrimaryKey where
+instance Witch.From API.PrimaryKey PrimaryKey where
   from (API.PrimaryKey key) = PrimaryKey (Witch.from key)
 
-instance From PrimaryKey API.PrimaryKey where
+instance Witch.From PrimaryKey API.PrimaryKey where
   from (PrimaryKey key) = API.PrimaryKey (Witch.from key)
 
 --------------------------------------------------------------------------------
@@ -166,12 +140,12 @@ instance From PrimaryKey API.PrimaryKey where
 -- | TODO
 --
 -- NOTE: The 'ToJSON' instance is only intended for logging purposes.
-newtype ForeignKey = ForeignKey Column.Name
+newtype ForeignKey = ForeignKey IR.C.Name
   deriving stock (Data, Generic)
   deriving newtype (Eq, Hashable, Ord, Show, ToJSON, ToJSONKey)
 
-instance From API.ForeignKey ForeignKey where
+instance Witch.From API.ForeignKey ForeignKey where
   from (API.ForeignKey key) = ForeignKey (Witch.from key)
 
-instance From ForeignKey API.ForeignKey where
+instance Witch.From ForeignKey API.ForeignKey where
   from (ForeignKey key) = API.ForeignKey (Witch.from key)

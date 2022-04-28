@@ -14,24 +14,24 @@ import Hasura.Backends.DataWrapper.Adapter.Types qualified as GDW
   ( SourceConfig (..),
   )
 import Hasura.Backends.DataWrapper.Agent.Client qualified as Agent.Client
-import Hasura.Backends.DataWrapper.IR.Expression qualified as IR
-import Hasura.Backends.DataWrapper.IR.Name qualified as IR
-import Hasura.Backends.DataWrapper.IR.Scalar.Type qualified as IR.Scalar
-import Hasura.Backends.DataWrapper.IR.Table qualified as IR.Table
+import Hasura.Backends.DataWrapper.IR.Expression qualified as IR.E
+import Hasura.Backends.DataWrapper.IR.Name qualified as IR.N
+import Hasura.Backends.DataWrapper.IR.Scalar.Type qualified as IR.S.T
+import Hasura.Backends.DataWrapper.IR.Table qualified as IR.T
 import Hasura.Backends.Postgres.SQL.Types (PGDescription (..))
 import Hasura.Base.Error (Code (..), QErr, throw400, withPathK)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (OpExpG (..), PartialSQLExp (..))
-import Hasura.RQL.Types.Column (ColumnMutability (..), ColumnReference, ColumnType (..), RawColumnInfo (..), ValueParser, columnReferenceType, parseScalarValueColumnType)
+import Hasura.RQL.Types.Column qualified as RQL.T.C
 import Hasura.RQL.Types.Common (OID (..), SourceName)
 import Hasura.RQL.Types.Metadata (SourceMetadata (..))
 import Hasura.RQL.Types.Metadata.Backend (BackendMetadata (..))
 import Hasura.RQL.Types.Source (ResolvedSource (..))
 import Hasura.RQL.Types.SourceCustomization (SourceTypeCustomization)
-import Hasura.RQL.Types.Table (Constraint (..), DBTableMetadata (..), FieldInfo, FieldInfoMap, PrimaryKey (..), ViewInfo (..))
+import Hasura.RQL.Types.Table qualified as RQL.T.T
 import Hasura.SQL.Backend (BackendType (..))
 import Hasura.SQL.Types (CollectableType (..))
-import Hasura.Server.Utils (isReqUserId, isSessionVariable, userIdHeader)
+import Hasura.Server.Utils qualified as HSU
 import Hasura.Session (SessionVariable, mkSessionVariable)
 import Hasura.Tracing (noReporter, runTraceTWithReporter)
 import Language.GraphQL.Draft.Syntax qualified as GQL
@@ -78,24 +78,24 @@ resolveDatabaseMetadata' _ sc@(GDW.SourceConfig _ (API.SchemaResponse {..}) _) c
   let tables = Map.fromList $ do
         API.TableInfo {..} <- srTables
         let meta =
-              DBTableMetadata
+              RQL.T.T.DBTableMetadata
                 { _ptmiOid = OID 0,
                   _ptmiColumns = do
                     API.ColumnInfo {..} <- dtiColumns
                     pure $
-                      RawColumnInfo
+                      RQL.T.C.RawColumnInfo
                         { rciName = Witch.from dciName,
                           rciPosition = 1,
                           rciType = Witch.from dciType,
                           rciIsNullable = dciNullable,
                           rciDescription = fmap GQL.Description dciDescription,
                           -- TODO: Add Column Mutability to the 'TableInfo'
-                          rciMutability = ColumnMutability False False
+                          rciMutability = RQL.T.C.ColumnMutability False False
                         },
-                  _ptmiPrimaryKey = dtiPrimaryKey <&> \key -> PrimaryKey (Constraint () (OID 0)) (NESeq.singleton (coerce key)),
+                  _ptmiPrimaryKey = dtiPrimaryKey <&> \key -> RQL.T.T.PrimaryKey (RQL.T.T.Constraint () (OID 0)) (NESeq.singleton (coerce key)),
                   _ptmiUniqueConstraints = mempty,
                   _ptmiForeignKeys = mempty,
-                  _ptmiViewInfo = Just $ ViewInfo False False False,
+                  _ptmiViewInfo = Just $ RQL.T.T.ViewInfo False False False,
                   _ptmiDescription = fmap PGDescription dtiDescription,
                   _ptmiExtraTableMetadata = ()
                 }
@@ -114,23 +114,23 @@ resolveDatabaseMetadata' _ sc@(GDW.SourceConfig _ (API.SchemaResponse {..}) _) c
 parseBoolExpOperations' ::
   forall m v.
   MonadError QErr m =>
-  ValueParser 'DataWrapper m v ->
-  IR.Table.Name ->
-  FieldInfoMap (FieldInfo 'DataWrapper) ->
-  ColumnReference 'DataWrapper ->
+  RQL.T.C.ValueParser 'DataWrapper m v ->
+  IR.T.Name ->
+  RQL.T.T.FieldInfoMap (RQL.T.T.FieldInfo 'DataWrapper) ->
+  RQL.T.C.ColumnReference 'DataWrapper ->
   J.Value ->
   m [OpExpG 'DataWrapper v]
 parseBoolExpOperations' rhsParser _table _fields columnRef value =
-  withPathK (toTxt columnRef) $ parseOperations (columnReferenceType columnRef) value
+  withPathK (toTxt columnRef) $ parseOperations (RQL.T.C.columnReferenceType columnRef) value
   where
     parseWithTy ty = rhsParser (CollectableTypeScalar ty)
 
-    parseOperations :: ColumnType 'DataWrapper -> J.Value -> m [OpExpG 'DataWrapper v]
+    parseOperations :: RQL.T.C.ColumnType 'DataWrapper -> J.Value -> m [OpExpG 'DataWrapper v]
     parseOperations columnType = \case
-      J.Object o -> mapM (parseOperation columnType) $ Map.toList o
+      J.Object o -> traverse (parseOperation columnType) $ Map.toList o
       v -> pure . AEQ False <$> parseWithTy columnType v
 
-    parseOperation :: ColumnType 'DataWrapper -> (Text, J.Value) -> m (OpExpG 'DataWrapper v)
+    parseOperation :: RQL.T.C.ColumnType 'DataWrapper -> (Text, J.Value) -> m (OpExpG 'DataWrapper v)
     parseOperation columnType (opStr, val) = withPathK opStr $
       case opStr of
         "_eq" -> parseEq
@@ -145,12 +145,10 @@ parseBoolExpOperations' rhsParser _table _fields columnRef value =
         "$gte" -> parseGte
         "_lte" -> parseLte
         "$lte" -> parseLte
-        -- "$in"            -> parseIn
-        -- "_in"            -> parseIn
-        --
-        -- "$nin"           -> parseNin
-        -- "_nin"           -> parseNin
-
+        "$in" -> parseIn
+        "_in" -> parseIn
+        "$nin" -> parseNin
+        "_nin" -> parseNin
         -- "$like"          -> parseLike
         -- "_like"          -> parseLike
         --
@@ -159,15 +157,15 @@ parseBoolExpOperations' rhsParser _table _fields columnRef value =
 
         x -> throw400 UnexpectedPayload $ "Unknown operator : " <> x
       where
-        -- colTy = columnReferenceType columnRef
+        colTy = RQL.T.C.columnReferenceType columnRef
 
         parseOne = parseWithTy columnType val
-        -- parseManyWithType ty = rhsParser (CollectableTypeArray ty) val
+        parseManyWithType ty = rhsParser (CollectableTypeArray ty) val
 
         parseEq = AEQ False <$> parseOne
         parseNeq = ANE False <$> parseOne
-        -- parseIn    = AIN <$> parseManyWithType colTy
-        -- parseNin   = ANIN <$> parseManyWithType colTy
+        parseIn = AIN <$> parseManyWithType colTy
+        parseNin = ANIN <$> parseManyWithType colTy
         parseGt = AGT <$> parseOne
         parseLt = ALT <$> parseOne
         parseGte = AGTE <$> parseOne
@@ -175,27 +173,28 @@ parseBoolExpOperations' rhsParser _table _fields columnRef value =
 
 parseCollectableType' ::
   MonadError QErr m =>
-  CollectableType (ColumnType 'DataWrapper) ->
+  CollectableType (RQL.T.C.ColumnType 'DataWrapper) ->
   J.Value ->
   m (PartialSQLExp 'DataWrapper)
 parseCollectableType' collectableType = \case
   J.String t
-    | isSessionVariable t -> pure $ mkTypedSessionVar collectableType $ mkSessionVariable t
-    | isReqUserId t -> pure $ mkTypedSessionVar collectableType userIdHeader
+    | HSU.isSessionVariable t -> pure $ mkTypedSessionVar collectableType $ mkSessionVariable t
+    | HSU.isReqUserId t -> pure $ mkTypedSessionVar collectableType HSU.userIdHeader
   val -> case collectableType of
     CollectableTypeScalar scalarType ->
-      PSESQLExp . IR.Literal <$> parseScalarValueColumnType scalarType val
+      PSESQLExp . IR.E.Literal <$> RQL.T.C.parseScalarValueColumnType scalarType val
     CollectableTypeArray _ ->
       throw400 NotSupported "Array types are not supported by dynamic backends"
 
 mkTypedSessionVar ::
-  CollectableType (ColumnType 'DataWrapper) ->
+  CollectableType (RQL.T.C.ColumnType 'DataWrapper) ->
   SessionVariable ->
   PartialSQLExp 'DataWrapper
 mkTypedSessionVar columnType =
   PSESessVar (columnTypeToScalarType <$> columnType)
 
-columnTypeToScalarType :: ColumnType 'DataWrapper -> IR.Scalar.Type
+columnTypeToScalarType :: RQL.T.C.ColumnType 'DataWrapper -> IR.S.T.Type
 columnTypeToScalarType = \case
-  ColumnScalar scalarType -> scalarType
-  ColumnEnumReference _ -> IR.Scalar.String -- is this even reachable?
+  RQL.T.C.ColumnScalar scalarType -> scalarType
+  -- NOTE: This should be unreachable:
+  RQL.T.C.ColumnEnumReference _ -> IR.S.T.String
