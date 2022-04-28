@@ -1,7 +1,7 @@
 ---
 sidebar_label: To remote database
 sidebar_position: 1
-description: Adding remote database relationships with Postgres tables in Hasura
+description: Adding remote database relationships with MS SQL Server tables in Hasura
 keywords:
   - hasura
   - docs
@@ -16,7 +16,7 @@ import TabItem from '@theme/TabItem';
 import Thumbnail from "@site/src/components/Thumbnail";
 import GraphiQLIDE from "@site/src/components/GraphiQLIDE";
 
-# Postgres: Database to remote database relationships
+# MS SQL Server: Database to remote database relationships
 
 ## Introduction
 
@@ -33,7 +33,7 @@ while providing remote joins.
 
 :::tip Supported from
 
-Remote database relationships for Postgres are supported from versions `v2.1.0` and above.
+Remote database relationships for MS SQL Server are supported from versions `v2.6.0` and above.
 
 :::
 
@@ -67,7 +67,7 @@ Head to the `Data > [database] > [orders] > Relationships` tab.
 Under the `Remote Database Relationships` section, select `Add a remote database relationship`.
 
 <Thumbnail
-  src="/img/graphql/core/databases/postgres/schema/create-remote-source-relationship.png"
+  src="/img/graphql/core/databases/ms-sql-server/schema/create-remote-source-relationship.png"
   alt="Create remote database relationships"
 />
 
@@ -105,8 +105,8 @@ hasura metadata apply
 <TabItem value="api" label="API">
 
 You can add a remote database relationship by using the
-[pg_create_remote_relationship](/graphql/core/api-reference/metadata-api/remote-relationships.mdx#metadata-pg-create-remote-relationship) or
-[pg_update_remote_relationship](/graphql/core/api-reference/metadata-api/remote-relationships.mdx#metadata-pg-update-remote-relationship) metadata APIs with the `to_source` field.
+[mssql_create_remote_relationship](/graphql/core/api-reference/metadata-api/remote-relationships.mdx#metadata-mssql-create-remote-relationship) or
+[mssql_update_remote_relationship](/graphql/core/api-reference/metadata-api/remote-relationships.mdx#metadata-mssql-update-remote-relationship) metadata APIs with the `to_source` field.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -114,10 +114,10 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "pg_create_remote_relationship",
+  "type": "mssql_create_remote_relationship",
   "args": {
     "name": "user",
-    "source": "pg1",
+    "source": "mssql1",
     "table": {
       "name": "order",
       "schema": "public"
@@ -125,7 +125,7 @@ X-Hasura-Role: admin
     "definition": {
       "to_source": {
         "relationship_type": "object",
-        "source": "pg2",
+        "source": "mssql2",
         "table": {
           "name": "user",
           "schema": "public"

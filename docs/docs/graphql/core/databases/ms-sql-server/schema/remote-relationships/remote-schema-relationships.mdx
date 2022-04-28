@@ -1,7 +1,7 @@
 ---
 sidebar_label: To Remote Schema
 sidebar_position: 2
-description: Adding remote schema relationships with Postgres tables in Hasura
+description: Adding remote schema relationships with MS SQL Server tables in Hasura
 keywords:
   - hasura
   - docs
@@ -16,7 +16,7 @@ import TabItem from "@theme/TabItem";
 import Thumbnail from "@site/src/components/Thumbnail";
 import GraphiQLIDE from "@site/src/components/GraphiQLIDE";
 
-# Postgres: Database to Remote Schema relationships
+# MS SQL Server: Database to Remote Schema relationships
 
 ## Introduction
 
@@ -41,7 +41,7 @@ post](https://hasura.io/blog/remote-joins-a-graphql-api-to-join-database-and-oth
 
 :::tip Supported from
 
-Remote schema relationships from Postgres are supported from versions `v1.3.0` and
+Remote schema relationships from MS SQL Server are supported from versions `v2.6.0` and
 above.
 
 :::
@@ -135,11 +135,11 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "pg_create_remote_relationship",
+  "type":"mssql_create_remote_relationship",
   "args": {
     "name": "user",
-    "source": "pg1",
-    "table": { "name": "order", "schema": "public" },
+    "source": "mssql1",
+    "table": { "name": "order", "schema": "dbo" },
     "hasura_fields": ["user_id"],
     "remote_schema": "user-remote-schema",
     "remote_field": {

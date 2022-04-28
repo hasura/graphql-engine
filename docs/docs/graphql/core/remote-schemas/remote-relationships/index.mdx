@@ -1,44 +1,39 @@
 ---
 slug: index
-description: Manage remote relationships with Postgres in Hasura
+description: Manage remote relationships in Hasura
 keywords:
   - hasura
   - docs
-  - postgres
   - schema
   - relationship
   - remote relationship
 ---
 
-# Postgres: Remote relationships
+# Remote relationships
 
 ## Introduction
 
 Remote relationships (aka "remote joins") allow you to join data across
-tables and remote data sources. The remote data source can either be a
-[remote schema](/graphql/core/remote-schemas/index.mdx), a table from a second database source,
-or the type returned from an [action](/graphql/core/actions/index.mdx). Once you create
-relationships between types from your database tables and types created
-from remote schemas or actions, you can then "join" them by running GraphQL
+remote schemas and other remote data sources. The remote data source can either be another
+[remote schema](/graphql/core/remote-schemas/index.mdx) or a table from a database source.
+Once you create relationships between types from your remote schema and types created
+from databases or other remote schemas, you can then "join" them by running GraphQL
 queries.
 
 See the following guides on how to create different types of remote
-relationships related to Postgres:
+relationships related to remote schemas:
 
-- [Database to database relationships](/graphql/core/databases/postgres/schema/remote-relationships/remote-source-relationships.mdx): To join
-data across tables between two different database sources, such as order information stored in a Postgres database, and user information stored
-in a separate Postgres or say a SQL Server database.
-- [Database to Remote Schema relationships](/graphql/core/databases/postgres/schema/remote-relationships/remote-schema-relationships.mdx): To
-join data across tables and remote GraphQL APIs. For example, you can join customer data from your tables with account data from Stripe, Spotify, or Auth0.
 - [Remote Schema to database relationships](/graphql/core/remote-schemas/remote-relationships/remote-schema-db-relationships.mdx): To join
 data from your remote schemas (such as Stripe, Spotify or Auth0) to customer data from your tables.
-- [Action to database relationships](/graphql/core/databases/postgres/schema/remote-relationships/action-relationships.mdx): To join data across
-tables and actions (i.e. Rest APIs). For example, you can join `user` data from your database with the response from a `createUser` action,
-using the `id` field.
+- [Remote Schema to Remote Schema relationships](/graphql/core/remote-schemas/remote-relationships/remote-schema-relationships.mdx): To
+join data between two remote schemas such as Stripe, Spotify or Auth0 to customer data from your custom GraphQL API.
+- [Database to Remote Schema relationships](/graphql/core/databases/postgres/schema/remote-relationships/remote-schema-relationships.mdx): To
+join data across tables and remote GraphQL APIs. For example, you can join customer data from your tables with account data from Stripe, Spotify, or Auth0.
 
 ## Benefits
 
 Hasura's remote joins architecture provides the following benefits.
+
 
 - **Security**: Hasura's [authorization model](/graphql/core/auth/authorization/index.mdx) gives
   you role-based access control. This extends to actions and remote
@@ -66,3 +61,9 @@ Hasura's remote joins architecture provides the following benefits.
   via metadata. This allows underlying data sources and APIs to evolve
   independently. Your applications have a unified API to query the
   full data landscape in your org.
+
+:::info Additional Resources
+
+Data Federation with Hasura - [Watch Webinar](https://hasura.io/events/webinar/data-federation-hasura-graphql/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
+
+:::
