@@ -1,5 +1,5 @@
 ---
-sidebar_label: Action relationships
+sidebar_label: From Action
 sidebar_position: 3
 description: Adding action relationships with Postgres tables in Hasura
 keywords:
@@ -14,7 +14,7 @@ import TabItem from "@theme/TabItem";
 import Thumbnail from "@site/src/components/Thumbnail";
 import GraphiQLIDE from "@site/src/components/GraphiQLIDE";
 
-# Postgres: Action relationships
+# Postgres: Action to database relationships
 
 ## Introduction
 
@@ -50,7 +50,9 @@ The following values can be defined for an action relationship:
   to.
 
 In this example, we're creating a relationship for the `createUser`
-action.
+action. We're creating a relationship called `user`, from the
+`id` field returned in the action response, to the `id` column of the
+`users` table.
 
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
@@ -58,20 +60,20 @@ action.
 - Head to the `Actions -> [action-name] -> Relationships` tab.
 - Click `Add a relationship`.
 
-<Thumbnail
-  src="/img/graphql/core/schema/add-action-relationship.png"
-  alt="Opening the action relationship section"
-  width="600px"
-/>
+  <Thumbnail
+    src="/img/graphql/core/schema/add-action-relationship.png"
+    alt="Opening the action relationship section"
+    width="600px"
+  />
 
 - In the section opened by the above step, fill out the following
   fields and hit `Save`.
 
-<Thumbnail
-  src="/img/graphql/core/schema/define-action-relationship.png"
-  alt="Defining the relationship"
-  width="700px"
-/>
+  <Thumbnail
+    src="/img/graphql/core/schema/define-action-relationship.png"
+    alt="Defining the relationship"
+    width="700px"
+  />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -142,10 +144,6 @@ X-Hasura-Role: admin
 
 </TabItem>
 </Tabs>
-
-In this example, we're creating a relationship called `user`, from the
-`id` field returned in the action response, to the `id` column of the
-`users` table.
 
 ### Step 2: Explore with GraphiQL
 

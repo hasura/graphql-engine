@@ -12,19 +12,19 @@ import Thumbnail from "@site/src/components/Thumbnail";
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Adding a remote schema
+# Adding a Remote Schema
 
 ## Introduction
 
-Follow the steps below to merge your remote schema with the GraphQL engine's auto-generated schema.
+Follow the steps below to merge your remote GraphQL API with the GraphQL engine's auto-generated API.
 
 ## Step 0: Write a custom GraphQL server
 
-*If you already have a functional GraphQL server that meets your requirements, you can skip this step.*
+*You can skip this step if you are using a 3rd party GraphQL API or already have a functional GraphQL server that meets your requirements.*
 
-You need to create a custom GraphQL server with a schema and corresponding resolvers that solve your use case
+You need to create a custom GraphQL server with a schema and corresponding resolvers that solve your use case.
 
-You can use any language/framework of your choice to author this server and deploy it anywhere. A great way to get started is to use one of our [boilerplates](https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas)
+You can use any language/framework of your choice to author this server and deploy it anywhere. A great way to get started is to use one of our [boilerplates](https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas).
 
 ## Step 1: Merge remote schema {#merge-remote-schema}
 
