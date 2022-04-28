@@ -31,6 +31,7 @@ data Operator
   | LessThanOrEqual
   | GreaterThan
   | GreaterThanOrEqual
+  | Equal
   deriving stock (Data, Eq, Generic, Ord, Show, Enum, Bounded)
   deriving anyclass (Hashable, NFData)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Operator
@@ -42,7 +43,8 @@ instance HasCodec Operator where
         [ (LessThan, "less_than"),
           (LessThanOrEqual, "less_than_or_equal"),
           (GreaterThan, "greater_than"),
-          (GreaterThanOrEqual, "greater_than_or_equal")
+          (GreaterThanOrEqual, "greater_than_or_equal"),
+          (Equal, "equal")
         ]
 
 --------------------------------------------------------------------------------
@@ -56,10 +58,7 @@ data Expression
   | Or (ValueWrapper "expressions" [Expression])
   | Not (ValueWrapper "expression" Expression)
   | IsNull (ValueWrapper "expression" Expression)
-  | IsNotNull (ValueWrapper "expression" Expression)
   | Column (ValueWrapper "column" API.V0.ColumnName)
-  | Equal (ValueWrapper2 "left" Expression "right" Expression)
-  | NotEqual (ValueWrapper2 "left" Expression "right" Expression)
   | ApplyOperator (ValueWrapper3 "operator" Operator "left" Expression "right" Expression)
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Hashable, NFData)
@@ -76,10 +75,7 @@ instance HasCodec Expression where
           TypeAlternative "OrExpression" "or" _Or,
           TypeAlternative "NotExpression" "not" _Not,
           TypeAlternative "IsNullExpression" "is_null" _IsNull,
-          TypeAlternative "IsNotNullExpression" "is_not_null" _IsNotNull,
           TypeAlternative "ColumnExpression" "column" _Column,
-          TypeAlternative "EqualExpression" "equal" _Equal,
-          TypeAlternative "NotEqualExpression" "not_equal" _NotEqual,
           TypeAlternative "ApplyOperatorExpression" "op" _ApplyOperator
         ]
 

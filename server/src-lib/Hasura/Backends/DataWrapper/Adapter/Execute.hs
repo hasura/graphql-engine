@@ -10,11 +10,12 @@ where
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.Text.Encoding qualified as TE
-import Hasura.Backends.DataWrapper.API (Capabilities (dcRelationships), Routes (..), SchemaResponse (srCapabilities))
+import Hasura.Backends.DataWrapper.API qualified as API
 import Hasura.Backends.DataWrapper.Agent.Client
-import Hasura.Backends.DataWrapper.IR.Query qualified as IR
+import Hasura.Backends.DataWrapper.IR.Export as IR
+import Hasura.Backends.DataWrapper.IR.Query qualified as IR.Q
 import Hasura.Backends.DataWrapper.Plan qualified as GDW
-import Hasura.Base.Error (Code (NotSupported), QErr, throw400, throw500)
+import Hasura.Base.Error (Code (..), QErr, throw400, throw500)
 import Hasura.EncJSON (EncJSON, encJFromJValue)
 import Hasura.GraphQL.Execute.Backend (BackendExecute (..), DBStepInfo (..), ExplainPlan (..))
 import Hasura.GraphQL.Namespace qualified as GQL
@@ -23,7 +24,6 @@ import Hasura.SQL.AnyBackend (mkAnyBackend)
 import Hasura.SQL.Backend (BackendType (DataWrapper))
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
-import Witch qualified (from)
 
 --------------------------------------------------------------------------------
 
@@ -67,11 +67,17 @@ toExplainPlan :: GQL.RootFieldAlias -> GDW.Plan -> ExplainPlan
 toExplainPlan fieldName plan_ =
   ExplainPlan fieldName (Just "") (Just [TE.decodeUtf8 $ BL.toStrict $ J.encode $ GDW.query $ plan_])
 
-buildAction :: GDW.SourceConfig -> IR.Query -> Tracing.TraceT (ExceptT QErr IO) EncJSON
+buildAction :: GDW.SourceConfig -> IR.Q.Query -> Tracing.TraceT (ExceptT QErr IO) EncJSON
 buildAction GDW.SourceConfig {..} query = do
-  -- TODO(SOLOMON): Should this check occur during query construction in 'mkPlan'?
-  when (GDW.queryHasRelations query && not (dcRelationships (srCapabilities dscSchema))) $
+  -- NOTE: Should this check occur during query construction in 'mkPlan'?
+  when (GDW.queryHasRelations query && not (API.dcRelationships (API.srCapabilities dscSchema))) $
     throw400 NotSupported "Agents must provide their own dataloader."
-  Routes {..} <- liftIO $ client @(Tracing.TraceT (ExceptT QErr IO)) dscManager (ConnSourceConfig dscEndpoint)
-  queryResponse <- _query $ Witch.from query
-  pure $ encJFromJValue queryResponse
+  API.Routes {..} <- liftIO $ client @(Tracing.TraceT (ExceptT QErr IO)) dscManager (ConnSourceConfig dscEndpoint)
+  case fmap _query $ IR.queryToAPI query of
+    Right query' -> do
+      queryResponse <- query'
+      pure $ encJFromJValue queryResponse
+    Left (IR.InvalidExpression expr) ->
+      throw500 $ "Invalid query constructed: Bad Expression '" <> tshow expr <> "'."
+    Left (IR.ExposedLiteral lit) ->
+      throw500 $ "Invalid query constructed: Exposed IR Literal '" <> lit <> "'."

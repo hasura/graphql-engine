@@ -2,7 +2,7 @@ module Hasura.Backends.DataWrapper.IR.Function (Name) where
 
 --------------------------------------------------------------------------------
 
-import Hasura.Backends.DataWrapper.IR.Name qualified as Name
+import Hasura.Backends.DataWrapper.IR.Name qualified as IR.N
 
 --------------------------------------------------------------------------------
 
@@ -19,4 +19,4 @@ import Hasura.Backends.DataWrapper.IR.Name qualified as Name
 --   example :: Function.Name
 --   example = coerce @Text @Function.Name "function_name"
 -- @
-type Name = Name.Name 'Name.Function
+type Name = IR.N.Name 'IR.N.Function

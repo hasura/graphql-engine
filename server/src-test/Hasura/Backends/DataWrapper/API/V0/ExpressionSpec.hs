@@ -44,14 +44,10 @@ spec = do
       testToFromJSONToSchema (Not $ ValueWrapper lit) [aesonQQ|{"type": "not", "expression": {"type": "literal", "value": null}}|]
     describe "IsNull" $ do
       testToFromJSONToSchema (IsNull $ ValueWrapper lit) [aesonQQ|{"type": "is_null", "expression": {"type": "literal", "value": null}}|]
-    describe "Not" $ do
-      testToFromJSONToSchema (IsNotNull $ ValueWrapper lit) [aesonQQ|{"type": "is_not_null", "expression": {"type": "literal", "value": null}}|]
     describe "Column" $ do
       testToFromJSONToSchema (Column $ ValueWrapper $ ColumnName "my_column_name") [aesonQQ|{"type": "column", "column": "my_column_name"}|]
     describe "Equal" $ do
-      testToFromJSONToSchema (Equal $ ValueWrapper2 left right) [aesonQQ|{"type": "equal", "left": {"type": "literal", "value": "left"}, "right": {"type": "literal", "value": "right"}}|]
-    describe "NotEqual" $ do
-      testToFromJSONToSchema (NotEqual $ ValueWrapper2 left right) [aesonQQ|{"type": "not_equal", "left": {"type": "literal", "value": "left"}, "right": {"type": "literal", "value": "right"}}|]
+      testToFromJSONToSchema (ApplyOperator $ ValueWrapper3 Equal left right) [aesonQQ|{"type": "op", "operator": "equal", "left": {"type": "literal", "value": "left"}, "right": {"type": "literal", "value": "right"}}|]
     describe "ApplyOperator" $ do
       testToFromJSONToSchema (ApplyOperator $ ValueWrapper3 LessThan left right) [aesonQQ|{"type": "op", "operator": "less_than", "left": {"type": "literal", "value": "left"}, "right": {"type": "literal", "value": "right"}}|]
 
@@ -72,10 +68,7 @@ genExpression =
       Or <$> genValueWrapper genExpressions,
       Not <$> genValueWrapper smallExpression,
       IsNull <$> genValueWrapper smallExpression,
-      IsNotNull <$> genValueWrapper smallExpression,
       Column <$> genValueWrapper genColumnName,
-      Equal <$> genValueWrapper2 smallExpression smallExpression,
-      NotEqual <$> genValueWrapper2 smallExpression smallExpression,
       ApplyOperator <$> genValueWrapper3 genOperator smallExpression smallExpression
     ]
   where

@@ -1,5 +1,4 @@
 {-# LANGUAGE NamedFieldPuns #-}
-{-# OPTIONS_GHC -Wno-deferred-out-of-scope-variables #-}
 
 module Hasura.Backends.DataWrapper.Plan
   ( SourceConfig (..),
@@ -18,19 +17,17 @@ import Data.ByteString.Lazy qualified as BL
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Semigroup (Any (..), Min (..))
+import Data.Text as T
 import Data.Text.Encoding qualified as TE
 import Data.These
-import Data.Vector qualified as Vector
-import Hasura.Backends.DataWrapper.API (Capabilities (..), QueryResponse (..), SchemaResponse (..))
+import Data.Vector qualified as V
 import Hasura.Backends.DataWrapper.API qualified as API
 import Hasura.Backends.DataWrapper.Adapter.Types
-import Hasura.Backends.DataWrapper.IR.Expression qualified as IR
-import Hasura.Backends.DataWrapper.IR.Expression qualified as IR.Expression
-import Hasura.Backends.DataWrapper.IR.OrderBy qualified as IR
-import Hasura.Backends.DataWrapper.IR.OrderBy qualified as IR.OrderBy
-import Hasura.Backends.DataWrapper.IR.Query qualified as IR (Field (..), ForeignKey (..), PrimaryKey (..), Query (..))
-import Hasura.Backends.DataWrapper.IR.Query qualified as IR.Query
-import Hasura.Backends.DataWrapper.IR.Scalar.Value qualified as IR.Scalar
+import Hasura.Backends.DataWrapper.IR.Export qualified as IR
+import Hasura.Backends.DataWrapper.IR.Expression qualified as IR.E
+import Hasura.Backends.DataWrapper.IR.OrderBy qualified as IR.O
+import Hasura.Backends.DataWrapper.IR.Query qualified as IR.Q
+import Hasura.Backends.DataWrapper.IR.Scalar.Value qualified as IR.S
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Column
 import Hasura.Prelude
@@ -41,17 +38,16 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.SQL.Backend
 import Hasura.Session
-import Witch qualified
 
 --------------------------------------------------------------------------------
 
--- | A 'Plan' consists of an 'IR.Query' describing the query to be
+-- | A 'Plan' consists of an 'IR.Q' describing the query to be
 -- performed by the Agent and a continuation for post processing the
 -- response. See the 'postProcessResponseRow' haddock for more
 -- information on why we need a post-processor.
 data Plan = Plan
-  { query :: IR.Query,
-    postProcessor :: (QueryResponse -> Either ResponseError QueryResponse)
+  { query :: IR.Q.Query,
+    postProcessor :: (API.QueryResponse -> Either ResponseError API.QueryResponse)
   }
 
 -- | Error type for the postProcessor continuation. Failure can occur if the Agent
@@ -64,12 +60,12 @@ data ResponseError
   | UnexpectedResponseCardinality
   deriving (Show, Eq)
 
--- | Extract the 'IR.Query' from a 'Plan' and render it as 'Text'.
+-- | Extract the 'IR.Q' from a 'Plan' and render it as 'Text'.
 --
 -- NOTE: This is for logging and debug purposes only.
 renderPlan :: Plan -> Text
 renderPlan =
-  TE.decodeUtf8 . BL.toStrict . J.encode . Witch.from @_ @API.Query . query
+  TE.decodeUtf8 . BL.toStrict . J.encode . IR.queryToAPI . query
 
 -- | Map a 'QueryDB 'DataWrapper' term into a 'Plan'
 mkPlan ::
@@ -79,7 +75,7 @@ mkPlan ::
   SourceConfig ->
   QueryDB 'DataWrapper Void (UnpreparedValue 'DataWrapper) ->
   m Plan
-mkPlan session (SourceConfig _ SchemaResponse {srCapabilities} _) ir = translateQueryDB ir
+mkPlan session (SourceConfig _ API.SchemaResponse {srCapabilities} _) ir = translateQueryDB ir
   where
     translateQueryDB ::
       QueryDB 'DataWrapper Void (UnpreparedValue 'DataWrapper) ->
@@ -87,21 +83,21 @@ mkPlan session (SourceConfig _ SchemaResponse {srCapabilities} _) ir = translate
     translateQueryDB =
       traverse replaceSessionVariables >=> \case
         QDBMultipleRows s -> do
-          query <- translateAnnSelect IR.Query.Many s
+          query <- translateAnnSelect IR.Q.Many s
           pure $
-            Plan query $ \QueryResponse {getQueryResponse = response} ->
-              fmap QueryResponse $ traverse (postProcessResponseRow srCapabilities query) response
+            Plan query $ \API.QueryResponse {getQueryResponse = response} ->
+              fmap API.QueryResponse $ traverse (postProcessResponseRow srCapabilities query) response
         QDBSingleRow s -> do
-          query <- translateAnnSelect IR.Query.OneOrZero s
+          query <- translateAnnSelect IR.Q.OneOrZero s
           pure $
-            Plan query $ \QueryResponse {getQueryResponse = response} ->
-              fmap QueryResponse $ traverse (postProcessResponseRow srCapabilities query) response
+            Plan query $ \API.QueryResponse {getQueryResponse = response} ->
+              fmap API.QueryResponse $ traverse (postProcessResponseRow srCapabilities query) response
         QDBAggregation {} -> throw400 NotSupported "QDBAggregation: not supported"
 
     translateAnnSelect ::
-      IR.Query.Cardinality ->
-      AnnSimpleSelectG 'DataWrapper Void IR.Expression ->
-      m IR.Query
+      IR.Q.Cardinality ->
+      AnnSimpleSelectG 'DataWrapper Void IR.E.Expression ->
+      m IR.Q.Query
     translateAnnSelect card s = do
       tableName <- case _asnFrom s of
         FromTable tn -> pure tn
@@ -114,7 +110,7 @@ mkPlan session (SourceConfig _ SchemaResponse {srCapabilities} _) ir = translate
       whereClause <- translateBoolExp whereClauseWithPermissions
       orderBy <- translateOrderBy (_saOrderBy $ _asnArgs s)
       pure
-        IR.Query
+        IR.Q.Query
           { from = tableName,
             fields = fields,
             limit =
@@ -131,8 +127,8 @@ mkPlan session (SourceConfig _ SchemaResponse {srCapabilities} _) ir = translate
           }
 
     translateOrderBy ::
-      Maybe (NE.NonEmpty (AnnotatedOrderByItemG 'DataWrapper IR.Expression)) ->
-      m [IR.OrderBy]
+      Maybe (NE.NonEmpty (AnnotatedOrderByItemG 'DataWrapper IR.E.Expression)) ->
+      m [IR.O.OrderBy]
     translateOrderBy = \case
       Nothing -> pure []
       Just orderBys ->
@@ -141,17 +137,17 @@ mkPlan session (SourceConfig _ SchemaResponse {srCapabilities} _) ir = translate
           <$> for orderBys \OrderByItemG {..} -> case obiColumn of
             AOCColumn (ColumnInfo {ciColumn = dynColumnName}) ->
               pure
-                IR.OrderBy
+                IR.O.OrderBy
                   { column = dynColumnName,
                     -- NOTE: Picking a default ordering.
-                    ordering = fromMaybe IR.OrderBy.Ascending obiType
+                    ordering = fromMaybe IR.O.Ascending obiType
                   }
             _ -> throw400 NotSupported "translateOrderBy: references unsupported in dynamic backends"
 
     translateFields ::
-      IR.Query.Cardinality ->
-      AnnFieldsG 'DataWrapper Void IR.Expression ->
-      m (HashMap Text IR.Query.Field)
+      IR.Q.Cardinality ->
+      AnnFieldsG 'DataWrapper Void IR.E.Expression ->
+      m (HashMap Text IR.Q.Field)
     translateFields card xs = do
       fields <- traverse (traverse (translateField card)) xs
       pure $
@@ -164,22 +160,22 @@ mkPlan session (SourceConfig _ SchemaResponse {srCapabilities} _) ir = translate
             )
 
     translateField ::
-      IR.Query.Cardinality ->
-      AnnFieldG 'DataWrapper Void IR.Expression ->
-      m (Maybe IR.Field)
+      IR.Q.Cardinality ->
+      AnnFieldG 'DataWrapper Void IR.E.Expression ->
+      m (Maybe IR.Q.Field)
     translateField _card (AFColumn colField) =
       -- TODO: make sure certain fields in colField are not in use, since we don't
       -- support them
-      pure $ Just $ IR.Query.Column (IR.Query.ColumnContents $ _acfColumn colField)
+      pure $ Just $ IR.Q.Column (IR.Q.ColumnContents $ _acfColumn colField)
     translateField card (AFObjectRelation objRel) = do
       fields <- translateFields card (_aosFields (_aarAnnSelect objRel))
       whereClause <- translateBoolExp (_aosTableFilter (_aarAnnSelect objRel))
       pure $
         Just $
-          IR.Query.Relationship $
-            IR.Query.RelationshipContents
-              (HashMap.mapKeys IR.PrimaryKey $ fmap IR.ForeignKey $ _aarColumnMapping objRel)
-              ( IR.Query
+          IR.Q.Relationship $
+            IR.Q.RelationshipContents
+              (HashMap.mapKeys IR.Q.PrimaryKey $ fmap IR.Q.ForeignKey $ _aarColumnMapping objRel)
+              ( IR.Q.Query
                   { fields = fields,
                     from = _aosTableFrom (_aarAnnSelect objRel),
                     where_ = Just whereClause,
@@ -190,60 +186,61 @@ mkPlan session (SourceConfig _ SchemaResponse {srCapabilities} _) ir = translate
                   }
               )
     translateField _card (AFArrayRelation (ASSimple arrRel)) = do
-      query <- translateAnnSelect IR.Query.Many (_aarAnnSelect arrRel)
-      pure $ Just $ IR.Query.Relationship $ IR.Query.RelationshipContents (HashMap.mapKeys IR.PrimaryKey $ fmap IR.ForeignKey $ _aarColumnMapping arrRel) query
+      query <- translateAnnSelect IR.Q.Many (_aarAnnSelect arrRel)
+      pure $ Just $ IR.Q.Relationship $ IR.Q.RelationshipContents (HashMap.mapKeys IR.Q.PrimaryKey $ fmap IR.Q.ForeignKey $ _aarColumnMapping arrRel) query
     translateField _card (AFExpression _literal) =
       pure Nothing
     translateField _ _ = throw400 NotSupported "translateField: field type not supported"
 
     replaceSessionVariables ::
       UnpreparedValue 'DataWrapper ->
-      m IR.Expression
+      m IR.E.Expression
     replaceSessionVariables (UVLiteral e) = pure e
-    replaceSessionVariables (UVParameter _ e) = pure (IR.Expression.Literal (cvValue e))
+    replaceSessionVariables (UVParameter _ e) = pure (IR.E.Literal (cvValue e))
     replaceSessionVariables UVSession = throw400 NotSupported "replaceSessionVariables: UVSession"
     replaceSessionVariables (UVSessionVar _ v) =
       case getSessionVariableValue v session of
         Nothing -> throw400 NotSupported "session var not found"
-        Just s -> pure (IR.Expression.Literal (IR.Scalar.String s))
+        Just s -> pure (IR.E.Literal (IR.S.String s))
 
     translateBoolExp ::
-      AnnBoolExp 'DataWrapper IR.Expression ->
-      m IR.Expression
+      AnnBoolExp 'DataWrapper IR.E.Expression ->
+      m IR.E.Expression
     translateBoolExp (BoolAnd xs) =
-      IR.And <$> traverse translateBoolExp xs
+      IR.E.And <$> traverse translateBoolExp xs
     translateBoolExp (BoolOr xs) =
-      IR.Or <$> traverse translateBoolExp xs
+      IR.E.Or <$> traverse translateBoolExp xs
     translateBoolExp (BoolNot x) =
-      IR.Not <$> translateBoolExp x
+      IR.E.Not <$> translateBoolExp x
     translateBoolExp (BoolFld (AVColumn c xs)) =
-      IR.And
+      IR.E.And
         <$> sequence
-          [translateOp (IR.Expression.Column (ciColumn c)) x | x <- xs]
+          [translateOp (IR.E.Column (ciColumn c)) x | x <- xs]
     translateBoolExp _ =
       throw400 NotSupported "An expression type is not supported by the dynamic backend"
 
     translateOp ::
-      IR.Expression ->
-      OpExpG 'DataWrapper IR.Expression ->
-      m IR.Expression
+      IR.E.Expression ->
+      OpExpG 'DataWrapper IR.E.Expression ->
+      m IR.E.Expression
     translateOp lhs = \case
       AEQ _ rhs ->
-        pure $ IR.Expression.Equal lhs rhs
+        pure $ IR.E.ApplyOperator IR.E.Equal lhs rhs
       ANE _ rhs ->
-        pure $ IR.Expression.NotEqual lhs rhs
+        pure $ IR.E.Not (IR.E.ApplyOperator IR.E.Equal lhs rhs)
       AGT rhs ->
-        pure $ IR.Expression.ApplyOperator IR.Expression.GreaterThan lhs rhs
+        pure $ IR.E.ApplyOperator IR.E.GreaterThan lhs rhs
       ALT rhs ->
-        pure $ IR.Expression.ApplyOperator IR.Expression.LessThan lhs rhs
+        pure $ IR.E.ApplyOperator IR.E.LessThan lhs rhs
       AGTE rhs ->
-        pure $ IR.Expression.ApplyOperator IR.Expression.GreaterThanOrEqual lhs rhs
+        pure $ IR.E.ApplyOperator IR.E.GreaterThanOrEqual lhs rhs
       ALTE rhs ->
-        pure $ IR.Expression.ApplyOperator IR.Expression.LessThanOrEqual lhs rhs
+        pure $ IR.E.ApplyOperator IR.E.LessThanOrEqual lhs rhs
       ANISNULL ->
-        pure $ IR.Expression.IsNull lhs
+        pure $ IR.E.IsNull lhs
       ANISNOTNULL ->
-        pure $ IR.Expression.IsNotNull lhs
+        pure $ IR.E.Not (IR.E.IsNull lhs)
+      AIN (IR.E.Array rhs) -> pure $ IR.E.In lhs rhs
       _ ->
         throw400 NotSupported "An operator is not supported by the dynamic backend"
 
@@ -254,17 +251,17 @@ mkPlan session (SourceConfig _ SchemaResponse {srCapabilities} _) ir = translate
 -- This function takes a response object, and the 'Plan' used to
 -- fetch it, and modifies any such arrays accordingly.
 postProcessResponseRow ::
-  Capabilities ->
-  IR.Query ->
+  API.Capabilities ->
+  IR.Q.Query ->
   J.Object ->
   Either ResponseError J.Object
-postProcessResponseRow capabilities IR.Query {fields} row =
+postProcessResponseRow capabilities IR.Q.Query {fields} row =
   sequenceA $ alignWith go fields row
   where
-    go :: These IR.Query.Field J.Value -> Either ResponseError J.Value
+    go :: These IR.Q.Field J.Value -> Either ResponseError J.Value
     go (This field) =
       case field of
-        IR.Query.Literal literal ->
+        IR.Q.Literal literal ->
           pure (J.String literal)
         _ ->
           Left RequiredFieldMissing
@@ -272,17 +269,17 @@ postProcessResponseRow capabilities IR.Query {fields} row =
       Left UnexpectedFields
     go (These field value) =
       case field of
-        IR.Query.Literal {} ->
+        IR.Q.Literal {} ->
           Left UnexpectedFields
-        IR.Query.Column {} ->
+        IR.Q.Column {} ->
           pure value
-        IR.Query.Relationship (IR.Query.RelationshipContents _ subquery@IR.Query {cardinality}) ->
+        IR.Q.Relationship (IR.Q.RelationshipContents _ subquery@IR.Q.Query {cardinality}) ->
           case value of
             J.Array rows -> do
               processed <- traverse (postProcessResponseRow capabilities subquery <=< parseObject) (toList rows)
               applyCardinalityToResponse cardinality processed
             other
-              | dcRelationships capabilities ->
+              | API.dcRelationships capabilities ->
                 Left ExpectedArray
               | otherwise ->
                 pure other
@@ -295,16 +292,16 @@ parseObject = \case
 -- | If a fk-to-pk lookup comes from an object relationship then we
 -- expect 0 or 1 items in the response and we should return it as an object.
 -- if it's an array, we have to send back all of the results
-applyCardinalityToResponse :: IR.Query.Cardinality -> [J.Object] -> Either ResponseError J.Value
-applyCardinalityToResponse IR.Query.OneOrZero = \case
+applyCardinalityToResponse :: IR.Q.Cardinality -> [J.Object] -> Either ResponseError J.Value
+applyCardinalityToResponse IR.Q.OneOrZero = \case
   [] -> pure J.Null
   [x] -> pure $ J.Object x
   _ -> Left UnexpectedResponseCardinality
-applyCardinalityToResponse IR.Query.Many =
-  pure . J.Array . Vector.fromList . fmap J.Object
+applyCardinalityToResponse IR.Q.Many =
+  pure . J.Array . V.fromList . fmap J.Object
 
--- | Validate if a 'IR.Query' contains any relationships.
-queryHasRelations :: IR.Query -> Bool
-queryHasRelations IR.Query {fields} = getAny $ flip foldMap fields \case
-  IR.Query.Relationship _ -> Any True
+-- | Validate if a 'IR.Q' contains any relationships.
+queryHasRelations :: IR.Q.Query -> Bool
+queryHasRelations IR.Q.Query {fields} = getAny $ flip foldMap fields \case
+  IR.Q.Relationship _ -> Any True
   _ -> Any False

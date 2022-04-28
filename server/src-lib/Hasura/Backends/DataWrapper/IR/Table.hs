@@ -5,7 +5,7 @@ where
 
 --------------------------------------------------------------------------------
 
-import Hasura.Backends.DataWrapper.IR.Name qualified as Name
+import Hasura.Backends.DataWrapper.IR.Name qualified as IR.N
 
 --------------------------------------------------------------------------------
 
@@ -22,4 +22,4 @@ import Hasura.Backends.DataWrapper.IR.Name qualified as Name
 --   example :: Table.Name
 --   example = coerce @Text @Table.Name "table_name"
 -- @
-type Name = Name.Name 'Name.Table
+type Name = IR.N.Name 'IR.N.Table

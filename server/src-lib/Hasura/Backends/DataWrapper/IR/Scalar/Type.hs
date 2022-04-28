@@ -12,7 +12,7 @@ import Data.Text.Extended (ToTxt (..))
 import Hasura.Backends.DataWrapper.API qualified as API
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
-import Witch
+import Witch qualified
 
 --------------------------------------------------------------------------------
 
@@ -43,13 +43,13 @@ data Type
 instance ToTxt Type where
   toTxt = tshow
 
-instance From API.Type Type where
+instance Witch.From API.Type Type where
   from = \case
     API.StringTy -> String
     API.NumberTy -> Number
     API.BoolTy -> Bool
 
-instance From Type API.Type where
+instance Witch.From Type API.Type where
   from = \case
     String -> API.StringTy
     Number -> API.NumberTy

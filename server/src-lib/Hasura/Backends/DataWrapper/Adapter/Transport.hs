@@ -13,7 +13,7 @@ import Hasura.Backends.DataWrapper.Plan qualified as GDW
 import Hasura.Base.Error (Code (NotSupported), QErr, throw400)
 import Hasura.EncJSON (EncJSON)
 import Hasura.GraphQL.Execute.Backend (DBStepInfo (..))
-import Hasura.GraphQL.Logging (GeneratedQuery (GeneratedQuery), MonadQueryLog (..), QueryLog (..), QueryLogKind (..))
+import Hasura.GraphQL.Logging qualified as HGL
 import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.Transport.Backend (BackendTransport (..))
 import Hasura.GraphQL.Transport.HTTP.Protocol (GQLReqUnparsed)
@@ -40,7 +40,7 @@ runDBQuery' ::
   ( MonadIO m,
     MonadError QErr m,
     Tracing.MonadTrace m,
-    MonadQueryLog m
+    HGL.MonadQueryLog m
   ) =>
   RequestId ->
   GQLReqUnparsed ->
@@ -52,7 +52,7 @@ runDBQuery' ::
   Maybe GDW.Plan ->
   m (DiffTime, a)
 runDBQuery' requestId query fieldName _userInfo logger _sourceConfig action ir = do
-  void $ logQueryLog logger $ mkQueryLog query fieldName ir requestId
+  void $ HGL.logQueryLog logger $ mkQueryLog query fieldName ir requestId
   withElapsedTime
     . Tracing.trace ("Dynamic backend query for root field " <>> fieldName)
     . Tracing.interpTraceT (liftEitherM . liftIO . runExceptT)
@@ -63,13 +63,13 @@ mkQueryLog ::
   RootFieldAlias ->
   Maybe GDW.Plan ->
   RequestId ->
-  QueryLog
+  HGL.QueryLog
 mkQueryLog gqlQuery fieldName maybePlan requestId =
-  QueryLog
+  HGL.QueryLog
     gqlQuery
-    ((\plan -> (fieldName, GeneratedQuery (GDW.renderPlan plan) J.Null)) <$> maybePlan)
+    ((\plan -> (fieldName, HGL.GeneratedQuery (GDW.renderPlan plan) J.Null)) <$> maybePlan)
     requestId
-    QueryLogKindDatabase
+    HGL.QueryLogKindDatabase
 
 runDBQueryExplain' ::
   (MonadIO m, MonadError QErr m) =>
