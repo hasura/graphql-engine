@@ -120,7 +120,7 @@ To create a new test:
 When creating a new test, make sure that:
 
 1. The module name is suffixed by the word `Spec`
-2. The module exports the entry point `spec :: SpecWith State`
+2. The module exports the entry point `spec :: SpecWith TestEnvironment`
 3. The module is listed in the cabal file under `other-modules`
 
 (1) and (2) are required for `hspec-discover` to find and run the test.
@@ -136,15 +136,15 @@ running test trees in terms of a list of `Context a`s.
 
 Each `Context a` requires:
 - a unique `name`, of type `ContextName`
-- a `mkLocalState` action, of type `State -> IO a`
-- a `setup` action, of type `(State, a) -> IO ()`
-- a `teardown` action, of type `(State, a) -> IO ()`
-- an `options` parameter, which will be threaded through the tests themselves
-to modify behavior for a particular `Context`
+- a `mkLocalTestEnvironment` action, of type `TestEnvironment -> IO a`
+- a `setup` action, of type `(TestEnvironment, a) -> IO ()`
+- a `teardown` action, of type `(TestEnvironment, a) -> IO ()`
+- an `customOptions` parameter, which will be threaded through the
+tests themselves to modify behavior for a particular `Context`
 
 Of these two functions, whether one wishes to use `Harness.Test.Context.run` or
-`Harness.Test.Context.runWithLocalState` will depend on if their test can be
-written in terms of information provided by the global `State` type or if it
+`Harness.Test.Context.runWithLocalTestEnvironment` will depend on if their test can be
+written in terms of information provided by the global `TestEnvironment` type or if it
 depends on some additional "local" state.
 
 More often than not, test authors should use `Harness.Test.Context.run`, which
@@ -154,30 +154,33 @@ the body of the tests themselves.
 
 In the rare cases where some local state is necessary (either for the test
 itself, or as an argument to the `teardown` action for some `Context`), test
-authors should use `Harness.Test.Context.runWithLocalState`. This function
-takes a type parameter for its local state, which will be provided to both
+authors should use `Harness.Test.Context.runWithLocalTestEnvironment`. This function
+takes a type parameter for its local testEnvironment, which will be provided to both
 the `teardown` action specified in `Context` as well as the body of tests
 themselves.
 
-#### Make local state action
+#### Make local testEnvironment action
 
-This refers to the function `mkLocalState` defined for `Context`:
+This refers to the function `mkLocalTestEnvironment` defined for `Context`:
 
 ```hs
-mkLocalState :: State -> IO a
+mkLocalTestEnvironment :: TestEnvironment -> IO a
 ```
 
-Its return value, `IO a`, matches the `a` of `Context a`: it is the additional
-local state that is required throughout the tests, in addition to the global
-`State`. Some tests, such as tests which check remote relationships, need to keep some state which is local to the context,
-but most tests do not need additional state, and define `mkLocalState` to be `Harness.Test.Context.noLocalState`.
+Its return value, `IO a`, matches the `a` of `Context a`: it is the
+additional local state that is required throughout the tests, in
+addition to the global `TestEnvironment`. Some tests, such as tests
+which check remote relationships, need to keep some state which is
+local to the context, but most tests do not need additional state, and
+define `mkLocalTestEnvironment` to be
+`Harness.Test.Context.noLocalTestEnvironment`.
 
 This local state will be pass to the `setup` function and the `teardown` function.
 The `teardown` function is responsible to destroy the local state as well, if needed.
 
 #### Setup action
 
-A setup action is a function of type `(State, a) -> IO ()` which is responsible for
+A setup action is a function of type `(TestEnvironment, a) -> IO ()` which is responsible for
 creating the environment for the test. It needs to:
 
 1. Clear and reconfigure the metadata
@@ -192,9 +195,9 @@ backend using `Backend.<backend>.run_`.
 
 #### Teardown action
 
-The teardown action is another function of type `(State, a) -> IO ()` which is
+The teardown action is another function of type `(TestEnvironment, a) -> IO ()` which is
 responsible for removing the environment created by the test or setup, so that
-other tests can have a "clean slate" with no artifacts. The `(State, a)`
+other tests can have a "clean slate" with no artifacts. The `(TestEnvironment, a)`
 parameter is constructed from the `a` parameter of the `Context a`: it is the
 local state that is passed throughout the tests.
 
@@ -208,16 +211,16 @@ backend using `Backend.<backend>.run_`.
 
 ### Writing tests
 
-Test should be written (or reachable from) `tests :: SpecWith State`, or `tests
-:: SpecWith (State, Foo)` for tests that use an additional local state.
+Test should be written (or reachable from) `tests :: SpecWith TestEnvironment`, or `tests
+:: SpecWith (TestEnvironment, Foo)` for tests that use an additional local state.
 
 A typical test will look similar to this:
 
 ```hs
-  it "Where id=1" \state ->
+  it "Where id=1" \testEnvironment ->
     shouldReturnYaml
       ( GraphqlEngine.postGraphql
-          state
+          testEnvironment
           [graphql|
 query {
   hasura_author(where: {id: {_eq: 1}}) {
