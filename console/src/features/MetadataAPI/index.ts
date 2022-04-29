@@ -16,6 +16,7 @@ export {
   useGetAllRemoteSchemaRelationships,
   useGetRemoteSchemaRelationship,
 } from './hooks/useMetadataRemoteSchemas';
+export { useDbToRemoteSchemaRelationships } from './hooks/useMetadataRemoteRelationships';
 
 // we probably need to remove all usages that directly use the useMetadata and use only the exported functions
 export { useMetadata } from './hooks/useMetadata';

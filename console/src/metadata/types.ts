@@ -645,7 +645,7 @@ export interface RemoteRelationship {
   name: RemoteRelationshipName;
   /** Definition object */
   definition: RemoteRelationshipDef;
-  remote_relationships: RemoteDBRelationship;
+  remote_relationships?: RemoteDBRelationship;
 }
 
 export interface RemoteRelationshipDef {
@@ -653,11 +653,11 @@ export interface RemoteRelationshipDef {
    * Column(s) in the table that is used for joining with remote schema field.
    * All join keys in remote_field must appear here.
    */
-  hasura_fields: PGColumn[];
+  hasura_fields?: PGColumn[];
   /** Name of the remote schema to join with */
-  remote_schema: RemoteSchemaName;
+  remote_schema?: RemoteSchemaName;
   /** The schema tree ending at the field in remote schema which needs to be joined with. */
-  remote_field: RemoteField;
+  remote_field?: RemoteField;
 
   to_source: {
     relationship_type: string;
@@ -665,6 +665,14 @@ export interface RemoteRelationshipDef {
     table: QualifiedTable;
     field_mapping: Record<string, string>;
   };
+
+  to_remote_schema?: ToRemoteSchema;
+}
+
+export interface ToRemoteSchema {
+  lhs_fields: string[];
+  remote_schema: string;
+  remote_field: RemoteField;
 }
 
 /**
