@@ -810,6 +810,7 @@ library
                      , Data.Tuple.Extended
                      , Hasura.SQL.AnyBackend
                      , Hasura.SQL.Backend
+                     , Hasura.SQL.BackendMap
                      , Hasura.SQL.TH
                      , Hasura.SQL.Tag
                      , Hasura.SQL.GeoJSON

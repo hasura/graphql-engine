@@ -24,6 +24,7 @@ module Hasura.Server.API.Backend
 where
 
 import Data.Aeson ((<?>))
+import Data.Aeson.Extended (FromJSONWithContext (..))
 import Data.Aeson.Types (modifyFailure)
 import Data.Aeson.Types qualified as J
 import Data.Text qualified as T
@@ -35,27 +36,28 @@ import {-# SOURCE #-} Hasura.Server.API.Metadata
 
 -- API class
 
-type CommandParser = Text -> J.Value -> J.Parser (Maybe RQLMetadataV1)
+type CommandParser b = BackendSourceKind b -> Text -> J.Value -> J.Parser (Maybe RQLMetadataV1)
 
 class BackendAPI (b :: BackendType) where
-  metadataV1CommandParsers :: [CommandParser]
+  metadataV1CommandParsers :: [CommandParser b]
 
 -- helpers
 
-commandParser ::
-  J.FromJSON a =>
+commandParserWithExplicitParser ::
+  -- | Explicit parsing function that also takes a BackendKind
+  (BackendSourceKind b -> J.Value -> J.Parser a) ->
   -- | expected command name
   Text ->
   -- | corresponding parser
   (a -> RQLMetadataV1) ->
-  CommandParser
-commandParser expected constructor provided arguments =
+  CommandParser b
+commandParserWithExplicitParser parseJSONWithBackendKind expected constructor backendKind provided arguments =
   -- We return a Maybe parser here if the command name doesn't match, as Aeson's alternative
   -- instance backtracks: if we used 'fail', we would not be able to distinguish between "this is
   -- the correct branch, the name matches, but the argument fails to parse, we must fail" and "this
   -- is not the command we were expecting here, it is fine to continue with another".
   whenMaybe (expected == provided) $
-    modifyFailure withDetails $ constructor <$> (J.parseJSON arguments <?> J.Key "args")
+    modifyFailure withDetails $ constructor <$> (parseJSONWithBackendKind backendKind arguments <?> J.Key "args")
   where
     withDetails internalErrorMessage =
       intercalate
@@ -64,6 +66,26 @@ commandParser expected constructor provided arguments =
           "See our documentation at https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/index.html#metadata-apis.",
           "Internal error message: " <> internalErrorMessage
         ]
+
+commandParser ::
+  J.FromJSON a =>
+  -- | expected command name
+  Text ->
+  -- | corresponding parser
+  (a -> RQLMetadataV1) ->
+  CommandParser b
+commandParser =
+  commandParserWithExplicitParser (const J.parseJSON) -- Ignore the backend source kind and just parse using the FromJSON instance
+
+commandParserWithBackendKind ::
+  FromJSONWithContext (BackendSourceKind b) a =>
+  -- | expected command name
+  Text ->
+  -- | corresponding parser
+  (a -> RQLMetadataV1) ->
+  CommandParser b
+commandParserWithBackendKind =
+  commandParserWithExplicitParser parseJSONWithContext
 
 sourceCommands,
   tableCommands,
@@ -75,9 +97,9 @@ sourceCommands,
   eventTriggerCommands ::
     forall (b :: BackendType).
     Backend b =>
-    [CommandParser]
+    [CommandParser b]
 sourceCommands =
-  [ commandParser "add_source" $ RMAddSource . mkAnyBackend @b,
+  [ commandParserWithBackendKind "add_source" $ RMAddSource . mkAnyBackend @b,
     commandParser "drop_source" $ RMDropSource,
     commandParser "set_table_customization" $ RMSetTableCustomization . mkAnyBackend @b
   ]

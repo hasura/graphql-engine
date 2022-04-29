@@ -21,6 +21,7 @@ import Hasura.Backends.BigQuery.Source
 import Hasura.Backends.BigQuery.Types
 import Hasura.Base.Error
 import Hasura.Prelude
+import Hasura.RQL.Types.Backend (BackendConfig)
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Source
@@ -41,9 +42,11 @@ resolveSourceConfig ::
   MonadIO m =>
   SourceName ->
   BigQueryConnSourceConfig ->
+  BackendSourceKind 'BigQuery ->
+  BackendConfig 'BigQuery ->
   Env.Environment ->
   m (Either QErr BigQuerySourceConfig)
-resolveSourceConfig _name BigQueryConnSourceConfig {..} env = runExceptT $ do
+resolveSourceConfig _name BigQueryConnSourceConfig {..} _backendKind _backendConfig env = runExceptT $ do
   eSA <- resolveConfigurationJson env _cscServiceAccount
   case eSA of
     Left e -> throw400 Unexpected $ T.pack e

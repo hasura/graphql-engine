@@ -55,6 +55,8 @@ class
     (MonadIO m, MonadResolveSource m) =>
     SourceName ->
     SourceConnConfiguration b ->
+    BackendSourceKind b ->
+    BackendConfig b ->
     Env.Environment ->
     m (Either QErr (SourceConfig b))
 

@@ -32,6 +32,7 @@ import Hasura.Backends.MSSQL.SQL.Error qualified as HGE
 import Hasura.Backends.MSSQL.Types
 import Hasura.Base.Error
 import Hasura.Prelude
+import Hasura.RQL.Types.Backend (BackendConfig)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (..))
 import Hasura.RQL.Types.Source
@@ -45,9 +46,11 @@ resolveSourceConfig ::
   (MonadIO m, MonadResolveSource m) =>
   SourceName ->
   MSSQLConnConfiguration ->
+  BackendSourceKind 'MSSQL ->
+  BackendConfig 'MSSQL ->
   Env.Environment ->
   m (Either QErr MSSQLSourceConfig)
-resolveSourceConfig name config _env = runExceptT do
+resolveSourceConfig name config _backendKind _backendConfig _env = runExceptT do
   sourceResolver <- getMSSQLSourceResolver
   liftEitherM $ liftIO $ sourceResolver name config
 
@@ -80,8 +83,8 @@ doesSchemaExist (SchemaName schemaName) = do
       SELECT CAST (
         CASE
           WHEN EXISTS( SELECT 1 FROM sys.schemas WHERE name = $schemaName )
-            THEN 1 
-          ELSE 0 
+            THEN 1
+          ELSE 0
         END
       AS BIT)
     |]
@@ -95,8 +98,8 @@ doesTableExist tableName = do
         SELECT CAST (
           CASE
             WHEN (Select OBJECT_ID($qualifiedTable)) IS NOT NULL
-              THEN 1 
-            ELSE 0 
+              THEN 1
+            ELSE 0
           END
         AS BIT)
       |]

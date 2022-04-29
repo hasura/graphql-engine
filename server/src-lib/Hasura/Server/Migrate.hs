@@ -151,7 +151,7 @@ migrateCatalog maybeDefaultSourceConfig maintenanceMode migrationTime = do
               -- insert metadata with default source
               let defaultSourceMetadata =
                     AB.mkAnyBackend $
-                      SourceMetadata @('Postgres 'Vanilla) defaultSource mempty mempty defaultSourceConfig Nothing emptySourceCustomization
+                      SourceMetadata @('Postgres 'Vanilla) defaultSource PostgresVanillaKind mempty mempty defaultSourceConfig Nothing emptySourceCustomization
                   sources = OMap.singleton defaultSource defaultSourceMetadata
                in emptyMetadata {_metaSources = sources}
 
@@ -325,7 +325,7 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
                 let MetadataNoSources {..} = metadataV2
                     defaultSourceMetadata =
                       AB.mkAnyBackend $
-                        SourceMetadata defaultSource _mnsTables _mnsFunctions defaultSourceConfig Nothing emptySourceCustomization
+                        SourceMetadata defaultSource PostgresVanillaKind _mnsTables _mnsFunctions defaultSourceConfig Nothing emptySourceCustomization
                  in Metadata
                       (OMap.singleton defaultSource defaultSourceMetadata)
                       _mnsRemoteSchemas
@@ -340,6 +340,7 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
                       mempty
                       mempty
                       emptyNetwork
+                      mempty
           liftTx $ insertMetadataInCatalog metadataV3
 
     from43To42 = do
