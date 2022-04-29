@@ -3,6 +3,7 @@
 
 module Hasura.RQL.Types.Metadata
   ( Actions,
+    BackendConfigWrapper (..),
     BackendSourceMetadata,
     CatalogState (..),
     CatalogStateType (..),
@@ -55,6 +56,7 @@ module Hasura.RQL.Types.Metadata
     metaApiLimits,
     metaCronTriggers,
     metaCustomTypes,
+    metaBackendConfigs,
     metaInheritedRoles,
     metaMetricsConfig,
     metaNetwork,
@@ -76,6 +78,7 @@ module Hasura.RQL.Types.Metadata
     rspmRole,
     smConfiguration,
     smFunctions,
+    smKind,
     smName,
     smQueryTags,
     smTables,
@@ -138,6 +141,8 @@ import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
+import Hasura.SQL.BackendMap (BackendMap)
+import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.SQL.Tag
 import Hasura.Session
 import Hasura.Tracing (TraceT)
@@ -439,6 +444,7 @@ type InheritedRoles = InsOrdHashMap RoleName InheritedRole
 
 data SourceMetadata b = SourceMetadata
   { _smName :: !SourceName,
+    _smKind :: !(BackendSourceKind b),
     _smTables :: !(Tables b),
     _smFunctions :: !(Functions b),
     _smConfiguration :: !(SourceConnConfiguration b),
@@ -458,6 +464,7 @@ instance (Backend b) => Cacheable (SourceMetadata b)
 instance (Backend b) => FromJSON (SourceMetadata b) where
   parseJSON = withObject "Object" $ \o -> do
     _smName <- o .: "name"
+    _smKind <- o .: "kind"
     _smTables <- oMapFromL _tmTable <$> o .: "tables"
     _smFunctions <- oMapFromL _fmFunction <$> o .:? "functions" .!= []
     _smConfiguration <- o .: "configuration"
@@ -469,11 +476,12 @@ mkSourceMetadata ::
   forall (b :: BackendType).
   Backend b =>
   SourceName ->
+  BackendSourceKind b ->
   SourceConnConfiguration b ->
   SourceCustomization ->
   BackendSourceMetadata
-mkSourceMetadata name config customization =
-  AB.mkAnyBackend $ SourceMetadata @b name mempty mempty config Nothing customization
+mkSourceMetadata name backendSourceKind config customization =
+  AB.mkAnyBackend $ SourceMetadata @b name backendSourceKind mempty mempty config Nothing customization
 
 type BackendSourceMetadata = AB.AnyBackend SourceMetadata
 
@@ -532,6 +540,19 @@ parseNonSourcesMetadata o = do
       introspectionDisabledForRoles
     )
 
+-- | This newtype simply wraps the BackendConfig type family so that it can be used
+-- with BackendMap in the Metadata type. GHC will not allow the type family to be
+-- used directly. :(
+newtype BackendConfigWrapper b = BackendConfigWrapper {unBackendConfigWrapper :: BackendConfig b}
+
+deriving newtype instance (Backend b) => Show (BackendConfigWrapper b)
+
+deriving newtype instance (Backend b) => Eq (BackendConfigWrapper b)
+
+deriving newtype instance (Backend b) => ToJSON (BackendConfigWrapper b)
+
+deriving newtype instance (Backend b) => FromJSON (BackendConfigWrapper b)
+
 -- | A complete GraphQL Engine metadata representation to be stored,
 -- exported/replaced via metadata queries.
 data Metadata = Metadata
@@ -547,7 +568,8 @@ data Metadata = Metadata
     _metaMetricsConfig :: !MetricsConfig,
     _metaInheritedRoles :: !InheritedRoles,
     _metaSetGraphqlIntrospectionOptions :: !SetGraphqlIntrospectionOptions,
-    _metaNetwork :: !Network
+    _metaNetwork :: !Network,
+    _metaBackendConfigs :: BackendMap BackendConfigWrapper
   }
   deriving (Show, Eq, Generic)
 
@@ -559,6 +581,7 @@ instance FromJSON Metadata where
     when (version /= MVVersion3) $
       fail $ "unexpected metadata version from storage: " <> show version
     rawSources <- o .: "sources"
+    backendConfigs <- o .:? "backend_configs" .!= mempty
     sources <- oMapFromL getSourceName <$> mapWithJSONPath parseSourceMetadata rawSources <?> Key "sources"
     endpoints <- oMapFromL _ceName <$> o .:? "rest_endpoints" .!= []
     network <- o .:? "network" .!= emptyNetwork
@@ -589,11 +612,16 @@ instance FromJSON Metadata where
         inheritedRoles
         disabledSchemaIntrospectionRoles
         network
+        backendConfigs
     where
       parseSourceMetadata :: Value -> Parser (AB.AnyBackend SourceMetadata)
       parseSourceMetadata = withObject "SourceMetadata" \o -> do
-        backendKind <- o .:? "kind" .!= Postgres Vanilla
-        AB.parseAnyBackendFromJSON backendKind (Object o)
+        backendSourceKind <- explicitParseField AB.parseBackendSourceKindFromJSON o "kind"
+        AB.dispatchAnyBackend'' @FromJSON @Backend
+          backendSourceKind
+          ( \(_kind :: BackendSourceKind b) ->
+              AB.mkAnyBackend @b <$> parseJSON (Object o)
+          )
 
 emptyMetadata :: Metadata
 emptyMetadata =
@@ -610,7 +638,8 @@ emptyMetadata =
       _metaCustomTypes = emptyCustomTypes,
       _metaApiLimits = emptyApiLimit,
       _metaMetricsConfig = emptyMetricsConfig,
-      _metaNetwork = emptyNetwork
+      _metaNetwork = emptyNetwork,
+      _metaBackendConfigs = mempty
     }
 
 tableMetadataSetter ::
@@ -777,6 +806,7 @@ metadataToOrdJSON
       inheritedRoles
       introspectionDisabledRoles
       networkConfig
+      backendConfigs
     ) =
     AO.object $
       [versionPair, sourcesPair]
@@ -792,7 +822,8 @@ metadataToOrdJSON
             metricsConfigPair,
             inheritedRolesPair,
             introspectionDisabledRolesPair,
-            networkPair
+            networkPair,
+            backendConfigsPair
           ]
     where
       versionPair = ("version", AO.toOrdered currentMetadataVersion)
@@ -831,12 +862,27 @@ metadataToOrdJSON
           then Just ("network", AO.toOrdered networkConfig)
           else Nothing
 
+      backendConfigsPair =
+        if backendConfigs /= mempty
+          then Just ("backend_configs", backendConfigsToOrdJSON backendConfigs)
+          else Nothing
+
+      backendConfigsToOrdJSON :: BackendMap BackendConfigWrapper -> AO.Value
+      backendConfigsToOrdJSON backendConfigs' =
+        AO.object . sortOn fst $ backendConfigToOrdJSON <$> BackendMap.elems backendConfigs'
+
+      backendConfigToOrdJSON :: AB.AnyBackend BackendConfigWrapper -> (Text, AO.Value)
+      backendConfigToOrdJSON backendConfig =
+        AB.dispatchAnyBackend @Backend backendConfig $ \((BackendConfigWrapper backendConfig') :: BackendConfigWrapper b) ->
+          let backendTypeStr = T.toTxt $ reify $ backendTag @b
+              val = AO.toOrdered backendConfig'
+           in (backendTypeStr, val)
+
       sourceMetaToOrdJSON :: BackendSourceMetadata -> AO.Value
       sourceMetaToOrdJSON exists =
         AB.dispatchAnyBackend @Backend exists $ \(SourceMetadata {..} :: SourceMetadata b) ->
           let sourceNamePair = ("name", AO.toOrdered _smName)
-              sourceKind = T.toTxt $ reify $ backendTag @b
-              sourceKindPair = ("kind", AO.String sourceKind)
+              sourceKindPair = ("kind", AO.toOrdered _smKind)
               tablesPair = ("tables", AO.array $ map tableMetaToOrdJSON $ sortOn _tmTable $ OM.elems _smTables)
               functionsPair = listToMaybeOrdPairSort "functions" functionMetadataToOrdJSON _fmFunction _smFunctions
               configurationPair = [("configuration", AO.toOrdered _smConfiguration)]

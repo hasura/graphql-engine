@@ -71,9 +71,11 @@ resolveSourceConfig ::
   (MonadIO m, MonadResolveSource m) =>
   SourceName ->
   PostgresConnConfiguration ->
+  BackendSourceKind ('Postgres pgKind) ->
+  BackendConfig ('Postgres pgKind) ->
   Env.Environment ->
   m (Either QErr (SourceConfig ('Postgres pgKind)))
-resolveSourceConfig name config _env = runExceptT do
+resolveSourceConfig name config _backendKind _backendConfig _env = runExceptT do
   sourceResolver <- getPGSourceResolver
   liftEitherM $ liftIO $ sourceResolver name config
 

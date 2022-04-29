@@ -14,8 +14,8 @@ where
 
 import Control.Lens (at, (.~), (^.))
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Data.Aeson
-import Data.Aeson qualified as J
+import Data.Aeson.Extended
+import Data.Aeson.Extended qualified as J
 import Data.Aeson.TH
 import Data.Has
 import Data.HashMap.Strict qualified as HM
@@ -37,6 +37,7 @@ import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend
 import Hasura.Server.Logging (MetadataLog (..))
 
 --------------------------------------------------------------------------------
@@ -44,15 +45,17 @@ import Hasura.Server.Logging (MetadataLog (..))
 
 data AddSource b = AddSource
   { _asName :: !SourceName,
+    _asBackendKind :: !(BackendSourceKind b),
     _asConfiguration :: !(SourceConnConfiguration b),
     _asReplaceConfiguration :: !Bool,
     _asCustomization :: !SourceCustomization
   }
 
-instance (Backend b) => FromJSON (AddSource b) where
-  parseJSON = withObject "AddSource" $ \o ->
+instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (AddSource b) where
+  parseJSONWithContext backendKind = withObject "AddSource" $ \o ->
     AddSource
       <$> o .: "name"
+      <*> pure backendKind
       <*> o .: "configuration"
       <*> o .:? "replace_configuration" .!= False
       <*> o .:? "customization" .!= emptySourceCustomization
@@ -62,7 +65,7 @@ runAddSource ::
   (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) =>
   AddSource b ->
   m EncJSON
-runAddSource (AddSource name sourceConfig replaceConfiguration sourceCustomization) = do
+runAddSource (AddSource name backendKind sourceConfig replaceConfiguration sourceCustomization) = do
   sources <- scSources <$> askSchemaCache
 
   metadataModifier <-
@@ -73,7 +76,7 @@ runAddSource (AddSource name sourceConfig replaceConfiguration sourceCustomizati
             then pure $ metaSources . ix name . toSourceMetadata @b . smConfiguration .~ sourceConfig
             else throw400 AlreadyExists $ "source with name " <> name <<> " already exists"
         else do
-          let sourceMetadata = mkSourceMetadata @b name sourceConfig sourceCustomization
+          let sourceMetadata = mkSourceMetadata @b name backendKind sourceConfig sourceCustomization
           pure $ metaSources %~ OMap.insert name sourceMetadata
 
   buildSchemaCacheFor (MOSource name) metadataModifier

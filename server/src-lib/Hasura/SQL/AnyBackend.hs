@@ -4,12 +4,14 @@
 
 module Hasura.SQL.AnyBackend
   ( AnyBackend,
+    SatisfiesForAllBackends,
     liftTag,
     mkAnyBackend,
     mapBackend,
     traverseBackend,
     dispatchAnyBackend,
     dispatchAnyBackend',
+    dispatchAnyBackend'',
     dispatchAnyBackendArrow,
     dispatchAnyBackendWithTwoConstraints,
     unpackAnyBackend,
@@ -17,6 +19,8 @@ module Hasura.SQL.AnyBackend
     runBackend,
     parseAnyBackendFromJSON,
     debugAnyBackendToJSON,
+    backendSourceKindFromText,
+    parseBackendSourceKindFromJSON,
   )
 where
 
@@ -24,6 +28,8 @@ import Control.Arrow.Extended (ArrowChoice, arr, (|||))
 import Data.Aeson
 import Data.Aeson.Types (Parser)
 import Data.Kind (Constraint, Type)
+import Data.Text.NonEmpty (mkNonEmptyText)
+import Hasura.Backends.DataWrapper.Adapter.Types (DataConnectorName (..))
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.SQL.Backend
@@ -297,6 +303,21 @@ dispatchAnyBackend' ::
   (forall (b :: BackendType). c (i b) => i b -> r) ->
   r
 dispatchAnyBackend' e f = $(mkDispatch 'f 'e)
+
+-- | This allows you to apply a constraint to the Backend instances (c2)
+-- as well as a constraint on the higher-kinded 'i b' type (c1)
+dispatchAnyBackend'' ::
+  forall
+    (c1 :: Type -> Constraint)
+    (c2 :: BackendType -> Constraint)
+    (i :: BackendType -> Type)
+    (r :: Type).
+  i `SatisfiesForAllBackends` c1 =>
+  AllBackendsSatisfy c2 =>
+  AnyBackend i ->
+  (forall (b :: BackendType). c2 b => c1 (i b) => i b -> r) ->
+  r
+dispatchAnyBackend'' e f = $(mkDispatch 'f 'e)
 
 -- | Sometimes we need to run operations on two backends of the same type.
 -- If the backends don't contain the same type, the given 'r' value is returned.
@@ -602,3 +623,29 @@ deriving instance i `SatisfiesForAllBackends` Eq => Eq (AnyBackend i)
 instance i `SatisfiesForAllBackends` Hashable => Hashable (AnyBackend i)
 
 instance i `SatisfiesForAllBackends` Cacheable => Cacheable (AnyBackend i)
+
+backendSourceKindFromText :: Text -> Maybe (AnyBackend BackendSourceKind)
+backendSourceKindFromText text =
+  PostgresVanillaValue <$> staticKindFromText PostgresVanillaKind
+    <|> PostgresCitusValue <$> staticKindFromText PostgresCitusKind
+    <|> MSSQLValue <$> staticKindFromText MSSQLKind
+    <|> BigQueryValue <$> staticKindFromText BigQueryKind
+    <|> MySQLValue <$> staticKindFromText MySQLKind
+    -- IMPORTANT: This must be the last thing here, since it will accept (almost) any string
+    <|> DataWrapperValue . DataWrapperKind . DataConnectorName <$> mkNonEmptyText text
+  where
+    staticKindFromText :: BackendSourceKind b -> Maybe (BackendSourceKind b)
+    staticKindFromText kind =
+      if text `elem` backendTextNames (backendTypeFromBackendSourceKind kind)
+        then Just kind
+        else Nothing
+
+parseBackendSourceKindFromJSON :: Value -> Parser (AnyBackend BackendSourceKind)
+parseBackendSourceKindFromJSON value =
+  PostgresVanillaValue <$> parseJSON @(BackendSourceKind ('Postgres 'Vanilla)) value
+    <|> PostgresCitusValue <$> parseJSON @(BackendSourceKind ('Postgres 'Citus)) value
+    <|> MSSQLValue <$> parseJSON @(BackendSourceKind ('MSSQL)) value
+    <|> BigQueryValue <$> parseJSON @(BackendSourceKind ('BigQuery)) value
+    <|> MySQLValue <$> parseJSON @(BackendSourceKind ('MySQL)) value
+    -- IMPORTANT: This must the last thing here, since it will accept (almost) any string
+    <|> DataWrapperValue <$> parseJSON @(BackendSourceKind ('DataWrapper)) value

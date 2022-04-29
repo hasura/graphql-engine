@@ -1,6 +1,7 @@
 module Data.Aeson.Extended
   ( FromJSONKeyValue (..),
     ToJSONKeyValue (..),
+    FromJSONWithContext (..),
     mapWithJSONPath,
     encodeToStrictText,
     (.=?),
@@ -33,6 +34,15 @@ instance ToJSONKeyValue Void where
 
 instance ToJSONKeyValue a => ToJSONKeyValue (Const a b) where
   toJSONKeyValue = toJSONKeyValue . getConst
+
+-- | Similar to 'FromJSON', except the parser can also source data with which
+-- to construct 'a' from a context 'ctx'.
+--
+-- This can be useful if the 'a' value contains some data that is not from the
+-- current piece of JSON (the 'Value'). For example, some data from higher
+-- up in the overall JSON graph, or from some system context.
+class FromJSONWithContext ctx a | a -> ctx where
+  parseJSONWithContext :: ctx -> Value -> Parser a
 
 -------------------------------------------------------------------------------
 

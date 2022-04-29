@@ -44,6 +44,7 @@ import Hasura.Incremental.Select
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.URI.Extended qualified as N
+import Servant.Client (BaseUrl, Scheme)
 import System.Cron.Types
 
 -- | A 'Dependency' represents a value that a 'Rule' can /conditionally/ depend on. A 'Dependency'
@@ -373,6 +374,10 @@ instance Cacheable G.TypeSystemDefinition
 instance Cacheable G.SchemaDocument
 
 instance Cacheable G.SchemaIntrospection
+
+instance Cacheable Scheme
+
+instance Cacheable BaseUrl
 
 class GCacheable f where
   gunchanged :: f p -> f p -> Accesses -> Bool

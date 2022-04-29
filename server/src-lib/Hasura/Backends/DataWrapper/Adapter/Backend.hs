@@ -6,7 +6,6 @@ module Hasura.Backends.DataWrapper.Adapter.Backend () where
 
 import Data.Aeson qualified as J (Value)
 import Hasura.Backends.DataWrapper.Adapter.Types qualified as Adapter
-import Hasura.Backends.DataWrapper.Agent.Client qualified as Agent.Client
 import Hasura.Backends.DataWrapper.IR.Column qualified as IR.C
 import Hasura.Backends.DataWrapper.IR.Expression qualified as IR.E
 import Hasura.Backends.DataWrapper.IR.Function qualified as IR.F
@@ -35,8 +34,9 @@ import Language.GraphQL.Draft.Syntax qualified as G
 type Unimplemented = ()
 
 instance Backend 'DataWrapper where
+  type BackendConfig 'DataWrapper = Adapter.DataConnectorBackendConfig
   type SourceConfig 'DataWrapper = Adapter.SourceConfig
-  type SourceConnConfiguration 'DataWrapper = Agent.Client.ConnSourceConfig
+  type SourceConnConfiguration 'DataWrapper = Adapter.ConnSourceConfig
 
   type TableName 'DataWrapper = IR.T.Name
   type FunctionName 'DataWrapper = IR.F.Name

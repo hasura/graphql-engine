@@ -1,9 +1,5 @@
-{-# LANGUAGE DeriveAnyClass #-}
-
---
 module Hasura.Backends.DataWrapper.Agent.Client
-  ( ConnSourceConfig (..),
-    Hasura.Backends.DataWrapper.Agent.Client.client,
+  ( Hasura.Backends.DataWrapper.Agent.Client.client,
   )
 where
 
@@ -13,13 +9,8 @@ import Control.Monad.Free
 
 -- import qualified Network.HTTP.Client.Transformable      as Transformable
 
-import Data.Aeson (FromJSON, ToJSON)
-import Data.Aeson qualified as J
-import Data.Aeson.Casing qualified as J
-import Data.Text (unpack)
 import Hasura.Backends.DataWrapper.API qualified as API
 import Hasura.Base.Error
-import Hasura.Incremental.Internal.Dependency (Cacheable (..))
 import Hasura.Prelude
 import Network.HTTP.Client (Manager)
 import Network.HTTP.Client qualified as HTTP
@@ -32,37 +23,16 @@ import Servant.Client.Internal.HttpClient (clientResponseToResponse)
 --------------------------------------------------------------------------------
 -- Client
 
-newtype ConnSourceConfig = ConnSourceConfig
-  { dcscEndpoint :: Text
-  }
-  deriving stock (Eq, Ord, Show, Generic, Data)
-  deriving anyclass (Hashable, NFData, Cacheable)
-
-instance ToJSON ConnSourceConfig where
-  toJSON =
-    J.genericToJSON $
-      J.defaultOptions
-        { J.fieldLabelModifier = J.snakeCase . drop 4
-        }
-
-instance FromJSON ConnSourceConfig where
-  parseJSON =
-    J.genericParseJSON $
-      J.defaultOptions
-        { J.fieldLabelModifier = J.snakeCase . drop 4
-        }
-
--- | Create a record of client functions (see 'Routes') from a 'ConnSourceConfig'
--- configuration object. This function takes care to add trace headers, and to
--- propagate useful errors back to the client for debugging purposes.
+-- | Create a record of client functions (see 'Routes') from a 'BaseUrl'.
+-- This function takes care to add trace headers, and to propagate useful
+-- errors back to the client for debugging purposes.
 client ::
   forall m.
   (MonadIO m {- MonadTrace m, -}, MonadError QErr m) =>
   Manager ->
-  ConnSourceConfig ->
+  BaseUrl ->
   IO (API.Routes (AsClientT m))
-client mgr config = do
-  baseUrl <- parseBaseUrl (unpack (dcscEndpoint config))
+client mgr baseUrl = do
   let interpret :: ClientF a -> m a
       interpret (RunRequest req k) = do
         let req' = defaultMakeClientRequest baseUrl req

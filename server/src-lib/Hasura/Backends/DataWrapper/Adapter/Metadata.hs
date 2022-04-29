@@ -7,12 +7,11 @@ module Hasura.Backends.DataWrapper.Adapter.Metadata () where
 import Data.Aeson qualified as J
 import Data.Environment (Environment)
 import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text.Extended (toTxt)
 import Hasura.Backends.DataWrapper.API qualified as API
 import Hasura.Backends.DataWrapper.Adapter.Types qualified as GDW
-  ( SourceConfig (..),
-  )
 import Hasura.Backends.DataWrapper.Agent.Client qualified as Agent.Client
 import Hasura.Backends.DataWrapper.IR.Expression qualified as IR.E
 import Hasura.Backends.DataWrapper.IR.Name qualified as IR.N
@@ -29,7 +28,7 @@ import Hasura.RQL.Types.Metadata.Backend (BackendMetadata (..))
 import Hasura.RQL.Types.Source (ResolvedSource (..))
 import Hasura.RQL.Types.SourceCustomization (SourceTypeCustomization)
 import Hasura.RQL.Types.Table qualified as RQL.T.T
-import Hasura.SQL.Backend (BackendType (..))
+import Hasura.SQL.Backend (BackendSourceKind (..), BackendType (..))
 import Hasura.SQL.Types (CollectableType (..))
 import Hasura.Server.Utils qualified as HSU
 import Hasura.Session (SessionVariable, mkSessionVariable)
@@ -54,18 +53,23 @@ instance BackendMetadata 'DataWrapper where
 resolveSourceConfig' ::
   MonadIO m =>
   SourceName ->
-  Agent.Client.ConnSourceConfig ->
+  GDW.ConnSourceConfig ->
+  BackendSourceKind 'DataWrapper ->
+  GDW.DataConnectorBackendConfig ->
   Environment ->
   m (Either QErr GDW.SourceConfig)
-resolveSourceConfig' _ (Agent.Client.ConnSourceConfig endpoint) _ = runExceptT do
+resolveSourceConfig' _sourceName _sourceConfig (DataWrapperKind dataConnectorName) backendConfig _ = runExceptT do
+  GDW.DataConnectorOptions {..} <-
+    OMap.lookup dataConnectorName backendConfig
+      `onNothing` throw400 DataConnectorError ("Data connector named " <> toTxt dataConnectorName <> " was not found in the data connector backend config")
   manager <- liftIO $ HTTP.newManager HTTP.defaultManagerSettings
-  API.Routes {..} <- liftIO $ Agent.Client.client manager (Agent.Client.ConnSourceConfig endpoint)
+  API.Routes {..} <- liftIO $ Agent.Client.client manager _dcoUri
   schemaResponse <- runTraceTWithReporter noReporter "resolve source" _schema
   pure
     GDW.SourceConfig
-      { dscEndpoint = endpoint,
-        dscSchema = schemaResponse,
-        dscManager = manager
+      { _scEndpoint = _dcoUri,
+        _scSchema = schemaResponse,
+        _scManager = manager
       }
 
 resolveDatabaseMetadata' ::

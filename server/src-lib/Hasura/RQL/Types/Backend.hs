@@ -64,6 +64,7 @@ class
     Ord (ScalarType b),
     Data (TableName b),
     Traversable (BooleanOperators b),
+    FromJSON (BackendConfig b),
     FromJSON (Column b),
     FromJSON (ConstraintName b),
     FromJSON (FunctionName b),
@@ -71,7 +72,9 @@ class
     FromJSON (TableName b),
     FromJSON (SourceConnConfiguration b),
     FromJSON (ExtraTableMetadata b),
+    FromJSON (BackendSourceKind b),
     FromJSONKey (Column b),
+    ToJSON (BackendConfig b),
     ToJSON (Column b),
     ToJSON (ConstraintName b),
     ToJSON (FunctionArgType b),
@@ -92,11 +95,15 @@ class
     ToTxt (TableName b),
     ToTxt (ConstraintName b),
     Cacheable (SourceConfig b),
+    Cacheable (BackendConfig b),
     Typeable (TableName b),
     Typeable (ConstraintName b),
     Typeable b,
     HasTag b,
     -- Type constraints.
+    Eq (BackendConfig b),
+    Show (BackendConfig b),
+    Monoid (BackendConfig b),
     Eq (CountType b),
     Show (CountType b),
     Eq (ScalarValue b),
@@ -119,6 +126,7 @@ class
   Backend (b :: BackendType)
   where
   -- types
+  type BackendConfig b :: Type
   type SourceConfig b :: Type
   type SourceConnConfiguration b :: Type
   type TableName b :: Type

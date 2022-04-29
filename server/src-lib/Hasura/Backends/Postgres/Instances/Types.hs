@@ -9,6 +9,7 @@ module Hasura.Backends.Postgres.Instances.Types
   )
 where
 
+import Data.Aeson (FromJSON)
 import Data.Aeson qualified as J
 import Data.Kind (Type)
 import Data.Typeable
@@ -57,10 +58,12 @@ instance PostgresBackend 'Citus where
 instance
   ( HasTag ('Postgres pgKind),
     Typeable ('Postgres pgKind),
-    PostgresBackend pgKind
+    PostgresBackend pgKind,
+    FromJSON (BackendSourceKind ('Postgres pgKind))
   ) =>
   Backend ('Postgres pgKind)
   where
+  type BackendConfig ('Postgres pgKind) = ()
   type SourceConfig ('Postgres pgKind) = PG.PGSourceConfig
   type SourceConnConfiguration ('Postgres pgKind) = PG.PostgresConnConfiguration
   type TableName ('Postgres pgKind) = PG.QualifiedTable

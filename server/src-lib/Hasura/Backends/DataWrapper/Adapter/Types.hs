@@ -1,19 +1,33 @@
---
+{-# LANGUAGE DeriveAnyClass #-}
+
 module Hasura.Backends.DataWrapper.Adapter.Types
-  ( SourceConfig (..),
+  ( ConnSourceConfig (..),
+    SourceConfig (..),
+    DataConnectorBackendConfig,
+    DataConnectorName (..),
+    DataConnectorOptions (..),
   )
 where
 
+import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey, genericParseJSON, genericToJSON)
 import Data.Aeson qualified as J
+import Data.Text.Extended (ToTxt)
+import Data.Text.NonEmpty (NonEmptyText)
 import Hasura.Backends.DataWrapper.API qualified as API
 import Hasura.Incremental (Cacheable (..))
 import Hasura.Prelude
 import Network.HTTP.Client (Manager)
+import Servant.Client (BaseUrl)
+import Witch qualified
+
+newtype ConnSourceConfig = ConnSourceConfig J.Value
+  deriving stock (Eq, Ord, Show, Generic)
+  deriving anyclass (Hashable, NFData, Cacheable, ToJSON, FromJSON)
 
 data SourceConfig = SourceConfig
-  { dscEndpoint :: Text,
-    dscSchema :: API.SchemaResponse,
-    dscManager :: Manager
+  { _scEndpoint :: BaseUrl,
+    _scSchema :: API.SchemaResponse,
+    _scManager :: Manager
   }
 
 instance Show SourceConfig where
@@ -28,3 +42,23 @@ instance Eq SourceConfig where
 
 instance Cacheable SourceConfig where
   unchanged _ = (==)
+
+newtype DataConnectorName = DataConnectorName {unDataConnectorName :: NonEmptyText}
+  deriving stock (Eq, Ord, Show, Generic)
+  deriving newtype (FromJSON, ToJSON, FromJSONKey, ToJSONKey, Hashable, ToTxt)
+  deriving anyclass (Cacheable, NFData)
+
+instance Witch.From DataConnectorName NonEmptyText
+
+type DataConnectorBackendConfig = InsOrdHashMap DataConnectorName DataConnectorOptions
+
+data DataConnectorOptions = DataConnectorOptions
+  {_dcoUri :: BaseUrl}
+  deriving stock (Eq, Ord, Show, Generic)
+  deriving anyclass (Cacheable)
+
+instance FromJSON DataConnectorOptions where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON DataConnectorOptions where
+  toJSON = genericToJSON hasuraJSON

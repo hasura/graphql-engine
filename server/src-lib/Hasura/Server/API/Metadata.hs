@@ -65,7 +65,6 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.SQL.AnyBackend
 import Hasura.SQL.Backend
-import Hasura.SQL.Tag
 import Hasura.Server.API.Backend
 import Hasura.Server.API.Instances ()
 import Hasura.Server.Types
@@ -254,24 +253,26 @@ instance FromJSON RQLMetadataV1 where
       "bulk" -> RMBulk <$> args
       -- backend specific
       _ -> do
+        (backendSourceKind, cmd) <- parseQueryType queryType
+        dispatchAnyBackend @BackendAPI backendSourceKind \(backendSourceKind' :: BackendSourceKind b) -> do
+          argValue <- args
+          command <- choice <$> sequenceA [p backendSourceKind' cmd argValue | p <- metadataV1CommandParsers @b]
+          onNothing command $
+            fail $
+              "unknown metadata command \"" <> T.unpack cmd
+                <> "\" for backend "
+                <> T.unpack (T.toTxt backendSourceKind')
+    where
+      parseQueryType :: MonadFail m => Text -> m (AnyBackend BackendSourceKind, Text)
+      parseQueryType queryType =
         let (prefix, T.drop 1 -> cmd) = T.breakOn "_" queryType
-        backendType <-
-          runAesonParser parseJSON (String prefix)
-            `onLeft` \_ ->
-              fail
+         in (,cmd) <$> backendSourceKindFromText prefix
+              `onNothing` fail
                 ( "unknown metadata command \"" <> T.unpack queryType
                     <> "\"; \""
                     <> T.unpack prefix
                     <> "\" was not recognized as a valid backend name"
                 )
-        dispatchAnyBackend @BackendAPI (liftTag backendType) \(_ :: BackendTag b) -> do
-          argValue <- args
-          command <- choice <$> sequenceA [p cmd argValue | p <- metadataV1CommandParsers @b]
-          onNothing command $
-            fail $
-              "unknown metadata command \"" <> T.unpack cmd
-                <> "\" for backend "
-                <> T.unpack (T.toTxt backendType)
 
 data RQLMetadataV2
   = RMV2ReplaceMetadata !ReplaceMetadataV2
