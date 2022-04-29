@@ -68,7 +68,7 @@ PlaygroundWithPrimaryTest.play = async ({ canvasElement }) => {
 
   await canvas.findByText('Name');
 
-  const submitButton = await canvas.findByText('Add Relationship');
+  const submitButton = await canvas.findByText('Save Relationship');
 
   userEvent.click(submitButton);
 

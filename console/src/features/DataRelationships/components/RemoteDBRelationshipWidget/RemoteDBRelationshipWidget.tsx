@@ -12,10 +12,12 @@ import { getMetadataQuery, MetadataQueryType } from '@/metadata/queryUtils';
 import { schema, Schema } from './schema';
 import { FormElements } from './FormElements';
 import { useDefaultValues } from './hooks';
+import { getSchemaKey } from './utils';
 
-export type LocalRelationshipWidgetProps = {
-  sourceTableInfo: DataTarget;
-  existingRelationshipName?: string;
+type StatusType = {
+  title: string;
+  message: string;
+  type: 'success' | 'error';
 };
 
 type MetadataPayloadType = {
@@ -24,10 +26,31 @@ type MetadataPayloadType = {
   version?: number;
 };
 
-export const LocalRelationshipWidget = ({
+export type RemoteDBRelationshipWidgetProps = {
+  /**
+   * the data source which the relationship originates from, this is the only mandator prop to render this component
+   *
+   * @type {DataTarget}
+   */
+  sourceTableInfo: DataTarget;
+  /**
+   * Used to render the component in edit mode, passing the relationship name would prefill the form with default values required for the relationship
+   *
+   * @type {string}
+   */
+  existingRelationshipName?: string;
+  /**
+   * optional callback function, can be used to get the onComplete event, this could be a onSuccess, or onError event.
+   *
+   */
+  onComplete?: (v: StatusType) => void;
+};
+
+export const RemoteDBRelationshipWidget = ({
   sourceTableInfo,
   existingRelationshipName,
-}: LocalRelationshipWidgetProps) => {
+  onComplete,
+}: RemoteDBRelationshipWidgetProps) => {
   // hook to fetch data for existing relationship
   const { data: defaultValues, isLoading, isError } = useDefaultValues({
     sourceTableInfo,
@@ -37,18 +60,26 @@ export const LocalRelationshipWidget = ({
   const mutation = useMetadataMigration(
     {
       onSuccess: () => {
-        fireNotification({
+        const status: StatusType = {
           title: 'Success!',
           message: 'Relationship saved successfully',
           type: 'success',
-        });
+        };
+        fireNotification(status);
+        if (onComplete) {
+          onComplete(status);
+        }
       },
       onError: (error: Error) => {
-        fireNotification({
+        const status: StatusType = {
           title: 'Error',
           message: error?.message ?? 'Error while creating the relationship',
           type: 'error',
-        });
+        };
+        fireNotification(status);
+        if (onComplete) {
+          onComplete(status);
+        }
       },
     },
     true
@@ -65,25 +96,39 @@ export const LocalRelationshipWidget = ({
 
     const args = {
       source: sourceTableInfo.database,
-      table: sourceTableInfo.table,
+      table: {
+        [getSchemaKey(sourceTableInfo)]:
+          (sourceTableInfo as any).dataset ?? (sourceTableInfo as any).schema,
+        name: sourceTableInfo.table,
+      },
       name: values.relationshipName,
-      using: {
-        manual_configuration: {
-          remote_table,
-          mapping: values.mapping,
+      definition: {
+        to_source: {
+          source: values.destination.database,
+          table: remote_table,
+          relationship_type: values.relationshipType,
+          field_mapping: values.mapping,
         },
       },
     };
-    const requestBody = getMetadataQuery(
-      values.relationshipType as MetadataQueryType,
-      sourceTableInfo.database,
-      args
-    );
+    const requestBody = existingRelationshipName
+      ? getMetadataQuery(
+          'update_remote_relationship' as MetadataQueryType,
+          sourceTableInfo.database,
+          args
+        )
+      : getMetadataQuery(
+          'create_remote_relationship' as MetadataQueryType,
+          sourceTableInfo.database,
+          args
+        );
 
     mutation.mutate({
       source: '',
       query: requestBody as MetadataPayloadType,
-      migrationName: 'createLocalDBToDBRelationship',
+      migrationName: existingRelationshipName
+        ? 'updateRemoteDBToDBRelationship'
+        : 'createRemoteDBToDBRelationship',
     });
   };
 
@@ -119,11 +164,11 @@ export const LocalRelationshipWidget = ({
                   options={[
                     {
                       label: 'Object Relationship',
-                      value: 'create_object_relationship',
+                      value: 'object',
                     },
                     {
                       label: 'Array Relationship',
-                      value: 'create_array_relationship',
+                      value: 'array',
                     },
                   ]}
                 />
@@ -138,7 +183,7 @@ export const LocalRelationshipWidget = ({
               loadingText="Saving relationship"
               data-test="add-local-db-relationship"
             >
-              Add Relationship
+              {existingRelationshipName ? 'Save' : 'Add'} Relationship
             </Button>
           </div>
 
