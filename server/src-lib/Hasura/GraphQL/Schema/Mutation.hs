@@ -310,7 +310,7 @@ mkInsertObject objects tableInfo backendInsert insertPerms updatePerms =
       _aiTableName = table,
       _aiCheckCondition = (insertCheck, updateCheck),
       _aiTableColumns = columns,
-      _aiDefaultValues = defaultValues,
+      _aiPresetValues = presetValues,
       _aiBackendInsert = backendInsert
     }
   where
@@ -318,14 +318,7 @@ mkInsertObject objects tableInfo backendInsert insertPerms updatePerms =
     columns = tableColumns tableInfo
     insertCheck = fmap partialSQLExpToUnpreparedValue <$> ipiCheck insertPerms
     updateCheck = (fmap . fmap . fmap) partialSQLExpToUnpreparedValue $ upiCheck =<< updatePerms
-    defaultValues =
-      Map.union (partialSQLExpToUnpreparedValue <$> ipiSet insertPerms) $
-        Map.fromList
-          [ (column, UVLiteral $ columnDefaultValue @b column)
-            | ci <- columns,
-              _cmIsInsertable (ciMutability ci),
-              let column = ciColumn ci
-          ]
+    presetValues = partialSQLExpToUnpreparedValue <$> ipiSet insertPerms
 
 -- delete
 

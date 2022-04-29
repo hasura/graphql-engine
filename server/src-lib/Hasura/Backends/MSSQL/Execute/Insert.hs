@@ -187,7 +187,7 @@ buildInsertTx tableName withAlias stringifyNum insert = do
 --   Should be used as part of a bigger transaction in 'buildInsertTx'.
 buildUpsertTx :: TSQL.TableName -> AnnotatedInsert 'MSSQL Void Expression -> IfMatched Expression -> Tx.TxET QErr IO ()
 buildUpsertTx tableName insert ifMatched = do
-  let presets = _aiDefaultValues $ _aiData insert
+  let presets = _aiPresetValues $ _aiData insert
       insertColumnNames =
         concatMap (map fst . getInsertColumns) (_aiInsertObject $ _aiData insert) <> HM.keys presets
       allTableColumns = _aiTableColumns $ _aiData insert

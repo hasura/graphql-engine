@@ -70,9 +70,6 @@ instance BackendSchema 'MSSQL where
   computedField = msComputedField
   node = msNode
 
-  -- SQL literals
-  columnDefaultValue = msColumnDefaultValue
-
 ----------------------------------------------------------------
 
 -- * Top level parsers
@@ -465,12 +462,3 @@ msNode ::
         )
     )
 msNode = throw500 "MSSQL does not support relay; `node` should never be exposed in the schema."
-
-----------------------------------------------------------------
-
--- * SQL literals
-
--- FIXME: this is nonsensical for MSSQL, we'll need to adjust the corresponding mutation
--- and its representation.
-msColumnDefaultValue :: Column 'MSSQL -> SQLExpression 'MSSQL
-msColumnDefaultValue = const $ MSSQL.ValueExpression ODBC.NullValue
