@@ -2,6 +2,7 @@ import { Button } from '@/new-components/Button';
 import React, { useState } from 'react';
 import { CardRadioGroup } from '@/new-components/CardRadioGroup';
 import { LocalRelationshipWidget } from '../LocalDBRelationshipWidget';
+import { RemoteDBRelationshipWidget } from '../RemoteDBRelationshipWidget';
 
 type Value =
   | 'Local Relationship'
@@ -55,7 +56,13 @@ export const Form = () => {
             }}
           />
         ) : option === 'Remote Database Relationship' ? (
-          <>do something for remote DB relationships</>
+          <RemoteDBRelationshipWidget
+            sourceTableInfo={{
+              database: 'default',
+              schema: 'public',
+              table: 'resident',
+            }}
+          />
         ) : (
           <>do something for remote schema relationships</>
         )}

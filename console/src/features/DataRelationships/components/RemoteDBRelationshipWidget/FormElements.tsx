@@ -38,7 +38,6 @@ export const FormElements = () => {
                 name="source"
                 errors={errors}
                 className="border-l-4 border-l-green-600"
-                hiddenKeys={['database']}
                 disabledKeys={['schema', 'table', 'database']}
                 labels={{
                   database: 'Source Database',
@@ -64,7 +63,6 @@ export const FormElements = () => {
                 name="destination"
                 errors={errors}
                 className="border-l-4 border-l-indigo-600"
-                hiddenKeys={['database']}
                 labels={{
                   database: 'Reference Database',
                   schema: 'Reference Schema',

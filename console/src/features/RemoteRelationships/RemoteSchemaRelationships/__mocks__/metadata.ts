@@ -75,6 +75,25 @@ export const metadata = {
                 },
               },
             ],
+            remote_relationships: [
+              {
+                definition: {
+                  to_source: {
+                    relationship_type: 'object',
+                    source: 'default',
+                    table: {
+                      schema: 'public',
+                      name: 'resident',
+                    },
+                    field_mapping: {
+                      id: 'Id',
+                      updated_at: 'FirstName',
+                    },
+                  },
+                },
+                name: 'AlbumToResident',
+              },
+            ],
           },
           {
             table: {
