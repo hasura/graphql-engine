@@ -90,6 +90,26 @@ export namespace MetadataSelector {
     );
   };
 
+  interface DbToRemoteSchemaArgs {
+    dataSource: string;
+    tableName: string;
+  }
+
+  export const getDbToRemoteSchemaRelationships = ({
+    dataSource,
+    tableName,
+  }: DbToRemoteSchemaArgs) => (m: MetadataResponse) => {
+    // find relevant table from metadata
+    const tableEntry = m.metadata.sources
+      .find(s => s.name === dataSource)
+      ?.tables.find(t => t.table.name === tableName);
+
+    return {
+      table: tableEntry?.table,
+      remote_relationships: tableEntry?.remote_relationships,
+    };
+  };
+
   export const getTables = (dataSource: string) => (m: MetadataResponse) => {
     const sources = getDataSourceMetadata(dataSource)(m);
     return sources?.tables ?? [];
