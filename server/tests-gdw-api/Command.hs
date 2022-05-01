@@ -13,10 +13,12 @@ import Control.Lens (contains, modifying, use, (^.), _2)
 import Control.Lens.TH (makeLenses)
 import Control.Monad (when)
 import Control.Monad.State (State, runState)
+import Data.Aeson (eitherDecodeStrict')
 import Data.HashSet (HashSet)
 import Data.HashSet qualified as HashSet
 import Data.Text (Text)
 import Data.Text qualified as Text
+import Data.Text.Encoding qualified as Text
 import Data.Version (showVersion)
 import Hasura.Backends.DataWrapper.API qualified as API
 import Options.Applicative
@@ -30,6 +32,7 @@ data Command
 
 data TestOptions = TestOptions
   { _toAgentBaseUrl :: BaseUrl,
+    _toAgentConfig :: API.Config,
     _toAgentCapabilities :: AgentCapabilities,
     _toParallelDegree :: Maybe Int,
     _toMatch :: Maybe String,
@@ -98,6 +101,13 @@ testOptionsParser =
           <> metavar "URL"
           <> help "The base URL of the GDW agent to be tested"
       )
+    <*> option
+      configValue
+      ( long "agent-config"
+          <> short 's'
+          <> metavar "JSON"
+          <> help "The configuration JSON to be sent to the agent via the X-Hasura-DataConnector-Config header"
+      )
     <*> agentCapabilitiesParser
     <*> optional
       ( option
@@ -137,6 +147,9 @@ positiveNonZeroInt :: ReadM Int
 positiveNonZeroInt =
   auto >>= \int ->
     if int <= 0 then readerError "Must be a positive, non-zero integer" else pure int
+
+configValue :: ReadM API.Config
+configValue = eitherReader $ (fmap API.Config . eitherDecodeStrict' . Text.encodeUtf8 . Text.pack)
 
 agentCapabilitiesParser :: Parser AgentCapabilities
 agentCapabilitiesParser =

@@ -8,10 +8,10 @@ The executable also has the ability to export the OpenAPI spec of the GDW agent 
 ## How to Use
 First, start your GDW agent and ensure it is populated with the Chinook data set. For example, you could start the Reference Agent by following the instructions in [its README](../../gdw-agents/reference/README.md).
 
-To run the tests against the agent (for example), you must specify the agent's URL on the command line:
+To run the tests against the agent (for example), you must specify the agent's URL on the command line (`-u`), as well as the agent's configuration JSON (`-s`, sent in the `X-Hasura-DataConnector-Config` header):
 
 ```
-cabal run test:tests-gdw-api -- test -u "http://localhost:8100"
+cabal run test:tests-gdw-api -- test -u "http://localhost:8100" -s '{}'
 ```
 
 By default, the test suite will discover what capabilities the agent exposes by querying it. Otherwise, the user can use command line flags to specify which capabilities their agent has to ensure that it exposes the expected capabilities and that the test suite only runs the tests that correspond to those capabilities.
@@ -19,7 +19,7 @@ By default, the test suite will discover what capabilities the agent exposes by 
 To set the agent's available the capabilities use `-c` and comma separate them:
 
 ```
-> cabal run test:tests-gdw-api -- test -u "http://localhost:8100" -c relationships
+> cabal run test:tests-gdw-api -- test -u "http://localhost:8100" -s '{}' -c relationships
 ```
 
 If `-c` is omitted, the default value is `autodetect`. If you have no capabilities, you can specify `none`.

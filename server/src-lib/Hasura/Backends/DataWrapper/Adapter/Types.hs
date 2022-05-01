@@ -20,12 +20,16 @@ import Network.HTTP.Client (Manager)
 import Servant.Client (BaseUrl)
 import Witch qualified
 
-newtype ConnSourceConfig = ConnSourceConfig J.Value
+newtype ConnSourceConfig = ConnSourceConfig API.Config
   deriving stock (Eq, Ord, Show, Generic)
-  deriving anyclass (Hashable, NFData, Cacheable, ToJSON, FromJSON)
+  deriving anyclass (Hashable, NFData, ToJSON, FromJSON)
+
+instance Cacheable ConnSourceConfig where
+  unchanged _ = (==)
 
 data SourceConfig = SourceConfig
   { _scEndpoint :: BaseUrl,
+    _scConfig :: API.Config,
     _scSchema :: API.SchemaResponse,
     _scManager :: Manager
   }
@@ -37,8 +41,8 @@ instance J.ToJSON SourceConfig where
   toJSON _ = J.String "SourceConfig"
 
 instance Eq SourceConfig where
-  SourceConfig ep1 schema1 _ == SourceConfig ep2 schema2 _ =
-    ep1 == ep2 && schema1 == schema2
+  SourceConfig ep1 config1 schema1 _ == SourceConfig ep2 config2 schema2 _ =
+    ep1 == ep2 && config1 == config2 && schema1 == schema2
 
 instance Cacheable SourceConfig where
   unchanged _ = (==)

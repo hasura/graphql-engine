@@ -75,7 +75,7 @@ mkPlan ::
   SourceConfig ->
   QueryDB 'DataWrapper Void (UnpreparedValue 'DataWrapper) ->
   m Plan
-mkPlan session (SourceConfig _ API.SchemaResponse {srCapabilities} _) ir = translateQueryDB ir
+mkPlan session (SourceConfig {_scSchema = API.SchemaResponse {..}}) ir = translateQueryDB ir
   where
     translateQueryDB ::
       QueryDB 'DataWrapper Void (UnpreparedValue 'DataWrapper) ->

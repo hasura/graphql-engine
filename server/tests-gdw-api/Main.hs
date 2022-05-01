@@ -19,19 +19,19 @@ import Test.QuerySpec qualified
 import Test.SchemaSpec qualified
 import Prelude
 
-tests :: Client IO (NamedRoutes Routes) -> API.Capabilities -> Spec
-tests api capabilities = do
-  Test.SchemaSpec.spec api capabilities
-  Test.QuerySpec.spec api capabilities
+tests :: Client IO (NamedRoutes Routes) -> API.Config -> API.Capabilities -> Spec
+tests api agentConfig capabilities = do
+  Test.SchemaSpec.spec api agentConfig capabilities
+  Test.QuerySpec.spec api agentConfig capabilities
 
 main :: IO ()
 main = do
   command <- parseCommandLine
   case command of
-    Test testOptions -> do
+    Test testOptions@TestOptions {..} -> do
       api <- mkIOApiClient testOptions
-      agentCapabilities <- getAgentCapabilities api (_toAgentCapabilities testOptions)
-      runSpec (tests api agentCapabilities) (applyTestConfig defaultConfig testOptions) >>= evaluateSummary
+      agentCapabilities <- getAgentCapabilities api _toAgentConfig _toAgentCapabilities
+      runSpec (tests api _toAgentConfig agentCapabilities) (applyTestConfig defaultConfig testOptions) >>= evaluateSummary
     ExportOpenAPISpec ->
       Text.putStrLn $ encodeToLazyText openApiSchema
 
@@ -46,9 +46,9 @@ mkIOApiClient TestOptions {..} = do
 throwClientError :: Either ClientError a -> IO a
 throwClientError = either throwIO pure
 
-getAgentCapabilities :: Client IO (NamedRoutes Routes) -> AgentCapabilities -> IO API.Capabilities
-getAgentCapabilities api = \case
-  AutoDetect -> fmap API.srCapabilities $ api // _schema
+getAgentCapabilities :: Client IO (NamedRoutes Routes) -> API.Config -> AgentCapabilities -> IO API.Capabilities
+getAgentCapabilities api agentConfig = \case
+  AutoDetect -> fmap API.srCapabilities $ api // _schema $ agentConfig
   Explicit capabilities -> pure capabilities
 
 applyTestConfig :: Config -> TestOptions -> Config

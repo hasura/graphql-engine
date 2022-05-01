@@ -2,8 +2,6 @@
 
 module Hasura.Backends.DataWrapper.Adapter.Metadata () where
 
---------------------------------------------------------------------------------
-
 import Data.Aeson qualified as J
 import Data.Environment (Environment)
 import Data.HashMap.Strict qualified as Map
@@ -11,6 +9,7 @@ import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text.Extended (toTxt)
 import Hasura.Backends.DataWrapper.API qualified as API
+import Hasura.Backends.DataWrapper.Adapter.Types (ConnSourceConfig (..))
 import Hasura.Backends.DataWrapper.Adapter.Types qualified as GDW
 import Hasura.Backends.DataWrapper.Agent.Client qualified as Agent.Client
 import Hasura.Backends.DataWrapper.IR.Expression qualified as IR.E
@@ -37,8 +36,6 @@ import Language.GraphQL.Draft.Syntax qualified as GQL
 import Network.HTTP.Client qualified as HTTP
 import Witch qualified
 
---------------------------------------------------------------------------------
-
 instance BackendMetadata 'DataWrapper where
   resolveSourceConfig = resolveSourceConfig'
   resolveDatabaseMetadata = resolveDatabaseMetadata'
@@ -58,16 +55,17 @@ resolveSourceConfig' ::
   GDW.DataConnectorBackendConfig ->
   Environment ->
   m (Either QErr GDW.SourceConfig)
-resolveSourceConfig' _sourceName _sourceConfig (DataWrapperKind dataConnectorName) backendConfig _ = runExceptT do
+resolveSourceConfig' _sourceName (ConnSourceConfig config) (DataWrapperKind dataConnectorName) backendConfig _ = runExceptT do
   GDW.DataConnectorOptions {..} <-
     OMap.lookup dataConnectorName backendConfig
       `onNothing` throw400 DataConnectorError ("Data connector named " <> toTxt dataConnectorName <> " was not found in the data connector backend config")
   manager <- liftIO $ HTTP.newManager HTTP.defaultManagerSettings
   API.Routes {..} <- liftIO $ Agent.Client.client manager _dcoUri
-  schemaResponse <- runTraceTWithReporter noReporter "resolve source" _schema
+  schemaResponse <- runTraceTWithReporter noReporter "resolve source" $ _schema config
   pure
     GDW.SourceConfig
       { _scEndpoint = _dcoUri,
+        _scConfig = config,
         _scSchema = schemaResponse,
         _scManager = manager
       }
@@ -78,7 +76,7 @@ resolveDatabaseMetadata' ::
   GDW.SourceConfig ->
   SourceTypeCustomization ->
   m (Either QErr (ResolvedSource 'DataWrapper))
-resolveDatabaseMetadata' _ sc@(GDW.SourceConfig _ (API.SchemaResponse {..}) _) customization =
+resolveDatabaseMetadata' _ sc@(GDW.SourceConfig {_scSchema = API.SchemaResponse {..}}) customization =
   let tables = Map.fromList $ do
         API.TableInfo {..} <- srTables
         let meta =
