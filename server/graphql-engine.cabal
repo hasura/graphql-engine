@@ -136,6 +136,7 @@ library gdw-api
                      , autodocodec
                      , autodocodec-openapi3
                      , base
+                     , bytestring
                      , deepseq
                      , hashable
                      , lens

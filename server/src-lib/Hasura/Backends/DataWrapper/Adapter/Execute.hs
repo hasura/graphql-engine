@@ -73,7 +73,7 @@ buildAction GDW.SourceConfig {..} query = do
   when (GDW.queryHasRelations query && not (API.dcRelationships (API.srCapabilities _scSchema))) $
     throw400 NotSupported "Agents must provide their own dataloader."
   API.Routes {..} <- liftIO $ client @(Tracing.TraceT (ExceptT QErr IO)) _scManager _scEndpoint
-  case fmap _query $ IR.queryToAPI query of
+  case fmap (_query _scConfig) $ IR.queryToAPI query of
     Right query' -> do
       queryResponse <- query'
       pure $ encJFromJValue queryResponse
