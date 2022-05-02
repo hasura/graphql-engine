@@ -21,6 +21,9 @@
 
 ## Milestone Release - v2.6.0
 
+### Known issue
+SQL Server: Mutation: [Default values overwritten on insert under certain conditions](https://github.com/hasura/graphql-engine/issues/8443). Will be addressed in 2.5.2 and 2.6.1.
+
 ### Announcing GraphQL Joins
 We are delighted to announce Hasura’s data federation capabilities that accelerate the API development process by creating a single GraphQL schema from multiple data sources such as databases and remote GraphQL APIs. This allows you to query and mutate across federated data sources in real-time without writing any custom code. In addition, we can leverage many of Hasura’s powerful features from Hasura CE and Hasura Cloud.
 Hasura’s field level permissions for remote schemas applies for joins as well, allowing for tightly controlled data disclosure when federating sources.
@@ -52,6 +55,9 @@ The query and raw-query field from http-logs for metadata requests are removed b
 - docs: support for graphql-ws is considered GA
 
 ## v2.5.1
+
+### Known issue
+SQL Server: Mutation: [Default values overwritten on insert under certain conditions](https://github.com/hasura/graphql-engine/issues/8443). Will be addressed in 2.5.2 and 2.6.1.
 
 ### Bug fixes and improvements
 - server: fixes remote relationships on actions (fix #8399)
