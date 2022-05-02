@@ -87,3 +87,6 @@ class TestCustomEndpoints:
 
     def test_query_validation(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/endpoint_query_validation.yaml', transport)
+
+    def test_endpoint_with_pg_date_url_variable(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/endpoint_pg_date_url_variable.yaml', transport)

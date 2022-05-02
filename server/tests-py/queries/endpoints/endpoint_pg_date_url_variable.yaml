@@ -1,0 +1,7 @@
+description: Successful call of an endpoint with date and point
+url: /api/rest/with_date/2010-1-1/{"type":"Point","coordinates":[-48.23456,20.12345]}
+method: GET
+status: 200
+query:
+response:
+  test_table: []

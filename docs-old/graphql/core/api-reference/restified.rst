@@ -65,12 +65,8 @@ Variables can be supplied via route patterns, url query variables, and request b
   * Missing nullable variables are interpreted as ``NULL``
   * Boolean variables are interpreted as ``Boolean``
   * Boolean flags without values e.g. ``/api/rest/myquery?mybool`` are interpreted as ``true``
-  * String variables are interpreted as ``String``
-  * UUID variables are interpreted as ``String``
-  * ID variables are interpreted as ``String``
   * Number, Int, Float, and Double variables are interpreted as ``Number``
-  * **All other types or mismatches currently report variable type errors**
-
+  * **All other types are currently interpreted as ``String``** (Note: Further validation is performed during query execution)
 
 When making a request to this API only one endpoint should match. If multiple endpoints match your request this is considered an error and will report so via a 500 status code. If endpoints exist with your path, but none matching your HTTP method then a 405 error will be returned
 listing the methods that you can use.

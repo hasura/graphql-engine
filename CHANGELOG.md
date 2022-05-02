@@ -10,6 +10,8 @@
 - server: fix parsing remote relationship json definition from 1.x server catalog on migration (fix #7906)
 - server: Don't drop nested typed null fields in actions (fix #8237)
 - server: fixes remote relationships on actions (fix #8399)
+- server: fixes url/query date variable bug in REST endpoints
+- server: makes url/query variables in REST endpoints assume string if other types not applicable
 - console: add remote database relationships for views
 - console: bug fixes for RS-to-RS relationships
 - cli: avoid exporting hasura-specific schemas during hasura init (#8352)

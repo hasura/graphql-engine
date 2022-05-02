@@ -3,9 +3,12 @@ args:
 - type: run_sql
   args:
     sql: |
+      CREATE EXTENSION IF NOT EXISTS postgis;
       create table test_table(
           first_name text,
           last_name text,
+          created_at date,
+          point GEOMETRY,
           id UUID NOT NULL DEFAULT gen_random_uuid()
       );
 
@@ -38,6 +41,8 @@ args:
         query: "query ($first_name: String!, $last_name:String!) { test_table(where: {first_name: { _eq: $first_name } last_name: { _eq: $last_name }}) { first_name last_name } }"
       - name: query_with_uuid_arg
         query: "query ($id: uuid!) { test_table(where: {id: { _neq: $id }}) { first_name last_name } }"
+      - name: query_with_date_arg
+        query: "query ($date: date!, $point: geometry!) { test_table(where: {created_at: {_gt: $date}, point: {_st_equals: $point}}) { created_at } }"
       - name: query_with_uuid_args
         query: "query ($ids: [uuid!]!) { test_table(where: {id: { _in: $ids }}) { first_name last_name } }"
       - name: simple_subscription
@@ -112,6 +117,17 @@ args:
 
 - type: create_rest_endpoint
   args:
+    url: with_date/:date/:point
+    name: with_date
+    methods:
+      - GET
+    definition:
+      query:
+        collection_name: test_collection
+        query_name: query_with_date_arg
+
+- type: create_rest_endpoint
+  args:
     url: with_uuids
     name: with_uuids
     methods:
@@ -120,7 +136,6 @@ args:
       query:
         collection_name: test_collection
         query_name: query_with_uuid_args
-
 
 - type: create_rest_endpoint
   args:
