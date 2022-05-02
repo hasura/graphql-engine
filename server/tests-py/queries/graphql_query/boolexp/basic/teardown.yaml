@@ -12,4 +12,5 @@ args:
       DROP TABLE uuid_test;
       DROP TABLE "user";
       DROP TABLE account;
+      DROP TABLE cast_test;
     cascade: true

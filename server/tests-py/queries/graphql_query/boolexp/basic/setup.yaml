@@ -143,6 +143,25 @@ args:
         , sql_id information_schema.sql_identifier );
       INSERT INTO table_with_sql_identifier (sql_id)
         VALUES ('one'), ('one'), ('two'), ('three'), ('four'), ('one'), ('two');
+      
+      CREATE TABLE "cast_test" (
+        id serial primary key,
+        smallint_col smallint,
+        integer_col integer,
+        bigint_col bigint,
+        float_col float,
+        double_col double precision,
+        numeric_col numeric,
+        money_col money,
+        boolean_col boolean,
+        char_col char,
+        date_col date,
+        timestamp_col timestamp,
+        timestamptz_col timestamptz,
+        timetz_col timetz,
+        json_col json,
+        uuid_col uuid
+      );
 
 - type: track_table
   args:
@@ -284,3 +303,46 @@ args:
 
 - type: track_table
   args: table_with_sql_identifier
+
+#Table to test _cast to string
+- type: track_table
+  args:
+    name: cast_test
+    schema: public
+
+- type: insert
+  args:
+    table: cast_test
+    objects:
+      - smallint_col: 123 
+      - integer_col: 123
+      - bigint_col: 123
+      - float_col: 1.23
+      - double_col: 1.23 
+      - numeric_col: 123
+      - money_col: 1.23 
+      - boolean_col: true 
+      - char_col: 'a' 
+      - date_col: '2018-05-12'
+      - timestamp_col: '2018-09-21T09:50:44'
+      - timestamptz_col: '2018-09-21T09:50:44'
+      - timetz_col: '09:50:44'
+      - json_col: 
+        - foo
+      - uuid_col: 28d6d683-1317-49f7-b1cf-7d195242e4e5 
+      - smallint_col: 789 
+      - integer_col: 789
+      - bigint_col: 789
+      - float_col: 7.89 
+      - double_col: 7.89
+      - numeric_col: 789 
+      - money_col: 7.89 
+      - boolean_col: false 
+      - char_col: 'z' 
+      - date_col: '2019-01-11'
+      - timestamp_col: '2019-01-21T01:10:11'
+      - timestamptz_col: '2019-01-21T01:10:11'
+      - timetz_col: '01:51:11'
+      - json_col: 
+        - bar
+      - uuid_col: 28d6d683-1317-49f7-b1cf-7d195242e4e6 
