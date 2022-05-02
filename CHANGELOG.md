@@ -1,6 +1,7 @@
 # Hasura GraphQL Engine Changelog
 
 ## Next release
+- docs: add Clerk integration guide
 
 ### Bug fixes and improvements
 
