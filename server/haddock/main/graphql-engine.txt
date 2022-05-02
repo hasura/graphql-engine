@@ -28983,6 +28983,12 @@ instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Transport.HTTP.QueryCache
 module Hasura.Server.Rest
 parseVariableNames :: EndpointMetadata GQLQueryWithText -> [Text]
 alignVars :: [VariableDefinition] -> [(Text, Either Text Value)] -> HashMap Name (These VariableDefinition (Either Text Value))
+
+-- | <a>resolveVar</a> is responsible for decoding variables sent via REST
+--   request. These can either be via body (represented by Right) or via
+--   query-param or URL param (represented by Left). A variable can be
+--   expected, unexpected, or missing (represented by These, This, and
+--   That).
 resolveVar :: Name -> These VariableDefinition (Either Text Value) -> Either Text (Maybe Value)
 mkPassthroughRequest :: EndpointMetadata GQLQueryWithText -> VariableValues -> GQLReq GQLQueryText
 data RestRequest method
