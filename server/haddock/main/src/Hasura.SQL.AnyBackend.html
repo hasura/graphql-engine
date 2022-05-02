@@ -29,7 +29,7 @@
 </span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.Types</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Parser</span></span><span class="hs-special">)</span><span>
 </span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Kind</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Constraint</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Type</span></span><span class="hs-special">)</span><span>
 </span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html"><span class="hs-identifier">Data.Text.NonEmpty</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Text.NonEmpty.html#mkNonEmptyText"><span class="hs-identifier">mkNonEmptyText</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.Adapter.Types.html"><span class="hs-identifier">Hasura.Backends.DataWrapper.Adapter.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataWrapper.Adapter.Types.html#DataConnectorName"><span class="hs-identifier">DataConnectorName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html"><span class="hs-identifier">Hasura.Backends.DataConnector.Adapter.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorName"><span class="hs-identifier">DataConnectorName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.html"><span class="hs-identifier">Hasura.Incremental</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier">Cacheable</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
@@ -58,7 +58,7 @@
 </span><span id="line-58"></span><span class="hs-comment">--     | MySQLValue (i 'MySQL)</span><span>
 </span><span id="line-59"></span><span class="hs-comment">--     | MSSQLValue (i 'MSSQL)</span><span>
 </span><span id="line-60"></span><span class="hs-comment">--     | ExperimentalValue (i 'Experimental)</span><span>
-</span><span id="line-61"></span><span class="hs-special">$(</span><span> </span><span id="DataWrapperValue"><span id="MySQLValue"><span id="BigQueryValue"><span id="MSSQLValue"><span id="PostgresCitusValue"><span id="PostgresVanillaValue"><span id="local-6989586621688571645"><span id="AnyBackend"><span id="local-6989586621688571598"><span id="local-6989586621688571599"></span></span><span class="hs-keyword">do</span><span>
+</span><span id="line-61"></span><span class="hs-special">$(</span><span> </span><span id="DataConnectorValue"><span id="MySQLValue"><span id="BigQueryValue"><span id="MSSQLValue"><span id="PostgresCitusValue"><span id="PostgresVanillaValue"><span id="local-6989586621688571645"><span id="AnyBackend"><span id="local-6989586621688571598"><span id="local-6989586621688571599"></span></span><span class="hs-keyword">do</span><span>
 </span><span id="line-62"></span><span>     </span><span class="hs-comment">-- the kind of the type variable, expressed with a quote</span><span>
 </span><span id="line-63"></span><span>     </span><span class="hs-identifier">varKind</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-special">[t|</span><span class="hs-identifier">BackendType</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier">Type</span><span class="hs-special">|]</span><span>
 </span><span id="line-64"></span><span>     </span><span class="hs-comment">-- how to build a basic type: no UNPACK, no strict!, just a name</span><span>
@@ -852,21 +852,21 @@ BackendSourceKind b -&gt; Maybe (BackendSourceKind b)
 -&gt; Maybe (AnyBackend BackendSourceKind)
 -&gt; Maybe (AnyBackend BackendSourceKind)
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
-</span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">BackendSourceKind 'DataWrapper -&gt; AnyBackend BackendSourceKind
-forall (i :: BackendType -&gt; *). i 'DataWrapper -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#DataWrapperValue"><span class="hs-identifier hs-var">DataWrapperValue</span></a></span><span> </span><span class="annot"><span class="annottext">(BackendSourceKind 'DataWrapper -&gt; AnyBackend BackendSourceKind)
--&gt; (NonEmptyText -&gt; BackendSourceKind 'DataWrapper)
+</span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">BackendSourceKind 'DataConnector -&gt; AnyBackend BackendSourceKind
+forall (i :: BackendType -&gt; *). i 'DataConnector -&gt; AnyBackend i
+</span><a href="Hasura.SQL.AnyBackend.html#DataConnectorValue"><span class="hs-identifier hs-var">DataConnectorValue</span></a></span><span> </span><span class="annot"><span class="annottext">(BackendSourceKind 'DataConnector -&gt; AnyBackend BackendSourceKind)
+-&gt; (NonEmptyText -&gt; BackendSourceKind 'DataConnector)
 -&gt; NonEmptyText
 -&gt; AnyBackend BackendSourceKind
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">DataConnectorName -&gt; BackendSourceKind 'DataWrapper
-</span><a href="Hasura.SQL.Backend.html#DataWrapperKind"><span class="hs-identifier hs-var">DataWrapperKind</span></a></span><span> </span><span class="annot"><span class="annottext">(DataConnectorName -&gt; BackendSourceKind 'DataWrapper)
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">DataConnectorName -&gt; BackendSourceKind 'DataConnector
+</span><a href="Hasura.SQL.Backend.html#DataConnectorKind"><span class="hs-identifier hs-var">DataConnectorKind</span></a></span><span> </span><span class="annot"><span class="annottext">(DataConnectorName -&gt; BackendSourceKind 'DataConnector)
 -&gt; (NonEmptyText -&gt; DataConnectorName)
 -&gt; NonEmptyText
--&gt; BackendSourceKind 'DataWrapper
+-&gt; BackendSourceKind 'DataConnector
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">NonEmptyText -&gt; DataConnectorName
-</span><a href="Hasura.Backends.DataWrapper.Adapter.Types.html#DataConnectorName"><span class="hs-identifier hs-var">DataConnectorName</span></a></span><span> </span><span class="annot"><span class="annottext">(NonEmptyText -&gt; AnyBackend BackendSourceKind)
+</span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorName"><span class="hs-identifier hs-var">DataConnectorName</span></a></span><span> </span><span class="annot"><span class="annottext">(NonEmptyText -&gt; AnyBackend BackendSourceKind)
 -&gt; Maybe NonEmptyText -&gt; Maybe (AnyBackend BackendSourceKind)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe NonEmptyText
@@ -974,14 +974,14 @@ forall a. FromJSON a =&gt; Value -&gt; Parser a
 -&gt; Parser (AnyBackend BackendSourceKind)
 -&gt; Parser (AnyBackend BackendSourceKind)
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
-</span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">BackendSourceKind 'DataWrapper -&gt; AnyBackend BackendSourceKind
-forall (i :: BackendType -&gt; *). i 'DataWrapper -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#DataWrapperValue"><span class="hs-identifier hs-var">DataWrapperValue</span></a></span><span> </span><span class="annot"><span class="annottext">(BackendSourceKind 'DataWrapper -&gt; AnyBackend BackendSourceKind)
--&gt; Parser (BackendSourceKind 'DataWrapper)
+</span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">BackendSourceKind 'DataConnector -&gt; AnyBackend BackendSourceKind
+forall (i :: BackendType -&gt; *). i 'DataConnector -&gt; AnyBackend i
+</span><a href="Hasura.SQL.AnyBackend.html#DataConnectorValue"><span class="hs-identifier hs-var">DataConnectorValue</span></a></span><span> </span><span class="annot"><span class="annottext">(BackendSourceKind 'DataConnector -&gt; AnyBackend BackendSourceKind)
+-&gt; Parser (BackendSourceKind 'DataConnector)
 -&gt; Parser (AnyBackend BackendSourceKind)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser (BackendSourceKind 'DataWrapper)
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser (BackendSourceKind 'DataConnector)
 forall a. FromJSON a =&gt; Value -&gt; Parser a
-</span><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendSourceKind"><span class="hs-identifier hs-type">BackendSourceKind</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataWrapper"><span class="hs-identifier hs-type">DataWrapper</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendSourceKind"><span class="hs-identifier hs-type">BackendSourceKind</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621688571480"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-652"></span></pre></body></html>

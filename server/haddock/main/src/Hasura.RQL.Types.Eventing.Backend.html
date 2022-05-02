@@ -1165,16 +1165,16 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><span id="line-284"></span><span class="hs-comment">-- implement these methods in the 'Hasura.Experimental.Adapters' module</span><span>
 </span><span id="line-285"></span><span class="hs-comment">-- hierarchy just to keep everything as tidy as possible for that section of</span><span>
 </span><span id="line-286"></span><span class="hs-comment">-- code.</span><span>
-</span><span id="line-287"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#BackendEventTrigger"><span class="hs-identifier hs-type">BackendEventTrigger</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataWrapper"><span class="hs-identifier hs-type">DataWrapper</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-288"></span><span>  </span><span id="local-6989586621688603613"><span class="annot"><span class="annottext">insertManualEvent :: SourceConfig 'DataWrapper
--&gt; TableName 'DataWrapper
+</span><span id="line-287"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#BackendEventTrigger"><span class="hs-identifier hs-type">BackendEventTrigger</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-288"></span><span>  </span><span id="local-6989586621688603613"><span class="annot"><span class="annottext">insertManualEvent :: SourceConfig 'DataConnector
+-&gt; TableName 'DataConnector
 -&gt; TriggerName
 -&gt; Value
 -&gt; UserInfo
 -&gt; TraceContext
 -&gt; m EventId
-</span><a href="#local-6989586621688603613"><span class="hs-identifier hs-var hs-var hs-var hs-var">insertManualEvent</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataWrapper
-</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableName 'DataWrapper
+</span><a href="#local-6989586621688603613"><span class="hs-identifier hs-var hs-var hs-var hs-var">insertManualEvent</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataConnector
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableName 'DataConnector
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TriggerName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">UserInfo
@@ -1184,31 +1184,31 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;Event triggers are not supported for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-290"></span><span>  </span><span id="local-6989586621688603612"><span class="annot"><span class="annottext">fetchUndeliveredEvents :: SourceConfig 'DataWrapper
+</span><span class="hs-string">&quot;Event triggers are not supported for the Data Connector backend.&quot;</span></span><span>
+</span><span id="line-290"></span><span>  </span><span id="local-6989586621688603612"><span class="annot"><span class="annottext">fetchUndeliveredEvents :: SourceConfig 'DataConnector
 -&gt; SourceName
 -&gt; [TriggerName]
 -&gt; MaintenanceMode ()
 -&gt; FetchBatchSize
--&gt; m [Event 'DataWrapper]
-</span><a href="#local-6989586621688603612"><span class="hs-identifier hs-var hs-var hs-var hs-var">fetchUndeliveredEvents</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataWrapper
+-&gt; m [Event 'DataConnector]
+</span><a href="#local-6989586621688603612"><span class="hs-identifier hs-var hs-var hs-var hs-var">fetchUndeliveredEvents</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataConnector
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">[TriggerName]
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">MaintenanceMode ()
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">FetchBatchSize
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-291"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m [Event 'DataWrapper]
+</span><span id="line-291"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m [Event 'DataConnector]
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;Event triggers are not supported for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-292"></span><span>  </span><span id="local-6989586621688603611"><span class="annot"><span class="annottext">setRetry :: SourceConfig 'DataWrapper
--&gt; Event 'DataWrapper
+</span><span class="hs-string">&quot;Event triggers are not supported for the Data Connector backend.&quot;</span></span><span>
+</span><span id="line-292"></span><span>  </span><span id="local-6989586621688603611"><span class="annot"><span class="annottext">setRetry :: SourceConfig 'DataConnector
+-&gt; Event 'DataConnector
 -&gt; UTCTime
 -&gt; MaintenanceMode MaintenanceModeVersion
 -&gt; m ()
-</span><a href="#local-6989586621688603611"><span class="hs-identifier hs-var hs-var hs-var hs-var">setRetry</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataWrapper
-</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event 'DataWrapper
+</span><a href="#local-6989586621688603611"><span class="hs-identifier hs-var hs-var hs-var hs-var">setRetry</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataConnector
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event 'DataConnector
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">UTCTime
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">MaintenanceMode MaintenanceModeVersion
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
@@ -1216,14 +1216,14 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;Event triggers are not supported for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-294"></span><span>  </span><span id="local-6989586621688603610"><span class="annot"><span class="annottext">recordSuccess :: SourceConfig 'DataWrapper
--&gt; Event 'DataWrapper
+</span><span class="hs-string">&quot;Event triggers are not supported for the Data Connector backend.&quot;</span></span><span>
+</span><span id="line-294"></span><span>  </span><span id="local-6989586621688603610"><span class="annot"><span class="annottext">recordSuccess :: SourceConfig 'DataConnector
+-&gt; Event 'DataConnector
 -&gt; Invocation 'EventType
 -&gt; MaintenanceMode MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688603610"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordSuccess</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataWrapper
-</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event 'DataWrapper
+</span><a href="#local-6989586621688603610"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordSuccess</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataConnector
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event 'DataConnector
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Invocation 'EventType
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">MaintenanceMode MaintenanceModeVersion
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
@@ -1236,23 +1236,23 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;Event triggers are not supported for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-296"></span><span>  </span><span id="local-6989586621688603609"><span class="annot"><span class="annottext">getMaintenanceModeVersion :: SourceConfig 'DataWrapper -&gt; m MaintenanceModeVersion
-</span><a href="#local-6989586621688603609"><span class="hs-identifier hs-var hs-var hs-var hs-var">getMaintenanceModeVersion</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataWrapper
+</span><span class="hs-string">&quot;Event triggers are not supported for the Data Connector backend.&quot;</span></span><span>
+</span><span id="line-296"></span><span>  </span><span id="local-6989586621688603609"><span class="annot"><span class="annottext">getMaintenanceModeVersion :: SourceConfig 'DataConnector -&gt; m MaintenanceModeVersion
+</span><a href="#local-6989586621688603609"><span class="hs-identifier hs-var hs-var hs-var hs-var">getMaintenanceModeVersion</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataConnector
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-297"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m MaintenanceModeVersion
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;Event triggers are not supported for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-298"></span><span>  </span><span id="local-6989586621688603608"><span class="annot"><span class="annottext">recordError :: SourceConfig 'DataWrapper
--&gt; Event 'DataWrapper
+</span><span class="hs-string">&quot;Event triggers are not supported for the Data Connector backend.&quot;</span></span><span>
+</span><span id="line-298"></span><span>  </span><span id="local-6989586621688603608"><span class="annot"><span class="annottext">recordError :: SourceConfig 'DataConnector
+-&gt; Event 'DataConnector
 -&gt; Invocation 'EventType
 -&gt; ProcessEventError
 -&gt; MaintenanceMode MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688603608"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataWrapper
-</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event 'DataWrapper
+</span><a href="#local-6989586621688603608"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataConnector
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event 'DataConnector
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Invocation 'EventType
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">ProcessEventError
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">MaintenanceMode MaintenanceModeVersion
@@ -1266,15 +1266,15 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;Event triggers are not supported for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-300"></span><span>  </span><span id="local-6989586621688603607"><span class="annot"><span class="annottext">recordError' :: SourceConfig 'DataWrapper
--&gt; Event 'DataWrapper
+</span><span class="hs-string">&quot;Event triggers are not supported for the Data Connector backend.&quot;</span></span><span>
+</span><span id="line-300"></span><span>  </span><span id="local-6989586621688603607"><span class="annot"><span class="annottext">recordError' :: SourceConfig 'DataConnector
+-&gt; Event 'DataConnector
 -&gt; Maybe (Invocation 'EventType)
 -&gt; ProcessEventError
 -&gt; MaintenanceMode MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="#local-6989586621688603607"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError'</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataWrapper
-</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event 'DataWrapper
+</span><a href="#local-6989586621688603607"><span class="hs-identifier hs-var hs-var hs-var hs-var">recordError'</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataConnector
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Event 'DataConnector
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe (Invocation 'EventType)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">ProcessEventError
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">MaintenanceMode MaintenanceModeVersion
@@ -1288,41 +1288,41 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;Event triggers are not supported for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-302"></span><span>  </span><span id="local-6989586621688603606"><span class="annot"><span class="annottext">dropTriggerAndArchiveEvents :: SourceConfig 'DataWrapper
--&gt; TriggerName -&gt; TableName 'DataWrapper -&gt; m ()
-</span><a href="#local-6989586621688603606"><span class="hs-identifier hs-var hs-var hs-var hs-var">dropTriggerAndArchiveEvents</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataWrapper
+</span><span class="hs-string">&quot;Event triggers are not supported for the Data Connector backend.&quot;</span></span><span>
+</span><span id="line-302"></span><span>  </span><span id="local-6989586621688603606"><span class="annot"><span class="annottext">dropTriggerAndArchiveEvents :: SourceConfig 'DataConnector
+-&gt; TriggerName -&gt; TableName 'DataConnector -&gt; m ()
+</span><a href="#local-6989586621688603606"><span class="hs-identifier hs-var hs-var hs-var hs-var">dropTriggerAndArchiveEvents</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataConnector
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TriggerName
-</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableName 'DataWrapper
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableName 'DataConnector
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-303"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;Event triggers are not supported for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-304"></span><span>  </span><span id="local-6989586621688603605"><span class="annot"><span class="annottext">dropDanglingSQLTrigger :: SourceConfig 'DataWrapper
--&gt; TriggerName -&gt; TableName 'DataWrapper -&gt; HashSet Ops -&gt; m ()
-</span><a href="#local-6989586621688603605"><span class="hs-identifier hs-var hs-var hs-var hs-var">dropDanglingSQLTrigger</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataWrapper
+</span><span class="hs-string">&quot;Event triggers are not supported for the Data Connector backend.&quot;</span></span><span>
+</span><span id="line-304"></span><span>  </span><span id="local-6989586621688603605"><span class="annot"><span class="annottext">dropDanglingSQLTrigger :: SourceConfig 'DataConnector
+-&gt; TriggerName -&gt; TableName 'DataConnector -&gt; HashSet Ops -&gt; m ()
+</span><a href="#local-6989586621688603605"><span class="hs-identifier hs-var hs-var hs-var hs-var">dropDanglingSQLTrigger</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataConnector
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TriggerName
-</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableName 'DataWrapper
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableName 'DataConnector
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">HashSet Ops
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-305"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;Event triggers are not supported for GraphQL Data Wrappers&quot;</span></span><span>
-</span><span id="line-306"></span><span>  </span><span id="local-6989586621688603604"><span class="annot"><span class="annottext">redeliverEvent :: SourceConfig 'DataWrapper -&gt; EventId -&gt; m ()
-</span><a href="#local-6989586621688603604"><span class="hs-identifier hs-var hs-var hs-var hs-var">redeliverEvent</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataWrapper
+</span><span class="hs-string">&quot;Event triggers are not supported for the Data Connector backend&quot;</span></span><span>
+</span><span id="line-306"></span><span>  </span><span id="local-6989586621688603604"><span class="annot"><span class="annottext">redeliverEvent :: SourceConfig 'DataConnector -&gt; EventId -&gt; m ()
+</span><a href="#local-6989586621688603604"><span class="hs-identifier hs-var hs-var hs-var hs-var">redeliverEvent</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataConnector
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">EventId
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-307"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;Event triggers are not supported for GraphQL Data Wrappers.&quot;</span></span><span>
-</span><span id="line-308"></span><span>  </span><span id="local-6989586621688603603"><span class="annot"><span class="annottext">unlockEventsInSource :: SourceConfig 'DataWrapper -&gt; Set EventId -&gt; m (Either QErr Int)
-</span><a href="#local-6989586621688603603"><span class="hs-identifier hs-var hs-var hs-var hs-var">unlockEventsInSource</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataWrapper
+</span><span class="hs-string">&quot;Event triggers are not supported for the Data Connector backend.&quot;</span></span><span>
+</span><span id="line-308"></span><span>  </span><span id="local-6989586621688603603"><span class="annot"><span class="annottext">unlockEventsInSource :: SourceConfig 'DataConnector -&gt; Set EventId -&gt; m (Either QErr Int)
+</span><a href="#local-6989586621688603603"><span class="hs-identifier hs-var hs-var hs-var hs-var">unlockEventsInSource</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataConnector
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Set EventId
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-309"></span><span>    </span><span class="annot"><span class="annottext">ExceptT QErr m Int -&gt; m (Either QErr Int)
@@ -1334,22 +1334,22 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;Event triggers are not supported for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span class="hs-string">&quot;Event triggers are not supported for the Data Connector backend.&quot;</span></span><span>
 </span><span id="line-310"></span><span>  </span><span id="local-6989586621688603602"><span class="annot"><span class="annottext">createTableEventTrigger :: ServerConfigCtx
--&gt; SourceConfig 'DataWrapper
--&gt; TableName 'DataWrapper
--&gt; [ColumnInfo 'DataWrapper]
+-&gt; SourceConfig 'DataConnector
+-&gt; TableName 'DataConnector
+-&gt; [ColumnInfo 'DataConnector]
 -&gt; TriggerName
--&gt; TriggerOpsDef 'DataWrapper
--&gt; Maybe (PrimaryKey 'DataWrapper (ColumnInfo 'DataWrapper))
+-&gt; TriggerOpsDef 'DataConnector
+-&gt; Maybe (PrimaryKey 'DataConnector (ColumnInfo 'DataConnector))
 -&gt; m (Either QErr ())
 </span><a href="#local-6989586621688603602"><span class="hs-identifier hs-var hs-var hs-var hs-var">createTableEventTrigger</span></a></span></span><span> </span><span class="annot"><span class="annottext">ServerConfigCtx
-</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataWrapper
-</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableName 'DataWrapper
-</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">[ColumnInfo 'DataWrapper]
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataConnector
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableName 'DataConnector
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">[ColumnInfo 'DataConnector]
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TriggerName
-</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TriggerOpsDef 'DataWrapper
-</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe (PrimaryKey 'DataWrapper (ColumnInfo 'DataWrapper))
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TriggerOpsDef 'DataConnector
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe (PrimaryKey 'DataConnector (ColumnInfo 'DataConnector))
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-311"></span><span>    </span><span class="annot"><span class="annottext">ExceptT QErr m () -&gt; m (Either QErr ())
 forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
@@ -1360,5 +1360,5 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;Event triggers are not supported for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span class="hs-string">&quot;Event triggers are not supported for the Data Connector backend.&quot;</span></span><span>
 </span><span id="line-312"></span></pre></body></html>

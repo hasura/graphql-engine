@@ -1753,7 +1753,7 @@ instance GHC.Show.Show Hasura.Backends.Postgres.SQL.Error.PGTransactionRollback
 instance GHC.Classes.Eq Hasura.Backends.Postgres.SQL.Error.PGErrorType
 instance GHC.Show.Show Hasura.Backends.Postgres.SQL.Error.PGErrorType
 
-module Hasura.Backends.DataWrapper.Agent.Client
+module Hasura.Backends.DataConnector.Agent.Client
 
 -- | Create a record of client functions (see <tt>Routes</tt>) from a
 --   <a>BaseUrl</a>. This function takes care to add trace headers, and to
@@ -7483,7 +7483,7 @@ latestSourceCatalogVersionText :: Text
 setSourceCatalogVersion :: MonadMSSQLTx m => Int -> m ()
 getSourceCatalogVersion :: MonadMSSQLTx m => m Int
 
-module Hasura.Backends.DataWrapper.IR.Scalar.Value
+module Hasura.Backends.DataConnector.IR.Scalar.Value
 
 -- | Literal scalar values that can appear as leaf nodes in expressions
 --   
@@ -7494,20 +7494,20 @@ String :: Text -> Value
 Number :: Scientific -> Value
 Boolean :: Bool -> Value
 Null :: Value
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataWrapper.IR.Scalar.Value.Value
-instance Control.DeepSeq.NFData Hasura.Backends.DataWrapper.IR.Scalar.Value.Value
-instance Data.Hashable.Class.Hashable Hasura.Backends.DataWrapper.IR.Scalar.Value.Value
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.DataWrapper.IR.Scalar.Value.Value
-instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.Backends.DataWrapper.IR.Scalar.Value.Value
-instance GHC.Show.Show Hasura.Backends.DataWrapper.IR.Scalar.Value.Value
-instance GHC.Classes.Ord Hasura.Backends.DataWrapper.IR.Scalar.Value.Value
-instance GHC.Generics.Generic Hasura.Backends.DataWrapper.IR.Scalar.Value.Value
-instance GHC.Classes.Eq Hasura.Backends.DataWrapper.IR.Scalar.Value.Value
-instance Data.Data.Data Hasura.Backends.DataWrapper.IR.Scalar.Value.Value
-instance Witch.From.From Hasura.Backends.DataWrapper.API.V0.Scalar.Value.Value Hasura.Backends.DataWrapper.IR.Scalar.Value.Value
-instance Witch.From.From Hasura.Backends.DataWrapper.IR.Scalar.Value.Value Hasura.Backends.DataWrapper.API.V0.Scalar.Value.Value
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataConnector.IR.Scalar.Value.Value
+instance Control.DeepSeq.NFData Hasura.Backends.DataConnector.IR.Scalar.Value.Value
+instance Data.Hashable.Class.Hashable Hasura.Backends.DataConnector.IR.Scalar.Value.Value
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.DataConnector.IR.Scalar.Value.Value
+instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.Backends.DataConnector.IR.Scalar.Value.Value
+instance GHC.Show.Show Hasura.Backends.DataConnector.IR.Scalar.Value.Value
+instance GHC.Classes.Ord Hasura.Backends.DataConnector.IR.Scalar.Value.Value
+instance GHC.Generics.Generic Hasura.Backends.DataConnector.IR.Scalar.Value.Value
+instance GHC.Classes.Eq Hasura.Backends.DataConnector.IR.Scalar.Value.Value
+instance Data.Data.Data Hasura.Backends.DataConnector.IR.Scalar.Value.Value
+instance Witch.From.From Hasura.Backends.DataConnector.API.V0.Scalar.Value.Value Hasura.Backends.DataConnector.IR.Scalar.Value.Value
+instance Witch.From.From Hasura.Backends.DataConnector.IR.Scalar.Value.Value Hasura.Backends.DataConnector.API.V0.Scalar.Value.Value
 
-module Hasura.Backends.DataWrapper.IR.Scalar.Type
+module Hasura.Backends.DataConnector.IR.Scalar.Type
 
 -- | Types of scalar values
 --   
@@ -7522,23 +7522,23 @@ data Type
 String :: Type
 Number :: Type
 Bool :: Type
-instance Data.Aeson.Types.ToJSON.ToJSONKey Hasura.Backends.DataWrapper.IR.Scalar.Type.Type
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataWrapper.IR.Scalar.Type.Type
-instance Control.DeepSeq.NFData Hasura.Backends.DataWrapper.IR.Scalar.Type.Type
-instance Data.Hashable.Class.Hashable Hasura.Backends.DataWrapper.IR.Scalar.Type.Type
-instance Data.Aeson.Types.FromJSON.FromJSONKey Hasura.Backends.DataWrapper.IR.Scalar.Type.Type
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.DataWrapper.IR.Scalar.Type.Type
-instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.Backends.DataWrapper.IR.Scalar.Type.Type
-instance GHC.Show.Show Hasura.Backends.DataWrapper.IR.Scalar.Type.Type
-instance GHC.Classes.Ord Hasura.Backends.DataWrapper.IR.Scalar.Type.Type
-instance GHC.Generics.Generic Hasura.Backends.DataWrapper.IR.Scalar.Type.Type
-instance GHC.Classes.Eq Hasura.Backends.DataWrapper.IR.Scalar.Type.Type
-instance Data.Data.Data Hasura.Backends.DataWrapper.IR.Scalar.Type.Type
-instance Data.Text.Extended.ToTxt Hasura.Backends.DataWrapper.IR.Scalar.Type.Type
-instance Witch.From.From Hasura.Backends.DataWrapper.API.V0.Scalar.Type.Type Hasura.Backends.DataWrapper.IR.Scalar.Type.Type
-instance Witch.From.From Hasura.Backends.DataWrapper.IR.Scalar.Type.Type Hasura.Backends.DataWrapper.API.V0.Scalar.Type.Type
+instance Data.Aeson.Types.ToJSON.ToJSONKey Hasura.Backends.DataConnector.IR.Scalar.Type.Type
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataConnector.IR.Scalar.Type.Type
+instance Control.DeepSeq.NFData Hasura.Backends.DataConnector.IR.Scalar.Type.Type
+instance Data.Hashable.Class.Hashable Hasura.Backends.DataConnector.IR.Scalar.Type.Type
+instance Data.Aeson.Types.FromJSON.FromJSONKey Hasura.Backends.DataConnector.IR.Scalar.Type.Type
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.DataConnector.IR.Scalar.Type.Type
+instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.Backends.DataConnector.IR.Scalar.Type.Type
+instance GHC.Show.Show Hasura.Backends.DataConnector.IR.Scalar.Type.Type
+instance GHC.Classes.Ord Hasura.Backends.DataConnector.IR.Scalar.Type.Type
+instance GHC.Generics.Generic Hasura.Backends.DataConnector.IR.Scalar.Type.Type
+instance GHC.Classes.Eq Hasura.Backends.DataConnector.IR.Scalar.Type.Type
+instance Data.Data.Data Hasura.Backends.DataConnector.IR.Scalar.Type.Type
+instance Data.Text.Extended.ToTxt Hasura.Backends.DataConnector.IR.Scalar.Type.Type
+instance Witch.From.From Hasura.Backends.DataConnector.API.V0.Scalar.Type.Type Hasura.Backends.DataConnector.IR.Scalar.Type.Type
+instance Witch.From.From Hasura.Backends.DataConnector.IR.Scalar.Type.Type Hasura.Backends.DataConnector.API.V0.Scalar.Type.Type
 
-module Hasura.Backends.DataWrapper.IR.Name
+module Hasura.Backends.DataConnector.IR.Name
 
 -- | A tagged, opaque wrapper around <a>Text</a> that provides a number of
 --   derived derived instances (primarily as required by the
@@ -7560,25 +7560,25 @@ data NameType
 Column :: NameType
 Function :: NameType
 Table :: NameType
-instance Data.Text.Extended.ToTxt (Hasura.Backends.DataWrapper.IR.Name.Name ty)
-instance Data.Aeson.Types.ToJSON.ToJSONKey (Hasura.Backends.DataWrapper.IR.Name.Name ty)
-instance Data.Aeson.Types.ToJSON.ToJSON (Hasura.Backends.DataWrapper.IR.Name.Name ty)
-instance Control.DeepSeq.NFData (Hasura.Backends.DataWrapper.IR.Name.Name ty)
-instance Data.Hashable.Class.Hashable (Hasura.Backends.DataWrapper.IR.Name.Name ty)
-instance Data.Aeson.Types.FromJSON.FromJSONKey (Hasura.Backends.DataWrapper.IR.Name.Name ty)
-instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.Backends.DataWrapper.IR.Name.Name ty)
-instance Hasura.Incremental.Internal.Dependency.Cacheable (Hasura.Backends.DataWrapper.IR.Name.Name ty)
-instance GHC.Show.Show (Hasura.Backends.DataWrapper.IR.Name.Name ty)
-instance GHC.Classes.Ord (Hasura.Backends.DataWrapper.IR.Name.Name ty)
-instance GHC.Generics.Generic (Hasura.Backends.DataWrapper.IR.Name.Name ty)
-instance GHC.Classes.Eq (Hasura.Backends.DataWrapper.IR.Name.Name ty)
-instance Data.Typeable.Internal.Typeable ty => Data.Data.Data (Hasura.Backends.DataWrapper.IR.Name.Name ty)
-instance Witch.From.From Hasura.Backends.DataWrapper.API.V0.Table.TableName (Hasura.Backends.DataWrapper.IR.Name.Name 'Hasura.Backends.DataWrapper.IR.Name.Table)
-instance Witch.From.From (Hasura.Backends.DataWrapper.IR.Name.Name 'Hasura.Backends.DataWrapper.IR.Name.Table) Hasura.Backends.DataWrapper.API.V0.Table.TableName
-instance Witch.From.From Hasura.Backends.DataWrapper.API.V0.Column.ColumnName (Hasura.Backends.DataWrapper.IR.Name.Name 'Hasura.Backends.DataWrapper.IR.Name.Column)
-instance Witch.From.From (Hasura.Backends.DataWrapper.IR.Name.Name 'Hasura.Backends.DataWrapper.IR.Name.Column) Hasura.Backends.DataWrapper.API.V0.Column.ColumnName
+instance Data.Text.Extended.ToTxt (Hasura.Backends.DataConnector.IR.Name.Name ty)
+instance Data.Aeson.Types.ToJSON.ToJSONKey (Hasura.Backends.DataConnector.IR.Name.Name ty)
+instance Data.Aeson.Types.ToJSON.ToJSON (Hasura.Backends.DataConnector.IR.Name.Name ty)
+instance Control.DeepSeq.NFData (Hasura.Backends.DataConnector.IR.Name.Name ty)
+instance Data.Hashable.Class.Hashable (Hasura.Backends.DataConnector.IR.Name.Name ty)
+instance Data.Aeson.Types.FromJSON.FromJSONKey (Hasura.Backends.DataConnector.IR.Name.Name ty)
+instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.Backends.DataConnector.IR.Name.Name ty)
+instance Hasura.Incremental.Internal.Dependency.Cacheable (Hasura.Backends.DataConnector.IR.Name.Name ty)
+instance GHC.Show.Show (Hasura.Backends.DataConnector.IR.Name.Name ty)
+instance GHC.Classes.Ord (Hasura.Backends.DataConnector.IR.Name.Name ty)
+instance GHC.Generics.Generic (Hasura.Backends.DataConnector.IR.Name.Name ty)
+instance GHC.Classes.Eq (Hasura.Backends.DataConnector.IR.Name.Name ty)
+instance Data.Typeable.Internal.Typeable ty => Data.Data.Data (Hasura.Backends.DataConnector.IR.Name.Name ty)
+instance Witch.From.From Hasura.Backends.DataConnector.API.V0.Table.TableName (Hasura.Backends.DataConnector.IR.Name.Name 'Hasura.Backends.DataConnector.IR.Name.Table)
+instance Witch.From.From (Hasura.Backends.DataConnector.IR.Name.Name 'Hasura.Backends.DataConnector.IR.Name.Table) Hasura.Backends.DataConnector.API.V0.Table.TableName
+instance Witch.From.From Hasura.Backends.DataConnector.API.V0.Column.ColumnName (Hasura.Backends.DataConnector.IR.Name.Name 'Hasura.Backends.DataConnector.IR.Name.Column)
+instance Witch.From.From (Hasura.Backends.DataConnector.IR.Name.Name 'Hasura.Backends.DataConnector.IR.Name.Column) Hasura.Backends.DataConnector.API.V0.Column.ColumnName
 
-module Hasura.Backends.DataWrapper.IR.Table
+module Hasura.Backends.DataConnector.IR.Table
 
 -- | An alias for <a>Table</a> <a>Name</a>s.
 --   
@@ -7592,7 +7592,7 @@ module Hasura.Backends.DataWrapper.IR.Table
 --   "table_name" @
 type Name = Name 'Table
 
-module Hasura.Backends.DataWrapper.IR.Function
+module Hasura.Backends.DataConnector.IR.Function
 
 -- | An alias for <a>Function</a> <a>Name</a>s.
 --   
@@ -7606,7 +7606,7 @@ module Hasura.Backends.DataWrapper.IR.Function
 --   "function_name" @
 type Name = Name 'Function
 
-module Hasura.Backends.DataWrapper.IR.Column
+module Hasura.Backends.DataConnector.IR.Column
 
 -- | An alias for <a>Column</a> <a>Name</a>s.
 --   
@@ -7620,7 +7620,7 @@ module Hasura.Backends.DataWrapper.IR.Column
 --   "column_name" @
 type Name = Name 'Column
 
-module Hasura.Backends.DataWrapper.Schema.Column
+module Hasura.Backends.DataConnector.Schema.Column
 
 -- | A schematic representation which captures common attributes associated
 --   with a piece of data that is stored in a given backend.
@@ -7639,13 +7639,13 @@ Column :: Name -> Type -> Bool -> Maybe Text -> Column
 [type_] :: Column -> Type
 [isNullable] :: Column -> Bool
 [description] :: Column -> Maybe Text
-instance GHC.Show.Show Hasura.Backends.DataWrapper.Schema.Column.Column
-instance GHC.Classes.Ord Hasura.Backends.DataWrapper.Schema.Column.Column
-instance GHC.Generics.Generic Hasura.Backends.DataWrapper.Schema.Column.Column
-instance GHC.Classes.Eq Hasura.Backends.DataWrapper.Schema.Column.Column
-instance Data.Data.Data Hasura.Backends.DataWrapper.Schema.Column.Column
+instance GHC.Show.Show Hasura.Backends.DataConnector.Schema.Column.Column
+instance GHC.Classes.Ord Hasura.Backends.DataConnector.Schema.Column.Column
+instance GHC.Generics.Generic Hasura.Backends.DataConnector.Schema.Column.Column
+instance GHC.Classes.Eq Hasura.Backends.DataConnector.Schema.Column.Column
+instance Data.Data.Data Hasura.Backends.DataConnector.Schema.Column.Column
 
-module Hasura.Backends.DataWrapper.Schema.Table
+module Hasura.Backends.DataConnector.Schema.Table
 
 -- | A schematic representation which captures a named collection of
 --   columns
@@ -7668,13 +7668,13 @@ Table :: Name -> [Column] -> Maybe Text -> Maybe Text -> Table
 [columns] :: Table -> [Column]
 [primaryKey] :: Table -> Maybe Text
 [description] :: Table -> Maybe Text
-instance GHC.Show.Show Hasura.Backends.DataWrapper.Schema.Table.Table
-instance GHC.Classes.Ord Hasura.Backends.DataWrapper.Schema.Table.Table
-instance GHC.Generics.Generic Hasura.Backends.DataWrapper.Schema.Table.Table
-instance GHC.Classes.Eq Hasura.Backends.DataWrapper.Schema.Table.Table
-instance Data.Data.Data Hasura.Backends.DataWrapper.Schema.Table.Table
+instance GHC.Show.Show Hasura.Backends.DataConnector.Schema.Table.Table
+instance GHC.Classes.Ord Hasura.Backends.DataConnector.Schema.Table.Table
+instance GHC.Generics.Generic Hasura.Backends.DataConnector.Schema.Table.Table
+instance GHC.Classes.Eq Hasura.Backends.DataConnector.Schema.Table.Table
+instance Data.Data.Data Hasura.Backends.DataConnector.Schema.Table.Table
 
-module Hasura.Backends.DataWrapper.IR.OrderBy
+module Hasura.Backends.DataConnector.IR.OrderBy
 
 -- | Indicates a particular sort order that should be applied based on some
 --   <a>Name</a> returned within a data source query.
@@ -7701,30 +7701,30 @@ OrderBy :: Name -> OrderType -> OrderBy
 data OrderType
 Ascending :: OrderType
 Descending :: OrderType
-instance Control.DeepSeq.NFData Hasura.Backends.DataWrapper.IR.OrderBy.OrderType
-instance Data.Hashable.Class.Hashable Hasura.Backends.DataWrapper.IR.OrderBy.OrderType
-instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.Backends.DataWrapper.IR.OrderBy.OrderType
-instance GHC.Show.Show Hasura.Backends.DataWrapper.IR.OrderBy.OrderType
-instance GHC.Classes.Ord Hasura.Backends.DataWrapper.IR.OrderBy.OrderType
-instance GHC.Generics.Generic Hasura.Backends.DataWrapper.IR.OrderBy.OrderType
-instance GHC.Classes.Eq Hasura.Backends.DataWrapper.IR.OrderBy.OrderType
-instance Data.Data.Data Hasura.Backends.DataWrapper.IR.OrderBy.OrderType
-instance Control.DeepSeq.NFData Hasura.Backends.DataWrapper.IR.OrderBy.OrderBy
-instance Data.Hashable.Class.Hashable Hasura.Backends.DataWrapper.IR.OrderBy.OrderBy
-instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.Backends.DataWrapper.IR.OrderBy.OrderBy
-instance GHC.Show.Show Hasura.Backends.DataWrapper.IR.OrderBy.OrderBy
-instance GHC.Classes.Ord Hasura.Backends.DataWrapper.IR.OrderBy.OrderBy
-instance GHC.Generics.Generic Hasura.Backends.DataWrapper.IR.OrderBy.OrderBy
-instance GHC.Classes.Eq Hasura.Backends.DataWrapper.IR.OrderBy.OrderBy
-instance Data.Data.Data Hasura.Backends.DataWrapper.IR.OrderBy.OrderBy
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataWrapper.IR.OrderBy.OrderBy
-instance Witch.From.From Hasura.Backends.DataWrapper.API.V0.OrderBy.OrderBy Hasura.Backends.DataWrapper.IR.OrderBy.OrderBy
-instance Witch.From.From Hasura.Backends.DataWrapper.IR.OrderBy.OrderBy Hasura.Backends.DataWrapper.API.V0.OrderBy.OrderBy
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataWrapper.IR.OrderBy.OrderType
-instance Witch.From.From Hasura.Backends.DataWrapper.API.V0.OrderBy.OrderType Hasura.Backends.DataWrapper.IR.OrderBy.OrderType
-instance Witch.From.From Hasura.Backends.DataWrapper.IR.OrderBy.OrderType Hasura.Backends.DataWrapper.API.V0.OrderBy.OrderType
+instance Control.DeepSeq.NFData Hasura.Backends.DataConnector.IR.OrderBy.OrderType
+instance Data.Hashable.Class.Hashable Hasura.Backends.DataConnector.IR.OrderBy.OrderType
+instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.Backends.DataConnector.IR.OrderBy.OrderType
+instance GHC.Show.Show Hasura.Backends.DataConnector.IR.OrderBy.OrderType
+instance GHC.Classes.Ord Hasura.Backends.DataConnector.IR.OrderBy.OrderType
+instance GHC.Generics.Generic Hasura.Backends.DataConnector.IR.OrderBy.OrderType
+instance GHC.Classes.Eq Hasura.Backends.DataConnector.IR.OrderBy.OrderType
+instance Data.Data.Data Hasura.Backends.DataConnector.IR.OrderBy.OrderType
+instance Control.DeepSeq.NFData Hasura.Backends.DataConnector.IR.OrderBy.OrderBy
+instance Data.Hashable.Class.Hashable Hasura.Backends.DataConnector.IR.OrderBy.OrderBy
+instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.Backends.DataConnector.IR.OrderBy.OrderBy
+instance GHC.Show.Show Hasura.Backends.DataConnector.IR.OrderBy.OrderBy
+instance GHC.Classes.Ord Hasura.Backends.DataConnector.IR.OrderBy.OrderBy
+instance GHC.Generics.Generic Hasura.Backends.DataConnector.IR.OrderBy.OrderBy
+instance GHC.Classes.Eq Hasura.Backends.DataConnector.IR.OrderBy.OrderBy
+instance Data.Data.Data Hasura.Backends.DataConnector.IR.OrderBy.OrderBy
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataConnector.IR.OrderBy.OrderBy
+instance Witch.From.From Hasura.Backends.DataConnector.API.V0.OrderBy.OrderBy Hasura.Backends.DataConnector.IR.OrderBy.OrderBy
+instance Witch.From.From Hasura.Backends.DataConnector.IR.OrderBy.OrderBy Hasura.Backends.DataConnector.API.V0.OrderBy.OrderBy
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataConnector.IR.OrderBy.OrderType
+instance Witch.From.From Hasura.Backends.DataConnector.API.V0.OrderBy.OrderType Hasura.Backends.DataConnector.IR.OrderBy.OrderType
+instance Witch.From.From Hasura.Backends.DataConnector.IR.OrderBy.OrderType Hasura.Backends.DataConnector.API.V0.OrderBy.OrderType
 
-module Hasura.Backends.DataWrapper.IR.Expression
+module Hasura.Backends.DataConnector.IR.Expression
 
 -- | A "concrete" expression type for datasource-agnostic queries (as
 --   opposed to our existing polymorphic intermediate representation).
@@ -7821,30 +7821,30 @@ LessThanOrEqual :: Operator
 GreaterThan :: Operator
 GreaterThanOrEqual :: Operator
 Equal :: Operator
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataWrapper.IR.Expression.Operator
-instance Control.DeepSeq.NFData Hasura.Backends.DataWrapper.IR.Expression.Operator
-instance Data.Hashable.Class.Hashable Hasura.Backends.DataWrapper.IR.Expression.Operator
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.DataWrapper.IR.Expression.Operator
-instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.Backends.DataWrapper.IR.Expression.Operator
-instance GHC.Show.Show Hasura.Backends.DataWrapper.IR.Expression.Operator
-instance GHC.Classes.Ord Hasura.Backends.DataWrapper.IR.Expression.Operator
-instance GHC.Generics.Generic Hasura.Backends.DataWrapper.IR.Expression.Operator
-instance GHC.Classes.Eq Hasura.Backends.DataWrapper.IR.Expression.Operator
-instance Data.Data.Data Hasura.Backends.DataWrapper.IR.Expression.Operator
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataWrapper.IR.Expression.Expression
-instance Control.DeepSeq.NFData Hasura.Backends.DataWrapper.IR.Expression.Expression
-instance Data.Hashable.Class.Hashable Hasura.Backends.DataWrapper.IR.Expression.Expression
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.DataWrapper.IR.Expression.Expression
-instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.Backends.DataWrapper.IR.Expression.Expression
-instance GHC.Show.Show Hasura.Backends.DataWrapper.IR.Expression.Expression
-instance GHC.Classes.Ord Hasura.Backends.DataWrapper.IR.Expression.Expression
-instance GHC.Generics.Generic Hasura.Backends.DataWrapper.IR.Expression.Expression
-instance GHC.Classes.Eq Hasura.Backends.DataWrapper.IR.Expression.Expression
-instance Data.Data.Data Hasura.Backends.DataWrapper.IR.Expression.Expression
-instance Witch.From.From Hasura.Backends.DataWrapper.API.V0.Expression.Operator Hasura.Backends.DataWrapper.IR.Expression.Operator
-instance Witch.From.From Hasura.Backends.DataWrapper.IR.Expression.Operator Hasura.Backends.DataWrapper.API.V0.Expression.Operator
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataConnector.IR.Expression.Operator
+instance Control.DeepSeq.NFData Hasura.Backends.DataConnector.IR.Expression.Operator
+instance Data.Hashable.Class.Hashable Hasura.Backends.DataConnector.IR.Expression.Operator
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.DataConnector.IR.Expression.Operator
+instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.Backends.DataConnector.IR.Expression.Operator
+instance GHC.Show.Show Hasura.Backends.DataConnector.IR.Expression.Operator
+instance GHC.Classes.Ord Hasura.Backends.DataConnector.IR.Expression.Operator
+instance GHC.Generics.Generic Hasura.Backends.DataConnector.IR.Expression.Operator
+instance GHC.Classes.Eq Hasura.Backends.DataConnector.IR.Expression.Operator
+instance Data.Data.Data Hasura.Backends.DataConnector.IR.Expression.Operator
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataConnector.IR.Expression.Expression
+instance Control.DeepSeq.NFData Hasura.Backends.DataConnector.IR.Expression.Expression
+instance Data.Hashable.Class.Hashable Hasura.Backends.DataConnector.IR.Expression.Expression
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.DataConnector.IR.Expression.Expression
+instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.Backends.DataConnector.IR.Expression.Expression
+instance GHC.Show.Show Hasura.Backends.DataConnector.IR.Expression.Expression
+instance GHC.Classes.Ord Hasura.Backends.DataConnector.IR.Expression.Expression
+instance GHC.Generics.Generic Hasura.Backends.DataConnector.IR.Expression.Expression
+instance GHC.Classes.Eq Hasura.Backends.DataConnector.IR.Expression.Expression
+instance Data.Data.Data Hasura.Backends.DataConnector.IR.Expression.Expression
+instance Witch.From.From Hasura.Backends.DataConnector.API.V0.Expression.Operator Hasura.Backends.DataConnector.IR.Expression.Operator
+instance Witch.From.From Hasura.Backends.DataConnector.IR.Expression.Operator Hasura.Backends.DataConnector.API.V0.Expression.Operator
 
-module Hasura.Backends.DataWrapper.IR.Query
+module Hasura.Backends.DataConnector.IR.Query
 
 -- | An abstract request to retrieve structured data from some source.
 --   
@@ -7932,59 +7932,59 @@ PrimaryKey :: Name -> PrimaryKey
 --   purposes.
 newtype ForeignKey
 ForeignKey :: Name -> ForeignKey
-instance GHC.Show.Show Hasura.Backends.DataWrapper.IR.Query.Cardinality
-instance GHC.Classes.Ord Hasura.Backends.DataWrapper.IR.Query.Cardinality
-instance GHC.Generics.Generic Hasura.Backends.DataWrapper.IR.Query.Cardinality
-instance GHC.Classes.Eq Hasura.Backends.DataWrapper.IR.Query.Cardinality
-instance Data.Data.Data Hasura.Backends.DataWrapper.IR.Query.Cardinality
-instance GHC.Show.Show Hasura.Backends.DataWrapper.IR.Query.ColumnContents
-instance GHC.Classes.Ord Hasura.Backends.DataWrapper.IR.Query.ColumnContents
-instance GHC.Generics.Generic Hasura.Backends.DataWrapper.IR.Query.ColumnContents
-instance GHC.Classes.Eq Hasura.Backends.DataWrapper.IR.Query.ColumnContents
-instance Data.Data.Data Hasura.Backends.DataWrapper.IR.Query.ColumnContents
-instance Data.Aeson.Types.ToJSON.ToJSONKey Hasura.Backends.DataWrapper.IR.Query.PrimaryKey
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataWrapper.IR.Query.PrimaryKey
-instance GHC.Show.Show Hasura.Backends.DataWrapper.IR.Query.PrimaryKey
-instance GHC.Classes.Ord Hasura.Backends.DataWrapper.IR.Query.PrimaryKey
-instance Data.Hashable.Class.Hashable Hasura.Backends.DataWrapper.IR.Query.PrimaryKey
-instance GHC.Classes.Eq Hasura.Backends.DataWrapper.IR.Query.PrimaryKey
-instance GHC.Generics.Generic Hasura.Backends.DataWrapper.IR.Query.PrimaryKey
-instance Data.Data.Data Hasura.Backends.DataWrapper.IR.Query.PrimaryKey
-instance Data.Aeson.Types.ToJSON.ToJSONKey Hasura.Backends.DataWrapper.IR.Query.ForeignKey
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataWrapper.IR.Query.ForeignKey
-instance GHC.Show.Show Hasura.Backends.DataWrapper.IR.Query.ForeignKey
-instance GHC.Classes.Ord Hasura.Backends.DataWrapper.IR.Query.ForeignKey
-instance Data.Hashable.Class.Hashable Hasura.Backends.DataWrapper.IR.Query.ForeignKey
-instance GHC.Classes.Eq Hasura.Backends.DataWrapper.IR.Query.ForeignKey
-instance GHC.Generics.Generic Hasura.Backends.DataWrapper.IR.Query.ForeignKey
-instance Data.Data.Data Hasura.Backends.DataWrapper.IR.Query.ForeignKey
-instance GHC.Show.Show Hasura.Backends.DataWrapper.IR.Query.Field
-instance GHC.Classes.Ord Hasura.Backends.DataWrapper.IR.Query.Field
-instance GHC.Generics.Generic Hasura.Backends.DataWrapper.IR.Query.Field
-instance GHC.Classes.Eq Hasura.Backends.DataWrapper.IR.Query.Field
-instance Data.Data.Data Hasura.Backends.DataWrapper.IR.Query.Field
-instance GHC.Show.Show Hasura.Backends.DataWrapper.IR.Query.Query
-instance GHC.Classes.Ord Hasura.Backends.DataWrapper.IR.Query.Query
-instance GHC.Generics.Generic Hasura.Backends.DataWrapper.IR.Query.Query
-instance GHC.Classes.Eq Hasura.Backends.DataWrapper.IR.Query.Query
-instance Data.Data.Data Hasura.Backends.DataWrapper.IR.Query.Query
-instance GHC.Show.Show Hasura.Backends.DataWrapper.IR.Query.RelationshipContents
-instance GHC.Classes.Ord Hasura.Backends.DataWrapper.IR.Query.RelationshipContents
-instance GHC.Generics.Generic Hasura.Backends.DataWrapper.IR.Query.RelationshipContents
-instance GHC.Classes.Eq Hasura.Backends.DataWrapper.IR.Query.RelationshipContents
-instance Data.Data.Data Hasura.Backends.DataWrapper.IR.Query.RelationshipContents
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataWrapper.IR.Query.Query
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataWrapper.IR.Query.Field
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataWrapper.IR.Query.RelationshipContents
-instance Witch.From.From Hasura.Backends.DataWrapper.API.V0.Query.ForeignKey Hasura.Backends.DataWrapper.IR.Query.ForeignKey
-instance Witch.From.From Hasura.Backends.DataWrapper.IR.Query.ForeignKey Hasura.Backends.DataWrapper.API.V0.Query.ForeignKey
-instance Witch.From.From Hasura.Backends.DataWrapper.API.V0.Query.PrimaryKey Hasura.Backends.DataWrapper.IR.Query.PrimaryKey
-instance Witch.From.From Hasura.Backends.DataWrapper.IR.Query.PrimaryKey Hasura.Backends.DataWrapper.API.V0.Query.PrimaryKey
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataWrapper.IR.Query.ColumnContents
-instance Witch.From.From Hasura.Backends.DataWrapper.IR.Query.ColumnContents Hasura.Backends.DataWrapper.API.V0.Query.Field
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataWrapper.IR.Query.Cardinality
+instance GHC.Show.Show Hasura.Backends.DataConnector.IR.Query.Cardinality
+instance GHC.Classes.Ord Hasura.Backends.DataConnector.IR.Query.Cardinality
+instance GHC.Generics.Generic Hasura.Backends.DataConnector.IR.Query.Cardinality
+instance GHC.Classes.Eq Hasura.Backends.DataConnector.IR.Query.Cardinality
+instance Data.Data.Data Hasura.Backends.DataConnector.IR.Query.Cardinality
+instance GHC.Show.Show Hasura.Backends.DataConnector.IR.Query.ColumnContents
+instance GHC.Classes.Ord Hasura.Backends.DataConnector.IR.Query.ColumnContents
+instance GHC.Generics.Generic Hasura.Backends.DataConnector.IR.Query.ColumnContents
+instance GHC.Classes.Eq Hasura.Backends.DataConnector.IR.Query.ColumnContents
+instance Data.Data.Data Hasura.Backends.DataConnector.IR.Query.ColumnContents
+instance Data.Aeson.Types.ToJSON.ToJSONKey Hasura.Backends.DataConnector.IR.Query.PrimaryKey
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataConnector.IR.Query.PrimaryKey
+instance GHC.Show.Show Hasura.Backends.DataConnector.IR.Query.PrimaryKey
+instance GHC.Classes.Ord Hasura.Backends.DataConnector.IR.Query.PrimaryKey
+instance Data.Hashable.Class.Hashable Hasura.Backends.DataConnector.IR.Query.PrimaryKey
+instance GHC.Classes.Eq Hasura.Backends.DataConnector.IR.Query.PrimaryKey
+instance GHC.Generics.Generic Hasura.Backends.DataConnector.IR.Query.PrimaryKey
+instance Data.Data.Data Hasura.Backends.DataConnector.IR.Query.PrimaryKey
+instance Data.Aeson.Types.ToJSON.ToJSONKey Hasura.Backends.DataConnector.IR.Query.ForeignKey
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataConnector.IR.Query.ForeignKey
+instance GHC.Show.Show Hasura.Backends.DataConnector.IR.Query.ForeignKey
+instance GHC.Classes.Ord Hasura.Backends.DataConnector.IR.Query.ForeignKey
+instance Data.Hashable.Class.Hashable Hasura.Backends.DataConnector.IR.Query.ForeignKey
+instance GHC.Classes.Eq Hasura.Backends.DataConnector.IR.Query.ForeignKey
+instance GHC.Generics.Generic Hasura.Backends.DataConnector.IR.Query.ForeignKey
+instance Data.Data.Data Hasura.Backends.DataConnector.IR.Query.ForeignKey
+instance GHC.Show.Show Hasura.Backends.DataConnector.IR.Query.Field
+instance GHC.Classes.Ord Hasura.Backends.DataConnector.IR.Query.Field
+instance GHC.Generics.Generic Hasura.Backends.DataConnector.IR.Query.Field
+instance GHC.Classes.Eq Hasura.Backends.DataConnector.IR.Query.Field
+instance Data.Data.Data Hasura.Backends.DataConnector.IR.Query.Field
+instance GHC.Show.Show Hasura.Backends.DataConnector.IR.Query.Query
+instance GHC.Classes.Ord Hasura.Backends.DataConnector.IR.Query.Query
+instance GHC.Generics.Generic Hasura.Backends.DataConnector.IR.Query.Query
+instance GHC.Classes.Eq Hasura.Backends.DataConnector.IR.Query.Query
+instance Data.Data.Data Hasura.Backends.DataConnector.IR.Query.Query
+instance GHC.Show.Show Hasura.Backends.DataConnector.IR.Query.RelationshipContents
+instance GHC.Classes.Ord Hasura.Backends.DataConnector.IR.Query.RelationshipContents
+instance GHC.Generics.Generic Hasura.Backends.DataConnector.IR.Query.RelationshipContents
+instance GHC.Classes.Eq Hasura.Backends.DataConnector.IR.Query.RelationshipContents
+instance Data.Data.Data Hasura.Backends.DataConnector.IR.Query.RelationshipContents
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataConnector.IR.Query.Query
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataConnector.IR.Query.Field
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataConnector.IR.Query.RelationshipContents
+instance Witch.From.From Hasura.Backends.DataConnector.API.V0.Query.ForeignKey Hasura.Backends.DataConnector.IR.Query.ForeignKey
+instance Witch.From.From Hasura.Backends.DataConnector.IR.Query.ForeignKey Hasura.Backends.DataConnector.API.V0.Query.ForeignKey
+instance Witch.From.From Hasura.Backends.DataConnector.API.V0.Query.PrimaryKey Hasura.Backends.DataConnector.IR.Query.PrimaryKey
+instance Witch.From.From Hasura.Backends.DataConnector.IR.Query.PrimaryKey Hasura.Backends.DataConnector.API.V0.Query.PrimaryKey
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataConnector.IR.Query.ColumnContents
+instance Witch.From.From Hasura.Backends.DataConnector.IR.Query.ColumnContents Hasura.Backends.DataConnector.API.V0.Query.Field
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataConnector.IR.Query.Cardinality
 
-module Hasura.Backends.DataWrapper.IR.Export
+module Hasura.Backends.DataConnector.IR.Export
 data QueryError
 InvalidExpression :: Expression -> QueryError
 ExposedLiteral :: Text -> QueryError
@@ -7992,10 +7992,10 @@ queryToAPI :: Query -> Either QueryError Query
 fromField :: Field -> Either QueryError Field
 rcToAPI :: RelationshipContents -> Either QueryError Field
 expressionToAPI :: Expression -> Either QueryError Expression
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataWrapper.IR.Export.QueryError
-instance GHC.Generics.Generic Hasura.Backends.DataWrapper.IR.Export.QueryError
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataConnector.IR.Export.QueryError
+instance GHC.Generics.Generic Hasura.Backends.DataConnector.IR.Export.QueryError
 
-module Hasura.Backends.DataWrapper.Adapter.Types
+module Hasura.Backends.DataConnector.Adapter.Types
 newtype ConnSourceConfig
 ConnSourceConfig :: Config -> ConnSourceConfig
 data SourceConfig
@@ -8011,39 +8011,39 @@ type DataConnectorBackendConfig = InsOrdHashMap DataConnectorName DataConnectorO
 data DataConnectorOptions
 DataConnectorOptions :: BaseUrl -> DataConnectorOptions
 [_dcoUri] :: DataConnectorOptions -> BaseUrl
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.DataWrapper.Adapter.Types.ConnSourceConfig
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataWrapper.Adapter.Types.ConnSourceConfig
-instance Control.DeepSeq.NFData Hasura.Backends.DataWrapper.Adapter.Types.ConnSourceConfig
-instance Data.Hashable.Class.Hashable Hasura.Backends.DataWrapper.Adapter.Types.ConnSourceConfig
-instance GHC.Generics.Generic Hasura.Backends.DataWrapper.Adapter.Types.ConnSourceConfig
-instance GHC.Show.Show Hasura.Backends.DataWrapper.Adapter.Types.ConnSourceConfig
-instance GHC.Classes.Ord Hasura.Backends.DataWrapper.Adapter.Types.ConnSourceConfig
-instance GHC.Classes.Eq Hasura.Backends.DataWrapper.Adapter.Types.ConnSourceConfig
-instance Control.DeepSeq.NFData Hasura.Backends.DataWrapper.Adapter.Types.DataConnectorName
-instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.Backends.DataWrapper.Adapter.Types.DataConnectorName
-instance Data.Text.Extended.ToTxt Hasura.Backends.DataWrapper.Adapter.Types.DataConnectorName
-instance Data.Hashable.Class.Hashable Hasura.Backends.DataWrapper.Adapter.Types.DataConnectorName
-instance Data.Aeson.Types.ToJSON.ToJSONKey Hasura.Backends.DataWrapper.Adapter.Types.DataConnectorName
-instance Data.Aeson.Types.FromJSON.FromJSONKey Hasura.Backends.DataWrapper.Adapter.Types.DataConnectorName
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataWrapper.Adapter.Types.DataConnectorName
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.DataWrapper.Adapter.Types.DataConnectorName
-instance GHC.Generics.Generic Hasura.Backends.DataWrapper.Adapter.Types.DataConnectorName
-instance GHC.Show.Show Hasura.Backends.DataWrapper.Adapter.Types.DataConnectorName
-instance GHC.Classes.Ord Hasura.Backends.DataWrapper.Adapter.Types.DataConnectorName
-instance GHC.Classes.Eq Hasura.Backends.DataWrapper.Adapter.Types.DataConnectorName
-instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.Backends.DataWrapper.Adapter.Types.DataConnectorOptions
-instance GHC.Generics.Generic Hasura.Backends.DataWrapper.Adapter.Types.DataConnectorOptions
-instance GHC.Show.Show Hasura.Backends.DataWrapper.Adapter.Types.DataConnectorOptions
-instance GHC.Classes.Ord Hasura.Backends.DataWrapper.Adapter.Types.DataConnectorOptions
-instance GHC.Classes.Eq Hasura.Backends.DataWrapper.Adapter.Types.DataConnectorOptions
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.DataWrapper.Adapter.Types.DataConnectorOptions
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataWrapper.Adapter.Types.DataConnectorOptions
-instance Witch.From.From Hasura.Backends.DataWrapper.Adapter.Types.DataConnectorName Data.Text.NonEmpty.NonEmptyText
-instance GHC.Show.Show Hasura.Backends.DataWrapper.Adapter.Types.SourceConfig
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataWrapper.Adapter.Types.SourceConfig
-instance GHC.Classes.Eq Hasura.Backends.DataWrapper.Adapter.Types.SourceConfig
-instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.Backends.DataWrapper.Adapter.Types.SourceConfig
-instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.Backends.DataWrapper.Adapter.Types.ConnSourceConfig
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.DataConnector.Adapter.Types.ConnSourceConfig
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataConnector.Adapter.Types.ConnSourceConfig
+instance Control.DeepSeq.NFData Hasura.Backends.DataConnector.Adapter.Types.ConnSourceConfig
+instance Data.Hashable.Class.Hashable Hasura.Backends.DataConnector.Adapter.Types.ConnSourceConfig
+instance GHC.Generics.Generic Hasura.Backends.DataConnector.Adapter.Types.ConnSourceConfig
+instance GHC.Show.Show Hasura.Backends.DataConnector.Adapter.Types.ConnSourceConfig
+instance GHC.Classes.Ord Hasura.Backends.DataConnector.Adapter.Types.ConnSourceConfig
+instance GHC.Classes.Eq Hasura.Backends.DataConnector.Adapter.Types.ConnSourceConfig
+instance Control.DeepSeq.NFData Hasura.Backends.DataConnector.Adapter.Types.DataConnectorName
+instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.Backends.DataConnector.Adapter.Types.DataConnectorName
+instance Data.Text.Extended.ToTxt Hasura.Backends.DataConnector.Adapter.Types.DataConnectorName
+instance Data.Hashable.Class.Hashable Hasura.Backends.DataConnector.Adapter.Types.DataConnectorName
+instance Data.Aeson.Types.ToJSON.ToJSONKey Hasura.Backends.DataConnector.Adapter.Types.DataConnectorName
+instance Data.Aeson.Types.FromJSON.FromJSONKey Hasura.Backends.DataConnector.Adapter.Types.DataConnectorName
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataConnector.Adapter.Types.DataConnectorName
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.DataConnector.Adapter.Types.DataConnectorName
+instance GHC.Generics.Generic Hasura.Backends.DataConnector.Adapter.Types.DataConnectorName
+instance GHC.Show.Show Hasura.Backends.DataConnector.Adapter.Types.DataConnectorName
+instance GHC.Classes.Ord Hasura.Backends.DataConnector.Adapter.Types.DataConnectorName
+instance GHC.Classes.Eq Hasura.Backends.DataConnector.Adapter.Types.DataConnectorName
+instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.Backends.DataConnector.Adapter.Types.DataConnectorOptions
+instance GHC.Generics.Generic Hasura.Backends.DataConnector.Adapter.Types.DataConnectorOptions
+instance GHC.Show.Show Hasura.Backends.DataConnector.Adapter.Types.DataConnectorOptions
+instance GHC.Classes.Ord Hasura.Backends.DataConnector.Adapter.Types.DataConnectorOptions
+instance GHC.Classes.Eq Hasura.Backends.DataConnector.Adapter.Types.DataConnectorOptions
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.DataConnector.Adapter.Types.DataConnectorOptions
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataConnector.Adapter.Types.DataConnectorOptions
+instance Witch.From.From Hasura.Backends.DataConnector.Adapter.Types.DataConnectorName Data.Text.NonEmpty.NonEmptyText
+instance GHC.Show.Show Hasura.Backends.DataConnector.Adapter.Types.SourceConfig
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.DataConnector.Adapter.Types.SourceConfig
+instance GHC.Classes.Eq Hasura.Backends.DataConnector.Adapter.Types.SourceConfig
+instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.Backends.DataConnector.Adapter.Types.SourceConfig
+instance Hasura.Incremental.Internal.Dependency.Cacheable Hasura.Backends.DataConnector.Adapter.Types.ConnSourceConfig
 
 module Hasura.SQL.Backend
 
@@ -8060,20 +8060,20 @@ Postgres :: PostgresKind -> BackendType
 MSSQL :: BackendType
 BigQuery :: BackendType
 MySQL :: BackendType
-DataWrapper :: BackendType
+DataConnector :: BackendType
 
 -- | Similar to <a>BackendType</a>, however, in the case of
---   <a>DataWrapperKind</a> we need to be able capture the name of the data
---   connector that should be used by the DataWrapper backend. This type
---   correlates to the kind property of <tt>SourceMetadata</tt>, which is
---   usually just postgres, mssql, etc for static backends, but can be a
---   configurable value for DataWrapper hence requiring
---   <a>DataConnectorName</a> for <a>DataWrapperKind</a>
+--   <a>DataConnectorKind</a> we need to be able capture the name of the
+--   data connector that should be used by the DataConnector backend. This
+--   type correlates to the kind property of <tt>SourceMetadata</tt>, which
+--   is usually just postgres, mssql, etc for static backends, but can be a
+--   configurable value for DataConnector hence requiring
+--   <a>DataConnectorName</a> for <a>DataConnectorKind</a>
 --   
 --   This type cannot entirely replace <a>BackendType</a> because
 --   <a>BackendType</a> has a fixed number of possible values which can be
 --   enumerated over at compile time, but <a>BackendSourceKind</a> does not
---   because DataWrapper fundamentally is configured at runtime with
+--   because DataConnector fundamentally is configured at runtime with
 --   <a>DataConnectorName</a>.
 data BackendSourceKind (b :: BackendType)
 [PostgresVanillaKind] :: BackendSourceKind ('Postgres 'Vanilla)
@@ -8081,7 +8081,7 @@ data BackendSourceKind (b :: BackendType)
 [MSSQLKind] :: BackendSourceKind 'MSSQL
 [BigQueryKind] :: BackendSourceKind 'BigQuery
 [MySQLKind] :: BackendSourceKind 'MySQL
-[DataWrapperKind] :: DataConnectorName -> BackendSourceKind 'DataWrapper
+[DataConnectorKind] :: DataConnectorName -> BackendSourceKind 'DataConnector
 mkParseStaticBackendSourceKind :: BackendSourceKind b -> Value -> Parser (BackendSourceKind b)
 
 -- | Some generated APIs use a shortened version of the backend's name
@@ -8122,7 +8122,7 @@ instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.SQL.Backend.BackendSourceKin
 instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.SQL.Backend.BackendSourceKind 'Hasura.SQL.Backend.MSSQL)
 instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.SQL.Backend.BackendSourceKind 'Hasura.SQL.Backend.BigQuery)
 instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.SQL.Backend.BackendSourceKind 'Hasura.SQL.Backend.MySQL)
-instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.SQL.Backend.BackendSourceKind 'Hasura.SQL.Backend.DataWrapper)
+instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.SQL.Backend.BackendSourceKind 'Hasura.SQL.Backend.DataConnector)
 instance Witch.From.From Hasura.SQL.Backend.BackendType Data.Text.NonEmpty.NonEmptyText
 instance Data.Text.Extended.ToTxt Hasura.SQL.Backend.BackendType
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.SQL.Backend.BackendType
@@ -8210,7 +8210,7 @@ data BackendTag (b :: BackendType)
 [MSSQLTag] :: BackendTag 'MSSQL
 [BigQueryTag] :: BackendTag 'BigQuery
 [MySQLTag] :: BackendTag 'MySQL
-[DataWrapperTag] :: BackendTag 'DataWrapper
+[DataConnectorTag] :: BackendTag 'DataConnector
 
 -- | This class describes how to get a tag for a given type. We use it in
 --   AnyBackend: `case backendTag @b of`...
@@ -8229,7 +8229,7 @@ instance Hasura.SQL.Tag.HasTag ('Hasura.SQL.Backend.Postgres 'Hasura.SQL.Backend
 instance Hasura.SQL.Tag.HasTag 'Hasura.SQL.Backend.MSSQL
 instance Hasura.SQL.Tag.HasTag 'Hasura.SQL.Backend.BigQuery
 instance Hasura.SQL.Tag.HasTag 'Hasura.SQL.Backend.MySQL
-instance Hasura.SQL.Tag.HasTag 'Hasura.SQL.Backend.DataWrapper
+instance Hasura.SQL.Tag.HasTag 'Hasura.SQL.Backend.DataConnector
 instance Data.GADT.Internal.GEq Hasura.SQL.Tag.BackendTag
 instance Data.GADT.Internal.GCompare Hasura.SQL.Tag.BackendTag
 
@@ -11867,7 +11867,7 @@ PostgresCitusValue :: i ('Postgres 'Citus) -> AnyBackend (i :: BackendType -> Ty
 MSSQLValue :: i 'MSSQL -> AnyBackend (i :: BackendType -> Type)
 BigQueryValue :: i 'BigQuery -> AnyBackend (i :: BackendType -> Type)
 MySQLValue :: i 'MySQL -> AnyBackend (i :: BackendType -> Type)
-DataWrapperValue :: i 'DataWrapper -> AnyBackend (i :: BackendType -> Type)
+DataConnectorValue :: i 'DataConnector -> AnyBackend (i :: BackendType -> Type)
 
 -- | Generates a constraint for all backends. This Template Haskell
 --   expression generates the following constraint type:
@@ -11877,7 +11877,7 @@ DataWrapperValue :: i 'DataWrapper -> AnyBackend (i :: BackendType -> Type)
 --   
 --   That is, given a class C, this creates the constraint that dictates
 --   that all backend must satisfy C.
-type AllBackendsSatisfy (c :: BackendType -> Constraint) = ((c ('Postgres 'Vanilla), c ('Postgres 'Citus), c ('MSSQL), c ('BigQuery), c ('MySQL), c ('DataWrapper)))
+type AllBackendsSatisfy (c :: BackendType -> Constraint) = ((c ('Postgres 'Vanilla), c ('Postgres 'Citus), c ('MSSQL), c ('BigQuery), c ('MySQL), c ('DataConnector)))
 
 -- | Generates a constraint for a generic type over all backends. This
 --   Template Haskell expression generates the following constraint type:
@@ -11887,7 +11887,7 @@ type AllBackendsSatisfy (c :: BackendType -> Constraint) = ((c ('Postgres 'Vanil
 --   
 --   That is, given a type I and a class C, this creates the constraint
 --   that dictates that for all backends b, <tt>I b</tt> must satisfy C.
-type SatisfiesForAllBackends (i :: BackendType -> Type) (c :: Type -> Constraint) = ((c (i ('Postgres 'Vanilla)), c (i ('Postgres 'Citus)), c (i ('MSSQL)), c (i ('BigQuery)), c (i ('MySQL)), c (i ('DataWrapper))))
+type SatisfiesForAllBackends (i :: BackendType -> Type) (c :: Type -> Constraint) = ((c (i ('Postgres 'Vanilla)), c (i ('Postgres 'Citus)), c (i ('MSSQL)), c (i ('BigQuery)), c (i ('MySQL)), c (i ('DataConnector))))
 
 -- | How to obtain a tag from a runtime value. This function is generated
 --   with Template Haskell for each <tt>Backend</tt>. The case switch looks
@@ -11942,7 +11942,7 @@ unpackAnyBackend :: forall (b :: BackendType) (i :: BackendType -> Type). HasTag
 --   
 --   type BackendChoice (i :: BackendType -&gt; Type) = Either (i
 --   'Postgres) ( Either (i 'MSSQL) ( Either ... Void
-type BackendChoice (i :: BackendType -> Type) = (Either (i ('Postgres 'Vanilla)) (Either (i ('Postgres 'Citus)) (Either (i ('MSSQL)) (Either (i ('BigQuery)) (Either (i ('MySQL)) (Either (i ('DataWrapper)) Void))))))
+type BackendChoice (i :: BackendType -> Type) = (Either (i ('Postgres 'Vanilla)) (Either (i ('Postgres 'Citus)) (Either (i ('MSSQL)) (Either (i ('BigQuery)) (Either (i ('MySQL)) (Either (i ('DataConnector)) Void))))))
 
 -- | Spread a <a>AnyBackend</a> into a <a>BackendChoice</a>.
 --   
@@ -12050,10 +12050,10 @@ instance Hasura.SQL.AnyBackend.SatisfiesForAllBackends i GHC.Classes.Eq => GHC.C
 instance Hasura.SQL.AnyBackend.SatisfiesForAllBackends i Data.Aeson.Types.FromJSON.FromJSON => Data.Aeson.Types.FromJSON.FromJSON (Hasura.SQL.BackendMap.BackendMap i)
 instance Hasura.SQL.AnyBackend.SatisfiesForAllBackends i Data.Aeson.Types.ToJSON.ToJSON => Data.Aeson.Types.ToJSON.ToJSON (Hasura.SQL.BackendMap.BackendMap i)
 
-module Hasura.Backends.DataWrapper.Adapter.Backend
+module Hasura.Backends.DataConnector.Adapter.Backend
 
 -- | An alias for <tt>()</tt> indicating that a particular associated type
---   has not yet been implemented for the <a>DataWrapper</a> backend.
+--   has not yet been implemented for the <a>DataConnector</a> backend.
 --   
 --   <tt>()</tt> is used (rather than a type with an empty data
 --   constructor) because it comes with many of the instances that these
@@ -12062,7 +12062,7 @@ module Hasura.Backends.DataWrapper.Adapter.Backend
 --   This alias should <i>not</i> be exported from this module, and it's
 --   only defined for clarity.
 type Unimplemented = ()
-instance Hasura.RQL.Types.Backend.Backend 'Hasura.SQL.Backend.DataWrapper
+instance Hasura.RQL.Types.Backend.Backend 'Hasura.SQL.Backend.DataConnector
 
 module Hasura.Backends.BigQuery.Source
 data PKey
@@ -17776,7 +17776,7 @@ instance Hasura.RQL.Types.Eventing.Backend.BackendEventTrigger ('Hasura.SQL.Back
 instance Hasura.RQL.Types.Eventing.Backend.BackendEventTrigger 'Hasura.SQL.Backend.MSSQL
 instance Hasura.RQL.Types.Eventing.Backend.BackendEventTrigger 'Hasura.SQL.Backend.BigQuery
 instance Hasura.RQL.Types.Eventing.Backend.BackendEventTrigger 'Hasura.SQL.Backend.MySQL
-instance Hasura.RQL.Types.Eventing.Backend.BackendEventTrigger 'Hasura.SQL.Backend.DataWrapper
+instance Hasura.RQL.Types.Eventing.Backend.BackendEventTrigger 'Hasura.SQL.Backend.DataConnector
 
 
 -- | MSSQL Source
@@ -20033,16 +20033,16 @@ validateRelationship :: (BackendMetadata b, MonadError QErr m) => TableCache b -
 module Hasura.Backends.MySQL.Instances.Metadata
 instance Hasura.RQL.Types.Metadata.Backend.BackendMetadata 'Hasura.SQL.Backend.MySQL
 
-module Hasura.Backends.DataWrapper.Adapter.Metadata
-resolveSourceConfig' :: MonadIO m => SourceName -> ConnSourceConfig -> BackendSourceKind 'DataWrapper -> DataConnectorBackendConfig -> Environment -> m (Either QErr SourceConfig)
-resolveDatabaseMetadata' :: Applicative m => SourceMetadata 'DataWrapper -> SourceConfig -> SourceTypeCustomization -> m (Either QErr (ResolvedSource 'DataWrapper))
+module Hasura.Backends.DataConnector.Adapter.Metadata
+resolveSourceConfig' :: MonadIO m => SourceName -> ConnSourceConfig -> BackendSourceKind 'DataConnector -> DataConnectorBackendConfig -> Environment -> m (Either QErr SourceConfig)
+resolveDatabaseMetadata' :: Applicative m => SourceMetadata 'DataConnector -> SourceConfig -> SourceTypeCustomization -> m (Either QErr (ResolvedSource 'DataConnector))
 
 -- | This is needed to get permissions to work
-parseBoolExpOperations' :: forall m v. MonadError QErr m => ValueParser 'DataWrapper m v -> Name -> FieldInfoMap (FieldInfo 'DataWrapper) -> ColumnReference 'DataWrapper -> Value -> m [OpExpG 'DataWrapper v]
-parseCollectableType' :: MonadError QErr m => CollectableType (ColumnType 'DataWrapper) -> Value -> m (PartialSQLExp 'DataWrapper)
-mkTypedSessionVar :: CollectableType (ColumnType 'DataWrapper) -> SessionVariable -> PartialSQLExp 'DataWrapper
-columnTypeToScalarType :: ColumnType 'DataWrapper -> Type
-instance Hasura.RQL.Types.Metadata.Backend.BackendMetadata 'Hasura.SQL.Backend.DataWrapper
+parseBoolExpOperations' :: forall m v. MonadError QErr m => ValueParser 'DataConnector m v -> Name -> FieldInfoMap (FieldInfo 'DataConnector) -> ColumnReference 'DataConnector -> Value -> m [OpExpG 'DataConnector v]
+parseCollectableType' :: MonadError QErr m => CollectableType (ColumnType 'DataConnector) -> Value -> m (PartialSQLExp 'DataConnector)
+mkTypedSessionVar :: CollectableType (ColumnType 'DataConnector) -> SessionVariable -> PartialSQLExp 'DataConnector
+columnTypeToScalarType :: ColumnType 'DataConnector -> Type
+instance Hasura.RQL.Types.Metadata.Backend.BackendMetadata 'Hasura.SQL.Backend.DataConnector
 
 
 -- | Functions for fetching and updating @<a>Metadata</a> in the catalog.
@@ -22858,7 +22858,7 @@ processOrderByItems :: forall pgKind m. (MonadReader StringifyNumbers m, MonadWr
 applyDistinctOnAtBase :: NonEmpty PGCol -> DistinctExpr
 applyDistinctOnAtNode :: Identifier -> NonEmpty PGCol -> (DistinctExpr, [(Alias, SQLExp)])
 
-module Hasura.Backends.DataWrapper.Plan
+module Hasura.Backends.DataConnector.Plan
 
 -- | A <a>Plan</a> consists of an <a>Q</a> describing the query to be
 --   performed by the Agent and a continuation for post processing the
@@ -22883,8 +22883,8 @@ UnexpectedResponseCardinality :: ResponseError
 --   NOTE: This is for logging and debug purposes only.
 renderPlan :: Plan -> Text
 
--- | Map a 'QueryDB <a>DataWrapper</a> term into a <a>Plan</a>
-mkPlan :: forall m. MonadError QErr m => SessionVariables -> SourceConfig -> QueryDB 'DataWrapper Void (UnpreparedValue 'DataWrapper) -> m Plan
+-- | Map a 'QueryDB <a>DataConnector</a> term into a <a>Plan</a>
+mkPlan :: forall m. MonadError QErr m => SessionVariables -> SourceConfig -> QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector) -> m Plan
 
 -- | We need to modify any JSON substructures which appear as a result of
 --   fetching object relationships, to peel off the outer array sent by the
@@ -22902,8 +22902,8 @@ applyCardinalityToResponse :: Cardinality -> [Object] -> Either ResponseError Va
 
 -- | Validate if a <a>Q</a> contains any relationships.
 queryHasRelations :: Query -> Bool
-instance GHC.Classes.Eq Hasura.Backends.DataWrapper.Plan.ResponseError
-instance GHC.Show.Show Hasura.Backends.DataWrapper.Plan.ResponseError
+instance GHC.Classes.Eq Hasura.Backends.DataConnector.Plan.ResponseError
+instance GHC.Show.Show Hasura.Backends.DataConnector.Plan.ResponseError
 
 
 -- | Translate from the DML to the BigQuery dialect.
@@ -25863,13 +25863,13 @@ msComputedField :: MonadBuildSchema 'MSSQL r m n => SourceName -> ComputedFieldI
 msNode :: MonadBuildSchema 'MSSQL r m n => m (Parser 'Output n (HashMap (TableName 'MSSQL) (SourceName, SourceConfig 'MSSQL, SelPermInfo 'MSSQL, PrimaryKeyColumns 'MSSQL, AnnotatedFields 'MSSQL)))
 instance Hasura.GraphQL.Schema.Backend.BackendSchema 'Hasura.SQL.Backend.MSSQL
 
-module Hasura.Backends.DataWrapper.Adapter.Schema
-experimentalBuildTableRelayQueryFields :: MonadBuildSchema 'DataWrapper r m n => SourceName -> TableName 'DataWrapper -> TableInfo 'DataWrapper -> Name -> NESeq (ColumnInfo 'DataWrapper) -> m [a]
-columnParser' :: (MonadSchema n m, MonadError QErr m) => ColumnType 'DataWrapper -> Nullability -> m (Parser 'Both n (ValueWithOrigin (ColumnValue 'DataWrapper)))
-orderByOperators' :: NonEmpty (Definition EnumValueInfo, (BasicOrderType 'DataWrapper, NullsOrderType 'DataWrapper))
-comparisonExps' :: forall m n r. (BackendSchema 'DataWrapper, MonadSchema n m, MonadError QErr m, MonadReader r m, Has QueryContext r) => ColumnType 'DataWrapper -> m (Parser 'Input n [ComparisonExp 'DataWrapper])
-tableArgs' :: forall r m n. MonadBuildSchema 'DataWrapper r m n => SourceName -> TableInfo 'DataWrapper -> m (InputFieldsParser n (SelectArgsG 'DataWrapper (UnpreparedValue 'DataWrapper)))
-instance Hasura.GraphQL.Schema.Backend.BackendSchema 'Hasura.SQL.Backend.DataWrapper
+module Hasura.Backends.DataConnector.Adapter.Schema
+experimentalBuildTableRelayQueryFields :: MonadBuildSchema 'DataConnector r m n => SourceName -> TableName 'DataConnector -> TableInfo 'DataConnector -> Name -> NESeq (ColumnInfo 'DataConnector) -> m [a]
+columnParser' :: (MonadSchema n m, MonadError QErr m) => ColumnType 'DataConnector -> Nullability -> m (Parser 'Both n (ValueWithOrigin (ColumnValue 'DataConnector)))
+orderByOperators' :: NonEmpty (Definition EnumValueInfo, (BasicOrderType 'DataConnector, NullsOrderType 'DataConnector))
+comparisonExps' :: forall m n r. (BackendSchema 'DataConnector, MonadSchema n m, MonadError QErr m, MonadReader r m, Has QueryContext r) => ColumnType 'DataConnector -> m (Parser 'Input n [ComparisonExp 'DataConnector])
+tableArgs' :: forall r m n. MonadBuildSchema 'DataConnector r m n => SourceName -> TableInfo 'DataConnector -> m (InputFieldsParser n (SelectArgsG 'DataConnector (UnpreparedValue 'DataConnector)))
+instance Hasura.GraphQL.Schema.Backend.BackendSchema 'Hasura.SQL.Backend.DataConnector
 
 module Hasura.Backends.BigQuery.Instances.Schema
 bqBuildTableRelayQueryFields :: MonadBuildSchema 'BigQuery r m n => SourceName -> TableName 'BigQuery -> TableInfo 'BigQuery -> Name -> NESeq (ColumnInfo 'BigQuery) -> m [a]
@@ -26633,16 +26633,16 @@ runQueryExplain :: (MonadIO m, MonadError QErr m) => DBStepInfo 'MySQL -> m EncJ
 mkQueryLog :: GQLReqUnparsed -> RootFieldAlias -> Maybe (PreparedQuery 'MySQL) -> RequestId -> QueryLog
 instance Hasura.GraphQL.Transport.Backend.BackendTransport 'Hasura.SQL.Backend.MySQL
 
-module Hasura.Backends.DataWrapper.Adapter.Execute
+module Hasura.Backends.DataConnector.Adapter.Execute
 toExplainPlan :: RootFieldAlias -> Plan -> ExplainPlan
 buildAction :: SourceConfig -> Query -> TraceT (ExceptT QErr IO) EncJSON
-instance Hasura.GraphQL.Execute.Backend.BackendExecute 'Hasura.SQL.Backend.DataWrapper
+instance Hasura.GraphQL.Execute.Backend.BackendExecute 'Hasura.SQL.Backend.DataConnector
 
-module Hasura.Backends.DataWrapper.Adapter.Transport
+module Hasura.Backends.DataConnector.Adapter.Transport
 runDBQuery' :: (MonadIO m, MonadError QErr m, MonadTrace m, MonadQueryLog m) => RequestId -> GQLReqUnparsed -> RootFieldAlias -> UserInfo -> Logger Hasura -> SourceConfig -> TraceT (ExceptT QErr IO) a -> Maybe Plan -> m (DiffTime, a)
 mkQueryLog :: GQLReqUnparsed -> RootFieldAlias -> Maybe Plan -> RequestId -> QueryLog
-runDBQueryExplain' :: (MonadIO m, MonadError QErr m) => DBStepInfo 'DataWrapper -> m EncJSON
-instance Hasura.GraphQL.Transport.Backend.BackendTransport 'Hasura.SQL.Backend.DataWrapper
+runDBQueryExplain' :: (MonadIO m, MonadError QErr m) => DBStepInfo 'DataConnector -> m EncJSON
+instance Hasura.GraphQL.Transport.Backend.BackendTransport 'Hasura.SQL.Backend.DataConnector
 
 module Hasura.Backends.BigQuery.Instances.Execute
 bqDBQueryPlan :: forall m. MonadError QErr m => UserInfo -> SourceName -> SourceConfig 'BigQuery -> QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery) -> m (DBStepInfo 'BigQuery)
@@ -28035,8 +28035,8 @@ instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.MySQL
 module Hasura.Backends.MSSQL.Instances.API
 instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.MSSQL
 
-module Hasura.Backends.DataWrapper.Adapter.API
-instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.DataWrapper
+module Hasura.Backends.DataConnector.Adapter.API
+instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.DataConnector
 
 module Hasura.Backends.BigQuery.Instances.API
 instance Hasura.Server.API.Backend.BackendAPI 'Hasura.SQL.Backend.BigQuery
