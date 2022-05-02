@@ -129,9 +129,9 @@ common common-exe
     -- workaround for limitations in monitoring tools than anything...
     "-with-rtsopts=-N -I0 -T -qn2 -kc8K --disable-delayed-os-memory-return"
 
-library gdw-api
+library dc-api
   import: common-all
-  hs-source-dirs:      src-gdw-api
+  hs-source-dirs:      src-dc-api
   build-depends:       aeson
                      , autodocodec
                      , autodocodec-openapi3
@@ -153,16 +153,16 @@ library gdw-api
     build-depends:     ghc-heap-view
 
   exposed-modules:     Autodocodec.Extended
-                     , Hasura.Backends.DataWrapper.API
-                     , Hasura.Backends.DataWrapper.API.V0.API
-                     , Hasura.Backends.DataWrapper.API.V0.Column
-                     , Hasura.Backends.DataWrapper.API.V0.Expression
-                     , Hasura.Backends.DataWrapper.API.V0.OrderBy
-                     , Hasura.Backends.DataWrapper.API.V0.Query
-                     , Hasura.Backends.DataWrapper.API.V0.Scalar.Type
-                     , Hasura.Backends.DataWrapper.API.V0.Scalar.Value
-                     , Hasura.Backends.DataWrapper.API.V0.Schema
-                     , Hasura.Backends.DataWrapper.API.V0.Table
+                     , Hasura.Backends.DataConnector.API
+                     , Hasura.Backends.DataConnector.API.V0.API
+                     , Hasura.Backends.DataConnector.API.V0.Column
+                     , Hasura.Backends.DataConnector.API.V0.Expression
+                     , Hasura.Backends.DataConnector.API.V0.OrderBy
+                     , Hasura.Backends.DataConnector.API.V0.Query
+                     , Hasura.Backends.DataConnector.API.V0.Scalar.Type
+                     , Hasura.Backends.DataConnector.API.V0.Scalar.Value
+                     , Hasura.Backends.DataConnector.API.V0.Schema
+                     , Hasura.Backends.DataConnector.API.V0.Table
 
 library
   import: common-all
@@ -185,7 +185,7 @@ library
                      , either
                      , exceptions
                      , fast-logger
-                     , gdw-api
+                     , dc-api
                      , free
                      , hashable
                      , hashable-time
@@ -367,11 +367,6 @@ library
                      , mysql
                      , mysql-simple
 
-                     -- TODO(jkachmar): re-organize this before merging
-                     -- dynamic backends stuff
-                     , uri-bytestring
-                     , witch
-
   if !flag(profiling)
     -- ghc-heap-view can't be built with profiling
     build-depends:     ghc-heap-view
@@ -547,28 +542,28 @@ library
                      , Hasura.Backends.MySQL.ToQuery
                      , Hasura.Backends.MySQL.Instances.API
 
-                     -- GraphQL Data Wrappers
-                     , Hasura.Backends.DataWrapper.Adapter.API
-                     , Hasura.Backends.DataWrapper.Adapter.Backend
-                     , Hasura.Backends.DataWrapper.Adapter.Execute
-                     , Hasura.Backends.DataWrapper.Adapter.Metadata
-                     , Hasura.Backends.DataWrapper.Adapter.Schema
-                     , Hasura.Backends.DataWrapper.Adapter.Transport
-                     , Hasura.Backends.DataWrapper.Adapter.Types
-                     , Hasura.Backends.DataWrapper.Agent.Client
-                     , Hasura.Backends.DataWrapper.IR.Column
-                     , Hasura.Backends.DataWrapper.IR.Expression
-                     , Hasura.Backends.DataWrapper.IR.Export
-                     , Hasura.Backends.DataWrapper.IR.Function
-                     , Hasura.Backends.DataWrapper.IR.Name
-                     , Hasura.Backends.DataWrapper.IR.OrderBy
-                     , Hasura.Backends.DataWrapper.IR.Query
-                     , Hasura.Backends.DataWrapper.IR.Scalar.Type
-                     , Hasura.Backends.DataWrapper.IR.Scalar.Value
-                     , Hasura.Backends.DataWrapper.IR.Table
-                     , Hasura.Backends.DataWrapper.Plan
-                     , Hasura.Backends.DataWrapper.Schema.Column
-                     , Hasura.Backends.DataWrapper.Schema.Table
+                     -- GraphQL Data Connector
+                     , Hasura.Backends.DataConnector.Adapter.API
+                     , Hasura.Backends.DataConnector.Adapter.Backend
+                     , Hasura.Backends.DataConnector.Adapter.Execute
+                     , Hasura.Backends.DataConnector.Adapter.Metadata
+                     , Hasura.Backends.DataConnector.Adapter.Schema
+                     , Hasura.Backends.DataConnector.Adapter.Transport
+                     , Hasura.Backends.DataConnector.Adapter.Types
+                     , Hasura.Backends.DataConnector.Agent.Client
+                     , Hasura.Backends.DataConnector.IR.Column
+                     , Hasura.Backends.DataConnector.IR.Expression
+                     , Hasura.Backends.DataConnector.IR.Export
+                     , Hasura.Backends.DataConnector.IR.Function
+                     , Hasura.Backends.DataConnector.IR.Name
+                     , Hasura.Backends.DataConnector.IR.OrderBy
+                     , Hasura.Backends.DataConnector.IR.Query
+                     , Hasura.Backends.DataConnector.IR.Scalar.Type
+                     , Hasura.Backends.DataConnector.IR.Scalar.Value
+                     , Hasura.Backends.DataConnector.IR.Table
+                     , Hasura.Backends.DataConnector.Plan
+                     , Hasura.Backends.DataConnector.Schema.Column
+                     , Hasura.Backends.DataConnector.Schema.Table
 
                      -- Exposed for benchmark:
                      , Hasura.Cache.Bounded
@@ -867,7 +862,7 @@ test-suite graphql-engine-tests
     , dependent-map
     , dependent-sum
     , ekg-core
-    , gdw-api
+    , dc-api
     , free
     , graphql-engine
     , graphql-parser
@@ -931,21 +926,21 @@ test-suite graphql-engine-tests
     Data.TrieSpec
     Database.MSSQL.TransactionSpec
     Hasura.AppSpec
-    Hasura.Backends.DataWrapper.API.V0Spec
-    Hasura.Backends.DataWrapper.API.V0.ColumnSpec
-    Hasura.Backends.DataWrapper.API.V0.ExpressionSpec
-    Hasura.Backends.DataWrapper.API.V0.OrderBySpec
-    Hasura.Backends.DataWrapper.API.V0.QuerySpec
-    Hasura.Backends.DataWrapper.API.V0.Scalar.TypeSpec
-    Hasura.Backends.DataWrapper.API.V0.Scalar.ValueSpec
-    Hasura.Backends.DataWrapper.API.V0.SchemaSpec
-    Hasura.Backends.DataWrapper.API.V0.TableSpec
-    Hasura.Backends.DataWrapper.RQLGenerator
-    Hasura.Backends.DataWrapper.RQLGenerator.GenAnnSelectG
-    Hasura.Backends.DataWrapper.RQLGenerator.GenCommon
-    Hasura.Backends.DataWrapper.RQLGenerator.GenTablePermG
-    Hasura.Backends.DataWrapper.RQLGenerator.GenSelectArgsG
-    Hasura.Backends.DataWrapper.RQLGenerator.GenSelectFromG
+    Hasura.Backends.DataConnector.API.V0Spec
+    Hasura.Backends.DataConnector.API.V0.ColumnSpec
+    Hasura.Backends.DataConnector.API.V0.ExpressionSpec
+    Hasura.Backends.DataConnector.API.V0.OrderBySpec
+    Hasura.Backends.DataConnector.API.V0.QuerySpec
+    Hasura.Backends.DataConnector.API.V0.Scalar.TypeSpec
+    Hasura.Backends.DataConnector.API.V0.Scalar.ValueSpec
+    Hasura.Backends.DataConnector.API.V0.SchemaSpec
+    Hasura.Backends.DataConnector.API.V0.TableSpec
+    Hasura.Backends.DataConnector.RQLGenerator
+    Hasura.Backends.DataConnector.RQLGenerator.GenAnnSelectG
+    Hasura.Backends.DataConnector.RQLGenerator.GenCommon
+    Hasura.Backends.DataConnector.RQLGenerator.GenTablePermG
+    Hasura.Backends.DataConnector.RQLGenerator.GenSelectArgsG
+    Hasura.Backends.DataConnector.RQLGenerator.GenSelectFromG
     Hasura.Backends.MSSQL.ErrorSpec
     Hasura.Backends.MySQL.DataLoader.ExecuteTests
     Hasura.Backends.Postgres.RQLGenerator
@@ -1130,7 +1125,7 @@ test-suite tests-hspec
     Test.InsertEnumColumnSpec
     Test.SQLServer.InsertVarcharColumnSpec
 
-test-suite tests-gdw-api
+test-suite tests-dc-api
   import: common-all, common-exe
   type: exitcode-stdio-1.0
   build-depends:
@@ -1141,7 +1136,7 @@ test-suite tests-gdw-api
     , bytestring
     , deepseq
     , file-embed
-    , gdw-api
+    , dc-api
     , hashable
     , hspec
     , hspec-core
@@ -1161,7 +1156,7 @@ test-suite tests-gdw-api
     , text
     , unordered-containers
     , vector
-  hs-source-dirs: tests-gdw-api
+  hs-source-dirs: tests-dc-api
   -- Turning off optimizations is intentional; tests aren't
   -- performance sensitive and waiting for compilation is a problem.
   ghc-options: -Wall -O0 -threaded

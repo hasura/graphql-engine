@@ -29,7 +29,7 @@ import Data.Aeson
 import Data.Aeson.Types (Parser)
 import Data.Kind (Constraint, Type)
 import Data.Text.NonEmpty (mkNonEmptyText)
-import Hasura.Backends.DataWrapper.Adapter.Types (DataConnectorName (..))
+import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName (..))
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.SQL.Backend
@@ -632,7 +632,7 @@ backendSourceKindFromText text =
     <|> BigQueryValue <$> staticKindFromText BigQueryKind
     <|> MySQLValue <$> staticKindFromText MySQLKind
     -- IMPORTANT: This must be the last thing here, since it will accept (almost) any string
-    <|> DataWrapperValue . DataWrapperKind . DataConnectorName <$> mkNonEmptyText text
+    <|> DataConnectorValue . DataConnectorKind . DataConnectorName <$> mkNonEmptyText text
   where
     staticKindFromText :: BackendSourceKind b -> Maybe (BackendSourceKind b)
     staticKindFromText kind =
@@ -648,4 +648,4 @@ parseBackendSourceKindFromJSON value =
     <|> BigQueryValue <$> parseJSON @(BackendSourceKind ('BigQuery)) value
     <|> MySQLValue <$> parseJSON @(BackendSourceKind ('MySQL)) value
     -- IMPORTANT: This must the last thing here, since it will accept (almost) any string
-    <|> DataWrapperValue <$> parseJSON @(BackendSourceKind ('DataWrapper)) value
+    <|> DataConnectorValue <$> parseJSON @(BackendSourceKind ('DataConnector)) value

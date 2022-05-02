@@ -27,7 +27,7 @@ import Hasura.App
     mkPgSourceResolver,
   )
 import Hasura.AppSpec qualified as AppSpec
-import Hasura.Backends.DataWrapper.API.V0Spec qualified as DataWrapper.API.V0Spec
+import Hasura.Backends.DataConnector.API.V0Spec qualified as DataConnector.API.V0Spec
 import Hasura.Backends.MSSQL.ErrorSpec qualified as MSSQLErrorSpec
 import Hasura.Backends.MySQL.DataLoader.ExecuteTests qualified as MySQLDataLoader
 import Hasura.Backends.Postgres.Connection.MonadTx
@@ -113,7 +113,7 @@ unitSpecs = do
   describe "Data.Time" TimeSpec.spec
   describe "Data.Trie" TrieSpec.spec
   describe "Hasura.App" AppSpec.spec
-  describe "Hasura.Backends.DataWrapper.API.V0" DataWrapper.API.V0Spec.spec
+  describe "Hasura.Backends.DataConnector.API.V0" DataConnector.API.V0Spec.spec
   describe "Hasura.Backends.MSSQL.ErrorSpec" MSSQLErrorSpec.spec
   describe "Hasura.Backends.MySQL.DataLoader.ExecuteTests" MySQLDataLoader.spec
   describe "Hasura.Eventing" EventingSpec.spec

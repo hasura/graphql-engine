@@ -20,7 +20,7 @@ import Data.Proxy
 import Data.Text (unpack)
 import Data.Text.Extended
 import Data.Text.NonEmpty (NonEmptyText, mkNonEmptyText, nonEmptyTextQQ)
-import Hasura.Backends.DataWrapper.Adapter.Types (DataConnectorName (..))
+import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName (..))
 import Hasura.Incremental
 import Hasura.Prelude
 import Witch qualified
@@ -39,7 +39,7 @@ data BackendType
   | MSSQL
   | BigQuery
   | MySQL
-  | DataWrapper
+  | DataConnector
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (Hashable, Cacheable)
 
@@ -50,7 +50,7 @@ instance Witch.From BackendType NonEmptyText where
   from MSSQL = [nonEmptyTextQQ|mssql|]
   from BigQuery = [nonEmptyTextQQ|bigquery|]
   from MySQL = [nonEmptyTextQQ|mysql|]
-  from DataWrapper = [nonEmptyTextQQ|dataconnector|]
+  from DataConnector = [nonEmptyTextQQ|dataconnector|]
 
 instance ToTxt BackendType where
   toTxt = toTxt . Witch.into @NonEmptyText
@@ -63,22 +63,22 @@ instance ToJSON BackendType where
 
 instance Cacheable (Proxy (b :: BackendType))
 
--- | Similar to 'BackendType', however, in the case of 'DataWrapperKind' we need to be able
--- capture the name of the data connector that should be used by the DataWrapper backend.
+-- | Similar to 'BackendType', however, in the case of 'DataConnectorKind' we need to be able
+-- capture the name of the data connector that should be used by the DataConnector backend.
 -- This type correlates to the kind property of 'SourceMetadata', which is usually just
--- postgres, mssql, etc for static backends, but can be a configurable value for DataWrapper
--- hence requiring 'DataConnectorName' for 'DataWrapperKind'
+-- postgres, mssql, etc for static backends, but can be a configurable value for DataConnector
+-- hence requiring 'DataConnectorName' for 'DataConnectorKind'
 --
 -- This type cannot entirely replace 'BackendType' because 'BackendType' has a fixed number of
 -- possible values which can be enumerated over at compile time, but 'BackendSourceKind' does
--- not because DataWrapper fundamentally is configured at runtime with 'DataConnectorName'.
+-- not because DataConnector fundamentally is configured at runtime with 'DataConnectorName'.
 data BackendSourceKind (b :: BackendType) where
   PostgresVanillaKind :: BackendSourceKind ('Postgres 'Vanilla)
   PostgresCitusKind :: BackendSourceKind ('Postgres 'Citus)
   MSSQLKind :: BackendSourceKind 'MSSQL
   BigQueryKind :: BackendSourceKind 'BigQuery
   MySQLKind :: BackendSourceKind 'MySQL
-  DataWrapperKind :: DataConnectorName -> BackendSourceKind 'DataWrapper
+  DataConnectorKind :: DataConnectorName -> BackendSourceKind 'DataConnector
 
 deriving instance Show (BackendSourceKind b)
 
@@ -97,7 +97,7 @@ instance Witch.From (BackendSourceKind b) NonEmptyText where
   from k@MSSQLKind = Witch.into @NonEmptyText $ backendTypeFromBackendSourceKind k
   from k@BigQueryKind = Witch.into @NonEmptyText $ backendTypeFromBackendSourceKind k
   from k@MySQLKind = Witch.into @NonEmptyText $ backendTypeFromBackendSourceKind k
-  from (DataWrapperKind dataConnectorName) = Witch.into @NonEmptyText dataConnectorName
+  from (DataConnectorKind dataConnectorName) = Witch.into @NonEmptyText dataConnectorName
 
 instance ToTxt (BackendSourceKind b) where
   toTxt = toTxt . Witch.into @NonEmptyText
@@ -124,9 +124,9 @@ instance FromJSON (BackendSourceKind ('BigQuery)) where
 instance FromJSON (BackendSourceKind ('MySQL)) where
   parseJSON = mkParseStaticBackendSourceKind MySQLKind
 
-instance FromJSON (BackendSourceKind ('DataWrapper)) where
+instance FromJSON (BackendSourceKind ('DataConnector)) where
   parseJSON = withText "BackendSourceKind" $ \text ->
-    DataWrapperKind . DataConnectorName <$> mkNonEmptyText text
+    DataConnectorKind . DataConnectorName <$> mkNonEmptyText text
       `onNothing` fail "Cannot be empty string"
 
 mkParseStaticBackendSourceKind :: BackendSourceKind b -> (Value -> Parser (BackendSourceKind b))
@@ -152,7 +152,7 @@ supportedBackends =
     MSSQL,
     BigQuery,
     MySQL,
-    DataWrapper
+    DataConnector
   ]
 
 backendTextNames :: BackendType -> [Text]
@@ -185,4 +185,4 @@ backendTypeFromBackendSourceKind = \case
   MSSQLKind -> MSSQL
   BigQueryKind -> BigQuery
   MySQLKind -> MySQL
-  DataWrapperKind _ -> DataWrapper
+  DataConnectorKind _ -> DataConnector
