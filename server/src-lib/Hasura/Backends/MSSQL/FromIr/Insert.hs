@@ -7,8 +7,9 @@ module Hasura.Backends.MSSQL.FromIr.Insert
   )
 where
 
-import Data.Containers.ListUtils (nubOrd)
 import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict.Extended qualified as HM
+import Data.HashSet qualified as HS
 import Hasura.Backends.MSSQL.FromIr (FromIr)
 import Hasura.Backends.MSSQL.FromIr.Constants (tempTableNameInserted, tempTableNameValues)
 import Hasura.Backends.MSSQL.FromIr.Expression (fromGBoolExp)
@@ -20,16 +21,15 @@ import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Column qualified as IR
 import Hasura.SQL.Backend
 
-fromInsert :: IR.AnnInsert 'MSSQL Void Expression -> Insert
-fromInsert IR.AnnInsert {..} =
-  let IR.AnnIns {..} = _aiData
-      insertRows = normalizeInsertRows _aiDefVals $ map IR.getInsertColumns _aiInsObj
-      insertColumnNames = maybe [] (map fst) $ listToMaybe insertRows
-      insertValues = map (Values . map snd) insertRows
-      allColumnNames = map IR.ciColumn _aiTableCols
+fromInsert :: IR.AnnotatedInsert 'MSSQL Void Expression -> Insert
+fromInsert IR.AnnotatedInsert {..} =
+  let IR.AnnotatedInsertData {..} = _aiData
+      (insertColumnNames, insertRows) = normalizeInsertRows _aiPresetValues $ _aiInsertObject
+      insertValues = map (Values . HM.elems) insertRows
+      allColumnNames = map IR.ciColumn _aiTableColumns
       insertOutput = Output Inserted $ map OutputColumn allColumnNames
       tempTable = TempTable tempTableNameInserted allColumnNames
-   in Insert _aiTableName insertColumnNames insertOutput tempTable insertValues
+   in Insert _aiTableName (HS.toList insertColumnNames) insertOutput tempTable insertValues
 
 -- | Normalize a row by adding missing columns with @DEFAULT@ value and sort by
 -- column name to make sure all rows are consistent in column values and order.
@@ -58,18 +58,14 @@ fromInsert IR.AnnInsert {..} =
 -- >   VALUES (1, 'Foo', 21), (2, 'Bar', DEFAULT)
 normalizeInsertRows ::
   HM.HashMap (Column 'MSSQL) Expression ->
-  [[(Column 'MSSQL, Expression)]] ->
-  [[(Column 'MSSQL, Expression)]]
+  [IR.AnnotatedInsertRow 'MSSQL Expression] ->
+  (HashSet (Column 'MSSQL), [HM.HashMap (Column 'MSSQL) Expression])
 normalizeInsertRows presets insertRows =
-  let insertColumns = nubOrd (concatMap (map fst) insertRows <> HM.keys presets)
-      allColumnsWithDefaultValue =
-        map (\col -> (col, fromMaybe DefaultExpression $ HM.lookup col presets)) insertColumns
-      addMissingColumns insertRow =
-        HM.toList $ HM.fromList insertRow `HM.union` HM.fromList allColumnsWithDefaultValue
-      sortByColumn = sortBy (\l r -> compare (fst l) (fst r))
-   in map (sortByColumn . addMissingColumns) insertRows
+  HM.homogenise
+    DefaultExpression
+    (map ((presets <>) . HM.fromList . IR.getInsertColumns) insertRows)
 
--- | Construct a MERGE statement from AnnInsert information.
+-- | Construct a MERGE statement from AnnotatedInsert information.
 --   A MERGE statement is responsible for actually inserting and/or updating
 --   the data in the table.
 toMerge ::
@@ -79,8 +75,10 @@ toMerge ::
   IfMatched Expression ->
   FromIr Merge
 toMerge tableName insertRows allColumns IfMatched {..} = do
-  let normalizedInsertRows = normalizeInsertRows _imColumnPresets $ map IR.getInsertColumns insertRows
-      insertColumnNames = maybe [] (map fst) $ listToMaybe normalizedInsertRows
+  let insertColumnNames =
+        HS.toList $
+          HM.keysSet _imColumnPresets
+            <> HS.unions (map (HM.keysSet . HM.fromList . IR.getInsertColumns) insertRows)
       allColumnNames = map IR.ciColumn allColumns
 
   matchConditions <-
@@ -105,14 +103,13 @@ toMerge tableName insertRows allColumns IfMatched {..} = do
 --   We insert the values into a temporary table first in order to replace the missing
 --   fields with @DEFAULT@ in @normalizeInsertRows@, and we can't do that in a
 --   MERGE statement directly.
-toInsertValuesIntoTempTable :: TempTableName -> IR.AnnInsert 'MSSQL Void Expression -> InsertValuesIntoTempTable
-toInsertValuesIntoTempTable tempTable IR.AnnInsert {..} =
-  let IR.AnnIns {..} = _aiData
-      insertRows = normalizeInsertRows _aiDefVals $ map IR.getInsertColumns _aiInsObj
-      insertColumnNames = maybe [] (map fst) $ listToMaybe insertRows
-      insertValues = map (Values . map snd) insertRows
+toInsertValuesIntoTempTable :: TempTableName -> IR.AnnotatedInsert 'MSSQL Void Expression -> InsertValuesIntoTempTable
+toInsertValuesIntoTempTable tempTable IR.AnnotatedInsert {..} =
+  let IR.AnnotatedInsertData {..} = _aiData
+      (insertColumnNames, insertRows) = normalizeInsertRows _aiPresetValues _aiInsertObject
+      insertValues = map (Values . HM.elems) insertRows
    in InsertValuesIntoTempTable
         { ivittTempTableName = tempTable,
-          ivittColumns = insertColumnNames,
+          ivittColumns = HS.toList insertColumnNames,
           ivittValues = insertValues
         }

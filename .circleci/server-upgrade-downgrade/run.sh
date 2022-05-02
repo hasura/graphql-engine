@@ -200,6 +200,7 @@ get_server_upgrade_tests() {
 		--deselect test_graphql_queries.py::TestGraphQLQueryFunctions \
 		--deselect test_graphql_queries.py::TestGraphQLExplainCommon::test_limit_orderby_relationship_query \
 		--deselect test_graphql_queries.py::TestGraphQLExplainCommon::test_limit_offset_orderby_relationship_query \
+    --deselect test_schema_stitching.py::TestRemoteSchemaBasic::test_json_scalar_dict \
 		  1>/dev/null 2>/dev/null
 	set +x
 	# Choose the subset of jobs to run based on possible parallelism in this buildkite job

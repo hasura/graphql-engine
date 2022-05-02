@@ -225,7 +225,7 @@ convertInsert ::
     PostgresAnnotatedFieldJSON pgKind
   ) =>
   UserInfo ->
-  IR.AnnInsert ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
+  IR.AnnotatedInsert ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
   StringifyNumbers ->
   QueryTagsComment ->
   m (Tracing.TraceT (Q.TxET QErr IO) EncJSON)
