@@ -1,34 +1,104 @@
-description: create and then drop an event trigger
-url: /v1/query
-status: 200
-query:
-  type: bulk
-  args:
-  - type: track_table
+- description: create and then drop an event trigger
+  url: /v1/query
+  status: 200
+  query:
+    type: bulk
     args:
-      schema: hge_tests
-      name: test_t1
-
-  - type: create_event_trigger
-    args: &def_args
-      name: t1_1
-      table:
+    - type: track_table
+      args:
         schema: hge_tests
         name: test_t1
-      insert:
-        columns: "*"
-      update:
-        columns: "*"
-      delete:
-        columns: "*"
-      webhook: http://127.0.0.1:5592
 
-  - type: delete_event_trigger
-    args:
-      name: t1_1
+    - type: create_event_trigger
+      args:
+        name: t1_1
+        table:
+          schema: hge_tests
+          name: test_t1
+        insert:
+          columns: "*"
+        update:
+          columns: "*"
+        delete:
+          columns: "*"
+        webhook: http://127.0.0.1:5592
 
-  - type: untrack_table
+    - type: delete_event_trigger
+      args:
+        name: t1_1
+
+    - type: untrack_table
+      args:
+        table:
+          schema: hge_tests
+          name: test_t1
+
+- description: create an event trigger on case sensitive table name and then drop that event trigger
+  url: /v1/query
+  status: 200
+  query:
+    type: bulk
     args:
-      table:
+    - type: track_table
+      args:
         schema: hge_tests
-        name: test_t1
+        name: TEST_T2
+
+    - type: create_event_trigger
+      args:
+        name: t1_2
+        table:
+          schema: hge_tests
+          name: TEST_T2
+        insert:
+          columns: "*"
+        update:
+          columns: "*"
+        delete:
+          columns: "*"
+        webhook: http://127.0.0.1:5592
+
+    - type: delete_event_trigger
+      args:
+        name: t1_2
+
+    - type: untrack_table
+      args:
+        table:
+          schema: hge_tests
+          name: TEST_T2
+
+- description: create an event trigger on case sensitive table name on public schema and then drop that event trigger
+  url: /v1/query
+  status: 200
+  query:
+    type: bulk
+    args:
+    - type: track_table
+      args:
+        schema: public
+        name: Test_T3
+
+    - type: create_event_trigger
+      args:
+        name: t1_3
+        table:
+          schema: public
+          name: Test_T3
+        insert:
+          columns: "*"
+        update:
+          columns: "*"
+        delete:
+          columns: "*"
+        webhook: http://127.0.0.1:5592
+
+    - type: delete_event_trigger
+      args:
+        name: t1_3
+
+    - type: untrack_table
+      args:
+        table:
+          schema: public
+          name: Test_T3

@@ -3,6 +3,7 @@
 ## Next release
 
 ### Bug fixes and improvements
+- server: server: fix bug when event triggers where defined on tables that contained non lower-case alphabet characters (fix #8454)
 
 ## Milestone Release - v2.6.0
 
