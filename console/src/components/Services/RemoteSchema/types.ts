@@ -19,16 +19,16 @@ export type AsyncState = {
 };
 
 export type graphQLCustomization = {
-  root_fields_namespace?: string;
+  root_fields_namespace?: string | null;
   type_names?: {
-    prefix?: string;
-    suffix?: string;
+    prefix?: string | null;
+    suffix?: string | null;
     mapping?: Record<string, string>;
   };
   field_names?: {
     parent_type?: string;
-    prefix?: string;
-    suffix?: string;
+    prefix?: string | null;
+    suffix?: string | null;
     mapping?: Record<string, string>;
   }[];
 };
