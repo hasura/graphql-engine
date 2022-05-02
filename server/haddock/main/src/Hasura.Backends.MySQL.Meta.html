@@ -28,20 +28,20 @@
 </span><span id="line-28"></span><span>
 </span><span id="line-29"></span><span class="annot"><a href="Hasura.Backends.MySQL.Meta.html#getMetadata"><span class="hs-identifier hs-type">getMetadata</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ConnSourceConfig"><span class="hs-identifier hs-type">ConnSourceConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Connection</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#DBTablesMetadata"><span class="hs-identifier hs-type">DBTablesMetadata</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-30"></span><span id="getMetadata"><span class="annot"><span class="annottext">getMetadata :: ConnSourceConfig -&gt; Connection -&gt; IO (DBTablesMetadata 'MySQL)
-</span><a href="Hasura.Backends.MySQL.Meta.html#getMetadata"><span class="hs-identifier hs-var hs-var">getMetadata</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ConnSourceConfig"><span class="hs-identifier hs-type">ConnSourceConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688601798"><span class="annot"><span class="annottext">Text
+</span><a href="Hasura.Backends.MySQL.Meta.html#getMetadata"><span class="hs-identifier hs-var hs-var">getMetadata</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ConnSourceConfig"><span class="hs-identifier hs-type">ConnSourceConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688601789"><span class="annot"><span class="annottext">Text
 _cscDatabase :: ConnSourceConfig -&gt; Text
 _cscDatabase :: Text
-</span><a href="Hasura.Backends.MySQL.Types.Internal.html#_cscDatabase"><span class="hs-identifier hs-var hs-var">_cscDatabase</span></a></span></span><span class="hs-special">}</span><span> </span><span id="local-6989586621688601796"><span class="annot"><span class="annottext">Connection
-</span><a href="#local-6989586621688601796"><span class="hs-identifier hs-var">scConnection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-31"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688601795"><span class="annot"><span class="annottext">sql :: ByteString
-</span><a href="#local-6989586621688601795"><span class="hs-identifier hs-var hs-var">sql</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">$(</span><span class="hs-identifier">makeRelativeToProject</span><span> </span><span class="hs-string">&quot;src-rsr/mysql_table_metadata.sql&quot;</span><span> </span><span class="hs-operator">&gt;&gt;=</span><span> </span><span class="hs-identifier">embedFile</span><span class="hs-special">)</span><span>
-</span><span id="line-32"></span><span>  </span><span id="local-6989586621688601792"><span class="annot"><span class="annottext">[InformationSchema]
-</span><a href="#local-6989586621688601792"><span class="hs-identifier hs-var">results</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.MySQL.Meta.html#InformationSchema"><span class="hs-identifier hs-type">InformationSchema</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Connection -&gt; Query -&gt; Only Text -&gt; IO [InformationSchema]
+</span><a href="Hasura.Backends.MySQL.Types.Internal.html#_cscDatabase"><span class="hs-identifier hs-var hs-var">_cscDatabase</span></a></span></span><span class="hs-special">}</span><span> </span><span id="local-6989586621688601787"><span class="annot"><span class="annottext">Connection
+</span><a href="#local-6989586621688601787"><span class="hs-identifier hs-var">scConnection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688601786"><span class="annot"><span class="annottext">sql :: ByteString
+</span><a href="#local-6989586621688601786"><span class="hs-identifier hs-var hs-var">sql</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">$(</span><span class="hs-identifier">makeRelativeToProject</span><span> </span><span class="hs-string">&quot;src-rsr/mysql_table_metadata.sql&quot;</span><span> </span><span class="hs-operator">&gt;&gt;=</span><span> </span><span class="hs-identifier">embedFile</span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span>  </span><span id="local-6989586621688601783"><span class="annot"><span class="annottext">[InformationSchema]
+</span><a href="#local-6989586621688601783"><span class="hs-identifier hs-var">results</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.MySQL.Meta.html#InformationSchema"><span class="hs-identifier hs-type">InformationSchema</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Connection -&gt; Query -&gt; Only Text -&gt; IO [InformationSchema]
 forall q r.
 (QueryParams q, QueryResults r) =&gt;
 Connection -&gt; Query -&gt; q -&gt; IO [r]
 </span><span class="hs-identifier hs-var">query</span></span><span> </span><span class="annot"><span class="annottext">Connection
-</span><a href="#local-6989586621688601796"><span class="hs-identifier hs-var">scConnection</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Query
+</span><a href="#local-6989586621688601787"><span class="hs-identifier hs-var">scConnection</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Query
 forall a. IsString a =&gt; String -&gt; a
 </span><span class="hs-identifier hs-var">fromString</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Query) -&gt; (ByteString -&gt; String) -&gt; ByteString -&gt; Query
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -49,16 +49,16 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-identifier hs-var">B8.unpack</span></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Query) -&gt; ByteString -&gt; Query
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688601795"><span class="hs-identifier hs-var">sql</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Only Text
+</span><a href="#local-6989586621688601786"><span class="hs-identifier hs-var">sql</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Only Text
 forall a. a -&gt; Only a
 </span><span class="hs-identifier hs-var">Only</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688601798"><span class="hs-identifier hs-var">_cscDatabase</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601789"><span class="hs-identifier hs-var">_cscDatabase</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-33"></span><span>  </span><span class="annot"><span class="annottext">HashMap TableName (DBTableMetadata 'MySQL)
 -&gt; IO (HashMap TableName (DBTableMetadata 'MySQL))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[InformationSchema] -&gt; DBTablesMetadata 'MySQL
 </span><a href="Hasura.Backends.MySQL.Meta.html#mkMetadata"><span class="hs-identifier hs-var">mkMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">[InformationSchema]
-</span><a href="#local-6989586621688601792"><span class="hs-identifier hs-var">results</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601783"><span class="hs-identifier hs-var">results</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-34"></span><span>
 </span><span id="line-35"></span><span class="annot"><a href="Hasura.Backends.MySQL.Meta.html#mkMetadata"><span class="hs-identifier hs-type">mkMetadata</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.MySQL.Meta.html#InformationSchema"><span class="hs-identifier hs-type">InformationSchema</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#DBTablesMetadata"><span class="hs-identifier hs-type">DBTablesMetadata</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span>
 </span><span id="line-36"></span><span id="mkMetadata"><span class="annot"><span class="annottext">mkMetadata :: [InformationSchema] -&gt; DBTablesMetadata 'MySQL
@@ -83,7 +83,7 @@ forall k v. HashMap k v
 </span><span id="line-38"></span><span class="annot"><a href="Hasura.Backends.MySQL.Meta.html#mergeMetadata"><span class="hs-identifier hs-type">mergeMetadata</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Meta.html#InformationSchema"><span class="hs-identifier hs-type">InformationSchema</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#DBTablesMetadata"><span class="hs-identifier hs-type">DBTablesMetadata</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#DBTablesMetadata"><span class="hs-identifier hs-type">DBTablesMetadata</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span>
 </span><span id="line-39"></span><span id="mergeMetadata"><span class="annot"><span class="annottext">mergeMetadata :: InformationSchema
 -&gt; DBTablesMetadata 'MySQL -&gt; DBTablesMetadata 'MySQL
-</span><a href="Hasura.Backends.MySQL.Meta.html#mergeMetadata"><span class="hs-identifier hs-var hs-var">mergeMetadata</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Meta.html#InformationSchema"><span class="hs-identifier hs-type">InformationSchema</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688601769"><span id="local-6989586621688601770"><span id="local-6989586621688601771"><span id="local-6989586621688601772"><span id="local-6989586621688601773"><span id="local-6989586621688601774"><span id="local-6989586621688601775"><span id="local-6989586621688601776"><span id="local-6989586621688601777"><span id="local-6989586621688601778"><span id="local-6989586621688601779"><span id="local-6989586621688601780"><span id="local-6989586621688601781"><span id="local-6989586621688601782"><span id="local-6989586621688601783"><span id="local-6989586621688601784"><span class="annot"><span class="annottext">Maybe Word
+</span><a href="Hasura.Backends.MySQL.Meta.html#mergeMetadata"><span class="hs-identifier hs-var hs-var">mergeMetadata</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Meta.html#InformationSchema"><span class="hs-identifier hs-type">InformationSchema</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688601760"><span id="local-6989586621688601761"><span id="local-6989586621688601762"><span id="local-6989586621688601763"><span id="local-6989586621688601764"><span id="local-6989586621688601765"><span id="local-6989586621688601766"><span id="local-6989586621688601767"><span id="local-6989586621688601768"><span id="local-6989586621688601769"><span id="local-6989586621688601770"><span id="local-6989586621688601771"><span id="local-6989586621688601772"><span id="local-6989586621688601773"><span id="local-6989586621688601774"><span id="local-6989586621688601775"><span class="annot"><span class="annottext">Maybe Word
 Maybe Text
 Word
 Text
@@ -137,11 +137,11 @@ forall k v.
 </span><span id="line-42"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TableName :: Text -&gt; Maybe Text -&gt; TableName
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">name :: Text
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#name"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688601783"><span class="hs-identifier hs-var">isTableName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">schema :: Maybe Text
+</span><a href="#local-6989586621688601774"><span class="hs-identifier hs-var">isTableName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">schema :: Maybe Text
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#schema"><span class="hs-identifier hs-var">schema</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Text
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688601784"><span class="hs-identifier hs-var">isTableSchema</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601775"><span class="hs-identifier hs-var">isTableSchema</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
 </span><span id="line-43"></span><span>    </span><span class="annot"><span class="annottext">(DBTableMetadata 'MySQL
  -&gt; HashMap TableName (DBTableMetadata 'MySQL)
  -&gt; HashMap TableName (DBTableMetadata 'MySQL))
@@ -178,19 +178,19 @@ Column b
 </span><span id="line-47"></span><span>              </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">rciName :: Column 'MySQL
 </span><a href="Hasura.RQL.Types.Column.html#rciName"><span class="hs-identifier hs-var">rciName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Column
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#Column"><span class="hs-identifier hs-var">Column</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688601782"><span class="hs-identifier hs-var">isColumnName</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688601773"><span class="hs-identifier hs-var">isColumnName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-48"></span><span>                </span><span class="annot"><span class="annottext">rciPosition :: Int
 </span><a href="Hasura.RQL.Types.Column.html#rciPosition"><span class="hs-identifier hs-var">rciPosition</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word -&gt; Int
 forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Word
-</span><a href="#local-6989586621688601781"><span class="hs-identifier hs-var">isOrdinalPosition</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688601772"><span class="hs-identifier hs-var">isOrdinalPosition</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-49"></span><span>                </span><span class="annot"><span class="annottext">rciType :: ScalarType 'MySQL
 </span><a href="Hasura.RQL.Types.Column.html#rciType"><span class="hs-identifier hs-var">rciType</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ScalarType
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#parseMySQLScalarType"><span class="hs-identifier hs-var">parseMySQLScalarType</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688601777"><span class="hs-identifier hs-var">isColumnType</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- TODO: This needs to become more precise by considering Field length and character-set</span><span>
+</span><a href="#local-6989586621688601768"><span class="hs-identifier hs-var">isColumnType</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- TODO: This needs to become more precise by considering Field length and character-set</span><span>
 </span><span id="line-50"></span><span>                </span><span class="annot"><span class="annottext">rciIsNullable :: Bool
 </span><a href="Hasura.RQL.Types.Column.html#rciIsNullable"><span class="hs-identifier hs-var">rciIsNullable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688601779"><span class="hs-identifier hs-var">isIsNullable</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
+</span><a href="#local-6989586621688601770"><span class="hs-identifier hs-var">isIsNullable</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;YES&quot;</span></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- ref: https://dev.mysql.com/doc/refman/8.0/en/information-schema-columns-table.html</span><span>
@@ -202,7 +202,7 @@ forall a. a -&gt; Maybe a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Description
 </span><span class="hs-identifier hs-var">G.Description</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688601775"><span class="hs-identifier hs-var">isColumnComment</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688601766"><span class="hs-identifier hs-var">isColumnComment</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-52"></span><span>                </span><span class="annot"><span class="annottext">rciMutability :: ColumnMutability
 </span><a href="Hasura.RQL.Types.Column.html#rciMutability"><span class="hs-identifier hs-var">rciMutability</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnMutability :: Bool -&gt; Bool -&gt; ColumnMutability
 </span><a href="Hasura.RQL.Types.Column.html#ColumnMutability"><span class="hs-identifier hs-type">ColumnMutability</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_cmIsInsertable :: Bool
@@ -215,7 +215,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-55"></span><span>        </span><span class="annot"><span class="annottext">_ptmiPrimaryKey :: Maybe (PrimaryKey 'MySQL (Column 'MySQL))
 </span><a href="Hasura.RQL.Types.Table.html#_ptmiPrimaryKey"><span class="hs-identifier hs-var">_ptmiPrimaryKey</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-56"></span><span>          </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">InformationSchemaColumnKey
-</span><a href="#local-6989586621688601776"><span class="hs-identifier hs-var">isColumnKey</span></a></span><span> </span><span class="annot"><span class="annottext">InformationSchemaColumnKey -&gt; InformationSchemaColumnKey -&gt; Bool
+</span><a href="#local-6989586621688601767"><span class="hs-identifier hs-var">isColumnKey</span></a></span><span> </span><span class="annot"><span class="annottext">InformationSchemaColumnKey -&gt; InformationSchemaColumnKey -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">InformationSchemaColumnKey
 </span><a href="Hasura.Backends.MySQL.Meta.html#PRI"><span class="hs-identifier hs-var">PRI</span></a></span><span>
@@ -240,7 +240,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;&quot;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621688601774"><span class="hs-identifier hs-var">isConstraintName</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601765"><span class="hs-identifier hs-var">isConstraintName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-62"></span><span>                      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; OID
 </span><a href="Hasura.RQL.Types.Common.html#OID"><span class="hs-identifier hs-var">OID</span></a></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; OID) -&gt; Int -&gt; OID
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -252,20 +252,20 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Word
 </span><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Maybe Word
-</span><a href="#local-6989586621688601773"><span class="hs-identifier hs-var">isConstraintOrdinalPosition</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601764"><span class="hs-identifier hs-var">isConstraintOrdinalPosition</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-63"></span><span>                  </span><span class="hs-special">)</span><span>
 </span><span id="line-64"></span><span>                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Column -&gt; NESeq Column
 forall a. a -&gt; NESeq a
 </span><a href="Data.Sequence.NonEmpty.html#singleton"><span class="hs-identifier hs-var">SNE.singleton</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Column
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#Column"><span class="hs-identifier hs-var">Column</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688601782"><span class="hs-identifier hs-var">isColumnName</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601773"><span class="hs-identifier hs-var">isColumnName</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-65"></span><span>            </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">Maybe (PrimaryKey 'MySQL (Column 'MySQL))
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span>
 </span><span id="line-66"></span><span>        </span><span class="annot"><span class="annottext">_ptmiUniqueConstraints :: HashSet (Constraint 'MySQL)
 </span><a href="Hasura.RQL.Types.Table.html#_ptmiUniqueConstraints"><span class="hs-identifier hs-var">_ptmiUniqueConstraints</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-67"></span><span>          </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">InformationSchemaColumnKey
-</span><a href="#local-6989586621688601776"><span class="hs-identifier hs-var">isColumnKey</span></a></span><span> </span><span class="annot"><span class="annottext">InformationSchemaColumnKey -&gt; InformationSchemaColumnKey -&gt; Bool
+</span><a href="#local-6989586621688601767"><span class="hs-identifier hs-var">isColumnKey</span></a></span><span> </span><span class="annot"><span class="annottext">InformationSchemaColumnKey -&gt; InformationSchemaColumnKey -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">InformationSchemaColumnKey
 </span><a href="Hasura.Backends.MySQL.Meta.html#UNI"><span class="hs-identifier hs-var">UNI</span></a></span><span>
@@ -283,7 +283,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;&quot;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621688601774"><span class="hs-identifier hs-var">isConstraintName</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601765"><span class="hs-identifier hs-var">isConstraintName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-72"></span><span>                    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; OID
 </span><a href="Hasura.RQL.Types.Common.html#OID"><span class="hs-identifier hs-var">OID</span></a></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; OID) -&gt; Int -&gt; OID
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -295,7 +295,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Word
 </span><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Maybe Word
-</span><a href="#local-6989586621688601773"><span class="hs-identifier hs-var">isConstraintOrdinalPosition</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601764"><span class="hs-identifier hs-var">isConstraintOrdinalPosition</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-73"></span><span>                </span><span class="hs-special">)</span><span>
 </span><span id="line-74"></span><span>            </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">HashSet (Constraint 'MySQL)
 forall a. HashSet a
@@ -303,7 +303,7 @@ forall a. HashSet a
 </span><span id="line-75"></span><span>        </span><span class="annot"><span class="annottext">_ptmiForeignKeys :: HashSet (ForeignKeyMetadata 'MySQL)
 </span><a href="Hasura.RQL.Types.Table.html#_ptmiForeignKeys"><span class="hs-identifier hs-var">_ptmiForeignKeys</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-76"></span><span>          </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">InformationSchemaColumnKey
-</span><a href="#local-6989586621688601776"><span class="hs-identifier hs-var">isColumnKey</span></a></span><span> </span><span class="annot"><span class="annottext">InformationSchemaColumnKey -&gt; InformationSchemaColumnKey -&gt; Bool
+</span><a href="#local-6989586621688601767"><span class="hs-identifier hs-var">isColumnKey</span></a></span><span> </span><span class="annot"><span class="annottext">InformationSchemaColumnKey -&gt; InformationSchemaColumnKey -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">InformationSchemaColumnKey
 </span><a href="Hasura.Backends.MySQL.Meta.html#MUL"><span class="hs-identifier hs-var">MUL</span></a></span><span>
@@ -332,7 +332,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;&quot;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621688601774"><span class="hs-identifier hs-var">isConstraintName</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601765"><span class="hs-identifier hs-var">isConstraintName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-83"></span><span>                            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; OID
 </span><a href="Hasura.RQL.Types.Common.html#OID"><span class="hs-identifier hs-var">OID</span></a></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; OID) -&gt; Int -&gt; OID
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -344,7 +344,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Word
 </span><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Maybe Word
-</span><a href="#local-6989586621688601773"><span class="hs-identifier hs-var">isConstraintOrdinalPosition</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601764"><span class="hs-identifier hs-var">isConstraintOrdinalPosition</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-84"></span><span>                        </span><span class="hs-special">)</span><span>
 </span><span id="line-85"></span><span>                        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">TableName :: Text -&gt; Maybe Text -&gt; TableName
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span>
@@ -353,10 +353,10 @@ forall a. a -&gt; Maybe a -&gt; a
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;&quot;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621688601770"><span class="hs-identifier hs-var">isReferencedTableName</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688601761"><span class="hs-identifier hs-var">isReferencedTableName</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-87"></span><span>                              </span><span class="annot"><span class="annottext">schema :: Maybe Text
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#schema"><span class="hs-identifier hs-var">schema</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621688601771"><span class="hs-identifier hs-var">isReferencedTableSchema</span></a></span><span>
+</span><a href="#local-6989586621688601762"><span class="hs-identifier hs-var">isReferencedTableSchema</span></a></span><span>
 </span><span id="line-88"></span><span>                            </span><span class="hs-special">}</span><span>
 </span><span id="line-89"></span><span>                        </span><span class="hs-special">)</span><span>
 </span><span id="line-90"></span><span>                        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Column -&gt; Column -&gt; HashMap Column Column
@@ -364,7 +364,7 @@ forall k v. Hashable k =&gt; k -&gt; v -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">HM.singleton</span></span><span>
 </span><span id="line-91"></span><span>                            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Column
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#Column"><span class="hs-identifier hs-var">Column</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688601782"><span class="hs-identifier hs-var">isColumnName</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601773"><span class="hs-identifier hs-var">isColumnName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-92"></span><span>                            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Column
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#Column"><span class="hs-identifier hs-var">Column</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Column) -&gt; Text -&gt; Column
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -372,7 +372,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;&quot;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621688601769"><span class="hs-identifier hs-var">isReferencedColumnName</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601760"><span class="hs-identifier hs-var">isReferencedColumnName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-93"></span><span>                        </span><span class="hs-special">)</span><span>
 </span><span id="line-94"></span><span>                    </span><span class="hs-special">)</span><span>
 </span><span id="line-95"></span><span>                </span><span class="hs-special">)</span><span>
@@ -394,9 +394,9 @@ forall a. Maybe a
 </span><span id="line-102"></span><span class="annot"><a href="Hasura.Backends.MySQL.Meta.html#mergeDBTableMetadata"><span class="hs-identifier hs-type">mergeDBTableMetadata</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#DBTableMetadata"><span class="hs-identifier hs-type">DBTableMetadata</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#DBTableMetadata"><span class="hs-identifier hs-type">DBTableMetadata</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#DBTableMetadata"><span class="hs-identifier hs-type">DBTableMetadata</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span>
 </span><span id="line-103"></span><span id="mergeDBTableMetadata"><span class="annot"><span class="annottext">mergeDBTableMetadata :: DBTableMetadata 'MySQL
 -&gt; DBTableMetadata 'MySQL -&gt; DBTableMetadata 'MySQL
-</span><a href="Hasura.Backends.MySQL.Meta.html#mergeDBTableMetadata"><span class="hs-identifier hs-var hs-var">mergeDBTableMetadata</span></a></span></span><span> </span><span id="local-6989586621688601711"><span class="annot"><span class="annottext">DBTableMetadata 'MySQL
-</span><a href="#local-6989586621688601711"><span class="hs-identifier hs-var">new</span></a></span></span><span> </span><span id="local-6989586621688601710"><span class="annot"><span class="annottext">DBTableMetadata 'MySQL
-</span><a href="#local-6989586621688601710"><span class="hs-identifier hs-var">existing</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.MySQL.Meta.html#mergeDBTableMetadata"><span class="hs-identifier hs-var hs-var">mergeDBTableMetadata</span></a></span></span><span> </span><span id="local-6989586621688601702"><span class="annot"><span class="annottext">DBTableMetadata 'MySQL
+</span><a href="#local-6989586621688601702"><span class="hs-identifier hs-var">new</span></a></span></span><span> </span><span id="local-6989586621688601701"><span class="annot"><span class="annottext">DBTableMetadata 'MySQL
+</span><a href="#local-6989586621688601701"><span class="hs-identifier hs-var">existing</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-104"></span><span>  </span><span class="annot"><span class="annottext">DBTableMetadata :: forall (b :: BackendType).
 OID
 -&gt; [RawColumnInfo b]
@@ -416,19 +416,19 @@ OID
 </span><a href="Hasura.RQL.Types.Table.html#_ptmiColumns"><span class="hs-identifier hs-var">_ptmiColumns</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DBTableMetadata 'MySQL -&gt; [RawColumnInfo 'MySQL]
 forall (b :: BackendType). DBTableMetadata b -&gt; [RawColumnInfo b]
 </span><a href="Hasura.RQL.Types.Table.html#_ptmiColumns"><span class="hs-identifier hs-var hs-var">_ptmiColumns</span></a></span><span> </span><span class="annot"><span class="annottext">DBTableMetadata 'MySQL
-</span><a href="#local-6989586621688601710"><span class="hs-identifier hs-var">existing</span></a></span><span> </span><span class="annot"><span class="annottext">[RawColumnInfo 'MySQL]
+</span><a href="#local-6989586621688601701"><span class="hs-identifier hs-var">existing</span></a></span><span> </span><span class="annot"><span class="annottext">[RawColumnInfo 'MySQL]
 -&gt; [RawColumnInfo 'MySQL] -&gt; [RawColumnInfo 'MySQL]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">DBTableMetadata 'MySQL -&gt; [RawColumnInfo 'MySQL]
 forall (b :: BackendType). DBTableMetadata b -&gt; [RawColumnInfo b]
 </span><a href="Hasura.RQL.Types.Table.html#_ptmiColumns"><span class="hs-identifier hs-var hs-var">_ptmiColumns</span></a></span><span> </span><span class="annot"><span class="annottext">DBTableMetadata 'MySQL
-</span><a href="#local-6989586621688601711"><span class="hs-identifier hs-var">new</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688601702"><span class="hs-identifier hs-var">new</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-107"></span><span>      </span><span class="annot"><span class="annottext">_ptmiPrimaryKey :: Maybe (PrimaryKey 'MySQL (Column 'MySQL))
 </span><a href="Hasura.RQL.Types.Table.html#_ptmiPrimaryKey"><span class="hs-identifier hs-var">_ptmiPrimaryKey</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DBTableMetadata 'MySQL -&gt; Maybe (PrimaryKey 'MySQL (Column 'MySQL))
 forall (b :: BackendType).
 DBTableMetadata b -&gt; Maybe (PrimaryKey b (Column b))
 </span><a href="Hasura.RQL.Types.Table.html#_ptmiPrimaryKey"><span class="hs-identifier hs-var hs-var">_ptmiPrimaryKey</span></a></span><span> </span><span class="annot"><span class="annottext">DBTableMetadata 'MySQL
-</span><a href="#local-6989586621688601710"><span class="hs-identifier hs-var">existing</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (PrimaryKey 'MySQL Column)
+</span><a href="#local-6989586621688601701"><span class="hs-identifier hs-var">existing</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (PrimaryKey 'MySQL Column)
 -&gt; Maybe (PrimaryKey 'MySQL Column)
 -&gt; Maybe (PrimaryKey 'MySQL Column)
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
@@ -436,26 +436,26 @@ forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 forall (b :: BackendType).
 DBTableMetadata b -&gt; Maybe (PrimaryKey b (Column b))
 </span><a href="Hasura.RQL.Types.Table.html#_ptmiPrimaryKey"><span class="hs-identifier hs-var hs-var">_ptmiPrimaryKey</span></a></span><span> </span><span class="annot"><span class="annottext">DBTableMetadata 'MySQL
-</span><a href="#local-6989586621688601711"><span class="hs-identifier hs-var">new</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- Only one column can be a PRIMARY KEY, so this is just a courtesy choice.</span><span>
+</span><a href="#local-6989586621688601702"><span class="hs-identifier hs-var">new</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- Only one column can be a PRIMARY KEY, so this is just a courtesy choice.</span><span>
 </span><span id="line-108"></span><span>      </span><span class="annot"><span class="annottext">_ptmiUniqueConstraints :: HashSet (Constraint 'MySQL)
 </span><a href="Hasura.RQL.Types.Table.html#_ptmiUniqueConstraints"><span class="hs-identifier hs-var">_ptmiUniqueConstraints</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DBTableMetadata 'MySQL -&gt; HashSet (Constraint 'MySQL)
 forall (b :: BackendType).
 DBTableMetadata b -&gt; HashSet (Constraint b)
 </span><a href="Hasura.RQL.Types.Table.html#_ptmiUniqueConstraints"><span class="hs-identifier hs-var hs-var">_ptmiUniqueConstraints</span></a></span><span> </span><span class="annot"><span class="annottext">DBTableMetadata 'MySQL
-</span><a href="#local-6989586621688601710"><span class="hs-identifier hs-var">existing</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet (Constraint 'MySQL)
+</span><a href="#local-6989586621688601701"><span class="hs-identifier hs-var">existing</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet (Constraint 'MySQL)
 -&gt; HashSet (Constraint 'MySQL) -&gt; HashSet (Constraint 'MySQL)
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">DBTableMetadata 'MySQL -&gt; HashSet (Constraint 'MySQL)
 forall (b :: BackendType).
 DBTableMetadata b -&gt; HashSet (Constraint b)
 </span><a href="Hasura.RQL.Types.Table.html#_ptmiUniqueConstraints"><span class="hs-identifier hs-var hs-var">_ptmiUniqueConstraints</span></a></span><span> </span><span class="annot"><span class="annottext">DBTableMetadata 'MySQL
-</span><a href="#local-6989586621688601711"><span class="hs-identifier hs-var">new</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- union</span><span>
+</span><a href="#local-6989586621688601702"><span class="hs-identifier hs-var">new</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- union</span><span>
 </span><span id="line-109"></span><span>      </span><span class="annot"><span class="annottext">_ptmiForeignKeys :: HashSet (ForeignKeyMetadata 'MySQL)
 </span><a href="Hasura.RQL.Types.Table.html#_ptmiForeignKeys"><span class="hs-identifier hs-var">_ptmiForeignKeys</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DBTableMetadata 'MySQL -&gt; HashSet (ForeignKeyMetadata 'MySQL)
 forall (b :: BackendType).
 DBTableMetadata b -&gt; HashSet (ForeignKeyMetadata b)
 </span><a href="Hasura.RQL.Types.Table.html#_ptmiForeignKeys"><span class="hs-identifier hs-var hs-var">_ptmiForeignKeys</span></a></span><span> </span><span class="annot"><span class="annottext">DBTableMetadata 'MySQL
-</span><a href="#local-6989586621688601710"><span class="hs-identifier hs-var">existing</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet (ForeignKeyMetadata 'MySQL)
+</span><a href="#local-6989586621688601701"><span class="hs-identifier hs-var">existing</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet (ForeignKeyMetadata 'MySQL)
 -&gt; HashSet (ForeignKeyMetadata 'MySQL)
 -&gt; HashSet (ForeignKeyMetadata 'MySQL)
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
@@ -463,32 +463,32 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 forall (b :: BackendType).
 DBTableMetadata b -&gt; HashSet (ForeignKeyMetadata b)
 </span><a href="Hasura.RQL.Types.Table.html#_ptmiForeignKeys"><span class="hs-identifier hs-var hs-var">_ptmiForeignKeys</span></a></span><span> </span><span class="annot"><span class="annottext">DBTableMetadata 'MySQL
-</span><a href="#local-6989586621688601711"><span class="hs-identifier hs-var">new</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- union</span><span>
+</span><a href="#local-6989586621688601702"><span class="hs-identifier hs-var">new</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- union</span><span>
 </span><span id="line-110"></span><span>      </span><span class="annot"><span class="annottext">_ptmiViewInfo :: Maybe ViewInfo
 </span><a href="Hasura.RQL.Types.Table.html#_ptmiViewInfo"><span class="hs-identifier hs-var">_ptmiViewInfo</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DBTableMetadata 'MySQL -&gt; Maybe ViewInfo
 forall (b :: BackendType). DBTableMetadata b -&gt; Maybe ViewInfo
 </span><a href="Hasura.RQL.Types.Table.html#_ptmiViewInfo"><span class="hs-identifier hs-var hs-var">_ptmiViewInfo</span></a></span><span> </span><span class="annot"><span class="annottext">DBTableMetadata 'MySQL
-</span><a href="#local-6989586621688601710"><span class="hs-identifier hs-var">existing</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ViewInfo -&gt; Maybe ViewInfo -&gt; Maybe ViewInfo
+</span><a href="#local-6989586621688601701"><span class="hs-identifier hs-var">existing</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ViewInfo -&gt; Maybe ViewInfo -&gt; Maybe ViewInfo
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">DBTableMetadata 'MySQL -&gt; Maybe ViewInfo
 forall (b :: BackendType). DBTableMetadata b -&gt; Maybe ViewInfo
 </span><a href="Hasura.RQL.Types.Table.html#_ptmiViewInfo"><span class="hs-identifier hs-var hs-var">_ptmiViewInfo</span></a></span><span> </span><span class="annot"><span class="annottext">DBTableMetadata 'MySQL
-</span><a href="#local-6989586621688601711"><span class="hs-identifier hs-var">new</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688601702"><span class="hs-identifier hs-var">new</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-111"></span><span>      </span><span class="annot"><span class="annottext">_ptmiDescription :: Maybe PGDescription
 </span><a href="Hasura.RQL.Types.Table.html#_ptmiDescription"><span class="hs-identifier hs-var">_ptmiDescription</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DBTableMetadata 'MySQL -&gt; Maybe PGDescription
 forall (b :: BackendType). DBTableMetadata b -&gt; Maybe PGDescription
 </span><a href="Hasura.RQL.Types.Table.html#_ptmiDescription"><span class="hs-identifier hs-var hs-var">_ptmiDescription</span></a></span><span> </span><span class="annot"><span class="annottext">DBTableMetadata 'MySQL
-</span><a href="#local-6989586621688601710"><span class="hs-identifier hs-var">existing</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PGDescription -&gt; Maybe PGDescription -&gt; Maybe PGDescription
+</span><a href="#local-6989586621688601701"><span class="hs-identifier hs-var">existing</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PGDescription -&gt; Maybe PGDescription -&gt; Maybe PGDescription
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">DBTableMetadata 'MySQL -&gt; Maybe PGDescription
 forall (b :: BackendType). DBTableMetadata b -&gt; Maybe PGDescription
 </span><a href="Hasura.RQL.Types.Table.html#_ptmiDescription"><span class="hs-identifier hs-var hs-var">_ptmiDescription</span></a></span><span> </span><span class="annot"><span class="annottext">DBTableMetadata 'MySQL
-</span><a href="#local-6989586621688601711"><span class="hs-identifier hs-var">new</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688601702"><span class="hs-identifier hs-var">new</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-112"></span><span>      </span><span class="annot"><span class="annottext">_ptmiExtraTableMetadata :: ExtraTableMetadata 'MySQL
 </span><a href="Hasura.RQL.Types.Table.html#_ptmiExtraTableMetadata"><span class="hs-identifier hs-var">_ptmiExtraTableMetadata</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-113"></span><span>    </span><span class="hs-special">}</span><span>
 </span><span id="line-114"></span><span>
-</span><span id="line-115"></span><span id="local-6989586621688601707"><span id="local-6989586621688601708"></span></span><span class="hs-keyword">data</span><span> </span><span id="InformationSchema"><span class="annot"><a href="Hasura.Backends.MySQL.Meta.html#InformationSchema"><span class="hs-identifier hs-var">InformationSchema</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="InformationSchema"><span class="annot"><a href="Hasura.Backends.MySQL.Meta.html#InformationSchema"><span class="hs-identifier hs-var">InformationSchema</span></a></span></span><span>
+</span><span id="line-115"></span><span id="local-6989586621688601698"><span id="local-6989586621688601699"></span></span><span class="hs-keyword">data</span><span> </span><span id="InformationSchema"><span class="annot"><a href="Hasura.Backends.MySQL.Meta.html#InformationSchema"><span class="hs-identifier hs-var">InformationSchema</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="InformationSchema"><span class="annot"><a href="Hasura.Backends.MySQL.Meta.html#InformationSchema"><span class="hs-identifier hs-var">InformationSchema</span></a></span></span><span>
 </span><span id="line-116"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="isTableSchema"><span class="annot"><span class="annottext">InformationSchema -&gt; Text
 </span><a href="Hasura.Backends.MySQL.Meta.html#isTableSchema"><span class="hs-identifier hs-var hs-var">isTableSchema</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
 </span><span id="line-117"></span><span>    </span><span id="isTableName"><span class="annot"><span class="annottext">InformationSchema -&gt; Text
@@ -522,7 +522,7 @@ forall (b :: BackendType). DBTableMetadata b -&gt; Maybe PGDescription
 </span><span id="line-131"></span><span>    </span><span id="isReferencedColumnName"><span class="annot"><span class="annottext">InformationSchema -&gt; Maybe Text
 </span><a href="Hasura.Backends.MySQL.Meta.html#isReferencedColumnName"><span class="hs-identifier hs-var hs-var">isReferencedColumnName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span>
 </span><span id="line-132"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-133"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688601701"><span id="local-6989586621688601703"><span id="local-6989586621688601705"><span class="annot"><span class="annottext">Int -&gt; InformationSchema -&gt; ShowS
+</span><span id="line-133"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688601692"><span id="local-6989586621688601694"><span id="local-6989586621688601696"><span class="annot"><span class="annottext">Int -&gt; InformationSchema -&gt; ShowS
 [InformationSchema] -&gt; ShowS
 InformationSchema -&gt; String
 (Int -&gt; InformationSchema -&gt; ShowS)
@@ -537,7 +537,7 @@ show :: InformationSchema -&gt; String
 $cshow :: InformationSchema -&gt; String
 showsPrec :: Int -&gt; InformationSchema -&gt; ShowS
 $cshowsPrec :: Int -&gt; InformationSchema -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688601696"><span id="local-6989586621688601698"><span class="annot"><span class="annottext">InformationSchema -&gt; InformationSchema -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688601687"><span id="local-6989586621688601689"><span class="annot"><span class="annottext">InformationSchema -&gt; InformationSchema -&gt; Bool
 (InformationSchema -&gt; InformationSchema -&gt; Bool)
 -&gt; (InformationSchema -&gt; InformationSchema -&gt; Bool)
 -&gt; Eq InformationSchema
@@ -558,73 +558,73 @@ $cfrom :: forall x. InformationSchema -&gt; Rep InformationSchema x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-134"></span><span>
 </span><span id="line-135"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">QueryResults</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Meta.html#InformationSchema"><span class="hs-identifier hs-type">InformationSchema</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-136"></span><span>  </span><span id="local-6989586621688601689"><span class="annot"><span class="annottext">convertResults :: [Field] -&gt; [Maybe ByteString] -&gt; InformationSchema
+</span><span id="line-136"></span><span>  </span><span id="local-6989586621688601680"><span class="annot"><span class="annottext">convertResults :: [Field] -&gt; [Maybe ByteString] -&gt; InformationSchema
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">convertResults</span></span></span><span>
-</span><span id="line-137"></span><span>    </span><span class="hs-special">[</span><span> </span><span id="local-6989586621688601687"><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601687"><span class="hs-identifier hs-var">fisTableSchema</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-138"></span><span>      </span><span id="local-6989586621688601686"><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601686"><span class="hs-identifier hs-var">fisTableName</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-139"></span><span>      </span><span id="local-6989586621688601685"><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601685"><span class="hs-identifier hs-var">fisColumnName</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-140"></span><span>      </span><span id="local-6989586621688601684"><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601684"><span class="hs-identifier hs-var">fisOrdinalPosition</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-141"></span><span>      </span><span id="local-6989586621688601683"><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601683"><span class="hs-identifier hs-var">fisColumnDefault</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-142"></span><span>      </span><span id="local-6989586621688601682"><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601682"><span class="hs-identifier hs-var">fisIsNullable</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-143"></span><span>      </span><span id="local-6989586621688601681"><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601681"><span class="hs-identifier hs-var">fisDataType</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-144"></span><span>      </span><span id="local-6989586621688601680"><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601680"><span class="hs-identifier hs-var">fisColumnType</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-145"></span><span>      </span><span id="local-6989586621688601679"><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601679"><span class="hs-identifier hs-var">fisColumnKey</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-146"></span><span>      </span><span id="local-6989586621688601678"><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601678"><span class="hs-identifier hs-var">fisColumnComment</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-147"></span><span>      </span><span id="local-6989586621688601677"><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601677"><span class="hs-identifier hs-var">fisConstraintName</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-148"></span><span>      </span><span id="local-6989586621688601676"><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601676"><span class="hs-identifier hs-var">fisConstraintOrdinalPosition</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-149"></span><span>      </span><span id="local-6989586621688601675"><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601675"><span class="hs-identifier hs-var">fisPositionInUniqueConstraint</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-150"></span><span>      </span><span id="local-6989586621688601674"><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601674"><span class="hs-identifier hs-var">fisReferencedTableSchema</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-151"></span><span>      </span><span id="local-6989586621688601673"><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601673"><span class="hs-identifier hs-var">fisReferencedTableName</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-152"></span><span>      </span><span id="local-6989586621688601672"><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601672"><span class="hs-identifier hs-var">fisReferencedColumnName</span></a></span></span><span>
+</span><span id="line-137"></span><span>    </span><span class="hs-special">[</span><span> </span><span id="local-6989586621688601678"><span class="annot"><span class="annottext">Field
+</span><a href="#local-6989586621688601678"><span class="hs-identifier hs-var">fisTableSchema</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-138"></span><span>      </span><span id="local-6989586621688601677"><span class="annot"><span class="annottext">Field
+</span><a href="#local-6989586621688601677"><span class="hs-identifier hs-var">fisTableName</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-139"></span><span>      </span><span id="local-6989586621688601676"><span class="annot"><span class="annottext">Field
+</span><a href="#local-6989586621688601676"><span class="hs-identifier hs-var">fisColumnName</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-140"></span><span>      </span><span id="local-6989586621688601675"><span class="annot"><span class="annottext">Field
+</span><a href="#local-6989586621688601675"><span class="hs-identifier hs-var">fisOrdinalPosition</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-141"></span><span>      </span><span id="local-6989586621688601674"><span class="annot"><span class="annottext">Field
+</span><a href="#local-6989586621688601674"><span class="hs-identifier hs-var">fisColumnDefault</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-142"></span><span>      </span><span id="local-6989586621688601673"><span class="annot"><span class="annottext">Field
+</span><a href="#local-6989586621688601673"><span class="hs-identifier hs-var">fisIsNullable</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-143"></span><span>      </span><span id="local-6989586621688601672"><span class="annot"><span class="annottext">Field
+</span><a href="#local-6989586621688601672"><span class="hs-identifier hs-var">fisDataType</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-144"></span><span>      </span><span id="local-6989586621688601671"><span class="annot"><span class="annottext">Field
+</span><a href="#local-6989586621688601671"><span class="hs-identifier hs-var">fisColumnType</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-145"></span><span>      </span><span id="local-6989586621688601670"><span class="annot"><span class="annottext">Field
+</span><a href="#local-6989586621688601670"><span class="hs-identifier hs-var">fisColumnKey</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-146"></span><span>      </span><span id="local-6989586621688601669"><span class="annot"><span class="annottext">Field
+</span><a href="#local-6989586621688601669"><span class="hs-identifier hs-var">fisColumnComment</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-147"></span><span>      </span><span id="local-6989586621688601668"><span class="annot"><span class="annottext">Field
+</span><a href="#local-6989586621688601668"><span class="hs-identifier hs-var">fisConstraintName</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-148"></span><span>      </span><span id="local-6989586621688601667"><span class="annot"><span class="annottext">Field
+</span><a href="#local-6989586621688601667"><span class="hs-identifier hs-var">fisConstraintOrdinalPosition</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-149"></span><span>      </span><span id="local-6989586621688601666"><span class="annot"><span class="annottext">Field
+</span><a href="#local-6989586621688601666"><span class="hs-identifier hs-var">fisPositionInUniqueConstraint</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-150"></span><span>      </span><span id="local-6989586621688601665"><span class="annot"><span class="annottext">Field
+</span><a href="#local-6989586621688601665"><span class="hs-identifier hs-var">fisReferencedTableSchema</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-151"></span><span>      </span><span id="local-6989586621688601664"><span class="annot"><span class="annottext">Field
+</span><a href="#local-6989586621688601664"><span class="hs-identifier hs-var">fisReferencedTableName</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-152"></span><span>      </span><span id="local-6989586621688601663"><span class="annot"><span class="annottext">Field
+</span><a href="#local-6989586621688601663"><span class="hs-identifier hs-var">fisReferencedColumnName</span></a></span></span><span>
 </span><span id="line-153"></span><span>      </span><span class="hs-special">]</span><span>
-</span><span id="line-154"></span><span>    </span><span class="hs-special">[</span><span> </span><span id="local-6989586621688601671"><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601671"><span class="hs-identifier hs-var">visTableSchema</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-155"></span><span>      </span><span id="local-6989586621688601670"><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601670"><span class="hs-identifier hs-var">visTableName</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-156"></span><span>      </span><span id="local-6989586621688601669"><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601669"><span class="hs-identifier hs-var">visColumnName</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-157"></span><span>      </span><span id="local-6989586621688601668"><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601668"><span class="hs-identifier hs-var">visOrdinalPosition</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-158"></span><span>      </span><span id="local-6989586621688601667"><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601667"><span class="hs-identifier hs-var">visColumnDefault</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-159"></span><span>      </span><span id="local-6989586621688601666"><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601666"><span class="hs-identifier hs-var">visIsNullable</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-160"></span><span>      </span><span id="local-6989586621688601665"><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601665"><span class="hs-identifier hs-var">visDataType</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-161"></span><span>      </span><span id="local-6989586621688601664"><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601664"><span class="hs-identifier hs-var">visColumnType</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-162"></span><span>      </span><span id="local-6989586621688601663"><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601663"><span class="hs-identifier hs-var">visColumnKey</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-163"></span><span>      </span><span id="local-6989586621688601662"><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601662"><span class="hs-identifier hs-var">visColumnComment</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-164"></span><span>      </span><span id="local-6989586621688601661"><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601661"><span class="hs-identifier hs-var">visConstraintName</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-165"></span><span>      </span><span id="local-6989586621688601660"><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601660"><span class="hs-identifier hs-var">visConstraintOrdinalPosition</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-166"></span><span>      </span><span id="local-6989586621688601659"><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601659"><span class="hs-identifier hs-var">visPositionInUniqueConstraint</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-167"></span><span>      </span><span id="local-6989586621688601658"><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601658"><span class="hs-identifier hs-var">visReferencedTableSchema</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-168"></span><span>      </span><span id="local-6989586621688601657"><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601657"><span class="hs-identifier hs-var">visReferencedTableName</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-169"></span><span>      </span><span id="local-6989586621688601656"><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601656"><span class="hs-identifier hs-var">visReferencedColumnName</span></a></span></span><span>
+</span><span id="line-154"></span><span>    </span><span class="hs-special">[</span><span> </span><span id="local-6989586621688601662"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601662"><span class="hs-identifier hs-var">visTableSchema</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-155"></span><span>      </span><span id="local-6989586621688601661"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601661"><span class="hs-identifier hs-var">visTableName</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-156"></span><span>      </span><span id="local-6989586621688601660"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601660"><span class="hs-identifier hs-var">visColumnName</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-157"></span><span>      </span><span id="local-6989586621688601659"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601659"><span class="hs-identifier hs-var">visOrdinalPosition</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-158"></span><span>      </span><span id="local-6989586621688601658"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601658"><span class="hs-identifier hs-var">visColumnDefault</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-159"></span><span>      </span><span id="local-6989586621688601657"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601657"><span class="hs-identifier hs-var">visIsNullable</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-160"></span><span>      </span><span id="local-6989586621688601656"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601656"><span class="hs-identifier hs-var">visDataType</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-161"></span><span>      </span><span id="local-6989586621688601655"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601655"><span class="hs-identifier hs-var">visColumnType</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-162"></span><span>      </span><span id="local-6989586621688601654"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601654"><span class="hs-identifier hs-var">visColumnKey</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-163"></span><span>      </span><span id="local-6989586621688601653"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601653"><span class="hs-identifier hs-var">visColumnComment</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-164"></span><span>      </span><span id="local-6989586621688601652"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601652"><span class="hs-identifier hs-var">visConstraintName</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-165"></span><span>      </span><span id="local-6989586621688601651"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601651"><span class="hs-identifier hs-var">visConstraintOrdinalPosition</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-166"></span><span>      </span><span id="local-6989586621688601650"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601650"><span class="hs-identifier hs-var">visPositionInUniqueConstraint</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-167"></span><span>      </span><span id="local-6989586621688601649"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601649"><span class="hs-identifier hs-var">visReferencedTableSchema</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-168"></span><span>      </span><span id="local-6989586621688601648"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601648"><span class="hs-identifier hs-var">visReferencedTableName</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-169"></span><span>      </span><span id="local-6989586621688601647"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601647"><span class="hs-identifier hs-var">visReferencedColumnName</span></a></span></span><span>
 </span><span id="line-170"></span><span>      </span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-171"></span><span>      </span><span class="annot"><span class="annottext">Text
 -&gt; Text
@@ -647,99 +647,99 @@ $cfrom :: forall x. InformationSchema -&gt; Rep InformationSchema x
 </span><span id="line-172"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field -&gt; Maybe ByteString -&gt; Text
 forall a. Result a =&gt; Field -&gt; Maybe ByteString -&gt; a
 </span><span class="hs-identifier hs-var">convert</span></span><span> </span><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601687"><span class="hs-identifier hs-var">fisTableSchema</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601671"><span class="hs-identifier hs-var">visTableSchema</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601678"><span class="hs-identifier hs-var">fisTableSchema</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601662"><span class="hs-identifier hs-var">visTableSchema</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-173"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field -&gt; Maybe ByteString -&gt; Text
 forall a. Result a =&gt; Field -&gt; Maybe ByteString -&gt; a
 </span><span class="hs-identifier hs-var">convert</span></span><span> </span><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601686"><span class="hs-identifier hs-var">fisTableName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601670"><span class="hs-identifier hs-var">visTableName</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601677"><span class="hs-identifier hs-var">fisTableName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601661"><span class="hs-identifier hs-var">visTableName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-174"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field -&gt; Maybe ByteString -&gt; Text
 forall a. Result a =&gt; Field -&gt; Maybe ByteString -&gt; a
 </span><span class="hs-identifier hs-var">convert</span></span><span> </span><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601685"><span class="hs-identifier hs-var">fisColumnName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601669"><span class="hs-identifier hs-var">visColumnName</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601676"><span class="hs-identifier hs-var">fisColumnName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601660"><span class="hs-identifier hs-var">visColumnName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-175"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field -&gt; Maybe ByteString -&gt; Word
 forall a. Result a =&gt; Field -&gt; Maybe ByteString -&gt; a
 </span><span class="hs-identifier hs-var">convert</span></span><span> </span><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601684"><span class="hs-identifier hs-var">fisOrdinalPosition</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601668"><span class="hs-identifier hs-var">visOrdinalPosition</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601675"><span class="hs-identifier hs-var">fisOrdinalPosition</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601659"><span class="hs-identifier hs-var">visOrdinalPosition</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-176"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field -&gt; Maybe ByteString -&gt; Maybe Text
 forall a. Result a =&gt; Field -&gt; Maybe ByteString -&gt; a
 </span><span class="hs-identifier hs-var">convert</span></span><span> </span><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601683"><span class="hs-identifier hs-var">fisColumnDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601667"><span class="hs-identifier hs-var">visColumnDefault</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601674"><span class="hs-identifier hs-var">fisColumnDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601658"><span class="hs-identifier hs-var">visColumnDefault</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-177"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field -&gt; Maybe ByteString -&gt; Text
 forall a. Result a =&gt; Field -&gt; Maybe ByteString -&gt; a
 </span><span class="hs-identifier hs-var">convert</span></span><span> </span><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601682"><span class="hs-identifier hs-var">fisIsNullable</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601666"><span class="hs-identifier hs-var">visIsNullable</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601673"><span class="hs-identifier hs-var">fisIsNullable</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601657"><span class="hs-identifier hs-var">visIsNullable</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-178"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field -&gt; Maybe ByteString -&gt; Maybe Text
 forall a. Result a =&gt; Field -&gt; Maybe ByteString -&gt; a
 </span><span class="hs-identifier hs-var">convert</span></span><span> </span><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601681"><span class="hs-identifier hs-var">fisDataType</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601665"><span class="hs-identifier hs-var">visDataType</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601672"><span class="hs-identifier hs-var">fisDataType</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601656"><span class="hs-identifier hs-var">visDataType</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-179"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field -&gt; Maybe ByteString -&gt; Text
 forall a. Result a =&gt; Field -&gt; Maybe ByteString -&gt; a
 </span><span class="hs-identifier hs-var">convert</span></span><span> </span><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601680"><span class="hs-identifier hs-var">fisColumnType</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601664"><span class="hs-identifier hs-var">visColumnType</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601671"><span class="hs-identifier hs-var">fisColumnType</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601655"><span class="hs-identifier hs-var">visColumnType</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-180"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field -&gt; Maybe ByteString -&gt; InformationSchemaColumnKey
 forall a. Result a =&gt; Field -&gt; Maybe ByteString -&gt; a
 </span><span class="hs-identifier hs-var">convert</span></span><span> </span><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601679"><span class="hs-identifier hs-var">fisColumnKey</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601663"><span class="hs-identifier hs-var">visColumnKey</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601670"><span class="hs-identifier hs-var">fisColumnKey</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601654"><span class="hs-identifier hs-var">visColumnKey</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-181"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field -&gt; Maybe ByteString -&gt; Text
 forall a. Result a =&gt; Field -&gt; Maybe ByteString -&gt; a
 </span><span class="hs-identifier hs-var">convert</span></span><span> </span><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601678"><span class="hs-identifier hs-var">fisColumnComment</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601662"><span class="hs-identifier hs-var">visColumnComment</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601669"><span class="hs-identifier hs-var">fisColumnComment</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601653"><span class="hs-identifier hs-var">visColumnComment</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-182"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field -&gt; Maybe ByteString -&gt; Maybe Text
 forall a. Result a =&gt; Field -&gt; Maybe ByteString -&gt; a
 </span><span class="hs-identifier hs-var">convert</span></span><span> </span><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601677"><span class="hs-identifier hs-var">fisConstraintName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601661"><span class="hs-identifier hs-var">visConstraintName</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601668"><span class="hs-identifier hs-var">fisConstraintName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601652"><span class="hs-identifier hs-var">visConstraintName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-183"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field -&gt; Maybe ByteString -&gt; Maybe Word
 forall a. Result a =&gt; Field -&gt; Maybe ByteString -&gt; a
 </span><span class="hs-identifier hs-var">convert</span></span><span> </span><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601676"><span class="hs-identifier hs-var">fisConstraintOrdinalPosition</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601660"><span class="hs-identifier hs-var">visConstraintOrdinalPosition</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601667"><span class="hs-identifier hs-var">fisConstraintOrdinalPosition</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601651"><span class="hs-identifier hs-var">visConstraintOrdinalPosition</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-184"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field -&gt; Maybe ByteString -&gt; Maybe Word
 forall a. Result a =&gt; Field -&gt; Maybe ByteString -&gt; a
 </span><span class="hs-identifier hs-var">convert</span></span><span> </span><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601675"><span class="hs-identifier hs-var">fisPositionInUniqueConstraint</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601659"><span class="hs-identifier hs-var">visPositionInUniqueConstraint</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601666"><span class="hs-identifier hs-var">fisPositionInUniqueConstraint</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601650"><span class="hs-identifier hs-var">visPositionInUniqueConstraint</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-185"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field -&gt; Maybe ByteString -&gt; Maybe Text
 forall a. Result a =&gt; Field -&gt; Maybe ByteString -&gt; a
 </span><span class="hs-identifier hs-var">convert</span></span><span> </span><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601674"><span class="hs-identifier hs-var">fisReferencedTableSchema</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601658"><span class="hs-identifier hs-var">visReferencedTableSchema</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601665"><span class="hs-identifier hs-var">fisReferencedTableSchema</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601649"><span class="hs-identifier hs-var">visReferencedTableSchema</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-186"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field -&gt; Maybe ByteString -&gt; Maybe Text
 forall a. Result a =&gt; Field -&gt; Maybe ByteString -&gt; a
 </span><span class="hs-identifier hs-var">convert</span></span><span> </span><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601673"><span class="hs-identifier hs-var">fisReferencedTableName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601657"><span class="hs-identifier hs-var">visReferencedTableName</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601664"><span class="hs-identifier hs-var">fisReferencedTableName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601648"><span class="hs-identifier hs-var">visReferencedTableName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-187"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field -&gt; Maybe ByteString -&gt; Maybe Text
 forall a. Result a =&gt; Field -&gt; Maybe ByteString -&gt; a
 </span><span class="hs-identifier hs-var">convert</span></span><span> </span><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601672"><span class="hs-identifier hs-var">fisReferencedColumnName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601656"><span class="hs-identifier hs-var">visReferencedColumnName</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-188"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">convertResults</span></span><span> </span><span id="local-6989586621688601655"><span class="annot"><span class="annottext">[Field]
-</span><a href="#local-6989586621688601655"><span class="hs-identifier hs-var">fs</span></a></span></span><span> </span><span id="local-6989586621688601654"><span class="annot"><span class="annottext">[Maybe ByteString]
-</span><a href="#local-6989586621688601654"><span class="hs-identifier hs-var">vs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Field] -&gt; [Maybe ByteString] -&gt; Int -&gt; InformationSchema
+</span><a href="#local-6989586621688601663"><span class="hs-identifier hs-var">fisReferencedColumnName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601647"><span class="hs-identifier hs-var">visReferencedColumnName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-188"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">convertResults</span></span><span> </span><span id="local-6989586621688601646"><span class="annot"><span class="annottext">[Field]
+</span><a href="#local-6989586621688601646"><span class="hs-identifier hs-var">fs</span></a></span></span><span> </span><span id="local-6989586621688601645"><span class="annot"><span class="annottext">[Maybe ByteString]
+</span><a href="#local-6989586621688601645"><span class="hs-identifier hs-var">vs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Field] -&gt; [Maybe ByteString] -&gt; Int -&gt; InformationSchema
 forall a. [Field] -&gt; [Maybe ByteString] -&gt; Int -&gt; a
 </span><span class="hs-identifier hs-var">convertError</span></span><span> </span><span class="annot"><span class="annottext">[Field]
-</span><a href="#local-6989586621688601655"><span class="hs-identifier hs-var">fs</span></a></span><span> </span><span class="annot"><span class="annottext">[Maybe ByteString]
-</span><a href="#local-6989586621688601654"><span class="hs-identifier hs-var">vs</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621688601646"><span class="hs-identifier hs-var">fs</span></a></span><span> </span><span class="annot"><span class="annottext">[Maybe ByteString]
+</span><a href="#local-6989586621688601645"><span class="hs-identifier hs-var">vs</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">16</span></span><span>
 </span><span id="line-189"></span><span>
-</span><span id="line-190"></span><span id="local-6989586621688601652"><span id="local-6989586621688601653"></span></span><span class="hs-keyword">data</span><span> </span><span id="InformationSchemaColumnKey"><span class="annot"><a href="Hasura.Backends.MySQL.Meta.html#InformationSchemaColumnKey"><span class="hs-identifier hs-var">InformationSchemaColumnKey</span></a></span></span><span>
+</span><span id="line-190"></span><span id="local-6989586621688601643"><span id="local-6989586621688601644"></span></span><span class="hs-keyword">data</span><span> </span><span id="InformationSchemaColumnKey"><span class="annot"><a href="Hasura.Backends.MySQL.Meta.html#InformationSchemaColumnKey"><span class="hs-identifier hs-var">InformationSchemaColumnKey</span></a></span></span><span>
 </span><span id="line-191"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="PRI"><span class="annot"><a href="Hasura.Backends.MySQL.Meta.html#PRI"><span class="hs-identifier hs-var">PRI</span></a></span></span><span>
 </span><span id="line-192"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UNI"><span class="annot"><a href="Hasura.Backends.MySQL.Meta.html#UNI"><span class="hs-identifier hs-var">UNI</span></a></span></span><span>
 </span><span id="line-193"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="MUL"><span class="annot"><a href="Hasura.Backends.MySQL.Meta.html#MUL"><span class="hs-identifier hs-var">MUL</span></a></span></span><span>
 </span><span id="line-194"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | This field isn't NULLable and uses empty strings, by the looks of it.</span><span>
 </span><span id="line-195"></span><span>    </span><span id="BLANK"><span class="annot"><a href="Hasura.Backends.MySQL.Meta.html#BLANK"><span class="hs-identifier hs-var">BLANK</span></a></span></span><span>
-</span><span id="line-196"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688601645"><span id="local-6989586621688601647"><span id="local-6989586621688601649"><span class="annot"><span class="annottext">Int -&gt; InformationSchemaColumnKey -&gt; ShowS
+</span><span id="line-196"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688601636"><span id="local-6989586621688601638"><span id="local-6989586621688601640"><span class="annot"><span class="annottext">Int -&gt; InformationSchemaColumnKey -&gt; ShowS
 [InformationSchemaColumnKey] -&gt; ShowS
 InformationSchemaColumnKey -&gt; String
 (Int -&gt; InformationSchemaColumnKey -&gt; ShowS)
@@ -754,7 +754,7 @@ show :: InformationSchemaColumnKey -&gt; String
 $cshow :: InformationSchemaColumnKey -&gt; String
 showsPrec :: Int -&gt; InformationSchemaColumnKey -&gt; ShowS
 $cshowsPrec :: Int -&gt; InformationSchemaColumnKey -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688601637"><span id="local-6989586621688601639"><span id="local-6989586621688601641"><span id="local-6989586621688601643"><span class="annot"><span class="annottext">ReadPrec [InformationSchemaColumnKey]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688601628"><span id="local-6989586621688601630"><span id="local-6989586621688601632"><span id="local-6989586621688601634"><span class="annot"><span class="annottext">ReadPrec [InformationSchemaColumnKey]
 ReadPrec InformationSchemaColumnKey
 Int -&gt; ReadS InformationSchemaColumnKey
 ReadS [InformationSchemaColumnKey]
@@ -774,7 +774,7 @@ readList :: ReadS [InformationSchemaColumnKey]
 $creadList :: ReadS [InformationSchemaColumnKey]
 readsPrec :: Int -&gt; ReadS InformationSchemaColumnKey
 $creadsPrec :: Int -&gt; ReadS InformationSchemaColumnKey
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688601632"><span id="local-6989586621688601634"><span class="annot"><span class="annottext">InformationSchemaColumnKey -&gt; InformationSchemaColumnKey -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688601623"><span id="local-6989586621688601625"><span class="annot"><span class="annottext">InformationSchemaColumnKey -&gt; InformationSchemaColumnKey -&gt; Bool
 (InformationSchemaColumnKey -&gt; InformationSchemaColumnKey -&gt; Bool)
 -&gt; (InformationSchemaColumnKey
     -&gt; InformationSchemaColumnKey -&gt; Bool)
@@ -802,12 +802,12 @@ InformationSchemaColumnKey -&gt; Rep InformationSchemaColumnKey x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-197"></span><span>
 </span><span id="line-198"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Result</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Meta.html#InformationSchemaColumnKey"><span class="hs-identifier hs-type">InformationSchemaColumnKey</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-199"></span><span>  </span><span id="local-6989586621688601627"><span class="annot"><span class="annottext">convert :: Field -&gt; Maybe ByteString -&gt; InformationSchemaColumnKey
-</span><a href="#local-6989586621688601627"><span class="hs-identifier hs-var hs-var hs-var hs-var">convert</span></a></span></span><span> </span><span id="local-6989586621688601626"><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601626"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621688601625"><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601625"><span class="hs-identifier hs-var">mbs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-199"></span><span>  </span><span id="local-6989586621688601618"><span class="annot"><span class="annottext">convert :: Field -&gt; Maybe ByteString -&gt; InformationSchemaColumnKey
+</span><a href="#local-6989586621688601618"><span class="hs-identifier hs-var hs-var hs-var hs-var">convert</span></a></span></span><span> </span><span id="local-6989586621688601617"><span class="annot"><span class="annottext">Field
+</span><a href="#local-6989586621688601617"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621688601616"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688601616"><span class="hs-identifier hs-var">mbs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-200"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688601625"><span class="hs-identifier hs-var">mbs</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688601616"><span class="hs-identifier hs-var">mbs</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-201"></span><span>      </span><span class="annot"><span class="annottext">Maybe ByteString
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-202"></span><span>        </span><span class="annot"><span class="annottext">ResultError -&gt; InformationSchemaColumnKey
@@ -824,7 +824,7 @@ forall a. Show a =&gt; a -&gt; String
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Field -&gt; ScalarType
 </span><span class="hs-identifier hs-var hs-var">fieldType</span></span><span> </span><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601626"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601617"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-205"></span><span>            </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;InformationSchemaColumnKey&quot;</span></span><span>
 </span><span id="line-206"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; String
@@ -832,12 +832,12 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Field -&gt; ByteString
 </span><span class="hs-identifier hs-var hs-var">fieldName</span></span><span> </span><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601626"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601617"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-207"></span><span>            </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;COLUMN_KEY in INFORMATION_SCHEMA cannot be NULL&quot;</span></span><span>
-</span><span id="line-208"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688601620"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688601620"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688601620"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-208"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688601611"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688601611"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688601611"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-209"></span><span>        </span><span class="hs-comment">-- Could have used 'readMaybe' here, but we need the specific errors.</span><span>
 </span><span id="line-210"></span><span>        </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;PRI&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InformationSchemaColumnKey
@@ -851,8 +851,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-213"></span><span>        </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InformationSchemaColumnKey
 </span><a href="Hasura.Backends.MySQL.Meta.html#BLANK"><span class="hs-identifier hs-var">BLANK</span></a></span><span>
-</span><span id="line-214"></span><span>        </span><span id="local-6989586621688601619"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688601619"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-214"></span><span>        </span><span id="local-6989586621688601610"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688601610"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-215"></span><span>          </span><span class="annot"><span class="annottext">ResultError -&gt; InformationSchemaColumnKey
 forall a e. Exception e =&gt; e -&gt; a
 </span><span class="hs-identifier hs-var">throw</span></span><span> </span><span class="annot"><span class="annottext">(ResultError -&gt; InformationSchemaColumnKey)
@@ -867,7 +867,7 @@ forall a. Show a =&gt; a -&gt; String
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Field -&gt; ScalarType
 </span><span class="hs-identifier hs-var hs-var">fieldType</span></span><span> </span><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601626"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601617"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-218"></span><span>              </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;InformationSchemaColumnKey&quot;</span></span><span>
 </span><span id="line-219"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; String
@@ -875,11 +875,11 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Field -&gt; ByteString
 </span><span class="hs-identifier hs-var hs-var">fieldName</span></span><span> </span><span class="annot"><span class="annottext">Field
-</span><a href="#local-6989586621688601626"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601617"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-220"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;COLUMN_KEY in INFORMATION_SCHEMA has value extraneous to the expected ENUM: &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; String
 </span><span class="hs-identifier hs-var">B8.unpack</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688601619"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688601610"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-221"></span></pre></body></html>
