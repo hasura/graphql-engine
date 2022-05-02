@@ -22,8 +22,8 @@ type Props = {
 };
 
 type TypeNamesType = {
-  prefix?: string;
-  suffix?: string;
+  prefix?: string | null;
+  suffix?: string | null;
   mapping?: { type: string; custom_name: string }[];
 };
 
@@ -78,14 +78,10 @@ const GraphQLCustomizationEdit = ({
   const [openEditor, setOpenEditor] = useState(false);
 
   const [rootFieldNamespace, setRootFieldNamespace] = useState<
-    string | undefined
-  >(undefined);
-  const [typeNames, setTypesNames] = useState<undefined | TypeNamesType>(
-    undefined
-  );
-  const [fieldNames, setFieldNames] = useState<undefined | FieldNamesType[]>(
-    undefined
-  );
+    string | null | undefined
+  >(null);
+  const [typeNames, setTypesNames] = useState<null | TypeNamesType>(null);
+  const [fieldNames, setFieldNames] = useState<null | FieldNamesType[]>(null);
   const [showFieldCustomizationBtn, updateShowFieldCustomizationBtn] = useState(
     true
   );
@@ -98,8 +94,14 @@ const GraphQLCustomizationEdit = ({
 
   useEffect(() => {
     setTypesNames({
-      prefix: graphQLCustomization?.type_names?.prefix,
-      suffix: graphQLCustomization?.type_names?.suffix,
+      prefix:
+        graphQLCustomization?.type_names?.prefix === ''
+          ? null
+          : graphQLCustomization?.type_names?.prefix,
+      suffix:
+        graphQLCustomization?.type_names?.suffix === ''
+          ? null
+          : graphQLCustomization?.type_names?.suffix,
       mapping: Object.entries(
         graphQLCustomization?.type_names?.mapping || {}
       ).map(([type, custom_name]) => ({
@@ -115,8 +117,8 @@ const GraphQLCustomizationEdit = ({
         graphQLCustomization?.field_names.map(fieldName => {
           return {
             parentType: fieldName.parent_type,
-            prefix: fieldName.prefix,
-            suffix: fieldName.suffix,
+            prefix: fieldName?.prefix === '' ? null : fieldName?.prefix,
+            suffix: fieldName?.suffix === '' ? null : fieldName?.suffix,
             mapping: Object.entries(fieldName.mapping || {}).map(
               ([type, custom_name]) => ({
                 type,
@@ -155,12 +157,12 @@ const GraphQLCustomizationEdit = ({
                 type="text"
                 className="form-control"
                 placeholder="namespace_"
-                value={rootFieldNamespace}
+                value={rootFieldNamespace || ''}
                 data-test="remote-schema-customization-root-field-input"
                 onChange={e =>
                   onChange({
                     ...graphQLCustomization,
-                    root_fields_namespace: e.target.value,
+                    root_fields_namespace: e.target.value || null,
                   })
                 }
               />
@@ -176,14 +178,14 @@ const GraphQLCustomizationEdit = ({
                 type="text"
                 className="form-control"
                 placeholder="prefix_"
-                value={typeNames?.prefix}
+                value={typeNames?.prefix || ''}
                 data-test="remote-schema-customization-type-name-prefix-input"
                 onChange={e =>
                   onChange({
                     ...graphQLCustomization,
                     type_names: {
                       ...graphQLCustomization?.type_names,
-                      prefix: e.target.value,
+                      prefix: e.target.value || null,
                     },
                   })
                 }
@@ -198,14 +200,14 @@ const GraphQLCustomizationEdit = ({
                 type="text"
                 className="form-control"
                 placeholder="_suffix"
-                value={typeNames?.suffix}
+                value={typeNames?.suffix || ''}
                 data-test="remote-schema-customization-type-name-suffix-input"
                 onChange={e =>
                   onChange({
                     ...graphQLCustomization,
                     type_names: {
                       ...graphQLCustomization?.type_names,
-                      suffix: e.target.value,
+                      suffix: e.target.value || null,
                     },
                   })
                 }

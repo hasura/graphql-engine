@@ -7,8 +7,8 @@ import TypeMapping from './TypeMapping';
 
 type FieldNameType = {
   parentType?: string;
-  prefix?: string;
-  suffix?: string;
+  prefix?: string | null;
+  suffix?: string | null;
   mapping?: { type: string; custom_name: string }[];
 };
 
@@ -105,11 +105,11 @@ const FieldNames = ({
             type="text"
             className="form-control"
             placeholder="prefix_"
-            value={fieldNameInput?.prefix}
+            value={fieldNameInput?.prefix || ''}
             onChange={e =>
               onChange({
                 ...fieldNameInput,
-                prefix: e.target.value,
+                prefix: e.target.value || null,
               })
             }
             data-test={`remote-schema-customization-${label}-field-prefix-input`}
@@ -124,11 +124,11 @@ const FieldNames = ({
             type="text"
             className="form-control"
             placeholder="_suffix"
-            value={fieldNameInput?.suffix}
+            value={fieldNameInput?.suffix || ''}
             onChange={e =>
               onChange({
                 ...fieldNameInput,
-                suffix: e.target.value,
+                suffix: e.target.value || null,
               })
             }
             data-test={`remote-schema-customization-${label}-field-suffix-input`}
