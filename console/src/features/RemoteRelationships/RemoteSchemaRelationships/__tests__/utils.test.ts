@@ -1,4 +1,10 @@
-import { generateLhsFields, getFieldTypesFromType } from '../utils';
+import { buildClientSchema } from 'graphql';
+import { schema } from '../__mocks__/schema';
+import {
+  generateLhsFields,
+  getFieldTypesFromType,
+  getTypesFromIntrospection,
+} from '../utils';
 
 describe('generateLhsFields', () => {
   it('with 1 source field in the resultset', () => {
@@ -108,5 +114,91 @@ describe('getFieldTypesFromType', () => {
   it('with invalid schemaTypes and sourceType', () => {
     const lhsFields = getFieldTypesFromType(remoteSchemaTypes, 'Pokemonss');
     expect(lhsFields).toEqual([]);
+  });
+});
+
+describe(' getTypesFromIntrospection', () => {
+  it('filter out all types other then obejct type', () => {
+    const graphQLSchema = buildClientSchema(schema.data as any);
+    const filterTypes = getTypesFromIntrospection(graphQLSchema);
+    // expect to see Quey and Countary because these are object type
+    expect(filterTypes[0]?.typeName).toEqual('Query');
+    expect(filterTypes[1]?.typeName).toEqual('Country');
+    // beacuse ID, Boolean is Scalar type
+    const filterScalarType = filterTypes.find(
+      obj => obj.typeName === 'ID',
+      'Boolean'
+    );
+    expect(filterScalarType).toBe(undefined);
+    // because __TypeKind is of ENUM type
+    const filterEnumType = filterTypes.find(
+      obj => obj.typeName === '__TypeKind'
+    );
+    expect(filterEnumType).toBe(undefined);
+    // snapshot only contains object types
+    expect(filterTypes).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "fields": Array [
+            "_entities",
+            "_service",
+            "countries",
+            "country",
+            "continents",
+            "continent",
+            "languages",
+            "language",
+          ],
+          "typeName": "Query",
+        },
+        Object {
+          "fields": Array [
+            "code",
+            "name",
+            "native",
+            "phone",
+            "continent",
+            "capital",
+            "currency",
+            "languages",
+            "emoji",
+            "emojiU",
+            "states",
+          ],
+          "typeName": "Country",
+        },
+        Object {
+          "fields": Array [
+            "code",
+            "name",
+            "countries",
+          ],
+          "typeName": "Continent",
+        },
+        Object {
+          "fields": Array [
+            "code",
+            "name",
+            "native",
+            "rtl",
+          ],
+          "typeName": "Language",
+        },
+        Object {
+          "fields": Array [
+            "code",
+            "name",
+            "country",
+          ],
+          "typeName": "State",
+        },
+        Object {
+          "fields": Array [
+            "sdl",
+          ],
+          "typeName": "_Service",
+        },
+      ]
+    `);
   });
 });
