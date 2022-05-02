@@ -284,28 +284,28 @@ instance BackendEventTrigger 'MySQL where
 -- implement these methods in the 'Hasura.Experimental.Adapters' module
 -- hierarchy just to keep everything as tidy as possible for that section of
 -- code.
-instance BackendEventTrigger 'DataWrapper where
+instance BackendEventTrigger 'DataConnector where
   insertManualEvent _ _ _ _ _ _ =
-    throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
+    throw400 NotSupported "Event triggers are not supported for the Data Connector backend."
   fetchUndeliveredEvents _ _ _ _ _ =
-    throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
+    throw400 NotSupported "Event triggers are not supported for the Data Connector backend."
   setRetry _ _ _ _ =
-    throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
+    throw400 NotSupported "Event triggers are not supported for the Data Connector backend."
   recordSuccess _ _ _ _ =
-    runExceptT $ throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
+    runExceptT $ throw400 NotSupported "Event triggers are not supported for the Data Connector backend."
   getMaintenanceModeVersion _ =
-    throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
+    throw400 NotSupported "Event triggers are not supported for the Data Connector backend."
   recordError _ _ _ _ _ =
-    runExceptT $ throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
+    runExceptT $ throw400 NotSupported "Event triggers are not supported for the Data Connector backend."
   recordError' _ _ _ _ _ =
-    runExceptT $ throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
+    runExceptT $ throw400 NotSupported "Event triggers are not supported for the Data Connector backend."
   dropTriggerAndArchiveEvents _ _ _ =
-    throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
+    throw400 NotSupported "Event triggers are not supported for the Data Connector backend."
   dropDanglingSQLTrigger _ _ _ _ =
-    throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers"
+    throw400 NotSupported "Event triggers are not supported for the Data Connector backend"
   redeliverEvent _ _ =
-    throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
+    throw400 NotSupported "Event triggers are not supported for the Data Connector backend."
   unlockEventsInSource _ _ =
-    runExceptT $ throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
+    runExceptT $ throw400 NotSupported "Event triggers are not supported for the Data Connector backend."
   createTableEventTrigger _ _ _ _ _ _ _ =
-    runExceptT $ throw400 NotSupported "Event triggers are not supported for GraphQL Data Wrappers."
+    runExceptT $ throw400 NotSupported "Event triggers are not supported for the Data Connector backend."
