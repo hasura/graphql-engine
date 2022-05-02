@@ -20,6 +20,9 @@ args:
     name: with_uuid
 - type: drop_rest_endpoint
   args:
+    name: with_date
+- type: drop_rest_endpoint
+  args:
     name: with_template
 - type: drop_query_collection
   args:
