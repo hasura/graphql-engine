@@ -4,6 +4,7 @@
 
 ### Bug fixes and improvements
 
+- server: fix bug when event triggers where defined on tables that contained non lower-case alphabet characters
 - server: avoid encoding 'varchar' values to UTF8 in MSSQL backends
 - server: add support for MSSQL event triggers (#7228)
 - server: update pg_dump to be compatible with postgres 14 (#7676)

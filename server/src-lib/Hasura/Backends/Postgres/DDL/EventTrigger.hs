@@ -663,19 +663,23 @@ checkIfTriggerExists ::
   QualifiedTriggerName ->
   QualifiedTable ->
   Q.TxE QErr Bool
-checkIfTriggerExists (QualifiedTriggerName triggerName) table =
+checkIfTriggerExists (QualifiedTriggerName triggerName) (QualifiedObject schemaName tableName) =
   fmap (runIdentity . Q.getRow) $
     Q.withQE
       defaultTxErrorHandler
+      -- 'regclass' converts non-quoted strings to lowercase but since identifiers
+      -- such as table name needs are case-sensitive, we add quotes to table name
+      -- using 'quote_ident'.
+      -- Ref: https://www.postgresql.org/message-id/3896142.1620136761%40sss.pgh.pa.us
       [Q.sql|
       SELECT EXISTS (
         SELECT 1
         FROM pg_trigger
         WHERE NOT tgisinternal
-        AND tgname = $1 AND tgrelid = $2::regclass
+        AND tgname = $1 AND tgrelid = (quote_ident($2) || '.' || quote_ident($3))::regclass
         )
      |]
-      (triggerName, qualifiedObjectToText table)
+      (triggerName, schemaName, tableName)
       True
 
 mkTrigger ::

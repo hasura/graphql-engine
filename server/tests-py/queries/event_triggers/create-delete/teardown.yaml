@@ -1,6 +1,6 @@
-type: bulk
+type: run_sql
 args:
-- type: run_sql
-  args:
-    sql: |
-      drop table hge_tests.test_t1
+  sql: |
+    drop table hge_tests.test_t1;
+    drop table hge_tests."TEST_T2";
+    drop table "Test_T3";
