@@ -1,0 +1,108 @@
+---
+description: GCP Postgres SSL Connection Guide
+keywords:
+  - hasura
+  - docs
+  - SSL
+  - guide
+  - gcp
+  - postgres
+---
+
+import Thumbnail from "@site/src/components/Thumbnail";
+
+# GCP Postgres SSL Connection Guide
+
+## Introduction
+
+This guide explains how to make a SSL Connection from Hasura Cloud to a GCP Postgres database.
+
+## Assumptions
+
+Hasura Project is created via Hasura Cloud Dashboard
+
+Postgres DB is created on GCP Cloud
+
+## GCP SSL Certs
+
+Google Cloud (GCP) SQL makes available these SSL/TLS certificates for download:
+A server certificate saved as server-ca.pem
+A client public key certificate saved as client-cert.pem
+A client private key saved as client-key.pem
+
+:::info Note
+Please refer to [Google Cloud Documentation] (https://cloud.google.com/sql/docs/postgres/configure-ssl-instance?&_ga=2.87107544.-1769733723.1651179247#server-certs) for information about the different certs.
+
+:::
+
+Download these certs to your local drive and follow these steps:
+
+
+##Step 1: Login the Hasura Cloud, go to your project and add these Env Vars
+
+| Env Var Name            | Value                                                                 |
+|-------------------------|-----------------------------------------------------------------------|
+| SSL_ROOTCERT_GCP        | Contents from server-ca.pem **                                        |
+| SSL_CERT_GCP            | Contents from client-cert.pem **                                      |
+| SSL_KEY_GCP             | Contents from client-key.pem **                                       |
+| PG_DATABASE_URL_GCP   * | postgresql://<user-name>:<password>@<public-ip>:<postgres-port>/<db>  |
+
+** Open the cert files using your favorite Text Editor, select all the contents and copy those to the clipboard
+
+* This is optional (yet recommended), if you decide to use Env Var for your datasource
+
+
+Here is how your Hasura Cloud Env Vars setup should look like:
+
+<Thumbnail
+  src="/img/graphql/cloud/cloud-dbs/cloud-gcp-env-vars.png"
+  alt="Hasura Cloud Env Vars"
+  width="1000px"
+/>
+
+##Step 2: Go to your Hasura Cloud Console and configure the Database Setup (in Data tab):
+
+<Thumbnail
+  src="/img/graphql/cloud/cloud-dbs/postgres-database-url.png"
+  alt="GCP Postgres Database URL"
+  width="1000px"
+/>
+
+In the same tab, complete the SSL Certificate Settings:
+
+| Field Name              | Value                                    |
+|-------------------------|------------------------------------------|
+| SSL Mode                | verify-ca (select from dropdown)         |
+| SSL Root Certificate    | SSL_ROOTCERT_GCP                         |
+| SSL Certificate         | SSL_CERT_GCP                             |
+| SSL Key                 | SSL_KEY_GCP                              |
+
+Here is how the setup would look like:
+
+<Thumbnail
+  src="/img/graphql/cloud/cloud-dbs/ssl-config-setup.png"
+  alt="Hasura Console SSL Config Setup"
+  width="1000px"
+/>
+
+Click on the “Update Connection” button available on the lower-mid section of the screen:
+
+<Thumbnail
+  src="/img/graphql/cloud/cloud-dbs/update-connection-button.png"
+  alt="Update Connection Button"
+  width="1000px"
+/>
+
+You should see the following message on the screen, indicating a successful GCP Database connection from Hasura Cloud !!
+
+<Thumbnail
+  src="/img/graphql/cloud/cloud-dbs/datasource-update-success.png"
+  alt="Datasource Update Success"
+  width="1000px"
+/>
+
+
+
+
+
+
