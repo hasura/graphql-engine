@@ -19,19 +19,19 @@ This guide explains how to make a SSL Connection from Hasura Cloud to a GCP Post
 
 ## Assumptions
 
-Hasura Project is created via Hasura Cloud Dashboard
+- Hasura Project is created via Hasura Cloud Dashboard
 
-Postgres DB is created on GCP Cloud
+- Postgres DB is created on GCP Cloud
 
 ## GCP SSL Certs
 
 Google Cloud (GCP) SQL makes available these SSL/TLS certificates for download:
-A server certificate saved as server-ca.pem
-A client public key certificate saved as client-cert.pem
-A client private key saved as client-key.pem
+- A server certificate saved as server-ca.pem
+- A client public key certificate saved as client-cert.pem
+- A client private key saved as client-key.pem
 
 :::info Note
-Please refer to [Google Cloud Documentation] (https://cloud.google.com/sql/docs/postgres/configure-ssl-instance?&_ga=2.87107544.-1769733723.1651179247#server-certs) for information about the different certs.
+Please refer to [Google Cloud Documentation](https://cloud.google.com/sql/docs/postgres/configure-ssl-instance?&_ga=2.87107544.-1769733723.1651179247#server-certs) for information about the different certs.
 
 :::
 
@@ -45,11 +45,11 @@ Download these certs to your local drive and follow these steps:
 | SSL_ROOTCERT_GCP        | Contents from server-ca.pem **                                        |
 | SSL_CERT_GCP            | Contents from client-cert.pem **                                      |
 | SSL_KEY_GCP             | Contents from client-key.pem **                                       |
-| PG_DATABASE_URL_GCP   * | postgresql://user-name:password@public-ip:postgres-port/db            |
+| PG_DATABASE_URL_GCP *** | postgresql://user-name:password@public-ip:postgres-port/db            |
 
 ** Open the cert files using your favorite Text Editor, select all the contents and copy those to the clipboard
 
-* This is optional (yet recommended), if you decide to use Env Var for your datasource
+*** This is optional (yet recommended), if you decide to use Env Var for your datasource
 
 
 Here is how your Hasura Cloud Env Vars setup should look like:
@@ -98,7 +98,7 @@ You should see the following message on the screen, indicating a successful GCP 
 <Thumbnail
   src="/img/graphql/cloud/cloud-dbs/gcp/datasource-update-success.png"
   alt="Datasource Update Success"
-  width="1000px"
+  width="300px"
 />
 
 
