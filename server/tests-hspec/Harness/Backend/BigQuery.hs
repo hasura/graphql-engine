@@ -3,7 +3,9 @@
 
 {-# OPTIONS -Wno-redundant-constraints #-}
 
--- | BigQuery helpers.
+-- | BigQuery helpers. This module contains BigQuery specific schema
+-- setup/teardown functions because BigQuery API has a different API
+-- (dataset field, manual_configuration field etc)
 module Harness.Backend.BigQuery
   ( run_,
     runSql_,
@@ -16,13 +18,18 @@ module Harness.Backend.BigQuery
     dropTable,
     untrackTable,
     setup,
+    setupWithAdditionalRelationship,
     teardown,
+    teardownWithAdditionalRelationship,
   )
 where
 
 import Control.Monad (void)
-import Data.Aeson (Value)
-import Data.Bool (bool)
+import Data.Aeson
+  ( Value (..),
+    object,
+    (.=),
+  )
 import Data.Foldable (for_)
 import Data.String
 import Data.Text (Text, pack, replace)
@@ -35,8 +42,19 @@ import Harness.Env
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Context (BackendType (BigQuery), defaultBackendTypeString, defaultSource)
-import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..))
+import Harness.Test.Context
+  ( BackendType (BigQuery),
+    defaultBackendTypeString,
+    defaultSource,
+  )
+import Harness.Test.Schema
+  ( BackendScalarType (..),
+    BackendScalarValue (..),
+    ManualRelationship (..),
+    Reference (..),
+    ScalarValue (..),
+    Table (..),
+  )
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
 import Hasura.Backends.BigQuery.Connection (initConnection)
@@ -123,13 +141,13 @@ scalarType = \case
   Schema.TBool -> "BIT"
   Schema.TCustomType txt -> Schema.getBackendScalarType txt bstBigQuery
 
+-- | Create column. BigQuery doesn't support default values. Also,
+-- currently we don't support specifying NOT NULL constraint.
 mkColumn :: Schema.Column -> Text
-mkColumn Schema.Column {columnName, columnType, columnNullable, columnDefault} =
+mkColumn Schema.Column {columnName, columnType} =
   T.unwords
     [ columnName,
-      scalarType columnType,
-      bool "NOT NULL" "DEFAULT NULL" columnNullable,
-      maybe "" ("DEFAULT " <>) columnDefault
+      scalarType columnType
     ]
 
 -- | Serialize tableData into an SQL insert statement and execute it.
@@ -244,6 +262,34 @@ args:
       datasets: [*dataset]
 |]
 
+-- | Converts 'ManualRelationship' to 'Table'. Should be only used for
+-- building the relationship.
+relationshipToTable :: ManualRelationship -> Schema.Table
+relationshipToTable ManualRelationship {..} =
+  Table
+    { tableName = relSourceTable,
+      tablePrimaryKey = [],
+      tableColumns = [],
+      tableData = [],
+      tableReferences =
+        [ Reference
+            { referenceLocalColumn = relSourceColumn,
+              referenceTargetTable = relTargetTable,
+              referenceTargetColumn = relTargetColumn
+            }
+        ]
+    }
+
+-- | Same as 'setup' but also additional sets up the manual
+-- relationship that might be required for some cases.
+setupWithAdditionalRelationship :: [Schema.Table] -> [ManualRelationship] -> (TestEnvironment, ()) -> IO ()
+setupWithAdditionalRelationship tables rels (testEnvironment, _) = do
+  setup tables (testEnvironment, ())
+  let relTables = map relationshipToTable rels
+  for_ relTables $ \table -> do
+    trackObjectRelationships BigQuery table testEnvironment
+    trackArrayRelationships BigQuery table testEnvironment
+
 -- | Setup the schema in the most expected way.
 -- NOTE: Certain test modules may warrant having their own local version.
 setup :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
@@ -276,8 +322,8 @@ args:
     trackTable testEnvironment table
   -- Setup relationships
   for_ tables $ \table -> do
-    Schema.trackObjectRelationships BigQuery table testEnvironment
-    Schema.trackArrayRelationships BigQuery table testEnvironment
+    trackObjectRelationships BigQuery table testEnvironment
+    trackArrayRelationships BigQuery table testEnvironment
 
 -- | Teardown the schema and tracking in the most expected way.
 -- NOTE: Certain test modules may warrant having their own version.
@@ -285,8 +331,127 @@ teardown :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
 teardown (reverse -> tables) (testEnvironment, _) = do
   -- Teardown relationships first
   forFinally_ tables $ \table ->
-    Schema.untrackRelationships BigQuery table testEnvironment
+    untrackRelationships BigQuery table testEnvironment
   -- Then teardown tables
   forFinally_ tables $ \table -> do
     untrackTable testEnvironment table
     dropTable table
+
+-- | Same as 'teardown' but also tears the manual relationship that
+-- was setup.
+teardownWithAdditionalRelationship :: [Schema.Table] -> [ManualRelationship] -> (TestEnvironment, ()) -> IO ()
+teardownWithAdditionalRelationship tables rels (testEnvironment, _) = do
+  let relTables = map relationshipToTable rels
+  for_ relTables $ \table -> do
+    untrackRelationships BigQuery table testEnvironment
+  -- We do teardown in the reverse order to ensure that the tables
+  -- that have dependency are removed first. This has to be only done
+  -- for BigQuery backend since the metadata tracks the relationship
+  -- between them.
+  teardown (reverse tables) (testEnvironment, ())
+
+-- | Bigquery specific function for tracking array relationships
+trackArrayRelationships :: HasCallStack => BackendType -> Table -> TestEnvironment -> IO ()
+trackArrayRelationships backend Table {tableName, tableReferences} testEnvironment = do
+  let source = defaultSource backend
+      dataset = Constants.bigqueryDataset
+      requestType = source <> "_create_array_relationship"
+  for_ tableReferences $ \Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} -> do
+    let relationshipName = Schema.mkArrayRelationshipName referenceTargetTable referenceTargetColumn
+        manualConfiguration :: Value
+        manualConfiguration =
+          object
+            [ "remote_table"
+                .= object
+                  [ "dataset" .= String (T.pack dataset),
+                    "name" .= String referenceTargetTable
+                  ],
+              "column_mapping"
+                .= object [referenceLocalColumn .= referenceTargetColumn]
+            ]
+        payload =
+          [yaml|
+type: *requestType
+args:
+  source: *source
+  table:
+    dataset: *dataset
+    name: *tableName
+  name: *relationshipName
+  using:
+    manual_configuration: *manualConfiguration
+|]
+    GraphqlEngine.postMetadata_
+      testEnvironment
+      payload
+
+-- | Bigquery specific function for tracking object relationships
+trackObjectRelationships :: HasCallStack => BackendType -> Table -> TestEnvironment -> IO ()
+trackObjectRelationships backend Table {tableName, tableReferences} testEnvironment = do
+  let source = defaultSource backend
+      dataset = Constants.bigqueryDataset
+      requestType = source <> "_create_object_relationship"
+  for_ tableReferences $ \ref@Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} -> do
+    let relationshipName = Schema.mkObjectRelationshipName ref
+        manualConfiguration :: Value
+        manualConfiguration =
+          object
+            [ "remote_table"
+                .= object
+                  [ "dataset" .= String (T.pack dataset),
+                    "name" .= String referenceTargetTable
+                  ],
+              "column_mapping"
+                .= object [referenceLocalColumn .= referenceTargetColumn]
+            ]
+        payload =
+          [yaml|
+type: *requestType
+args:
+  source: *source
+  table:
+    dataset: *dataset
+    name: *tableName
+  name: *relationshipName
+  using:
+    manual_configuration: *manualConfiguration
+|]
+
+    GraphqlEngine.postMetadata_
+      testEnvironment
+      payload
+
+-- | Bigquery specific function for untracking relationships
+-- Overriding `Schema.untrackRelationships` here because bigquery's API expects a `dataset` key
+untrackRelationships :: HasCallStack => BackendType -> Table -> TestEnvironment -> IO ()
+untrackRelationships backend Table {tableName, tableReferences} testEnvironment = do
+  let source = defaultSource backend
+      dataset = Constants.bigqueryDataset
+      requestType = source <> "_drop_relationship"
+  for_ tableReferences $ \ref@Reference {referenceTargetTable, referenceTargetColumn} -> do
+    let arrayRelationshipName = Schema.mkArrayRelationshipName referenceTargetTable referenceTargetColumn
+        objectRelationshipName = Schema.mkObjectRelationshipName ref
+    -- drop array relationships
+    GraphqlEngine.postMetadata_
+      testEnvironment
+      [yaml|
+type: *requestType
+args:
+  source: *source
+  table:
+    dataset: *dataset
+    name: *tableName
+  relationship: *arrayRelationshipName
+|]
+    -- drop object relationships
+    GraphqlEngine.postMetadata_
+      testEnvironment
+      [yaml|
+type: *requestType
+args:
+  source: *source
+  table:
+    dataset: *dataset
+    name: *tableName
+  relationship: *objectRelationshipName
+|]
