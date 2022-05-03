@@ -1,0 +1,131 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# OPTIONS_GHC -fno-warn-orphans #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.DataWrapper.Adapter.Metadata</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Metadata.Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier">BackendMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier">BackendType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataWrapper"><span class="hs-identifier">DataWrapper</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688356126"><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataWrapper"><span class="hs-identifier hs-type">DataWrapper</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-13"></span><span>  </span><span id="local-6989586621688356124"><span class="annot"><span class="annottext">resolveSourceConfig :: SourceName
+-&gt; SourceConnConfiguration 'DataWrapper
+-&gt; Environment
+-&gt; m (Either QErr (SourceConfig 'DataWrapper))
+</span><a href="Hasura.RQL.Types.Metadata.Backend.html#resolveSourceConfig"><span class="hs-identifier hs-var hs-var hs-var hs-var">resolveSourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; SourceName -&gt; () -&gt; Environment -&gt; m (Either QErr ())
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;resolveSourceConfig: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-14"></span><span>  </span><span id="local-6989586621688356121"><span class="annot"><span class="annottext">resolveDatabaseMetadata :: SourceMetadata 'DataWrapper
+-&gt; SourceConfig 'DataWrapper
+-&gt; SourceTypeCustomization
+-&gt; m (Either QErr (ResolvedSource 'DataWrapper))
+</span><a href="Hasura.RQL.Types.Metadata.Backend.html#resolveDatabaseMetadata"><span class="hs-identifier hs-var hs-var hs-var hs-var">resolveDatabaseMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char]
+-&gt; SourceMetadata 'DataWrapper
+-&gt; ()
+-&gt; SourceTypeCustomization
+-&gt; m (Either QErr (ResolvedSource 'DataWrapper))
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;resolveDatabaseMetadata: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-15"></span><span>  </span><span id="local-6989586621688356119"><span class="annot"><span class="annottext">parseBoolExpOperations :: ValueParser 'DataWrapper m v
+-&gt; TableName 'DataWrapper
+-&gt; FieldInfoMap (FieldInfo 'DataWrapper)
+-&gt; ColumnReference 'DataWrapper
+-&gt; Value
+-&gt; m [OpExpG 'DataWrapper v]
+</span><a href="Hasura.RQL.Types.Metadata.Backend.html#parseBoolExpOperations"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseBoolExpOperations</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char]
+-&gt; ValueParser 'DataWrapper m v
+-&gt; Name
+-&gt; FieldInfoMap (FieldInfo 'DataWrapper)
+-&gt; ColumnReference 'DataWrapper
+-&gt; Value
+-&gt; m [OpExpG 'DataWrapper v]
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;parseBoolExpOperations: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-16"></span><span>  </span><span id="local-6989586621688356117"><span class="annot"><span class="annottext">parseCollectableType :: CollectableType (ColumnType 'DataWrapper)
+-&gt; Value -&gt; m (PartialSQLExp 'DataWrapper)
+</span><a href="Hasura.RQL.Types.Metadata.Backend.html#parseCollectableType"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseCollectableType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char]
+-&gt; CollectableType (ColumnType 'DataWrapper)
+-&gt; Value
+-&gt; m (PartialSQLExp 'DataWrapper)
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;parseCollectableType: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-17"></span><span>  </span><span id="local-6989586621688356115"><span class="annot"><span class="annottext">buildComputedFieldInfo :: HashSet (TableName 'DataWrapper)
+-&gt; TableName 'DataWrapper
+-&gt; ComputedFieldName
+-&gt; ComputedFieldDefinition 'DataWrapper
+-&gt; RawFunctionInfo 'DataWrapper
+-&gt; Comment
+-&gt; m (ComputedFieldInfo 'DataWrapper)
+</span><a href="Hasura.RQL.Types.Metadata.Backend.html#buildComputedFieldInfo"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildComputedFieldInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char]
+-&gt; HashSet Name
+-&gt; Name
+-&gt; ComputedFieldName
+-&gt; ComputedFieldDefinition 'DataWrapper
+-&gt; XDisable
+-&gt; Comment
+-&gt; m (ComputedFieldInfo 'DataWrapper)
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;buildComputedFieldInfo: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-18"></span><span>  </span><span id="local-6989586621688356113"><span class="annot"><span class="annottext">fetchAndValidateEnumValues :: SourceConfig 'DataWrapper
+-&gt; TableName 'DataWrapper
+-&gt; Maybe (PrimaryKey 'DataWrapper (RawColumnInfo 'DataWrapper))
+-&gt; [RawColumnInfo 'DataWrapper]
+-&gt; m (Either QErr EnumValues)
+</span><a href="Hasura.RQL.Types.Metadata.Backend.html#fetchAndValidateEnumValues"><span class="hs-identifier hs-var hs-var hs-var hs-var">fetchAndValidateEnumValues</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char]
+-&gt; ()
+-&gt; Name
+-&gt; Maybe (PrimaryKey 'DataWrapper (RawColumnInfo 'DataWrapper))
+-&gt; [RawColumnInfo 'DataWrapper]
+-&gt; m (Either QErr EnumValues)
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;fetchAndValidateEnumValues: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-19"></span><span>  </span><span id="local-6989586621688356111"><span class="annot"><span class="annottext">buildFunctionInfo :: SourceName
+-&gt; FunctionName 'DataWrapper
+-&gt; SystemDefined
+-&gt; FunctionConfig
+-&gt; FunctionPermissionsMap
+-&gt; RawFunctionInfo 'DataWrapper
+-&gt; Maybe Text
+-&gt; m (FunctionInfo 'DataWrapper, SchemaDependency)
+</span><a href="Hasura.RQL.Types.Metadata.Backend.html#buildFunctionInfo"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildFunctionInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char]
+-&gt; SourceName
+-&gt; Name
+-&gt; SystemDefined
+-&gt; FunctionConfig
+-&gt; FunctionPermissionsMap
+-&gt; XDisable
+-&gt; Maybe Text
+-&gt; m (FunctionInfo 'DataWrapper, SchemaDependency)
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;buildFunctionInfo: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-20"></span><span>  </span><span id="local-6989586621688356109"><span class="annot"><span class="annottext">updateColumnInEventTrigger :: TableName 'DataWrapper
+-&gt; Column 'DataWrapper
+-&gt; Column 'DataWrapper
+-&gt; TableName 'DataWrapper
+-&gt; EventTriggerConf 'DataWrapper
+-&gt; EventTriggerConf 'DataWrapper
+</span><a href="Hasura.RQL.Types.Metadata.Backend.html#updateColumnInEventTrigger"><span class="hs-identifier hs-var hs-var hs-var hs-var">updateColumnInEventTrigger</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char]
+-&gt; Name
+-&gt; Name
+-&gt; Name
+-&gt; Name
+-&gt; EventTriggerConf 'DataWrapper
+-&gt; EventTriggerConf 'DataWrapper
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;updateColumnInEventTrigger: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-21"></span><span>  </span><span id="local-6989586621688356107"><span class="annot"><span class="annottext">postDropSourceHook :: SourceConfig 'DataWrapper -&gt; m ()
+</span><a href="Hasura.RQL.Types.Metadata.Backend.html#postDropSourceHook"><span class="hs-identifier hs-var hs-var hs-var hs-var">postDropSourceHook</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; () -&gt; m ()
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;postDropSourceHook: not implemented for GraphQL Data Wrappers.&quot;</span></span><span>
+</span><span id="line-22"></span></pre></body></html>

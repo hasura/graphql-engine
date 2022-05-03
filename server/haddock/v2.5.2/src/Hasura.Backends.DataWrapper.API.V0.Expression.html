@@ -1,0 +1,618 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="%24con2tag_I8SQ7dV3DcxFPMQk0F7gqm"><span id="%24con2tag_6wmKObHnJoL7NI0HHH7GtW"></span></span><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-comment">--</span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.DataWrapper.API.V0.Expression</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier">Expression</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Operator"><span class="hs-identifier">Operator</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html"><span class="hs-identifier">Hasura.Backends.DataWrapper.API.V0.Column</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">API.V0</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Scalar.Value.html"><span class="hs-identifier">Hasura.Backends.DataWrapper.API.V0.Scalar.Value</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">API.V0.Scalar</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.html"><span class="hs-identifier">Hasura.Incremental</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier">Cacheable</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-15"></span><span>
+</span><span id="line-16"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-comment">-- | A serializable representation of query expressions.</span><span>
+</span><span id="line-19"></span><span id="local-6989586621688307957"><span id="local-6989586621688307958"></span></span><span class="hs-keyword">data</span><span> </span><span id="Expression"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-var">Expression</span></a></span></span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | A constant 'Scalar.Value'.</span><span>
+</span><span id="line-21"></span><span>    </span><span id="Literal"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Literal"><span class="hs-identifier hs-var">Literal</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Scalar.Value.html#Value"><span class="hs-identifier hs-type">API.V0.Scalar.Value</span></a></span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="In"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#In"><span class="hs-identifier hs-var">In</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashSet</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Scalar.Value.html#Value"><span class="hs-identifier hs-type">API.V0.Scalar.Value</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="And"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#And"><span class="hs-identifier hs-var">And</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Or"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Or"><span class="hs-identifier hs-var">Or</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Not"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Not"><span class="hs-identifier hs-var">Not</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="IsNull"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#IsNull"><span class="hs-identifier hs-var">IsNull</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="IsNotNull"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#IsNotNull"><span class="hs-identifier hs-var">IsNotNull</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Column"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Column"><span class="hs-identifier hs-var">Column</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnName"><span class="hs-identifier hs-type">API.V0.ColumnName</span></a></span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Equal"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Equal"><span class="hs-identifier hs-var">Equal</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="NotEqual"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#NotEqual"><span class="hs-identifier hs-var">NotEqual</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ApplyOperator"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#ApplyOperator"><span class="hs-identifier hs-var">ApplyOperator</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Operator"><span class="hs-identifier hs-type">Operator</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cApplyOperator"><span id="%24cNotEqual"><span id="%24cEqual"><span id="%24cColumn"><span id="%24cIsNotNull"><span id="%24cIsNull"><span id="%24cNot"><span id="%24cOr"><span id="%24cAnd"><span id="%24cIn"><span id="%24cLiteral"><span id="%24tExpression"><span id="local-6989586621688307914"><span id="local-6989586621688307916"><span id="local-6989586621688307918"><span id="local-6989586621688307920"><span id="local-6989586621688307922"><span id="local-6989586621688307924"><span id="local-6989586621688307926"><span id="local-6989586621688307928"><span id="local-6989586621688307930"><span id="local-6989586621688307932"><span id="local-6989586621688307934"><span id="local-6989586621688307936"><span id="local-6989586621688307938"><span id="local-6989586621688307940"><span class="annot"><span class="annottext">Typeable Expression
+DataType
+Constr
+Typeable Expression
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; Expression -&gt; c Expression)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Expression)
+-&gt; (Expression -&gt; Constr)
+-&gt; (Expression -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Expression))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e))
+    -&gt; Maybe (c Expression))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; Expression -&gt; Expression)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Expression -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Expression -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; Expression -&gt; [u])
+-&gt; (forall u.
+    Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Expression -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; Expression -&gt; m Expression)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; Expression -&gt; m Expression)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; Expression -&gt; m Expression)
+-&gt; Data Expression
+Expression -&gt; DataType
+Expression -&gt; Constr
+(forall b. Data b =&gt; b -&gt; b) -&gt; Expression -&gt; Expression
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; Expression -&gt; c Expression
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Expression
+forall a.
+Typeable a
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; a -&gt; c a)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c a)
+-&gt; (a -&gt; Constr)
+-&gt; (a -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c a))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c a))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; a -&gt; a)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; Data a
+forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Expression -&gt; u
+forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; Expression -&gt; [u]
+forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Expression -&gt; r
+forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Expression -&gt; r
+forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Expression -&gt; m Expression
+forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Expression -&gt; m Expression
+forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Expression
+forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; Expression -&gt; c Expression
+forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Expression)
+forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c Expression)
+$cApplyOperator :: Constr
+$cNotEqual :: Constr
+$cEqual :: Constr
+$cColumn :: Constr
+$cIsNotNull :: Constr
+$cIsNull :: Constr
+$cNot :: Constr
+$cOr :: Constr
+$cAnd :: Constr
+$cIn :: Constr
+$cLiteral :: Constr
+$tExpression :: DataType
+gmapMo :: (forall d. Data d =&gt; d -&gt; m d) -&gt; Expression -&gt; m Expression
+$cgmapMo :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Expression -&gt; m Expression
+gmapMp :: (forall d. Data d =&gt; d -&gt; m d) -&gt; Expression -&gt; m Expression
+$cgmapMp :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Expression -&gt; m Expression
+gmapM :: (forall d. Data d =&gt; d -&gt; m d) -&gt; Expression -&gt; m Expression
+$cgmapM :: forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Expression -&gt; m Expression
+gmapQi :: Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Expression -&gt; u
+$cgmapQi :: forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Expression -&gt; u
+gmapQ :: (forall d. Data d =&gt; d -&gt; u) -&gt; Expression -&gt; [u]
+$cgmapQ :: forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; Expression -&gt; [u]
+gmapQr :: (r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Expression -&gt; r
+$cgmapQr :: forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Expression -&gt; r
+gmapQl :: (r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Expression -&gt; r
+$cgmapQl :: forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Expression -&gt; r
+gmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; Expression -&gt; Expression
+$cgmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; Expression -&gt; Expression
+dataCast2 :: (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c Expression)
+$cdataCast2 :: forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c Expression)
+dataCast1 :: (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Expression)
+$cdataCast1 :: forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Expression)
+dataTypeOf :: Expression -&gt; DataType
+$cdataTypeOf :: Expression -&gt; DataType
+toConstr :: Expression -&gt; Constr
+$ctoConstr :: Expression -&gt; Constr
+gunfold :: (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Expression
+$cgunfold :: forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Expression
+gfoldl :: (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; Expression -&gt; c Expression
+$cgfoldl :: forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; Expression -&gt; c Expression
+$cp1Data :: Typeable Expression
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307897"><span id="local-6989586621688307899"><span class="annot"><span class="annottext">Expression -&gt; Expression -&gt; Bool
+(Expression -&gt; Expression -&gt; Bool)
+-&gt; (Expression -&gt; Expression -&gt; Bool) -&gt; Eq Expression
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: Expression -&gt; Expression -&gt; Bool
+$c/= :: Expression -&gt; Expression -&gt; Bool
+== :: Expression -&gt; Expression -&gt; Bool
+$c== :: Expression -&gt; Expression -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. Expression -&gt; Rep Expression x)
+-&gt; (forall x. Rep Expression x -&gt; Expression) -&gt; Generic Expression
+forall x. Rep Expression x -&gt; Expression
+forall x. Expression -&gt; Rep Expression x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep Expression x -&gt; Expression
+$cfrom :: forall x. Expression -&gt; Rep Expression x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307878"><span id="local-6989586621688307880"><span id="local-6989586621688307882"><span id="local-6989586621688307884"><span id="local-6989586621688307886"><span id="local-6989586621688307888"><span id="local-6989586621688307890"><span class="annot"><span class="annottext">Eq Expression
+Eq Expression
+-&gt; (Expression -&gt; Expression -&gt; Ordering)
+-&gt; (Expression -&gt; Expression -&gt; Bool)
+-&gt; (Expression -&gt; Expression -&gt; Bool)
+-&gt; (Expression -&gt; Expression -&gt; Bool)
+-&gt; (Expression -&gt; Expression -&gt; Bool)
+-&gt; (Expression -&gt; Expression -&gt; Expression)
+-&gt; (Expression -&gt; Expression -&gt; Expression)
+-&gt; Ord Expression
+Expression -&gt; Expression -&gt; Bool
+Expression -&gt; Expression -&gt; Ordering
+Expression -&gt; Expression -&gt; Expression
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: Expression -&gt; Expression -&gt; Expression
+$cmin :: Expression -&gt; Expression -&gt; Expression
+max :: Expression -&gt; Expression -&gt; Expression
+$cmax :: Expression -&gt; Expression -&gt; Expression
+&gt;= :: Expression -&gt; Expression -&gt; Bool
+$c&gt;= :: Expression -&gt; Expression -&gt; Bool
+&gt; :: Expression -&gt; Expression -&gt; Bool
+$c&gt; :: Expression -&gt; Expression -&gt; Bool
+&lt;= :: Expression -&gt; Expression -&gt; Bool
+$c&lt;= :: Expression -&gt; Expression -&gt; Bool
+&lt; :: Expression -&gt; Expression -&gt; Bool
+$c&lt; :: Expression -&gt; Expression -&gt; Bool
+compare :: Expression -&gt; Expression -&gt; Ordering
+$ccompare :: Expression -&gt; Expression -&gt; Ordering
+$cp1Ord :: Eq Expression
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307871"><span id="local-6989586621688307873"><span id="local-6989586621688307875"><span class="annot"><span class="annottext">Int -&gt; Expression -&gt; ShowS
+[Expression] -&gt; ShowS
+Expression -&gt; String
+(Int -&gt; Expression -&gt; ShowS)
+-&gt; (Expression -&gt; String)
+-&gt; ([Expression] -&gt; ShowS)
+-&gt; Show Expression
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [Expression] -&gt; ShowS
+$cshowList :: [Expression] -&gt; ShowS
+show :: Expression -&gt; String
+$cshow :: Expression -&gt; String
+showsPrec :: Int -&gt; Expression -&gt; ShowS
+$cshowsPrec :: Int -&gt; Expression -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688307867"><span class="annot"><span class="annottext">Eq Expression
+Eq Expression
+-&gt; (Accesses -&gt; Expression -&gt; Expression -&gt; Bool)
+-&gt; Cacheable Expression
+Accesses -&gt; Expression -&gt; Expression -&gt; Bool
+forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
+unchanged :: Accesses -&gt; Expression -&gt; Expression -&gt; Bool
+$cunchanged :: Accesses -&gt; Expression -&gt; Expression -&gt; Bool
+$cp1Cacheable :: Eq Expression
+</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307862"><span id="local-6989586621688307864"><span class="annot"><span class="annottext">Value -&gt; Parser [Expression]
+Value -&gt; Parser Expression
+(Value -&gt; Parser Expression)
+-&gt; (Value -&gt; Parser [Expression]) -&gt; FromJSON Expression
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [Expression]
+$cparseJSONList :: Value -&gt; Parser [Expression]
+parseJSON :: Value -&gt; Parser Expression
+$cparseJSON :: Value -&gt; Parser Expression
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307857"><span id="local-6989586621688307859"><span class="annot"><span class="annottext">Int -&gt; Expression -&gt; Int
+Expression -&gt; Int
+(Int -&gt; Expression -&gt; Int)
+-&gt; (Expression -&gt; Int) -&gt; Hashable Expression
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: Expression -&gt; Int
+$chash :: Expression -&gt; Int
+hashWithSalt :: Int -&gt; Expression -&gt; Int
+$chashWithSalt :: Int -&gt; Expression -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307854"><span class="annot"><span class="annottext">Expression -&gt; ()
+(Expression -&gt; ()) -&gt; NFData Expression
+forall a. (a -&gt; ()) -&gt; NFData a
+rnf :: Expression -&gt; ()
+$crnf :: Expression -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307845"><span id="local-6989586621688307847"><span id="local-6989586621688307849"><span id="local-6989586621688307851"><span class="annot"><span class="annottext">[Expression] -&gt; Encoding
+[Expression] -&gt; Value
+Expression -&gt; Encoding
+Expression -&gt; Value
+(Expression -&gt; Value)
+-&gt; (Expression -&gt; Encoding)
+-&gt; ([Expression] -&gt; Value)
+-&gt; ([Expression] -&gt; Encoding)
+-&gt; ToJSON Expression
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [Expression] -&gt; Encoding
+$ctoEncodingList :: [Expression] -&gt; Encoding
+toJSONList :: [Expression] -&gt; Value
+$ctoJSONList :: [Expression] -&gt; Value
+toEncoding :: Expression -&gt; Encoding
+$ctoEncoding :: Expression -&gt; Encoding
+toJSON :: Expression -&gt; Value
+$ctoJSON :: Expression -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span class="hs-comment">-- | A serializable representation of query operators.</span><span>
+</span><span id="line-38"></span><span id="local-6989586621688307842"><span id="local-6989586621688307843"></span></span><span class="hs-keyword">data</span><span> </span><span id="Operator"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#Operator"><span class="hs-identifier hs-var">Operator</span></a></span></span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="LessThan"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#LessThan"><span class="hs-identifier hs-var">LessThan</span></a></span></span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="LessThanOrEqual"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#LessThanOrEqual"><span class="hs-identifier hs-var">LessThanOrEqual</span></a></span></span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="GreaterThan"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#GreaterThan"><span class="hs-identifier hs-var">GreaterThan</span></a></span></span><span>
+</span><span id="line-42"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="GreaterThanOrEqual"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Expression.html#GreaterThanOrEqual"><span class="hs-identifier hs-var">GreaterThanOrEqual</span></a></span></span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cGreaterThanOrEqual"><span id="%24cGreaterThan"><span id="%24cLessThanOrEqual"><span id="%24cLessThan"><span id="%24tOperator"><span id="local-6989586621688307809"><span id="local-6989586621688307811"><span id="local-6989586621688307813"><span id="local-6989586621688307815"><span id="local-6989586621688307817"><span id="local-6989586621688307819"><span id="local-6989586621688307821"><span id="local-6989586621688307823"><span id="local-6989586621688307825"><span id="local-6989586621688307827"><span id="local-6989586621688307829"><span id="local-6989586621688307831"><span id="local-6989586621688307833"><span id="local-6989586621688307835"><span class="annot"><span class="annottext">Typeable Operator
+DataType
+Constr
+Typeable Operator
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; Operator -&gt; c Operator)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Operator)
+-&gt; (Operator -&gt; Constr)
+-&gt; (Operator -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Operator))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c Operator))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; Operator -&gt; Operator)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Operator -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Operator -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; Operator -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Operator -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator)
+-&gt; Data Operator
+Operator -&gt; DataType
+Operator -&gt; Constr
+(forall b. Data b =&gt; b -&gt; b) -&gt; Operator -&gt; Operator
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; Operator -&gt; c Operator
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Operator
+forall a.
+Typeable a
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; a -&gt; c a)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c a)
+-&gt; (a -&gt; Constr)
+-&gt; (a -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c a))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c a))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; a -&gt; a)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; Data a
+forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Operator -&gt; u
+forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; Operator -&gt; [u]
+forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Operator -&gt; r
+forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Operator -&gt; r
+forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator
+forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator
+forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Operator
+forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; Operator -&gt; c Operator
+forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Operator)
+forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c Operator)
+$cGreaterThanOrEqual :: Constr
+$cGreaterThan :: Constr
+$cLessThanOrEqual :: Constr
+$cLessThan :: Constr
+$tOperator :: DataType
+gmapMo :: (forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator
+$cgmapMo :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator
+gmapMp :: (forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator
+$cgmapMp :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator
+gmapM :: (forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator
+$cgmapM :: forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; Operator -&gt; m Operator
+gmapQi :: Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Operator -&gt; u
+$cgmapQi :: forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; Operator -&gt; u
+gmapQ :: (forall d. Data d =&gt; d -&gt; u) -&gt; Operator -&gt; [u]
+$cgmapQ :: forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; Operator -&gt; [u]
+gmapQr :: (r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Operator -&gt; r
+$cgmapQr :: forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Operator -&gt; r
+gmapQl :: (r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Operator -&gt; r
+$cgmapQl :: forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; Operator -&gt; r
+gmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; Operator -&gt; Operator
+$cgmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; Operator -&gt; Operator
+dataCast2 :: (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c Operator)
+$cdataCast2 :: forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c Operator)
+dataCast1 :: (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Operator)
+$cdataCast1 :: forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c Operator)
+dataTypeOf :: Operator -&gt; DataType
+$cdataTypeOf :: Operator -&gt; DataType
+toConstr :: Operator -&gt; Constr
+$ctoConstr :: Operator -&gt; Constr
+gunfold :: (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Operator
+$cgunfold :: forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c Operator
+gfoldl :: (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; Operator -&gt; c Operator
+$cgfoldl :: forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; Operator -&gt; c Operator
+$cp1Data :: Typeable Operator
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307800"><span id="local-6989586621688307802"><span class="annot"><span class="annottext">Operator -&gt; Operator -&gt; Bool
+(Operator -&gt; Operator -&gt; Bool)
+-&gt; (Operator -&gt; Operator -&gt; Bool) -&gt; Eq Operator
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: Operator -&gt; Operator -&gt; Bool
+$c/= :: Operator -&gt; Operator -&gt; Bool
+== :: Operator -&gt; Operator -&gt; Bool
+$c== :: Operator -&gt; Operator -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. Operator -&gt; Rep Operator x)
+-&gt; (forall x. Rep Operator x -&gt; Operator) -&gt; Generic Operator
+forall x. Rep Operator x -&gt; Operator
+forall x. Operator -&gt; Rep Operator x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep Operator x -&gt; Operator
+$cfrom :: forall x. Operator -&gt; Rep Operator x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307783"><span id="local-6989586621688307785"><span id="local-6989586621688307787"><span id="local-6989586621688307789"><span id="local-6989586621688307791"><span id="local-6989586621688307793"><span id="local-6989586621688307795"><span class="annot"><span class="annottext">Eq Operator
+Eq Operator
+-&gt; (Operator -&gt; Operator -&gt; Ordering)
+-&gt; (Operator -&gt; Operator -&gt; Bool)
+-&gt; (Operator -&gt; Operator -&gt; Bool)
+-&gt; (Operator -&gt; Operator -&gt; Bool)
+-&gt; (Operator -&gt; Operator -&gt; Bool)
+-&gt; (Operator -&gt; Operator -&gt; Operator)
+-&gt; (Operator -&gt; Operator -&gt; Operator)
+-&gt; Ord Operator
+Operator -&gt; Operator -&gt; Bool
+Operator -&gt; Operator -&gt; Ordering
+Operator -&gt; Operator -&gt; Operator
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: Operator -&gt; Operator -&gt; Operator
+$cmin :: Operator -&gt; Operator -&gt; Operator
+max :: Operator -&gt; Operator -&gt; Operator
+$cmax :: Operator -&gt; Operator -&gt; Operator
+&gt;= :: Operator -&gt; Operator -&gt; Bool
+$c&gt;= :: Operator -&gt; Operator -&gt; Bool
+&gt; :: Operator -&gt; Operator -&gt; Bool
+$c&gt; :: Operator -&gt; Operator -&gt; Bool
+&lt;= :: Operator -&gt; Operator -&gt; Bool
+$c&lt;= :: Operator -&gt; Operator -&gt; Bool
+&lt; :: Operator -&gt; Operator -&gt; Bool
+$c&lt; :: Operator -&gt; Operator -&gt; Bool
+compare :: Operator -&gt; Operator -&gt; Ordering
+$ccompare :: Operator -&gt; Operator -&gt; Ordering
+$cp1Ord :: Eq Operator
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307777"><span id="local-6989586621688307779"><span id="local-6989586621688307781"><span class="annot"><span class="annottext">Int -&gt; Operator -&gt; ShowS
+[Operator] -&gt; ShowS
+Operator -&gt; String
+(Int -&gt; Operator -&gt; ShowS)
+-&gt; (Operator -&gt; String) -&gt; ([Operator] -&gt; ShowS) -&gt; Show Operator
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [Operator] -&gt; ShowS
+$cshowList :: [Operator] -&gt; ShowS
+show :: Operator -&gt; String
+$cshow :: Operator -&gt; String
+showsPrec :: Int -&gt; Operator -&gt; ShowS
+$cshowsPrec :: Int -&gt; Operator -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688307774"><span class="annot"><span class="annottext">Eq Operator
+Eq Operator
+-&gt; (Accesses -&gt; Operator -&gt; Operator -&gt; Bool) -&gt; Cacheable Operator
+Accesses -&gt; Operator -&gt; Operator -&gt; Bool
+forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
+unchanged :: Accesses -&gt; Operator -&gt; Operator -&gt; Bool
+$cunchanged :: Accesses -&gt; Operator -&gt; Operator -&gt; Bool
+$cp1Cacheable :: Eq Operator
+</span><a href="#local-6989586621688307774"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307770"><span id="local-6989586621688307772"><span class="annot"><span class="annottext">Value -&gt; Parser [Operator]
+Value -&gt; Parser Operator
+(Value -&gt; Parser Operator)
+-&gt; (Value -&gt; Parser [Operator]) -&gt; FromJSON Operator
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [Operator]
+$cparseJSONList :: Value -&gt; Parser [Operator]
+parseJSON :: Value -&gt; Parser Operator
+$cparseJSON :: Value -&gt; Parser Operator
+</span><a href="#local-6989586621688307770"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307766"><span id="local-6989586621688307768"><span class="annot"><span class="annottext">Int -&gt; Operator -&gt; Int
+Operator -&gt; Int
+(Int -&gt; Operator -&gt; Int) -&gt; (Operator -&gt; Int) -&gt; Hashable Operator
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: Operator -&gt; Int
+$chash :: Operator -&gt; Int
+hashWithSalt :: Int -&gt; Operator -&gt; Int
+$chashWithSalt :: Int -&gt; Operator -&gt; Int
+</span><a href="#local-6989586621688307766"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307764"><span class="annot"><span class="annottext">Operator -&gt; ()
+(Operator -&gt; ()) -&gt; NFData Operator
+forall a. (a -&gt; ()) -&gt; NFData a
+rnf :: Operator -&gt; ()
+$crnf :: Operator -&gt; ()
+</span><a href="#local-6989586621688307764"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307756"><span id="local-6989586621688307758"><span id="local-6989586621688307760"><span id="local-6989586621688307762"><span class="annot"><span class="annottext">[Operator] -&gt; Encoding
+[Operator] -&gt; Value
+Operator -&gt; Encoding
+Operator -&gt; Value
+(Operator -&gt; Value)
+-&gt; (Operator -&gt; Encoding)
+-&gt; ([Operator] -&gt; Value)
+-&gt; ([Operator] -&gt; Encoding)
+-&gt; ToJSON Operator
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [Operator] -&gt; Encoding
+$ctoEncodingList :: [Operator] -&gt; Encoding
+toJSONList :: [Operator] -&gt; Value
+$ctoJSONList :: [Operator] -&gt; Value
+toEncoding :: Operator -&gt; Encoding
+$ctoEncoding :: Operator -&gt; Encoding
+toJSON :: Operator -&gt; Value
+$ctoJSON :: Operator -&gt; Value
+</span><a href="#local-6989586621688307756"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span></pre></body></html>

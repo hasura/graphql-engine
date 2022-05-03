@@ -1,0 +1,38 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE QuasiQuotes #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.MSSQL.DDL.Source.Version</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.Source.Version.html#latestSourceCatalogVersion"><span class="hs-identifier">latestSourceCatalogVersion</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.Source.Version.html#setSourceCatalogVersion"><span class="hs-identifier">setSourceCatalogVersion</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Database.MSSQL.Transaction.html"><span class="hs-identifier">Database.MSSQL.Transaction</span></a></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Database.ODBC.SQLServer</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Database.ODBC.TH</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">ODBC</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html"><span class="hs-identifier">Hasura.Backends.MSSQL.Connection</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MonadMSSQLTx"><span class="hs-identifier">MonadMSSQLTx</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.SQL.Error.html"><span class="hs-identifier">Hasura.Backends.MSSQL.SQL.Error</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HGE</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-15"></span><span>
+</span><span id="line-16"></span><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.Source.Version.html#latestSourceCatalogVersion"><span class="hs-identifier hs-type">latestSourceCatalogVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-17"></span><span id="latestSourceCatalogVersion"><span class="annot"><span class="annottext">latestSourceCatalogVersion :: Int
+</span><a href="Hasura.Backends.MSSQL.DDL.Source.Version.html#latestSourceCatalogVersion"><span class="hs-identifier hs-var hs-var">latestSourceCatalogVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">1</span></span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span id="local-6989586621688306484"><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.Source.Version.html#setSourceCatalogVersion"><span class="hs-identifier hs-type">setSourceCatalogVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Connection.html#MonadMSSQLTx"><span class="hs-identifier hs-type">MonadMSSQLTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688306484"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688306484"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-20"></span><span id="setSourceCatalogVersion"><span class="annot"><span class="annottext">setSourceCatalogVersion :: Int -&gt; m ()
+</span><a href="Hasura.Backends.MSSQL.DDL.Source.Version.html#setSourceCatalogVersion"><span class="hs-identifier hs-var hs-var">setSourceCatalogVersion</span></a></span></span><span> </span><span id="local-6989586621688306483"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621688306483"><span class="hs-identifier hs-var">version</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TxE QErr () -&gt; m ()
+forall (m :: * -&gt; *) a. MonadMSSQLTx m =&gt; TxE QErr a -&gt; m a
+</span><a href="Hasura.Backends.MSSQL.Connection.html#liftMSSQLTx"><span class="hs-identifier hs-var">liftMSSQLTx</span></a></span><span> </span><span class="annot"><span class="annottext">(TxE QErr () -&gt; m ()) -&gt; TxE QErr () -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(MSSQLTxError -&gt; QErr) -&gt; Query -&gt; TxE QErr ()
+forall (m :: * -&gt; *) e.
+MonadIO m =&gt;
+(MSSQLTxError -&gt; e) -&gt; Query -&gt; TxET e m ()
+</span><a href="Database.MSSQL.Transaction.html#unitQueryE"><span class="hs-identifier hs-var">unitQueryE</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; QErr
+</span><a href="Hasura.Backends.MSSQL.SQL.Error.html#defaultMSSQLTxErrorHandler"><span class="hs-identifier hs-var">HGE.defaultMSSQLTxErrorHandler</span></a></span><span> </span><span class="annot"><span class="annottext">Query
+</span><a href="#local-6989586621688306479"><span class="hs-identifier hs-var">setSourceCatalogVersionQuery</span></a></span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-22"></span><span>    </span><span id="local-6989586621688306479"><span class="annot"><span class="annottext">setSourceCatalogVersionQuery :: Query
+</span><a href="#local-6989586621688306479"><span class="hs-identifier hs-var hs-var">setSourceCatalogVersionQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="">[ODBC.sql| INSERT INTO hdb_catalog.hdb_source_catalog_version(version, upgraded_on) VALUES ($version, SYSDATETIMEOFFSET()) |]</span></span><span>
+</span><span id="line-23"></span></pre></body></html>

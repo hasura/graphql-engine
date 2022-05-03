@@ -1,0 +1,278 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.IR.Delete</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Delete.html#AnnDel"><span class="hs-identifier">AnnDel</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Delete.html#AnnDelG"><span class="hs-identifier">AnnDelG</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Delete.html#adTable"><span class="hs-identifier">adTable</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Delete.html#adWhere"><span class="hs-identifier">adWhere</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Delete.html#adOutput"><span class="hs-identifier">adOutput</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Delete.html#adAllCols"><span class="hs-identifier">adAllCols</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens.TH</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">makeLenses</span></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Kind</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Type</span></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html"><span class="hs-identifier">Hasura.RQL.IR.BoolExp</span></a></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Returning.html"><span class="hs-identifier">Hasura.RQL.IR.Returning</span></a></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html"><span class="hs-identifier">Hasura.RQL.Types.Column</span></a></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">data</span><span> </span><span id="AnnDelG"><span class="annot"><a href="Hasura.RQL.IR.Delete.html#AnnDelG"><span class="hs-identifier hs-var">AnnDelG</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688351651"><span class="annot"><a href="#local-6989586621688351651"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688351650"><span class="annot"><a href="#local-6989586621688351650"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688351649"><span class="annot"><a href="#local-6989586621688351649"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AnnDel"><span class="annot"><a href="Hasura.RQL.IR.Delete.html#AnnDel"><span class="hs-identifier hs-var">AnnDel</span></a></span></span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_adTable"><span class="annot"><span class="annottext">AnnDelG b r v -&gt; TableName b
+</span><a href="Hasura.RQL.IR.Delete.html#_adTable"><span class="hs-identifier hs-var hs-var">_adTable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688351651"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>    </span><span id="_adWhere"><span class="annot"><span class="annottext">AnnDelG b r v -&gt; (AnnBoolExp b v, AnnBoolExp b v)
+</span><a href="Hasura.RQL.IR.Delete.html#_adWhere"><span class="hs-identifier hs-var hs-var">_adWhere</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688351651"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688351649"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688351651"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688351649"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-26"></span><span>    </span><span id="_adOutput"><span class="annot"><span class="annottext">AnnDelG b r v -&gt; MutationOutputG b r v
+</span><a href="Hasura.RQL.IR.Delete.html#_adOutput"><span class="hs-identifier hs-var hs-var">_adOutput</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Returning.html#MutationOutputG"><span class="hs-identifier hs-type">MutationOutputG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688351651"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688351650"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688351649"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>    </span><span id="_adAllCols"><span class="annot"><span class="annottext">AnnDelG b r v -&gt; [ColumnInfo b]
+</span><a href="Hasura.RQL.IR.Delete.html#_adAllCols"><span class="hs-identifier hs-var hs-var">_adAllCols</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688351651"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688351640"><span id="local-6989586621688351642"><span class="annot"><span class="annottext">a -&gt; AnnDelG b r b -&gt; AnnDelG b r a
+(a -&gt; b) -&gt; AnnDelG b r a -&gt; AnnDelG b r b
+(forall a b. (a -&gt; b) -&gt; AnnDelG b r a -&gt; AnnDelG b r b)
+-&gt; (forall a b. a -&gt; AnnDelG b r b -&gt; AnnDelG b r a)
+-&gt; Functor (AnnDelG b r)
+forall a b. a -&gt; AnnDelG b r b -&gt; AnnDelG b r a
+forall a b. (a -&gt; b) -&gt; AnnDelG b r a -&gt; AnnDelG b r b
+forall (b :: BackendType) r a b.
+Backend b =&gt;
+a -&gt; AnnDelG b r b -&gt; AnnDelG b r a
+forall (b :: BackendType) r a b.
+Backend b =&gt;
+(a -&gt; b) -&gt; AnnDelG b r a -&gt; AnnDelG b r b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a -&gt; AnnDelG b r b -&gt; AnnDelG b r a
+$c&lt;$ :: forall (b :: BackendType) r a b.
+Backend b =&gt;
+a -&gt; AnnDelG b r b -&gt; AnnDelG b r a
+fmap :: (a -&gt; b) -&gt; AnnDelG b r a -&gt; AnnDelG b r b
+$cfmap :: forall (b :: BackendType) r a b.
+Backend b =&gt;
+(a -&gt; b) -&gt; AnnDelG b r a -&gt; AnnDelG b r b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688351605"><span id="local-6989586621688351607"><span id="local-6989586621688351609"><span id="local-6989586621688351611"><span id="local-6989586621688351613"><span id="local-6989586621688351615"><span id="local-6989586621688351617"><span id="local-6989586621688351619"><span id="local-6989586621688351621"><span id="local-6989586621688351623"><span id="local-6989586621688351625"><span id="local-6989586621688351627"><span id="local-6989586621688351629"><span id="local-6989586621688351631"><span id="local-6989586621688351633"><span id="local-6989586621688351635"><span id="local-6989586621688351637"><span class="annot"><span class="annottext">AnnDelG b r a -&gt; Bool
+(a -&gt; m) -&gt; AnnDelG b r a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnDelG b r a -&gt; b
+(forall m. Monoid m =&gt; AnnDelG b r m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnDelG b r a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnDelG b r a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnDelG b r a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnDelG b r a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnDelG b r a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnDelG b r a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnDelG b r a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnDelG b r a -&gt; a)
+-&gt; (forall a. AnnDelG b r a -&gt; [a])
+-&gt; (forall a. AnnDelG b r a -&gt; Bool)
+-&gt; (forall a. AnnDelG b r a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; AnnDelG b r a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; AnnDelG b r a -&gt; a)
+-&gt; (forall a. Ord a =&gt; AnnDelG b r a -&gt; a)
+-&gt; (forall a. Num a =&gt; AnnDelG b r a -&gt; a)
+-&gt; (forall a. Num a =&gt; AnnDelG b r a -&gt; a)
+-&gt; Foldable (AnnDelG b r)
+forall a. Eq a =&gt; a -&gt; AnnDelG b r a -&gt; Bool
+forall a. Num a =&gt; AnnDelG b r a -&gt; a
+forall a. Ord a =&gt; AnnDelG b r a -&gt; a
+forall m. Monoid m =&gt; AnnDelG b r m -&gt; m
+forall a. AnnDelG b r a -&gt; Bool
+forall a. AnnDelG b r a -&gt; Int
+forall a. AnnDelG b r a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; AnnDelG b r a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnDelG b r a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnDelG b r a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnDelG b r a -&gt; b
+forall (b :: BackendType) r a.
+(Backend b, Eq a) =&gt;
+a -&gt; AnnDelG b r a -&gt; Bool
+forall (b :: BackendType) r a.
+(Backend b, Num a) =&gt;
+AnnDelG b r a -&gt; a
+forall (b :: BackendType) r a.
+(Backend b, Ord a) =&gt;
+AnnDelG b r a -&gt; a
+forall (b :: BackendType) r m.
+(Backend b, Monoid m) =&gt;
+AnnDelG b r m -&gt; m
+forall (b :: BackendType) r a. Backend b =&gt; AnnDelG b r a -&gt; Bool
+forall (b :: BackendType) r a. Backend b =&gt; AnnDelG b r a -&gt; Int
+forall (b :: BackendType) r a. Backend b =&gt; AnnDelG b r a -&gt; [a]
+forall (b :: BackendType) r a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; AnnDelG b r a -&gt; a
+forall (b :: BackendType) r m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; AnnDelG b r a -&gt; m
+forall (b :: BackendType) r b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnDelG b r a -&gt; b
+forall (b :: BackendType) r a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnDelG b r a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+product :: AnnDelG b r a -&gt; a
+$cproduct :: forall (b :: BackendType) r a.
+(Backend b, Num a) =&gt;
+AnnDelG b r a -&gt; a
+sum :: AnnDelG b r a -&gt; a
+$csum :: forall (b :: BackendType) r a.
+(Backend b, Num a) =&gt;
+AnnDelG b r a -&gt; a
+minimum :: AnnDelG b r a -&gt; a
+$cminimum :: forall (b :: BackendType) r a.
+(Backend b, Ord a) =&gt;
+AnnDelG b r a -&gt; a
+maximum :: AnnDelG b r a -&gt; a
+$cmaximum :: forall (b :: BackendType) r a.
+(Backend b, Ord a) =&gt;
+AnnDelG b r a -&gt; a
+elem :: a -&gt; AnnDelG b r a -&gt; Bool
+$celem :: forall (b :: BackendType) r a.
+(Backend b, Eq a) =&gt;
+a -&gt; AnnDelG b r a -&gt; Bool
+length :: AnnDelG b r a -&gt; Int
+$clength :: forall (b :: BackendType) r a. Backend b =&gt; AnnDelG b r a -&gt; Int
+null :: AnnDelG b r a -&gt; Bool
+$cnull :: forall (b :: BackendType) r a. Backend b =&gt; AnnDelG b r a -&gt; Bool
+toList :: AnnDelG b r a -&gt; [a]
+$ctoList :: forall (b :: BackendType) r a. Backend b =&gt; AnnDelG b r a -&gt; [a]
+foldl1 :: (a -&gt; a -&gt; a) -&gt; AnnDelG b r a -&gt; a
+$cfoldl1 :: forall (b :: BackendType) r a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; AnnDelG b r a -&gt; a
+foldr1 :: (a -&gt; a -&gt; a) -&gt; AnnDelG b r a -&gt; a
+$cfoldr1 :: forall (b :: BackendType) r a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; AnnDelG b r a -&gt; a
+foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; AnnDelG b r a -&gt; b
+$cfoldl' :: forall (b :: BackendType) r b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnDelG b r a -&gt; b
+foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; AnnDelG b r a -&gt; b
+$cfoldl :: forall (b :: BackendType) r b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnDelG b r a -&gt; b
+foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; AnnDelG b r a -&gt; b
+$cfoldr' :: forall (b :: BackendType) r a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnDelG b r a -&gt; b
+foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; AnnDelG b r a -&gt; b
+$cfoldr :: forall (b :: BackendType) r a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnDelG b r a -&gt; b
+foldMap' :: (a -&gt; m) -&gt; AnnDelG b r a -&gt; m
+$cfoldMap' :: forall (b :: BackendType) r m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; AnnDelG b r a -&gt; m
+foldMap :: (a -&gt; m) -&gt; AnnDelG b r a -&gt; m
+$cfoldMap :: forall (b :: BackendType) r m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; AnnDelG b r a -&gt; m
+fold :: AnnDelG b r m -&gt; m
+$cfold :: forall (b :: BackendType) r m.
+(Backend b, Monoid m) =&gt;
+AnnDelG b r m -&gt; m
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688351594"><span id="local-6989586621688351596"><span id="local-6989586621688351598"><span id="local-6989586621688351600"><span class="annot"><span class="annottext">Functor (AnnDelG b r)
+Foldable (AnnDelG b r)
+Functor (AnnDelG b r)
+-&gt; Foldable (AnnDelG b r)
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; AnnDelG b r a -&gt; f (AnnDelG b r b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    AnnDelG b r (f a) -&gt; f (AnnDelG b r a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; AnnDelG b r a -&gt; m (AnnDelG b r b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    AnnDelG b r (m a) -&gt; m (AnnDelG b r a))
+-&gt; Traversable (AnnDelG b r)
+(a -&gt; f b) -&gt; AnnDelG b r a -&gt; f (AnnDelG b r b)
+forall (b :: BackendType) r. Backend b =&gt; Functor (AnnDelG b r)
+forall (b :: BackendType) r. Backend b =&gt; Foldable (AnnDelG b r)
+forall (b :: BackendType) r (m :: * -&gt; *) a.
+(Backend b, Monad m) =&gt;
+AnnDelG b r (m a) -&gt; m (AnnDelG b r a)
+forall (b :: BackendType) r (f :: * -&gt; *) a.
+(Backend b, Applicative f) =&gt;
+AnnDelG b r (f a) -&gt; f (AnnDelG b r a)
+forall (b :: BackendType) r (m :: * -&gt; *) a b.
+(Backend b, Monad m) =&gt;
+(a -&gt; m b) -&gt; AnnDelG b r a -&gt; m (AnnDelG b r b)
+forall (b :: BackendType) r (f :: * -&gt; *) a b.
+(Backend b, Applicative f) =&gt;
+(a -&gt; f b) -&gt; AnnDelG b r a -&gt; f (AnnDelG b r b)
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+AnnDelG b r (m a) -&gt; m (AnnDelG b r a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+AnnDelG b r (f a) -&gt; f (AnnDelG b r a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; AnnDelG b r a -&gt; m (AnnDelG b r b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; AnnDelG b r a -&gt; f (AnnDelG b r b)
+sequence :: AnnDelG b r (m a) -&gt; m (AnnDelG b r a)
+$csequence :: forall (b :: BackendType) r (m :: * -&gt; *) a.
+(Backend b, Monad m) =&gt;
+AnnDelG b r (m a) -&gt; m (AnnDelG b r a)
+mapM :: (a -&gt; m b) -&gt; AnnDelG b r a -&gt; m (AnnDelG b r b)
+$cmapM :: forall (b :: BackendType) r (m :: * -&gt; *) a b.
+(Backend b, Monad m) =&gt;
+(a -&gt; m b) -&gt; AnnDelG b r a -&gt; m (AnnDelG b r b)
+sequenceA :: AnnDelG b r (f a) -&gt; f (AnnDelG b r a)
+$csequenceA :: forall (b :: BackendType) r (f :: * -&gt; *) a.
+(Backend b, Applicative f) =&gt;
+AnnDelG b r (f a) -&gt; f (AnnDelG b r a)
+traverse :: (a -&gt; f b) -&gt; AnnDelG b r a -&gt; f (AnnDelG b r b)
+$ctraverse :: forall (b :: BackendType) r (f :: * -&gt; *) a b.
+(Backend b, Applicative f) =&gt;
+(a -&gt; f b) -&gt; AnnDelG b r a -&gt; f (AnnDelG b r b)
+$cp2Traversable :: forall (b :: BackendType) r. Backend b =&gt; Foldable (AnnDelG b r)
+$cp1Traversable :: forall (b :: BackendType) r. Backend b =&gt; Functor (AnnDelG b r)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">type</span><span> </span><span id="AnnDel"><span class="annot"><a href="Hasura.RQL.IR.Delete.html#AnnDel"><span class="hs-identifier hs-var">AnnDel</span></a></span></span><span> </span><span id="local-6989586621688351592"><span class="annot"><a href="#local-6989586621688351592"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Delete.html#AnnDelG"><span class="hs-identifier hs-type">AnnDelG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688351592"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SQLExpression"><span class="hs-identifier hs-type">SQLExpression</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688351592"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span id="local-6989586621688351581"><span id="local-6989586621688351583"><span id="local-6989586621688351585"><span id="local-6989586621688351587"><span id="local-6989586621688351588"><span id="local-6989586621688351589"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Returning.html#MutationOutputG"><span class="hs-identifier hs-type">MutationOutputG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688351589"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688351588"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688351587"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688351589"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#BooleanOperators"><span class="hs-identifier hs-type">BooleanOperators</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688351589"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688351587"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621688351587"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Delete.html#AnnDelG"><span class="hs-identifier hs-type">AnnDelG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688351589"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688351588"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688351587"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span class="hs-special">$(</span><span id="local-6989586621688351579"><span id="local-6989586621688351649"><span id="local-6989586621688351650"><span id="local-6989586621688351651"><span id="adAllCols"><span id="adOutput"><span id="adWhere"><span id="adTable"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">AnnDelG</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span></pre></body></html>

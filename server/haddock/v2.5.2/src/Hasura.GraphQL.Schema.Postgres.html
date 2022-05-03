@@ -1,0 +1,426 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | Postgres-specific schema combinators. Those should be moved to</span><span>
+</span><span id="line-2"></span><span class="hs-comment">-- the corresponding instance of `BackendSchema`, when actions are</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- generalized.</span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.GraphQL.Schema.Postgres</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Postgres.html#buildActionQueryFields"><span class="hs-identifier">buildActionQueryFields</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.Postgres.html#buildActionSubscriptionFields"><span class="hs-identifier">buildActionSubscriptionFields</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.Postgres.html#buildActionMutationFields"><span class="hs-identifier">buildActionMutationFields</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.html"><span class="hs-identifier">Hasura.GraphQL.Parser</span></a></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#EnumValueInfo"><span class="hs-identifier">EnumValueInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#field"><span class="hs-identifier">field</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Action.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Action</span></a></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier">MonadBuildSchema</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.html"><span class="hs-identifier">Hasura.RQL.IR</span></a></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.html"><span class="hs-identifier">Hasura.RQL.Types</span></a></span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span id="local-6989586621688399507"><span id="local-6989586621688399508"><span id="local-6989586621688399509"><span class="annot"><a href="Hasura.GraphQL.Schema.Postgres.html#buildActionQueryFields"><span class="hs-identifier hs-type">buildActionQueryFields</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-19"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688399509"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688399508"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688399507"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-20"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#AnnotatedCustomTypes"><span class="hs-identifier hs-type">AnnotatedCustomTypes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-21"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionInfo"><span class="hs-identifier hs-type">ActionInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-22"></span><span>  </span><span class="annot"><a href="#local-6989586621688399508"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688399507"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#QueryRootField"><span class="hs-identifier hs-type">QueryRootField</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span></span></span></span><span>
+</span><span id="line-23"></span><span id="buildActionQueryFields"><span class="annot"><span class="annottext">buildActionQueryFields :: AnnotatedCustomTypes
+-&gt; ActionInfo -&gt; m [FieldParser n (QueryRootField UnpreparedValue)]
+</span><a href="Hasura.GraphQL.Schema.Postgres.html#buildActionQueryFields"><span class="hs-identifier hs-var hs-var">buildActionQueryFields</span></a></span></span><span> </span><span id="local-6989586621688399506"><span class="annot"><span class="annottext">AnnotatedCustomTypes
+</span><a href="#local-6989586621688399506"><span class="hs-identifier hs-var">customTypes</span></a></span></span><span> </span><span id="local-6989586621688399505"><span class="annot"><span class="annottext">ActionInfo
+</span><a href="#local-6989586621688399505"><span class="hs-identifier hs-var">actionInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-24"></span><span>  </span><span class="annot"><span class="annottext">Maybe (FieldParser n (QueryRootField UnpreparedValue))
+-&gt; [FieldParser n (QueryRootField UnpreparedValue)]
+forall a. Maybe a -&gt; [a]
+</span><span class="hs-identifier hs-var">maybeToList</span></span><span> </span><span class="annot"><span class="annottext">(Maybe (FieldParser n (QueryRootField UnpreparedValue))
+ -&gt; [FieldParser n (QueryRootField UnpreparedValue)])
+-&gt; m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+-&gt; m [FieldParser n (QueryRootField UnpreparedValue)]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ActionDefinition
+  (ArgumentDefinition (GType, NonObjectCustomType)) ResolvedWebhook
+-&gt; ActionType
+forall a b. ActionDefinition a b -&gt; ActionType
+</span><a href="Hasura.RQL.Types.Action.html#_adType"><span class="hs-identifier hs-var hs-var">_adType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ActionInfo
+-&gt; ActionDefinition
+     (ArgumentDefinition (GType, NonObjectCustomType)) ResolvedWebhook
+</span><a href="Hasura.RQL.Types.Action.html#_aiDefinition"><span class="hs-identifier hs-var hs-var">_aiDefinition</span></a></span><span> </span><span class="annot"><span class="annottext">ActionInfo
+</span><a href="#local-6989586621688399505"><span class="hs-identifier hs-var">actionInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-25"></span><span>    </span><span class="annot"><span class="annottext">ActionType
+</span><a href="Hasura.RQL.Types.Action.html#ActionQuery"><span class="hs-identifier hs-var">ActionQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-26"></span><span>      </span><span class="annot"><span class="annottext">(FieldParser
+   n (AnnActionExecution (RemoteRelationshipField UnpreparedValue))
+ -&gt; FieldParser n (QueryRootField UnpreparedValue))
+-&gt; Maybe
+     (FieldParser
+        n (AnnActionExecution (RemoteRelationshipField UnpreparedValue)))
+-&gt; Maybe (FieldParser n (QueryRootField UnpreparedValue))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(AnnActionExecution (RemoteRelationshipField UnpreparedValue)
+ -&gt; QueryRootField UnpreparedValue)
+-&gt; FieldParser
+     n (AnnActionExecution (RemoteRelationshipField UnpreparedValue))
+-&gt; FieldParser n (QueryRootField UnpreparedValue)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ActionQuery (RemoteRelationshipField UnpreparedValue)
+-&gt; QueryRootField UnpreparedValue
+forall action (db :: BackendType -&gt; *) remote raw.
+action -&gt; RootField db remote action raw
+</span><a href="Hasura.RQL.IR.Root.html#RFAction"><span class="hs-identifier hs-var">RFAction</span></a></span><span> </span><span class="annot"><span class="annottext">(ActionQuery (RemoteRelationshipField UnpreparedValue)
+ -&gt; QueryRootField UnpreparedValue)
+-&gt; (AnnActionExecution (RemoteRelationshipField UnpreparedValue)
+    -&gt; ActionQuery (RemoteRelationshipField UnpreparedValue))
+-&gt; AnnActionExecution (RemoteRelationshipField UnpreparedValue)
+-&gt; QueryRootField UnpreparedValue
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">AnnActionExecution (RemoteRelationshipField UnpreparedValue)
+-&gt; ActionQuery (RemoteRelationshipField UnpreparedValue)
+forall r. AnnActionExecution r -&gt; ActionQuery r
+</span><a href="Hasura.RQL.IR.Root.html#AQQuery"><span class="hs-identifier hs-var">AQQuery</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Maybe
+   (FieldParser
+      n (AnnActionExecution (RemoteRelationshipField UnpreparedValue)))
+ -&gt; Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+-&gt; m (Maybe
+        (FieldParser
+           n (AnnActionExecution (RemoteRelationshipField UnpreparedValue))))
+-&gt; m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">AnnotatedCustomTypes
+-&gt; ActionInfo
+-&gt; m (Maybe
+        (FieldParser
+           n (AnnActionExecution (RemoteRelationshipField UnpreparedValue))))
+forall r (m :: * -&gt; *) (n :: * -&gt; *).
+MonadBuildSchema ('Postgres 'Vanilla) r m n =&gt;
+AnnotatedCustomTypes
+-&gt; ActionInfo
+-&gt; m (Maybe
+        (FieldParser
+           n (AnnActionExecution (RemoteRelationshipField UnpreparedValue))))
+</span><a href="Hasura.GraphQL.Schema.Action.html#actionExecute"><span class="hs-identifier hs-var">actionExecute</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedCustomTypes
+</span><a href="#local-6989586621688399506"><span class="hs-identifier hs-var">customTypes</span></a></span><span> </span><span class="annot"><span class="annottext">ActionInfo
+</span><a href="#local-6989586621688399505"><span class="hs-identifier hs-var">actionInfo</span></a></span><span>
+</span><span id="line-27"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutation"><span class="hs-identifier hs-type">ActionMutation</span></a></span><span> </span><span class="annot"><span class="annottext">ActionMutationKind
+</span><a href="Hasura.RQL.Types.Action.html#ActionSynchronous"><span class="hs-identifier hs-var">ActionSynchronous</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe (FieldParser n (QueryRootField UnpreparedValue))
+-&gt; m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe (FieldParser n (QueryRootField UnpreparedValue))
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-28"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutation"><span class="hs-identifier hs-type">ActionMutation</span></a></span><span> </span><span class="annot"><span class="annottext">ActionMutationKind
+</span><a href="Hasura.RQL.Types.Action.html#ActionAsynchronous"><span class="hs-identifier hs-var">ActionAsynchronous</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-29"></span><span>      </span><span class="annot"><span class="annottext">(FieldParser
+   n
+   (AnnActionAsyncQuery
+      ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue))
+ -&gt; FieldParser n (QueryRootField UnpreparedValue))
+-&gt; Maybe
+     (FieldParser
+        n
+        (AnnActionAsyncQuery
+           ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue)))
+-&gt; Maybe (FieldParser n (QueryRootField UnpreparedValue))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(AnnActionAsyncQuery
+   ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue)
+ -&gt; QueryRootField UnpreparedValue)
+-&gt; FieldParser
+     n
+     (AnnActionAsyncQuery
+        ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue))
+-&gt; FieldParser n (QueryRootField UnpreparedValue)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ActionQuery (RemoteRelationshipField UnpreparedValue)
+-&gt; QueryRootField UnpreparedValue
+forall action (db :: BackendType -&gt; *) remote raw.
+action -&gt; RootField db remote action raw
+</span><a href="Hasura.RQL.IR.Root.html#RFAction"><span class="hs-identifier hs-var">RFAction</span></a></span><span> </span><span class="annot"><span class="annottext">(ActionQuery (RemoteRelationshipField UnpreparedValue)
+ -&gt; QueryRootField UnpreparedValue)
+-&gt; (AnnActionAsyncQuery
+      ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue)
+    -&gt; ActionQuery (RemoteRelationshipField UnpreparedValue))
+-&gt; AnnActionAsyncQuery
+     ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue)
+-&gt; QueryRootField UnpreparedValue
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">AnnActionAsyncQuery
+  ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue)
+-&gt; ActionQuery (RemoteRelationshipField UnpreparedValue)
+forall r.
+AnnActionAsyncQuery ('Postgres 'Vanilla) r -&gt; ActionQuery r
+</span><a href="Hasura.RQL.IR.Root.html#AQAsync"><span class="hs-identifier hs-var">AQAsync</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Maybe
+   (FieldParser
+      n
+      (AnnActionAsyncQuery
+         ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue)))
+ -&gt; Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+-&gt; m (Maybe
+        (FieldParser
+           n
+           (AnnActionAsyncQuery
+              ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue))))
+-&gt; m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">AnnotatedObjects
+-&gt; ActionInfo
+-&gt; m (Maybe
+        (FieldParser
+           n
+           (AnnActionAsyncQuery
+              ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue))))
+forall r (m :: * -&gt; *) (n :: * -&gt; *).
+MonadBuildSchema ('Postgres 'Vanilla) r m n =&gt;
+AnnotatedObjects
+-&gt; ActionInfo
+-&gt; m (Maybe
+        (FieldParser
+           n
+           (AnnActionAsyncQuery
+              ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue))))
+</span><a href="Hasura.GraphQL.Schema.Action.html#actionAsyncQuery"><span class="hs-identifier hs-var">actionAsyncQuery</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnotatedCustomTypes -&gt; AnnotatedObjects
+</span><a href="Hasura.RQL.Types.CustomTypes.html#_actObjects"><span class="hs-identifier hs-var hs-var">_actObjects</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedCustomTypes
+</span><a href="#local-6989586621688399506"><span class="hs-identifier hs-var">customTypes</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ActionInfo
+</span><a href="#local-6989586621688399505"><span class="hs-identifier hs-var">actionInfo</span></a></span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span id="local-6989586621688399487"><span id="local-6989586621688399488"><span id="local-6989586621688399489"><span class="annot"><a href="Hasura.GraphQL.Schema.Postgres.html#buildActionMutationFields"><span class="hs-identifier hs-type">buildActionMutationFields</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-32"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688399489"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688399488"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688399487"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-33"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#AnnotatedCustomTypes"><span class="hs-identifier hs-type">AnnotatedCustomTypes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-34"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionInfo"><span class="hs-identifier hs-type">ActionInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-35"></span><span>  </span><span class="annot"><a href="#local-6989586621688399488"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688399487"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#MutationRootField"><span class="hs-identifier hs-type">MutationRootField</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span></span></span></span><span>
+</span><span id="line-36"></span><span id="buildActionMutationFields"><span class="annot"><span class="annottext">buildActionMutationFields :: AnnotatedCustomTypes
+-&gt; ActionInfo
+-&gt; m [FieldParser n (MutationRootField UnpreparedValue)]
+</span><a href="Hasura.GraphQL.Schema.Postgres.html#buildActionMutationFields"><span class="hs-identifier hs-var hs-var">buildActionMutationFields</span></a></span></span><span> </span><span id="local-6989586621688399486"><span class="annot"><span class="annottext">AnnotatedCustomTypes
+</span><a href="#local-6989586621688399486"><span class="hs-identifier hs-var">customTypes</span></a></span></span><span> </span><span id="local-6989586621688399485"><span class="annot"><span class="annottext">ActionInfo
+</span><a href="#local-6989586621688399485"><span class="hs-identifier hs-var">actionInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-37"></span><span>  </span><span class="annot"><span class="annottext">Maybe (FieldParser n (MutationRootField UnpreparedValue))
+-&gt; [FieldParser n (MutationRootField UnpreparedValue)]
+forall a. Maybe a -&gt; [a]
+</span><span class="hs-identifier hs-var">maybeToList</span></span><span> </span><span class="annot"><span class="annottext">(Maybe (FieldParser n (MutationRootField UnpreparedValue))
+ -&gt; [FieldParser n (MutationRootField UnpreparedValue)])
+-&gt; m (Maybe (FieldParser n (MutationRootField UnpreparedValue)))
+-&gt; m [FieldParser n (MutationRootField UnpreparedValue)]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ActionDefinition
+  (ArgumentDefinition (GType, NonObjectCustomType)) ResolvedWebhook
+-&gt; ActionType
+forall a b. ActionDefinition a b -&gt; ActionType
+</span><a href="Hasura.RQL.Types.Action.html#_adType"><span class="hs-identifier hs-var hs-var">_adType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ActionInfo
+-&gt; ActionDefinition
+     (ArgumentDefinition (GType, NonObjectCustomType)) ResolvedWebhook
+</span><a href="Hasura.RQL.Types.Action.html#_aiDefinition"><span class="hs-identifier hs-var hs-var">_aiDefinition</span></a></span><span> </span><span class="annot"><span class="annottext">ActionInfo
+</span><a href="#local-6989586621688399485"><span class="hs-identifier hs-var">actionInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-38"></span><span>    </span><span class="annot"><span class="annottext">ActionType
+</span><a href="Hasura.RQL.Types.Action.html#ActionQuery"><span class="hs-identifier hs-var">ActionQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe (FieldParser n (MutationRootField UnpreparedValue))
+-&gt; m (Maybe (FieldParser n (MutationRootField UnpreparedValue)))
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe (FieldParser n (MutationRootField UnpreparedValue))
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-39"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutation"><span class="hs-identifier hs-type">ActionMutation</span></a></span><span> </span><span class="annot"><span class="annottext">ActionMutationKind
+</span><a href="Hasura.RQL.Types.Action.html#ActionSynchronous"><span class="hs-identifier hs-var">ActionSynchronous</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-40"></span><span>      </span><span class="annot"><span class="annottext">(FieldParser
+   n (AnnActionExecution (RemoteRelationshipField UnpreparedValue))
+ -&gt; FieldParser n (MutationRootField UnpreparedValue))
+-&gt; Maybe
+     (FieldParser
+        n (AnnActionExecution (RemoteRelationshipField UnpreparedValue)))
+-&gt; Maybe (FieldParser n (MutationRootField UnpreparedValue))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(AnnActionExecution (RemoteRelationshipField UnpreparedValue)
+ -&gt; MutationRootField UnpreparedValue)
+-&gt; FieldParser
+     n (AnnActionExecution (RemoteRelationshipField UnpreparedValue))
+-&gt; FieldParser n (MutationRootField UnpreparedValue)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ActionMutation (RemoteRelationshipField UnpreparedValue)
+-&gt; MutationRootField UnpreparedValue
+forall action (db :: BackendType -&gt; *) remote raw.
+action -&gt; RootField db remote action raw
+</span><a href="Hasura.RQL.IR.Root.html#RFAction"><span class="hs-identifier hs-var">RFAction</span></a></span><span> </span><span class="annot"><span class="annottext">(ActionMutation (RemoteRelationshipField UnpreparedValue)
+ -&gt; MutationRootField UnpreparedValue)
+-&gt; (AnnActionExecution (RemoteRelationshipField UnpreparedValue)
+    -&gt; ActionMutation (RemoteRelationshipField UnpreparedValue))
+-&gt; AnnActionExecution (RemoteRelationshipField UnpreparedValue)
+-&gt; MutationRootField UnpreparedValue
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">AnnActionExecution (RemoteRelationshipField UnpreparedValue)
+-&gt; ActionMutation (RemoteRelationshipField UnpreparedValue)
+forall r. AnnActionExecution r -&gt; ActionMutation r
+</span><a href="Hasura.RQL.IR.Root.html#AMSync"><span class="hs-identifier hs-var">AMSync</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Maybe
+   (FieldParser
+      n (AnnActionExecution (RemoteRelationshipField UnpreparedValue)))
+ -&gt; Maybe (FieldParser n (MutationRootField UnpreparedValue)))
+-&gt; m (Maybe
+        (FieldParser
+           n (AnnActionExecution (RemoteRelationshipField UnpreparedValue))))
+-&gt; m (Maybe (FieldParser n (MutationRootField UnpreparedValue)))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">AnnotatedCustomTypes
+-&gt; ActionInfo
+-&gt; m (Maybe
+        (FieldParser
+           n (AnnActionExecution (RemoteRelationshipField UnpreparedValue))))
+forall r (m :: * -&gt; *) (n :: * -&gt; *).
+MonadBuildSchema ('Postgres 'Vanilla) r m n =&gt;
+AnnotatedCustomTypes
+-&gt; ActionInfo
+-&gt; m (Maybe
+        (FieldParser
+           n (AnnActionExecution (RemoteRelationshipField UnpreparedValue))))
+</span><a href="Hasura.GraphQL.Schema.Action.html#actionExecute"><span class="hs-identifier hs-var">actionExecute</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedCustomTypes
+</span><a href="#local-6989586621688399486"><span class="hs-identifier hs-var">customTypes</span></a></span><span> </span><span class="annot"><span class="annottext">ActionInfo
+</span><a href="#local-6989586621688399485"><span class="hs-identifier hs-var">actionInfo</span></a></span><span>
+</span><span id="line-41"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutation"><span class="hs-identifier hs-type">ActionMutation</span></a></span><span> </span><span class="annot"><span class="annottext">ActionMutationKind
+</span><a href="Hasura.RQL.Types.Action.html#ActionAsynchronous"><span class="hs-identifier hs-var">ActionAsynchronous</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-42"></span><span>      </span><span class="annot"><span class="annottext">(FieldParser n AnnActionMutationAsync
+ -&gt; FieldParser n (MutationRootField UnpreparedValue))
+-&gt; Maybe (FieldParser n AnnActionMutationAsync)
+-&gt; Maybe (FieldParser n (MutationRootField UnpreparedValue))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(AnnActionMutationAsync -&gt; MutationRootField UnpreparedValue)
+-&gt; FieldParser n AnnActionMutationAsync
+-&gt; FieldParser n (MutationRootField UnpreparedValue)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ActionMutation (RemoteRelationshipField UnpreparedValue)
+-&gt; MutationRootField UnpreparedValue
+forall action (db :: BackendType -&gt; *) remote raw.
+action -&gt; RootField db remote action raw
+</span><a href="Hasura.RQL.IR.Root.html#RFAction"><span class="hs-identifier hs-var">RFAction</span></a></span><span> </span><span class="annot"><span class="annottext">(ActionMutation (RemoteRelationshipField UnpreparedValue)
+ -&gt; MutationRootField UnpreparedValue)
+-&gt; (AnnActionMutationAsync
+    -&gt; ActionMutation (RemoteRelationshipField UnpreparedValue))
+-&gt; AnnActionMutationAsync
+-&gt; MutationRootField UnpreparedValue
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">AnnActionMutationAsync
+-&gt; ActionMutation (RemoteRelationshipField UnpreparedValue)
+forall r. AnnActionMutationAsync -&gt; ActionMutation r
+</span><a href="Hasura.RQL.IR.Root.html#AMAsync"><span class="hs-identifier hs-var">AMAsync</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Maybe (FieldParser n AnnActionMutationAsync)
+ -&gt; Maybe (FieldParser n (MutationRootField UnpreparedValue)))
+-&gt; m (Maybe (FieldParser n AnnActionMutationAsync))
+-&gt; m (Maybe (FieldParser n (MutationRootField UnpreparedValue)))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">NonObjectTypeMap
+-&gt; ActionInfo -&gt; m (Maybe (FieldParser n AnnActionMutationAsync))
+forall r (m :: * -&gt; *) (n :: * -&gt; *).
+MonadBuildSchemaBase r m n =&gt;
+NonObjectTypeMap
+-&gt; ActionInfo -&gt; m (Maybe (FieldParser n AnnActionMutationAsync))
+</span><a href="Hasura.GraphQL.Schema.Action.html#actionAsyncMutation"><span class="hs-identifier hs-var">actionAsyncMutation</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnotatedCustomTypes -&gt; NonObjectTypeMap
+</span><a href="Hasura.RQL.Types.CustomTypes.html#_actNonObjects"><span class="hs-identifier hs-var hs-var">_actNonObjects</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedCustomTypes
+</span><a href="#local-6989586621688399486"><span class="hs-identifier hs-var">customTypes</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ActionInfo
+</span><a href="#local-6989586621688399485"><span class="hs-identifier hs-var">actionInfo</span></a></span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span id="local-6989586621688399478"><span id="local-6989586621688399479"><span id="local-6989586621688399480"><span class="annot"><a href="Hasura.GraphQL.Schema.Postgres.html#buildActionSubscriptionFields"><span class="hs-identifier hs-type">buildActionSubscriptionFields</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-45"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688399480"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688399479"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688399478"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-46"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#AnnotatedCustomTypes"><span class="hs-identifier hs-type">AnnotatedCustomTypes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-47"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionInfo"><span class="hs-identifier hs-type">ActionInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-48"></span><span>  </span><span class="annot"><a href="#local-6989586621688399479"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688399478"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#QueryRootField"><span class="hs-identifier hs-type">QueryRootField</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span></span></span></span><span>
+</span><span id="line-49"></span><span id="buildActionSubscriptionFields"><span class="annot"><span class="annottext">buildActionSubscriptionFields :: AnnotatedCustomTypes
+-&gt; ActionInfo -&gt; m [FieldParser n (QueryRootField UnpreparedValue)]
+</span><a href="Hasura.GraphQL.Schema.Postgres.html#buildActionSubscriptionFields"><span class="hs-identifier hs-var hs-var">buildActionSubscriptionFields</span></a></span></span><span> </span><span id="local-6989586621688399477"><span class="annot"><span class="annottext">AnnotatedCustomTypes
+</span><a href="#local-6989586621688399477"><span class="hs-identifier hs-var">customTypes</span></a></span></span><span> </span><span id="local-6989586621688399476"><span class="annot"><span class="annottext">ActionInfo
+</span><a href="#local-6989586621688399476"><span class="hs-identifier hs-var">actionInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-50"></span><span>  </span><span class="annot"><span class="annottext">Maybe (FieldParser n (QueryRootField UnpreparedValue))
+-&gt; [FieldParser n (QueryRootField UnpreparedValue)]
+forall a. Maybe a -&gt; [a]
+</span><span class="hs-identifier hs-var">maybeToList</span></span><span> </span><span class="annot"><span class="annottext">(Maybe (FieldParser n (QueryRootField UnpreparedValue))
+ -&gt; [FieldParser n (QueryRootField UnpreparedValue)])
+-&gt; m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+-&gt; m [FieldParser n (QueryRootField UnpreparedValue)]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ActionDefinition
+  (ArgumentDefinition (GType, NonObjectCustomType)) ResolvedWebhook
+-&gt; ActionType
+forall a b. ActionDefinition a b -&gt; ActionType
+</span><a href="Hasura.RQL.Types.Action.html#_adType"><span class="hs-identifier hs-var hs-var">_adType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ActionInfo
+-&gt; ActionDefinition
+     (ArgumentDefinition (GType, NonObjectCustomType)) ResolvedWebhook
+</span><a href="Hasura.RQL.Types.Action.html#_aiDefinition"><span class="hs-identifier hs-var hs-var">_aiDefinition</span></a></span><span> </span><span class="annot"><span class="annottext">ActionInfo
+</span><a href="#local-6989586621688399476"><span class="hs-identifier hs-var">actionInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-51"></span><span>    </span><span class="annot"><span class="annottext">ActionType
+</span><a href="Hasura.RQL.Types.Action.html#ActionQuery"><span class="hs-identifier hs-var">ActionQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe (FieldParser n (QueryRootField UnpreparedValue))
+-&gt; m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe (FieldParser n (QueryRootField UnpreparedValue))
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-52"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutation"><span class="hs-identifier hs-type">ActionMutation</span></a></span><span> </span><span class="annot"><span class="annottext">ActionMutationKind
+</span><a href="Hasura.RQL.Types.Action.html#ActionSynchronous"><span class="hs-identifier hs-var">ActionSynchronous</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe (FieldParser n (QueryRootField UnpreparedValue))
+-&gt; m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe (FieldParser n (QueryRootField UnpreparedValue))
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-53"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutation"><span class="hs-identifier hs-type">ActionMutation</span></a></span><span> </span><span class="annot"><span class="annottext">ActionMutationKind
+</span><a href="Hasura.RQL.Types.Action.html#ActionAsynchronous"><span class="hs-identifier hs-var">ActionAsynchronous</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-54"></span><span>      </span><span class="annot"><span class="annottext">(FieldParser
+   n
+   (AnnActionAsyncQuery
+      ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue))
+ -&gt; FieldParser n (QueryRootField UnpreparedValue))
+-&gt; Maybe
+     (FieldParser
+        n
+        (AnnActionAsyncQuery
+           ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue)))
+-&gt; Maybe (FieldParser n (QueryRootField UnpreparedValue))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(AnnActionAsyncQuery
+   ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue)
+ -&gt; QueryRootField UnpreparedValue)
+-&gt; FieldParser
+     n
+     (AnnActionAsyncQuery
+        ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue))
+-&gt; FieldParser n (QueryRootField UnpreparedValue)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ActionQuery (RemoteRelationshipField UnpreparedValue)
+-&gt; QueryRootField UnpreparedValue
+forall action (db :: BackendType -&gt; *) remote raw.
+action -&gt; RootField db remote action raw
+</span><a href="Hasura.RQL.IR.Root.html#RFAction"><span class="hs-identifier hs-var">RFAction</span></a></span><span> </span><span class="annot"><span class="annottext">(ActionQuery (RemoteRelationshipField UnpreparedValue)
+ -&gt; QueryRootField UnpreparedValue)
+-&gt; (AnnActionAsyncQuery
+      ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue)
+    -&gt; ActionQuery (RemoteRelationshipField UnpreparedValue))
+-&gt; AnnActionAsyncQuery
+     ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue)
+-&gt; QueryRootField UnpreparedValue
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">AnnActionAsyncQuery
+  ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue)
+-&gt; ActionQuery (RemoteRelationshipField UnpreparedValue)
+forall r.
+AnnActionAsyncQuery ('Postgres 'Vanilla) r -&gt; ActionQuery r
+</span><a href="Hasura.RQL.IR.Root.html#AQAsync"><span class="hs-identifier hs-var">AQAsync</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Maybe
+   (FieldParser
+      n
+      (AnnActionAsyncQuery
+         ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue)))
+ -&gt; Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+-&gt; m (Maybe
+        (FieldParser
+           n
+           (AnnActionAsyncQuery
+              ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue))))
+-&gt; m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">AnnotatedObjects
+-&gt; ActionInfo
+-&gt; m (Maybe
+        (FieldParser
+           n
+           (AnnActionAsyncQuery
+              ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue))))
+forall r (m :: * -&gt; *) (n :: * -&gt; *).
+MonadBuildSchema ('Postgres 'Vanilla) r m n =&gt;
+AnnotatedObjects
+-&gt; ActionInfo
+-&gt; m (Maybe
+        (FieldParser
+           n
+           (AnnActionAsyncQuery
+              ('Postgres 'Vanilla) (RemoteRelationshipField UnpreparedValue))))
+</span><a href="Hasura.GraphQL.Schema.Action.html#actionAsyncQuery"><span class="hs-identifier hs-var">actionAsyncQuery</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnotatedCustomTypes -&gt; AnnotatedObjects
+</span><a href="Hasura.RQL.Types.CustomTypes.html#_actObjects"><span class="hs-identifier hs-var hs-var">_actObjects</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedCustomTypes
+</span><a href="#local-6989586621688399477"><span class="hs-identifier hs-var">customTypes</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ActionInfo
+</span><a href="#local-6989586621688399476"><span class="hs-identifier hs-var">actionInfo</span></a></span><span>
+</span><span id="line-55"></span></pre></body></html>

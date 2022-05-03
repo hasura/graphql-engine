@@ -1,0 +1,617 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-comment">--</span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.DataWrapper.API.V0.Table</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#TableInfo"><span class="hs-identifier">TableInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#TableName"><span class="hs-identifier">TableName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.Casing</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">snakeCase</span></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html"><span class="hs-identifier">Hasura.Backends.DataWrapper.API.V0.Column</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">API.V0</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.html"><span class="hs-identifier">Hasura.Incremental</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier">Cacheable</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span id="local-6989586621688307356"><span id="local-6989586621688307357"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="TableName"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#TableName"><span class="hs-identifier hs-var">TableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TableName"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#TableName"><span class="hs-identifier hs-var">TableName</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688307351"><span id="local-6989586621688307353"><span class="annot"><span class="annottext">TableName -&gt; TableName -&gt; Bool
+(TableName -&gt; TableName -&gt; Bool)
+-&gt; (TableName -&gt; TableName -&gt; Bool) -&gt; Eq TableName
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: TableName -&gt; TableName -&gt; Bool
+$c/= :: TableName -&gt; TableName -&gt; Bool
+== :: TableName -&gt; TableName -&gt; Bool
+$c== :: TableName -&gt; TableName -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307335"><span id="local-6989586621688307337"><span id="local-6989586621688307339"><span id="local-6989586621688307341"><span id="local-6989586621688307343"><span id="local-6989586621688307345"><span id="local-6989586621688307347"><span class="annot"><span class="annottext">Eq TableName
+Eq TableName
+-&gt; (TableName -&gt; TableName -&gt; Ordering)
+-&gt; (TableName -&gt; TableName -&gt; Bool)
+-&gt; (TableName -&gt; TableName -&gt; Bool)
+-&gt; (TableName -&gt; TableName -&gt; Bool)
+-&gt; (TableName -&gt; TableName -&gt; Bool)
+-&gt; (TableName -&gt; TableName -&gt; TableName)
+-&gt; (TableName -&gt; TableName -&gt; TableName)
+-&gt; Ord TableName
+TableName -&gt; TableName -&gt; Bool
+TableName -&gt; TableName -&gt; Ordering
+TableName -&gt; TableName -&gt; TableName
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: TableName -&gt; TableName -&gt; TableName
+$cmin :: TableName -&gt; TableName -&gt; TableName
+max :: TableName -&gt; TableName -&gt; TableName
+$cmax :: TableName -&gt; TableName -&gt; TableName
+&gt;= :: TableName -&gt; TableName -&gt; Bool
+$c&gt;= :: TableName -&gt; TableName -&gt; Bool
+&gt; :: TableName -&gt; TableName -&gt; Bool
+$c&gt; :: TableName -&gt; TableName -&gt; Bool
+&lt;= :: TableName -&gt; TableName -&gt; Bool
+$c&lt;= :: TableName -&gt; TableName -&gt; Bool
+&lt; :: TableName -&gt; TableName -&gt; Bool
+$c&lt; :: TableName -&gt; TableName -&gt; Bool
+compare :: TableName -&gt; TableName -&gt; Ordering
+$ccompare :: TableName -&gt; TableName -&gt; Ordering
+$cp1Ord :: Eq TableName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307328"><span id="local-6989586621688307330"><span id="local-6989586621688307332"><span class="annot"><span class="annottext">Int -&gt; TableName -&gt; ShowS
+[TableName] -&gt; ShowS
+TableName -&gt; String
+(Int -&gt; TableName -&gt; ShowS)
+-&gt; (TableName -&gt; String)
+-&gt; ([TableName] -&gt; ShowS)
+-&gt; Show TableName
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [TableName] -&gt; ShowS
+$cshowList :: [TableName] -&gt; ShowS
+show :: TableName -&gt; String
+$cshow :: TableName -&gt; String
+showsPrec :: Int -&gt; TableName -&gt; ShowS
+$cshowsPrec :: Int -&gt; TableName -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. TableName -&gt; Rep TableName x)
+-&gt; (forall x. Rep TableName x -&gt; TableName) -&gt; Generic TableName
+forall x. Rep TableName x -&gt; TableName
+forall x. TableName -&gt; Rep TableName x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep TableName x -&gt; TableName
+$cfrom :: forall x. TableName -&gt; Rep TableName x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cTableName"><span id="%24tTableName"><span id="local-6989586621688307295"><span id="local-6989586621688307297"><span id="local-6989586621688307299"><span id="local-6989586621688307301"><span id="local-6989586621688307303"><span id="local-6989586621688307305"><span id="local-6989586621688307307"><span id="local-6989586621688307309"><span id="local-6989586621688307311"><span id="local-6989586621688307313"><span id="local-6989586621688307315"><span id="local-6989586621688307317"><span id="local-6989586621688307319"><span id="local-6989586621688307321"><span class="annot"><span class="annottext">Typeable TableName
+DataType
+Constr
+Typeable TableName
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; TableName -&gt; c TableName)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c TableName)
+-&gt; (TableName -&gt; Constr)
+-&gt; (TableName -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c TableName))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c TableName))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; TableName -&gt; TableName)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TableName -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TableName -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; TableName -&gt; [u])
+-&gt; (forall u.
+    Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; TableName -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; TableName -&gt; m TableName)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; TableName -&gt; m TableName)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; TableName -&gt; m TableName)
+-&gt; Data TableName
+TableName -&gt; DataType
+TableName -&gt; Constr
+(forall b. Data b =&gt; b -&gt; b) -&gt; TableName -&gt; TableName
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; TableName -&gt; c TableName
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c TableName
+forall a.
+Typeable a
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; a -&gt; c a)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c a)
+-&gt; (a -&gt; Constr)
+-&gt; (a -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c a))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c a))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; a -&gt; a)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; Data a
+forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; TableName -&gt; u
+forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; TableName -&gt; [u]
+forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TableName -&gt; r
+forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TableName -&gt; r
+forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; TableName -&gt; m TableName
+forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; TableName -&gt; m TableName
+forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c TableName
+forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; TableName -&gt; c TableName
+forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c TableName)
+forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c TableName)
+$cTableName :: Constr
+$tTableName :: DataType
+gmapMo :: (forall d. Data d =&gt; d -&gt; m d) -&gt; TableName -&gt; m TableName
+$cgmapMo :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; TableName -&gt; m TableName
+gmapMp :: (forall d. Data d =&gt; d -&gt; m d) -&gt; TableName -&gt; m TableName
+$cgmapMp :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; TableName -&gt; m TableName
+gmapM :: (forall d. Data d =&gt; d -&gt; m d) -&gt; TableName -&gt; m TableName
+$cgmapM :: forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; TableName -&gt; m TableName
+gmapQi :: Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; TableName -&gt; u
+$cgmapQi :: forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; TableName -&gt; u
+gmapQ :: (forall d. Data d =&gt; d -&gt; u) -&gt; TableName -&gt; [u]
+$cgmapQ :: forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; TableName -&gt; [u]
+gmapQr :: (r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TableName -&gt; r
+$cgmapQr :: forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TableName -&gt; r
+gmapQl :: (r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TableName -&gt; r
+$cgmapQl :: forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TableName -&gt; r
+gmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; TableName -&gt; TableName
+$cgmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; TableName -&gt; TableName
+dataCast2 :: (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c TableName)
+$cdataCast2 :: forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c TableName)
+dataCast1 :: (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c TableName)
+$cdataCast1 :: forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c TableName)
+dataTypeOf :: TableName -&gt; DataType
+$cdataTypeOf :: TableName -&gt; DataType
+toConstr :: TableName -&gt; Constr
+$ctoConstr :: TableName -&gt; Constr
+gunfold :: (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c TableName
+$cgunfold :: forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c TableName
+gfoldl :: (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; TableName -&gt; c TableName
+$cgfoldl :: forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; TableName -&gt; c TableName
+$cp1Data :: Typeable TableName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688307288"><span id="local-6989586621688307290"><span class="annot"><span class="annottext">Value -&gt; Parser [TableName]
+Value -&gt; Parser TableName
+(Value -&gt; Parser TableName)
+-&gt; (Value -&gt; Parser [TableName]) -&gt; FromJSON TableName
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [TableName]
+$cparseJSONList :: Value -&gt; Parser [TableName]
+parseJSON :: Value -&gt; Parser TableName
+$cparseJSON :: Value -&gt; Parser TableName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307279"><span id="local-6989586621688307281"><span id="local-6989586621688307283"><span id="local-6989586621688307285"><span class="annot"><span class="annottext">[TableName] -&gt; Encoding
+[TableName] -&gt; Value
+TableName -&gt; Encoding
+TableName -&gt; Value
+(TableName -&gt; Value)
+-&gt; (TableName -&gt; Encoding)
+-&gt; ([TableName] -&gt; Value)
+-&gt; ([TableName] -&gt; Encoding)
+-&gt; ToJSON TableName
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [TableName] -&gt; Encoding
+$ctoEncodingList :: [TableName] -&gt; Encoding
+toJSONList :: [TableName] -&gt; Value
+$ctoJSONList :: [TableName] -&gt; Value
+toEncoding :: TableName -&gt; Encoding
+$ctoEncoding :: TableName -&gt; Encoding
+toJSON :: TableName -&gt; Value
+$ctoJSON :: TableName -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688307276"><span class="annot"><span class="annottext">TableName -&gt; ()
+(TableName -&gt; ()) -&gt; NFData TableName
+forall a. (a -&gt; ()) -&gt; NFData a
+rnf :: TableName -&gt; ()
+$crnf :: TableName -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307272"><span class="annot"><span class="annottext">Eq TableName
+Eq TableName
+-&gt; (Accesses -&gt; TableName -&gt; TableName -&gt; Bool)
+-&gt; Cacheable TableName
+Accesses -&gt; TableName -&gt; TableName -&gt; Bool
+forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
+unchanged :: Accesses -&gt; TableName -&gt; TableName -&gt; Bool
+$cunchanged :: Accesses -&gt; TableName -&gt; TableName -&gt; Bool
+$cp1Cacheable :: Eq TableName
+</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307267"><span id="local-6989586621688307269"><span class="annot"><span class="annottext">Int -&gt; TableName -&gt; Int
+TableName -&gt; Int
+(Int -&gt; TableName -&gt; Int)
+-&gt; (TableName -&gt; Int) -&gt; Hashable TableName
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: TableName -&gt; Int
+$chash :: TableName -&gt; Int
+hashWithSalt :: Int -&gt; TableName -&gt; Int
+$chashWithSalt :: Int -&gt; TableName -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="hs-comment">-- | Table schema data from the 'SchemaResponse'.</span><span>
+</span><span id="line-29"></span><span id="local-6989586621688307264"><span id="local-6989586621688307265"></span></span><span class="hs-keyword">data</span><span> </span><span id="TableInfo"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#TableInfo"><span class="hs-identifier hs-var">TableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TableInfo"><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#TableInfo"><span class="hs-identifier hs-var">TableInfo</span></a></span></span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="dtiName"><span class="annot"><span class="annottext">TableInfo -&gt; TableName
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#dtiName"><span class="hs-identifier hs-var hs-var">dtiName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>    </span><span id="dtiColumns"><span class="annot"><span class="annottext">TableInfo -&gt; [ColumnInfo]
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#dtiColumns"><span class="hs-identifier hs-var hs-var">dtiColumns</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Column.html#ColumnInfo"><span class="hs-identifier hs-type">API.V0.ColumnInfo</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>    </span><span id="dtiPrimaryKey"><span class="annot"><span class="annottext">TableInfo -&gt; Maybe Text
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#dtiPrimaryKey"><span class="hs-identifier hs-var hs-var">dtiPrimaryKey</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>    </span><span id="dtiDescription"><span class="annot"><span class="annottext">TableInfo -&gt; Maybe Text
+</span><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#dtiDescription"><span class="hs-identifier hs-var hs-var">dtiDescription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688307255"><span id="local-6989586621688307257"><span class="annot"><span class="annottext">TableInfo -&gt; TableInfo -&gt; Bool
+(TableInfo -&gt; TableInfo -&gt; Bool)
+-&gt; (TableInfo -&gt; TableInfo -&gt; Bool) -&gt; Eq TableInfo
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: TableInfo -&gt; TableInfo -&gt; Bool
+$c/= :: TableInfo -&gt; TableInfo -&gt; Bool
+== :: TableInfo -&gt; TableInfo -&gt; Bool
+$c== :: TableInfo -&gt; TableInfo -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307240"><span id="local-6989586621688307242"><span id="local-6989586621688307244"><span id="local-6989586621688307246"><span id="local-6989586621688307248"><span id="local-6989586621688307250"><span id="local-6989586621688307252"><span class="annot"><span class="annottext">Eq TableInfo
+Eq TableInfo
+-&gt; (TableInfo -&gt; TableInfo -&gt; Ordering)
+-&gt; (TableInfo -&gt; TableInfo -&gt; Bool)
+-&gt; (TableInfo -&gt; TableInfo -&gt; Bool)
+-&gt; (TableInfo -&gt; TableInfo -&gt; Bool)
+-&gt; (TableInfo -&gt; TableInfo -&gt; Bool)
+-&gt; (TableInfo -&gt; TableInfo -&gt; TableInfo)
+-&gt; (TableInfo -&gt; TableInfo -&gt; TableInfo)
+-&gt; Ord TableInfo
+TableInfo -&gt; TableInfo -&gt; Bool
+TableInfo -&gt; TableInfo -&gt; Ordering
+TableInfo -&gt; TableInfo -&gt; TableInfo
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: TableInfo -&gt; TableInfo -&gt; TableInfo
+$cmin :: TableInfo -&gt; TableInfo -&gt; TableInfo
+max :: TableInfo -&gt; TableInfo -&gt; TableInfo
+$cmax :: TableInfo -&gt; TableInfo -&gt; TableInfo
+&gt;= :: TableInfo -&gt; TableInfo -&gt; Bool
+$c&gt;= :: TableInfo -&gt; TableInfo -&gt; Bool
+&gt; :: TableInfo -&gt; TableInfo -&gt; Bool
+$c&gt; :: TableInfo -&gt; TableInfo -&gt; Bool
+&lt;= :: TableInfo -&gt; TableInfo -&gt; Bool
+$c&lt;= :: TableInfo -&gt; TableInfo -&gt; Bool
+&lt; :: TableInfo -&gt; TableInfo -&gt; Bool
+$c&lt; :: TableInfo -&gt; TableInfo -&gt; Bool
+compare :: TableInfo -&gt; TableInfo -&gt; Ordering
+$ccompare :: TableInfo -&gt; TableInfo -&gt; Ordering
+$cp1Ord :: Eq TableInfo
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307234"><span id="local-6989586621688307236"><span id="local-6989586621688307238"><span class="annot"><span class="annottext">Int -&gt; TableInfo -&gt; ShowS
+[TableInfo] -&gt; ShowS
+TableInfo -&gt; String
+(Int -&gt; TableInfo -&gt; ShowS)
+-&gt; (TableInfo -&gt; String)
+-&gt; ([TableInfo] -&gt; ShowS)
+-&gt; Show TableInfo
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [TableInfo] -&gt; ShowS
+$cshowList :: [TableInfo] -&gt; ShowS
+show :: TableInfo -&gt; String
+$cshow :: TableInfo -&gt; String
+showsPrec :: Int -&gt; TableInfo -&gt; ShowS
+$cshowsPrec :: Int -&gt; TableInfo -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. TableInfo -&gt; Rep TableInfo x)
+-&gt; (forall x. Rep TableInfo x -&gt; TableInfo) -&gt; Generic TableInfo
+forall x. Rep TableInfo x -&gt; TableInfo
+forall x. TableInfo -&gt; Rep TableInfo x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep TableInfo x -&gt; TableInfo
+$cfrom :: forall x. TableInfo -&gt; Rep TableInfo x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cTableInfo"><span id="%24tTableInfo"><span id="local-6989586621688307203"><span id="local-6989586621688307205"><span id="local-6989586621688307207"><span id="local-6989586621688307209"><span id="local-6989586621688307211"><span id="local-6989586621688307213"><span id="local-6989586621688307215"><span id="local-6989586621688307217"><span id="local-6989586621688307219"><span id="local-6989586621688307221"><span id="local-6989586621688307223"><span id="local-6989586621688307225"><span id="local-6989586621688307227"><span id="local-6989586621688307229"><span class="annot"><span class="annottext">Typeable TableInfo
+DataType
+Constr
+Typeable TableInfo
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; TableInfo -&gt; c TableInfo)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c TableInfo)
+-&gt; (TableInfo -&gt; Constr)
+-&gt; (TableInfo -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c TableInfo))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c TableInfo))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; TableInfo -&gt; TableInfo)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TableInfo -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TableInfo -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; TableInfo -&gt; [u])
+-&gt; (forall u.
+    Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; TableInfo -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; TableInfo -&gt; m TableInfo)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; TableInfo -&gt; m TableInfo)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; TableInfo -&gt; m TableInfo)
+-&gt; Data TableInfo
+TableInfo -&gt; DataType
+TableInfo -&gt; Constr
+(forall b. Data b =&gt; b -&gt; b) -&gt; TableInfo -&gt; TableInfo
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; TableInfo -&gt; c TableInfo
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c TableInfo
+forall a.
+Typeable a
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; a -&gt; c a)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c a)
+-&gt; (a -&gt; Constr)
+-&gt; (a -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c a))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c a))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; a -&gt; a)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; Data a
+forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; TableInfo -&gt; u
+forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; TableInfo -&gt; [u]
+forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TableInfo -&gt; r
+forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TableInfo -&gt; r
+forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; TableInfo -&gt; m TableInfo
+forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; TableInfo -&gt; m TableInfo
+forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c TableInfo
+forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; TableInfo -&gt; c TableInfo
+forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c TableInfo)
+forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c TableInfo)
+$cTableInfo :: Constr
+$tTableInfo :: DataType
+gmapMo :: (forall d. Data d =&gt; d -&gt; m d) -&gt; TableInfo -&gt; m TableInfo
+$cgmapMo :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; TableInfo -&gt; m TableInfo
+gmapMp :: (forall d. Data d =&gt; d -&gt; m d) -&gt; TableInfo -&gt; m TableInfo
+$cgmapMp :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; TableInfo -&gt; m TableInfo
+gmapM :: (forall d. Data d =&gt; d -&gt; m d) -&gt; TableInfo -&gt; m TableInfo
+$cgmapM :: forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d) -&gt; TableInfo -&gt; m TableInfo
+gmapQi :: Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; TableInfo -&gt; u
+$cgmapQi :: forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; TableInfo -&gt; u
+gmapQ :: (forall d. Data d =&gt; d -&gt; u) -&gt; TableInfo -&gt; [u]
+$cgmapQ :: forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; TableInfo -&gt; [u]
+gmapQr :: (r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TableInfo -&gt; r
+$cgmapQr :: forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TableInfo -&gt; r
+gmapQl :: (r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TableInfo -&gt; r
+$cgmapQl :: forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; TableInfo -&gt; r
+gmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; TableInfo -&gt; TableInfo
+$cgmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; TableInfo -&gt; TableInfo
+dataCast2 :: (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c TableInfo)
+$cdataCast2 :: forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c TableInfo)
+dataCast1 :: (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c TableInfo)
+$cdataCast1 :: forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c TableInfo)
+dataTypeOf :: TableInfo -&gt; DataType
+$cdataTypeOf :: TableInfo -&gt; DataType
+toConstr :: TableInfo -&gt; Constr
+$ctoConstr :: TableInfo -&gt; Constr
+gunfold :: (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c TableInfo
+$cgunfold :: forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c TableInfo
+gfoldl :: (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; TableInfo -&gt; c TableInfo
+$cgfoldl :: forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; TableInfo -&gt; c TableInfo
+$cp1Data :: Typeable TableInfo
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688307199"><span class="annot"><span class="annottext">TableInfo -&gt; ()
+(TableInfo -&gt; ()) -&gt; NFData TableInfo
+forall a. (a -&gt; ()) -&gt; NFData a
+rnf :: TableInfo -&gt; ()
+$crnf :: TableInfo -&gt; ()
+</span><a href="#local-6989586621688307199"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307196"><span class="annot"><span class="annottext">Eq TableInfo
+Eq TableInfo
+-&gt; (Accesses -&gt; TableInfo -&gt; TableInfo -&gt; Bool)
+-&gt; Cacheable TableInfo
+Accesses -&gt; TableInfo -&gt; TableInfo -&gt; Bool
+forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
+unchanged :: Accesses -&gt; TableInfo -&gt; TableInfo -&gt; Bool
+$cunchanged :: Accesses -&gt; TableInfo -&gt; TableInfo -&gt; Bool
+$cp1Cacheable :: Eq TableInfo
+</span><a href="#local-6989586621688307196"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688307192"><span id="local-6989586621688307194"><span class="annot"><span class="annottext">Int -&gt; TableInfo -&gt; Int
+TableInfo -&gt; Int
+(Int -&gt; TableInfo -&gt; Int)
+-&gt; (TableInfo -&gt; Int) -&gt; Hashable TableInfo
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: TableInfo -&gt; Int
+$chash :: TableInfo -&gt; Int
+hashWithSalt :: Int -&gt; TableInfo -&gt; Int
+$chashWithSalt :: Int -&gt; TableInfo -&gt; Int
+</span><a href="#local-6989586621688307192"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688307185"><span id="local-6989586621688307187"><span id="local-6989586621688307189"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-39"></span><span>  </span><span id="local-6989586621688307184"><span class="annot"><span class="annottext">toJSON :: TableInfo -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-40"></span><span>    </span><span class="annot"><span class="annottext">Options -&gt; TableInfo -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">J.genericToJSON</span></span><span> </span><span class="annot"><span class="annottext">(Options -&gt; TableInfo -&gt; Value) -&gt; Options -&gt; TableInfo -&gt; Value
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-41"></span><span>      </span><span class="annot"><span class="annottext">Options
+</span><span class="hs-identifier hs-var">J.defaultOptions</span></span><span>
+</span><span id="line-42"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">fieldLabelModifier :: ShowS
+</span><a href="#local-6989586621688307180"><span class="hs-identifier hs-var">J.fieldLabelModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><span class="hs-identifier hs-var">snakeCase</span></span><span> </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; ShowS
+forall a. Int -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">drop</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">3</span></span><span>
+</span><span id="line-43"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688307175"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataWrapper.API.V0.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-46"></span><span>  </span><span id="local-6989586621688307174"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser TableInfo
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-47"></span><span>    </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser TableInfo
+forall a.
+(Generic a, GFromJSON Zero (Rep a)) =&gt;
+Options -&gt; Value -&gt; Parser a
+</span><span class="hs-identifier hs-var">J.genericParseJSON</span></span><span> </span><span class="annot"><span class="annottext">(Options -&gt; Value -&gt; Parser TableInfo)
+-&gt; Options -&gt; Value -&gt; Parser TableInfo
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-48"></span><span>      </span><span class="annot"><span class="annottext">Options
+</span><span class="hs-identifier hs-var">J.defaultOptions</span></span><span>
+</span><span id="line-49"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">fieldLabelModifier :: ShowS
+</span><a href="#local-6989586621688307180"><span class="hs-identifier hs-var">J.fieldLabelModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><span class="hs-identifier hs-var">snakeCase</span></span><span> </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; ShowS
+forall a. Int -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">drop</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">3</span></span><span>
+</span><span id="line-50"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-51"></span></pre></body></html>

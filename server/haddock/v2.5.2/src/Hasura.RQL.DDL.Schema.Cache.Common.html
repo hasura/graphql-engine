@@ -1,0 +1,1267 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE Arrows #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- | Types/functions shared between modules that implement &quot;Hasura.RQL.DDL.Schema.Cache&quot;. Other</span><span>
+</span><span id="line-6"></span><span class="hs-comment">-- modules should not import this module directly.</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.DDL.Schema.Cache.Common</span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#BuildOutputs"><span class="hs-identifier">BuildOutputs</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#CacheBuild"><span class="hs-identifier">CacheBuild</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#CacheBuildParams"><span class="hs-identifier">CacheBuildParams</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#CacheBuildParams"><span class="hs-identifier">CacheBuildParams</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#InvalidationKeys"><span class="hs-identifier">InvalidationKeys</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#ikMetadata"><span class="hs-identifier">ikMetadata</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#ikRemoteSchemas"><span class="hs-identifier">ikRemoteSchemas</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#ikSources"><span class="hs-identifier">ikSources</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#NonColumnTableInputs"><span class="hs-identifier">NonColumnTableInputs</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#RebuildableSchemaCache"><span class="hs-identifier">RebuildableSchemaCache</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#RebuildableSchemaCache"><span class="hs-identifier">RebuildableSchemaCache</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#lastBuiltSchemaCache"><span class="hs-identifier">lastBuiltSchemaCache</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#TableBuildInput"><span class="hs-identifier">TableBuildInput</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#TableBuildInput"><span class="hs-identifier">TableBuildInput</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_tbiName"><span class="hs-identifier">_tbiName</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#TablePermissionInputs"><span class="hs-identifier">TablePermissionInputs</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#addTableContext"><span class="hs-identifier">addTableContext</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#bindErrorA"><span class="hs-identifier">bindErrorA</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#boAllowlist"><span class="hs-identifier">boAllowlist</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#boApiLimits"><span class="hs-identifier">boApiLimits</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#boMetricsConfig"><span class="hs-identifier">boMetricsConfig</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#boTlsAllowlist"><span class="hs-identifier">boTlsAllowlist</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#boActions"><span class="hs-identifier">boActions</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-26"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#boCronTriggers"><span class="hs-identifier">boCronTriggers</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#boCustomTypes"><span class="hs-identifier">boCustomTypes</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#boEndpoints"><span class="hs-identifier">boEndpoints</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#boQueryCollections"><span class="hs-identifier">boQueryCollections</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#boRemoteSchemas"><span class="hs-identifier">boRemoteSchemas</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#boRoles"><span class="hs-identifier">boRoles</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#boSources"><span class="hs-identifier">boSources</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#buildInfoMap"><span class="hs-identifier">buildInfoMap</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#buildInfoMapPreservingMetadata"><span class="hs-identifier">buildInfoMapPreservingMetadata</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#initialInvalidationKeys"><span class="hs-identifier">initialInvalidationKeys</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#invalidateKeys"><span class="hs-identifier">invalidateKeys</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#mkTableInputs"><span class="hs-identifier">mkTableInputs</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#runCacheBuild"><span class="hs-identifier">runCacheBuild</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#runCacheBuildM"><span class="hs-identifier">runCacheBuildM</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#withRecordDependencies"><span class="hs-identifier">withRecordDependencies</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Control.Arrow.Extended.html"><span class="hs-identifier">Control.Arrow.Extended</span></a></span><span>
+</span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Control.Arrow.Interpret.html"><span class="hs-identifier">Control.Arrow.Interpret</span></a></span><span>
+</span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens</span></span><span>
+</span><span id="line-47"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Trans.Control</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadBaseControl</span></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Control.Monad.Unique.html"><span class="hs-identifier">Control.Monad.Unique</span></a></span><span>
+</span><span id="line-49"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.HashMap.Strict.Extended.html"><span class="hs-identifier">Data.HashMap.Strict.Extended</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">M</span></span><span>
+</span><span id="line-50"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OMap</span></span><span>
+</span><span id="line-51"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Sequence</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Seq</span></span><span>
+</span><span id="line-52"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span>
+</span><span id="line-53"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
+</span><span id="line-54"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.html"><span class="hs-identifier">Hasura.Incremental</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Inc</span></span><span>
+</span><span id="line-55"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-56"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.html"><span class="hs-identifier">Hasura.RQL.Types</span></a></span><span>
+</span><span id="line-57"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html"><span class="hs-identifier">Hasura.RQL.Types.Endpoint</span></a></span><span>
+</span><span id="line-58"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Session.html"><span class="hs-identifier">Hasura.Session</span></a></span><span>
+</span><span id="line-59"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Network.HTTP.Client.Manager.html"><span class="hs-identifier">Network.HTTP.Client.Manager</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Network.HTTP.Client.Manager.html#HasHttpManagerM"><span class="hs-identifier">HasHttpManagerM</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-60"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Network.HTTP.Client.Transformable.html"><span class="hs-identifier">Network.HTTP.Client.Transformable</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HTTP</span></span><span>
+</span><span id="line-61"></span><span>
+</span><span id="line-62"></span><span class="hs-comment">-- | 'InvalidationKeys' used to apply requested 'CacheInvalidations'.</span><span>
+</span><span id="line-63"></span><span id="local-6989586621688368517"><span id="local-6989586621688368518"></span></span><span class="hs-keyword">data</span><span> </span><span id="InvalidationKeys"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#InvalidationKeys"><span class="hs-identifier hs-var">InvalidationKeys</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="InvalidationKeys"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#InvalidationKeys"><span class="hs-identifier hs-var">InvalidationKeys</span></a></span></span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_ikMetadata"><span class="annot"><span class="annottext">InvalidationKeys -&gt; InvalidationKey
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_ikMetadata"><span class="hs-identifier hs-var hs-var">_ikMetadata</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-type">Inc.InvalidationKey</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-65"></span><span>    </span><span id="_ikRemoteSchemas"><span class="annot"><span class="annottext">InvalidationKeys -&gt; HashMap RemoteSchemaName InvalidationKey
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_ikRemoteSchemas"><span class="hs-identifier hs-var hs-var">_ikRemoteSchemas</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaName"><span class="hs-identifier hs-type">RemoteSchemaName</span></a></span><span> </span><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-type">Inc.InvalidationKey</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-66"></span><span>    </span><span id="_ikSources"><span class="annot"><span class="annottext">InvalidationKeys -&gt; HashMap SourceName InvalidationKey
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_ikSources"><span class="hs-identifier hs-var hs-var">_ikSources</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-type">Inc.InvalidationKey</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-67"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688368507"><span id="local-6989586621688368509"><span id="local-6989586621688368511"><span class="annot"><span class="annottext">Int -&gt; InvalidationKeys -&gt; ShowS
+[InvalidationKeys] -&gt; ShowS
+InvalidationKeys -&gt; String
+(Int -&gt; InvalidationKeys -&gt; ShowS)
+-&gt; (InvalidationKeys -&gt; String)
+-&gt; ([InvalidationKeys] -&gt; ShowS)
+-&gt; Show InvalidationKeys
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [InvalidationKeys] -&gt; ShowS
+$cshowList :: [InvalidationKeys] -&gt; ShowS
+show :: InvalidationKeys -&gt; String
+$cshow :: InvalidationKeys -&gt; String
+showsPrec :: Int -&gt; InvalidationKeys -&gt; ShowS
+$cshowsPrec :: Int -&gt; InvalidationKeys -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688368502"><span id="local-6989586621688368504"><span class="annot"><span class="annottext">InvalidationKeys -&gt; InvalidationKeys -&gt; Bool
+(InvalidationKeys -&gt; InvalidationKeys -&gt; Bool)
+-&gt; (InvalidationKeys -&gt; InvalidationKeys -&gt; Bool)
+-&gt; Eq InvalidationKeys
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: InvalidationKeys -&gt; InvalidationKeys -&gt; Bool
+$c/= :: InvalidationKeys -&gt; InvalidationKeys -&gt; Bool
+== :: InvalidationKeys -&gt; InvalidationKeys -&gt; Bool
+$c== :: InvalidationKeys -&gt; InvalidationKeys -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. InvalidationKeys -&gt; Rep InvalidationKeys x)
+-&gt; (forall x. Rep InvalidationKeys x -&gt; InvalidationKeys)
+-&gt; Generic InvalidationKeys
+forall x. Rep InvalidationKeys x -&gt; InvalidationKeys
+forall x. InvalidationKeys -&gt; Rep InvalidationKeys x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep InvalidationKeys x -&gt; InvalidationKeys
+$cfrom :: forall x. InvalidationKeys -&gt; Rep InvalidationKeys x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-69"></span><span>
+</span><span id="line-70"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688368495"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Inc.Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#InvalidationKeys"><span class="hs-identifier hs-type">InvalidationKeys</span></a></span></span><span>
+</span><span id="line-71"></span><span>
+</span><span id="line-72"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688368491"><span class="annot"><a href="Hasura.Incremental.Select.html#Select"><span class="hs-identifier hs-type">Inc.Select</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#InvalidationKeys"><span class="hs-identifier hs-type">InvalidationKeys</span></a></span></span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span class="hs-special">$(</span><span id="ikSources"><span id="ikRemoteSchemas"><span id="ikMetadata"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">InvalidationKeys</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span>
+</span><span id="line-76"></span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#initialInvalidationKeys"><span class="hs-identifier hs-type">initialInvalidationKeys</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#InvalidationKeys"><span class="hs-identifier hs-type">InvalidationKeys</span></a></span><span>
+</span><span id="line-77"></span><span id="initialInvalidationKeys"><span class="annot"><span class="annottext">initialInvalidationKeys :: InvalidationKeys
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#initialInvalidationKeys"><span class="hs-identifier hs-var hs-var">initialInvalidationKeys</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InvalidationKey
+-&gt; HashMap RemoteSchemaName InvalidationKey
+-&gt; HashMap SourceName InvalidationKey
+-&gt; InvalidationKeys
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#InvalidationKeys"><span class="hs-identifier hs-var">InvalidationKeys</span></a></span><span> </span><span class="annot"><span class="annottext">InvalidationKey
+</span><a href="Hasura.Incremental.html#initialInvalidationKey"><span class="hs-identifier hs-var">Inc.initialInvalidationKey</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap RemoteSchemaName InvalidationKey
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="annot"><span class="annottext">HashMap SourceName InvalidationKey
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span>
+</span><span id="line-78"></span><span>
+</span><span id="line-79"></span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#invalidateKeys"><span class="hs-identifier hs-type">invalidateKeys</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheInvalidations"><span class="hs-identifier hs-type">CacheInvalidations</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#InvalidationKeys"><span class="hs-identifier hs-type">InvalidationKeys</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#InvalidationKeys"><span class="hs-identifier hs-type">InvalidationKeys</span></a></span><span>
+</span><span id="line-80"></span><span id="invalidateKeys"><span class="annot"><span class="annottext">invalidateKeys :: CacheInvalidations -&gt; InvalidationKeys -&gt; InvalidationKeys
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#invalidateKeys"><span class="hs-identifier hs-var hs-var">invalidateKeys</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheInvalidations"><span class="hs-identifier hs-type">CacheInvalidations</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688368485"><span id="local-6989586621688368486"><span id="local-6989586621688368487"><span class="annot"><span class="annottext">Bool
+HashSet SourceName
+HashSet RemoteSchemaName
+ciSources :: CacheInvalidations -&gt; HashSet SourceName
+ciRemoteSchemas :: CacheInvalidations -&gt; HashSet RemoteSchemaName
+ciMetadata :: CacheInvalidations -&gt; Bool
+ciSources :: HashSet SourceName
+ciRemoteSchemas :: HashSet RemoteSchemaName
+ciMetadata :: Bool
+</span><a href="Hasura.RQL.Types.SchemaCache.Build.html#ciSources"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#InvalidationKeys"><span class="hs-identifier hs-type">InvalidationKeys</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688368479"><span id="local-6989586621688368480"><span id="local-6989586621688368481"><span class="annot"><span class="annottext">HashMap SourceName InvalidationKey
+HashMap RemoteSchemaName InvalidationKey
+InvalidationKey
+_ikSources :: HashMap SourceName InvalidationKey
+_ikRemoteSchemas :: HashMap RemoteSchemaName InvalidationKey
+_ikMetadata :: InvalidationKey
+_ikSources :: InvalidationKeys -&gt; HashMap SourceName InvalidationKey
+_ikRemoteSchemas :: InvalidationKeys -&gt; HashMap RemoteSchemaName InvalidationKey
+_ikMetadata :: InvalidationKeys -&gt; InvalidationKey
+</span><a href="#local-6989586621688368479"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-81"></span><span>  </span><span class="annot"><span class="annottext">InvalidationKeys :: InvalidationKey
+-&gt; HashMap RemoteSchemaName InvalidationKey
+-&gt; HashMap SourceName InvalidationKey
+-&gt; InvalidationKeys
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#InvalidationKeys"><span class="hs-identifier hs-type">InvalidationKeys</span></a></span><span>
+</span><span id="line-82"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_ikMetadata :: InvalidationKey
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_ikMetadata"><span class="hs-identifier hs-var">_ikMetadata</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688368487"><span class="hs-identifier hs-var">ciMetadata</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">InvalidationKey -&gt; InvalidationKey
+</span><a href="Hasura.Incremental.html#invalidate"><span class="hs-identifier hs-var">Inc.invalidate</span></a></span><span> </span><span class="annot"><span class="annottext">InvalidationKey
+</span><a href="#local-6989586621688368481"><span class="hs-identifier hs-var">_ikMetadata</span></a></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">InvalidationKey
+</span><a href="#local-6989586621688368481"><span class="hs-identifier hs-var">_ikMetadata</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-83"></span><span>      </span><span class="annot"><span class="annottext">_ikRemoteSchemas :: HashMap RemoteSchemaName InvalidationKey
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_ikRemoteSchemas"><span class="hs-identifier hs-var">_ikRemoteSchemas</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(HashMap RemoteSchemaName InvalidationKey
+ -&gt; RemoteSchemaName -&gt; HashMap RemoteSchemaName InvalidationKey)
+-&gt; HashMap RemoteSchemaName InvalidationKey
+-&gt; HashSet RemoteSchemaName
+-&gt; HashMap RemoteSchemaName InvalidationKey
+forall (t :: * -&gt; *) b a.
+Foldable t =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b
+</span><span class="hs-identifier hs-var">foldl'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(RemoteSchemaName
+ -&gt; HashMap RemoteSchemaName InvalidationKey
+ -&gt; HashMap RemoteSchemaName InvalidationKey)
+-&gt; HashMap RemoteSchemaName InvalidationKey
+-&gt; RemoteSchemaName
+-&gt; HashMap RemoteSchemaName InvalidationKey
+forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
+-&gt; HashMap RemoteSchemaName InvalidationKey
+-&gt; HashMap RemoteSchemaName InvalidationKey
+forall a.
+(Eq a, Hashable a) =&gt;
+a -&gt; HashMap a InvalidationKey -&gt; HashMap a InvalidationKey
+</span><a href="#local-6989586621688368475"><span class="hs-identifier hs-var">invalidate</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashMap RemoteSchemaName InvalidationKey
+</span><a href="#local-6989586621688368480"><span class="hs-identifier hs-var">_ikRemoteSchemas</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet RemoteSchemaName
+</span><a href="#local-6989586621688368486"><span class="hs-identifier hs-var">ciRemoteSchemas</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-84"></span><span>      </span><span class="annot"><span class="annottext">_ikSources :: HashMap SourceName InvalidationKey
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_ikSources"><span class="hs-identifier hs-var">_ikSources</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(HashMap SourceName InvalidationKey
+ -&gt; SourceName -&gt; HashMap SourceName InvalidationKey)
+-&gt; HashMap SourceName InvalidationKey
+-&gt; HashSet SourceName
+-&gt; HashMap SourceName InvalidationKey
+forall (t :: * -&gt; *) b a.
+Foldable t =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b
+</span><span class="hs-identifier hs-var">foldl'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(SourceName
+ -&gt; HashMap SourceName InvalidationKey
+ -&gt; HashMap SourceName InvalidationKey)
+-&gt; HashMap SourceName InvalidationKey
+-&gt; SourceName
+-&gt; HashMap SourceName InvalidationKey
+forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">SourceName
+-&gt; HashMap SourceName InvalidationKey
+-&gt; HashMap SourceName InvalidationKey
+forall a.
+(Eq a, Hashable a) =&gt;
+a -&gt; HashMap a InvalidationKey -&gt; HashMap a InvalidationKey
+</span><a href="#local-6989586621688368475"><span class="hs-identifier hs-var">invalidate</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashMap SourceName InvalidationKey
+</span><a href="#local-6989586621688368479"><span class="hs-identifier hs-var">_ikSources</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet SourceName
+</span><a href="#local-6989586621688368485"><span class="hs-identifier hs-var">ciSources</span></a></span><span>
+</span><span id="line-85"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-86"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-87"></span><span>    </span><span id="local-6989586621688368892"><span class="annot"><a href="#local-6989586621688368475"><span class="hs-identifier hs-type">invalidate</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-88"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621688368892"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621688368892"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-89"></span><span>      </span><span class="annot"><a href="#local-6989586621688368892"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-90"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="#local-6989586621688368892"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-type">Inc.InvalidationKey</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-91"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="#local-6989586621688368892"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-type">Inc.InvalidationKey</span></a></span></span><span>
+</span><span id="line-92"></span><span>    </span><span id="local-6989586621688368475"><span class="annot"><span class="annottext">invalidate :: a -&gt; HashMap a InvalidationKey -&gt; HashMap a InvalidationKey
+</span><a href="#local-6989586621688368475"><span class="hs-identifier hs-var hs-var">invalidate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Maybe InvalidationKey -&gt; Maybe InvalidationKey)
+-&gt; a -&gt; HashMap a InvalidationKey -&gt; HashMap a InvalidationKey
+forall k v.
+(Eq k, Hashable k) =&gt;
+(Maybe v -&gt; Maybe v) -&gt; k -&gt; HashMap k v -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">M.alter</span></span><span> </span><span class="annot"><span class="annottext">((Maybe InvalidationKey -&gt; Maybe InvalidationKey)
+ -&gt; a -&gt; HashMap a InvalidationKey -&gt; HashMap a InvalidationKey)
+-&gt; (Maybe InvalidationKey -&gt; Maybe InvalidationKey)
+-&gt; a
+-&gt; HashMap a InvalidationKey
+-&gt; HashMap a InvalidationKey
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">InvalidationKey -&gt; Maybe InvalidationKey
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(InvalidationKey -&gt; Maybe InvalidationKey)
+-&gt; (Maybe InvalidationKey -&gt; InvalidationKey)
+-&gt; Maybe InvalidationKey
+-&gt; Maybe InvalidationKey
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">InvalidationKey
+-&gt; (InvalidationKey -&gt; InvalidationKey)
+-&gt; Maybe InvalidationKey
+-&gt; InvalidationKey
+forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="annot"><span class="annottext">InvalidationKey
+</span><a href="Hasura.Incremental.html#initialInvalidationKey"><span class="hs-identifier hs-var">Inc.initialInvalidationKey</span></a></span><span> </span><span class="annot"><span class="annottext">InvalidationKey -&gt; InvalidationKey
+</span><a href="Hasura.Incremental.html#invalidate"><span class="hs-identifier hs-var">Inc.invalidate</span></a></span><span>
+</span><span id="line-93"></span><span>
+</span><span id="line-94"></span><span id="local-6989586621688368470"><span id="local-6989586621688368471"></span></span><span class="hs-keyword">data</span><span> </span><span id="TableBuildInput"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#TableBuildInput"><span class="hs-identifier hs-var">TableBuildInput</span></a></span></span><span> </span><span id="local-6989586621688368822"><span class="annot"><a href="#local-6989586621688368822"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TableBuildInput"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#TableBuildInput"><span class="hs-identifier hs-var">TableBuildInput</span></a></span></span><span>
+</span><span id="line-95"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_tbiName"><span class="annot"><span class="annottext">TableBuildInput b -&gt; TableName b
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_tbiName"><span class="hs-identifier hs-var hs-var">_tbiName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368822"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-96"></span><span>    </span><span id="_tbiIsEnum"><span class="annot"><span class="annottext">TableBuildInput b -&gt; Bool
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_tbiIsEnum"><span class="hs-identifier hs-var hs-var">_tbiIsEnum</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
+</span><span id="line-97"></span><span>    </span><span id="_tbiConfiguration"><span class="annot"><span class="annottext">TableBuildInput b -&gt; TableConfig b
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_tbiConfiguration"><span class="hs-identifier hs-var hs-var">_tbiConfiguration</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableConfig"><span class="hs-identifier hs-type">TableConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368822"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-98"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-99"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688368462"><span id="local-6989586621688368464"><span id="local-6989586621688368466"><span class="annot"><span class="annottext">Int -&gt; TableBuildInput b -&gt; ShowS
+[TableBuildInput b] -&gt; ShowS
+TableBuildInput b -&gt; String
+(Int -&gt; TableBuildInput b -&gt; ShowS)
+-&gt; (TableBuildInput b -&gt; String)
+-&gt; ([TableBuildInput b] -&gt; ShowS)
+-&gt; Show (TableBuildInput b)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+forall (b :: BackendType).
+Backend b =&gt;
+Int -&gt; TableBuildInput b -&gt; ShowS
+forall (b :: BackendType).
+Backend b =&gt;
+[TableBuildInput b] -&gt; ShowS
+forall (b :: BackendType). Backend b =&gt; TableBuildInput b -&gt; String
+showList :: [TableBuildInput b] -&gt; ShowS
+$cshowList :: forall (b :: BackendType).
+Backend b =&gt;
+[TableBuildInput b] -&gt; ShowS
+show :: TableBuildInput b -&gt; String
+$cshow :: forall (b :: BackendType). Backend b =&gt; TableBuildInput b -&gt; String
+showsPrec :: Int -&gt; TableBuildInput b -&gt; ShowS
+$cshowsPrec :: forall (b :: BackendType).
+Backend b =&gt;
+Int -&gt; TableBuildInput b -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688368458"><span id="local-6989586621688368460"><span class="annot"><span class="annottext">TableBuildInput b -&gt; TableBuildInput b -&gt; Bool
+(TableBuildInput b -&gt; TableBuildInput b -&gt; Bool)
+-&gt; (TableBuildInput b -&gt; TableBuildInput b -&gt; Bool)
+-&gt; Eq (TableBuildInput b)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+forall (b :: BackendType).
+Backend b =&gt;
+TableBuildInput b -&gt; TableBuildInput b -&gt; Bool
+/= :: TableBuildInput b -&gt; TableBuildInput b -&gt; Bool
+$c/= :: forall (b :: BackendType).
+Backend b =&gt;
+TableBuildInput b -&gt; TableBuildInput b -&gt; Bool
+== :: TableBuildInput b -&gt; TableBuildInput b -&gt; Bool
+$c== :: forall (b :: BackendType).
+Backend b =&gt;
+TableBuildInput b -&gt; TableBuildInput b -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. TableBuildInput b -&gt; Rep (TableBuildInput b) x)
+-&gt; (forall x. Rep (TableBuildInput b) x -&gt; TableBuildInput b)
+-&gt; Generic (TableBuildInput b)
+forall x. Rep (TableBuildInput b) x -&gt; TableBuildInput b
+forall x. TableBuildInput b -&gt; Rep (TableBuildInput b) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x.
+Rep (TableBuildInput b) x -&gt; TableBuildInput b
+forall (b :: BackendType) x.
+TableBuildInput b -&gt; Rep (TableBuildInput b) x
+$cto :: forall (b :: BackendType) x.
+Rep (TableBuildInput b) x -&gt; TableBuildInput b
+$cfrom :: forall (b :: BackendType) x.
+TableBuildInput b -&gt; Rep (TableBuildInput b) x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-100"></span><span>
+</span><span id="line-101"></span><span id="local-6989586621688368455"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688368453"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368455"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#TableBuildInput"><span class="hs-identifier hs-type">TableBuildInput</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368455"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-102"></span><span>
+</span><span id="line-103"></span><span id="local-6989586621688368451"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688368448"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368451"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Inc.Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#TableBuildInput"><span class="hs-identifier hs-type">TableBuildInput</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368451"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-104"></span><span>
+</span><span id="line-105"></span><span id="local-6989586621688368446"><span id="local-6989586621688368447"></span></span><span class="hs-keyword">data</span><span> </span><span id="NonColumnTableInputs"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#NonColumnTableInputs"><span class="hs-identifier hs-var">NonColumnTableInputs</span></a></span></span><span> </span><span id="local-6989586621688368821"><span class="annot"><a href="#local-6989586621688368821"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NonColumnTableInputs"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#NonColumnTableInputs"><span class="hs-identifier hs-var">NonColumnTableInputs</span></a></span></span><span>
+</span><span id="line-106"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_nctiTable"><span class="annot"><span class="annottext">NonColumnTableInputs b -&gt; TableName b
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_nctiTable"><span class="hs-identifier hs-var hs-var">_nctiTable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368821"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-107"></span><span>    </span><span id="_nctiObjectRelationships"><span class="annot"><span class="annottext">NonColumnTableInputs b -&gt; [ObjRelDef b]
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_nctiObjectRelationships"><span class="hs-identifier hs-var hs-var">_nctiObjectRelationships</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#ObjRelDef"><span class="hs-identifier hs-type">ObjRelDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368821"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-108"></span><span>    </span><span id="_nctiArrayRelationships"><span class="annot"><span class="annottext">NonColumnTableInputs b -&gt; [ArrRelDef b]
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_nctiArrayRelationships"><span class="hs-identifier hs-var hs-var">_nctiArrayRelationships</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#ArrRelDef"><span class="hs-identifier hs-type">ArrRelDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368821"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-109"></span><span>    </span><span id="_nctiComputedFields"><span class="annot"><span class="annottext">NonColumnTableInputs b -&gt; [ComputedFieldMetadata b]
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_nctiComputedFields"><span class="hs-identifier hs-var hs-var">_nctiComputedFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#ComputedFieldMetadata"><span class="hs-identifier hs-type">ComputedFieldMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368821"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-110"></span><span>    </span><span id="_nctiRemoteRelationships"><span class="annot"><span class="annottext">NonColumnTableInputs b -&gt; [RemoteRelationship]
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_nctiRemoteRelationships"><span class="hs-identifier hs-var hs-var">_nctiRemoteRelationships</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html#RemoteRelationship"><span class="hs-identifier hs-type">RemoteRelationship</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-111"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-112"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688368434"><span id="local-6989586621688368436"><span id="local-6989586621688368438"><span class="annot"><span class="annottext">Int -&gt; NonColumnTableInputs b -&gt; ShowS
+[NonColumnTableInputs b] -&gt; ShowS
+NonColumnTableInputs b -&gt; String
+(Int -&gt; NonColumnTableInputs b -&gt; ShowS)
+-&gt; (NonColumnTableInputs b -&gt; String)
+-&gt; ([NonColumnTableInputs b] -&gt; ShowS)
+-&gt; Show (NonColumnTableInputs b)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+forall (b :: BackendType).
+Backend b =&gt;
+Int -&gt; NonColumnTableInputs b -&gt; ShowS
+forall (b :: BackendType).
+Backend b =&gt;
+[NonColumnTableInputs b] -&gt; ShowS
+forall (b :: BackendType).
+Backend b =&gt;
+NonColumnTableInputs b -&gt; String
+showList :: [NonColumnTableInputs b] -&gt; ShowS
+$cshowList :: forall (b :: BackendType).
+Backend b =&gt;
+[NonColumnTableInputs b] -&gt; ShowS
+show :: NonColumnTableInputs b -&gt; String
+$cshow :: forall (b :: BackendType).
+Backend b =&gt;
+NonColumnTableInputs b -&gt; String
+showsPrec :: Int -&gt; NonColumnTableInputs b -&gt; ShowS
+$cshowsPrec :: forall (b :: BackendType).
+Backend b =&gt;
+Int -&gt; NonColumnTableInputs b -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688368430"><span id="local-6989586621688368432"><span class="annot"><span class="annottext">NonColumnTableInputs b -&gt; NonColumnTableInputs b -&gt; Bool
+(NonColumnTableInputs b -&gt; NonColumnTableInputs b -&gt; Bool)
+-&gt; (NonColumnTableInputs b -&gt; NonColumnTableInputs b -&gt; Bool)
+-&gt; Eq (NonColumnTableInputs b)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+forall (b :: BackendType).
+Backend b =&gt;
+NonColumnTableInputs b -&gt; NonColumnTableInputs b -&gt; Bool
+/= :: NonColumnTableInputs b -&gt; NonColumnTableInputs b -&gt; Bool
+$c/= :: forall (b :: BackendType).
+Backend b =&gt;
+NonColumnTableInputs b -&gt; NonColumnTableInputs b -&gt; Bool
+== :: NonColumnTableInputs b -&gt; NonColumnTableInputs b -&gt; Bool
+$c== :: forall (b :: BackendType).
+Backend b =&gt;
+NonColumnTableInputs b -&gt; NonColumnTableInputs b -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x.
+ NonColumnTableInputs b -&gt; Rep (NonColumnTableInputs b) x)
+-&gt; (forall x.
+    Rep (NonColumnTableInputs b) x -&gt; NonColumnTableInputs b)
+-&gt; Generic (NonColumnTableInputs b)
+forall x. Rep (NonColumnTableInputs b) x -&gt; NonColumnTableInputs b
+forall x. NonColumnTableInputs b -&gt; Rep (NonColumnTableInputs b) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x.
+Rep (NonColumnTableInputs b) x -&gt; NonColumnTableInputs b
+forall (b :: BackendType) x.
+NonColumnTableInputs b -&gt; Rep (NonColumnTableInputs b) x
+$cto :: forall (b :: BackendType) x.
+Rep (NonColumnTableInputs b) x -&gt; NonColumnTableInputs b
+$cfrom :: forall (b :: BackendType) x.
+NonColumnTableInputs b -&gt; Rep (NonColumnTableInputs b) x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-113"></span><span>
+</span><span id="line-114"></span><span id="local-6989586621688368426"><span id="local-6989586621688368427"></span></span><span class="hs-keyword">data</span><span> </span><span id="TablePermissionInputs"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#TablePermissionInputs"><span class="hs-identifier hs-var">TablePermissionInputs</span></a></span></span><span> </span><span id="local-6989586621688368817"><span class="annot"><a href="#local-6989586621688368817"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TablePermissionInputs"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#TablePermissionInputs"><span class="hs-identifier hs-var">TablePermissionInputs</span></a></span></span><span>
+</span><span id="line-115"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_tpiTable"><span class="annot"><span class="annottext">TablePermissionInputs b -&gt; TableName b
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_tpiTable"><span class="hs-identifier hs-var hs-var">_tpiTable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368817"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-116"></span><span>    </span><span id="_tpiInsert"><span class="annot"><span class="annottext">TablePermissionInputs b -&gt; [InsPermDef b]
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_tpiInsert"><span class="hs-identifier hs-var hs-var">_tpiInsert</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Permission.html#InsPermDef"><span class="hs-identifier hs-type">InsPermDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368817"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-117"></span><span>    </span><span id="_tpiSelect"><span class="annot"><span class="annottext">TablePermissionInputs b -&gt; [SelPermDef b]
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_tpiSelect"><span class="hs-identifier hs-var hs-var">_tpiSelect</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Permission.html#SelPermDef"><span class="hs-identifier hs-type">SelPermDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368817"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-118"></span><span>    </span><span id="_tpiUpdate"><span class="annot"><span class="annottext">TablePermissionInputs b -&gt; [UpdPermDef b]
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_tpiUpdate"><span class="hs-identifier hs-var hs-var">_tpiUpdate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Permission.html#UpdPermDef"><span class="hs-identifier hs-type">UpdPermDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368817"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-119"></span><span>    </span><span id="_tpiDelete"><span class="annot"><span class="annottext">TablePermissionInputs b -&gt; [DelPermDef b]
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_tpiDelete"><span class="hs-identifier hs-var hs-var">_tpiDelete</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Permission.html#DelPermDef"><span class="hs-identifier hs-type">DelPermDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368817"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-120"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-121"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688368414"><span id="local-6989586621688368416"><span id="local-6989586621688368418"><span class="annot"><span class="annottext">Int -&gt; TablePermissionInputs b -&gt; ShowS
+[TablePermissionInputs b] -&gt; ShowS
+TablePermissionInputs b -&gt; String
+(Int -&gt; TablePermissionInputs b -&gt; ShowS)
+-&gt; (TablePermissionInputs b -&gt; String)
+-&gt; ([TablePermissionInputs b] -&gt; ShowS)
+-&gt; Show (TablePermissionInputs b)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+forall (b :: BackendType).
+Backend b =&gt;
+Int -&gt; TablePermissionInputs b -&gt; ShowS
+forall (b :: BackendType).
+Backend b =&gt;
+[TablePermissionInputs b] -&gt; ShowS
+forall (b :: BackendType).
+Backend b =&gt;
+TablePermissionInputs b -&gt; String
+showList :: [TablePermissionInputs b] -&gt; ShowS
+$cshowList :: forall (b :: BackendType).
+Backend b =&gt;
+[TablePermissionInputs b] -&gt; ShowS
+show :: TablePermissionInputs b -&gt; String
+$cshow :: forall (b :: BackendType).
+Backend b =&gt;
+TablePermissionInputs b -&gt; String
+showsPrec :: Int -&gt; TablePermissionInputs b -&gt; ShowS
+$cshowsPrec :: forall (b :: BackendType).
+Backend b =&gt;
+Int -&gt; TablePermissionInputs b -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688368410"><span id="local-6989586621688368412"><span class="annot"><span class="annottext">TablePermissionInputs b -&gt; TablePermissionInputs b -&gt; Bool
+(TablePermissionInputs b -&gt; TablePermissionInputs b -&gt; Bool)
+-&gt; (TablePermissionInputs b -&gt; TablePermissionInputs b -&gt; Bool)
+-&gt; Eq (TablePermissionInputs b)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+forall (b :: BackendType).
+Backend b =&gt;
+TablePermissionInputs b -&gt; TablePermissionInputs b -&gt; Bool
+/= :: TablePermissionInputs b -&gt; TablePermissionInputs b -&gt; Bool
+$c/= :: forall (b :: BackendType).
+Backend b =&gt;
+TablePermissionInputs b -&gt; TablePermissionInputs b -&gt; Bool
+== :: TablePermissionInputs b -&gt; TablePermissionInputs b -&gt; Bool
+$c== :: forall (b :: BackendType).
+Backend b =&gt;
+TablePermissionInputs b -&gt; TablePermissionInputs b -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x.
+ TablePermissionInputs b -&gt; Rep (TablePermissionInputs b) x)
+-&gt; (forall x.
+    Rep (TablePermissionInputs b) x -&gt; TablePermissionInputs b)
+-&gt; Generic (TablePermissionInputs b)
+forall x.
+Rep (TablePermissionInputs b) x -&gt; TablePermissionInputs b
+forall x.
+TablePermissionInputs b -&gt; Rep (TablePermissionInputs b) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x.
+Rep (TablePermissionInputs b) x -&gt; TablePermissionInputs b
+forall (b :: BackendType) x.
+TablePermissionInputs b -&gt; Rep (TablePermissionInputs b) x
+$cto :: forall (b :: BackendType) x.
+Rep (TablePermissionInputs b) x -&gt; TablePermissionInputs b
+$cfrom :: forall (b :: BackendType) x.
+TablePermissionInputs b -&gt; Rep (TablePermissionInputs b) x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-122"></span><span>
+</span><span id="line-123"></span><span id="local-6989586621688368407"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688368404"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368407"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Inc.Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#TablePermissionInputs"><span class="hs-identifier hs-type">TablePermissionInputs</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368407"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-124"></span><span>
+</span><span id="line-125"></span><span id="local-6989586621688368403"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#mkTableInputs"><span class="hs-identifier hs-type">mkTableInputs</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-126"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#TableMetadata"><span class="hs-identifier hs-type">TableMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368403"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#TableBuildInput"><span class="hs-identifier hs-type">TableBuildInput</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368403"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#NonColumnTableInputs"><span class="hs-identifier hs-type">NonColumnTableInputs</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368403"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#TablePermissionInputs"><span class="hs-identifier hs-type">TablePermissionInputs</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368403"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-127"></span><span id="mkTableInputs"><span class="annot"><span class="annottext">mkTableInputs :: TableMetadata b
+-&gt; (TableBuildInput b, NonColumnTableInputs b,
+    TablePermissionInputs b)
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#mkTableInputs"><span class="hs-identifier hs-var hs-var">mkTableInputs</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#TableMetadata"><span class="hs-identifier hs-type">TableMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688368390"><span id="local-6989586621688368391"><span id="local-6989586621688368392"><span id="local-6989586621688368393"><span id="local-6989586621688368394"><span id="local-6989586621688368395"><span id="local-6989586621688368396"><span id="local-6989586621688368397"><span id="local-6989586621688368398"><span id="local-6989586621688368399"><span id="local-6989586621688368400"><span id="local-6989586621688368401"><span class="annot"><span class="annottext">Bool
+Permissions (UpdPermDef b)
+Permissions (DelPermDef b)
+Permissions (SelPermDef b)
+Permissions (InsPermDef b)
+Relationships (ObjRelDef b)
+Relationships (ArrRelDef b)
+RemoteRelationships
+EventTriggers b
+ComputedFields b
+TableName b
+TableConfig b
+_tmEventTriggers :: forall (b :: BackendType). TableMetadata b -&gt; EventTriggers b
+_tmDeletePermissions :: forall (b :: BackendType).
+TableMetadata b -&gt; Permissions (DelPermDef b)
+_tmUpdatePermissions :: forall (b :: BackendType).
+TableMetadata b -&gt; Permissions (UpdPermDef b)
+_tmSelectPermissions :: forall (b :: BackendType).
+TableMetadata b -&gt; Permissions (SelPermDef b)
+_tmInsertPermissions :: forall (b :: BackendType).
+TableMetadata b -&gt; Permissions (InsPermDef b)
+_tmRemoteRelationships :: forall (b :: BackendType). TableMetadata b -&gt; RemoteRelationships
+_tmComputedFields :: forall (b :: BackendType). TableMetadata b -&gt; ComputedFields b
+_tmArrayRelationships :: forall (b :: BackendType).
+TableMetadata b -&gt; Relationships (ArrRelDef b)
+_tmObjectRelationships :: forall (b :: BackendType).
+TableMetadata b -&gt; Relationships (ObjRelDef b)
+_tmConfiguration :: forall (b :: BackendType). TableMetadata b -&gt; TableConfig b
+_tmIsEnum :: forall (b :: BackendType). TableMetadata b -&gt; Bool
+_tmTable :: forall (b :: BackendType). TableMetadata b -&gt; TableName b
+_tmEventTriggers :: EventTriggers b
+_tmDeletePermissions :: Permissions (DelPermDef b)
+_tmUpdatePermissions :: Permissions (UpdPermDef b)
+_tmSelectPermissions :: Permissions (SelPermDef b)
+_tmInsertPermissions :: Permissions (InsPermDef b)
+_tmRemoteRelationships :: RemoteRelationships
+_tmComputedFields :: ComputedFields b
+_tmArrayRelationships :: Relationships (ArrRelDef b)
+_tmObjectRelationships :: Relationships (ObjRelDef b)
+_tmConfiguration :: TableConfig b
+_tmIsEnum :: Bool
+_tmTable :: TableName b
+</span><a href="Hasura.RQL.Types.Metadata.html#_tmEventTriggers"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-128"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TableBuildInput b
+</span><a href="#local-6989586621688368377"><span class="hs-identifier hs-var">buildInput</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NonColumnTableInputs b
+</span><a href="#local-6989586621688368376"><span class="hs-identifier hs-var">nonColumns</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TablePermissionInputs b
+</span><a href="#local-6989586621688368375"><span class="hs-identifier hs-var">permissions</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-129"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-130"></span><span>    </span><span id="local-6989586621688368377"><span class="annot"><span class="annottext">buildInput :: TableBuildInput b
+</span><a href="#local-6989586621688368377"><span class="hs-identifier hs-var hs-var">buildInput</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableName b -&gt; Bool -&gt; TableConfig b -&gt; TableBuildInput b
+forall (b :: BackendType).
+TableName b -&gt; Bool -&gt; TableConfig b -&gt; TableBuildInput b
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#TableBuildInput"><span class="hs-identifier hs-var">TableBuildInput</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621688368401"><span class="hs-identifier hs-var">_tmTable</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688368400"><span class="hs-identifier hs-var">_tmIsEnum</span></a></span><span> </span><span class="annot"><span class="annottext">TableConfig b
+</span><a href="#local-6989586621688368399"><span class="hs-identifier hs-var">_tmConfiguration</span></a></span><span>
+</span><span id="line-131"></span><span>    </span><span id="local-6989586621688368376"><span class="annot"><span class="annottext">nonColumns :: NonColumnTableInputs b
+</span><a href="#local-6989586621688368376"><span class="hs-identifier hs-var hs-var">nonColumns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-132"></span><span>      </span><span class="annot"><span class="annottext">TableName b
+-&gt; [ObjRelDef b]
+-&gt; [ArrRelDef b]
+-&gt; [ComputedFieldMetadata b]
+-&gt; [RemoteRelationship]
+-&gt; NonColumnTableInputs b
+forall (b :: BackendType).
+TableName b
+-&gt; [ObjRelDef b]
+-&gt; [ArrRelDef b]
+-&gt; [ComputedFieldMetadata b]
+-&gt; [RemoteRelationship]
+-&gt; NonColumnTableInputs b
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#NonColumnTableInputs"><span class="hs-identifier hs-var">NonColumnTableInputs</span></a></span><span>
+</span><span id="line-133"></span><span>        </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621688368401"><span class="hs-identifier hs-var">_tmTable</span></a></span><span>
+</span><span id="line-134"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Relationships (ObjRelDef b) -&gt; [ObjRelDef b]
+forall k v. InsOrdHashMap k v -&gt; [v]
+</span><span class="hs-identifier hs-var">OMap.elems</span></span><span> </span><span class="annot"><span class="annottext">Relationships (ObjRelDef b)
+</span><a href="#local-6989586621688368398"><span class="hs-identifier hs-var">_tmObjectRelationships</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-135"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Relationships (ArrRelDef b) -&gt; [ArrRelDef b]
+forall k v. InsOrdHashMap k v -&gt; [v]
+</span><span class="hs-identifier hs-var">OMap.elems</span></span><span> </span><span class="annot"><span class="annottext">Relationships (ArrRelDef b)
+</span><a href="#local-6989586621688368397"><span class="hs-identifier hs-var">_tmArrayRelationships</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-136"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ComputedFields b -&gt; [ComputedFieldMetadata b]
+forall k v. InsOrdHashMap k v -&gt; [v]
+</span><span class="hs-identifier hs-var">OMap.elems</span></span><span> </span><span class="annot"><span class="annottext">ComputedFields b
+</span><a href="#local-6989586621688368396"><span class="hs-identifier hs-var">_tmComputedFields</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-137"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RemoteRelationships -&gt; [RemoteRelationship]
+forall k v. InsOrdHashMap k v -&gt; [v]
+</span><span class="hs-identifier hs-var">OMap.elems</span></span><span> </span><span class="annot"><span class="annottext">RemoteRelationships
+</span><a href="#local-6989586621688368395"><span class="hs-identifier hs-var">_tmRemoteRelationships</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-138"></span><span>    </span><span id="local-6989586621688368375"><span class="annot"><span class="annottext">permissions :: TablePermissionInputs b
+</span><a href="#local-6989586621688368375"><span class="hs-identifier hs-var hs-var">permissions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-139"></span><span>      </span><span class="annot"><span class="annottext">TableName b
+-&gt; [InsPermDef b]
+-&gt; [SelPermDef b]
+-&gt; [UpdPermDef b]
+-&gt; [DelPermDef b]
+-&gt; TablePermissionInputs b
+forall (b :: BackendType).
+TableName b
+-&gt; [InsPermDef b]
+-&gt; [SelPermDef b]
+-&gt; [UpdPermDef b]
+-&gt; [DelPermDef b]
+-&gt; TablePermissionInputs b
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#TablePermissionInputs"><span class="hs-identifier hs-var">TablePermissionInputs</span></a></span><span>
+</span><span id="line-140"></span><span>        </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621688368401"><span class="hs-identifier hs-var">_tmTable</span></a></span><span>
+</span><span id="line-141"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Permissions (InsPermDef b) -&gt; [InsPermDef b]
+forall k v. InsOrdHashMap k v -&gt; [v]
+</span><span class="hs-identifier hs-var">OMap.elems</span></span><span> </span><span class="annot"><span class="annottext">Permissions (InsPermDef b)
+</span><a href="#local-6989586621688368394"><span class="hs-identifier hs-var">_tmInsertPermissions</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-142"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Permissions (SelPermDef b) -&gt; [SelPermDef b]
+forall k v. InsOrdHashMap k v -&gt; [v]
+</span><span class="hs-identifier hs-var">OMap.elems</span></span><span> </span><span class="annot"><span class="annottext">Permissions (SelPermDef b)
+</span><a href="#local-6989586621688368393"><span class="hs-identifier hs-var">_tmSelectPermissions</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-143"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Permissions (UpdPermDef b) -&gt; [UpdPermDef b]
+forall k v. InsOrdHashMap k v -&gt; [v]
+</span><span class="hs-identifier hs-var">OMap.elems</span></span><span> </span><span class="annot"><span class="annottext">Permissions (UpdPermDef b)
+</span><a href="#local-6989586621688368392"><span class="hs-identifier hs-var">_tmUpdatePermissions</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-144"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Permissions (DelPermDef b) -&gt; [DelPermDef b]
+forall k v. InsOrdHashMap k v -&gt; [v]
+</span><span class="hs-identifier hs-var">OMap.elems</span></span><span> </span><span class="annot"><span class="annottext">Permissions (DelPermDef b)
+</span><a href="#local-6989586621688368391"><span class="hs-identifier hs-var">_tmDeletePermissions</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-145"></span><span>
+</span><span id="line-146"></span><span class="hs-comment">-- | The direct output of 'buildSchemaCacheRule'. Contains most of the things necessary to build a</span><span>
+</span><span id="line-147"></span><span class="hs-comment">-- schema cache, but dependencies and inconsistent metadata objects are collected via a separate</span><span>
+</span><span id="line-148"></span><span class="hs-comment">-- 'MonadWriter' side channel.</span><span>
+</span><span id="line-149"></span><span class="hs-keyword">data</span><span> </span><span id="BuildOutputs"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#BuildOutputs"><span class="hs-identifier hs-var">BuildOutputs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="BuildOutputs"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#BuildOutputs"><span class="hs-identifier hs-var">BuildOutputs</span></a></span></span><span>
+</span><span id="line-150"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_boSources"><span class="annot"><span class="annottext">BuildOutputs -&gt; SourceCache
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_boSources"><span class="hs-identifier hs-var hs-var">_boSources</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceCache"><span class="hs-identifier hs-type">SourceCache</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-151"></span><span>    </span><span id="_boActions"><span class="annot"><span class="annottext">BuildOutputs -&gt; ActionCache
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_boActions"><span class="hs-identifier hs-var hs-var">_boActions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#ActionCache"><span class="hs-identifier hs-type">ActionCache</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-152"></span><span>    </span><span class="hs-comment">-- | We preserve the 'MetadataObject' from the original catalog metadata in the output so we can</span><span>
+</span><span id="line-153"></span><span>    </span><span class="hs-comment">-- reuse it later if we need to mark the remote schema inconsistent during GraphQL schema</span><span>
+</span><span id="line-154"></span><span>    </span><span class="hs-comment">-- generation (because of field conflicts).</span><span>
+</span><span id="line-155"></span><span>    </span><span id="_boRemoteSchemas"><span class="annot"><span class="annottext">BuildOutputs
+-&gt; HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_boRemoteSchemas"><span class="hs-identifier hs-var hs-var">_boRemoteSchemas</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaName"><span class="hs-identifier hs-type">RemoteSchemaName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#RemoteSchemaCtx"><span class="hs-identifier hs-type">RemoteSchemaCtx</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#MetadataObject"><span class="hs-identifier hs-type">MetadataObject</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-156"></span><span>    </span><span id="_boAllowlist"><span class="annot"><span class="annottext">BuildOutputs -&gt; InlinedAllowlist
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_boAllowlist"><span class="hs-identifier hs-var hs-var">_boAllowlist</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Allowlist.html#InlinedAllowlist"><span class="hs-identifier hs-type">InlinedAllowlist</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-157"></span><span>    </span><span id="_boCustomTypes"><span class="annot"><span class="annottext">BuildOutputs -&gt; AnnotatedCustomTypes
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_boCustomTypes"><span class="hs-identifier hs-var hs-var">_boCustomTypes</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#AnnotatedCustomTypes"><span class="hs-identifier hs-type">AnnotatedCustomTypes</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-158"></span><span>    </span><span id="_boCronTriggers"><span class="annot"><span class="annottext">BuildOutputs -&gt; HashMap TriggerName CronTriggerInfo
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_boCronTriggers"><span class="hs-identifier hs-var hs-var">_boCronTriggers</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">M.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerName"><span class="hs-identifier hs-type">TriggerName</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#CronTriggerInfo"><span class="hs-identifier hs-type">CronTriggerInfo</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-159"></span><span>    </span><span id="_boEndpoints"><span class="annot"><span class="annottext">BuildOutputs
+-&gt; HashMap EndpointName (EndpointMetadata GQLQueryWithText)
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_boEndpoints"><span class="hs-identifier hs-var hs-var">_boEndpoints</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">M.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointName"><span class="hs-identifier hs-type">EndpointName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMetadata"><span class="hs-identifier hs-type">EndpointMetadata</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#GQLQueryWithText"><span class="hs-identifier hs-type">GQLQueryWithText</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-160"></span><span>    </span><span id="_boApiLimits"><span class="annot"><span class="annottext">BuildOutputs -&gt; ApiLimit
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_boApiLimits"><span class="hs-identifier hs-var hs-var">_boApiLimits</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#ApiLimit"><span class="hs-identifier hs-type">ApiLimit</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-161"></span><span>    </span><span id="_boMetricsConfig"><span class="annot"><span class="annottext">BuildOutputs -&gt; MetricsConfig
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_boMetricsConfig"><span class="hs-identifier hs-var hs-var">_boMetricsConfig</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#MetricsConfig"><span class="hs-identifier hs-type">MetricsConfig</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-162"></span><span>    </span><span id="_boRoles"><span class="annot"><span class="annottext">BuildOutputs -&gt; HashMap RoleName Role
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_boRoles"><span class="hs-identifier hs-var hs-var">_boRoles</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-type">Role</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-163"></span><span>    </span><span id="_boTlsAllowlist"><span class="annot"><span class="annottext">BuildOutputs -&gt; [TlsAllow]
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_boTlsAllowlist"><span class="hs-identifier hs-var hs-var">_boTlsAllowlist</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Network.html#TlsAllow"><span class="hs-identifier hs-type">TlsAllow</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-164"></span><span>    </span><span id="_boQueryCollections"><span class="annot"><span class="annottext">BuildOutputs -&gt; QueryCollections
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_boQueryCollections"><span class="hs-identifier hs-var hs-var">_boQueryCollections</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#QueryCollections"><span class="hs-identifier hs-type">QueryCollections</span></a></span><span>
+</span><span id="line-165"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-166"></span><span>
+</span><span id="line-167"></span><span class="hs-special">$(</span><span id="boSources"><span id="boRoles"><span id="boRemoteSchemas"><span id="boQueryCollections"><span id="boEndpoints"><span id="boCustomTypes"><span id="boCronTriggers"><span id="boActions"><span id="boTlsAllowlist"><span id="boMetricsConfig"><span id="boApiLimits"><span id="boAllowlist"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">BuildOutputs</span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-168"></span><span>
+</span><span id="line-169"></span><span class="hs-comment">-- | Parameters required for schema cache build</span><span>
+</span><span id="line-170"></span><span class="hs-keyword">data</span><span> </span><span id="CacheBuildParams"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#CacheBuildParams"><span class="hs-identifier hs-var">CacheBuildParams</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CacheBuildParams"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#CacheBuildParams"><span class="hs-identifier hs-var">CacheBuildParams</span></a></span></span><span>
+</span><span id="line-171"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_cbpManager"><span class="annot"><span class="annottext">CacheBuildParams -&gt; Manager
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_cbpManager"><span class="hs-identifier hs-var hs-var">_cbpManager</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Manager</span></span><span class="hs-special">,</span><span>
+</span><span id="line-172"></span><span>    </span><span id="_cbpPGSourceResolver"><span class="annot"><span class="annottext">CacheBuildParams -&gt; SourceResolver ('Postgres 'Vanilla)
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_cbpPGSourceResolver"><span class="hs-identifier hs-var hs-var">_cbpPGSourceResolver</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceResolver"><span class="hs-identifier hs-type">SourceResolver</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-173"></span><span>    </span><span id="_cbpMSSQLSourceResolver"><span class="annot"><span class="annottext">CacheBuildParams -&gt; SourceResolver 'MSSQL
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_cbpMSSQLSourceResolver"><span class="hs-identifier hs-var hs-var">_cbpMSSQLSourceResolver</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceResolver"><span class="hs-identifier hs-type">SourceResolver</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-174"></span><span>    </span><span id="_cbpServerConfigCtx"><span class="annot"><span class="annottext">CacheBuildParams -&gt; ServerConfigCtx
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_cbpServerConfigCtx"><span class="hs-identifier hs-var hs-var">_cbpServerConfigCtx</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Server.Types.html#ServerConfigCtx"><span class="hs-identifier hs-type">ServerConfigCtx</span></a></span><span>
+</span><span id="line-175"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-176"></span><span>
+</span><span id="line-177"></span><span class="hs-comment">-- | The monad in which @'RebuildableSchemaCache' is being run</span><span>
+</span><span id="line-178"></span><span class="hs-keyword">newtype</span><span> </span><span id="CacheBuild"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#CacheBuild"><span class="hs-identifier hs-var">CacheBuild</span></a></span></span><span> </span><span id="local-6989586621688368356"><span class="annot"><a href="#local-6989586621688368356"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CacheBuild"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#CacheBuild"><span class="hs-identifier hs-var">CacheBuild</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#CacheBuildParams"><span class="hs-identifier hs-type">CacheBuildParams</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688368356"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-179"></span><span>  </span><span class="hs-keyword">deriving</span><span>
+</span><span id="line-180"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621688368351"><span id="local-6989586621688368353"><span class="annot"><span class="annottext">a -&gt; CacheBuild b -&gt; CacheBuild a
+(a -&gt; b) -&gt; CacheBuild a -&gt; CacheBuild b
+(forall a b. (a -&gt; b) -&gt; CacheBuild a -&gt; CacheBuild b)
+-&gt; (forall a b. a -&gt; CacheBuild b -&gt; CacheBuild a)
+-&gt; Functor CacheBuild
+forall a b. a -&gt; CacheBuild b -&gt; CacheBuild a
+forall a b. (a -&gt; b) -&gt; CacheBuild a -&gt; CacheBuild b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a -&gt; CacheBuild b -&gt; CacheBuild a
+$c&lt;$ :: forall a b. a -&gt; CacheBuild b -&gt; CacheBuild a
+fmap :: (a -&gt; b) -&gt; CacheBuild a -&gt; CacheBuild b
+$cfmap :: forall a b. (a -&gt; b) -&gt; CacheBuild a -&gt; CacheBuild b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-181"></span><span>      </span><span id="local-6989586621688368339"><span id="local-6989586621688368341"><span id="local-6989586621688368343"><span id="local-6989586621688368345"><span id="local-6989586621688368347"><span class="annot"><span class="annottext">Functor CacheBuild
+a -&gt; CacheBuild a
+Functor CacheBuild
+-&gt; (forall a. a -&gt; CacheBuild a)
+-&gt; (forall a b.
+    CacheBuild (a -&gt; b) -&gt; CacheBuild a -&gt; CacheBuild b)
+-&gt; (forall a b c.
+    (a -&gt; b -&gt; c) -&gt; CacheBuild a -&gt; CacheBuild b -&gt; CacheBuild c)
+-&gt; (forall a b. CacheBuild a -&gt; CacheBuild b -&gt; CacheBuild b)
+-&gt; (forall a b. CacheBuild a -&gt; CacheBuild b -&gt; CacheBuild a)
+-&gt; Applicative CacheBuild
+CacheBuild a -&gt; CacheBuild b -&gt; CacheBuild b
+CacheBuild a -&gt; CacheBuild b -&gt; CacheBuild a
+CacheBuild (a -&gt; b) -&gt; CacheBuild a -&gt; CacheBuild b
+(a -&gt; b -&gt; c) -&gt; CacheBuild a -&gt; CacheBuild b -&gt; CacheBuild c
+forall a. a -&gt; CacheBuild a
+forall a b. CacheBuild a -&gt; CacheBuild b -&gt; CacheBuild a
+forall a b. CacheBuild a -&gt; CacheBuild b -&gt; CacheBuild b
+forall a b. CacheBuild (a -&gt; b) -&gt; CacheBuild a -&gt; CacheBuild b
+forall a b c.
+(a -&gt; b -&gt; c) -&gt; CacheBuild a -&gt; CacheBuild b -&gt; CacheBuild c
+forall (f :: * -&gt; *).
+Functor f
+-&gt; (forall a. a -&gt; f a)
+-&gt; (forall a b. f (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b c. (a -&gt; b -&gt; c) -&gt; f a -&gt; f b -&gt; f c)
+-&gt; (forall a b. f a -&gt; f b -&gt; f b)
+-&gt; (forall a b. f a -&gt; f b -&gt; f a)
+-&gt; Applicative f
+&lt;* :: CacheBuild a -&gt; CacheBuild b -&gt; CacheBuild a
+$c&lt;* :: forall a b. CacheBuild a -&gt; CacheBuild b -&gt; CacheBuild a
+*&gt; :: CacheBuild a -&gt; CacheBuild b -&gt; CacheBuild b
+$c*&gt; :: forall a b. CacheBuild a -&gt; CacheBuild b -&gt; CacheBuild b
+liftA2 :: (a -&gt; b -&gt; c) -&gt; CacheBuild a -&gt; CacheBuild b -&gt; CacheBuild c
+$cliftA2 :: forall a b c.
+(a -&gt; b -&gt; c) -&gt; CacheBuild a -&gt; CacheBuild b -&gt; CacheBuild c
+&lt;*&gt; :: CacheBuild (a -&gt; b) -&gt; CacheBuild a -&gt; CacheBuild b
+$c&lt;*&gt; :: forall a b. CacheBuild (a -&gt; b) -&gt; CacheBuild a -&gt; CacheBuild b
+pure :: a -&gt; CacheBuild a
+$cpure :: forall a. a -&gt; CacheBuild a
+$cp1Applicative :: Functor CacheBuild
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Applicative</span></span></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-182"></span><span>      </span><span id="local-6989586621688368331"><span id="local-6989586621688368333"><span id="local-6989586621688368335"><span class="annot"><span class="annottext">Applicative CacheBuild
+a -&gt; CacheBuild a
+Applicative CacheBuild
+-&gt; (forall a b.
+    CacheBuild a -&gt; (a -&gt; CacheBuild b) -&gt; CacheBuild b)
+-&gt; (forall a b. CacheBuild a -&gt; CacheBuild b -&gt; CacheBuild b)
+-&gt; (forall a. a -&gt; CacheBuild a)
+-&gt; Monad CacheBuild
+CacheBuild a -&gt; (a -&gt; CacheBuild b) -&gt; CacheBuild b
+CacheBuild a -&gt; CacheBuild b -&gt; CacheBuild b
+forall a. a -&gt; CacheBuild a
+forall a b. CacheBuild a -&gt; CacheBuild b -&gt; CacheBuild b
+forall a b. CacheBuild a -&gt; (a -&gt; CacheBuild b) -&gt; CacheBuild b
+forall (m :: * -&gt; *).
+Applicative m
+-&gt; (forall a b. m a -&gt; (a -&gt; m b) -&gt; m b)
+-&gt; (forall a b. m a -&gt; m b -&gt; m b)
+-&gt; (forall a. a -&gt; m a)
+-&gt; Monad m
+return :: a -&gt; CacheBuild a
+$creturn :: forall a. a -&gt; CacheBuild a
+&gt;&gt; :: CacheBuild a -&gt; CacheBuild b -&gt; CacheBuild b
+$c&gt;&gt; :: forall a b. CacheBuild a -&gt; CacheBuild b -&gt; CacheBuild b
+&gt;&gt;= :: CacheBuild a -&gt; (a -&gt; CacheBuild b) -&gt; CacheBuild b
+$c&gt;&gt;= :: forall a b. CacheBuild a -&gt; (a -&gt; CacheBuild b) -&gt; CacheBuild b
+$cp1Monad :: Applicative CacheBuild
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monad</span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-183"></span><span>      </span><span id="local-6989586621688368325"><span id="local-6989586621688368327"><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-184"></span><span>      </span><span id="local-6989586621688368317"><span id="local-6989586621688368319"><span id="local-6989586621688368321"><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#CacheBuildParams"><span class="hs-identifier hs-type">CacheBuildParams</span></a></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-185"></span><span>      </span><span id="local-6989586621688368313"><span class="annot"><span class="annottext">Monad CacheBuild
+Monad CacheBuild
+-&gt; (forall a. IO a -&gt; CacheBuild a) -&gt; MonadIO CacheBuild
+IO a -&gt; CacheBuild a
+forall a. IO a -&gt; CacheBuild a
+forall (m :: * -&gt; *).
+Monad m -&gt; (forall a. IO a -&gt; m a) -&gt; MonadIO m
+liftIO :: IO a -&gt; CacheBuild a
+$cliftIO :: forall a. IO a -&gt; CacheBuild a
+$cp1MonadIO :: Monad CacheBuild
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadIO</span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-186"></span><span>      </span><span id="local-6989586621688368306"><span class="annot"><span class="hs-identifier hs-type">MonadBase</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-187"></span><span>      </span><span id="local-6989586621688368300"><span id="local-6989586621688368302"><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-188"></span><span>      </span><span id="local-6989586621688368296"><span class="annot"><span class="annottext">Monad CacheBuild
+CacheBuild Unique
+Monad CacheBuild -&gt; CacheBuild Unique -&gt; MonadUnique CacheBuild
+forall (m :: * -&gt; *). Monad m -&gt; m Unique -&gt; MonadUnique m
+newUnique :: CacheBuild Unique
+$cnewUnique :: CacheBuild Unique
+$cp1MonadUnique :: Monad CacheBuild
+</span><a href="Control.Monad.Unique.html#C%3AMonadUnique"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadUnique</span></a></span></span><span>
+</span><span id="line-189"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-190"></span><span>
+</span><span id="line-191"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Network.HTTP.Client.Manager.html#HasHttpManagerM"><span class="hs-identifier hs-type">HasHttpManagerM</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#CacheBuild"><span class="hs-identifier hs-type">CacheBuild</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-192"></span><span>  </span><span id="local-6989586621688368291"><span class="annot"><span class="annottext">askHttpManager :: CacheBuild Manager
+</span><a href="Network.HTTP.Client.Manager.html#askHttpManager"><span class="hs-identifier hs-var hs-var hs-var hs-var">askHttpManager</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(CacheBuildParams -&gt; Manager) -&gt; CacheBuild Manager
+forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
+</span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">CacheBuildParams -&gt; Manager
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_cbpManager"><span class="hs-identifier hs-var hs-var">_cbpManager</span></a></span><span>
+</span><span id="line-193"></span><span>
+</span><span id="line-194"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.html#HasServerConfigCtx"><span class="hs-identifier hs-type">HasServerConfigCtx</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#CacheBuild"><span class="hs-identifier hs-type">CacheBuild</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-195"></span><span>  </span><span id="local-6989586621688368285"><span class="annot"><span class="annottext">askServerConfigCtx :: CacheBuild ServerConfigCtx
+</span><a href="Hasura.RQL.Types.html#askServerConfigCtx"><span class="hs-identifier hs-var hs-var hs-var hs-var">askServerConfigCtx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(CacheBuildParams -&gt; ServerConfigCtx) -&gt; CacheBuild ServerConfigCtx
+forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
+</span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">CacheBuildParams -&gt; ServerConfigCtx
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_cbpServerConfigCtx"><span class="hs-identifier hs-var hs-var">_cbpServerConfigCtx</span></a></span><span>
+</span><span id="line-196"></span><span>
+</span><span id="line-197"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#MonadResolveSource"><span class="hs-identifier hs-type">MonadResolveSource</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#CacheBuild"><span class="hs-identifier hs-type">CacheBuild</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-198"></span><span>  </span><span id="local-6989586621688368279"><span class="annot"><span class="annottext">getPGSourceResolver :: CacheBuild (SourceResolver ('Postgres 'Vanilla))
+</span><a href="Hasura.RQL.Types.Source.html#getPGSourceResolver"><span class="hs-identifier hs-var hs-var hs-var hs-var">getPGSourceResolver</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(CacheBuildParams
+ -&gt; SourceName
+ -&gt; PostgresConnConfiguration
+ -&gt; IO (Either QErr PGSourceConfig))
+-&gt; CacheBuild
+     (SourceName
+      -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig))
+forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
+</span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">CacheBuildParams -&gt; SourceResolver ('Postgres 'Vanilla)
+CacheBuildParams
+-&gt; SourceName
+-&gt; PostgresConnConfiguration
+-&gt; IO (Either QErr PGSourceConfig)
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_cbpPGSourceResolver"><span class="hs-identifier hs-var hs-var">_cbpPGSourceResolver</span></a></span><span>
+</span><span id="line-199"></span><span>  </span><span id="local-6989586621688368277"><span class="annot"><span class="annottext">getMSSQLSourceResolver :: CacheBuild (SourceResolver 'MSSQL)
+</span><a href="Hasura.RQL.Types.Source.html#getMSSQLSourceResolver"><span class="hs-identifier hs-var hs-var hs-var hs-var">getMSSQLSourceResolver</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(CacheBuildParams
+ -&gt; SourceName
+ -&gt; MSSQLConnConfiguration
+ -&gt; IO (Either QErr MSSQLSourceConfig))
+-&gt; CacheBuild
+     (SourceName
+      -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
+forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
+</span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">CacheBuildParams -&gt; SourceResolver 'MSSQL
+CacheBuildParams
+-&gt; SourceName
+-&gt; MSSQLConnConfiguration
+-&gt; IO (Either QErr MSSQLSourceConfig)
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_cbpMSSQLSourceResolver"><span class="hs-identifier hs-var hs-var">_cbpMSSQLSourceResolver</span></a></span><span>
+</span><span id="line-200"></span><span>
+</span><span id="line-201"></span><span id="local-6989586621688368669"><span id="local-6989586621688368670"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#runCacheBuild"><span class="hs-identifier hs-type">runCacheBuild</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-202"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688368670"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-203"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368670"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-204"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-205"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#CacheBuildParams"><span class="hs-identifier hs-type">CacheBuildParams</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-206"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#CacheBuild"><span class="hs-identifier hs-type">CacheBuild</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368669"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-207"></span><span>  </span><span class="annot"><a href="#local-6989586621688368670"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368669"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-208"></span><span id="runCacheBuild"><span class="annot"><span class="annottext">runCacheBuild :: CacheBuildParams -&gt; CacheBuild a -&gt; m a
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#runCacheBuild"><span class="hs-identifier hs-var hs-var">runCacheBuild</span></a></span></span><span> </span><span id="local-6989586621688368275"><span class="annot"><span class="annottext">CacheBuildParams
+</span><a href="#local-6989586621688368275"><span class="hs-identifier hs-var">params</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#CacheBuild"><span class="hs-identifier hs-type">CacheBuild</span></a></span><span> </span><span id="local-6989586621688368274"><span class="annot"><span class="annottext">ReaderT CacheBuildParams (ExceptT QErr IO) a
+</span><a href="#local-6989586621688368274"><span class="hs-identifier hs-var">m</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-209"></span><span>  </span><span class="annot"><span class="annottext">m (Either QErr a) -&gt; m a
+forall e (m :: * -&gt; *) a. MonadError e m =&gt; m (Either e a) -&gt; m a
+</span><a href="Hasura.Prelude.html#liftEitherM"><span class="hs-identifier hs-var">liftEitherM</span></a></span><span> </span><span class="annot"><span class="annottext">(m (Either QErr a) -&gt; m a) -&gt; m (Either QErr a) -&gt; m a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">IO (Either QErr a) -&gt; m (Either QErr a)
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (Either QErr a) -&gt; m (Either QErr a))
+-&gt; IO (Either QErr a) -&gt; m (Either QErr a)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ExceptT QErr IO a -&gt; IO (Either QErr a)
+forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
+</span><span class="hs-identifier hs-var">runExceptT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ReaderT CacheBuildParams (ExceptT QErr IO) a
+-&gt; CacheBuildParams -&gt; ExceptT QErr IO a
+forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
+</span><span class="hs-identifier hs-var hs-var">runReaderT</span></span><span> </span><span class="annot"><span class="annottext">ReaderT CacheBuildParams (ExceptT QErr IO) a
+</span><a href="#local-6989586621688368274"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="annot"><span class="annottext">CacheBuildParams
+</span><a href="#local-6989586621688368275"><span class="hs-identifier hs-var">params</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-210"></span><span>
+</span><span id="line-211"></span><span id="local-6989586621688368268"><span id="local-6989586621688368269"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#runCacheBuildM"><span class="hs-identifier hs-type">runCacheBuildM</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-212"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688368269"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-213"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368269"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-214"></span><span>    </span><span class="annot"><a href="Network.HTTP.Client.Manager.html#HasHttpManagerM"><span class="hs-identifier hs-type">HasHttpManagerM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368269"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-215"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.html#HasServerConfigCtx"><span class="hs-identifier hs-type">HasServerConfigCtx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368269"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-216"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#MonadResolveSource"><span class="hs-identifier hs-type">MonadResolveSource</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368269"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-217"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-218"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#CacheBuild"><span class="hs-identifier hs-type">CacheBuild</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368268"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-219"></span><span>  </span><span class="annot"><a href="#local-6989586621688368269"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368268"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-220"></span><span id="runCacheBuildM"><span class="annot"><span class="annottext">runCacheBuildM :: CacheBuild a -&gt; m a
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#runCacheBuildM"><span class="hs-identifier hs-var hs-var">runCacheBuildM</span></a></span></span><span> </span><span id="local-6989586621688368267"><span class="annot"><span class="annottext">CacheBuild a
+</span><a href="#local-6989586621688368267"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-221"></span><span>  </span><span id="local-6989586621688368266"><span class="annot"><span class="annottext">CacheBuildParams
+</span><a href="#local-6989586621688368266"><span class="hs-identifier hs-var">params</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-222"></span><span>    </span><span class="annot"><span class="annottext">Manager
+-&gt; SourceResolver ('Postgres 'Vanilla)
+-&gt; SourceResolver 'MSSQL
+-&gt; ServerConfigCtx
+-&gt; CacheBuildParams
+Manager
+-&gt; (SourceName
+    -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig))
+-&gt; (SourceName
+    -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
+-&gt; ServerConfigCtx
+-&gt; CacheBuildParams
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#CacheBuildParams"><span class="hs-identifier hs-var">CacheBuildParams</span></a></span><span>
+</span><span id="line-223"></span><span>      </span><span class="annot"><span class="annottext">(Manager
+ -&gt; (SourceName
+     -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig))
+ -&gt; (SourceName
+     -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
+ -&gt; ServerConfigCtx
+ -&gt; CacheBuildParams)
+-&gt; m Manager
+-&gt; m ((SourceName
+       -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig))
+      -&gt; (SourceName
+          -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
+      -&gt; ServerConfigCtx
+      -&gt; CacheBuildParams)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">m Manager
+forall (m :: * -&gt; *). HasHttpManagerM m =&gt; m Manager
+</span><a href="Network.HTTP.Client.Manager.html#askHttpManager"><span class="hs-identifier hs-var">askHttpManager</span></a></span><span>
+</span><span id="line-224"></span><span>      </span><span class="annot"><span class="annottext">m ((SourceName
+    -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig))
+   -&gt; (SourceName
+       -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
+   -&gt; ServerConfigCtx
+   -&gt; CacheBuildParams)
+-&gt; m (SourceName
+      -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig))
+-&gt; m ((SourceName
+       -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
+      -&gt; ServerConfigCtx -&gt; CacheBuildParams)
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">m (SourceName
+   -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig))
+forall (m :: * -&gt; *).
+MonadResolveSource m =&gt;
+m (SourceResolver ('Postgres 'Vanilla))
+</span><a href="Hasura.RQL.Types.Source.html#getPGSourceResolver"><span class="hs-identifier hs-var">getPGSourceResolver</span></a></span><span>
+</span><span id="line-225"></span><span>      </span><span class="annot"><span class="annottext">m ((SourceName
+    -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
+   -&gt; ServerConfigCtx -&gt; CacheBuildParams)
+-&gt; m (SourceName
+      -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
+-&gt; m (ServerConfigCtx -&gt; CacheBuildParams)
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">m (SourceName
+   -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
+forall (m :: * -&gt; *).
+MonadResolveSource m =&gt;
+m (SourceResolver 'MSSQL)
+</span><a href="Hasura.RQL.Types.Source.html#getMSSQLSourceResolver"><span class="hs-identifier hs-var">getMSSQLSourceResolver</span></a></span><span>
+</span><span id="line-226"></span><span>      </span><span class="annot"><span class="annottext">m (ServerConfigCtx -&gt; CacheBuildParams)
+-&gt; m ServerConfigCtx -&gt; m CacheBuildParams
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">m ServerConfigCtx
+forall (m :: * -&gt; *). HasServerConfigCtx m =&gt; m ServerConfigCtx
+</span><a href="Hasura.RQL.Types.html#askServerConfigCtx"><span class="hs-identifier hs-var">askServerConfigCtx</span></a></span><span>
+</span><span id="line-227"></span><span>  </span><span class="annot"><span class="annottext">CacheBuildParams -&gt; CacheBuild a -&gt; m a
+forall (m :: * -&gt; *) a.
+(MonadIO m, MonadError QErr m) =&gt;
+CacheBuildParams -&gt; CacheBuild a -&gt; m a
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#runCacheBuild"><span class="hs-identifier hs-var">runCacheBuild</span></a></span><span> </span><span class="annot"><span class="annottext">CacheBuildParams
+</span><a href="#local-6989586621688368266"><span class="hs-identifier hs-var">params</span></a></span><span> </span><span class="annot"><span class="annottext">CacheBuild a
+</span><a href="#local-6989586621688368267"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><span id="line-228"></span><span>
+</span><span id="line-229"></span><span class="hs-keyword">data</span><span> </span><span id="RebuildableSchemaCache"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#RebuildableSchemaCache"><span class="hs-identifier hs-var">RebuildableSchemaCache</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RebuildableSchemaCache"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#RebuildableSchemaCache"><span class="hs-identifier hs-var">RebuildableSchemaCache</span></a></span></span><span>
+</span><span id="line-230"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="lastBuiltSchemaCache"><span class="annot"><span class="annottext">RebuildableSchemaCache -&gt; SchemaCache
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#lastBuiltSchemaCache"><span class="hs-identifier hs-var hs-var">lastBuiltSchemaCache</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#SchemaCache"><span class="hs-identifier hs-type">SchemaCache</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-231"></span><span>    </span><span id="_rscInvalidationMap"><span class="annot"><span class="annottext">RebuildableSchemaCache -&gt; InvalidationKeys
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_rscInvalidationMap"><span class="hs-identifier hs-var hs-var">_rscInvalidationMap</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#InvalidationKeys"><span class="hs-identifier hs-type">InvalidationKeys</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-232"></span><span>    </span><span id="_rscRebuild"><span class="annot"><span class="annottext">RebuildableSchemaCache
+-&gt; Rule
+     (ReaderT BuildReason CacheBuild)
+     (Metadata, InvalidationKeys)
+     SchemaCache
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_rscRebuild"><span class="hs-identifier hs-var hs-var">_rscRebuild</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Rule.html#Rule"><span class="hs-identifier hs-type">Inc.Rule</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#BuildReason"><span class="hs-identifier hs-type">BuildReason</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#CacheBuild"><span class="hs-identifier hs-type">CacheBuild</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#Metadata"><span class="hs-identifier hs-type">Metadata</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#InvalidationKeys"><span class="hs-identifier hs-type">InvalidationKeys</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#SchemaCache"><span class="hs-identifier hs-type">SchemaCache</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-233"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-234"></span><span>
+</span><span id="line-235"></span><span id="local-6989586621688368259"><span id="local-6989586621688368260"><span id="local-6989586621688368261"><span id="local-6989586621688368262"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#bindErrorA"><span class="hs-identifier hs-type">bindErrorA</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-236"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ArrowChoice</span></span><span> </span><span class="annot"><a href="#local-6989586621688368262"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Control.Arrow.Extended.html#ArrowKleisli"><span class="hs-identifier hs-type">ArrowKleisli</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368261"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368262"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Control.Arrow.Trans.html#ArrowError"><span class="hs-identifier hs-type">ArrowError</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368260"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368262"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="#local-6989586621688368260"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368261"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-237"></span><span>  </span><span class="annot"><a href="#local-6989586621688368262"><span class="hs-identifier hs-type">arr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688368261"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368259"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688368259"><span class="hs-identifier hs-type">a</span></a></span></span></span></span></span><span>
+</span><span id="line-238"></span><span id="bindErrorA"><span class="annot"><span class="annottext">bindErrorA :: arr (m a) a
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#bindErrorA"><span class="hs-identifier hs-var hs-var">bindErrorA</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">arr (Either e a) a
+forall (arr :: * -&gt; * -&gt; *) e a.
+(ArrowChoice arr, ArrowError e arr) =&gt;
+arr (Either e a) a
+</span><a href="Control.Arrow.Trans.html#liftEitherA"><span class="hs-identifier hs-var">liftEitherA</span></a></span><span> </span><span class="annot"><span class="annottext">arr (Either e a) a -&gt; arr (m a) (Either e a) -&gt; arr (m a) a
+forall k (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">&lt;&lt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">(m a -&gt; m (Either e a)) -&gt; arr (m a) (Either e a)
+forall (m :: * -&gt; *) (arr :: * -&gt; * -&gt; *) a b.
+ArrowKleisli m arr =&gt;
+(a -&gt; m b) -&gt; arr a b
+</span><a href="Control.Arrow.Extended.html#arrM"><span class="hs-identifier hs-var">arrM</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688368255"><span class="annot"><span class="annottext">m a
+</span><a href="#local-6989586621688368255"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; Either e a
+forall a b. b -&gt; Either a b
+</span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">(a -&gt; Either e a) -&gt; m a -&gt; m (Either e a)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">m a
+</span><a href="#local-6989586621688368255"><span class="hs-identifier hs-var">m</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">m (Either e a) -&gt; (e -&gt; m (Either e a)) -&gt; m (Either e a)
+forall e (m :: * -&gt; *) a.
+MonadError e m =&gt;
+m a -&gt; (e -&gt; m a) -&gt; m a
+</span><span class="hs-operator hs-var">`catchError`</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Either e a -&gt; m (Either e a)
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Either e a -&gt; m (Either e a))
+-&gt; (e -&gt; Either e a) -&gt; e -&gt; m (Either e a)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">e -&gt; Either e a
+forall a b. a -&gt; Either a b
+</span><span class="hs-identifier hs-var">Left</span></span><span class="hs-special">)</span><span>
+</span><span id="line-239"></span><span class="hs-pragma">{-# INLINE</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#bindErrorA"><span class="hs-pragma hs-type">bindErrorA</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-240"></span><span>
+</span><span id="line-241"></span><span id="local-6989586621688368250"><span id="local-6989586621688368251"><span id="local-6989586621688368252"><span id="local-6989586621688368253"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#withRecordDependencies"><span class="hs-identifier hs-type">withRecordDependencies</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-242"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Control.Arrow.Trans.html#ArrowWriter"><span class="hs-identifier hs-type">ArrowWriter</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Seq</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CollectedInfo"><span class="hs-identifier hs-type">CollectedInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688368253"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-243"></span><span>  </span><span class="annot"><a href="Control.Arrow.Trans.html#WriterA"><span class="hs-identifier hs-type">WriterA</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Seq</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SchemaDependency"><span class="hs-identifier hs-type">SchemaDependency</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688368253"><span class="hs-identifier hs-type">arr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688368252"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621688368251"><span class="hs-identifier hs-type">s</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688368250"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-244"></span><span>  </span><span class="annot"><a href="#local-6989586621688368253"><span class="hs-identifier hs-type">arr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688368252"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#MetadataObject"><span class="hs-identifier hs-type">MetadataObject</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SchemaObjId"><span class="hs-identifier hs-type">SchemaObjId</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621688368251"><span class="hs-identifier hs-type">s</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688368250"><span class="hs-identifier hs-type">a</span></a></span></span></span></span></span><span>
+</span><span id="line-245"></span><span id="withRecordDependencies"><span class="annot"><span class="annottext">withRecordDependencies :: WriterA (Seq SchemaDependency) arr (e, s) a
+-&gt; arr (e, (MetadataObject, (SchemaObjId, s))) a
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#withRecordDependencies"><span class="hs-identifier hs-var hs-var">withRecordDependencies</span></a></span></span><span> </span><span id="local-6989586621688368249"><span class="annot"><span class="annottext">WriterA (Seq SchemaDependency) arr (e, s) a
+</span><a href="#local-6989586621688368249"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">proc</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688368248"><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621688368248"><span class="hs-identifier hs-var">e</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688368247"><span class="annot"><span class="annottext">MetadataObject
+</span><a href="#local-6989586621688368247"><span class="hs-identifier hs-var">metadataObject</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688368246"><span class="annot"><span class="annottext">SchemaObjId
+</span><a href="#local-6989586621688368246"><span class="hs-identifier hs-var">schemaObjectId</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688368245"><span class="annot"><span class="annottext">s
+</span><a href="#local-6989586621688368245"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-246"></span><span>  </span><span class="hs-special">(</span><span id="local-6989586621688368244"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688368244"><span class="hs-identifier hs-var">result</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688368243"><span class="annot"><span class="annottext">Seq SchemaDependency
+</span><a href="#local-6989586621688368243"><span class="hs-identifier hs-var">dependencies</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">WriterA (Seq SchemaDependency) arr (e, s) a
+-&gt; (Monoid (Seq SchemaDependency), Arrow arr) =&gt;
+   arr (e, s) (a, Seq SchemaDependency)
+forall w (arr :: * -&gt; * -&gt; *) a b.
+WriterA w arr a b -&gt; (Monoid w, Arrow arr) =&gt; arr a (b, w)
+</span><a href="Control.Arrow.Trans.html#runWriterA"><span class="hs-identifier hs-var">runWriterA</span></a></span><span> </span><span class="annot"><span class="annottext">WriterA (Seq SchemaDependency) arr (e, s) a
+</span><a href="#local-6989586621688368249"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621688368248"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">s
+</span><a href="#local-6989586621688368245"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-247"></span><span>  </span><span class="annot"><span class="annottext">arr (MetadataObject, SchemaObjId, [SchemaDependency]) ()
+forall (arr :: * -&gt; * -&gt; *).
+ArrowWriter (Seq CollectedInfo) arr =&gt;
+arr (MetadataObject, SchemaObjId, [SchemaDependency]) ()
+</span><a href="Hasura.RQL.Types.SchemaCache.Build.html#recordDependencies"><span class="hs-identifier hs-var">recordDependencies</span></a></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MetadataObject
+</span><a href="#local-6989586621688368247"><span class="hs-identifier hs-var">metadataObject</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SchemaObjId
+</span><a href="#local-6989586621688368246"><span class="hs-identifier hs-var">schemaObjectId</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Seq SchemaDependency -&gt; [SchemaDependency]
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
+</span><span class="hs-identifier hs-var">toList</span></span><span> </span><span class="annot"><span class="annottext">Seq SchemaDependency
+</span><a href="#local-6989586621688368243"><span class="hs-identifier hs-var">dependencies</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-248"></span><span>  </span><span class="annot"><span class="annottext">arr a a
+forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
+</span><span class="hs-identifier hs-var">returnA</span></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688368244"><span class="hs-identifier hs-var">result</span></a></span><span>
+</span><span id="line-249"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#withRecordDependencies"><span class="hs-pragma hs-type">withRecordDependencies</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-250"></span><span>
+</span><span id="line-251"></span><span id="local-6989586621688368586"><span id="local-6989586621688368587"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#noDuplicates"><span class="hs-identifier hs-type">noDuplicates</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-252"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadWriter</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Seq</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CollectedInfo"><span class="hs-identifier hs-type">CollectedInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688368587"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-253"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688368586"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#MetadataObject"><span class="hs-identifier hs-type">MetadataObject</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-254"></span><span>  </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621688368586"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-255"></span><span>  </span><span class="annot"><a href="#local-6989586621688368587"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621688368586"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-256"></span><span id="noDuplicates"><span class="annot"><span class="annottext">noDuplicates :: (a -&gt; MetadataObject) -&gt; [a] -&gt; m (Maybe a)
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#noDuplicates"><span class="hs-identifier hs-var hs-var">noDuplicates</span></a></span></span><span> </span><span id="local-6989586621688368237"><span class="annot"><span class="annottext">a -&gt; MetadataObject
+</span><a href="#local-6989586621688368237"><span class="hs-identifier hs-var">mkMetadataObject</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-257"></span><span>  </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe a -&gt; m (Maybe a)
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe a
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-258"></span><span>  </span><span class="hs-special">[</span><span id="local-6989586621688368236"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688368236"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe a -&gt; m (Maybe a)
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Maybe a -&gt; m (Maybe a)) -&gt; Maybe a -&gt; m (Maybe a)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; Maybe a
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688368236"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><span id="line-259"></span><span>  </span><span id="local-6989586621688368235"><span class="annot"><span class="annottext">values :: [a]
+</span><a href="#local-6989586621688368235"><span class="hs-identifier hs-var">values</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span id="local-6989586621688368234"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688368234"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span class="annot"><span class="annottext">[a]
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-260"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688368233"><span class="annot"><span class="annottext">objectId :: MetadataObjId
+</span><a href="#local-6989586621688368233"><span class="hs-identifier hs-var hs-var">objectId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MetadataObject -&gt; MetadataObjId
+</span><a href="Hasura.RQL.Types.Metadata.Object.html#_moId"><span class="hs-identifier hs-var hs-var">_moId</span></a></span><span> </span><span class="annot"><span class="annottext">(MetadataObject -&gt; MetadataObjId)
+-&gt; MetadataObject -&gt; MetadataObjId
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; MetadataObject
+</span><a href="#local-6989586621688368237"><span class="hs-identifier hs-var">mkMetadataObject</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688368234"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><span id="line-261"></span><span>        </span><span id="local-6989586621688368231"><span class="annot"><span class="annottext">definitions :: [Value]
+</span><a href="#local-6989586621688368231"><span class="hs-identifier hs-var hs-var">definitions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(a -&gt; Value) -&gt; [a] -&gt; [Value]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MetadataObject -&gt; Value
+</span><a href="Hasura.RQL.Types.Metadata.Object.html#_moDefinition"><span class="hs-identifier hs-var hs-var">_moDefinition</span></a></span><span> </span><span class="annot"><span class="annottext">(MetadataObject -&gt; Value) -&gt; (a -&gt; MetadataObject) -&gt; a -&gt; Value
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; MetadataObject
+</span><a href="#local-6989586621688368237"><span class="hs-identifier hs-var">mkMetadataObject</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621688368235"><span class="hs-identifier hs-var">values</span></a></span><span>
+</span><span id="line-262"></span><span>    </span><span class="annot"><span class="annottext">Seq CollectedInfo -&gt; m ()
+forall w (m :: * -&gt; *). MonadWriter w m =&gt; w -&gt; m ()
+</span><span class="hs-identifier hs-var">tell</span></span><span> </span><span class="annot"><span class="annottext">(Seq CollectedInfo -&gt; m ()) -&gt; Seq CollectedInfo -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">CollectedInfo -&gt; Seq CollectedInfo
+forall a. a -&gt; Seq a
+</span><span class="hs-identifier hs-var">Seq.singleton</span></span><span> </span><span class="annot"><span class="annottext">(CollectedInfo -&gt; Seq CollectedInfo)
+-&gt; CollectedInfo -&gt; Seq CollectedInfo
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">InconsistentMetadata -&gt; CollectedInfo
+</span><a href="Hasura.RQL.Types.SchemaCache.Build.html#CIInconsistency"><span class="hs-identifier hs-var">CIInconsistency</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MetadataObjId -&gt; [Value] -&gt; InconsistentMetadata
+</span><a href="Hasura.RQL.Types.Metadata.Object.html#DuplicateObjects"><span class="hs-identifier hs-var">DuplicateObjects</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataObjId
+</span><a href="#local-6989586621688368233"><span class="hs-identifier hs-var">objectId</span></a></span><span> </span><span class="annot"><span class="annottext">[Value]
+</span><a href="#local-6989586621688368231"><span class="hs-identifier hs-var">definitions</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-263"></span><span>    </span><span class="annot"><span class="annottext">Maybe a -&gt; m (Maybe a)
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">Maybe a
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-264"></span><span>
+</span><span id="line-265"></span><span class="hs-comment">-- | Processes a list of catalog metadata into a map of processed information, marking any duplicate</span><span>
+</span><span id="line-266"></span><span class="hs-comment">-- entries inconsistent.</span><span>
+</span><span id="line-267"></span><span id="local-6989586621688368558"><span id="local-6989586621688368559"><span id="local-6989586621688368560"><span id="local-6989586621688368561"><span id="local-6989586621688368562"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#buildInfoMap"><span class="hs-identifier hs-type">buildInfoMap</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-268"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ArrowChoice</span></span><span> </span><span class="annot"><a href="#local-6989586621688368562"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-269"></span><span>    </span><span class="annot"><a href="Hasura.Incremental.Internal.Rule.html#ArrowDistribute"><span class="hs-identifier hs-type">Inc.ArrowDistribute</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368562"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-270"></span><span>    </span><span class="annot"><a href="Control.Arrow.Trans.html#ArrowWriter"><span class="hs-identifier hs-type">ArrowWriter</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Seq</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CollectedInfo"><span class="hs-identifier hs-type">CollectedInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688368562"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-271"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621688368561"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-272"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621688368561"><span class="hs-identifier hs-type">k</span></a></span><span>
+</span><span id="line-273"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-274"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688368560"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688368561"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-275"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688368560"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#MetadataObject"><span class="hs-identifier hs-type">MetadataObject</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-276"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688368559"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621688368560"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688368562"><span class="hs-operator hs-type">`arr`</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621688368558"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-277"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688368559"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621688368560"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688368562"><span class="hs-operator hs-type">`arr`</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="#local-6989586621688368561"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368558"><span class="hs-identifier hs-type">b</span></a></span></span></span></span></span></span><span>
+</span><span id="line-278"></span><span id="buildInfoMap"><span class="annot"><span class="annottext">buildInfoMap :: (a -&gt; k)
+-&gt; (a -&gt; MetadataObject)
+-&gt; arr (e, a) (Maybe b)
+-&gt; arr (e, [a]) (HashMap k b)
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#buildInfoMap"><span class="hs-identifier hs-var hs-var">buildInfoMap</span></a></span></span><span> </span><span id="local-6989586621688368225"><span class="annot"><span class="annottext">a -&gt; k
+</span><a href="#local-6989586621688368225"><span class="hs-identifier hs-var">extractKey</span></a></span></span><span> </span><span id="local-6989586621688368224"><span class="annot"><span class="annottext">a -&gt; MetadataObject
+</span><a href="#local-6989586621688368224"><span class="hs-identifier hs-var">mkMetadataObject</span></a></span></span><span> </span><span id="local-6989586621688368223"><span class="annot"><span class="annottext">arr (e, a) (Maybe b)
+</span><a href="#local-6989586621688368223"><span class="hs-identifier hs-var">buildInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">proc</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688368222"><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621688368222"><span class="hs-identifier hs-var">e</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688368221"><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621688368221"><span class="hs-identifier hs-var">infos</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-279"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(a -&gt; k) -&gt; [a] -&gt; HashMap k [a]
+forall k (t :: * -&gt; *) v.
+(Eq k, Hashable k, Foldable t) =&gt;
+(v -&gt; k) -&gt; t v -&gt; HashMap k [v]
+</span><a href="Data.HashMap.Strict.Extended.html#groupOn"><span class="hs-identifier hs-var">M.groupOn</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; k
+</span><a href="#local-6989586621688368225"><span class="hs-identifier hs-var">extractKey</span></a></span><span> </span><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621688368221"><span class="hs-identifier hs-var">infos</span></a></span><span> </span><span class="hs-glyph">&gt;-</span><span> </span><span class="annot"><span class="annottext">arr (HashMap k [a]) (HashMap k [a])
+forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
+</span><span class="hs-identifier hs-var">returnA</span></span><span class="hs-special">)</span><span>
+</span><span id="line-280"></span><span>    </span><span class="annot"><span class="annottext">forall a.
+arr (a, ()) (HashMap k [a])
+-&gt; arr (a, (HashMap k [a], ())) (HashMap k (Maybe b))
+-&gt; arr (a, ()) (HashMap k (Maybe b))
+forall (arr :: * -&gt; * -&gt; *) e s a b.
+Arrow arr =&gt;
+arr (e, s) a -&gt; arr (e, (a, s)) b -&gt; arr (e, s) b
+</span><a href="Control.Arrow.Extended.html#%3E-%3E"><span class="hs-operator hs-var">&gt;-&gt;</span></a></span><span> </span><span class="hs-glyph">(|</span><span>
+</span><span id="line-281"></span><span>          </span><span class="annot"><span class="annottext">forall a.
+arr (a, (k, ([a], ()))) (Maybe b)
+-&gt; arr (a, (HashMap k [a], ())) (HashMap k (Maybe b))
+forall (arr :: * -&gt; * -&gt; *) k e a s b.
+(ArrowDistribute arr, Eq k, Hashable k) =&gt;
+arr (e, (k, (a, s))) b -&gt; arr (e, (HashMap k a, s)) (HashMap k b)
+</span><a href="Hasura.Incremental.Internal.Rule.html#keyed"><span class="hs-identifier hs-var">Inc.keyed</span></a></span><span>
+</span><span id="line-282"></span><span>            </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="annot"><span class="annottext">k
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688368217"><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621688368217"><span class="hs-identifier hs-var">duplicateInfos</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-283"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(a -&gt; MetadataObject)
+-&gt; [a] -&gt; WriterT (Seq CollectedInfo) Identity (Maybe a)
+forall (m :: * -&gt; *) a.
+MonadWriter (Seq CollectedInfo) m =&gt;
+(a -&gt; MetadataObject) -&gt; [a] -&gt; m (Maybe a)
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#noDuplicates"><span class="hs-identifier hs-var">noDuplicates</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; MetadataObject
+</span><a href="#local-6989586621688368224"><span class="hs-identifier hs-var">mkMetadataObject</span></a></span><span> </span><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621688368217"><span class="hs-identifier hs-var">duplicateInfos</span></a></span><span> </span><span class="hs-glyph">&gt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) (arr :: * -&gt; * -&gt; *) a.
+ArrowInterpret m arr =&gt;
+arr (m a) a
+forall (arr :: * -&gt; * -&gt; *) a.
+ArrowInterpret (WriterT (Seq CollectedInfo) Identity) arr =&gt;
+arr (WriterT (Seq CollectedInfo) Identity a) a
+</span><a href="Control.Arrow.Interpret.html#interpA"><span class="hs-identifier hs-var">interpA</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">WriterT</span></span><span> </span><span class="annot"><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Identity</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-284"></span><span>                  </span><span class="annot"><span class="annottext">forall a.
+arr (a, ()) (Maybe a)
+-&gt; arr (a, (Maybe a, ())) (Maybe (Maybe b))
+-&gt; arr (a, ()) (Maybe (Maybe b))
+forall (arr :: * -&gt; * -&gt; *) e s a b.
+Arrow arr =&gt;
+arr (e, s) a -&gt; arr (e, (a, s)) b -&gt; arr (e, s) b
+</span><a href="Control.Arrow.Extended.html#%3E-%3E"><span class="hs-operator hs-var">&gt;-&gt;</span></a></span><span> </span><span class="hs-glyph">(|</span><span> </span><span class="annot"><span class="annottext">forall a.
+arr (a, (a, ())) (Maybe b)
+-&gt; arr (a, (Maybe a, ())) (Maybe (Maybe b))
+forall (arr :: * -&gt; * -&gt; *) (t :: * -&gt; *) e a s b.
+(ArrowChoice arr, Traversable t) =&gt;
+arr (e, (a, s)) b -&gt; arr (e, (t a, s)) (t b)
+</span><a href="Control.Arrow.Extended.html#traverseA"><span class="hs-identifier hs-var">traverseA</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621688368214"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688368214"><span class="hs-identifier hs-var">info</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621688368222"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688368214"><span class="hs-identifier hs-var">info</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&gt;-</span><span> </span><span class="annot"><span class="annottext">arr (e, a) (Maybe b)
+</span><a href="#local-6989586621688368223"><span class="hs-identifier hs-var">buildInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">|)</span><span>
+</span><span id="line-285"></span><span>                  </span><span class="annot"><span class="annottext">forall a.
+arr (a, ()) (Maybe (Maybe b))
+-&gt; arr (a, (Maybe (Maybe b), ())) (Maybe b)
+-&gt; arr (a, ()) (Maybe b)
+forall (arr :: * -&gt; * -&gt; *) e s a b.
+Arrow arr =&gt;
+arr (e, s) a -&gt; arr (e, (a, s)) b -&gt; arr (e, s) b
+</span><a href="Control.Arrow.Extended.html#%3E-%3E"><span class="hs-operator hs-var">&gt;-&gt;</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621688368213"><span class="annot"><span class="annottext">Maybe (Maybe b)
+</span><a href="#local-6989586621688368213"><span class="hs-identifier hs-var">info</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe (Maybe b) -&gt; Maybe b
+forall (m :: * -&gt; *) a. Monad m =&gt; m (m a) -&gt; m a
+</span><span class="hs-identifier hs-var">join</span></span><span> </span><span class="annot"><span class="annottext">Maybe (Maybe b)
+</span><a href="#local-6989586621688368213"><span class="hs-identifier hs-var">info</span></a></span><span> </span><span class="hs-glyph">&gt;-</span><span> </span><span class="annot"><span class="annottext">arr (Maybe b) (Maybe b)
+forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
+</span><span class="hs-identifier hs-var">returnA</span></span><span class="hs-special">)</span><span>
+</span><span id="line-286"></span><span>            </span><span class="hs-special">)</span><span>
+</span><span id="line-287"></span><span>        </span><span class="hs-glyph">|)</span><span>
+</span><span id="line-288"></span><span>    </span><span class="annot"><span class="annottext">forall a.
+arr (a, ()) (HashMap k (Maybe b))
+-&gt; arr (a, (HashMap k (Maybe b), ())) (HashMap k b)
+-&gt; arr (a, ()) (HashMap k b)
+forall (arr :: * -&gt; * -&gt; *) e s a b.
+Arrow arr =&gt;
+arr (e, s) a -&gt; arr (e, (a, s)) b -&gt; arr (e, s) b
+</span><a href="Control.Arrow.Extended.html#%3E-%3E"><span class="hs-operator hs-var">&gt;-&gt;</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621688368212"><span class="annot"><span class="annottext">HashMap k (Maybe b)
+</span><a href="#local-6989586621688368212"><span class="hs-identifier hs-var">infoMap</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HashMap k (Maybe b) -&gt; HashMap k b
+forall k v. HashMap k (Maybe v) -&gt; HashMap k v
+</span><a href="Data.HashMap.Strict.Extended.html#catMaybes"><span class="hs-identifier hs-var">M.catMaybes</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap k (Maybe b)
+</span><a href="#local-6989586621688368212"><span class="hs-identifier hs-var">infoMap</span></a></span><span> </span><span class="hs-glyph">&gt;-</span><span> </span><span class="annot"><span class="annottext">arr (HashMap k b) (HashMap k b)
+forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
+</span><span class="hs-identifier hs-var">returnA</span></span><span class="hs-special">)</span><span>
+</span><span id="line-289"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#buildInfoMap"><span class="hs-pragma hs-type">buildInfoMap</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-290"></span><span>
+</span><span id="line-291"></span><span class="hs-comment">-- | Like 'buildInfo', but includes each processed info&#8217;s associated 'MetadataObject' in the result.</span><span>
+</span><span id="line-292"></span><span class="hs-comment">-- This is useful if the results will be further processed, and the 'MetadataObject' is still needed</span><span>
+</span><span id="line-293"></span><span class="hs-comment">-- to mark the object inconsistent.</span><span>
+</span><span id="line-294"></span><span id="local-6989586621688368206"><span id="local-6989586621688368207"><span id="local-6989586621688368208"><span id="local-6989586621688368209"><span id="local-6989586621688368210"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#buildInfoMapPreservingMetadata"><span class="hs-identifier hs-type">buildInfoMapPreservingMetadata</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-295"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ArrowChoice</span></span><span> </span><span class="annot"><a href="#local-6989586621688368210"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-296"></span><span>    </span><span class="annot"><a href="Hasura.Incremental.Internal.Rule.html#ArrowDistribute"><span class="hs-identifier hs-type">Inc.ArrowDistribute</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368210"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-297"></span><span>    </span><span class="annot"><a href="Control.Arrow.Trans.html#ArrowWriter"><span class="hs-identifier hs-type">ArrowWriter</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Seq</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CollectedInfo"><span class="hs-identifier hs-type">CollectedInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688368210"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-298"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621688368209"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-299"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621688368209"><span class="hs-identifier hs-type">k</span></a></span><span>
+</span><span id="line-300"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-301"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688368208"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688368209"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-302"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688368208"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#MetadataObject"><span class="hs-identifier hs-type">MetadataObject</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-303"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688368207"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621688368208"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688368210"><span class="hs-operator hs-type">`arr`</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621688368206"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-304"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688368207"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621688368208"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688368210"><span class="hs-operator hs-type">`arr`</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="#local-6989586621688368209"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688368206"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#MetadataObject"><span class="hs-identifier hs-type">MetadataObject</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
+</span><span id="line-305"></span><span id="buildInfoMapPreservingMetadata"><span class="annot"><span class="annottext">buildInfoMapPreservingMetadata :: (a -&gt; k)
+-&gt; (a -&gt; MetadataObject)
+-&gt; arr (e, a) (Maybe b)
+-&gt; arr (e, [a]) (HashMap k (b, MetadataObject))
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#buildInfoMapPreservingMetadata"><span class="hs-identifier hs-var hs-var">buildInfoMapPreservingMetadata</span></a></span></span><span> </span><span id="local-6989586621688368205"><span class="annot"><span class="annottext">a -&gt; k
+</span><a href="#local-6989586621688368205"><span class="hs-identifier hs-var">extractKey</span></a></span></span><span> </span><span id="local-6989586621688368204"><span class="annot"><span class="annottext">a -&gt; MetadataObject
+</span><a href="#local-6989586621688368204"><span class="hs-identifier hs-var">mkMetadataObject</span></a></span></span><span> </span><span id="local-6989586621688368203"><span class="annot"><span class="annottext">arr (e, a) (Maybe b)
+</span><a href="#local-6989586621688368203"><span class="hs-identifier hs-var">buildInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-306"></span><span>  </span><span class="annot"><span class="annottext">(a -&gt; k)
+-&gt; (a -&gt; MetadataObject)
+-&gt; arr (e, a) (Maybe (b, MetadataObject))
+-&gt; arr (e, [a]) (HashMap k (b, MetadataObject))
+forall (arr :: * -&gt; * -&gt; *) k a e b.
+(ArrowChoice arr, ArrowDistribute arr,
+ ArrowWriter (Seq CollectedInfo) arr, Eq k, Hashable k) =&gt;
+(a -&gt; k)
+-&gt; (a -&gt; MetadataObject)
+-&gt; arr (e, a) (Maybe b)
+-&gt; arr (e, [a]) (HashMap k b)
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#buildInfoMap"><span class="hs-identifier hs-var">buildInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; k
+</span><a href="#local-6989586621688368205"><span class="hs-identifier hs-var">extractKey</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; MetadataObject
+</span><a href="#local-6989586621688368204"><span class="hs-identifier hs-var">mkMetadataObject</span></a></span><span> </span><span class="hs-keyword">proc</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688368202"><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621688368202"><span class="hs-identifier hs-var">e</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688368201"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688368201"><span class="hs-identifier hs-var">info</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-307"></span><span>    </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621688368202"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688368201"><span class="hs-identifier hs-var">info</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&gt;-</span><span> </span><span class="annot"><span class="annottext">arr (e, a) (Maybe b)
+</span><a href="#local-6989586621688368203"><span class="hs-identifier hs-var">buildInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a.
+arr (a, ()) (Maybe b)
+-&gt; arr (a, (Maybe b, ())) (Maybe (b, MetadataObject))
+-&gt; arr (a, ()) (Maybe (b, MetadataObject))
+forall (arr :: * -&gt; * -&gt; *) e s a b.
+Arrow arr =&gt;
+arr (e, s) a -&gt; arr (e, (a, s)) b -&gt; arr (e, s) b
+</span><a href="Control.Arrow.Extended.html#%3E-%3E"><span class="hs-operator hs-var">&gt;-&gt;</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688368200"><span class="annot"><span class="annottext">Maybe b
+</span><a href="#local-6989586621688368200"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe b
+</span><a href="#local-6989586621688368200"><span class="hs-identifier hs-var">result</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe b -&gt; (b -&gt; (b, MetadataObject)) -&gt; Maybe (b, MetadataObject)
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
+</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-special">,</span></span><span class="annot"><span class="annottext">a -&gt; MetadataObject
+</span><a href="#local-6989586621688368204"><span class="hs-identifier hs-var">mkMetadataObject</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688368201"><span class="hs-identifier hs-var">info</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&gt;-</span><span> </span><span class="annot"><span class="annottext">arr (Maybe (b, MetadataObject)) (Maybe (b, MetadataObject))
+forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
+</span><span class="hs-identifier hs-var">returnA</span></span><span>
+</span><span id="line-308"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#buildInfoMapPreservingMetadata"><span class="hs-pragma hs-type">buildInfoMapPreservingMetadata</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-309"></span><span>
+</span><span id="line-310"></span><span id="local-6989586621688368198"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#addTableContext"><span class="hs-identifier hs-type">addTableContext</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368198"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688368198"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span></span><span>
+</span><span id="line-311"></span><span id="addTableContext"><span class="annot"><span class="annottext">addTableContext :: TableName b -&gt; Text -&gt; Text
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#addTableContext"><span class="hs-identifier hs-var hs-var">addTableContext</span></a></span></span><span> </span><span id="local-6989586621688368197"><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621688368197"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span id="local-6989586621688368196"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688368196"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;in table &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621688368197"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b -&gt; Text -&gt; Text
+forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688368196"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><span id="line-312"></span></pre></body></html>
