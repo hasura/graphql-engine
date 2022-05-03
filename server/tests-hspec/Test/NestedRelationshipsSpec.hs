@@ -5,7 +5,9 @@
 -- Original inspiration for this module Test.is <https://github.com/hasura/graphql-engine-mono/blob/08caf7df10cad0aea0916327736147a0a8f808d1/server/tests-py/queries/graphql_query/mysql/nested_select_query_deep.yaml>
 module Test.NestedRelationshipsSpec (spec) where
 
+import Data.Aeson (Value)
 import Data.Text (Text)
+import Harness.Backend.BigQuery qualified as Bigquery
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Mysql as Mysql
 import Harness.Backend.Postgres qualified as Postgres
@@ -17,6 +19,7 @@ import Harness.Test.Context qualified as Context
 import Harness.Test.Schema
   ( BackendScalarType (..),
     BackendScalarValue (..),
+    ManualRelationship (..),
     ScalarType (..),
     ScalarValue (..),
     defaultBackendScalarType,
@@ -24,6 +27,7 @@ import Harness.Test.Schema
   )
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
+import Harness.Yaml
 import Hasura.Prelude (tshow)
 import Test.Hspec
 import Prelude
@@ -61,6 +65,23 @@ spec =
           setup = Sqlserver.setup schema,
           teardown = Sqlserver.teardown schema,
           customOptions = Nothing
+        },
+      Context.Context
+        { name = Context.Backend Context.BigQuery,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+          setup =
+            Bigquery.setupWithAdditionalRelationship
+              schema
+              [authorArticles],
+          teardown =
+            Bigquery.teardownWithAdditionalRelationship
+              schema
+              [authorArticles],
+          customOptions =
+            Just $
+              Context.Options
+                { stringifyNumbers = True
+                }
         }
     ]
     tests
@@ -69,6 +90,15 @@ spec =
 -- Schema
 schema :: [Schema.Table]
 schema = [author, article]
+
+authorArticles :: ManualRelationship
+authorArticles =
+  ManualRelationship
+    { relSourceTable = "author",
+      relTargetTable = "article",
+      relSourceColumn = "id",
+      relTargetColumn = "author_id"
+    }
 
 author :: Schema.Table
 author =
@@ -87,7 +117,8 @@ author =
             { bsvMysql = Schema.quotedValue "2017-09-21 09:39:44",
               bsvCitus = Schema.quotedValue "2017-09-21T09:39:44",
               bsvMssql = Schema.quotedValue "2017-09-21T09:39:44Z",
-              bsvPostgres = Schema.quotedValue "2017-09-21T09:39:44"
+              bsvPostgres = Schema.quotedValue "2017-09-21T09:39:44",
+              bsvBigQuery = Schema.quotedValue "2017-09-21T09:39:44"
             }
       ],
       [ Schema.VInt 2,
@@ -97,7 +128,8 @@ author =
             { bsvMysql = Schema.quotedValue "2017-09-21 09:50:44",
               bsvCitus = Schema.quotedValue "2017-09-21T09:50:44",
               bsvMssql = Schema.quotedValue "2017-09-21T09:50:44Z",
-              bsvPostgres = Schema.quotedValue "2017-09-21T09:50:44"
+              bsvPostgres = Schema.quotedValue "2017-09-21T09:50:44",
+              bsvBigQuery = Schema.quotedValue "2017-09-21T09:50:44"
             }
       ]
     ]
@@ -109,7 +141,8 @@ author =
           { bstMysql = Just "DATETIME",
             bstMssql = Just "DATETIME",
             bstCitus = Just "TIMESTAMP",
-            bstPostgres = Just "TIMESTAMP"
+            bstPostgres = Just "TIMESTAMP",
+            bstBigQuery = Just "DATETIME"
           }
 
 article :: Schema.Table
@@ -127,9 +160,9 @@ article =
     ["id"]
     [ Schema.Reference "author_id" "author" "id"
     ]
-    [ mkArticle 1 "Article 1" "Sample article content 1" 1 0,
-      mkArticle 2 "Article 2" "Sample article content 2" 1 1,
-      mkArticle 3 "Article 3" "Sample article content 3" 2 1
+    [ mkArticle 1 "Article 1" "Sample article content 1" 1 False,
+      mkArticle 2 "Article 2" "Sample article content 2" 1 True,
+      mkArticle 3 "Article 3" "Sample article content 3" 2 True
     ]
   where
     textType :: ScalarType
@@ -139,7 +172,8 @@ article =
           { bstMysql = Just "TEXT",
             bstMssql = Just "TEXT",
             bstCitus = Just "TEXT",
-            bstPostgres = Just "TEXT"
+            bstPostgres = Just "TEXT",
+            bstBigQuery = Just "STRING"
           }
 
     bitType :: ScalarType
@@ -149,7 +183,8 @@ article =
           { bstMysql = Just "BIT",
             bstMssql = Just "BIT",
             bstCitus = Just "BOOLEAN",
-            bstPostgres = Just "BOOLEAN"
+            bstPostgres = Just "BOOLEAN",
+            bstBigQuery = Just "BOOL"
           }
 
     timestampType :: ScalarType
@@ -159,7 +194,8 @@ article =
           { bstMysql = Just "TIMESTAMP NULL",
             bstMssql = Just "DATETIME",
             bstCitus = Just "TIMESTAMP",
-            bstPostgres = Just "TIMESTAMP"
+            bstPostgres = Just "TIMESTAMP",
+            bstBigQuery = Just "DATETIME"
           }
 
     intUnsingedType :: ScalarType
@@ -169,28 +205,35 @@ article =
           { bstMysql = Just "INT UNSIGNED",
             bstMssql = Just "INT",
             bstCitus = Just "INT",
-            bstPostgres = Just "INT"
+            bstPostgres = Just "INT",
+            bstBigQuery = Just "INT64"
           }
 
-    mkArticle :: Int -> Text -> Text -> Int -> Int -> [ScalarValue]
-    mkArticle pid title content author_id is_published =
+    backendBool :: Bool -> Int
+    backendBool True = 1
+    backendBool False = 0
+
+    mkArticle :: Int -> Text -> Text -> Int -> Bool -> [ScalarValue]
+    mkArticle pid title content authorId isPublished =
       [ Schema.VInt pid,
         Schema.VStr title,
         Schema.VStr content,
         Schema.VCustomValue $
           defaultBackendScalarValue
-            { bsvMysql = Schema.unquotedValue (tshow is_published),
-              bsvCitus = Schema.quotedValue (tshow is_published),
-              bsvPostgres = Schema.quotedValue (tshow is_published),
-              bsvMssql = Schema.unquotedValue (tshow is_published)
+            { bsvMysql = Schema.unquotedValue (tshow $ backendBool isPublished),
+              bsvCitus = Schema.quotedValue (tshow $ backendBool isPublished),
+              bsvPostgres = Schema.quotedValue (tshow $ backendBool isPublished),
+              bsvMssql = Schema.unquotedValue (tshow $ backendBool isPublished),
+              bsvBigQuery = Schema.unquotedValue (tshow isPublished)
             },
         Schema.VNull,
         Schema.VCustomValue $
           defaultBackendScalarValue
-            { bsvMysql = Schema.unquotedValue (tshow author_id),
-              bsvCitus = Schema.unquotedValue (tshow author_id),
-              bsvPostgres = Schema.unquotedValue (tshow author_id),
-              bsvMssql = Schema.unquotedValue (tshow author_id)
+            { bsvMysql = Schema.unquotedValue (tshow authorId),
+              bsvCitus = Schema.unquotedValue (tshow authorId),
+              bsvPostgres = Schema.unquotedValue (tshow authorId),
+              bsvMssql = Schema.unquotedValue (tshow authorId),
+              bsvBigQuery = Schema.unquotedValue (tshow authorId)
             },
         Schema.VNull
       ]
@@ -202,7 +245,7 @@ article =
 -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L280
 tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
-  it "Nested select on article" $ \testEnvironment ->
+  it "Deep nested select with where" $ \testEnvironment ->
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphql
@@ -278,8 +321,35 @@ data:
 |]
   -- Equivalent python suite: test_nested_select_query_article_author
   -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L277
-  it "Nested select on article" $ \testEnvironment ->
-    shouldReturnYaml
+  it "Nested select on article" $ \testEnvironment -> do
+    let articleOne =
+          [yaml|
+id: 1
+title: Article 1
+content: Sample article content 1
+author_by_author_id:
+  id: 1
+  name: Author 1
+|]
+        articleTwo =
+          [yaml|
+id: 2
+title: Article 2
+content: Sample article content 2
+author_by_author_id:
+  id: 1
+  name: Author 1
+|]
+        articleThree =
+          [yaml|
+id: 3
+title: Article 3
+content: Sample article content 3
+author_by_author_id:
+  id: 2
+  name: Author 2
+|]
+    shouldReturnOneOfYaml
       opts
       ( GraphqlEngine.postGraphql
           testEnvironment
@@ -298,32 +368,11 @@ query {
 
 |]
       )
-      [yaml|
-data:
- hasura_article:
-  - id: 1
-    title: Article 1
-    content: Sample article content 1
-    author_by_author_id:
-      id: 1
-      name: Author 1
-  - id: 2
-    title: Article 2
-    content: Sample article content 2
-    author_by_author_id:
-      id: 1
-      name: Author 1
-  - id: 3
-    title: Article 3
-    content: Sample article content 3
-    author_by_author_id:
-      id: 2
-      name: Author 2
-|]
+      (combinationsObject response (map fromObject [articleOne, articleTwo, articleThree]))
   -- Equivalent python suite: test_nested_select_query_where_on_relationship
   -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L286
   it "Nested select on article with where condition" $ \testEnvironment ->
-    shouldReturnYaml
+    shouldReturnOneOfYaml
       opts
       ( GraphqlEngine.postGraphql
           testEnvironment
@@ -341,19 +390,33 @@ query {
 }
 |]
       )
-      [yaml|
+      ( combinationsObject
+          response
+          ( map
+              fromObject
+              [ [yaml|
+id: 1
+title: Article 1
+content: Sample article content 1
+author_by_author_id:
+  id: 1
+  name: Author 1
+|],
+                [yaml|
+id: 2
+title: Article 2
+content: Sample article content 2
+author_by_author_id:
+  id: 1
+  name: Author 1
+|]
+              ]
+          )
+      )
+
+response :: Value -> Value
+response articles =
+  [yaml|
 data:
- hasura_article:
-  - id: 1
-    title: Article 1
-    content: Sample article content 1
-    author_by_author_id:
-      id: 1
-      name: Author 1
-  - id: 2
-    title: Article 2
-    content: Sample article content 2
-    author_by_author_id:
-      id: 1
-      name: Author 1
+ hasura_article: *articles
 |]

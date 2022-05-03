@@ -1076,6 +1076,7 @@ test-suite tests-hspec
     Harness.Http
     Harness.RemoteServer
     Harness.TestEnvironment
+    Harness.Yaml
 
  -- Harness.Backend
     Harness.Backend.BigQuery

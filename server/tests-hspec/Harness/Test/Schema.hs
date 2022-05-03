@@ -10,6 +10,7 @@ module Harness.Test.Schema
     BackendScalarType (..),
     BackendScalarValue (..),
     BackendScalarValueType (..),
+    ManualRelationship (..),
     quotedValue,
     unquotedValue,
     backendScalarValue,
@@ -25,6 +26,8 @@ module Harness.Test.Schema
     trackObjectRelationships,
     trackArrayRelationships,
     untrackRelationships,
+    mkObjectRelationshipName,
+    mkArrayRelationshipName,
   )
 where
 
@@ -63,6 +66,17 @@ data Reference = Reference
   { referenceLocalColumn :: Text,
     referenceTargetTable :: Text,
     referenceTargetColumn :: Text
+  }
+  deriving (Show, Eq)
+
+-- | Type representing manual relationship between tables. This is
+-- only used for BigQuery backend currently where additional
+-- relationships has to be manually specified.
+data ManualRelationship = ManualRelationship
+  { relSourceTable :: Text,
+    relTargetTable :: Text,
+    relSourceColumn :: Text,
+    relTargetColumn :: Text
   }
   deriving (Show, Eq)
 
