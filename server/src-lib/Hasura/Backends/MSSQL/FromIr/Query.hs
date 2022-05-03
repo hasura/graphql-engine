@@ -648,7 +648,7 @@ fromAnnColumnField _stringifyNumbers annColumnField = do
       { _acfColumn = column,
         _acfType = typ,
         _acfAsText = _asText :: Bool,
-        _acfOp = _ :: Maybe (IR.ColumnOp 'MSSQL), -- TODO: What's this?
+        _acfArguments = _ :: Maybe Void,
         _acfCaseBoolExpression = caseBoolExpMaybe
       } = annColumnField
 

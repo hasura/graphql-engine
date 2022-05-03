@@ -203,11 +203,11 @@ class
     G.Nullability -> -- TODO maybe use Hasura.GraphQL.Parser.Schema.Nullability instead?
     m (Parser 'Both n (ValueWithOrigin (ColumnValue b)))
 
-  -- | The "path" argument for json column fields
-  jsonPathArg ::
+  -- | Parser for arguments on scalar fields in a selection set
+  scalarSelectionArgumentsParser ::
     MonadParse n =>
     ColumnType b ->
-    InputFieldsParser n (Maybe (IR.ColumnOp b))
+    InputFieldsParser n (Maybe (ScalarSelectionArguments b))
 
   orderByOperators ::
     NonEmpty (Definition EnumValueInfo, (BasicOrderType b, NullsOrderType b))

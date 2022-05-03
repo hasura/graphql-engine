@@ -59,7 +59,7 @@ instance BackendSchema 'BigQuery where
 
   -- indivdual components
   columnParser = bqColumnParser
-  jsonPathArg = bqJsonPathArg
+  scalarSelectionArgumentsParser = bqScalarSelectionArgumentsParser
   orderByOperators = bqOrderByOperators
   comparisonExps = bqComparisonExps
   countTypeInput = bqCountTypeInput
@@ -205,11 +205,11 @@ bqColumnParser columnType (G.Nullability isNullable) =
     stringBased scalarName =
       P.string {pType = P.TNamed P.NonNullable $ P.Definition scalarName Nothing P.TIScalar}
 
-bqJsonPathArg ::
+bqScalarSelectionArgumentsParser ::
   MonadParse n =>
   ColumnType 'BigQuery ->
-  InputFieldsParser n (Maybe (IR.ColumnOp 'BigQuery))
-bqJsonPathArg _columnType = pure Nothing
+  InputFieldsParser n (Maybe (ScalarSelectionArguments 'BigQuery))
+bqScalarSelectionArgumentsParser _columnType = pure Nothing
 
 bqOrderByOperators ::
   NonEmpty

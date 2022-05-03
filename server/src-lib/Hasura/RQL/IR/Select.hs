@@ -58,7 +58,6 @@ module Hasura.RQL.IR.Select
     ArraySelectG (..),
     ColFld (..),
     ColumnFields,
-    ColumnOp (..),
     ComputedFieldOrderBy (..),
     ComputedFieldOrderByElement (..),
     ComputedFieldScalarSelect (..),
@@ -600,7 +599,7 @@ mkAnnColumnField ::
   Column backend ->
   ColumnType backend ->
   Maybe (AnnColumnCaseBoolExp backend v) ->
-  Maybe (ColumnOp backend) ->
+  Maybe (ScalarSelectionArguments backend) ->
   AnnFieldG backend r v
 mkAnnColumnField col typ caseBoolExp colOpM =
   AFColumn (AnnColumnField col typ False colOpM caseBoolExp)
@@ -761,11 +760,13 @@ type EdgeFields b r v = Fields (EdgeField b r v)
 data AnnColumnField (b :: BackendType) v = AnnColumnField
   { _acfColumn :: Column b,
     _acfType :: ColumnType b,
-    -- | If this field is 'True', columns are explicitly casted to @text@ when fetched, which avoids
-    -- an issue that occurs because we don’t currently have proper support for array types. See
+    -- | If this field is 'True', columns are explicitly casted to @text@ when
+    -- fetched, which avoids an issue that occurs because we don’t currently
+    -- have proper support for array types. See
     -- https://github.com/hasura/graphql-engine/pull/3198 for more details.
     _acfAsText :: Bool,
-    _acfOp :: Maybe (ColumnOp b),
+    -- | Arguments of this column's selection. See 'ScalarSelectionArguments'
+    _acfArguments :: Maybe (ScalarSelectionArguments b),
     -- | This type is used to determine whether the column
     -- should be nullified. When the value is `Nothing`, the column value
     -- will be outputted as computed and when the value is `Just c`, the
@@ -789,22 +790,13 @@ deriving stock instance
   ) =>
   Show (AnnColumnField b v)
 
-data ColumnOp (b :: BackendType) = ColumnOp
-  { _colOp :: SQLOperator b,
-    _colExp :: SQLExpression b
-  }
-
-deriving stock instance Backend b => Show (ColumnOp b)
-
-deriving stock instance Backend b => Eq (ColumnOp b)
-
 -- Computed field
 
 data ComputedFieldScalarSelect (b :: BackendType) v = ComputedFieldScalarSelect
   { _cfssFunction :: FunctionName b,
     _cfssArguments :: FunctionArgsExpTableRow v,
     _cfssType :: ScalarType b,
-    _cfssColumnOp :: (Maybe (ColumnOp b))
+    _cfssScalarArguments :: (Maybe (ScalarSelectionArguments b))
   }
   deriving stock (Functor, Foldable, Traversable)
 

@@ -154,7 +154,7 @@ instance
 
   -- indivdual components
   columnParser = columnParser
-  jsonPathArg = jsonPathArg
+  scalarSelectionArgumentsParser = pgScalarSelectionArgumentsParser
   orderByOperators = orderByOperators
   comparisonExps = comparisonExps
   countTypeInput = countTypeInput
@@ -285,11 +285,11 @@ columnParser columnType (G.Nullability isNullable) =
         PGValText $ G.unName value
       )
 
-jsonPathArg ::
+pgScalarSelectionArgumentsParser ::
   MonadParse n =>
   ColumnType ('Postgres pgKind) ->
-  InputFieldsParser n (Maybe (IR.ColumnOp ('Postgres pgKind)))
-jsonPathArg columnType
+  InputFieldsParser n (Maybe (ScalarSelectionArguments ('Postgres pgKind)))
+pgScalarSelectionArgumentsParser columnType
   | isScalarColumnWhere PG.isJSONType columnType =
     P.fieldOptional fieldName description P.string `P.bindFields` fmap join . traverse toColExp
   | otherwise = pure Nothing
@@ -299,7 +299,7 @@ jsonPathArg columnType
     toColExp textValue = case parseJSONPath textValue of
       Left err -> parseError $ T.pack $ "parse json path error: " ++ err
       Right [] -> pure Nothing
-      Right jPaths -> pure $ Just $ IR.ColumnOp PG.jsonbPathOp $ PG.SEArray $ map elToColExp jPaths
+      Right jPaths -> pure $ Just $ PG.ColumnOp PG.jsonbPathOp $ PG.SEArray $ map elToColExp jPaths
     elToColExp (Key k) = PG.SELit k
     elToColExp (Index i) = PG.SELit $ tshow i
 

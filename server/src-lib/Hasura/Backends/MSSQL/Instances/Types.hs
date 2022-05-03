@@ -38,7 +38,7 @@ instance Backend 'MSSQL where
   type ScalarType 'MSSQL = MSSQL.ScalarType
   type BooleanOperators 'MSSQL = MSSQL.BooleanOperators
   type SQLExpression 'MSSQL = MSSQL.Expression
-  type SQLOperator 'MSSQL = MSSQL.Op
+  type ScalarSelectionArguments 'MSSQL = Void
 
   type BackendUpdate 'MSSQL = MSSQL.BackendUpdate
 

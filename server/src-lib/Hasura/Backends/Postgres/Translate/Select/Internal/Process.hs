@@ -366,10 +366,10 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
       where
         ComputedFieldScalarSelect fn args ty colOpM = computedFieldScalar
 
-    withColumnOp :: Maybe (ColumnOp ('Postgres pgKind)) -> S.SQLExp -> S.SQLExp
+    withColumnOp :: Maybe S.ColumnOp -> S.SQLExp -> S.SQLExp
     withColumnOp colOpM sqlExp = case colOpM of
       Nothing -> sqlExp
-      Just (ColumnOp opText cExp) -> S.mkSQLOpExp opText sqlExp cExp
+      Just (S.ColumnOp opText cExp) -> S.mkSQLOpExp opText sqlExp cExp
 
     mkNodeId :: QualifiedTable -> PrimaryKeyColumns ('Postgres pgKind) -> S.SQLExp
     mkNodeId (QualifiedObject tableSchema tableName) pkeyColumns =

@@ -445,7 +445,7 @@ fromAnnColumnField _stringifyNumbers annColumnField = do
       { _acfColumn = column,
         _acfType = typ,
         _acfAsText = _asText :: Bool,
-        _acfOp = _ :: Maybe (IR.ColumnOp 'MySQL)
+        _acfArguments = _ :: Maybe Void
       } = annColumnField
 
 fromRelName :: IR.RelName -> FromIr Text
@@ -657,7 +657,7 @@ fromObjectRelationSelectG annRelationSelectG = do
             { selectOrderBy = Nothing,
               selectProjections =
                 OSet.fromList joinFieldProjections
-                  <> OSet.fromList selectProjections, --Ordering is right-biased.
+                  <> OSet.fromList selectProjections, -- Ordering is right-biased.
               selectGroupBy = [],
               selectFrom = from,
               selectJoins = mapMaybe fieldSourceJoin fieldSources,

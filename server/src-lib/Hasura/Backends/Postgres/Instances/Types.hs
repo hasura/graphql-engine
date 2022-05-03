@@ -79,7 +79,7 @@ instance
   type ScalarType ('Postgres pgKind) = PG.PGScalarType
   type BooleanOperators ('Postgres pgKind) = PG.BooleanOperators
   type SQLExpression ('Postgres pgKind) = PG.SQLExp
-  type SQLOperator ('Postgres pgKind) = PG.SQLOp
+  type ScalarSelectionArguments ('Postgres pgKind) = PG.ColumnOp
 
   type BackendUpdate ('Postgres pgKind) = PG.BackendUpdate
 
