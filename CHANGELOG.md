@@ -3,6 +3,7 @@
 ## Next release
 
 ### Bug fixes and improvements
+- server: refactor insert mutations IR use of "default values" (fixes #8443)
 
 ## v2.6.0
 
