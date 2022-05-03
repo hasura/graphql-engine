@@ -1,0 +1,197 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.MySQL.SQL</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.SQL.html#runSQL"><span class="hs-identifier">runSQL</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MySQL.SQL.html#RunSQL"><span class="hs-identifier">RunSQL</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.TH</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString</span></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">null</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">reverse</span></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Pool</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">withResource</span></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.String</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">fromString</span></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Encoding</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">decodeUtf8With</span></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Encoding.Error</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">lenientDecode</span></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Database.MySQL.Base</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">fetchFields</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">query</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">storeResult</span></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Database.MySQL.Base.Types</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Field</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">fieldName</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Connection.html"><span class="hs-identifier">Hasura.Backends.MySQL.Connection</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MySQL.Connection.html#fetchAllRows"><span class="hs-identifier">fetchAllRows</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.html"><span class="hs-identifier">Hasura.Backends.MySQL.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#SourceConfig"><span class="hs-identifier">SourceConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html"><span class="hs-identifier">Hasura.EncJSON</span></a></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.html"><span class="hs-identifier">Hasura.RQL.DDL.Schema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Schema.html#RunSQLRes"><span class="hs-identifier">RunSQLRes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.html"><span class="hs-identifier">Hasura.RQL.Types</span></a></span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">data</span><span> </span><span id="RunSQL"><span class="annot"><a href="Hasura.Backends.MySQL.SQL.html#RunSQL"><span class="hs-identifier hs-var">RunSQL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RunSQL"><span class="annot"><a href="Hasura.Backends.MySQL.SQL.html#RunSQL"><span class="hs-identifier hs-var">RunSQL</span></a></span></span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_Sql"><span class="annot"><span class="annottext">RunSQL -&gt; Text
+</span><a href="Hasura.Backends.MySQL.SQL.html#_Sql"><span class="hs-identifier hs-var hs-var">_Sql</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>    </span><span id="_Source"><span class="annot"><span class="annottext">RunSQL -&gt; SourceName
+</span><a href="Hasura.Backends.MySQL.SQL.html#_Source"><span class="hs-identifier hs-var hs-var">_Source</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688504061"><span id="local-6989586621688504063"><span id="local-6989586621688504065"><span class="annot"><span class="annottext">Int -&gt; RunSQL -&gt; ShowS
+[RunSQL] -&gt; ShowS
+RunSQL -&gt; String
+(Int -&gt; RunSQL -&gt; ShowS)
+-&gt; (RunSQL -&gt; String) -&gt; ([RunSQL] -&gt; ShowS) -&gt; Show RunSQL
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [RunSQL] -&gt; ShowS
+$cshowList :: [RunSQL] -&gt; ShowS
+show :: RunSQL -&gt; String
+$cshow :: RunSQL -&gt; String
+showsPrec :: Int -&gt; RunSQL -&gt; ShowS
+$cshowsPrec :: Int -&gt; RunSQL -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688504056"><span id="local-6989586621688504058"><span class="annot"><span class="annottext">RunSQL -&gt; RunSQL -&gt; Bool
+(RunSQL -&gt; RunSQL -&gt; Bool)
+-&gt; (RunSQL -&gt; RunSQL -&gt; Bool) -&gt; Eq RunSQL
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: RunSQL -&gt; RunSQL -&gt; Bool
+$c/= :: RunSQL -&gt; RunSQL -&gt; Bool
+== :: RunSQL -&gt; RunSQL -&gt; Bool
+$c== :: RunSQL -&gt; RunSQL -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="hs-special">$(</span><span id="local-6989586621688504043"><span id="local-6989586621688504045"><span id="local-6989586621688504047"><span id="local-6989586621688504049"><span id="local-6989586621688504051"><span id="local-6989586621688504053"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RunSQL</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span id="local-6989586621688504037"><span class="annot"><a href="Hasura.Backends.MySQL.SQL.html#runSQL"><span class="hs-identifier hs-type">runSQL</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688504037"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688504037"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688504037"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688504037"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.SQL.html#RunSQL"><span class="hs-identifier hs-type">RunSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688504037"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-36"></span><span id="runSQL"><span class="annot"><span class="annottext">runSQL :: RunSQL -&gt; m EncJSON
+</span><a href="Hasura.Backends.MySQL.SQL.html#runSQL"><span class="hs-identifier hs-var hs-var">runSQL</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MySQL.SQL.html#RunSQL"><span class="hs-identifier hs-type">RunSQL</span></a></span><span> </span><span id="local-6989586621688504035"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688504035"><span class="hs-identifier hs-var">sql</span></a></span></span><span> </span><span id="local-6989586621688504034"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688504034"><span class="hs-identifier hs-var">source</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-37"></span><span>  </span><span id="local-6989586621688504033"><span class="annot"><span class="annottext">Pool Connection
+</span><a href="#local-6989586621688504033"><span class="hs-identifier hs-var">pool</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceConfig -&gt; Pool Connection
+</span><a href="Hasura.Backends.MySQL.Types.Internal.html#scConnectionPool"><span class="hs-identifier hs-var hs-var">scConnectionPool</span></a></span><span> </span><span class="annot"><span class="annottext">(SourceConfig -&gt; Pool Connection)
+-&gt; m SourceConfig -&gt; m (Pool Connection)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; m (SourceConfig 'MySQL)
+forall (b :: BackendType) (m :: * -&gt; *).
+(CacheRM m, MonadError QErr m, Backend b, MetadataM m) =&gt;
+SourceName -&gt; m (SourceConfig b)
+</span><a href="Hasura.RQL.Types.html#askSourceConfig"><span class="hs-identifier hs-var">askSourceConfig</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688504034"><span class="hs-identifier hs-var">source</span></a></span><span>
+</span><span id="line-38"></span><span>  </span><span id="local-6989586621688504029"><span class="annot"><span class="annottext">[[Maybe ByteString]]
+</span><a href="#local-6989586621688504029"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span class="hs-special">]</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO [[Maybe ByteString]] -&gt; m [[Maybe ByteString]]
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO [[Maybe ByteString]] -&gt; m [[Maybe ByteString]])
+-&gt; IO [[Maybe ByteString]] -&gt; m [[Maybe ByteString]]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-39"></span><span>    </span><span class="annot"><span class="annottext">Pool Connection
+-&gt; (Connection -&gt; IO [[Maybe ByteString]])
+-&gt; IO [[Maybe ByteString]]
+forall (m :: * -&gt; *) a b.
+MonadBaseControl IO m =&gt;
+Pool a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-identifier hs-var">withResource</span></span><span> </span><span class="annot"><span class="annottext">Pool Connection
+</span><a href="#local-6989586621688504033"><span class="hs-identifier hs-var">pool</span></a></span><span> </span><span class="annot"><span class="annottext">((Connection -&gt; IO [[Maybe ByteString]])
+ -&gt; IO [[Maybe ByteString]])
+-&gt; (Connection -&gt; IO [[Maybe ByteString]])
+-&gt; IO [[Maybe ByteString]]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688504027"><span class="annot"><span class="annottext">Connection
+</span><a href="#local-6989586621688504027"><span class="hs-identifier hs-var">conn</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-40"></span><span>      </span><span class="annot"><span class="annottext">Connection -&gt; ByteString -&gt; IO ()
+</span><span class="hs-identifier hs-var">query</span></span><span> </span><span class="annot"><span class="annottext">Connection
+</span><a href="#local-6989586621688504027"><span class="hs-identifier hs-var">conn</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ByteString
+forall a. IsString a =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">fromString</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; ByteString) -&gt; (Text -&gt; String) -&gt; Text -&gt; ByteString
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ByteString) -&gt; Text -&gt; ByteString
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688504035"><span class="hs-identifier hs-var">sql</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span>      </span><span id="local-6989586621688504024"><span class="annot"><span class="annottext">Result
+</span><a href="#local-6989586621688504024"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Connection -&gt; IO Result
+</span><span class="hs-identifier hs-var">storeResult</span></span><span> </span><span class="annot"><span class="annottext">Connection
+</span><a href="#local-6989586621688504027"><span class="hs-identifier hs-var">conn</span></a></span><span>
+</span><span id="line-42"></span><span>      </span><span id="local-6989586621688504023"><span class="annot"><span class="annottext">[Maybe ByteString]
+</span><a href="#local-6989586621688504023"><span class="hs-identifier hs-var">fieldNames</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Field -&gt; Maybe ByteString) -&gt; [Field] -&gt; [Maybe ByteString]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Maybe ByteString
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Maybe ByteString)
+-&gt; (Field -&gt; ByteString) -&gt; Field -&gt; Maybe ByteString
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Field -&gt; ByteString
+</span><span class="hs-identifier hs-var hs-var">fieldName</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([Field] -&gt; [Maybe ByteString])
+-&gt; IO [Field] -&gt; IO [Maybe ByteString]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Result -&gt; IO [Field]
+</span><span class="hs-identifier hs-var">fetchFields</span></span><span> </span><span class="annot"><span class="annottext">Result
+</span><a href="#local-6989586621688504024"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="hs-comment">-- fieldNames as Maybes for convenience</span><span>
+</span><span id="line-43"></span><span>      </span><span id="local-6989586621688504022"><span class="annot"><span class="annottext">[[Maybe ByteString]]
+</span><a href="#local-6989586621688504022"><span class="hs-identifier hs-var">rows</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Result -&gt; IO [[Maybe ByteString]]
+</span><a href="Hasura.Backends.MySQL.Connection.html#fetchAllRows"><span class="hs-identifier hs-var">fetchAllRows</span></a></span><span> </span><span class="annot"><span class="annottext">Result
+</span><a href="#local-6989586621688504024"><span class="hs-identifier hs-var">r</span></a></span><span>
+</span><span id="line-44"></span><span>      </span><span class="annot"><span class="annottext">[[Maybe ByteString]] -&gt; IO [[Maybe ByteString]]
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Maybe ByteString]
+</span><a href="#local-6989586621688504023"><span class="hs-identifier hs-var">fieldNames</span></a></span><span> </span><span class="annot"><span class="annottext">[Maybe ByteString] -&gt; [[Maybe ByteString]] -&gt; [[Maybe ByteString]]
+forall a. a -&gt; [a] -&gt; [a]
+</span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">[[Maybe ByteString]]
+</span><a href="#local-6989586621688504022"><span class="hs-identifier hs-var">rows</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span>  </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(EncJSON -&gt; m EncJSON)
+-&gt; (RunSQLRes -&gt; EncJSON) -&gt; RunSQLRes -&gt; m EncJSON
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">RunSQLRes -&gt; EncJSON
+forall a. ToJSON a =&gt; a -&gt; EncJSON
+</span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">(RunSQLRes -&gt; m EncJSON) -&gt; RunSQLRes -&gt; m EncJSON
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-46"></span><span>    </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">[[Maybe ByteString]] -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">[[Maybe ByteString]]
+</span><a href="#local-6989586621688504029"><span class="hs-identifier hs-var">result</span></a></span><span>
+</span><span id="line-47"></span><span>      </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value -&gt; RunSQLRes
+</span><a href="Hasura.RQL.DDL.Schema.html#RunSQLRes"><span class="hs-identifier hs-var">RunSQLRes</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;CommandOK&quot;</span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier hs-var">J.Null</span></span><span>
+</span><span id="line-48"></span><span>      </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value -&gt; RunSQLRes
+</span><a href="Hasura.RQL.DDL.Schema.html#RunSQLRes"><span class="hs-identifier hs-var">RunSQLRes</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;TuplesOk&quot;</span></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; RunSQLRes)
+-&gt; ([[Maybe ByteString]] -&gt; Value)
+-&gt; [[Maybe ByteString]]
+-&gt; RunSQLRes
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">[[Maybe Text]] -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">([[Maybe Text]] -&gt; Value)
+-&gt; ([[Maybe ByteString]] -&gt; [[Maybe Text]])
+-&gt; [[Maybe ByteString]]
+-&gt; Value
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">([Maybe ByteString] -&gt; [Maybe Text])
+-&gt; [[Maybe ByteString]] -&gt; [[Maybe Text]]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">(([Maybe ByteString] -&gt; [Maybe Text])
+ -&gt; [[Maybe ByteString]] -&gt; [[Maybe Text]])
+-&gt; ((ByteString -&gt; Text) -&gt; [Maybe ByteString] -&gt; [Maybe Text])
+-&gt; (ByteString -&gt; Text)
+-&gt; [[Maybe ByteString]]
+-&gt; [[Maybe Text]]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(Maybe ByteString -&gt; Maybe Text)
+-&gt; [Maybe ByteString] -&gt; [Maybe Text]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">((Maybe ByteString -&gt; Maybe Text)
+ -&gt; [Maybe ByteString] -&gt; [Maybe Text])
+-&gt; ((ByteString -&gt; Text) -&gt; Maybe ByteString -&gt; Maybe Text)
+-&gt; (ByteString -&gt; Text)
+-&gt; [Maybe ByteString]
+-&gt; [Maybe Text]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Text) -&gt; Maybe ByteString -&gt; Maybe Text
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OnDecodeError -&gt; ByteString -&gt; Text
+</span><span class="hs-identifier hs-var">decodeUtf8With</span></span><span> </span><span class="annot"><span class="annottext">OnDecodeError
+</span><span class="hs-identifier hs-var">lenientDecode</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([[Maybe ByteString]] -&gt; RunSQLRes)
+-&gt; [[Maybe ByteString]] -&gt; RunSQLRes
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[[Maybe ByteString]]
+</span><a href="#local-6989586621688504029"><span class="hs-identifier hs-var">result</span></a></span><span>
+</span><span id="line-49"></span></pre></body></html>
