@@ -19,6 +19,15 @@
 - cli: avoid exporting hasura-specific schemas during hasura init (#8352)
 - cli: fix performance regression in `migrate status` command (fix #8398)
 
+## v2.6.1
+
+- server: fix bug when event triggers where defined on tables that contained non lower-case alphabet characters (fix #8454)
+- server: refactor insert mutations IR use of "default values" (fixes #8443)
+
+## v2.5.2
+
+- server: refactor insert mutations IR use of "default values" (fixes #8443)
+
 ## Milestone Release - v2.6.0
 
 ### Known issue
