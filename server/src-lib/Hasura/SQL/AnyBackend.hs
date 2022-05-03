@@ -2,6 +2,72 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
+-- | Dispatch over backends.
+--
+-- = Backend Architecture
+--
+-- Our multiple backend architecture uses type classes and associated types
+-- in order to share code, such as parsing graphql queries, building
+-- schemas and metadata, while still accounting for the differences between
+-- backends.
+--
+-- Each backend implements the @Backend@ type class from "Hasura.RQL.Types.Backend"
+-- as well as instances for other classes such as @BackendSchema@ from
+-- "Hasura.GraphQL.Schema.Backend", and define the associated types and
+-- functions, such as @ScalarType@ and @parseScalarValue@, which fit the backend.
+--
+-- In order to actually program abstractly using type classes, we need the
+-- type class instances to be available for us to use. This module is a trick
+-- to enumerate all supported backends and their respective instances to convince
+-- GHC that they can be used.
+--
+-- = Example usage
+--
+-- As an example of using this module, consider wanting to write a function
+-- that calculates metrics for each source. For example, we want to count
+-- the number of tables each source has.
+--
+-- The @SchemaCache@ (defined in "Hasura.RQL.Types.SchemaCache") holds a hash map
+-- from each source to their information.
+-- The source information is parameterized by the 'BackendType' and is hidden
+-- using an existential type inside 'AnyBackend'. It essentially looks like this:
+--
+-- > data SourceInfo b = ...
+-- >
+-- > type SourceCache = HashMap SourceName (AnyBackend SourceInfo)
+--
+-- Our metrics calculation function cares which backend it receives, but only
+-- for its type class instances so it can call the relevant functions:
+--
+-- > telemetryForSource :: forall (b :: BackendType). SourceInfo b -> TelemetryPayload
+--
+-- In order to apply this function to all backends and return the telemetry payload for each,
+-- we need to map over the hash map and dispatch the function over the relevant backend.
+-- we can do this with 'runBackend':
+--
+-- > telemetries =
+-- >   map
+-- >     (`runBackend` telemetryForSource)
+-- >     (scSources schemaCache)
+--
+-- If we want to be able to extract some information about the backend type
+-- inside @telemetryForSource@, we can do this using 'backendTag':
+--
+-- > let telemetryForSource :: forall (b :: BackendType). HasTag b => SourceInfo b -> TelemetryPayload
+-- >     telemetryForSource =
+-- >       let dbKind = reify (backendTag @b)
+--
+-- Note that we needed to add the 'HasTag' constraint, which now means we can't use 'runBackend'
+-- because our function has the wrong type (it has an extra constraint).
+-- Instead, we can use 'dispatchAnyBackend' which allows us to have one constraint:
+--
+-- > telemetries =
+-- >   fmap
+-- >     (\sourceinfo -> (Any.dispatchAnyBackend @HasTag) sourceinfo telemetryForSource)
+-- >     (scSources schemaCache)
+--
+-- Note that we had to add the constraint name as a type application, and we had
+-- to explicitly add a lambda instead of using 'flip'.
 module Hasura.SQL.AnyBackend
   ( AnyBackend,
     SatisfiesForAllBackends,
@@ -38,11 +104,13 @@ import Hasura.SQL.Tag
 import Language.Haskell.TH hiding (Type)
 
 --------------------------------------------------------------------------------
--- Types and constraints
 
--- | This type is essentially an unlabeled box for types indexed by BackendType.
--- Given some type defined as 'data T (b :: BackendType) = ...', we can define
--- 'AnyBackend T' without mentioning any 'BackendType'.
+-- * Types and constraints
+
+-- | This type is essentially an unlabeled box for types indexed by 'BackendType'.
+--
+-- Given some type defined as @data T (b :: BackendType) = ...@, we can define
+-- @AnyBackend T@ without mentioning any 'BackendType'.
 --
 -- This is useful for having generic containers of potentially different types
 -- of T. For instance, @SourceCache@ is defined as a
@@ -51,13 +119,13 @@ import Language.Haskell.TH hiding (Type)
 -- This type is generated with Template Haskell to have one constructor per
 -- backend. This declaration generates the following type:
 --
---   data AnyBackend (i :: BackendType -> Type)
---     = PostgresVanillaValue (i '(Postgres Vanilla))
---     | PostgresCitusValue (i '(Postgres Citus))
---     | BigQueryValue (i 'BigQuery)
---     | MySQLValue (i 'MySQL)
---     | MSSQLValue (i 'MSSQL)
---     | ExperimentalValue (i 'Experimental)
+-- > data AnyBackend (i :: BackendType -> Type)
+-- >   = PostgresVanillaValue (i '(Postgres Vanilla))
+-- >   | PostgresCitusValue (i '(Postgres Citus))
+-- >   | BigQueryValue (i 'BigQuery)
+-- >   | MySQLValue (i 'MySQL)
+-- >   | MSSQLValue (i 'MSSQL)
+-- >   | ExperimentalValue (i 'Experimental)
 $( do
      -- the kind of the type variable, expressed with a quote
      varKind <- [t|BackendType -> Type|]
@@ -76,7 +144,7 @@ $( do
              NormalC
                -- the name of the constructor: `FooValue`
                (getBackendValueName b)
-               -- one argument: `i 'Foo`
+               -- one argument: @i 'Foo@
                -- (we Apply a type Variable to a Promoted name)
                [normalType $ AppT (VarT typeVarName) (getBackendTypeValue b)]
        )
@@ -85,22 +153,24 @@ $( do
  )
 
 -- | Generates a constraint for all backends.
+--
 -- This Template Haskell expression generates the following constraint type:
 --
---   type AllBackendsSatisfy (c :: BackendType -> Constraint) =
---     ( c 'Postgres
---     , c 'MSSQL
---     , ...
---     )
+-- > type AllBackendsSatisfy (c :: BackendType -> Constraint) =
+-- >   ( c 'Postgres
+-- >   , c 'MSSQL
+-- >   , ...
+-- >   )
 --
 -- That is, given a class C, this creates the constraint that dictates that all
 -- backend must satisfy C.
 type AllBackendsSatisfy (c :: BackendType -> Constraint) =
   $( do
-       -- the constraint for each backend: `c 'Foo`
+       -- the constraint for each backend: @c 'Foo@
        -- (we Apply a type Variable to a Promoted name)
-       constraints <- forEachBackend \b ->
-         pure $ AppT (VarT $ mkName "c") (getBackendTypeValue b)
+       constraints <-
+         forEachBackend $
+           pure . AppT (VarT $ mkName "c") . getBackendTypeValue
        -- transforms a list of constraints into a tuple of constraints
        -- by folding the "type application" constructor:
        --
@@ -114,15 +184,16 @@ type AllBackendsSatisfy (c :: BackendType -> Constraint) =
    )
 
 -- | Generates a constraint for a generic type over all backends.
+--
 -- This Template Haskell expression generates the following constraint type:
 --
---   type SatisfiesForAllBackends
---     (i :: BackendType -> Type)
---     (c :: Type -> Constraint)
---     = ( c (i 'Postgres)
---       , c (i 'MSSQL)
---       , ...
---       )
+-- > type SatisfiesForAllBackends
+-- >   (i :: BackendType -> Type)
+-- >   (c :: Type -> Constraint)
+-- >   = ( c (i 'Postgres)
+-- >     , c (i 'MSSQL)
+-- >     , ...
+-- >     )
 --
 -- That is, given a type I and a class C, this creates the constraint that
 -- dictates that for all backends b, @I b@ must satisfy C.
@@ -130,9 +201,10 @@ type SatisfiesForAllBackends
   (i :: BackendType -> Type)
   (c :: Type -> Constraint) =
   $( do
-       -- the constraint for each backend: `c (i 'Foo)`
-       constraints <- forEachBackend \b ->
-         pure $ AppT (VarT $ mkName "c") $ AppT (VarT $ mkName "i") (getBackendTypeValue b)
+       -- the constraint for each backend: @c (i 'Foo)@
+       constraints <-
+         forEachBackend $
+           pure . AppT (VarT $ mkName "c") . AppT (VarT $ mkName "i") . getBackendTypeValue
        -- transforms a list of constraints into a tuple of constraints
        -- by folding the type application constructor
        -- by folding the "type application" constructor:
@@ -147,14 +219,15 @@ type SatisfiesForAllBackends
    )
 
 --------------------------------------------------------------------------------
--- Functions on AnyBackend
+
+-- * Functions on AnyBackend
 
 -- | How to obtain a tag from a runtime value. This function is generated with
 -- Template Haskell for each 'Backend'. The case switch looks like this:
 --
---   Postgres -> PostgresValue PostgresTag
---   MSSQL    -> MSSQLValue    MSSQLTag
---   ...
+-- > Postgres -> PostgresValue PostgresTag
+-- > MSSQL    -> MSSQLValue    MSSQLTag
+-- > ...
 liftTag :: BackendType -> AnyBackend BackendTag
 liftTag t =
   $( backendCase
@@ -168,7 +241,7 @@ liftTag t =
        Nothing
    )
 
--- | Transforms an `AnyBackend i` into an `AnyBackend j`.
+-- | Transforms an @AnyBackend i@ into an @AnyBackend j@.
 mapBackend ::
   forall
     (i :: BackendType -> Type)
@@ -186,9 +259,9 @@ mapBackend e f =
        matches <- forEachBackend \b -> do
          -- the name of the constructor
          let consName = getBackendValueName b
-         -- the patterrn we match: `FooValue x`
+         -- the patterrn we match: @FooValue x@
          let matchPattern = ConP consName [VarP $ mkName "x"]
-         -- the body of the match: `FooValue (f x)`
+         -- the body of the match: @FooValue (f x)@
          matchBody <- [|$(pure $ ConE consName) (f x)|]
          pure $ Match matchPattern (NormalB matchBody) []
        -- the expression on which we do the case
@@ -197,7 +270,7 @@ mapBackend e f =
        pure $ CaseE caseExpr matches
    )
 
--- | Traverse an `AnyBackend i` into an `f (AnyBackend j)`.
+-- | Traverse an @AnyBackend i@ into an @f (AnyBackend j)@.
 traverseBackend ::
   forall
     (c :: BackendType -> Constraint)
@@ -210,17 +283,18 @@ traverseBackend ::
   f (AnyBackend j)
 traverseBackend e f =
   -- generates a case switch that, for each constructor, applies the provided function
-  --   case e of
-  --     FooValue x -> FooValue <$> f x
-  --     BarValue x -> BarValue <$> f x
+  --
+  -- > case e of
+  -- >   FooValue x -> FooValue <$> f x
+  -- >   BarValue x -> BarValue <$> f x
   $( do
        -- we create a case match for each backend
        matches <- forEachBackend \b -> do
          -- the name of the constructor
          let consName = getBackendValueName b
-         -- the patterrn we match: `FooValue x`
+         -- the patterrn we match: @FooValue x@
          let matchPattern = ConP consName [VarP $ mkName "x"]
-         -- the body of the match: `FooValue <$> f x`
+         -- the body of the match: @FooValue <$> f x@
          matchBody <- [|$(pure $ ConE consName) <$> f x|]
          pure $ Match matchPattern (NormalB matchBody) []
        -- the expression on which we do the case
@@ -239,9 +313,10 @@ mkAnyBackend ::
   AnyBackend i
 mkAnyBackend =
   -- generates a case switch that associates a tag constructor to a value constructor
-  --   case backendTag @b of
-  --     FooTag -> FooValue
-  --     BarTag -> BarValue
+  --
+  -- > case backendTag @b of
+  -- >   FooTag -> FooValue
+  -- >   BarTag -> BarValue
   $( backendCase
        [|backendTag @b|]
        -- the pattern for a backend
@@ -266,7 +341,7 @@ runBackend b f = $(mkDispatch 'f 'b)
 -- | Dispatch an existential using an universally quantified function while
 -- also resolving a different constraint.
 -- Use this to dispatch Backend* instances.
--- This is essentially a wrapper around 'runAnyBackend f . repackAnyBackend @c'.
+-- This is essentially a wrapper around @runAnyBackend f . repackAnyBackend \@c@.
 dispatchAnyBackend ::
   forall
     (c :: BackendType -> Constraint)
@@ -305,7 +380,7 @@ dispatchAnyBackend' ::
 dispatchAnyBackend' e f = $(mkDispatch 'f 'e)
 
 -- | This allows you to apply a constraint to the Backend instances (c2)
--- as well as a constraint on the higher-kinded 'i b' type (c1)
+-- as well as a constraint on the higher-kinded @i b@ type (c1)
 dispatchAnyBackend'' ::
   forall
     (c1 :: Type -> Constraint)
@@ -320,7 +395,7 @@ dispatchAnyBackend'' ::
 dispatchAnyBackend'' e f = $(mkDispatch 'f 'e)
 
 -- | Sometimes we need to run operations on two backends of the same type.
--- If the backends don't contain the same type, the given 'r' value is returned.
+-- If the backends don't contain the same type, the given @r@ value is returned.
 -- Otherwise, the function is called with the two wrapped values.
 composeAnyBackend ::
   forall
@@ -335,18 +410,19 @@ composeAnyBackend ::
   r
 composeAnyBackend f e1 e2 owise =
   -- generates the following case expression for all backends:
-  --   (FooValue a, FooValue b) -> f a b
-  --   (BarValue a, BarValue b) -> f a b
-  --   ...
-  --   _ -> owise
+  --
+  -- > (FooValue a, FooValue b) -> f a b
+  -- > (BarValue a, BarValue b) -> f a b
+  -- > ...
+  -- > _ -> owise
   $( backendCase
        [|(e1, e2)|]
-       -- the pattern for a given backend: `(FooValue a, FooValue b)`
+       -- the pattern for a given backend: @(FooValue a, FooValue b)@
        ( \b -> do
            let valueCon n = pure $ ConP (getBackendValueName b) [VarP $ mkName n]
            [p|($(valueCon "a"), $(valueCon "b"))|]
        )
-       -- the body for each backend: `f a b`
+       -- the body for each backend: @f a b@
        (const [|f a b|])
        -- the default case
        (Just [|owise|])
@@ -363,9 +439,10 @@ unpackAnyBackend ::
   Maybe (i b)
 unpackAnyBackend exists =
   -- generates the following case expression for all backends:
-  --   (FooTag, FooValue a) -> Just a
-  --   ...
-  --   _ -> Nothing
+  --
+  -- > (FooTag, FooValue a) -> Just a
+  -- > ...
+  -- > _ -> Nothing
   $( backendCase
        [|(backendTag @b, exists)|]
        -- the pattern for a given backend
@@ -381,32 +458,38 @@ unpackAnyBackend exists =
    )
 
 --------------------------------------------------------------------------------
--- Special case for arrows
+--
 
+-- * Special case for arrows
+
+--
+
+-- $caseforarrows
 -- Sadly, we CAN'T mix template haskell and arrow syntax... Meaning we can't
--- generate a `backendCase` within proc syntax. What we have to do instead is to
+-- generate a 'backendCase' within proc syntax. What we have to do instead is to
 -- MANUALLY DESUGAR the arrow code, to manually construct the following
 -- pipeline.
 --
--- ┌────────────┐         ┌────────────────────┐                ┌───┐
--- │ AnyBackend ├─┬──────►│ Left PostgresValue ├───────────────►│ f ├────────┐
--- └────────────┘ │       └────────────────────┘                └───┘        │
---                │                                                          │
---                │       ┌─────────────────────────┐           ┌───┐        │
---                └─┬────►│ Right (Left MSSQLValue) ├──────────►│ f ├─────┐  │
---                  │     └─────────────────────────┘           └───┘     │  │
---                  │                                                     │  │
---                  │     ┌─────────────────────────────────┐   ┌───┐     │  │
---                  └─┬──►│ Right (Right (Left MongoValue)) ├───┤ f ├──┐  │  │
---                    │   └─────────────────────────────────┘   └───┘  │  │  │
---                    │                                                │  │  │
---                    │   ┌───────────────────────────┐         ┌───┐  │  │  │  ┌───┐
---                    └──►│ Right (Right (Right ...)) ├─────────┤ f ├──┴──┴──┴─►│ r │
---                        └───────────────────────────┘         └───┘           └───┘
+-- > ┌────────────┐         ┌────────────────────┐                ┌───┐
+-- > │ AnyBackend ├─┬──────►│ Left PostgresValue ├───────────────►│ f ├────────┐
+-- > └────────────┘ │       └────────────────────┘                └───┘        │
+-- >                │                                                          │
+-- >                │       ┌─────────────────────────┐           ┌───┐        │
+-- >                └─┬────►│ Right (Left MSSQLValue) ├──────────►│ f ├─────┐  │
+-- >                  │     └─────────────────────────┘           └───┘     │  │
+-- >                  │                                                     │  │
+-- >                  │     ┌─────────────────────────────────┐   ┌───┐     │  │
+-- >                  └─┬──►│ Right (Right (Left MongoValue)) ├───┤ f ├──┐  │  │
+-- >                    │   └─────────────────────────────────┘   └───┘  │  │  │
+-- >                    │                                                │  │  │
+-- >                    │   ┌───────────────────────────┐         ┌───┐  │  │  │  ┌───┐
+-- >                    └──►│ Right (Right (Right ...)) ├─────────┤ f ├──┴──┴──┴─►│ r │
+-- >                        └───────────────────────────┘         └───┘           └───┘
 --
 -- This is what, internally, GHC would translate an arrow case-switch into: the
 -- only tool it has is:
---   (|||) :: a b d -> a c d -> a (Either b c) d
+--
+-- > (|||) :: a b d -> a c d -> a (Either b c) d
 --
 -- It must therefore encode the case switch as an arrow from the original value
 -- to this tree of Either, and then coalesce them using (|||). This is what we
@@ -416,16 +499,17 @@ unpackAnyBackend exists =
 -- `Void` as a terminating case for our recursion. This declaration creates the
 -- following type:
 --
---   type BackendChoice (i :: BackendType -> Type)
---     = Either (i 'Postgres)
---       ( Either (i 'MSSQL)
---         ( Either ...
---            Void
+-- > type BackendChoice (i :: BackendType -> Type)
+-- >   = Either (i 'Postgres)
+-- >     ( Either (i 'MSSQL)
+-- >       ( Either ...
+-- >          Void
 type BackendChoice (i :: BackendType -> Type) =
   $( do
        -- creates the type (i b) for each backend b
-       types <- forEachBackend \b ->
-         pure $ AppT (VarT $ mkName "i") (getBackendTypeValue b)
+       types <-
+         forEachBackend $
+           pure . AppT (VarT $ mkName "i") . getBackendTypeValue
        -- generate the either type by folding over that list
        let appEither l r = [t|Either $(pure l) $(pure r)|]
        foldrM appEither (ConT ''Void) types
@@ -433,18 +517,19 @@ type BackendChoice (i :: BackendType -> Type) =
 
 -- | Spread a 'AnyBackend' into  a 'BackendChoice'.
 --
--- Given backends Foo, Bar, Baz, the type of `BackendChoice c` will be:
---   ( Either (c 'Foo)
---     ( Either (c 'Bar)
---       ( Either (c 'Baz)
---         Void )))
+-- Given backends @Foo@, @Bar@, @Baz@, the type of @BackendChoice c@ will be:
+--
+-- > ( Either (c 'Foo)
+-- >   ( Either (c 'Bar)
+-- >     ( Either (c 'Baz)
+-- >       Void )))
 --
 -- Accordingly, the following Template Haskell splice generates the following code:
 --
---   case e of
---     FooValue x -> Left x
---     BarValue x -> Right (Left x)
---     BazValue x -> Right (Right (Left x))
+-- > case e of
+-- >   FooValue x -> Left x
+-- >   BarValue x -> Right (Left x)
+-- >   BazValue x -> Right (Right (Left x))
 spreadChoice ::
   forall
     (i :: BackendType -> Type)
@@ -461,7 +546,7 @@ spreadChoice = arr $ \e ->
        matches <- for (zip backendCons choiceCons) \(b, c) -> do
          -- name of the constructor: FooValue
          let consName = getBackendValueName b
-         -- pattern of the match: `FooValue x`
+         -- pattern of the match: @FooValue x@
          let matchPattern = ConP consName [VarP $ mkName "x"]
          -- expression of the match: applying the 'BackendChoice' constructor to x
          matchBody <- [|$(pure c) x|]
@@ -475,18 +560,19 @@ spreadChoice = arr $ \e ->
 -- | Coalesce a 'BackendChoice' into a result, given an arrow from each
 -- possibilty to a common result.
 --
--- Given backends Foo, Bar, Baz, the type of `BackendChoice c` will be:
---   ( Either (c 'Foo)
---     ( Either (c 'Bar)
---       ( Either (c 'Baz)
---         Void )))
+-- Given backends Foo, Bar, Baz, the type of @BackendChoice c@ will be:
+--
+-- > ( Either (c 'Foo)
+-- >   ( Either (c 'Bar)
+-- >     ( Either (c 'Baz)
+-- >       Void )))
 --
 -- Accordingly, the following Template Haskell splice generates the following code:
 --
---   ( arrow |||
---     ( arrow |||
---       ( arrow |||
---         absurd )))
+-- > ( arrow |||
+-- >   ( arrow |||
+-- >     ( arrow |||
+-- >       absurd )))
 coalesceChoice ::
   forall
     (c1 :: BackendType -> Constraint)
@@ -501,10 +587,10 @@ coalesceChoice arrow =
   $( do
        -- associate the arrow to each type
        arrows <- forEachBackend $ const [|arrow|]
-       -- the default case of our fold is `arr absurd` for the terminating Void
+       -- the default case of our fold is @arr absurd@ for the terminating Void
        baseCase <- [|arr absurd|]
        -- how to combine two arrows using (|||)
-       let combine = \l r -> [|$(pure l) ||| $(pure r)|]
+       let combine l r = [|$(pure l) ||| $(pure r)|]
        foldrM combine baseCase arrows
    )
 
@@ -533,32 +619,33 @@ newtype BackendArrowTuple x i (b :: BackendType) = BackendArrowTuple {unTuple ::
 -- | Finally, we can do the dispatch on the four-elements tuple.
 -- Here's what happens, step by step:
 --
--- ┌─────────────────────────┐
--- │ (x, y, AnyBackend i, z) │
--- └─┬───────────────────────┘
---   │
---   │   cons
---   ▼
--- ┌────────────────────────────────────────┐                 ┌─────────────────────────────┐
--- │ AnyBackend (BackendArrowTuple x y z i) │          ┌───►  │ BackendArrowTuple x y z i b │
--- └─┬──────────────────────────────────────┘          │      └─┬───────────────────────────┘
---   │                                                 │        │
---   │   spreadChoice                                  │        │   arr unTuple
---   ▼                                                 │        ▼
--- ┌───────────────────────────────────────────┐       │      ┌────────────────┐
--- │ BackendChoice (BackendArrowTuple x y z i) │       │      │ (x, y, i b, z) │
--- └─┬─────────────────────────────────────────┘       │      └─┬──────────────┘
---   │                                                 │        │
---   │   coalesceChoice (arr unTuple >>> arrow)  ◄─────┘        │   arrow
---   ▼                                                          ▼
--- ┌───┐                                                      ┌───┐
--- │ r │                                                      │ r │
--- └───┘                                                      └───┘
+-- > ┌─────────────────────────┐
+-- > │ (x, y, AnyBackend i, z) │
+-- > └─┬───────────────────────┘
+-- >   │
+-- >   │   cons
+-- >   ▼
+-- > ┌────────────────────────────────────────┐                 ┌─────────────────────────────┐
+-- > │ AnyBackend (BackendArrowTuple x y z i) │          ┌───►  │ BackendArrowTuple x y z i b │
+-- > └─┬──────────────────────────────────────┘          │      └─┬───────────────────────────┘
+-- >   │                                                 │        │
+-- >   │   spreadChoice                                  │        │   arr unTuple
+-- >   ▼                                                 │        ▼
+-- > ┌───────────────────────────────────────────┐       │      ┌────────────────┐
+-- > │ BackendChoice (BackendArrowTuple x y z i) │       │      │ (x, y, i b, z) │
+-- > └─┬─────────────────────────────────────────┘       │      └─┬──────────────┘
+-- >   │                                                 │        │
+-- >   │   coalesceChoice (arr unTuple >>> arrow)  ◄─────┘        │   arrow
+-- >   ▼                                                          ▼
+-- > ┌───┐                                                      ┌───┐
+-- > │ r │                                                      │ r │
+-- > └───┘                                                      └───┘
 --
 -- NOTE: The below function accepts two constraints, if the arrow
 -- you want to dispatch only has one constraint then repeat the constraint twice.
 -- For example:
--- ```AB.dispatchAnyBackendArrow @BackendMetadata @BackendMetadata (proc (sourceMetadata, invalidationKeys)```
+--
+-- > AB.dispatchAnyBackendArrow @BackendMetadata @BackendMetadata (proc (sourceMetadata, invalidationKeys)
 dispatchAnyBackendArrow ::
   forall
     (c1 :: BackendType -> Constraint)
@@ -577,7 +664,8 @@ dispatchAnyBackendArrow arrow =
     cons (e, x) = mapBackend e \ib -> BackendArrowTuple (ib, x)
 
 --------------------------------------------------------------------------------
--- JSON functions
+
+-- * JSON functions
 
 -- | Attempts to parse an 'AnyBackend' from a JSON value, using the provided
 -- backend information.
@@ -614,7 +702,8 @@ debugAnyBackendToJSON ::
 debugAnyBackendToJSON e = dispatchAnyBackend' @ToJSON e toJSON
 
 --------------------------------------------------------------------------------
--- Instances for 'AnyBackend'
+
+-- * Instances for 'AnyBackend'
 
 deriving instance i `SatisfiesForAllBackends` Show => Show (AnyBackend i)
 
