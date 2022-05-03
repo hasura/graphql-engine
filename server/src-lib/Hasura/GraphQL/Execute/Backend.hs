@@ -198,7 +198,7 @@ convertRemoteSourceRelationship
               { _acfColumn = argumentIdColumn,
                 _acfType = argumentIdColumnType,
                 _acfAsText = False,
-                _acfOp = Nothing,
+                _acfArguments = Nothing,
                 _acfCaseBoolExpression = Nothing
               }
         )

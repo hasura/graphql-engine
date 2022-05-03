@@ -953,7 +953,7 @@ fromAnnColumnField _stringifyNumbers annColumnField = do
     Ir.AnnColumnField
       { _acfColumn = column,
         _acfAsText = asText :: Bool,
-        _acfOp = _ :: Maybe (Ir.ColumnOp 'BigQuery), -- TODO: What's this?
+        _acfArguments = _ :: Maybe Void,
         _acfCaseBoolExpression = caseBoolExpMaybe :: Maybe (Ir.AnnColumnCaseBoolExp 'BigQuery Expression)
       } = annColumnField
 

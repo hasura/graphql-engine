@@ -50,7 +50,7 @@ instance Backend 'DataConnector where
   type ScalarValue 'DataConnector = IR.S.V.Value
   type ScalarType 'DataConnector = IR.S.T.Type
   type SQLExpression 'DataConnector = IR.E.Expression
-  type SQLOperator 'DataConnector = IR.E.Operator
+  type ScalarSelectionArguments 'DataConnector = Void
   type BooleanOperators 'DataConnector = Const XDisable
   type ExtraTableMetadata 'DataConnector = Unimplemented
 

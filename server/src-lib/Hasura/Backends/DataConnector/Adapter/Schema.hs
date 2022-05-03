@@ -55,7 +55,7 @@ instance BackendSchema 'DataConnector where
 
   -- individual components
   columnParser = columnParser'
-  jsonPathArg _ = pure Nothing
+  scalarSelectionArgumentsParser _ = pure Nothing
   orderByOperators = orderByOperators'
   comparisonExps = comparisonExps'
 
@@ -154,7 +154,7 @@ comparisonExps' = P.memoize 'comparisonExps' $ \columnType -> do
   where
     mkListLiteral :: [RQL.ColumnValue 'DataConnector] -> P.UnpreparedValue 'DataConnector
     mkListLiteral columnValues =
-      P.UVLiteral $ IR.E.Array $ mapMaybe extractLiteral $ fmap (IR.E.Literal . RQL.cvValue) columnValues
+      P.UVLiteral $ IR.E.Array $ mapMaybe (extractLiteral . IR.E.Literal . RQL.cvValue) columnValues
 
     extractLiteral :: IR.E.Expression -> Maybe IR.S.V.Value
     extractLiteral (IR.E.Literal lit) = Just lit

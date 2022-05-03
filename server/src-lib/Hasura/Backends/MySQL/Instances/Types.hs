@@ -28,7 +28,7 @@ instance Backend 'MySQL where
   type ScalarValue 'MySQL = MySQL.ScalarValue
   type ScalarType 'MySQL = MySQL.ScalarType -- DB.Type
   type SQLExpression 'MySQL = MySQL.Expression
-  type SQLOperator 'MySQL = MySQL.Op
+  type ScalarSelectionArguments 'MySQL = Void
   type BooleanOperators 'MySQL = Const Void
   type XComputedField 'MySQL = Void
   type XRelay 'MySQL = Void

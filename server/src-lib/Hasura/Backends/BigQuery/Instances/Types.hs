@@ -28,7 +28,7 @@ instance Backend 'BigQuery where
   type ScalarValue 'BigQuery = BigQuery.Value
   type ScalarType 'BigQuery = BigQuery.ScalarType
   type SQLExpression 'BigQuery = BigQuery.Expression
-  type SQLOperator 'BigQuery = BigQuery.Op
+  type ScalarSelectionArguments 'BigQuery = Void
   type BooleanOperators 'BigQuery = BigQuery.BooleanOperators
   type XStreamingSubscription 'BigQuery = XDisable
 

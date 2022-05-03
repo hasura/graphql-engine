@@ -36,6 +36,7 @@ module Hasura.Backends.Postgres.SQL.DML
     SQLExp (..),
     SQLInsert (SQLInsert, siCols, siConflict, siRet, siTable, siValues),
     SQLOp (SQLOp),
+    ColumnOp (..),
     SQLUpdate (SQLUpdate),
     Select (Select, selCTEs, selDistinct, selExtr, selFrom, selLimit, selOffset, selOrderBy, selWhere),
     SelectWith,
@@ -346,6 +347,18 @@ instance Hashable QIdentifier
 instance ToSQL QIdentifier where
   toSQL (QIdentifier qual iden) =
     mconcat [toSQL qual, TB.char '.', toSQL iden]
+
+data ColumnOp = ColumnOp
+  { _colOp :: SQLOp,
+    _colExp :: SQLExp
+  }
+  deriving (Show, Eq, Generic, Data)
+
+instance NFData ColumnOp
+
+instance Cacheable ColumnOp
+
+instance Hashable ColumnOp
 
 newtype SQLOp = SQLOp {sqlOpTxt :: Text}
   deriving (Show, Eq, NFData, Data, Cacheable, Hashable)

@@ -47,7 +47,7 @@ instance BackendSchema 'MySQL where
   nodesAggExtension = Just ()
   streamSubscriptionExtension = Nothing
   columnParser = columnParser'
-  jsonPathArg = jsonPathArg'
+  scalarSelectionArgumentsParser = scalarSelectionArgumentsParser'
   orderByOperators = orderByOperators'
   comparisonExps = comparisonExps'
   countTypeInput = mysqlCountTypeInput
@@ -206,11 +206,11 @@ columnParser' columnType (G.Nullability isNullable) =
         MySQL.VarcharValue $ G.unName value
       )
 
-jsonPathArg' ::
+scalarSelectionArgumentsParser' ::
   MonadParse n =>
   ColumnType 'MySQL ->
-  InputFieldsParser n (Maybe (IR.ColumnOp 'MySQL))
-jsonPathArg' _columnType = pure Nothing
+  InputFieldsParser n (Maybe (ScalarSelectionArguments 'MySQL))
+scalarSelectionArgumentsParser' _columnType = pure Nothing
 
 orderByOperators' :: NonEmpty (Definition P.EnumValueInfo, (BasicOrderType 'MySQL, NullsOrderType 'MySQL))
 orderByOperators' =

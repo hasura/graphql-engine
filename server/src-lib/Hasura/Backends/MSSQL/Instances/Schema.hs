@@ -71,7 +71,7 @@ instance BackendSchema 'MSSQL where
 
   -- individual components
   columnParser = msColumnParser
-  jsonPathArg = msJsonPathArg
+  scalarSelectionArgumentsParser = msScalarSelectionArgumentsParser
   orderByOperators = msOrderByOperators
   comparisonExps = msComparisonExps
   countTypeInput = msCountTypeInput
@@ -290,11 +290,11 @@ msColumnParser columnType (G.Nullability isNullable) =
         ODBC.TextValue $ G.unName value
       )
 
-msJsonPathArg ::
+msScalarSelectionArgumentsParser ::
   MonadParse n =>
   ColumnType 'MSSQL ->
-  InputFieldsParser n (Maybe (IR.ColumnOp 'MSSQL))
-msJsonPathArg _columnType = pure Nothing
+  InputFieldsParser n (Maybe (ScalarSelectionArguments 'MSSQL))
+msScalarSelectionArgumentsParser _columnType = pure Nothing
 
 msOrderByOperators ::
   NonEmpty

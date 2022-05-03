@@ -1079,7 +1079,7 @@ fieldSelection sourceName table tableInfo maybePkeyColumns = \case
           let caseBoolExp = join $ Map.lookup columnName (spiCols selectPermissions)
               caseBoolExpUnpreparedValue =
                 (fmap . fmap) partialSQLExpToUnpreparedValue <$> caseBoolExp
-              pathArg = jsonPathArg $ ciType columnInfo
+              pathArg = scalarSelectionArgumentsParser $ ciType columnInfo
               -- In an inherited role, when a column is part of all the select
               -- permissions which make up the inherited role then the nullability
               -- of the field is determined by the nullability of the DB column
@@ -1355,7 +1355,7 @@ computedFieldPG sourceName ComputedFieldInfo {..} parentTable tableInfo = runMay
             (fmap . fmap) partialSQLExpToUnpreparedValue <$> caseBoolExpMaybe
           fieldArgsParser = do
             args <- functionArgsParser
-            colOp <- jsonPathArg $ ColumnScalar scalarReturnType
+            colOp <- scalarSelectionArgumentsParser @('Postgres pgKind) $ ColumnScalar scalarReturnType
             pure $
               IR.AFComputedField
                 _cfiXComputedFieldInfo
@@ -1364,7 +1364,7 @@ computedFieldPG sourceName ComputedFieldInfo {..} parentTable tableInfo = runMay
                     ( IR.ComputedFieldScalarSelect
                         { IR._cfssFunction = _cffName _cfiFunction,
                           IR._cfssType = scalarReturnType,
-                          IR._cfssColumnOp = colOp,
+                          IR._cfssScalarArguments = colOp,
                           IR._cfssArguments = args
                         }
                     )
