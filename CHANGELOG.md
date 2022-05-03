@@ -3,7 +3,8 @@
 ## Next release
 
 ### Bug fixes and improvements
-- server: server: fix bug when event triggers where defined on tables that contained non lower-case alphabet characters (fix #8454)
+- server: fix bug when event triggers where defined on tables that contained non lower-case alphabet characters (fix #8454)
+- server: refactor insert mutations IR use of "default values" (fixes #8443)
 
 ## Milestone Release - v2.6.0
 
