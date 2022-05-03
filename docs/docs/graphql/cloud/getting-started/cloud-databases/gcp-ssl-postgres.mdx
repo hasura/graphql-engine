@@ -45,7 +45,7 @@ Download these certs to your local drive and follow these steps:
 | SSL_ROOTCERT_GCP        | Contents from server-ca.pem **                                        |
 | SSL_CERT_GCP            | Contents from client-cert.pem **                                      |
 | SSL_KEY_GCP             | Contents from client-key.pem **                                       |
-| PG_DATABASE_URL_GCP   * | postgresql://<user-name>:<password>@<public-ip>:<postgres-port>/<db>  |
+| PG_DATABASE_URL_GCP   * | postgresql://user-name:password@public-ip:postgres-port/db            |
 
 ** Open the cert files using your favorite Text Editor, select all the contents and copy those to the clipboard
 
@@ -55,7 +55,7 @@ Download these certs to your local drive and follow these steps:
 Here is how your Hasura Cloud Env Vars setup should look like:
 
 <Thumbnail
-  src="/img/graphql/cloud/cloud-dbs/cloud-gcp-env-vars.png"
+  src="/img/graphql/cloud/cloud-dbs/gcp/cloud-gcp-env-vars.png"
   alt="Hasura Cloud Env Vars"
   width="1000px"
 />
@@ -63,7 +63,7 @@ Here is how your Hasura Cloud Env Vars setup should look like:
 ##Step 2: Go to your Hasura Cloud Console and configure the Database Setup (in Data tab):
 
 <Thumbnail
-  src="/img/graphql/cloud/cloud-dbs/postgres-database-url.png"
+  src="/img/graphql/cloud/cloud-dbs/gcp/postgres-database-url.png"
   alt="GCP Postgres Database URL"
   width="1000px"
 />
@@ -80,7 +80,7 @@ In the same tab, complete the SSL Certificate Settings:
 Here is how the setup would look like:
 
 <Thumbnail
-  src="/img/graphql/cloud/cloud-dbs/ssl-config-setup.png"
+  src="/img/graphql/cloud/cloud-dbs/gcp/ssl-config-setup.png"
   alt="Hasura Console SSL Config Setup"
   width="1000px"
 />
@@ -88,7 +88,7 @@ Here is how the setup would look like:
 Click on the “Update Connection” button available on the lower-mid section of the screen:
 
 <Thumbnail
-  src="/img/graphql/cloud/cloud-dbs/update-connection-button.png"
+  src="/img/graphql/cloud/cloud-dbs/gcp/update-connection-button.png"
   alt="Update Connection Button"
   width="1000px"
 />
@@ -96,7 +96,7 @@ Click on the “Update Connection” button available on the lower-mid section o
 You should see the following message on the screen, indicating a successful GCP Database connection from Hasura Cloud !!
 
 <Thumbnail
-  src="/img/graphql/cloud/cloud-dbs/datasource-update-success.png"
+  src="/img/graphql/cloud/cloud-dbs/gcp/datasource-update-success.png"
   alt="Datasource Update Success"
   width="1000px"
 />
