@@ -353,37 +353,40 @@ getInconsistentQueryCollections ::
   [NormalizedQuery] ->
   m [InconsistentMetadata]
 getInconsistentQueryCollections rs qcs lqToMetadataObj restEndpoints allowLst = do
-  let zipLQwithDef :: (CollectionName, CreateCollection) -> [((CollectionName, ListedQuery), [G.ExecutableDefinition G.Name])]
-      zipLQwithDef (cName, cc) =
-        let lqs = _cdQueries . _ccDefinition $ cc
-         in map (\lq -> ((cName, lq), (G.getExecutableDefinitions . unGQLQuery . getGQLQuery . _lqQuery $ lq))) lqs
-      inAllowList :: [NormalizedQuery] -> (ListedQuery) -> Bool
-      inAllowList nqList (ListedQuery {..}) = any (\nq -> unNormalizedQuery nq == (unGQLQuery . getGQLQuery) _lqQuery) nqList
-
-      inRESTEndpoints :: EndpointTrie GQLQueryWithText -> (ListedQuery) -> [Text]
-      inRESTEndpoints edTrie lq = map fst $ filter (queryIsFaulty) allQueries
-        where
-          methodMaps = Trie.elems edTrie
-          endpoints = concatMap snd $ concatMap (MultiMap.toList) methodMaps
-          allQueries :: [(Text, GQLQueryWithText)]
-          allQueries = map (\d -> (unNonEmptyText . unEndpointName . _ceName $ d, _edQuery . _ceDefinition $ d)) endpoints
-
-          queryIsFaulty :: (Text, GQLQueryWithText) -> Bool
-          queryIsFaulty (_, gqlQ) = (_lqQuery lq) == gqlQ
-
-      lqLst = concatMap zipLQwithDef (OMap.toList qcs)
-      formatError (cName, lq) allErrs =
-        let msgInit = "In query collection \"" <> toTxt cName <> "\" the query \"" <> (toTxt . _lqName) lq <> "\" is invalid with the following error(s): "
-            lToTxt = dquoteList . reverse
-            faultyEndpoints = case inRESTEndpoints restEndpoints lq of
-              [] -> ""
-              ePoints -> ". This query is being used in the following REST endpoint(s): " <> lToTxt ePoints
-
-            isInAllowList = if inAllowList allowLst lq then ". This query is in allowlist." else ""
-         in msgInit <> lToTxt allErrs <> faultyEndpoints <> isInAllowList
-  validatedMetaObjs <- traverse (validateQuery rs (lqToMetadataObj) formatError) lqLst
-  let inconsistentMetaObjs = lefts validatedMetaObjs
+  inconsistentMetaObjs <- lefts <$> traverse (validateQuery rs (lqToMetadataObj) formatError) lqLst
   pure $ map (\(o, t) -> InconsistentObject t Nothing o) inconsistentMetaObjs
+  where
+    zipLQwithDef :: (CollectionName, CreateCollection) -> [((CollectionName, ListedQuery), [G.ExecutableDefinition G.Name])]
+    zipLQwithDef (cName, cc) = map (\lq -> ((cName, lq), (G.getExecutableDefinitions . unGQLQuery . getGQLQuery . _lqQuery $ lq))) lqs
+      where
+        lqs = _cdQueries . _ccDefinition $ cc
+
+    inAllowList :: [NormalizedQuery] -> (ListedQuery) -> Bool
+    inAllowList nqList (ListedQuery {..}) = any (\nq -> unNormalizedQuery nq == (unGQLQuery . getGQLQuery) _lqQuery) nqList
+
+    inRESTEndpoints :: EndpointTrie GQLQueryWithText -> (ListedQuery) -> [Text]
+    inRESTEndpoints edTrie lq = map fst $ filter (queryIsFaulty) allQueries
+      where
+        methodMaps = Trie.elems edTrie
+        endpoints = concatMap snd $ concatMap (MultiMap.toList) methodMaps
+        allQueries :: [(Text, GQLQueryWithText)]
+        allQueries = map (\d -> (unNonEmptyText . unEndpointName . _ceName $ d, _edQuery . _ceDefinition $ d)) endpoints
+
+        queryIsFaulty :: (Text, GQLQueryWithText) -> Bool
+        queryIsFaulty (_, gqlQ) = (_lqQuery lq) == gqlQ
+
+    lqLst = concatMap zipLQwithDef (OMap.toList qcs)
+
+    formatError :: (CollectionName, ListedQuery) -> [Text] -> Text
+    formatError (cName, lq) allErrs = msgInit <> lToTxt allErrs <> faultyEndpoints <> isInAllowList
+      where
+        msgInit = "In query collection \"" <> toTxt cName <> "\" the query \"" <> (toTxt . _lqName) lq <> "\" is invalid with the following error(s): "
+        lToTxt = dquoteList . reverse
+        faultyEndpoints = case inRESTEndpoints restEndpoints lq of
+          [] -> ""
+          ePoints -> ". This query is being used in the following REST endpoint(s): " <> lToTxt ePoints
+
+        isInAllowList = if inAllowList allowLst lq then ". This query is in allowlist." else ""
 
 validateQuery ::
   (MonadError QErr m) =>
@@ -397,14 +400,9 @@ validateQuery rSchema getMetaObj formatError (eMeta, eDefs) = do
   let gqlRequest = GQLReq Nothing (GQLExecDoc eDefs) Nothing
 
   -- @getSingleOperation@ will do the fragment inlining
-  G.TypedOperationDefinition {..} <- getSingleOperation gqlRequest
+  singleOperation <- getSingleOperation gqlRequest
 
-  -- we need to create @ExecutableDefinitionOperation@ to do the validation
-  -- we are also changing the type from @NoFragments@ to @FragmentSpread@
-  -- TODO: fix the @diagnoseGraphQLQuery@ to use @SingleOperation Name@
-  let eDef =
-        G.ExecutableDefinitionOperation . G.OperationDefinitionTyped $
-          G.TypedOperationDefinition {_todSelectionSet = G.fmapSelectionSetFragment G.inline _todSelectionSet, ..}
-  pure $ case diagnoseGraphQLQuery rSchema eDef of
+  -- perform the validation
+  pure $ case diagnoseGraphQLQuery rSchema singleOperation of
     Nothing -> Right ()
     Just errors -> Left (getMetaObj eMeta, formatError eMeta errors)

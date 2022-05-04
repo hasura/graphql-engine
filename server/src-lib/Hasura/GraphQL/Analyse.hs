@@ -85,7 +85,7 @@ data VariableInfo = VariableInfo
 -- Returns 'Nothing' if the query is valid, or a list of messages otherwise.
 diagnoseGraphQLQuery ::
   G.SchemaIntrospection ->
-  G.ExecutableDefinition G.Name ->
+  G.TypedOperationDefinition G.NoFragments G.Name ->
   Maybe [Text]
 diagnoseGraphQLQuery schema query =
   let (_structure, errors) = analyzeGraphQLQuery schema query
@@ -117,40 +117,35 @@ diagnoseGraphQLQuery schema query =
 -- AND an error about "does_not_exist" not existing.
 analyzeGraphQLQuery ::
   G.SchemaIntrospection ->
-  G.ExecutableDefinition G.Name ->
+  G.TypedOperationDefinition G.NoFragments G.Name ->
   (Structure, [Text])
-analyzeGraphQLQuery schema query = runAnalysis schema $ case query of
-  G.ExecutableDefinitionFragment _ ->
-    throwDiagnosis TopLevelFragment
-  G.ExecutableDefinitionOperation operation -> case operation of
-    G.OperationDefinitionUnTyped _ ->
-      throwDiagnosis UntypedTopLevelOperation
-    G.OperationDefinitionTyped (G.TypedOperationDefinition {..}) -> do
-      -- traverse the fields recursively
-      selection <- withCatchAndRecord do
-        let rootTypeName = case _todType of
-              G.OperationTypeQuery -> queryRootName
-              G.OperationTypeMutation -> mutationRootName
-              G.OperationTypeSubscription -> subscriptionRootName
-        rootTypeDefinition <-
-          lookupType rootTypeName
-            `onNothingM` throwDiagnosis (TypeNotFound rootTypeName)
-        analyzeSelectionSet rootTypeDefinition _todSelectionSet
-          `onNothingM` throwDiagnosis NoTopLevelSelection
-      -- collect variables
-      let variables =
-            _todVariableDefinitions <&> \G.VariableDefinition {..} ->
-              (_vdName, VariableInfo _vdType _vdDefaultValue)
-      pure $
-        Structure
-          (fromMaybe mempty selection)
-          (Map.fromList variables)
+analyzeGraphQLQuery schema G.TypedOperationDefinition {..} = runAnalysis schema $
+  do
+    -- traverse the fields recursively
+    selection <- withCatchAndRecord do
+      let rootTypeName = case _todType of
+            G.OperationTypeQuery -> queryRootName
+            G.OperationTypeMutation -> mutationRootName
+            G.OperationTypeSubscription -> subscriptionRootName
+      rootTypeDefinition <-
+        lookupType rootTypeName
+          `onNothingM` throwDiagnosis (TypeNotFound rootTypeName)
+      analyzeSelectionSet rootTypeDefinition _todSelectionSet
+        `onNothingM` throwDiagnosis NoTopLevelSelection
+    -- collect variables
+    let variables =
+          _todVariableDefinitions <&> \G.VariableDefinition {..} ->
+            (_vdName, VariableInfo _vdType _vdDefaultValue)
+    pure $
+      Structure
+        (fromMaybe mempty selection)
+        (Map.fromList variables)
 
 -- | Check the consistency between the schema information about a type and a
 -- selection set (or lack thereof) on that type.
 analyzeSelectionSet ::
   G.TypeDefinition [G.Name] G.InputValueDefinition ->
-  G.SelectionSet G.FragmentSpread G.Name ->
+  G.SelectionSet G.NoFragments G.Name ->
   Analysis (Maybe Selection)
 analyzeSelectionSet typeDef selectionSet = case typeDef of
   G.TypeDefinitionInputObject iotd -> do
@@ -180,16 +175,13 @@ analyzeSelectionSet typeDef selectionSet = case typeDef of
 -- continue accumulating the others.
 analyzeObjectSelectionSet ::
   G.ObjectTypeDefinition G.InputValueDefinition ->
-  G.SelectionSet G.FragmentSpread G.Name ->
+  G.SelectionSet G.NoFragments G.Name ->
   Analysis Selection
 analyzeObjectSelectionSet (G.ObjectTypeDefinition {..}) selectionSet = do
   mconcat . catMaybes <$> for selectionSet analyzeObjectSelection
   where
-    analyzeObjectSelection :: G.Selection G.FragmentSpread G.Name -> Analysis (Maybe Selection)
+    analyzeObjectSelection :: G.Selection G.NoFragments G.Name -> Analysis (Maybe Selection)
     analyzeObjectSelection = \case
-      -- TODO: implement fragments
-      G.SelectionFragmentSpread _ -> do
-        pure Nothing
       G.SelectionInlineFragment inlineFrag -> do
         -- analyze the inline fragment's selection set
         mconcat <$> for (G._ifSelectionSet inlineFrag) analyzeObjectSelection
@@ -306,9 +298,7 @@ data AnalysisError = AnalysisError
 type Path = Seq Text
 
 data Diagnosis
-  = TopLevelFragment
-  | UntypedTopLevelOperation
-  | NoTopLevelSelection
+  = NoTopLevelSelection
   | TypeNotFound G.Name
   | EnumSelectionSet G.Name
   | ScalarSelectionSet G.Name
@@ -318,10 +308,6 @@ data Diagnosis
 render :: AnalysisError -> Text
 render (AnalysisError path diagnosis) =
   T.intercalate "." (toList path) <> ": " <> case diagnosis of
-    TopLevelFragment ->
-      "found a fragment operation at the top level"
-    UntypedTopLevelOperation ->
-      "found an untyped operation at the top level"
     NoTopLevelSelection ->
       "did not find a valid selection set at the top level"
     TypeNotFound name ->
