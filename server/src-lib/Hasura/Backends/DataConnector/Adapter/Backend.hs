@@ -53,6 +53,7 @@ instance Backend 'DataConnector where
   type ScalarSelectionArguments 'DataConnector = Void
   type BooleanOperators 'DataConnector = Const XDisable
   type ExtraTableMetadata 'DataConnector = Unimplemented
+  type ComputedFieldDefinition 'DataConnector = Unimplemented
 
   type XComputedField 'DataConnector = XDisable
   type XRelay 'DataConnector = XDisable
@@ -81,6 +82,9 @@ instance Backend 'DataConnector where
 
   functionToTable :: FunctionName 'DataConnector -> TableName 'DataConnector
   functionToTable = error "functionToTable: not implemented for the Data Connector backend."
+
+  computedFieldFunction :: ComputedFieldDefinition 'DataConnector -> FunctionName 'DataConnector
+  computedFieldFunction = error "computedFieldFunction: not implemented for the Data Connector backend"
 
   -- phil said this was cursed
   tableToFunction :: TableName 'DataConnector -> FunctionName 'DataConnector

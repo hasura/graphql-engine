@@ -20,6 +20,7 @@ module Hasura.Server.API.Backend
     sourceCommands,
     tableCommands,
     tablePermissionsCommands,
+    computedFieldCommands,
   )
 where
 
@@ -94,7 +95,8 @@ sourceCommands,
   functionPermissionsCommands,
   relationshipCommands,
   remoteRelationshipCommands,
-  eventTriggerCommands ::
+  eventTriggerCommands,
+  computedFieldCommands ::
     forall (b :: BackendType).
     Backend b =>
     [CommandParser b]
@@ -144,4 +146,8 @@ eventTriggerCommands =
     commandParser "create_event_trigger" $ RMCreateEventTrigger . mkAnyBackend @b,
     commandParser "delete_event_trigger" $ RMDeleteEventTrigger . mkAnyBackend @b,
     commandParser "redeliver_event" $ RMRedeliverEvent . mkAnyBackend @b
+  ]
+computedFieldCommands =
+  [ commandParser "add_computed_field" $ RMAddComputedField . mkAnyBackend @b,
+    commandParser "drop_computed_field" $ RMDropComputedField . mkAnyBackend @b
   ]

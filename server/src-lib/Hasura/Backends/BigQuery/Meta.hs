@@ -14,8 +14,9 @@ module Hasura.Backends.BigQuery.Meta
     RestStandardSqlField (..),
     RestStandardSqlTableType (..),
     RestRoutineReference (..),
+    routineReferenceToFunctionName,
     RestRoutine (..),
-    getRoutine,
+    getRoutines,
   )
 where
 
@@ -32,6 +33,7 @@ import Data.Text qualified as T
 import GHC.Generics
 import Hasura.Backends.BigQuery.Connection
 import Hasura.Backends.BigQuery.Source
+import Hasura.Backends.BigQuery.Types
 import Hasura.Prelude (hasuraJSON)
 import Network.HTTP.Simple
 import Network.HTTP.Types
@@ -343,11 +345,15 @@ data RestRoutineReference = RestRoutineReference
 
 instance FromJSON RestRoutineReference
 
+routineReferenceToFunctionName :: RestRoutineReference -> FunctionName
+routineReferenceToFunctionName RestRoutineReference {..} =
+  FunctionName {functionName = routineId, functionNameSchema = Just datasetId}
+
 -- | A user-defined function.
 -- Ref: https://cloud.google.com/bigquery/docs/reference/rest/v2/routines#Routine
 data RestRoutine = RestRoutine
   { -- | Reference describing the ID of this routine
-    routineReference :: RestTableReference,
+    routineReference :: RestRoutineReference,
     -- | The type of routine
     routineType :: RestRoutineType,
     -- | List of arguments defined
@@ -359,17 +365,39 @@ data RestRoutine = RestRoutine
 
 instance FromJSON RestRoutine
 
--- | Fetch the routine information in a given dataset from BigQuery API
-getRoutine ::
+-- | List of routines
+-- Ref: https://cloud.google.com/bigquery/docs/reference/rest/v2/routines/list
+data RestRoutineList = RestRoutineList
+  { _rrlRoutines :: [RestRoutine],
+    _rrlNextPageToken :: Maybe Text
+  }
+  deriving (Show)
+
+instance FromJSON RestRoutineList where
+  parseJSON = withObject "Object" $ \o ->
+    RestRoutineList
+      <$> o .:? "routines" .!= [] -- "routine" field is absent when there are no routines defined
+      <*> o .:? "nextPageToken"
+
+-- | Get all routines from all specified data sets.
+getRoutines ::
+  MonadIO m =>
+  BigQuerySourceConfig ->
+  m (Either RestProblem [RestRoutine])
+getRoutines BigQuerySourceConfig {..} =
+  runExceptT
+    (fmap concat (traverse (ExceptT . getRoutinesForDataSet _scConnection) _scDatasets))
+
+-- | Get routines in the dataset.
+getRoutinesForDataSet ::
   MonadIO m =>
   BigQueryConnection ->
   Text ->
-  Text ->
-  m (Either RestProblem RestRoutine)
-getRoutine conn dataSet routineId = do
-  liftIO (catchAny run (pure . Left . GetRoutineProblem))
+  m (Either RestProblem [RestRoutine])
+getRoutinesForDataSet conn dataSet = do
+  liftIO (catchAny (run Nothing mempty) (pure . Left . GetRoutineProblem))
   where
-    run = do
+    run pageToken acc = do
       let req =
             setRequestHeader "Content-Type" ["application/json"] $
               parseRequest_ url
@@ -381,7 +409,10 @@ getRoutine conn dataSet routineId = do
             200 ->
               case Aeson.eitherDecode (getResponseBody resp) of
                 Left e -> pure (Left (GetMetaDecodeProblem e))
-                Right routine -> pure (Right routine)
+                Right RestRoutineList {_rrlRoutines = routines, _rrlNextPageToken = nextPageToken} ->
+                  case nextPageToken of
+                    Nothing -> pure (Right (toList (acc <> Seq.fromList routines)))
+                    Just token -> run (pure token) (acc <> Seq.fromList routines)
             _ -> pure (Left (RESTRequestNonOK (getResponseStatus resp)))
       where
         url =
@@ -389,6 +420,11 @@ getRoutine conn dataSet routineId = do
             <> T.unpack (_bqProjectId conn)
             <> "/datasets/"
             <> T.unpack dataSet
-            <> "/routines/"
-            <> T.unpack routineId
-            <> "?alt=json"
+            <> "/routines?alt=json&"
+            <> T.unpack (encodeParams extraParameters)
+        extraParameters = pageTokenParam
+          where
+            pageTokenParam =
+              case pageToken of
+                Nothing -> []
+                Just token -> [("pageToken", token)]

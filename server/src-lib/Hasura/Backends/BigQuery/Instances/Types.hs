@@ -3,6 +3,7 @@
 module Hasura.Backends.BigQuery.Instances.Types () where
 
 import Data.Aeson
+import Hasura.Backends.BigQuery.Meta qualified as BigQuery
 import Hasura.Backends.BigQuery.Source qualified as BigQuery
 import Hasura.Backends.BigQuery.ToQuery ()
 import Hasura.Backends.BigQuery.Types qualified as BigQuery
@@ -18,7 +19,7 @@ instance Backend 'BigQuery where
   type SourceConnConfiguration 'BigQuery = BigQuery.BigQueryConnSourceConfig
   type TableName 'BigQuery = BigQuery.TableName
   type FunctionName 'BigQuery = BigQuery.FunctionName
-  type RawFunctionInfo 'BigQuery = Void
+  type RawFunctionInfo 'BigQuery = BigQuery.RestRoutine
   type FunctionArgType 'BigQuery = Void
   type ConstraintName 'BigQuery = Void
   type BasicOrderType 'BigQuery = BigQuery.Order
@@ -30,6 +31,7 @@ instance Backend 'BigQuery where
   type SQLExpression 'BigQuery = BigQuery.Expression
   type ScalarSelectionArguments 'BigQuery = Void
   type BooleanOperators 'BigQuery = BigQuery.BooleanOperators
+  type ComputedFieldDefinition 'BigQuery = BigQuery.ComputedFieldDefinition
   type XStreamingSubscription 'BigQuery = XDisable
 
   type XComputedField 'BigQuery = XDisable
@@ -62,7 +64,11 @@ instance Backend 'BigQuery where
   functionToTable = error "functionToTable"
 
   tableToFunction :: TableName 'BigQuery -> FunctionName 'BigQuery
-  tableToFunction = coerce . BigQuery.tableName
+  tableToFunction BigQuery.TableName {..} =
+    BigQuery.FunctionName
+      { functionName = tableName,
+        functionNameSchema = Just tableNameSchema
+      }
 
   tableGraphQLName :: TableName 'BigQuery -> Either QErr G.Name
   tableGraphQLName = BigQuery.getGQLTableName
@@ -76,3 +82,6 @@ instance Backend 'BigQuery where
   snakeCaseTableName :: TableName 'BigQuery -> Text
   snakeCaseTableName BigQuery.TableName {tableName, tableNameSchema} =
     tableNameSchema <> "_" <> tableName
+
+  computedFieldFunction :: ComputedFieldDefinition 'BigQuery -> FunctionName 'BigQuery
+  computedFieldFunction = BigQuery._bqcfdFunction

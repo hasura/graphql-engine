@@ -216,7 +216,7 @@ bqDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argume
     jsonToRecordSet :: IR.SelectFromG ('BigQuery) (UnpreparedValue 'BigQuery)
     jsonToRecordSet =
       IR.FromFunction
-        (BigQuery.FunctionName "unnest")
+        (BigQuery.FunctionName "unnest" Nothing)
         ( IR.FunctionArgsExp
             [IR.AEInput rowsArgument]
             mempty

@@ -207,7 +207,11 @@ data ComputedFieldMetadata b = ComputedFieldMetadata
     _cfmDefinition :: !(ComputedFieldDefinition b),
     _cfmComment :: !Comment
   }
-  deriving (Show, Eq, Generic)
+  deriving (Generic)
+
+deriving instance (Backend b) => Show (ComputedFieldMetadata b)
+
+deriving instance (Backend b) => Eq (ComputedFieldMetadata b)
 
 instance (Backend b) => Cacheable (ComputedFieldMetadata b)
 

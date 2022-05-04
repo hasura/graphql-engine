@@ -286,7 +286,7 @@ mkComputedFieldMetadataObject (source, table, ComputedFieldMetadata {..}) =
           AB.mkAnyBackend $
             SMOTableObj @b table $
               MTOComputedField _cfmName
-      definition = AddComputedField source table _cfmName _cfmDefinition _cfmComment
+      definition = AddComputedField @b source table _cfmName _cfmDefinition _cfmComment
    in MetadataObject objectId (toJSON definition)
 
 buildComputedField ::
@@ -302,11 +302,11 @@ buildComputedField ::
   m (Either QErr (Maybe (ComputedFieldInfo b)))
 buildComputedField trackedTableNames source pgFunctions table cf@ComputedFieldMetadata {..} = runExceptT do
   let addComputedFieldContext e = "in computed field " <> _cfmName <<> ": " <> e
-      function = _cfdFunction _cfmDefinition
+      function = computedFieldFunction @b _cfmDefinition
       funcDefs = fromMaybe [] $ M.lookup function pgFunctions
   withRecordInconsistencyM (mkComputedFieldMetadataObject (source, table, cf)) $
     modifyErr (addTableContext @b table . addComputedFieldContext) $ do
-      rawfi <- handleMultipleFunctions @b (_cfdFunction _cfmDefinition) funcDefs
+      rawfi <- handleMultipleFunctions @b (computedFieldFunction @b _cfmDefinition) funcDefs
       buildComputedFieldInfo trackedTableNames table _cfmName _cfmDefinition rawfi _cfmComment
 
 mkRemoteRelationshipMetadataObject ::

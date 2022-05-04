@@ -10,7 +10,7 @@ where
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as L
 import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict.Extended qualified as HM
 import Data.Int qualified as Int
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
@@ -92,13 +92,16 @@ resolveSource ::
   m (Either QErr (ResolvedSource 'BigQuery))
 resolveSource sourceConfig customization =
   runExceptT $ do
-    result <- getTables sourceConfig
+    tables <- getTables sourceConfig
+    routines <- getRoutines sourceConfig
+    let result = (,) <$> tables <*> routines
     case result of
       Left err ->
         throw400 Unexpected $
           "unexpected exception while connecting to database: " <> tshow err
-      Right restTables -> do
+      Right (restTables, restRoutines) -> do
         seconds <- liftIO $ fmap systemSeconds getSystemTime
+        let functions = HM.groupOn (routineReferenceToFunctionName . routineReference) restRoutines
         pure
           ( ResolvedSource
               { _rsConfig = sourceConfig,
@@ -135,7 +138,7 @@ resolveSource sourceConfig customization =
                           zip [0 ..] restTables,
                         let RestTableSchema fields = schema
                     ],
-                _rsFunctions = mempty,
+                _rsFunctions = functions,
                 _rsPgScalars = mempty
               }
           )

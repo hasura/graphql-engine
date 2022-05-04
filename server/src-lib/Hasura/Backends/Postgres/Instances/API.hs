@@ -21,10 +21,9 @@ instance BackendAPI ('Postgres 'Vanilla) where
         relationshipCommands @('Postgres 'Vanilla),
         remoteRelationshipCommands @('Postgres 'Vanilla),
         eventTriggerCommands @('Postgres 'Vanilla),
+        computedFieldCommands @('Postgres 'Vanilla),
         -- postgres specific
-        [ commandParser "set_table_is_enum" RMPgSetTableIsEnum,
-          commandParser "add_computed_field" RMAddComputedField,
-          commandParser "drop_computed_field" RMDropComputedField
+        [ commandParser "set_table_is_enum" RMPgSetTableIsEnum
         ]
       ]
 

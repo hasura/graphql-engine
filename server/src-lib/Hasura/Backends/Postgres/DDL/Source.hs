@@ -38,12 +38,12 @@ import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.DDL.Source.Version
 import Hasura.Backends.Postgres.SQL.Types hiding (FunctionName)
+import Hasura.Backends.Postgres.Types.ComputedFieldDefinition
 import Hasura.Base.Error
 import Hasura.Logging
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (..))
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Metadata (SourceMetadata (..), TableMetadata (..), _cfmDefinition)
@@ -159,7 +159,7 @@ resolveDatabaseMetadata sourceMetadata sourceConfig sourceCustomization = runExc
   pure $ ResolvedSource sourceConfig sourceCustomization tablesMeta functionsMeta pgScalars
   where
     -- A helper function to list all functions underpinning computed fields from a table metadata
-    getComputedFieldFunctionsMetadata :: TableMetadata b -> [FunctionName b]
+    getComputedFieldFunctionsMetadata :: TableMetadata ('Postgres pgKind) -> [FunctionName ('Postgres pgKind)]
     getComputedFieldFunctionsMetadata =
       map (_cfdFunction . _cfmDefinition) . OMap.elems . _tmComputedFields
 

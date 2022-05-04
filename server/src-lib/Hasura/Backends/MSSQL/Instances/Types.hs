@@ -42,6 +42,8 @@ instance Backend 'MSSQL where
 
   type BackendUpdate 'MSSQL = MSSQL.BackendUpdate
 
+  type ComputedFieldDefinition 'MSSQL = Void
+
   type ExtraTableMetadata 'MSSQL = [MSSQL.ColumnName] -- List of identity columns
   type BackendInsert 'MSSQL = MSSQL.BackendInsert
 
@@ -87,3 +89,6 @@ instance Backend 'MSSQL where
 
   snakeCaseTableName :: TableName 'MSSQL -> Text
   snakeCaseTableName = MSSQL.snakeCaseTableName
+
+  computedFieldFunction :: ComputedFieldDefinition 'MSSQL -> FunctionName 'MSSQL
+  computedFieldFunction = absurd

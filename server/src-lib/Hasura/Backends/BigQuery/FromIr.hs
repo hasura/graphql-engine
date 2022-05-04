@@ -187,7 +187,7 @@ fromSelectRows annSelectG = do
     case from of
       Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
       Ir.FromFunction nm (Ir.FunctionArgsExp [Ir.AEInput json] _) (Just columns)
-        | nm == FunctionName "unnest" -> fromUnnestedJSON json columns (map fst fields)
+        | functionName nm == "unnest" -> fromUnnestedJSON json columns (map fst fields)
       _ -> refute (pure (FromTypeUnsupported from))
   Args
     { argsOrderBy,

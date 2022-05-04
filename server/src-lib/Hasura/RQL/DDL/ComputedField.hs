@@ -2,7 +2,6 @@
 -- Description: Add/Drop computed fields in metadata
 module Hasura.RQL.DDL.ComputedField
   ( AddComputedField (..),
-    ComputedFieldDefinition (..),
     runAddComputedField,
     DropComputedField,
     runDropComputedField,
@@ -65,7 +64,7 @@ runAddComputedField q = do
       metadata = ComputedFieldMetadata computedFieldName (_afcDefinition q) (_afcComment q)
   buildSchemaCacheFor metadataObj $
     MetadataModifier $
-      tableMetadataSetter source table . tmComputedFields
+      tableMetadataSetter @b source table . tmComputedFields
         %~ OMap.insert computedFieldName metadata
   pure successMsg
   where
