@@ -19,6 +19,7 @@ For motivation, rationale, and more, see the [test suite rfc](../../rfcs/hspec-t
       - [Setup action](#setup-action)
       - [Teardown action](#teardown-action)
     - [Writing tests](#writing-tests)
+  - [Debugging](#debugging)
   - [Style guide](#style-guide)
     - [Stick to Simple Haskell](#stick-to-simple-haskell)
     - [Write small, atomic, autonomous specs](#write-small-atomic-autonomous-specs)
@@ -279,6 +280,34 @@ data:
 
 __Note__: these quasi-quoter can also perform string interpolation. See the relevant modules
 under the [Harness.Quoter](Harness/Quoter) namespace.
+
+## Debugging
+
+There are times when you would want to debug a test failure by playing
+around with the Hasura's Graphql engine or by inspecting the
+database. The default behavior of the test suite is to drop all the
+data and the tables onces the test suite finishes. To prevent that,
+you can modify your test module to prevent teardown. Example:
+
+``` diff
+spec :: SpecWith TestEnvironment
+spec =
+  Context.run
+    [ Context.Context
+        { name = Context.Backend Context.MySQL,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+          setup = Mysql.setup schema,
+-         teardown = Mysql.teardown schema,
++         teardown = const $ pure (),
+          customOptions = Nothing
+        }]
+```
+
+Now re-run the particular test case again so that the local database
+is setup. You will still have access to that data once the test suite
+finishes running. Now based on what you want to, you can either run
+the Hasura's Graphql engine to debug this further or directly inspect
+the database using [any of it's clients](https://en.wikipedia.org/wiki/Comparison_of_database_administration_tools).
 
 ## Style guide
 
