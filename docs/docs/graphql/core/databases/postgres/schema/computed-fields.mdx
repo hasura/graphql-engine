@@ -21,7 +21,8 @@ import TabItem from '@theme/TabItem';
 
 Computed fields are virtual values or objects that are dynamically
 computed and can be queried along with a table/view's columns. Computed
-fields are computed when requested for via [custom SQL functions](https://www.postgresql.org/docs/current/sql-createfunction.html)
+fields are computed upon request. They are computed by executing
+[custom SQL functions](https://www.postgresql.org/docs/current/sql-createfunction.html)
 (a.k.a. stored procedures) using other columns of the table/view and
 other custom inputs if needed.
 
