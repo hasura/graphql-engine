@@ -19,3 +19,5 @@ venv
 
 # ignored so that everyone can have their own hie.yaml
 hie.yaml
+yarn.lock
+/node_modules/
