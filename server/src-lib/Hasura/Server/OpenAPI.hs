@@ -30,7 +30,9 @@ import Data.OpenApi.Declare
 import Data.Text qualified as T
 import Data.Text.NonEmpty
 import Data.Trie qualified as Trie
+import Hasura.Base.Error
 import Hasura.GraphQL.Analyse
+import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Prelude hiding (get, put)
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.QueryCollection
@@ -49,6 +51,9 @@ data EndpointData = EndpointData
     _edErrs :: [Text]
   }
   deriving (Show)
+
+-- | @DeclareErr@ is just a @ExceptT@ monad with the added capabilities of @Declare@ monad
+type DeclareErr d = ExceptT QErr (Declare d)
 
 -- * Response Body Related Functions.
 
@@ -420,26 +425,25 @@ getURL d =
     formatVariable variable = "{" <> dropColonPrefix variable <> "}"
     dropColonPrefix = T.drop 1
 
-extractEndpointInfo :: G.SchemaIntrospection -> EndpointMethod -> EndpointMetadata GQLQueryWithText -> Declare (Definitions Schema) EndpointData
+extractEndpointInfo :: G.SchemaIntrospection -> EndpointMethod -> EndpointMetadata GQLQueryWithText -> DeclareErr (Definitions Schema) EndpointData
 extractEndpointInfo schemaTypes method d = do
-  _edProperties <- mkProperties schemaTypes analysis
-  _edResponse <- foldMap (Map.singleton method) <$> mkResponse analysis method _edUrl
-  pure EndpointData {..}
-  where
-    (analysis, allErrors) = mconcat $ analyzeGraphQLQuery schemaTypes <$> _eDef
-    _eDef = mdDefinitions d
-    -- mdDefinition returns a list, but there should only be one definition associated, so it is safe to fold
-    _edUrl = T.unpack . getURL $ d
-    _edVarList = getParams analysis (_ceUrl d)
-    _edDescription = getComment d
-    _edName = unNonEmptyText $ unEndpointName $ _ceName d
-    _edMethod = Set.singleton method -- NOTE: Methods are grouped with into matching endpoints - Name used for grouping.
-    _edErrs = allErrors
+  singleOperation <- getSingleOperation (GQLReq Nothing (GQLExecDoc (mdDefinitions d)) Nothing)
+  let (analysis, allErrors) = analyzeGraphQLQuery schemaTypes singleOperation
+      _edUrl = T.unpack . getURL $ d
+      _edVarList = getParams analysis (_ceUrl d)
+      _edDescription = getComment d
+      _edName = unNonEmptyText $ unEndpointName $ _ceName d
+      _edMethod = Set.singleton method -- NOTE: Methods are grouped with into matching endpoints - Name used for grouping.
+      _edErrs = allErrors
+  _edProperties <- lift $ mkProperties schemaTypes analysis
+  _edResponse <- lift $ foldMap (Map.singleton method) <$> mkResponse analysis method _edUrl
+
+  pure $ EndpointData {..}
 
 getEndpointsData ::
   G.SchemaIntrospection ->
   SchemaCache ->
-  Declare (Definitions Schema) [EndpointData]
+  DeclareErr (Definitions Schema) [EndpointData]
 getEndpointsData sd sc = do
   let endpointTrie = scEndpoints sc
       methodMaps = Trie.elems endpointTrie
@@ -458,10 +462,12 @@ squashEndpointGroup g =
       _edResponse = foldMap _edResponse g
     }
 
-serveJSON :: SchemaCache -> OpenApi
-serveJSON sc = spec & components . schemas .~ defs
-  where
-    (defs, spec) = runDeclare (declareOpenApiSpec sc) mempty
+serveJSON :: (MonadError QErr m) => SchemaCache -> m OpenApi
+serveJSON sc =
+  let (defs, spec) = flip runDeclare mempty . runExceptT $ declareOpenApiSpec sc
+   in case spec of
+        Left qe -> throwError qe
+        Right openAPISpec -> pure $ openAPISpec & components . schemas .~ defs
 
 -- | If all variables are scalar or optional then the entire request body can be marked as optional
 isRequestBodyRequired :: EndpointData -> Bool
@@ -483,7 +489,7 @@ isRequestBodyRequired ed = not $ all isNotRequired (_edProperties ed)
 
 -- * Entry point
 
-declareOpenApiSpec :: SchemaCache -> Declare (Definitions Schema) OpenApi
+declareOpenApiSpec :: SchemaCache -> DeclareErr (Definitions Schema) OpenApi
 declareOpenApiSpec sc = do
   let _schemaIntrospection = scAdminIntrospection sc
       mkRequestBody :: EndpointData -> RequestBody

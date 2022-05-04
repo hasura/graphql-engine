@@ -1075,7 +1075,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
       mkGetHandler $ do
         onlyAdmin
         sc <- liftIO $ getSchemaCache $ scCacheRef serverCtx
-        let json = serveJSON sc
+        json <- serveJSON sc
         return (emptyHttpLogMetadata @m, JSONResp $ HttpResponse (encJFromJValue json) [])
 
   forM_ [Spock.GET, Spock.POST] $ \m -> Spock.hookAny m $ \_ -> do
