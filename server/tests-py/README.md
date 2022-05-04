@@ -167,9 +167,9 @@ HASURA_BIGQUERY_SERVICE_ACCOUNT_EMAIL=# eg. "<<SERVICE_ACCOUNT_NAME>>@<<PROJECT_
 HASURA_BIGQUERY_SERVICE_KEY=# the service account key
 ```
 
-Before running the test suite either manually or via `dev.sh`:
-1. Ensure you have access to a [Google Cloud Console service account](https://cloud.google.com/iam/docs/creating-managing-service-accounts#creating). Store the project ID and account email in `HASURA_BIGQUERY_PROJECT_ID` and (optional) `HASURA_BIGQUERY_SERVICE_ACCOUNT_EMAIL` variables.
-2. [Create and download a new service account key](https://cloud.google.com/iam/docs/creating-managing-service-account-keys). Store the contents of file in a `HASURA_BIGQUERY_SERVICE_KEY` variable. 
+Before running the test suite:
+1. Ensure you have access to a [Google Cloud Console service account](https://cloud.google.com/iam/docs/creating-managing-service-accounts#creating). Store the project ID and account email in `HASURA_BIGQUERY_PROJECT_ID` variable.
+2. [Create and download a new service account key](https://cloud.google.com/iam/docs/creating-managing-service-account-keys). Store the contents of file in a `HASURA_BIGQUERY_SERVICE_KEY` variable.
     ```bash
     export HASURA_BIGQUERY_SERVICE_KEY=$(cat /path/to/service/account)
     ```
@@ -184,6 +184,8 @@ Before running the test suite either manually or via `dev.sh`:
   ```
   scripts/dev.sh test --integration --backend bigquery -k TestGraphQLQueryBasicBigquery
   ```
+
+*Note to Hasura team: a service account is already setup for internal use, please check the wiki for further details.*
 
 ## Tests structure
 
