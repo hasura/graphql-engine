@@ -111,9 +111,9 @@ data RQLMetadataV1
   | -- Functions permissions
     RMCreateFunctionPermission !(AnyBackend FunctionPermissionArgument)
   | RMDropFunctionPermission !(AnyBackend FunctionPermissionArgument)
-  | -- Computed fields (PG-specific)
-    RMAddComputedField !(AddComputedField ('Postgres 'Vanilla))
-  | RMDropComputedField !(DropComputedField ('Postgres 'Vanilla))
+  | -- Computed fields
+    RMAddComputedField !(AnyBackend AddComputedField)
+  | RMDropComputedField !(AnyBackend DropComputedField)
   | -- Tables event triggers
     RMCreateEventTrigger !(AnyBackend (Unvalidated1 CreateEventTriggerQuery))
   | RMDeleteEventTrigger !(AnyBackend DeleteEventTriggerQuery)
@@ -456,8 +456,8 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMUntrackFunction q -> dispatchMetadata runUntrackFunc q
   RMCreateFunctionPermission q -> dispatchMetadata runCreateFunctionPermission q
   RMDropFunctionPermission q -> dispatchMetadata runDropFunctionPermission q
-  RMAddComputedField q -> runAddComputedField q
-  RMDropComputedField q -> runDropComputedField q
+  RMAddComputedField q -> dispatchMetadata runAddComputedField q
+  RMDropComputedField q -> dispatchMetadata runDropComputedField q
   RMCreateEventTrigger q ->
     dispatchMetadataAndEventTrigger
       ( validateTransforms

@@ -28,7 +28,6 @@ import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.SQL.AnyBackend
-import Hasura.SQL.Backend
 
 data RQLMetadataV1
   = -- Sources
@@ -68,9 +67,9 @@ data RQLMetadataV1
   | -- Functions permissions
     RMCreateFunctionPermission !(AnyBackend FunctionPermissionArgument)
   | RMDropFunctionPermission !(AnyBackend FunctionPermissionArgument)
-  | -- Computed fields (PG-specific)
-    RMAddComputedField !(AddComputedField ('Postgres 'Vanilla))
-  | RMDropComputedField !(DropComputedField ('Postgres 'Vanilla))
+  | -- Computed fields
+    RMAddComputedField !(AnyBackend AddComputedField)
+  | RMDropComputedField !(AnyBackend DropComputedField)
   | -- Tables event triggers
     RMCreateEventTrigger !(AnyBackend (Unvalidated1 CreateEventTriggerQuery))
   | RMDeleteEventTrigger !(AnyBackend DeleteEventTriggerQuery)

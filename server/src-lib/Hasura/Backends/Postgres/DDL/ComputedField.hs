@@ -14,6 +14,7 @@ import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Backends.Postgres.DDL.Function
 import Hasura.Backends.Postgres.SQL.Types
+import Hasura.Backends.Postgres.Types.ComputedFieldDefinition qualified as PG
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (Comment (..))
@@ -83,7 +84,7 @@ buildComputedFieldInfo ::
   S.HashSet QualifiedTable ->
   QualifiedTable ->
   ComputedFieldName ->
-  ComputedFieldDefinition ('Postgres pgKind) ->
+  PG.ComputedFieldDefinition ->
   PGRawFunctionInfo ->
   Comment ->
   m (ComputedFieldInfo ('Postgres pgKind))
@@ -91,7 +92,7 @@ buildComputedFieldInfo trackedTables table computedField definition rawFunctionI
   either (throw400 NotSupported . showErrors) pure =<< MV.runValidateT mkComputedFieldInfo
   where
     inputArgNames = rfiInputArgNames rawFunctionInfo
-    ComputedFieldDefinition function maybeTableArg maybeSessionArg = definition
+    PG.ComputedFieldDefinition function maybeTableArg maybeSessionArg = definition
     functionReturnType =
       QualifiedPGType
         (rfiReturnTypeSchema rawFunctionInfo)

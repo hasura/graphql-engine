@@ -3,8 +3,7 @@
 -- |
 -- Description: Schema cache types related to computed field
 module Hasura.RQL.Types.ComputedField
-  ( ComputedFieldDefinition (..),
-    ComputedFieldFunction (..),
+  ( ComputedFieldFunction (..),
     ComputedFieldInfo (..),
     ComputedFieldName (..),
     ComputedFieldReturn (..),
@@ -49,29 +48,6 @@ computedFieldNameToText = unNonEmptyText . unComputedFieldName
 
 fromComputedField :: ComputedFieldName -> FieldName
 fromComputedField = FieldName . computedFieldNameToText
-
-data ComputedFieldDefinition b = ComputedFieldDefinition
-  { _cfdFunction :: !(FunctionName b),
-    _cfdTableArgument :: !(Maybe FunctionArgName),
-    _cfdSessionArgument :: !(Maybe FunctionArgName)
-  }
-  deriving stock (Generic)
-
-deriving instance (Backend b) => Show (ComputedFieldDefinition b)
-
-deriving instance (Backend b) => Eq (ComputedFieldDefinition b)
-
-instance (Backend b) => NFData (ComputedFieldDefinition b)
-
-instance (Backend b) => Hashable (ComputedFieldDefinition b)
-
-instance (Backend b) => Cacheable (ComputedFieldDefinition b)
-
-instance (Backend b) => ToJSON (ComputedFieldDefinition b) where
-  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
-
-instance (Backend b) => FromJSON (ComputedFieldDefinition b) where
-  parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
 
 -- | The function table argument is either the very first argument or the named
 -- argument with an index. The index is 0 if the named argument is the first.

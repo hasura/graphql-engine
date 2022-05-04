@@ -20,7 +20,6 @@ module Hasura.Backends.BigQuery.Types
     FieldOrigin (..),
     Float64,
     From (..),
-    FunctionName (..),
     Geography (Geography),
     Int64 (Int64),
     Join (..),
@@ -59,6 +58,9 @@ module Hasura.Backends.BigQuery.Types
     projectionAlias,
     scalarTypeGraphQLName,
     scientificToText,
+    FunctionName (..),
+    ArgumentName (..),
+    ComputedFieldDefinition (..),
   )
 where
 
@@ -851,10 +853,6 @@ data UnifiedOn = UnifiedOn
   }
   deriving (Eq, Ord, Show)
 
--- Copied from feature/mssql
-newtype FunctionName = FunctionName Text -- TODO: Improve this type when SQL function support added
-  deriving (FromJSON, ToJSON, ToJSONKey, ToTxt, Show, Eq, Ord, Hashable, Cacheable, NFData)
-
 data BooleanOperators a
   = ASTContains !a
   | ASTEquals !a
@@ -878,6 +876,59 @@ instance ToJSON a => J.ToJSONKeyValue (BooleanOperators a) where
     ASTTouches a -> ("_st_touches", J.toJSON a)
     ASTWithin a -> ("_st_within", J.toJSON a)
     ASTDWithin a -> ("_st_dwithin", J.toJSON a)
+
+data FunctionName = FunctionName
+  { functionName :: Text,
+    -- | System functions like "unnest" don't have schema/dataset
+    functionNameSchema :: Maybe Text
+  }
+  deriving (Eq, Show, Generic, Data, Lift, Ord)
+
+instance FromJSON FunctionName where
+  parseJSON =
+    J.withObject
+      "FunctionName"
+      (\o -> FunctionName <$> o J..: "name" <*> o J..:? "dataset")
+
+instance ToJSON FunctionName where
+  toJSON FunctionName {..} = J.object ["name" J..= functionName, "dataset" J..= functionNameSchema]
+
+instance ToTxt FunctionName where toTxt = tshow
+
+instance Hashable FunctionName
+
+instance Cacheable FunctionName
+
+instance ToJSONKey FunctionName
+
+instance NFData FunctionName
+
+newtype ArgumentName = ArgumentName {getArgumentName :: Text}
+  deriving (Eq, Show, Generic, Data, Lift, Ord, NFData, Hashable, Cacheable, ToJSON, ToJSONKey, FromJSON, FromJSONKey)
+
+-- | The metadata required to define a computed field for a BigQuery table
+data ComputedFieldDefinition = ComputedFieldDefinition
+  { -- | Name of the user defined routine
+    _bqcfdFunction :: FunctionName,
+    -- | Name of the table which the function returns. If not provided
+    -- the return table is inferred from the routine API metadata.
+    _bqcfdReturnTable :: Maybe TableName,
+    -- | A mapping context to determine argument value from table column
+    _bqcfdArgumentMapping :: HashMap ArgumentName ColumnName
+  }
+  deriving (Eq, Show, Generic, Data, Lift, Ord)
+
+instance Hashable ComputedFieldDefinition
+
+instance Cacheable ComputedFieldDefinition
+
+instance NFData ComputedFieldDefinition
+
+instance ToJSON ComputedFieldDefinition where
+  toJSON = J.genericToJSON hasuraJSON
+
+instance FromJSON ComputedFieldDefinition where
+  parseJSON = J.genericParseJSON hasuraJSON
 
 --------------------------------------------------------------------------------
 -- Backend-related stuff

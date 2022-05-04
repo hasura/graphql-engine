@@ -59,6 +59,7 @@ class
     Representable (SourceConnConfiguration b),
     Representable (ExtraTableMetadata b),
     Representable (XComputedField b),
+    Representable (ComputedFieldDefinition b),
     Ord (TableName b),
     Ord (FunctionName b),
     Ord (ScalarType b),
@@ -72,6 +73,7 @@ class
     FromJSON (TableName b),
     FromJSON (SourceConnConfiguration b),
     FromJSON (ExtraTableMetadata b),
+    FromJSON (ComputedFieldDefinition b),
     FromJSON (BackendSourceKind b),
     FromJSONKey (Column b),
     ToJSON (BackendConfig b),
@@ -85,6 +87,7 @@ class
     ToJSON (SourceConnConfiguration b),
     ToJSON (ExtraTableMetadata b),
     ToJSON (SQLExpression b),
+    ToJSON (ComputedFieldDefinition b),
     ToJSONKey (Column b),
     ToJSONKey (FunctionName b),
     ToJSONKey (ScalarType b),
@@ -163,6 +166,7 @@ class
 
   type BooleanOperators b :: Type -> Type
   type SQLExpression b :: Type
+  type ComputedFieldDefinition b :: Type
 
   -- | Arguments of a scalar field's selection
   -- {
@@ -210,6 +214,7 @@ class
   scalarValueToJSON :: ScalarValue b -> Value
   functionToTable :: FunctionName b -> TableName b
   tableToFunction :: TableName b -> FunctionName b
+  computedFieldFunction :: ComputedFieldDefinition b -> FunctionName b
 
   -- functions on names
   tableGraphQLName :: TableName b -> Either QErr G.Name
