@@ -53,6 +53,9 @@ To set up the project configuration to coincide with the testing scripts below, 
 
     $ ln -s cabal/dev-sh.project.local cabal.project.local
 
+#### Compiling on MacOS
+If you are on MacOS, or experiencing any errors related to missing dependencies on MacOS, please try [this alternative setup guide](COMPILING-ON-MACOS.md).
+
 ### IDE Support
 
 You may want to use [hls](https://github.com/haskell/haskell-language-server)/[ghcide](https://github.com/haskell/ghcide) if your editor has LSP support. A sample configuration has been provided which can be used as follows:

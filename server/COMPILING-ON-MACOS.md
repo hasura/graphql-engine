@@ -1,4 +1,4 @@
-# Compile a native arm64 graphql-engine executable on M1 using brew and ghc-8.10.7
+# Compile a graphql-engine executable using brew and ghc-8.10.7
 
 1.  Install ghc-8.10.7 and cabal-install via ghcup
 

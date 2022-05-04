@@ -23,6 +23,8 @@ For motivation, rationale, and more, see the [test suite rfc](../../rfcs/hspec-t
     - [Stick to Simple Haskell](#stick-to-simple-haskell)
     - [Write small, atomic, autonomous specs](#write-small-atomic-autonomous-specs)
     - [Use the `Harness.*` hierarchy for common functions](#use-the-harness-hierarchy-for-common-functions)
+  - [Troubleshooting](#troubleshooting)
+    - [`Database 'hasura' already exists. Choose a different database name.`](#database-hasura-already-exists-choose-a-different-database-name)
 
 ## Required setup for BigQuery tests
 
@@ -300,3 +302,8 @@ Autonomous: Each test should run independently of other tests, and not be depend
 Avoid functions or types in tests, other than calls to the `Harness.*` API.
 
 Any supporting code should be in the `Harness.*` hierarchy and apply broadly to the test suites overall.
+
+## Troubleshooting
+
+### `Database 'hasura' already exists. Choose a different database name.`
+This typically indicates persistent DB state between test runs. Try `docker-compose down --volumes` to delete the DBs and restart the containers.
