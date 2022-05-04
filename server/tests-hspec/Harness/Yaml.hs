@@ -2,6 +2,7 @@
 module Harness.Yaml
   ( combinationsObject,
     fromObject,
+    combinationsObjectUsingValue,
   )
 where
 
@@ -9,8 +10,8 @@ import Data.Aeson
   ( Object,
     Value (..),
   )
+import Data.List (permutations)
 import Data.Vector qualified as V
-import Data.Word (Word8)
 import Hasura.Prelude
 
 fromObject :: Value -> Object
@@ -26,17 +27,12 @@ fromObject v = error $ "fromObject: Expected object, received" <> show v
 -- 'shouldReturnOneOfYaml' function.
 combinationsObject :: (Value -> Value) -> [Object] -> [Value]
 combinationsObject fn variants =
-  let nSubsets :: [[Object]]
-      nSubsets = subsets (fromIntegral $ length variants) variants
-
-      toArray :: [Value]
-      toArray = map ((Array . V.fromList) . (map Object)) nSubsets
+  let toArray :: [Value]
+      toArray = map ((Array . V.fromList) . (map Object)) (permutations variants)
    in map fn toArray
 
--- | 'subsets' n xs computes subsets with that the constraint that the
--- length of the subset should be equal to n provided that the list is
--- non empty.
-subsets :: Word8 -> [a] -> [[a]]
-subsets 0 _ = [[]]
-subsets _ [] = []
-subsets n (x : xs) = map (x :) (subsets (n - 1) xs) <> subsets n xs
+-- | Same as 'combinationsObject' but the second parameter is a list
+-- of 'Value`. We assume that 'Value' internally has only 'Object', if
+-- not it will throw exception.
+combinationsObjectUsingValue :: (Value -> Value) -> [Value] -> [Value]
+combinationsObjectUsingValue fn variants = combinationsObject fn (map fromObject variants)

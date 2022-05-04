@@ -4,6 +4,7 @@
 module Test.DirectivesSpec (spec) where
 
 import Data.Aeson (Value (..), object, (.=))
+import Harness.Backend.BigQuery qualified as Bigquery
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Mysql as Mysql
 import Harness.Backend.Postgres qualified as Postgres
@@ -14,6 +15,7 @@ import Harness.Quoter.Yaml
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
+import Harness.Yaml
 import Test.Hspec
 import Prelude
 
@@ -50,6 +52,17 @@ spec =
           setup = Sqlserver.setup schema,
           teardown = Sqlserver.teardown schema,
           customOptions = Nothing
+        },
+      Context.Context
+        { name = Context.Backend Context.BigQuery,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+          setup = Bigquery.setup schema,
+          teardown = Bigquery.teardown schema,
+          customOptions =
+            Just $
+              Context.Options
+                { stringifyNumbers = True
+                }
         }
     ]
     tests
@@ -97,69 +110,47 @@ tests opts = do
   -- Equivalent python suite: test_select_query_author_with_skip_include_directive
   -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L268
   it "Skip id field conditionally" \testEnvironment ->
-    shouldReturnYaml
+    shouldReturnOneOfYaml
       opts
       ( GraphqlEngine.postGraphql
           testEnvironment
           (query QueryParams {includeId = False, skipId = False})
       )
-      [yaml|
-data:
-  hasura_author:
-  - name: Author 1
-  - name: Author 2
-|]
+      (combinationsObjectUsingValue authorResponse authorNames)
   -- Equivalent python suite: test_select_query_author_with_skip_include_directive
   -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L268
   it "Skip id field conditionally, includeId=true" \testEnvironment ->
-    shouldReturnYaml
+    shouldReturnOneOfYaml
       opts
       ( GraphqlEngine.postGraphql
           testEnvironment
           (query QueryParams {includeId = True, skipId = False})
       )
-      [yaml|
-data:
-  hasura_author:
-  - id: 1
-    name: Author 1
-  - id: 2
-    name: Author 2
-|]
+      (combinationsObjectUsingValue authorResponse authorNameIds)
   -- Equivalent python suite: test_select_query_author_with_skip_include_directive
   -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L268
   it "Skip id field conditionally, skipId=true" \testEnvironment ->
-    shouldReturnYaml
+    shouldReturnOneOfYaml
       opts
       ( GraphqlEngine.postGraphql
           testEnvironment
           (query QueryParams {includeId = False, skipId = True})
       )
-      [yaml|
-data:
-  hasura_author:
-  - name: Author 1
-  - name: Author 2
-|]
+      (combinationsObjectUsingValue authorResponse authorNames)
   -- Equivalent python suite: test_select_query_author_with_skip_include_directive
   -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L268
   it "Skip id field conditionally, skipId=true, includeId=true" \testEnvironment ->
-    shouldReturnYaml
+    shouldReturnOneOfYaml
       opts
       ( GraphqlEngine.postGraphql
           testEnvironment
           (query QueryParams {includeId = True, skipId = True})
       )
-      [yaml|
-data:
-  hasura_author:
-  - name: Author 1
-  - name: Author 2
-|]
+      (combinationsObjectUsingValue authorResponse authorNames)
   -- Equivalent python suite: test_select_query_author_with_skip_directive
   -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L262
   it "Author with skip id" \testEnvironment ->
-    shouldReturnYaml
+    shouldReturnOneOfYaml
       opts
       ( GraphqlEngine.postGraphqlYaml
           testEnvironment
@@ -176,16 +167,12 @@ variables:
   skipName: false
 |]
       )
-      [yaml|
-data:
-  hasura_author:
-  - name: Author 1
-  - name: Author 2
-|]
+      (combinationsObjectUsingValue authorResponse authorNames)
+
   -- Equivalent python suite: test_select_query_author_with_skip_directive
   -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L262
   it "Author with skip name" \testEnvironment ->
-    shouldReturnYaml
+    shouldReturnOneOfYaml
       opts
       ( GraphqlEngine.postGraphqlYaml
           testEnvironment
@@ -202,12 +189,7 @@ variables:
   skipName: true
 |]
       )
-      [yaml|
-data:
-  hasura_author:
-  - id: 1
-  - id: 2
-|]
+      (combinationsObjectUsingValue authorResponse authorIds)
   -- Equivalent python suite: test_select_query_author_with_wrong_directive_err
   -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L271
   it "Rejects unknown directives" \testEnvironment ->
@@ -279,7 +261,7 @@ errors:
   -- Equivalent python suite: test_select_query_author_with_include_directive
   -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L265
   it "works with includeId as True includeName as False" \testEnvironment ->
-    shouldReturnYaml
+    shouldReturnOneOfYaml
       opts
       ( GraphqlEngine.postGraphqlWithPair
           testEnvironment
@@ -293,14 +275,9 @@ errors:
 |]
           ["variables" .= object ["includeId" .= True, "includeName" .= False]]
       )
-      [yaml|
-data:
-  hasura_author:
-  - id: 1
-  - id: 2
-|]
+      (combinationsObjectUsingValue authorResponse authorIds)
   it "works with includeId as False includeName as True" \testEnvironment ->
-    shouldReturnYaml
+    shouldReturnOneOfYaml
       opts
       ( GraphqlEngine.postGraphqlWithPair
           testEnvironment
@@ -314,9 +291,49 @@ data:
 |]
           ["variables" .= object ["includeId" .= False, "includeName" .= True]]
       )
-      [yaml|
+      (combinationsObjectUsingValue authorResponse authorNames)
+
+authorNames :: [Value]
+authorNames =
+  [ object
+      [ "name"
+          .= String "Author 1"
+      ],
+    object
+      [ "name"
+          .= String "Author 2"
+      ]
+  ]
+
+authorIds :: [Value]
+authorIds =
+  [ object
+      [ "id"
+          .= (1 :: Int)
+      ],
+    object
+      [ "id"
+          .= (2 :: Int)
+      ]
+  ]
+
+authorNameIds :: [Value]
+authorNameIds =
+  [ object
+      [ "name"
+          .= String "Author 1",
+        "id" .= (1 :: Int)
+      ],
+    object
+      [ "name"
+          .= String "Author 2",
+        "id" .= (2 :: Int)
+      ]
+  ]
+
+authorResponse :: Value -> Value
+authorResponse authors =
+  [yaml|
 data:
-  hasura_author:
-  - name: Author 1
-  - name: Author 2
+  hasura_author: *authors
 |]
