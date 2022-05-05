@@ -38,12 +38,6 @@ import Data.Proxy
 import Data.Set qualified as S
 import Data.Text.Extended
 import Data.These (These (..))
-import Data.Time.Clock (getCurrentTime)
-import Database.PG.Query qualified as Q
-import Hasura.Backends.MSSQL.Connection
-import Hasura.Backends.MSSQL.DDL.Source qualified as MSSQL
-import Hasura.Backends.Postgres.Connection
-import Hasura.Backends.Postgres.DDL.Source (initCatalogForSource)
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Types
 import Hasura.GraphQL.Schema (buildGQLContext)
@@ -97,7 +91,6 @@ import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.SQL.Tag
-import Hasura.SQL.Tag qualified as Tag
 import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
@@ -175,7 +168,6 @@ newtype CacheRWT m a
       MonadIO,
       MonadReader r,
       MonadError e,
-      MonadTx,
       UserInfoM,
       HasHttpManagerM,
       MonadMetadataStorage,
@@ -446,7 +438,6 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         -< do
           if numEventTriggers > 0
             then do
-              migrationTime <- liftIO getCurrentTime
               maintenanceMode <- _sccMaintenanceMode <$> askServerConfigCtx
               eventingMode <- _sccEventingMode <$> askServerConfigCtx
               readOnlyMode <- _sccReadOnlyMode <$> askServerConfigCtx
@@ -459,18 +450,6 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                   -- when maintenance mode is enabled, don't perform any migrations
                   | maintenanceMode == (MaintenanceModeEnabled ()) -> pure RETDoNothing
                   | otherwise -> do
-                    let initCatalogAction =
-                          case backendTag @b of
-                            Tag.PostgresVanillaTag -> do
-                              runExceptT $ runTx (_pscExecCtx sourceConfig) Q.ReadWrite (initCatalogForSource migrationTime)
-                            Tag.MSSQLTag -> do
-                              runExceptT $
-                                mssqlRunReadWrite (_mscExecCtx sourceConfig) MSSQL.initCatalogForSource
-                            -- TODO: When event triggers are supported on new databases,
-                            -- the initialization of the source catalog should also return
-                            -- if the event triggers are to be re-created or not, essentially
-                            -- replacing the `RETDoNothing` below
-                            _ -> pure $ Right RETDoNothing
                     -- The `initCatalogForSource` action is retried here because
                     -- in cloud there will be multiple workers (graphql-engine instances)
                     -- trying to migrate the source catalog, when needed. This introduces
@@ -486,7 +465,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                             <> Retry.limitRetries 3
                         )
                         (const $ return . isLeft)
-                        (const initCatalogAction)
+                        (const $ runExceptT $ prepareCatalog @b sourceConfig)
             else pure RETDoNothing
 
     buildSource ::

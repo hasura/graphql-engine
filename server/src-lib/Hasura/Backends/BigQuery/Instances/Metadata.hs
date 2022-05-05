@@ -3,10 +3,13 @@
 module Hasura.Backends.BigQuery.Instances.Metadata () where
 
 import Hasura.Backends.BigQuery.DDL qualified as BigQuery
+import Hasura.Prelude
+import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (RETDoNothing))
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.SQL.Backend
 
 instance BackendMetadata 'BigQuery where
+  prepareCatalog = const $ pure RETDoNothing
   buildComputedFieldInfo = BigQuery.buildComputedFieldInfo
   fetchAndValidateEnumValues = BigQuery.fetchAndValidateEnumValues
   resolveSourceConfig = BigQuery.resolveSourceConfig

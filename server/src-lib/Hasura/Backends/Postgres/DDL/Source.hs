@@ -15,7 +15,7 @@ module Hasura.Backends.Postgres.DDL.Source
   ( ToMetadataFetchQuery,
     fetchTableMetadata,
     fetchFunctionMetadata,
-    initCatalogForSource,
+    prepareCatalog,
     postDropSourceHook,
     resolveDatabaseMetadata,
     resolveSourceConfig,
@@ -33,7 +33,7 @@ import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.List.Extended qualified as LE
 import Data.List.NonEmpty qualified as NE
-import Data.Time.Clock (UTCTime)
+import Data.Time.Clock (UTCTime, getCurrentTime)
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.DDL.Source.Version
@@ -164,13 +164,14 @@ resolveDatabaseMetadata sourceMetadata sourceConfig sourceCustomization = runExc
       map (_cfdFunction . _cfmDefinition) . OMap.elems . _tmComputedFields
 
 -- | Initialise catalog tables for a source, including those required by the event delivery subsystem.
-initCatalogForSource ::
-  forall m. MonadTx m => UTCTime -> m RecreateEventTriggers
-initCatalogForSource migrationTime = do
+prepareCatalog ::
+  (MonadIO m, MonadBaseControl IO m) =>
+  SourceConfig ('Postgres pgKind) ->
+  ExceptT QErr m RecreateEventTriggers
+prepareCatalog sourceConfig = runTx (_pscExecCtx sourceConfig) Q.ReadWrite do
   hdbCatalogExist <- doesSchemaExist "hdb_catalog"
   eventLogTableExist <- doesTableExist "hdb_catalog" "event_log"
   sourceVersionTableExist <- doesTableExist "hdb_catalog" "hdb_source_catalog_version"
-
   if
       -- Fresh database
       | not hdbCatalogExist -> liftTx do
@@ -219,6 +220,7 @@ initCatalogForSource migrationTime = do
       case NE.nonEmpty neededMigrations of
         Just nonEmptyNeededMigrations -> do
           -- Migrations aren't empty. We need to update the catalog version after migrations
+          migrationTime <- liftIO getCurrentTime
           liftTx $ traverse_ snd nonEmptyNeededMigrations
           setCatalogVersion "43" migrationTime
         Nothing ->

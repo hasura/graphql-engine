@@ -121,4 +121,13 @@ class
     TableName b ->
     Either (ObjRelDef b) (ArrRelDef b) ->
     m ()
-  validateRelationship = \_ _ _ -> pure ()
+  validateRelationship _ _ _ = pure ()
+
+  -- | Run all operations required to create, update, or migrate the internal
+  -- catalog used by the backend for internal bookkeeping, if any. The return
+  -- type indicates whether the performed operations subsequently require
+  -- re-creating event trigers.
+  prepareCatalog ::
+    (MonadIO m, MonadBaseControl IO m) =>
+    SourceConfig b ->
+    ExceptT QErr m RecreateEventTriggers
