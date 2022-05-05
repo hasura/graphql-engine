@@ -1,6 +1,7 @@
 module Hasura.Backends.DataConnector.API.V0Spec (spec) where
 
 import Hasura.Backends.DataConnector.API.V0.ColumnSpec qualified as ColumnSpec
+import Hasura.Backends.DataConnector.API.V0.ConfigSchemaSpec qualified as ConfigSchemaSpec
 import Hasura.Backends.DataConnector.API.V0.ExpressionSpec qualified as ExpressionSpec
 import Hasura.Backends.DataConnector.API.V0.OrderBySpec qualified as OrderBySpec
 import Hasura.Backends.DataConnector.API.V0.QuerySpec qualified as QuerySpec
@@ -13,6 +14,7 @@ import Test.Hspec
 spec :: Spec
 spec = do
   describe "Column" ColumnSpec.spec
+  describe "ConfigSchema" ConfigSchemaSpec.spec
   describe "Expression" ExpressionSpec.spec
   describe "OrderBy" OrderBySpec.spec
   describe "Query" QuerySpec.spec
