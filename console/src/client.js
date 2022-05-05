@@ -12,6 +12,7 @@ import { syncHistoryWithStore } from 'react-router-redux';
 import { useBasename } from 'history';
 import { ReactQueryProvider } from './lib/reactQuery';
 import './theme/tailwind.css';
+import './theme/legacy-boostrap.css';
 
 import getRoutes from './routes';
 

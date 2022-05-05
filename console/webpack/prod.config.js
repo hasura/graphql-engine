@@ -23,7 +23,7 @@ module.exports = {
   mode: 'production',
   context: path.resolve(__dirname, '..'),
   entry: {
-    main: ['bootstrap-loader?extractStyles', './src/client.js'],
+    main: ['./src/client.js'],
   },
   output: {
     path: assetsPath,
