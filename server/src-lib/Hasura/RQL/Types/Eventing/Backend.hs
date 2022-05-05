@@ -83,9 +83,7 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
 
   -- | Ad-hoc function to set a retry for an undelivered event
   setRetry ::
-    ( MonadIO m,
-      MonadError QErr m
-    ) =>
+    (MonadIO m, MonadError QErr m) =>
     SourceConfig b ->
     Event b ->
     Time.UTCTime ->
@@ -95,9 +93,7 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
   -- | @getMaintenanceModeVersion@ gets the source catalog version from the
   --   source
   getMaintenanceModeVersion ::
-    ( MonadIO m,
-      MonadError QErr m
-    ) =>
+    (MonadIO m, MonadError QErr m) =>
     SourceConfig b ->
     m MaintenanceModeVersion
 
@@ -150,9 +146,7 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
   --   marks all the events related to the event trigger as archived.
   --   See Note [Cleanup for dropped triggers]
   dropTriggerAndArchiveEvents ::
-    ( MonadIO m,
-      MonadError QErr m
-    ) =>
+    (MonadIO m, MonadError QErr m) =>
     SourceConfig b ->
     TriggerName ->
     TableName b ->
@@ -166,9 +160,7 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
   --   case, we need to drop the trigger created by us earlier for the INSERT
   --   trigger.
   dropDanglingSQLTrigger ::
-    ( MonadIO m,
-      MonadError QErr m
-    ) =>
+    (MonadIO m, MonadError QErr m) =>
     SourceConfig b ->
     TriggerName ->
     TableName b ->
@@ -207,6 +199,13 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
     -- keys. Hence the PrimaryKey argument below.
     Maybe (PrimaryKey b (ColumnInfo b)) ->
     m (Either QErr ())
+
+--------------------------------------------------------------------------------
+-- TODO: move those instances to 'Backend/*/Instances/Eventing' and create a
+-- corresponding 'Instances.hs' file in this directory to import them, similarly
+-- to how we import instances for other backend classes. This would
+-- significantly reduce the number of files in the core engine that end up
+-- depending / importing backend-specific files.
 
 instance BackendEventTrigger ('Postgres 'Vanilla) where
   insertManualEvent = PG.insertManualEvent

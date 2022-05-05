@@ -11,6 +11,7 @@ import Hasura.RQL.Types.Metadata.Backend
 import Hasura.SQL.Backend
 
 instance BackendMetadata 'MSSQL where
+  prepareCatalog = MSSQL.prepareCatalog
   buildComputedFieldInfo = MSSQL.buildComputedFieldInfo
   fetchAndValidateEnumValues = MSSQL.fetchAndValidateEnumValues
   resolveSourceConfig = MSSQL.resolveSourceConfig

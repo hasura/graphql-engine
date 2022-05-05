@@ -13,7 +13,7 @@ module Hasura.Backends.MSSQL.DDL.Source
   ( resolveSourceConfig,
     resolveDatabaseMetadata,
     postDropSourceHook,
-    initCatalogForSource,
+    prepareCatalog,
   )
 where
 
@@ -107,12 +107,14 @@ doesTableExist tableName = do
     qualifiedTable = qualifyTableName tableName
 
 -- | Initialise catalog tables for a source, including those required by the event delivery subsystem.
-initCatalogForSource :: MonadMSSQLTx m => m RecreateEventTriggers
-initCatalogForSource = do
+prepareCatalog ::
+  (MonadIO m, MonadBaseControl IO m) =>
+  MSSQLSourceConfig ->
+  ExceptT QErr m RecreateEventTriggers
+prepareCatalog sourceConfig = mssqlRunReadWrite (_mscExecCtx sourceConfig) do
   hdbCatalogExist <- doesSchemaExist "hdb_catalog"
   eventLogTableExist <- doesTableExist $ TableName "event_log" "hdb_catalog"
   sourceVersionTableExist <- doesTableExist $ TableName "hdb_source_catalog_version" "hdb_catalog"
-
   if
       -- Fresh database
       | not hdbCatalogExist -> liftMSSQLTx do

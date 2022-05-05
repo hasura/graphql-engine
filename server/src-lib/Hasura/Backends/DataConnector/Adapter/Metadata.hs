@@ -22,6 +22,7 @@ import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (OpExpG (..), PartialSQLExp (..))
 import Hasura.RQL.Types.Column qualified as RQL.T.C
 import Hasura.RQL.Types.Common (OID (..), SourceName)
+import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (RETDoNothing))
 import Hasura.RQL.Types.Metadata (SourceMetadata (..))
 import Hasura.RQL.Types.Metadata.Backend (BackendMetadata (..))
 import Hasura.RQL.Types.Source (ResolvedSource (..))
@@ -38,6 +39,7 @@ import Servant.Client (AsClientT)
 import Witch qualified
 
 instance BackendMetadata 'DataConnector where
+  prepareCatalog = const $ pure RETDoNothing
   resolveSourceConfig = resolveSourceConfig'
   resolveDatabaseMetadata = resolveDatabaseMetadata'
   parseBoolExpOperations = parseBoolExpOperations'

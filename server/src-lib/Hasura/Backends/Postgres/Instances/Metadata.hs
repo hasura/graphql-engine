@@ -119,6 +119,7 @@ instance
   ) =>
   BackendMetadata ('Postgres pgKind)
   where
+  prepareCatalog = PG.prepareCatalog
   buildComputedFieldInfo = PG.buildComputedFieldInfo
   fetchAndValidateEnumValues = PG.fetchAndValidateEnumValues
   resolveSourceConfig = PG.resolveSourceConfig

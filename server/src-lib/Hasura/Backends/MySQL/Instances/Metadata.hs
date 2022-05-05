@@ -4,10 +4,12 @@ module Hasura.Backends.MySQL.Instances.Metadata () where
 
 import Hasura.Backends.MySQL.Connection qualified as MySQL
 import Hasura.Prelude
+import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (RETDoNothing))
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.SQL.Backend
 
 instance BackendMetadata 'MySQL where
+  prepareCatalog = const $ pure RETDoNothing
   buildComputedFieldInfo = error "buildComputedFieldInfo: MySQL backend does not support this operation yet."
   fetchAndValidateEnumValues = error "fetchAndValidateEnumValues: MySQL backend does not support this operation yet."
   resolveSourceConfig = MySQL.resolveSourceConfig
