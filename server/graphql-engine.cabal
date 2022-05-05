@@ -139,7 +139,9 @@ library dc-api
                      , bytestring
                      , deepseq
                      , hashable
+                     , insert-ordered-containers
                      , lens
+                     , lens-aeson
                      , openapi3
                      , scientific
                      , servant
@@ -156,6 +158,7 @@ library dc-api
                      , Hasura.Backends.DataConnector.API
                      , Hasura.Backends.DataConnector.API.V0.API
                      , Hasura.Backends.DataConnector.API.V0.Column
+                     , Hasura.Backends.DataConnector.API.V0.ConfigSchema
                      , Hasura.Backends.DataConnector.API.V0.Expression
                      , Hasura.Backends.DataConnector.API.V0.OrderBy
                      , Hasura.Backends.DataConnector.API.V0.Query
@@ -929,6 +932,7 @@ test-suite graphql-engine-tests
     Hasura.AppSpec
     Hasura.Backends.DataConnector.API.V0Spec
     Hasura.Backends.DataConnector.API.V0.ColumnSpec
+    Hasura.Backends.DataConnector.API.V0.ConfigSchemaSpec
     Hasura.Backends.DataConnector.API.V0.ExpressionSpec
     Hasura.Backends.DataConnector.API.V0.OrderBySpec
     Hasura.Backends.DataConnector.API.V0.QuerySpec
@@ -1168,6 +1172,7 @@ test-suite tests-dc-api
       Command
     , Paths_graphql_engine
     , Test.Data
+    , Test.ConfigSchemaSpec
     , Test.QuerySpec
     , Test.QuerySpec.BasicSpec
     , Test.QuerySpec.RelationshipsSpec

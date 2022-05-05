@@ -7,9 +7,9 @@ import Data.Environment (Environment)
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Sequence.NonEmpty qualified as NESeq
-import Data.Text.Extended (toTxt)
+import Data.Text qualified as Text
+import Data.Text.Extended (toTxt, (<<>))
 import Hasura.Backends.DataConnector.API qualified as API
-import Hasura.Backends.DataConnector.Adapter.Types (ConnSourceConfig (..))
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Backends.DataConnector.Agent.Client qualified as Agent.Client
 import Hasura.Backends.DataConnector.IR.Expression qualified as IR.E
@@ -31,9 +31,10 @@ import Hasura.SQL.Backend (BackendSourceKind (..), BackendType (..))
 import Hasura.SQL.Types (CollectableType (..))
 import Hasura.Server.Utils qualified as HSU
 import Hasura.Session (SessionVariable, mkSessionVariable)
-import Hasura.Tracing (noReporter, runTraceTWithReporter)
+import Hasura.Tracing (TraceT, noReporter, runTraceTWithReporter)
 import Language.GraphQL.Draft.Syntax qualified as GQL
 import Network.HTTP.Client qualified as HTTP
+import Servant.Client (AsClientT)
 import Witch qualified
 
 instance BackendMetadata 'DataConnector where
@@ -55,13 +56,15 @@ resolveSourceConfig' ::
   DC.DataConnectorBackendConfig ->
   Environment ->
   m (Either QErr DC.SourceConfig)
-resolveSourceConfig' _sourceName (ConnSourceConfig config) (DataConnectorKind dataConnectorName) backendConfig _ = runExceptT do
+resolveSourceConfig' sourceName (DC.ConnSourceConfig config) (DataConnectorKind dataConnectorName) backendConfig _ = runExceptT do
   DC.DataConnectorOptions {..} <-
     OMap.lookup dataConnectorName backendConfig
       `onNothing` throw400 DataConnectorError ("Data connector named " <> toTxt dataConnectorName <> " was not found in the data connector backend config")
   manager <- liftIO $ HTTP.newManager HTTP.defaultManagerSettings
-  API.Routes {..} <- liftIO $ Agent.Client.client manager _dcoUri
-  schemaResponse <- runTraceTWithReporter noReporter "resolve source" $ _schema config
+  routes@API.Routes {..} <- liftIO $ Agent.Client.client manager _dcoUri
+  schemaResponse <- runTraceTWithReporter noReporter "resolve source" $ do
+    validateConfiguration routes sourceName dataConnectorName config
+    _schema config
   pure
     DC.SourceConfig
       { _scEndpoint = _dcoUri,
@@ -69,6 +72,24 @@ resolveSourceConfig' _sourceName (ConnSourceConfig config) (DataConnectorKind da
         _scSchema = schemaResponse,
         _scManager = manager
       }
+
+validateConfiguration ::
+  MonadIO m =>
+  API.Routes (AsClientT (TraceT (ExceptT QErr m))) ->
+  SourceName ->
+  DC.DataConnectorName ->
+  API.Config ->
+  TraceT (ExceptT QErr m) ()
+validateConfiguration API.Routes {..} sourceName dataConnectorName config = do
+  configSchemaResponse <- _configSchema
+  let errors = API.validateConfigAgainstConfigSchema configSchemaResponse config
+  if errors /= []
+    then
+      let errorsText = Text.unlines (("- " <>) . Text.pack <$> errors)
+       in throw400
+            DataConnectorError
+            ("Configuration for source " <> sourceName <<> " is not valid based on the configuration schema declared by the " <> dataConnectorName <<> " data connector agent. Errors:\n" <> errorsText)
+    else pure ()
 
 resolveDatabaseMetadata' ::
   Applicative m =>
