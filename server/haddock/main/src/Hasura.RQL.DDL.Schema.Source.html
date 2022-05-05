@@ -43,23 +43,23 @@
 </span><span id="line-43"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-44"></span><span class="hs-comment">-- Add source</span><span>
 </span><span id="line-45"></span><span>
-</span><span id="line-46"></span><span class="hs-keyword">data</span><span> </span><span id="AddSource"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#AddSource"><span class="hs-identifier hs-var">AddSource</span></a></span></span><span> </span><span id="local-6989586621688758224"><span class="annot"><a href="#local-6989586621688758224"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AddSource"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#AddSource"><span class="hs-identifier hs-var">AddSource</span></a></span></span><span>
+</span><span id="line-46"></span><span class="hs-keyword">data</span><span> </span><span id="AddSource"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#AddSource"><span class="hs-identifier hs-var">AddSource</span></a></span></span><span> </span><span id="local-6989586621688758895"><span class="annot"><a href="#local-6989586621688758895"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AddSource"><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#AddSource"><span class="hs-identifier hs-var">AddSource</span></a></span></span><span>
 </span><span id="line-47"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_asName"><span class="annot"><span class="annottext">AddSource b -&gt; SourceName
 </span><a href="Hasura.RQL.DDL.Schema.Source.html#_asName"><span class="hs-identifier hs-var hs-var">_asName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-48"></span><span>    </span><span id="_asBackendKind"><span class="annot"><span class="annottext">AddSource b -&gt; BackendSourceKind b
-</span><a href="Hasura.RQL.DDL.Schema.Source.html#_asBackendKind"><span class="hs-identifier hs-var hs-var">_asBackendKind</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendSourceKind"><span class="hs-identifier hs-type">BackendSourceKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758224"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.DDL.Schema.Source.html#_asBackendKind"><span class="hs-identifier hs-var hs-var">_asBackendKind</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendSourceKind"><span class="hs-identifier hs-type">BackendSourceKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758895"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-49"></span><span>    </span><span id="_asConfiguration"><span class="annot"><span class="annottext">AddSource b -&gt; SourceConnConfiguration b
-</span><a href="Hasura.RQL.DDL.Schema.Source.html#_asConfiguration"><span class="hs-identifier hs-var hs-var">_asConfiguration</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConnConfiguration"><span class="hs-identifier hs-type">SourceConnConfiguration</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758224"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.DDL.Schema.Source.html#_asConfiguration"><span class="hs-identifier hs-var hs-var">_asConfiguration</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConnConfiguration"><span class="hs-identifier hs-type">SourceConnConfiguration</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758895"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-50"></span><span>    </span><span id="_asReplaceConfiguration"><span class="annot"><span class="annottext">AddSource b -&gt; Bool
 </span><a href="Hasura.RQL.DDL.Schema.Source.html#_asReplaceConfiguration"><span class="hs-identifier hs-var hs-var">_asReplaceConfiguration</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
 </span><span id="line-51"></span><span>    </span><span id="_asCustomization"><span class="annot"><span class="annottext">AddSource b -&gt; SourceCustomization
 </span><a href="Hasura.RQL.DDL.Schema.Source.html#_asCustomization"><span class="hs-identifier hs-var hs-var">_asCustomization</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceCustomization"><span class="hs-identifier hs-type">SourceCustomization</span></a></span><span>
 </span><span id="line-52"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-53"></span><span>
-</span><span id="line-54"></span><span id="local-6989586621688758041"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758041"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Data.Aeson.Extended.html#FromJSONWithContext"><span class="hs-identifier hs-type">FromJSONWithContext</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendSourceKind"><span class="hs-identifier hs-type">BackendSourceKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758041"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#AddSource"><span class="hs-identifier hs-type">AddSource</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758041"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-55"></span><span>  </span><span id="local-6989586621688758038"><span class="annot"><span class="annottext">parseJSONWithContext :: BackendSourceKind b -&gt; Value -&gt; Parser (AddSource b)
-</span><a href="Data.Aeson.Extended.html#parseJSONWithContext"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSONWithContext</span></a></span></span><span> </span><span id="local-6989586621688758036"><span class="annot"><span class="annottext">BackendSourceKind b
-</span><a href="#local-6989586621688758036"><span class="hs-identifier hs-var">backendKind</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-54"></span><span id="local-6989586621688758712"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758712"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Data.Aeson.Extended.html#FromJSONWithContext"><span class="hs-identifier hs-type">FromJSONWithContext</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendSourceKind"><span class="hs-identifier hs-type">BackendSourceKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758712"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#AddSource"><span class="hs-identifier hs-type">AddSource</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758712"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-55"></span><span>  </span><span id="local-6989586621688758709"><span class="annot"><span class="annottext">parseJSONWithContext :: BackendSourceKind b -&gt; Value -&gt; Parser (AddSource b)
+</span><a href="Data.Aeson.Extended.html#parseJSONWithContext"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSONWithContext</span></a></span></span><span> </span><span id="local-6989586621688758707"><span class="annot"><span class="annottext">BackendSourceKind b
+</span><a href="#local-6989586621688758707"><span class="hs-identifier hs-var">backendKind</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser (AddSource b))
 -&gt; Value
 -&gt; Parser (AddSource b)
@@ -70,8 +70,8 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser (AddSource b)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688758034"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688758034"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688758705"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688758705"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-56"></span><span>    </span><span class="annot"><span class="annottext">SourceName
 -&gt; BackendSourceKind b
 -&gt; SourceConnConfiguration b
@@ -101,7 +101,7 @@ SourceName
       -&gt; AddSource b)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688758034"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser SourceName
+</span><a href="#local-6989586621688758705"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser SourceName
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;name&quot;</span></span><span>
@@ -119,7 +119,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">BackendSourceKind b -&gt; Parser (BackendSourceKind b)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">BackendSourceKind b
-</span><a href="#local-6989586621688758036"><span class="hs-identifier hs-var">backendKind</span></a></span><span>
+</span><a href="#local-6989586621688758707"><span class="hs-identifier hs-var">backendKind</span></a></span><span>
 </span><span id="line-59"></span><span>      </span><span class="annot"><span class="annottext">Parser
   (SourceConnConfiguration b
    -&gt; Bool -&gt; SourceCustomization -&gt; AddSource b)
@@ -127,7 +127,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 -&gt; Parser (Bool -&gt; SourceCustomization -&gt; AddSource b)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688758034"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (SourceConnConfiguration b)
+</span><a href="#local-6989586621688758705"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (SourceConnConfiguration b)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;configuration&quot;</span></span><span>
@@ -135,7 +135,7 @@ forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 -&gt; Parser Bool -&gt; Parser (SourceCustomization -&gt; AddSource b)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688758034"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe Bool)
+</span><a href="#local-6989586621688758705"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe Bool)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;replace_configuration&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Bool) -&gt; Bool -&gt; Parser Bool
@@ -146,7 +146,7 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 -&gt; Parser SourceCustomization -&gt; Parser (AddSource b)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688758034"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe SourceCustomization)
+</span><a href="#local-6989586621688758705"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe SourceCustomization)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;customization&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe SourceCustomization)
@@ -156,27 +156,27 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><a href="Hasura.RQL.Types.SourceCustomization.html#emptySourceCustomization"><span class="hs-identifier hs-var">emptySourceCustomization</span></a></span></span><span>
 </span><span id="line-62"></span><span>
 </span><span id="line-63"></span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#runAddSource"><span class="hs-identifier hs-type">runAddSource</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-64"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688758028"><span class="annot"><a href="#local-6989586621688758028"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688758027"><span class="annot"><a href="#local-6989586621688758027"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-65"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758028"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758028"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758028"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758027"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-66"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#AddSource"><span class="hs-identifier hs-type">AddSource</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758027"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-67"></span><span>  </span><span class="annot"><a href="#local-6989586621688758028"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688758699"><span class="annot"><a href="#local-6989586621688758699"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688758698"><span class="annot"><a href="#local-6989586621688758698"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-65"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758699"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758699"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758699"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758698"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-66"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#AddSource"><span class="hs-identifier hs-type">AddSource</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758698"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-67"></span><span>  </span><span class="annot"><a href="#local-6989586621688758699"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
 </span><span id="line-68"></span><span id="runAddSource"><span class="annot"><span class="annottext">runAddSource :: AddSource b -&gt; m EncJSON
-</span><a href="Hasura.RQL.DDL.Schema.Source.html#runAddSource"><span class="hs-identifier hs-var hs-var">runAddSource</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#AddSource"><span class="hs-identifier hs-type">AddSource</span></a></span><span> </span><span id="local-6989586621688758026"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688758026"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621688758025"><span class="annot"><span class="annottext">BackendSourceKind b
-</span><a href="#local-6989586621688758025"><span class="hs-identifier hs-var">backendKind</span></a></span></span><span> </span><span id="local-6989586621688758024"><span class="annot"><span class="annottext">SourceConnConfiguration b
-</span><a href="#local-6989586621688758024"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span id="local-6989586621688758023"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688758023"><span class="hs-identifier hs-var">replaceConfiguration</span></a></span></span><span> </span><span id="local-6989586621688758022"><span class="annot"><span class="annottext">SourceCustomization
-</span><a href="#local-6989586621688758022"><span class="hs-identifier hs-var">sourceCustomization</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-69"></span><span>  </span><span id="local-6989586621688758021"><span class="annot"><span class="annottext">SourceCache
-</span><a href="#local-6989586621688758021"><span class="hs-identifier hs-var">sources</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; SourceCache
+</span><a href="Hasura.RQL.DDL.Schema.Source.html#runAddSource"><span class="hs-identifier hs-var hs-var">runAddSource</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#AddSource"><span class="hs-identifier hs-type">AddSource</span></a></span><span> </span><span id="local-6989586621688758697"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688758697"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621688758696"><span class="annot"><span class="annottext">BackendSourceKind b
+</span><a href="#local-6989586621688758696"><span class="hs-identifier hs-var">backendKind</span></a></span></span><span> </span><span id="local-6989586621688758695"><span class="annot"><span class="annottext">SourceConnConfiguration b
+</span><a href="#local-6989586621688758695"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span id="local-6989586621688758694"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688758694"><span class="hs-identifier hs-var">replaceConfiguration</span></a></span></span><span> </span><span id="local-6989586621688758693"><span class="annot"><span class="annottext">SourceCustomization
+</span><a href="#local-6989586621688758693"><span class="hs-identifier hs-var">sourceCustomization</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-69"></span><span>  </span><span id="local-6989586621688758692"><span class="annot"><span class="annottext">SourceCache
+</span><a href="#local-6989586621688758692"><span class="hs-identifier hs-var">sources</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; SourceCache
 </span><a href="Hasura.RQL.Types.SchemaCache.html#scSources"><span class="hs-identifier hs-var hs-var">scSources</span></a></span><span> </span><span class="annot"><span class="annottext">(SchemaCache -&gt; SourceCache) -&gt; m SchemaCache -&gt; m SourceCache
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">m SchemaCache
 forall (m :: * -&gt; *). CacheRM m =&gt; m SchemaCache
 </span><a href="Hasura.RQL.Types.SchemaCache.html#askSchemaCache"><span class="hs-identifier hs-var">askSchemaCache</span></a></span><span>
 </span><span id="line-70"></span><span>
-</span><span id="line-71"></span><span>  </span><span id="local-6989586621688758018"><span class="annot"><span class="annottext">MetadataModifier
-</span><a href="#local-6989586621688758018"><span class="hs-identifier hs-var">metadataModifier</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-71"></span><span>  </span><span id="local-6989586621688758689"><span class="annot"><span class="annottext">MetadataModifier
+</span><a href="#local-6989586621688758689"><span class="hs-identifier hs-var">metadataModifier</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-72"></span><span>    </span><span class="annot"><span class="annottext">(Metadata -&gt; Metadata) -&gt; MetadataModifier
 </span><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-var">MetadataModifier</span></a></span><span>
 </span><span id="line-73"></span><span>      </span><span class="annot"><span class="annottext">((Metadata -&gt; Metadata) -&gt; MetadataModifier)
@@ -185,11 +185,11 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; SourceCache -&gt; Bool
 forall k a. (Eq k, Hashable k) =&gt; k -&gt; HashMap k a -&gt; Bool
 </span><span class="hs-identifier hs-var">HM.member</span></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688758026"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">SourceCache
-</span><a href="#local-6989586621688758021"><span class="hs-identifier hs-var">sources</span></a></span><span>
+</span><a href="#local-6989586621688758697"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">SourceCache
+</span><a href="#local-6989586621688758692"><span class="hs-identifier hs-var">sources</span></a></span><span>
 </span><span id="line-74"></span><span>        </span><span class="hs-keyword">then</span><span>
 </span><span id="line-75"></span><span>          </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688758023"><span class="hs-identifier hs-var">replaceConfiguration</span></a></span><span>
+</span><a href="#local-6989586621688758694"><span class="hs-identifier hs-var">replaceConfiguration</span></a></span><span>
 </span><span id="line-76"></span><span>            </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">(Metadata -&gt; Metadata) -&gt; m (Metadata -&gt; Metadata)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">((Metadata -&gt; Metadata) -&gt; m (Metadata -&gt; Metadata))
@@ -210,7 +210,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall m. Ixed m =&gt; Index m -&gt; Traversal' m (IxValue m)
 </span><span class="hs-identifier hs-var">ix</span></span><span> </span><span class="annot"><span class="annottext">Index Sources
 SourceName
-</span><a href="#local-6989586621688758026"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">((AnyBackend SourceMetadata
+</span><a href="#local-6989586621688758697"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">((AnyBackend SourceMetadata
   -&gt; Identity (AnyBackend SourceMetadata))
  -&gt; Sources -&gt; Identity Sources)
 -&gt; ((SourceConnConfiguration b
@@ -226,7 +226,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall (b :: BackendType).
 Backend b =&gt;
 Prism' (AnyBackend SourceMetadata) (SourceMetadata b)
-</span><a href="Hasura.RQL.Types.Metadata.html#toSourceMetadata"><span class="hs-identifier hs-var">toSourceMetadata</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688758027"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">((SourceMetadata b -&gt; Identity (SourceMetadata b))
+</span><a href="Hasura.RQL.Types.Metadata.html#toSourceMetadata"><span class="hs-identifier hs-var">toSourceMetadata</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688758698"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">((SourceMetadata b -&gt; Identity (SourceMetadata b))
  -&gt; AnyBackend SourceMetadata
  -&gt; Identity (AnyBackend SourceMetadata))
 -&gt; ((SourceConnConfiguration b
@@ -247,7 +247,7 @@ Lens' (SourceMetadata b) (SourceConnConfiguration b)
 -&gt; SourceConnConfiguration b -&gt; Metadata -&gt; Metadata
 forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
 </span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">SourceConnConfiguration b
-</span><a href="#local-6989586621688758024"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span>
+</span><a href="#local-6989586621688758695"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span>
 </span><span id="line-77"></span><span>            </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m (Metadata -&gt; Metadata)
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
@@ -258,13 +258,13 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;source with name &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688758026"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688758697"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; already exists&quot;</span></span><span>
 </span><span id="line-78"></span><span>        </span><span class="hs-keyword">else</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-79"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688758007"><span class="annot"><span class="annottext">sourceMetadata :: AnyBackend SourceMetadata
-</span><a href="#local-6989586621688758007"><span class="hs-identifier hs-var hs-var">sourceMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><span id="line-79"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688758678"><span class="annot"><span class="annottext">sourceMetadata :: AnyBackend SourceMetadata
+</span><a href="#local-6989586621688758678"><span class="hs-identifier hs-var hs-var">sourceMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceName
 -&gt; BackendSourceKind b
 -&gt; SourceConnConfiguration b
 -&gt; SourceCustomization
@@ -276,11 +276,11 @@ SourceName
 -&gt; SourceConnConfiguration b
 -&gt; SourceCustomization
 -&gt; AnyBackend SourceMetadata
-</span><a href="Hasura.RQL.Types.Metadata.html#mkSourceMetadata"><span class="hs-identifier hs-var">mkSourceMetadata</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688758027"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688758026"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">BackendSourceKind b
-</span><a href="#local-6989586621688758025"><span class="hs-identifier hs-var">backendKind</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConnConfiguration b
-</span><a href="#local-6989586621688758024"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">SourceCustomization
-</span><a href="#local-6989586621688758022"><span class="hs-identifier hs-var">sourceCustomization</span></a></span><span>
+</span><a href="Hasura.RQL.Types.Metadata.html#mkSourceMetadata"><span class="hs-identifier hs-var">mkSourceMetadata</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688758698"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688758697"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">BackendSourceKind b
+</span><a href="#local-6989586621688758696"><span class="hs-identifier hs-var">backendKind</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConnConfiguration b
+</span><a href="#local-6989586621688758695"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">SourceCustomization
+</span><a href="#local-6989586621688758693"><span class="hs-identifier hs-var">sourceCustomization</span></a></span><span>
 </span><span id="line-80"></span><span>          </span><span class="annot"><span class="annottext">(Metadata -&gt; Metadata) -&gt; m (Metadata -&gt; Metadata)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">((Metadata -&gt; Metadata) -&gt; m (Metadata -&gt; Metadata))
@@ -296,8 +296,8 @@ forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.insert</span></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688758026"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend SourceMetadata
-</span><a href="#local-6989586621688758007"><span class="hs-identifier hs-var">sourceMetadata</span></a></span><span>
+</span><a href="#local-6989586621688758697"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend SourceMetadata
+</span><a href="#local-6989586621688758678"><span class="hs-identifier hs-var">sourceMetadata</span></a></span><span>
 </span><span id="line-81"></span><span>
 </span><span id="line-82"></span><span>  </span><span class="annot"><span class="annottext">MetadataObjId -&gt; MetadataModifier -&gt; m ()
 forall (m :: * -&gt; *).
@@ -305,8 +305,8 @@ forall (m :: * -&gt; *).
 MetadataObjId -&gt; MetadataModifier -&gt; m ()
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#buildSchemaCacheFor"><span class="hs-identifier hs-var">buildSchemaCacheFor</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceName -&gt; MetadataObjId
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#MOSource"><span class="hs-identifier hs-var">MOSource</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688758026"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MetadataModifier
-</span><a href="#local-6989586621688758018"><span class="hs-identifier hs-var">metadataModifier</span></a></span><span>
+</span><a href="#local-6989586621688758697"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MetadataModifier
+</span><a href="#local-6989586621688758689"><span class="hs-identifier hs-var">metadataModifier</span></a></span><span>
 </span><span id="line-83"></span><span>  </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">EncJSON
@@ -322,22 +322,22 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="Hasura.RQL.DDL.Schema.Source.html#_rmNewName"><span class="hs-identifier hs-var hs-var">_rmNewName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span>
 </span><span id="line-91"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-92"></span><span>
-</span><span id="line-93"></span><span class="hs-special">$(</span><span id="local-6989586621688757994"><span id="local-6989586621688757996"><span class="hs-identifier">deriveFromJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RenameSource</span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-93"></span><span class="hs-special">$(</span><span id="local-6989586621688758665"><span id="local-6989586621688758667"><span class="hs-identifier">deriveFromJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RenameSource</span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-94"></span><span>
 </span><span id="line-95"></span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#runRenameSource"><span class="hs-identifier hs-type">runRenameSource</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-96"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688757991"><span class="annot"><a href="#local-6989586621688757991"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-97"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688757991"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688757991"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688757991"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-96"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688758662"><span class="annot"><a href="#local-6989586621688758662"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-97"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758662"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758662"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758662"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-98"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#RenameSource"><span class="hs-identifier hs-type">RenameSource</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-99"></span><span>  </span><span class="annot"><a href="#local-6989586621688757991"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
+</span><span id="line-99"></span><span>  </span><span class="annot"><a href="#local-6989586621688758662"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
 </span><span id="line-100"></span><span id="runRenameSource"><span class="annot"><span class="annottext">runRenameSource :: RenameSource -&gt; m EncJSON
-</span><a href="Hasura.RQL.DDL.Schema.Source.html#runRenameSource"><span class="hs-identifier hs-var hs-var">runRenameSource</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#RenameSource"><span class="hs-identifier hs-type">RenameSource</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688757989"><span id="local-6989586621688757990"><span class="annot"><span class="annottext">SourceName
+</span><a href="Hasura.RQL.DDL.Schema.Source.html#runRenameSource"><span class="hs-identifier hs-var hs-var">runRenameSource</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#RenameSource"><span class="hs-identifier hs-type">RenameSource</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688758660"><span id="local-6989586621688758661"><span class="annot"><span class="annottext">SourceName
 _rmNewName :: SourceName
 _rmName :: SourceName
 _rmNewName :: RenameSource -&gt; SourceName
 _rmName :: RenameSource -&gt; SourceName
-</span><a href="#local-6989586621688757989"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-101"></span><span>  </span><span id="local-6989586621688757988"><span class="annot"><span class="annottext">SourceCache
-</span><a href="#local-6989586621688757988"><span class="hs-identifier hs-var">sources</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; SourceCache
+</span><a href="#local-6989586621688758660"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-101"></span><span>  </span><span id="local-6989586621688758659"><span class="annot"><span class="annottext">SourceCache
+</span><a href="#local-6989586621688758659"><span class="hs-identifier hs-var">sources</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; SourceCache
 </span><a href="Hasura.RQL.Types.SchemaCache.html#scSources"><span class="hs-identifier hs-var hs-var">scSources</span></a></span><span> </span><span class="annot"><span class="annottext">(SchemaCache -&gt; SourceCache) -&gt; m SchemaCache -&gt; m SourceCache
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">m SchemaCache
@@ -349,8 +349,8 @@ forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceName -&gt; SourceCache -&gt; Bool
 forall k a. (Eq k, Hashable k) =&gt; k -&gt; HashMap k a -&gt; Bool
 </span><span class="hs-identifier hs-var">HM.member</span></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757990"><span class="hs-identifier hs-var">_rmName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceCache
-</span><a href="#local-6989586621688757988"><span class="hs-identifier hs-var">sources</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+</span><a href="#local-6989586621688758661"><span class="hs-identifier hs-var">_rmName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceCache
+</span><a href="#local-6989586621688758659"><span class="hs-identifier hs-var">sources</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-104"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
@@ -362,15 +362,15 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;Could not find source with name &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; SourceName -&gt; Text
 forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757990"><span class="hs-identifier hs-var">_rmName</span></a></span><span>
+</span><a href="#local-6989586621688758661"><span class="hs-identifier hs-var">_rmName</span></a></span><span>
 </span><span id="line-105"></span><span>
 </span><span id="line-106"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceName -&gt; SourceCache -&gt; Bool
 forall k a. (Eq k, Hashable k) =&gt; k -&gt; HashMap k a -&gt; Bool
 </span><span class="hs-identifier hs-var">HM.member</span></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757989"><span class="hs-identifier hs-var">_rmNewName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceCache
-</span><a href="#local-6989586621688757988"><span class="hs-identifier hs-var">sources</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+</span><a href="#local-6989586621688758660"><span class="hs-identifier hs-var">_rmNewName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceCache
+</span><a href="#local-6989586621688758659"><span class="hs-identifier hs-var">sources</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-107"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
@@ -382,13 +382,13 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;Source with name &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757989"><span class="hs-identifier hs-var">_rmNewName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688758660"><span class="hs-identifier hs-var">_rmNewName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; already exists&quot;</span></span><span>
 </span><span id="line-108"></span><span>
-</span><span id="line-109"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688757983"><span class="annot"><span class="annottext">metadataModifier :: MetadataModifier
-</span><a href="#local-6989586621688757983"><span class="hs-identifier hs-var hs-var">metadataModifier</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-109"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688758654"><span class="annot"><span class="annottext">metadataModifier :: MetadataModifier
+</span><a href="#local-6989586621688758654"><span class="hs-identifier hs-var hs-var">metadataModifier</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-110"></span><span>        </span><span class="annot"><span class="annottext">(Metadata -&gt; Metadata) -&gt; MetadataModifier
 </span><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-var">MetadataModifier</span></a></span><span> </span><span class="annot"><span class="annottext">((Metadata -&gt; Metadata) -&gt; MetadataModifier)
 -&gt; (Metadata -&gt; Metadata) -&gt; MetadataModifier
@@ -400,47 +400,47 @@ Lens' Metadata Sources
 -&gt; (Sources -&gt; Sources) -&gt; Metadata -&gt; Metadata
 forall s t a b. ASetter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
 </span><span class="hs-operator hs-var">%~</span></span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; SourceName -&gt; Sources -&gt; Sources
-</span><a href="#local-6989586621688757982"><span class="hs-identifier hs-var">renameBackendSourceMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757990"><span class="hs-identifier hs-var">_rmName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757989"><span class="hs-identifier hs-var">_rmNewName</span></a></span><span>
+</span><a href="#local-6989586621688758653"><span class="hs-identifier hs-var">renameBackendSourceMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688758661"><span class="hs-identifier hs-var">_rmName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688758660"><span class="hs-identifier hs-var">_rmNewName</span></a></span><span>
 </span><span id="line-112"></span><span>  </span><span class="annot"><span class="annottext">MetadataObjId -&gt; MetadataModifier -&gt; m ()
 forall (m :: * -&gt; *).
 (QErrM m, CacheRWM m, MetadataM m) =&gt;
 MetadataObjId -&gt; MetadataModifier -&gt; m ()
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#buildSchemaCacheFor"><span class="hs-identifier hs-var">buildSchemaCacheFor</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceName -&gt; MetadataObjId
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#MOSource"><span class="hs-identifier hs-var">MOSource</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757989"><span class="hs-identifier hs-var">_rmNewName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MetadataModifier
-</span><a href="#local-6989586621688757983"><span class="hs-identifier hs-var">metadataModifier</span></a></span><span>
+</span><a href="#local-6989586621688758660"><span class="hs-identifier hs-var">_rmNewName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MetadataModifier
+</span><a href="#local-6989586621688758654"><span class="hs-identifier hs-var">metadataModifier</span></a></span><span>
 </span><span id="line-113"></span><span>
 </span><span id="line-114"></span><span>  </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">EncJSON
 </span><a href="Hasura.RQL.Types.Common.html#successMsg"><span class="hs-identifier hs-var">successMsg</span></a></span><span>
 </span><span id="line-115"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-116"></span><span>    </span><span class="annot"><a href="#local-6989586621688757982"><span class="hs-identifier hs-type">renameBackendSourceMetadata</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-116"></span><span>    </span><span class="annot"><a href="#local-6989586621688758653"><span class="hs-identifier hs-type">renameBackendSourceMetadata</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-117"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-118"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-119"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">OMap.InsOrdHashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#BackendSourceMetadata"><span class="hs-identifier hs-type">BackendSourceMetadata</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-120"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">OMap.InsOrdHashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#BackendSourceMetadata"><span class="hs-identifier hs-type">BackendSourceMetadata</span></a></span><span>
-</span><span id="line-121"></span><span>    </span><span id="local-6989586621688757982"><span class="annot"><span class="annottext">renameBackendSourceMetadata :: SourceName -&gt; SourceName -&gt; Sources -&gt; Sources
-</span><a href="#local-6989586621688757982"><span class="hs-identifier hs-var hs-var">renameBackendSourceMetadata</span></a></span></span><span> </span><span id="local-6989586621688757980"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757980"><span class="hs-identifier hs-var">oldKey</span></a></span></span><span> </span><span id="local-6989586621688757979"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757979"><span class="hs-identifier hs-var">newKey</span></a></span></span><span> </span><span id="local-6989586621688757978"><span class="annot"><span class="annottext">Sources
-</span><a href="#local-6989586621688757978"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-121"></span><span>    </span><span id="local-6989586621688758653"><span class="annot"><span class="annottext">renameBackendSourceMetadata :: SourceName -&gt; SourceName -&gt; Sources -&gt; Sources
+</span><a href="#local-6989586621688758653"><span class="hs-identifier hs-var hs-var">renameBackendSourceMetadata</span></a></span></span><span> </span><span id="local-6989586621688758651"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688758651"><span class="hs-identifier hs-var">oldKey</span></a></span></span><span> </span><span id="local-6989586621688758650"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688758650"><span class="hs-identifier hs-var">newKey</span></a></span></span><span> </span><span id="local-6989586621688758649"><span class="annot"><span class="annottext">Sources
+</span><a href="#local-6989586621688758649"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-122"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; Sources -&gt; Maybe (AnyBackend SourceMetadata)
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">OMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757980"><span class="hs-identifier hs-var">oldKey</span></a></span><span> </span><span class="annot"><span class="annottext">Sources
-</span><a href="#local-6989586621688757978"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-123"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688757976"><span class="annot"><span class="annottext">AnyBackend SourceMetadata
-</span><a href="#local-6989586621688757976"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621688758651"><span class="hs-identifier hs-var">oldKey</span></a></span><span> </span><span class="annot"><span class="annottext">Sources
+</span><a href="#local-6989586621688758649"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-123"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688758647"><span class="annot"><span class="annottext">AnyBackend SourceMetadata
+</span><a href="#local-6989586621688758647"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-124"></span><span>          </span><span class="annot"><span class="annottext">SourceName -&gt; AnyBackend SourceMetadata -&gt; Sources -&gt; Sources
 forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.insert</span></span><span>
 </span><span id="line-125"></span><span>            </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757979"><span class="hs-identifier hs-var">newKey</span></a></span><span>
+</span><a href="#local-6989586621688758650"><span class="hs-identifier hs-var">newKey</span></a></span><span>
 </span><span id="line-126"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnyBackend SourceMetadata
 -&gt; (forall (b :: BackendType).
     SourceMetadata b -&gt; SourceMetadata b)
@@ -449,11 +449,11 @@ forall (i :: BackendType -&gt; *) (j :: BackendType -&gt; *).
 AnyBackend i
 -&gt; (forall (b :: BackendType). i b -&gt; j b) -&gt; AnyBackend j
 </span><a href="Hasura.SQL.AnyBackend.html#mapBackend"><span class="hs-identifier hs-var">AB.mapBackend</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend SourceMetadata
-</span><a href="#local-6989586621688757976"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceName -&gt; SourceMetadata b -&gt; SourceMetadata b
+</span><a href="#local-6989586621688758647"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceName -&gt; SourceMetadata b -&gt; SourceMetadata b
 forall (b :: BackendType).
 SourceName -&gt; SourceMetadata b -&gt; SourceMetadata b
-</span><a href="#local-6989586621688757974"><span class="hs-identifier hs-var">renameSource</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757979"><span class="hs-identifier hs-var">newKey</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688758645"><span class="hs-identifier hs-var">renameSource</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688758650"><span class="hs-identifier hs-var">newKey</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-127"></span><span>            </span><span class="annot"><span class="annottext">(Sources -&gt; Sources) -&gt; (Sources -&gt; Sources) -&gt; Sources -&gt; Sources
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; Sources -&gt; Sources
@@ -461,23 +461,23 @@ forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.delete</span></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757980"><span class="hs-identifier hs-var">oldKey</span></a></span><span>
+</span><a href="#local-6989586621688758651"><span class="hs-identifier hs-var">oldKey</span></a></span><span>
 </span><span id="line-128"></span><span>            </span><span class="annot"><span class="annottext">(Sources -&gt; Sources) -&gt; Sources -&gt; Sources
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Sources
-</span><a href="#local-6989586621688757978"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><a href="#local-6989586621688758649"><span class="hs-identifier hs-var">m</span></a></span><span>
 </span><span id="line-129"></span><span>        </span><span class="annot"><span class="annottext">Maybe (AnyBackend SourceMetadata)
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Sources
-</span><a href="#local-6989586621688757978"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><a href="#local-6989586621688758649"><span class="hs-identifier hs-var">m</span></a></span><span>
 </span><span id="line-130"></span><span>
-</span><span id="line-131"></span><span>    </span><span class="annot"><a href="#local-6989586621688757974"><span class="hs-identifier hs-type">renameSource</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688758147"><span class="annot"><a href="#local-6989586621688758147"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#SourceMetadata"><span class="hs-identifier hs-type">SourceMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758147"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#SourceMetadata"><span class="hs-identifier hs-type">SourceMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758147"><span class="hs-identifier hs-type">b</span></a></span><span>
-</span><span id="line-132"></span><span>    </span><span id="local-6989586621688757974"><span class="annot"><span class="annottext">renameSource :: SourceName -&gt; SourceMetadata b -&gt; SourceMetadata b
-</span><a href="#local-6989586621688757974"><span class="hs-identifier hs-var hs-var">renameSource</span></a></span></span><span> </span><span id="local-6989586621688757972"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757972"><span class="hs-identifier hs-var">newName</span></a></span></span><span> </span><span id="local-6989586621688757971"><span class="annot"><span class="annottext">SourceMetadata b
-</span><a href="#local-6989586621688757971"><span class="hs-identifier hs-var">metadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceMetadata b
-</span><a href="#local-6989586621688757971"><span class="hs-identifier hs-var">metadata</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_smName :: SourceName
+</span><span id="line-131"></span><span>    </span><span class="annot"><a href="#local-6989586621688758645"><span class="hs-identifier hs-type">renameSource</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688758818"><span class="annot"><a href="#local-6989586621688758818"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#SourceMetadata"><span class="hs-identifier hs-type">SourceMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758818"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#SourceMetadata"><span class="hs-identifier hs-type">SourceMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758818"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-132"></span><span>    </span><span id="local-6989586621688758645"><span class="annot"><span class="annottext">renameSource :: SourceName -&gt; SourceMetadata b -&gt; SourceMetadata b
+</span><a href="#local-6989586621688758645"><span class="hs-identifier hs-var hs-var">renameSource</span></a></span></span><span> </span><span id="local-6989586621688758643"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688758643"><span class="hs-identifier hs-var">newName</span></a></span></span><span> </span><span id="local-6989586621688758642"><span class="annot"><span class="annottext">SourceMetadata b
+</span><a href="#local-6989586621688758642"><span class="hs-identifier hs-var">metadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceMetadata b
+</span><a href="#local-6989586621688758642"><span class="hs-identifier hs-var">metadata</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_smName :: SourceName
 </span><a href="Hasura.RQL.Types.Metadata.html#_smName"><span class="hs-identifier hs-var">_smName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757972"><span class="hs-identifier hs-var">newName</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621688758643"><span class="hs-identifier hs-var">newName</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-133"></span><span>
 </span><span id="line-134"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-135"></span><span class="hs-comment">-- Drop source</span><span>
@@ -488,7 +488,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-139"></span><span>    </span><span id="_dsCascade"><span class="annot"><span class="annottext">DropSource -&gt; Bool
 </span><a href="Hasura.RQL.DDL.Schema.Source.html#_dsCascade"><span class="hs-identifier hs-var hs-var">_dsCascade</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-140"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-141"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688757961"><span id="local-6989586621688757963"><span id="local-6989586621688757965"><span class="annot"><span class="annottext">Int -&gt; DropSource -&gt; ShowS
+</span><span id="line-141"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688758632"><span id="local-6989586621688758634"><span id="local-6989586621688758636"><span class="annot"><span class="annottext">Int -&gt; DropSource -&gt; ShowS
 [DropSource] -&gt; ShowS
 DropSource -&gt; String
 (Int -&gt; DropSource -&gt; ShowS)
@@ -503,7 +503,7 @@ show :: DropSource -&gt; String
 $cshow :: DropSource -&gt; String
 showsPrec :: Int -&gt; DropSource -&gt; ShowS
 $cshowsPrec :: Int -&gt; DropSource -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688757956"><span id="local-6989586621688757958"><span class="annot"><span class="annottext">DropSource -&gt; DropSource -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688758627"><span id="local-6989586621688758629"><span class="annot"><span class="annottext">DropSource -&gt; DropSource -&gt; Bool
 (DropSource -&gt; DropSource -&gt; Bool)
 -&gt; (DropSource -&gt; DropSource -&gt; Bool) -&gt; Eq DropSource
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -513,29 +513,29 @@ $c/= :: DropSource -&gt; DropSource -&gt; Bool
 $c== :: DropSource -&gt; DropSource -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-142"></span><span>
-</span><span id="line-143"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688757952"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#DropSource"><span class="hs-identifier hs-type">DropSource</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-144"></span><span>  </span><span id="local-6989586621688757951"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DropSource
-</span><a href="#local-6989586621688757951"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-143"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688758623"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#DropSource"><span class="hs-identifier hs-type">DropSource</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-144"></span><span>  </span><span id="local-6989586621688758622"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DropSource
+</span><a href="#local-6989586621688758622"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser DropSource) -&gt; Value -&gt; Parser DropSource
 forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">withObject</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;DropSource&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Object -&gt; Parser DropSource) -&gt; Value -&gt; Parser DropSource)
 -&gt; (Object -&gt; Parser DropSource) -&gt; Value -&gt; Parser DropSource
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688757950"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688757950"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688758621"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621688758621"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-145"></span><span>    </span><span class="annot"><span class="annottext">SourceName -&gt; Bool -&gt; DropSource
 </span><a href="Hasura.RQL.DDL.Schema.Source.html#DropSource"><span class="hs-identifier hs-var">DropSource</span></a></span><span> </span><span class="annot"><span class="annottext">(SourceName -&gt; Bool -&gt; DropSource)
 -&gt; Parser SourceName -&gt; Parser (Bool -&gt; DropSource)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688757950"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser SourceName
+</span><a href="#local-6989586621688758621"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser SourceName
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;name&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Bool -&gt; DropSource) -&gt; Parser Bool -&gt; Parser DropSource
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621688757950"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe Bool)
+</span><a href="#local-6989586621688758621"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe Bool)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;cascade&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Bool) -&gt; Bool -&gt; Parser Bool
@@ -544,37 +544,37 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-identifier hs-var">False</span></span><span>
 </span><span id="line-146"></span><span>
 </span><span id="line-147"></span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#runDropSource"><span class="hs-identifier hs-type">runDropSource</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-148"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688757949"><span class="annot"><a href="#local-6989586621688757949"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688757948"><span class="annot"><a href="#local-6989586621688757948"><span class="hs-identifier hs-type">r</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-149"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688757949"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-150"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688757949"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-151"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688757949"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-152"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688757949"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-153"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688757949"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-154"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621688757948"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688757949"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-155"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688757948"><span class="hs-identifier hs-type">r</span></a></span><span>
+</span><span id="line-148"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688758620"><span class="annot"><a href="#local-6989586621688758620"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688758619"><span class="annot"><a href="#local-6989586621688758619"><span class="hs-identifier hs-type">r</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-149"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758620"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-150"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758620"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-151"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688758620"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-152"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688758620"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-153"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758620"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-154"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621688758619"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758620"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-155"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688758619"><span class="hs-identifier hs-type">r</span></a></span><span>
 </span><span id="line-156"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-157"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#DropSource"><span class="hs-identifier hs-type">DropSource</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-158"></span><span>  </span><span class="annot"><a href="#local-6989586621688757949"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
+</span><span id="line-158"></span><span>  </span><span class="annot"><a href="#local-6989586621688758620"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
 </span><span id="line-159"></span><span id="runDropSource"><span class="annot"><span class="annottext">runDropSource :: DropSource -&gt; m EncJSON
-</span><a href="Hasura.RQL.DDL.Schema.Source.html#runDropSource"><span class="hs-identifier hs-var hs-var">runDropSource</span></a></span></span><span> </span><span id="local-6989586621688757947"><span class="annot"><span class="annottext">dropSourceInfo :: DropSource
-</span><a href="#local-6989586621688757947"><span class="hs-identifier hs-var">dropSourceInfo</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#DropSource"><span class="hs-identifier hs-type">DropSource</span></a></span><span> </span><span id="local-6989586621688757946"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757946"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621688757945"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688757945"><span class="hs-identifier hs-var">cascade</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-160"></span><span>  </span><span id="local-6989586621688757944"><span class="annot"><span class="annottext">SchemaCache
-</span><a href="#local-6989586621688757944"><span class="hs-identifier hs-var">schemaCache</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m SchemaCache
+</span><a href="Hasura.RQL.DDL.Schema.Source.html#runDropSource"><span class="hs-identifier hs-var hs-var">runDropSource</span></a></span></span><span> </span><span id="local-6989586621688758618"><span class="annot"><span class="annottext">dropSourceInfo :: DropSource
+</span><a href="#local-6989586621688758618"><span class="hs-identifier hs-var">dropSourceInfo</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#DropSource"><span class="hs-identifier hs-type">DropSource</span></a></span><span> </span><span id="local-6989586621688758617"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688758617"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621688758616"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688758616"><span class="hs-identifier hs-var">cascade</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-160"></span><span>  </span><span id="local-6989586621688758615"><span class="annot"><span class="annottext">SchemaCache
+</span><a href="#local-6989586621688758615"><span class="hs-identifier hs-var">schemaCache</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m SchemaCache
 forall (m :: * -&gt; *). CacheRM m =&gt; m SchemaCache
 </span><a href="Hasura.RQL.Types.SchemaCache.html#askSchemaCache"><span class="hs-identifier hs-var">askSchemaCache</span></a></span><span>
-</span><span id="line-161"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688757943"><span class="annot"><span class="annottext">sources :: SourceCache
-</span><a href="#local-6989586621688757943"><span class="hs-identifier hs-var hs-var">sources</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; SourceCache
+</span><span id="line-161"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688758614"><span class="annot"><span class="annottext">sources :: SourceCache
+</span><a href="#local-6989586621688758614"><span class="hs-identifier hs-var hs-var">sources</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; SourceCache
 </span><a href="Hasura.RQL.Types.SchemaCache.html#scSources"><span class="hs-identifier hs-var hs-var">scSources</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
-</span><a href="#local-6989586621688757944"><span class="hs-identifier hs-var">schemaCache</span></a></span><span>
+</span><a href="#local-6989586621688758615"><span class="hs-identifier hs-var">schemaCache</span></a></span><span>
 </span><span id="line-162"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; SourceCache -&gt; Maybe BackendSourceInfo
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">HM.lookup</span></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757946"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">SourceCache
-</span><a href="#local-6989586621688757943"><span class="hs-identifier hs-var">sources</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-163"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688757941"><span class="annot"><span class="annottext">BackendSourceInfo
-</span><a href="#local-6989586621688757941"><span class="hs-identifier hs-var">backendSourceInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621688758617"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">SourceCache
+</span><a href="#local-6989586621688758614"><span class="hs-identifier hs-var">sources</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-163"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688758612"><span class="annot"><span class="annottext">BackendSourceInfo
+</span><a href="#local-6989586621688758612"><span class="hs-identifier hs-var">backendSourceInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-164"></span><span>      </span><span class="annot"><span class="annottext">BackendSourceInfo
 -&gt; (forall (b :: BackendType).
     BackendMetadata b =&gt;
@@ -584,7 +584,7 @@ forall (c :: BackendType -&gt; Constraint) (i :: BackendType -&gt; *) r.
 AllBackendsSatisfy c =&gt;
 AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
 </span><a href="Hasura.SQL.AnyBackend.html#dispatchAnyBackend"><span class="hs-identifier hs-var">AB.dispatchAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">BackendSourceInfo
-</span><a href="#local-6989586621688757941"><span class="hs-identifier hs-var">backendSourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">((forall (b :: BackendType).
+</span><a href="#local-6989586621688758612"><span class="hs-identifier hs-var">backendSourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">((forall (b :: BackendType).
   BackendMetadata b =&gt;
   SourceInfo b -&gt; m ())
  -&gt; m ())
@@ -600,12 +600,12 @@ forall (m :: * -&gt; *) r (b :: BackendType).
  BackendMetadata b) =&gt;
 SchemaCache -&gt; DropSource -&gt; SourceInfo b -&gt; m ()
 </span><a href="Hasura.RQL.DDL.Schema.Source.html#dropSource"><span class="hs-identifier hs-var">dropSource</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
-</span><a href="#local-6989586621688757944"><span class="hs-identifier hs-var">schemaCache</span></a></span><span> </span><span class="annot"><span class="annottext">DropSource
-</span><a href="#local-6989586621688757947"><span class="hs-identifier hs-var">dropSourceInfo</span></a></span><span>
+</span><a href="#local-6989586621688758615"><span class="hs-identifier hs-var">schemaCache</span></a></span><span> </span><span class="annot"><span class="annottext">DropSource
+</span><a href="#local-6989586621688758618"><span class="hs-identifier hs-var">dropSourceInfo</span></a></span><span>
 </span><span id="line-165"></span><span>    </span><span class="annot"><span class="annottext">Maybe BackendSourceInfo
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-166"></span><span>      </span><span id="local-6989586621688757939"><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621688757939"><span class="hs-identifier hs-var">metadata</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m Metadata
+</span><span id="line-166"></span><span>      </span><span id="local-6989586621688758610"><span class="annot"><span class="annottext">Metadata
+</span><a href="#local-6989586621688758610"><span class="hs-identifier hs-var">metadata</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m Metadata
 forall (m :: * -&gt; *). MetadataM m =&gt; m Metadata
 </span><a href="Hasura.RQL.Types.Metadata.html#getMetadata"><span class="hs-identifier hs-var">getMetadata</span></a></span><span>
 </span><span id="line-167"></span><span>      </span><span class="annot"><span class="annottext">m (AnyBackend SourceMetadata) -&gt; m ()
@@ -618,7 +618,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; m (AnyBackend SourceMetadata) -&gt; m (AnyBackend SourceMetadata)
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="Hasura.Prelude.html#onNothing"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621688757939"><span class="hs-identifier hs-var">metadata</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata
+</span><a href="#local-6989586621688758610"><span class="hs-identifier hs-var">metadata</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata
 -&gt; Getting
      (Maybe (AnyBackend SourceMetadata))
      Metadata
@@ -644,7 +644,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall m. At m =&gt; Index m -&gt; Lens' m (Maybe (IxValue m))
 </span><span class="hs-identifier hs-var">at</span></span><span> </span><span class="annot"><span class="annottext">Index Sources
 SourceName
-</span><a href="#local-6989586621688757946"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m (AnyBackend SourceMetadata) -&gt; m (AnyBackend SourceMetadata))
+</span><a href="#local-6989586621688758617"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m (AnyBackend SourceMetadata) -&gt; m (AnyBackend SourceMetadata))
 -&gt; m (AnyBackend SourceMetadata) -&gt; m (AnyBackend SourceMetadata)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
@@ -658,12 +658,12 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;source with name &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757946"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688758617"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; does not exist&quot;</span></span><span>
 </span><span id="line-170"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688757945"><span class="hs-identifier hs-var">cascade</span></a></span><span>
+</span><a href="#local-6989586621688758616"><span class="hs-identifier hs-var">cascade</span></a></span><span>
 </span><span id="line-171"></span><span>        </span><span class="hs-keyword">then</span><span> </span><span class="hs-comment">-- Without sourceInfo we can't cascade, so throw an error</span><span>
 </span><span id="line-172"></span><span>          </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
@@ -674,7 +674,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;source with name &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757946"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688758617"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; is inconsistent&quot;</span></span><span>
@@ -685,9 +685,9 @@ forall (m :: * -&gt; *).
 MetadataObjId -&gt; MetadataModifier -&gt; m ()
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#buildSchemaCacheFor"><span class="hs-identifier hs-var">buildSchemaCacheFor</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceName -&gt; MetadataObjId
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#MOSource"><span class="hs-identifier hs-var">MOSource</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757946"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceName -&gt; MetadataModifier
+</span><a href="#local-6989586621688758617"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceName -&gt; MetadataModifier
 </span><a href="Hasura.RQL.DDL.Schema.Source.html#dropSourceMetadataModifier"><span class="hs-identifier hs-var">dropSourceMetadataModifier</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757946"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688758617"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-175"></span><span>  </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">EncJSON
@@ -695,8 +695,8 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span id="line-176"></span><span>
 </span><span id="line-177"></span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#dropSourceMetadataModifier"><span class="hs-identifier hs-type">dropSourceMetadataModifier</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-type">MetadataModifier</span></a></span><span>
 </span><span id="line-178"></span><span id="dropSourceMetadataModifier"><span class="annot"><span class="annottext">dropSourceMetadataModifier :: SourceName -&gt; MetadataModifier
-</span><a href="Hasura.RQL.DDL.Schema.Source.html#dropSourceMetadataModifier"><span class="hs-identifier hs-var hs-var">dropSourceMetadataModifier</span></a></span></span><span> </span><span id="local-6989586621688757933"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757933"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Metadata -&gt; Metadata) -&gt; MetadataModifier
+</span><a href="Hasura.RQL.DDL.Schema.Source.html#dropSourceMetadataModifier"><span class="hs-identifier hs-var hs-var">dropSourceMetadataModifier</span></a></span></span><span> </span><span id="local-6989586621688758604"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688758604"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Metadata -&gt; Metadata) -&gt; MetadataModifier
 </span><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-var">MetadataModifier</span></a></span><span> </span><span class="annot"><span class="annottext">((Metadata -&gt; Metadata) -&gt; MetadataModifier)
 -&gt; (Metadata -&gt; Metadata) -&gt; MetadataModifier
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -710,44 +710,44 @@ forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.delete</span></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757933"><span class="hs-identifier hs-var">sourceName</span></a></span><span>
+</span><a href="#local-6989586621688758604"><span class="hs-identifier hs-var">sourceName</span></a></span><span>
 </span><span id="line-179"></span><span>
 </span><span id="line-180"></span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#dropSource"><span class="hs-identifier hs-type">dropSource</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-181"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688758126"><span class="annot"><a href="#local-6989586621688758126"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688758122"><span class="annot"><a href="#local-6989586621688758122"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621688758117"><span class="annot"><a href="#local-6989586621688758117"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-182"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758126"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-183"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758126"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-184"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688758126"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-185"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688758126"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-186"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758126"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-187"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621688758122"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758126"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-188"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688758122"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-189"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758117"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-181"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688758797"><span class="annot"><a href="#local-6989586621688758797"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688758793"><span class="annot"><a href="#local-6989586621688758793"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621688758788"><span class="annot"><a href="#local-6989586621688758788"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-182"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758797"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-183"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758797"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-184"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688758797"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-185"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688758797"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-186"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758797"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-187"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621688758793"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758797"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-188"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688758793"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-189"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758788"><span class="hs-identifier hs-type">b</span></a></span><span>
 </span><span id="line-190"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-191"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#SchemaCache"><span class="hs-identifier hs-type">SchemaCache</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-192"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#DropSource"><span class="hs-identifier hs-type">DropSource</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-193"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758117"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-194"></span><span>  </span><span class="annot"><a href="#local-6989586621688758126"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-193"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758788"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-194"></span><span>  </span><span class="annot"><a href="#local-6989586621688758797"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-195"></span><span id="dropSource"><span class="annot"><span class="annottext">dropSource :: SchemaCache -&gt; DropSource -&gt; SourceInfo b -&gt; m ()
-</span><a href="Hasura.RQL.DDL.Schema.Source.html#dropSource"><span class="hs-identifier hs-var hs-var">dropSource</span></a></span></span><span> </span><span id="local-6989586621688757932"><span class="annot"><span class="annottext">SchemaCache
-</span><a href="#local-6989586621688757932"><span class="hs-identifier hs-var">_schemaCache</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#DropSource"><span class="hs-identifier hs-type">DropSource</span></a></span><span> </span><span id="local-6989586621688757931"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757931"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621688757930"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688757930"><span class="hs-identifier hs-var">cascade</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688757929"><span class="annot"><span class="annottext">SourceInfo b
-</span><a href="#local-6989586621688757929"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-196"></span><span>  </span><span id="local-6989586621688757928"><span class="annot"><span class="annottext">[SchemaObjId]
-</span><a href="#local-6989586621688757928"><span class="hs-identifier hs-var">indirectDeps</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; m [SchemaObjId]
+</span><a href="Hasura.RQL.DDL.Schema.Source.html#dropSource"><span class="hs-identifier hs-var hs-var">dropSource</span></a></span></span><span> </span><span id="local-6989586621688758603"><span class="annot"><span class="annottext">SchemaCache
+</span><a href="#local-6989586621688758603"><span class="hs-identifier hs-var">_schemaCache</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#DropSource"><span class="hs-identifier hs-type">DropSource</span></a></span><span> </span><span id="local-6989586621688758602"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688758602"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621688758601"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688758601"><span class="hs-identifier hs-var">cascade</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688758600"><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621688758600"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-196"></span><span>  </span><span id="local-6989586621688758599"><span class="annot"><span class="annottext">[SchemaObjId]
+</span><a href="#local-6989586621688758599"><span class="hs-identifier hs-var">indirectDeps</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; m [SchemaObjId]
 forall (m :: * -&gt; *).
 (QErrM m, CacheRM m) =&gt;
 SourceName -&gt; m [SchemaObjId]
 </span><a href="Hasura.GraphQL.Schema.Common.html#getIndirectDependencies"><span class="hs-identifier hs-var">getIndirectDependencies</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757931"><span class="hs-identifier hs-var">sourceName</span></a></span><span>
+</span><a href="#local-6989586621688758602"><span class="hs-identifier hs-var">sourceName</span></a></span><span>
 </span><span id="line-197"></span><span>
 </span><span id="line-198"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688757930"><span class="hs-identifier hs-var">cascade</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621688758601"><span class="hs-identifier hs-var">cascade</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">[SchemaObjId]
-</span><a href="#local-6989586621688757928"><span class="hs-identifier hs-var">indirectDeps</span></a></span><span> </span><span class="annot"><span class="annottext">[SchemaObjId] -&gt; [SchemaObjId] -&gt; Bool
+</span><a href="#local-6989586621688758599"><span class="hs-identifier hs-var">indirectDeps</span></a></span><span> </span><span class="annot"><span class="annottext">[SchemaObjId] -&gt; [SchemaObjId] -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -755,10 +755,10 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-199"></span><span>    </span><span class="annot"><span class="annottext">[SchemaObjId] -&gt; m ()
 forall (m :: * -&gt; *). MonadError QErr m =&gt; [SchemaObjId] -&gt; m ()
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#reportDependentObjectsExist"><span class="hs-identifier hs-var">reportDependentObjectsExist</span></a></span><span> </span><span class="annot"><span class="annottext">[SchemaObjId]
-</span><a href="#local-6989586621688757928"><span class="hs-identifier hs-var">indirectDeps</span></a></span><span>
+</span><a href="#local-6989586621688758599"><span class="hs-identifier hs-var">indirectDeps</span></a></span><span>
 </span><span id="line-200"></span><span>
-</span><span id="line-201"></span><span>  </span><span id="local-6989586621688757923"><span class="annot"><span class="annottext">MetadataModifier
-</span><a href="#local-6989586621688757923"><span class="hs-identifier hs-var">metadataModifier</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">WriterT MetadataModifier m () -&gt; m MetadataModifier
+</span><span id="line-201"></span><span>  </span><span id="local-6989586621688758594"><span class="annot"><span class="annottext">MetadataModifier
+</span><a href="#local-6989586621688758594"><span class="hs-identifier hs-var">metadataModifier</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">WriterT MetadataModifier m () -&gt; m MetadataModifier
 forall (m :: * -&gt; *) w a. Monad m =&gt; WriterT w m a -&gt; m w
 </span><span class="hs-identifier hs-var">execWriterT</span></span><span> </span><span class="annot"><span class="annottext">(WriterT MetadataModifier m () -&gt; m MetadataModifier)
 -&gt; WriterT MetadataModifier m () -&gt; m MetadataModifier
@@ -769,7 +769,7 @@ forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 [SchemaObjId] -&gt; WriterT MetadataModifier m ()
 </span><a href="Hasura.GraphQL.Schema.Common.html#purgeDependencies"><span class="hs-identifier hs-var">purgeDependencies</span></a></span><span> </span><span class="annot"><span class="annottext">[SchemaObjId]
-</span><a href="#local-6989586621688757928"><span class="hs-identifier hs-var">indirectDeps</span></a></span><span>
+</span><a href="#local-6989586621688758599"><span class="hs-identifier hs-var">indirectDeps</span></a></span><span>
 </span><span id="line-203"></span><span>    </span><span class="annot"><span class="annottext">MetadataModifier -&gt; WriterT MetadataModifier m ()
 forall w (m :: * -&gt; *). MonadWriter w m =&gt; w -&gt; m ()
 </span><span class="hs-identifier hs-var">tell</span></span><span> </span><span class="annot"><span class="annottext">(MetadataModifier -&gt; WriterT MetadataModifier m ())
@@ -777,7 +777,7 @@ forall w (m :: * -&gt; *). MonadWriter w m =&gt; w -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; MetadataModifier
 </span><a href="Hasura.RQL.DDL.Schema.Source.html#dropSourceMetadataModifier"><span class="hs-identifier hs-var">dropSourceMetadataModifier</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757931"><span class="hs-identifier hs-var">sourceName</span></a></span><span>
+</span><a href="#local-6989586621688758602"><span class="hs-identifier hs-var">sourceName</span></a></span><span>
 </span><span id="line-204"></span><span>
 </span><span id="line-205"></span><span>  </span><span class="annot"><span class="annottext">MetadataObjId -&gt; MetadataModifier -&gt; m ()
 forall (m :: * -&gt; *).
@@ -785,44 +785,44 @@ forall (m :: * -&gt; *).
 MetadataObjId -&gt; MetadataModifier -&gt; m ()
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#buildSchemaCacheFor"><span class="hs-identifier hs-var">buildSchemaCacheFor</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceName -&gt; MetadataObjId
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#MOSource"><span class="hs-identifier hs-var">MOSource</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757931"><span class="hs-identifier hs-var">sourceName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MetadataModifier
-</span><a href="#local-6989586621688757923"><span class="hs-identifier hs-var">metadataModifier</span></a></span><span>
+</span><a href="#local-6989586621688758602"><span class="hs-identifier hs-var">sourceName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MetadataModifier
+</span><a href="#local-6989586621688758594"><span class="hs-identifier hs-var">metadataModifier</span></a></span><span>
 </span><span id="line-206"></span><span>  </span><span class="annot"><span class="annottext">SourceName -&gt; SourceInfo b -&gt; m ()
 forall (m :: * -&gt; *) r (b :: BackendType).
 (MonadError QErr m, MonadIO m, MonadBaseControl IO m,
  MonadReader r m, Has (Logger Hasura) r, BackendMetadata b) =&gt;
 SourceName -&gt; SourceInfo b -&gt; m ()
 </span><a href="Hasura.RQL.DDL.Schema.Source.html#runPostDropSourceHook"><span class="hs-identifier hs-var">runPostDropSourceHook</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757931"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
-</span><a href="#local-6989586621688757929"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span>
+</span><a href="#local-6989586621688758602"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621688758600"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span>
 </span><span id="line-207"></span><span>
 </span><span id="line-208"></span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#runPostDropSourceHook"><span class="hs-identifier hs-type">runPostDropSourceHook</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-209"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688758091"><span class="annot"><a href="#local-6989586621688758091"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688758090"><span class="annot"><a href="#local-6989586621688758090"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621688758089"><span class="annot"><a href="#local-6989586621688758089"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-210"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758091"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-211"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688758091"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-212"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688758091"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-213"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621688758090"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758091"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-214"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688758090"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-215"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758089"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-209"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688758762"><span class="annot"><a href="#local-6989586621688758762"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688758761"><span class="annot"><a href="#local-6989586621688758761"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621688758760"><span class="annot"><a href="#local-6989586621688758760"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-210"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758762"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-211"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688758762"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-212"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688758762"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-213"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621688758761"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758762"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-214"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688758761"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-215"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758760"><span class="hs-identifier hs-type">b</span></a></span><span>
 </span><span id="line-216"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-217"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-218"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758089"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-219"></span><span>  </span><span class="annot"><a href="#local-6989586621688758091"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-218"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688758760"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-219"></span><span>  </span><span class="annot"><a href="#local-6989586621688758762"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-220"></span><span id="runPostDropSourceHook"><span class="annot"><span class="annottext">runPostDropSourceHook :: SourceName -&gt; SourceInfo b -&gt; m ()
-</span><a href="Hasura.RQL.DDL.Schema.Source.html#runPostDropSourceHook"><span class="hs-identifier hs-var hs-var">runPostDropSourceHook</span></a></span></span><span> </span><span id="local-6989586621688757920"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757920"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621688757919"><span class="annot"><span class="annottext">SourceInfo b
-</span><a href="#local-6989586621688757919"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-221"></span><span>  </span><span id="local-6989586621688757918"><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621688757918"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(r -&gt; Logger Hasura) -&gt; m (Logger Hasura)
+</span><a href="Hasura.RQL.DDL.Schema.Source.html#runPostDropSourceHook"><span class="hs-identifier hs-var hs-var">runPostDropSourceHook</span></a></span></span><span> </span><span id="local-6989586621688758591"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688758591"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621688758590"><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621688758590"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-221"></span><span>  </span><span id="local-6989586621688758589"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688758589"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(r -&gt; Logger Hasura) -&gt; m (Logger Hasura)
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; Logger Hasura
 forall a t. Has a t =&gt; t -&gt; a
 </span><span class="hs-identifier hs-var">getter</span></span><span>
-</span><span id="line-222"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688757915"><span class="annot"><span class="annottext">sourceConfig :: SourceConfig b
-</span><a href="#local-6989586621688757915"><span class="hs-identifier hs-var hs-var">sourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; SourceConfig b
+</span><span id="line-222"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688758586"><span class="annot"><span class="annottext">sourceConfig :: SourceConfig b
+</span><a href="#local-6989586621688758586"><span class="hs-identifier hs-var hs-var">sourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; SourceConfig b
 forall (b :: BackendType). SourceInfo b -&gt; SourceConfig b
 </span><a href="Hasura.RQL.Types.Source.html#_siConfiguration"><span class="hs-identifier hs-var hs-var">_siConfiguration</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
-</span><a href="#local-6989586621688757919"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span>
+</span><a href="#local-6989586621688758590"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span>
 </span><span id="line-223"></span><span>  </span><span class="hs-comment">-- We only log errors that arise from 'postDropSourceHook' here, and not</span><span>
 </span><span id="line-224"></span><span>  </span><span class="hs-comment">-- surface them as end-user errors. See comment</span><span>
 </span><span id="line-225"></span><span>  </span><span class="hs-comment">-- https://github.com/hasura/graphql-engine/issues/7092#issuecomment-873845282</span><span>
@@ -833,30 +833,30 @@ forall (b :: BackendType) (m :: * -&gt; *).
 (BackendMetadata b, MonadError QErr m, MonadIO m,
  MonadBaseControl IO m) =&gt;
 SourceConfig b -&gt; m ()
-</span><a href="Hasura.RQL.Types.Metadata.Backend.html#postDropSourceHook"><span class="hs-identifier hs-var">postDropSourceHook</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688758089"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig b
-</span><a href="#local-6989586621688757915"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">m (Either QErr ()) -&gt; (Either QErr () -&gt; m ()) -&gt; m ()
+</span><a href="Hasura.RQL.Types.Metadata.Backend.html#postDropSourceHook"><span class="hs-identifier hs-var">postDropSourceHook</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621688758760"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig b
+</span><a href="#local-6989586621688758586"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">m (Either QErr ()) -&gt; (Either QErr () -&gt; m ()) -&gt; m ()
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">(QErr -&gt; m ()) -&gt; (() -&gt; m ()) -&gt; Either QErr () -&gt; m ()
 forall a c b. (a -&gt; c) -&gt; (b -&gt; c) -&gt; Either a b -&gt; c
 </span><span class="hs-identifier hs-var">either</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Logger Hasura -&gt; QErr -&gt; m ()
-</span><a href="#local-6989586621688757910"><span class="hs-identifier hs-var">logDropSourceHookError</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621688757918"><span class="hs-identifier hs-var">logger</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">() -&gt; m ()
+</span><a href="#local-6989586621688758581"><span class="hs-identifier hs-var">logDropSourceHookError</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688758589"><span class="hs-identifier hs-var">logger</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">() -&gt; m ()
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span>
 </span><span id="line-227"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-228"></span><span>    </span><span id="local-6989586621688757910"><span class="annot"><span class="annottext">logDropSourceHookError :: Logger Hasura -&gt; QErr -&gt; m ()
-</span><a href="#local-6989586621688757910"><span class="hs-identifier hs-var hs-var">logDropSourceHookError</span></a></span></span><span> </span><span id="local-6989586621688757909"><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621688757909"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621688757908"><span class="annot"><span class="annottext">QErr
-</span><a href="#local-6989586621688757908"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-229"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688757907"><span class="annot"><span class="annottext">msg :: Text
-</span><a href="#local-6989586621688757907"><span class="hs-identifier hs-var hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-228"></span><span>    </span><span id="local-6989586621688758581"><span class="annot"><span class="annottext">logDropSourceHookError :: Logger Hasura -&gt; QErr -&gt; m ()
+</span><a href="#local-6989586621688758581"><span class="hs-identifier hs-var hs-var">logDropSourceHookError</span></a></span></span><span> </span><span id="local-6989586621688758580"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688758580"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621688758579"><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621688758579"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-229"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688758578"><span class="annot"><span class="annottext">msg :: Text
+</span><a href="#local-6989586621688758578"><span class="hs-identifier hs-var hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-230"></span><span>            </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Error executing cleanup actions after removing source '&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; Text
 forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688757920"><span class="hs-identifier hs-var">sourceName</span></a></span><span>
+</span><a href="#local-6989586621688758591"><span class="hs-identifier hs-var">sourceName</span></a></span><span>
 </span><span id="line-231"></span><span>              </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -871,13 +871,13 @@ Logger impl
    (ToEngineLog a impl, MonadIO m) =&gt;
    a -&gt; m ()
 </span><a href="Hasura.Logging.html#unLogger"><span class="hs-identifier hs-var hs-var">L.unLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621688757909"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(MetadataLog -&gt; m ()) -&gt; MetadataLog -&gt; m ()
+</span><a href="#local-6989586621688758580"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(MetadataLog -&gt; m ()) -&gt; MetadataLog -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; Text -&gt; Value -&gt; MetadataLog
 </span><a href="Hasura.Server.Logging.html#MetadataLog"><span class="hs-identifier hs-var">MetadataLog</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
 </span><a href="Hasura.Logging.html#LevelWarn"><span class="hs-identifier hs-var">L.LevelWarn</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688757907"><span class="hs-identifier hs-var">msg</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">QErr -&gt; Value
+</span><a href="#local-6989586621688758578"><span class="hs-identifier hs-var">msg</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">QErr -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">QErr
-</span><a href="#local-6989586621688757908"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688758579"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-233"></span></pre></body></html>
