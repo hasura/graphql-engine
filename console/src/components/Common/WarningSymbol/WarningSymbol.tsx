@@ -1,5 +1,7 @@
 import React from 'react';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
+import { FaExclamationTriangle } from 'react-icons/fa';
+
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
 import styles from './WarningSymbol.scss';
@@ -36,8 +38,8 @@ export const WarningIcon: React.FC<WarningIconProps> = ({
   customStyle = '',
 }) => {
   return (
-    <i
-      className={`fa fa-exclamation-triangle ${styles.warningSymbol} ${customStyle}`}
+    <FaExclamationTriangle
+      className={`${styles.warningSymbol} ${customStyle}`}
       aria-hidden="true"
     />
   );

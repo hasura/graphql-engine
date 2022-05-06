@@ -1,9 +1,10 @@
 import React from 'react';
+import { FaClock } from 'react-icons/fa';
 
 const Clock = ({ className = '', title = '' }) => {
   return (
-    <i
-      className={`fa fa-clock-o ${className || ''}`}
+    <FaClock
+      className={`${className || ''}`}
       aria-hidden="true"
       title={title}
     />

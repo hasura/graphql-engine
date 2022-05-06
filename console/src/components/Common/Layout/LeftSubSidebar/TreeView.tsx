@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { ReactElement, useMemo, useState } from 'react';
 
 import { Link } from 'react-router';
+import { FaDatabase } from 'react-icons/fa';
 
 import styles from './LeftSubSidebar.scss';
 
@@ -9,7 +10,7 @@ type CollapsibleItemsProps = {
   currentItem?: { name: string; source: string };
   getServiceEntityLink: (v: string) => string;
   items: { name: string; source: string }[];
-  icon: string;
+  icon: ReactElement;
 };
 const CollapsibleItems: React.FC<CollapsibleItemsProps> = ({
   currentItem,
@@ -29,7 +30,7 @@ const CollapsibleItems: React.FC<CollapsibleItemsProps> = ({
         className={styles.padd_bottom_small}
       >
         <span className={`${styles.title} ${isOpen ? '' : styles.titleClosed}`}>
-          <i className="fa fa-database" /> {source}
+          <FaDatabase /> {source}
         </span>
       </div>
       {isOpen
@@ -44,7 +45,7 @@ const CollapsibleItems: React.FC<CollapsibleItemsProps> = ({
               data-test={`action-sidebar-links-${name}`}
             >
               <Link to={getServiceEntityLink(name)} data-test={name}>
-                <i className={`fa ${icon || 'fa-wrench'}`} aria-hidden="true" />
+                {icon}
                 {name}
               </Link>
             </li>
@@ -59,7 +60,7 @@ type TreeViewProps = {
   items: { name: string; source: string }[];
   currentItem?: { name: string; source: string };
   getServiceEntityLink: (name: string) => string;
-  icon: string;
+  icon: ReactElement;
 };
 export const TreeView: React.FC<TreeViewProps> = ({
   items,

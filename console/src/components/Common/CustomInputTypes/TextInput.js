@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import AceEditor from 'react-ace';
+import { FaCompressAlt, FaExpandAlt } from 'react-icons/fa';
 
 import 'brace/mode/html';
 import 'brace/mode/markdown';
@@ -163,21 +164,28 @@ const TextInput = props => {
   //   </span>
   // );
 
-  const cycleIcon = (
-    <i
-      key="icon_text_editor"
-      className={
-        'fa ' +
-        styles.modeToggleButton +
-        (editorType === MULTILINE_KEY ? ' fa-compress' : ' fa-expand')
-      }
-      onClick={() => updateState(cycleEditorType)}
-      title={
-        (editorType === MULTILINE_KEY ? 'Collapse' : 'Expand') +
-        ' (Ctrl + Space)'
-      }
-    />
-  );
+  const cycleIcon =
+    editorType === MULTILINE_KEY ? (
+      <FaCompressAlt
+        key="icon_text_editor"
+        className={styles.modeToggleButton}
+        onClick={() => updateState(cycleEditorType)}
+        title={
+          (editorType === MULTILINE_KEY ? 'Collapse' : 'Expand') +
+          ' (Ctrl + Space)'
+        }
+      />
+    ) : (
+      <FaExpandAlt
+        key="icon_text_editor"
+        className={styles.modeToggleButton}
+        onClick={() => updateState(cycleEditorType)}
+        title={
+          (editorType === MULTILINE_KEY ? 'Collapse' : 'Expand') +
+          ' (Ctrl + Space)'
+        }
+      />
+    );
 
   return (
     <span className="text_input_editor">

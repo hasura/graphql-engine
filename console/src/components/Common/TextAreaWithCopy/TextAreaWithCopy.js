@@ -1,4 +1,6 @@
 import React from 'react';
+import { FaCopy } from 'react-icons/fa';
+
 import sqlFormatter from 'sql-formatter';
 import hljs from 'highlight.js';
 import PropTypes from 'prop-types';
@@ -131,8 +133,7 @@ class TextAreaWithCopy extends React.Component {
             >
               Copy
             </span>
-            <i
-              className={'fa fa-copy'}
+            <FaCopy
               onClick={this.copyToClip.bind(this, id)}
               onMouseLeave={this.resetCopy.bind(this, id)}
             />

@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaTimes } from 'react-icons/fa';
 import styles from './Headers.scss';
 import DropdownButton from '../DropdownButton/DropdownButton';
 import { addPlaceholderHeader } from './utils';
@@ -87,8 +88,8 @@ const Headers: React.FC<HeadersListProps> = ({
               />
             </div>
             {i < headers.length - 1 ? (
-              <i
-                className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+              <FaTimes
+                className={`${styles.fontAwosomeClose} fa-lg`}
                 onClick={removeHeader}
               />
             ) : null}

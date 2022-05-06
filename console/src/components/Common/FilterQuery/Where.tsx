@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaTimes } from 'react-icons/fa';
 import { ValueFilter, Operator } from './types';
 import { allOperators } from './utils';
 
@@ -104,8 +105,7 @@ const Where: React.FC<Props> = props => {
             </div>
             <div className="text-center col-xs-1">
               {filters.length === i + 1 ? null : (
-                <i
-                  className="fa fa-times"
+                <FaTimes
                   onClick={removeFilter}
                   data-test={`clear-filter-${i}`}
                 />

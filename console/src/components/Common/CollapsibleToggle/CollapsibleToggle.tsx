@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaChevronRight } from 'react-icons/fa';
 /**
  *  Accepts following props
  *    `title, string || react-element `: Title of the collapsible toggle
@@ -79,7 +80,7 @@ class CollapsibleToggle extends React.Component<
           data-test={testId}
         >
           <span className="inline-block text-xs mr-sm">
-            <i className={`fa fa-chevron-right ${isOpen && 'rotate-90'}`} />
+            <FaChevronRight className={`${isOpen && 'rotate-90'}`} />
           </span>
 
           <span className="inline-block">{getTitle()}</span>

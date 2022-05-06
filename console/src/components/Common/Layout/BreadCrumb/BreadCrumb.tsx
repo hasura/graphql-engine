@@ -1,4 +1,5 @@
 import React, { ReactElement } from 'react';
+import { FaAngleRight } from 'react-icons/fa';
 import { Link } from 'react-router';
 import styles from '../../TableCommon/Table.scss';
 
@@ -22,11 +23,7 @@ const BreadCrumb: React.FC<Props> = ({ breadCrumbs }) => {
       const addArrow = () => (
         <React.Fragment key={i}>
           &nbsp;
-          <i
-            key={`${b.title}-arrow`}
-            className="fa fa-angle-right"
-            aria-hidden="true"
-          />
+          <FaAngleRight key={`${b.title}-arrow`} aria-hidden="true" />
           &nbsp;
         </React.Fragment>
       );
