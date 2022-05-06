@@ -17,11 +17,11 @@ import Thumbnail from "@site/src/components/Thumbnail";
 
 ## Introduction
 
-You can export metrics and operation logs of your Hasura Cloud project to your organisation's Datadog dashboard. This can be configured on the integrations tab on the project's setting page.
+You can export metrics, operation logs and traces of your Hasura Cloud project to your organisation's Datadog dashboard. This can be configured on the integrations tab on the project's setting page.
 
 :::info Note
 
-Datadog Integration is only available for Hasura Cloud projects on the `Standard` (pay-as-you-go) tier and above. 
+Datadog Integration is only available for Hasura Cloud projects on the `Standard` (pay-as-you-go) tier and above.
 
 :::
 
@@ -48,6 +48,7 @@ Select the Datadog API region and enter the Datadog API key (can be retrieved by
 <Thumbnail
   src="/img/graphql/cloud/metrics/configure-datadog.png"
   alt="Configure Datadog Integration"
+  width="500px"
 />
 
 After adding appropriate values, click `Save`.
@@ -90,7 +91,7 @@ To view only logs exported by Hasura Cloud, filter your logs using `host` and/or
 
 :::info Note
 
-Datadog allows ingestion of logs with maximum size 256kB for a single log. If a log exceeds this limit, Datadog will truncate the log at 256kB. 
+Datadog allows ingestion of logs with maximum size 256kB for a single log. If a log exceeds this limit, Datadog will truncate the log at 256kB.
 
 :::
 
@@ -123,3 +124,16 @@ Select the graphs you want to view from the metrics explorer. Alternatively, sel
   alt="Metrics successfully exported to Datadog"
   width="1146px"
 />
+
+## View traces
+
+Along with the logs and metrics, query tracing is exported to DataDog. From your DataDog metrics page, `APM` > `Traces` will show you a live search of ingested trace data, with each entry of the output table showing the duration of the operation.
+
+Clicking on an entry from the table will show the details about the trace, including a flame graph, which contains a visual representation of where the operation spent its execution over time. For example, in this case a query took 2.31 milliseconds in total, of which 758 microseconds was the actual Postgres database processing the query.
+
+<Thumbnail
+  src="/img/graphql/cloud/metrics/datadog-trace-flame-graph.png"
+  alt="Flame graph for a trace entry in Datadog"
+  width="1146px"
+/>
+
