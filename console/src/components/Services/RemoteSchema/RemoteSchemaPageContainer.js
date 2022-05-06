@@ -1,7 +1,3 @@
-import {
-  availableFeatureFlagIds,
-  FeatureFlagToast,
-} from '@/features/FeatureFlags';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { Link } from 'react-router';
@@ -43,9 +39,6 @@ class RemoteSchemaPageContainer extends React.Component {
         <PageContainer helmet={helmet} leftContainer={leftContainer}>
           {children}
         </PageContainer>
-        <FeatureFlagToast
-          flagId={availableFeatureFlagIds.remoteSchemaRelationshipsId}
-        />
       </>
     );
   }

@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
 import { RiAddCircleFill } from 'react-icons/ri';
-import {
-  availableFeatureFlagIds,
-  FeatureFlagFloatingButton,
-  useIsFeatureFlagEnabled,
-} from '@/features/FeatureFlags';
+import { FeatureFlagFloatingButton } from '@/features/FeatureFlags';
 import {
   allowedMetadataTypes,
   useGetAllRemoteSchemaRelationships,
@@ -68,27 +64,9 @@ export const RemoteSchemaRelationRenderer = ({
     true
   );
 
-  const {
-    enabled: ffEnabled,
-    isLoading: ffIsLoading,
-  } = useIsFeatureFlagEnabled(
-    availableFeatureFlagIds.remoteSchemaRelationshipsId
-  );
-
-  if (isLoading || ffIsLoading) {
+  if (isLoading) {
     return <div>Loading...</div>;
   }
-
-  if (ffEnabled === undefined)
-    return <div>Remote schema relationships are not yet enabled.</div>;
-
-  if (ffEnabled === false)
-    return (
-      <div>
-        Remote schema relationships are not enabled. To enable them, visit the
-        Feature Flag section in Settings.
-      </div>
-    );
 
   const openForm = ({
     relationshipName,

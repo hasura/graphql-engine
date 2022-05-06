@@ -1,9 +1,5 @@
 import CommonTabLayout from '@/components/Common/Layout/CommonTabLayout/CommonTabLayout';
 import React from 'react';
-import {
-  useIsFeatureFlagEnabled,
-  availableFeatureFlagIds,
-} from '@/features/FeatureFlags';
 import { BreadCrumb } from '@/components/Common/Layout/BreadCrumb/BreadCrumb';
 
 const tabInfo = {
@@ -24,14 +20,6 @@ const tabInfoWithRelationships = {
     display_text: 'Relationships',
   },
 };
-
-const useTabInfo = () => {
-  const { enabled } = useIsFeatureFlagEnabled(
-    availableFeatureFlagIds.remoteSchemaRelationshipsId
-  );
-  return enabled ? tabInfoWithRelationships : tabInfo;
-};
-
 interface TabsProps {
   breadCrumbs: BreadCrumb[];
   heading: React.ReactNode;
@@ -44,6 +32,5 @@ interface TabsProps {
 }
 
 export const Tabs = (props: TabsProps) => {
-  const tabsInfo = useTabInfo();
-  return <CommonTabLayout tabsInfo={tabsInfo} {...props} />;
+  return <CommonTabLayout tabsInfo={tabInfoWithRelationships} {...props} />;
 };
