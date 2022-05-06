@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaEdit } from 'react-icons/fa';
 import styles from '../Common.scss';
 
 class Heading extends React.Component {
@@ -52,7 +53,7 @@ class Heading extends React.Component {
             className={styles.editable_heading_action}
             data-test={`heading-edit-${property}`}
           >
-            <i className="fa fa-edit" />
+            <FaEdit />
           </div>
         </div>
       );

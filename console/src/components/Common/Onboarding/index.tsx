@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router';
+import { FaExternalLinkAlt, FaDatabase } from 'react-icons/fa';
 
 import YouTube from 'react-youtube';
 
@@ -20,7 +21,6 @@ type PopupLinkProps = {
     oss: string;
   };
   internalLink?: string;
-  icon?: string;
   videoId?: string;
 };
 
@@ -30,7 +30,6 @@ const PopupLink = ({
   videoId,
   title,
   internalLink,
-  icon,
 }: PopupLinkProps) => {
   if (videoId) {
     return (
@@ -62,7 +61,7 @@ const PopupLink = ({
           className={`${styles.link_container} ${styles.link}`}
         >
           <div className={styles.helper_circle}>
-            <i className={`fa ${icon}`} />
+            <FaDatabase />
           </div>
           {title}
         </Link>
@@ -76,8 +75,9 @@ const PopupLink = ({
           <span className={styles.link_num}>{index}</span>
           {title}
           <div className={styles.spacer} />
-          <i
-            className={`fa fa-external-link ${styles.link_icon} ${styles.muted}`}
+
+          <FaExternalLinkAlt
+            className={`${styles.link_icon} ${styles.muted}`}
           />
         </a>
       )}
@@ -88,7 +88,6 @@ const PopupLink = ({
 const connectDatabaseHelper = {
   title: ' Connect Your First Database',
   internalLink: '/data/manage',
-  icon: 'fa-database',
 };
 
 const onboardingList = [

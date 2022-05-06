@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaCalendarAlt, FaTable, FaWrench } from 'react-icons/fa';
 import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 import getLeftSidebarSection from '../../Common/Layout/LeftSubSidebar/LeftSidebarSection';
 import { ScheduledTrigger, EventTrigger, EventKind } from './types';
@@ -10,6 +11,8 @@ import {
   getETModifyRoute,
 } from '../../Common/utils/routesUtils';
 import { TreeView } from '../../Common/Layout/LeftSubSidebar/TreeView';
+
+import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
 
 interface Props {
   triggers: ScheduledTrigger[] | EventTrigger[];
@@ -23,11 +26,13 @@ const LeftSidebar: React.FC<Props> = props => {
   const getSidebarIcon = () => {
     switch (service) {
       case 'cron':
-        return 'fa-calendar';
+        return (
+          <FaCalendarAlt aria-hidden="true" className={styles.tableIcon} />
+        );
       case 'data':
-        return 'fa-table';
+        return <FaTable aria-hidden="true" className={styles.tableIcon} />;
       default:
-        return 'fa-wrench';
+        return <FaWrench aria-hidden="true" className={styles.tableIcon} />;
     }
   };
 

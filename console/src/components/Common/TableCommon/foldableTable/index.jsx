@@ -1,18 +1,15 @@
 import React from 'react';
+import { FaCaretRight, FaCaretLeft } from 'react-icons/fa';
 
 const defaultFoldIconComponent = ({ collapsed, name }) => {
-  let icon;
   let title;
 
   if (collapsed) {
-    icon = 'fa-caret-right';
     title = name ? `Expand column "${name}"` : 'Expand column';
-  } else {
-    icon = 'fa-caret-left';
-    title = 'Collapse column';
+    return <FaCaretRight title={title} />;
   }
-
-  return <i className={'fa ' + icon} title={title} />;
+  title = 'Collapse column';
+  return <FaCaretLeft title={title} />;
 };
 
 const defaultFoldButtonComponent = ({ header, collapsed, icon, onClick }) => {

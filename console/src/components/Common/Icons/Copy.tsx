@@ -1,7 +1,8 @@
 import React from 'react';
+import { FaCopy } from 'react-icons/fa';
 
 const Copy = ({ className = '' }) => {
-  return <i className={`fa fa-copy ${className || ''}`} aria-hidden="true" />;
+  return <FaCopy className={`${className || ''}`} aria-hidden="true" />;
 };
 
 export default Copy;

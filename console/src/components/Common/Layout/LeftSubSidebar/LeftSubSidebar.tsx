@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router';
+import { FaSearch } from 'react-icons/fa';
 
 import Button from '../../Button/Button';
 import styles from './LeftSubSidebar.scss';
@@ -53,7 +54,7 @@ const LeftSubSidebar: React.FC<Props> = props => {
           <div
             className={`${styles.sidebarSearch} form-group col-xs-12 ${styles.padd_remove}`}
           >
-            <i className="fa fa-search" aria-hidden="true" />
+            <FaSearch aria-hidden="true" />
             {searchInput}
           </div>
         )}

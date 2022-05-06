@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import AceEditor from 'react-ace';
+import { FaCompressAlt, FaExpandAlt } from 'react-icons/fa';
 
 import 'brace/mode/markdown';
 import 'brace/theme/github';
@@ -122,20 +123,26 @@ const JsonInput = props => {
 
   const editor = editorType === JSONKEY ? getJsonEditor() : getNormalEditor();
 
-  const toggleIcon = (
-    <i
-      key="icon_json_editor"
-      className={
-        'fa ' +
-        styles.modeToggleButton +
-        (editorType === JSONKEY ? ' fa-compress' : ' fa-expand')
-      }
-      onClick={() => updateState(toggleEditorType)}
-      title={
-        (editorType === JSONKEY ? 'Collapse' : 'Expand') + ' (Ctrl + Space)'
-      }
-    />
-  );
+  const toggleIcon =
+    editorType === JSONKEY ? (
+      <FaCompressAlt
+        key="icon_json_editor"
+        className={styles.modeToggleButton}
+        onClick={() => updateState(toggleEditorType)}
+        title={
+          (editorType === JSONKEY ? 'Collapse' : 'Expand') + ' (Ctrl + Space)'
+        }
+      />
+    ) : (
+      <FaExpandAlt
+        key="icon_json_editor"
+        className={styles.modeToggleButton}
+        onClick={() => updateState(toggleEditorType)}
+        title={
+          (editorType === JSONKEY ? 'Collapse' : 'Expand') + ' (Ctrl + Space)'
+        }
+      />
+    );
 
   return (
     <span className="json_input_editor">

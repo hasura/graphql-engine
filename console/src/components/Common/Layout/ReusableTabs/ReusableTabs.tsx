@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router';
+import { FaSpinner } from 'react-icons/fa';
 import styles from './ReusableTabs.scss';
 
 export type Tabs = Record<
@@ -50,7 +51,7 @@ const Tabs: React.FC<Props> = ({
                 {tabName === t ? showCount : null}
                 {tabName === t && showLoader ? (
                   <span className={styles.loader_ml}>
-                    <i className="fa fa-spinner fa-spin" />
+                    <FaSpinner className="animate-spin" />
                   </span>
                 ) : null}
               </Link>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactElement } from 'react';
 import { Link } from 'react-router';
 import styles from './LeftSubSidebar.scss';
 
@@ -11,7 +11,7 @@ interface LeftSidebarSectionProps extends React.ComponentProps<'div'> {
   currentItem?: LeftSidebarItem;
   getServiceEntityLink: (s: string) => string;
   service: string;
-  sidebarIcon?: string;
+  sidebarIcon?: ReactElement;
 }
 
 const LeftSidebarSection = ({
@@ -76,12 +76,7 @@ const LeftSidebarSection = ({
             data-test={`action-sidebar-links-${a.name}`}
           >
             <Link to={getServiceEntityLink(a.name)} data-test={a.name}>
-              <i
-                className={`${styles.tableIcon} fa ${
-                  sidebarIcon || 'fa-wrench'
-                }`}
-                aria-hidden="true"
-              />
+              {sidebarIcon}
               {a.name}
             </Link>
           </li>

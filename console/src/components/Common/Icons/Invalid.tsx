@@ -1,9 +1,10 @@
 import React from 'react';
+import { FaExclamation } from 'react-icons/fa';
 
 const Invalid = ({ className = '', title = '' }) => {
   return (
-    <i
-      className={`fa fa-exclamation ${className || ''}`}
+    <FaExclamation
+      className={`${className || ''}`}
       aria-hidden="true"
       title={title}
     />

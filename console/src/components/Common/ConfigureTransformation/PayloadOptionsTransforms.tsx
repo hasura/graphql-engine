@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { FaExclamationCircle } from 'react-icons/fa';
 import TemplateEditor from './CustomEditors/TemplateEditor';
 import JsonEditor from './CustomEditors/JsonEditor';
 import AceEditor from '../AceEditor/BaseEditor';
@@ -110,7 +111,7 @@ const PayloadOptionsTransforms: React.FC<PayloadOptionsTransformsProps> = ({
           />
         ) : (
           <div className="flex items-center text-gray-600 bg-gray-200 border border-gray-400 text-sm rounded p-sm">
-            <i className="fa fa-exclamation-circle mr-sm" />
+            <FaExclamationCircle className="mr-sm" />
             The request body is disabled. No request body will be sent with this
             action. Enable the request body to modify your request
             transformation.
