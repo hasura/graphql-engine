@@ -169,6 +169,73 @@ Voilà. You are ready to start developing.
   width="1100px"
 />
 
+
+## Step 6 (optional): Enable SSL connection
+
+### Step 6.1 Get GCP SSL Certs
+
+Google Cloud (GCP) SQL makes the following SSL/TLS certificates available for download:
+- A server certificate saved as `server-ca.pem`
+- A client public key certificate saved as `client-cert.pem`
+- A client private key saved as `client-key.pem`
+
+:::info Note
+Please refer to the [Google Cloud Documentation](https://cloud.google.com/sql/docs/postgres/configure-ssl-instance?&_ga=2.87107544.-1769733723.1651179247#server-certs) for detailed information about the different certs.
+
+:::
+
+Download these certs to your local drive.
+
+### Step 6.2: Add env vars
+
+Log in to [Hasura Cloud](https://cloud.hasura.io/), go to your project and add the following env vars:
+
+(Open the cert files using your favourite text editor, select all the contents and copy them to the clipboard)
+
+| Env Var Name              | Value                                                                 |
+|---------------------------|-----------------------------------------------------------------------|
+| `SSL_ROOTCERT_GCP`        | Contents from `server-ca.pem`                                         |
+| `SSL_CERT_GCP`            | Contents from `client-cert.pem`                                       |
+| `SSL_KEY_GCP`             | Contents from `client-key.pem`                                        |
+
+
+Here is how your Hasura Cloud env vars setup should look like:
+
+<Thumbnail
+  src="/img/graphql/cloud/cloud-dbs/gcp/cloud-gcp-env-vars.png"
+  alt="Hasura Cloud Env Vars"
+  width="1000px"
+/>
+
+### Step 6.3: Configure SSL settings
+
+Open the console of your Hasura Cloud project, go to the `Data -> Manage -> [db-name] -> Edit` page.
+
+Under `Connection Settings` add the following SSL certificate settings:
+
+| Field Name              | Value                                    |
+|-------------------------|------------------------------------------|
+| `SSL Mode`              | `verify-ca` (select from dropdown)       |
+| `SSL Root Certificate`  | `SSL_ROOTCERT_GCP`                       |
+| `SSL Certificate`       | `SSL_CERT_GCP`                           |
+| `SSL Key`               | `SSL_KEY_GCP`                            |
+
+Here is how the setup should look like:
+
+<Thumbnail
+  src="/img/graphql/cloud/cloud-dbs/gcp/ssl-config-setup.png"
+  alt="Hasura Console SSL Config Setup"
+  width="1000px"
+/>
+
+Finally, click on the `Update Connection` button to apply the SSL settings.
+
+<Thumbnail
+  src="/img/graphql/cloud/cloud-dbs/gcp/update-connection-button.png"
+  alt="Update Connection Button"
+  width="1000px"
+/>
+
 ## Next steps
 
 You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other [GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
