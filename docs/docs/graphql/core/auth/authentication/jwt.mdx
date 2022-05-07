@@ -723,7 +723,7 @@ If you are using Firebase and Hasura, use this config:
 
 ### Auth0 {#auth0-issues}
 
-Refer the Refer the [Auth0 JWT Integration guide](/graphql/core/guides/integrations/auth0-jwt.mdx) for a full
+Refer to the [Auth0 JWT Integration guide](/graphql/core/guides/integrations/auth0-jwt.mdx) for a full
 integration guide with Auth0.
 
 Auth0 publishes their JWK under:
@@ -764,6 +764,14 @@ frGYaw+0cxO6/WvSir0eA=
 "
 }
 ```
+
+### Clerk
+
+Clerk integrates with Hasura GraphQL Engine using JWTs. 
+
+Clerk publishes their JWK under: `https://<YOUR_CLERK_FRONTEND_API>/.well-known/jwks.json`
+
+Refer to the [Clerk authentication guide](/graphql/core/guides/integrations/clerk-authentication.mdx) to set up authenticated requests to Hasura with Clerk.
 
 ## Generating JWT Config {#generating-jwt-config}
 
