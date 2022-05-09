@@ -1,6 +1,8 @@
 # Compile a graphql-engine executable using brew and ghc-8.10.7
 
-1.  Install ghc-8.10.7 and cabal-install via ghcup
+*Note: These instructions use the path `/opt/homebrew` in various places, but this path may be different on your machine depending on where you have installed homebrew (for example, many older homebrew installation were installed to `/usr/local`). You can find out the path of your homebrew installation by running the command `brew --prefix`, and if the output is not `/opt/homebrew`, then you should replace any instances of `/opt/homebrew` in these instructions with the path output by `brew --prefix`.*
+
+1.  Install ghc-8.10.7 and cabal-install via [ghcup](https://www.haskell.org/ghcup/)
 
 2.  Install dependencies:
 
@@ -54,7 +56,7 @@
     (cd tests-py/remote_schemas/nodejs && npm ci)
     ```
 
-5.  Add the C dependencies in the `cabal/dev-sh.project.local` and `cabal.project.local` files (according to where the dependencies were installed by homebrew):
+5.  Append lines below to `cabal/dev-sh.project.local` to allow Cabal (the Haskell build tool) to find the C dependencies you installed earlier (remembering to replace `/opt/homebrew` with your brew prefix if different):
 
     ```sh
     package mysql
@@ -90,16 +92,26 @@
         /opt/homebrew/opt/openssl/lib
     ```
 
-    Note: If you have not added any local project overrides in `cabal.project.local` you can just add a symbolic link to `cabal/dev-sh.project.local`:
+    Then either copy and paste the entirety of `cabal/dev-sh.project.local` into `cabal.project.local`, or create a symlink by running the command:
+    
+     ```sh
+     ln -s cabal/dev-sh.project.local cabal.project.local
+     ```
+     
+     (Copying and pasting allows you to add local projects overrides, which may be needed if you are are planning to make changes to the graphql-engine code, but is not required for simply compiling the code as-is).
+
+6. Write the version number of the graphql-server that you are intending to build to the file `server/CURRENT_VERSION`.
+    For example if you are building `v2.6.1` then you can run the following command:
 
     ```sh
-    ln -s cabal/dev-sh.project.local cabal.project.local
+    echo '2.6.1' > server/CURRENT_VERSION
     ```
 
+    This version number is used for the output of `graphql-engine --version` in your compiled binary, and it also used when fetching the frontend assets for the console from the CDN when running the server (if you do not specify `--console-assets-dir` to make it load from a locally compiled version).
 
-6.  Building the server should now work:
+7.  Building the server should now work:
 
     ```sh
     cabal v2-update
-    cabal v2-build graphql-engine -j4
+    cabal v2-build exe:graphql-engine -j4
     ```
