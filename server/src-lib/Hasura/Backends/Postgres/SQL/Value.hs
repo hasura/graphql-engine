@@ -120,10 +120,8 @@ pgScalarValueToJson = \case
   PGValText t -> toJSON t
   PGValCitext t -> toJSON t
   PGValDate d -> toJSON d
-  PGValTimeStamp u ->
-    toJSON $ formatTime defaultTimeLocale "%FT%T%QZ" u
-  PGValTimeStampTZ u ->
-    toJSON $ formatTime defaultTimeLocale "%FT%T%QZ" u
+  PGValTimeStamp u -> String $ formatTimestamp u
+  PGValTimeStampTZ u -> String $ formatTimestamp u
   PGValTimeTZ (ZonedTimeOfDay tod tz) ->
     toJSON (show tod ++ timeZoneOffsetString tz)
   PGNull _ -> Null
@@ -243,10 +241,8 @@ txtEncodedVal = \case
   PGValText t -> TELit t
   PGValCitext t -> TELit t
   PGValDate d -> TELit $ T.pack $ showGregorian d
-  PGValTimeStamp u ->
-    TELit $ T.pack $ formatTime defaultTimeLocale "%FT%T%QZ" u
-  PGValTimeStampTZ u ->
-    TELit $ T.pack $ formatTime defaultTimeLocale "%FT%T%QZ" u
+  PGValTimeStamp u -> TELit $ formatTimestamp u
+  PGValTimeStampTZ u -> TELit $ formatTimestamp u
   PGValTimeTZ (ZonedTimeOfDay tod tz) ->
     TELit $ T.pack (show tod ++ timeZoneOffsetString tz)
   PGNull _ ->
@@ -331,6 +327,9 @@ binEncoder = \case
   PGValLquery t -> Q.toPrepVal t
   PGValLtxtquery t -> Q.toPrepVal t
   PGValUnknown t -> (PTI.auto, Just (TE.encodeUtf8 t, PQ.Text))
+
+formatTimestamp :: FormatTime t => t -> Text
+formatTimestamp = T.pack . formatTime defaultTimeLocale "%0Y-%m-%dT%T%QZ"
 
 txtEncoder :: PGScalarValue -> S.SQLExp
 txtEncoder colVal = case txtEncodedVal colVal of
