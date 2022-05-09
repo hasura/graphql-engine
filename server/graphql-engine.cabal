@@ -1091,9 +1091,9 @@ test-suite tests-hspec
     Harness.Backend.Sqlserver
 
  -- Harness.Test
+    Harness.Test.BackendType
     Harness.Test.Context
     Harness.Test.Schema
-    Harness.Test.BackendType
 
  -- Harness.Quoter
     Harness.Quoter.Graphql
@@ -1107,30 +1107,31 @@ test-suite tests-hspec
     Test.CustomFieldNamesSpec
     Test.DirectivesSpec
     Test.HelloWorldSpec
+    Test.InsertCheckPermissionSpec
+    Test.InsertEnumColumnSpec
     Test.LimitOffsetSpec
     Test.NestedRelationshipsSpec
     Test.ObjectRelationshipsLimitSpec
     Test.ObjectRelationshipsSpec
     Test.OrderingSpec
+    Test.PostgresTypesSpec
     Test.PrimaryKeySpec
-    Test.RemoteRelationship.MetadataAPI.Common
+    Test.RemoteRelationship.FromRemoteSchemaSpec
     Test.RemoteRelationship.MetadataAPI.ClearMetadataSpec
+    Test.RemoteRelationship.MetadataAPI.Common
     Test.RemoteRelationship.MetadataAPI.DropSource.DBtoDBRelationshipSpec
     Test.RemoteRelationship.MetadataAPI.DropSource.RSToDBRelationshipSpec
-    Test.RemoteRelationship.FromRemoteSchemaSpec
     Test.RemoteRelationship.XToDBArrayRelationshipSpec
     Test.RemoteRelationship.XToDBObjectRelationshipSpec
     Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec
     Test.RequestHeadersSpec
-    Test.SerializationSpec
+    Test.RunSQLSpec
+    Test.SQLServer.InsertVarcharColumnSpec
     Test.SelectSpec
+    Test.SerializationSpec
     Test.ServiceLivenessSpec
     Test.ViewsSpec
     Test.WhereSpec
-    Test.RunSQLSpec
-    Test.InsertCheckPermissionSpec
-    Test.InsertEnumColumnSpec
-    Test.SQLServer.InsertVarcharColumnSpec
 
 test-suite tests-dc-api
   import: common-all, common-exe

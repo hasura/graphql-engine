@@ -4,6 +4,7 @@
 
 ### Bug fixes and improvements
 
+- server: fixed a bug where timestamp values sent to postgres would erroneously trim leading zeroes (#8096)
 - server: fix bug when event triggers where defined on tables that contained non lower-case alphabet characters
 - server: avoid encoding 'varchar' values to UTF8 in MSSQL backends
 - server: add support for MSSQL event triggers (#7228)
