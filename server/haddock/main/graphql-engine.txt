@@ -11871,6 +11871,19 @@ instance GHC.Base.Functor Hasura.Backends.MSSQL.Types.Internal.Countable
 
 -- | Dispatch over backends.
 --   
+--   <h1>Creating and consuming <a>AnyBackend</a></h1>
+--   
+--   Creating a new value of type <a>AnyBackend</a> is done via
+--   <a>mkAnyBackend</a>.
+--   
+--   Consuming a value of type <a>AnyBackend</a> is done via either
+--   <tt>runAnyBackend</tt> or any of the dispatch functions
+--   (<a>dispatchAnyBackend</a>, <a>dispatchAnyBackend'</a>,
+--   <a>dispatchAnyBackend''</a>).
+--   
+--   For implementation details, or when trying to understand this module,
+--   start from <a>AnyBackend</a>.
+--   
 --   <h1>Backend Architecture</h1>
 --   
 --   Our multiple backend architecture uses type classes and associated
@@ -11884,6 +11897,13 @@ instance GHC.Base.Functor Hasura.Backends.MSSQL.Types.Internal.Countable
 --   <a>Hasura.GraphQL.Schema.Backend</a>, and define the associated types
 --   and functions, such as <tt>ScalarType</tt> and
 --   <tt>parseScalarValue</tt>, which fit the backend.
+--   
+--   Whenever one of these associated types (<tt>ScalarType</tt>,
+--   <tt>Column</tt>, etc.) are used, we need to either push the
+--   <a>BackendType</a> to our caller (and making our type <tt>BackendType
+--   -&gt; Type</tt>), or use <a>AnyBackend</a> (and allow our type to be
+--   <a>Type</a>). This is particularly useful when we need to store a
+--   container of any backend.
 --   
 --   In order to actually program abstractly using type classes, we need
 --   the type class instances to be available for us to use. This module is
@@ -11954,8 +11974,11 @@ instance GHC.Base.Functor Hasura.Backends.MSSQL.Types.Internal.Countable
 --   we had to explicitly add a lambda instead of using <a>flip</a>.
 module Hasura.SQL.AnyBackend
 
--- | This type is essentially an unlabeled box for types indexed by
---   <a>BackendType</a>.
+-- | Allows storing types of kind <tt>BackendType -&gt; Type</tt>
+--   heterogenously.
+--   
+--   Adding a new constructor to <a>BackendType</a> will automatically
+--   create a new constructor here.
 --   
 --   Given some type defined as <tt>data T (b :: BackendType) = ...</tt>,
 --   we can define <tt>AnyBackend T</tt> without mentioning any
@@ -11992,7 +12015,8 @@ DataConnectorValue :: i 'DataConnector -> AnyBackend (i :: BackendType -> Type)
 --   
 --   <pre>
 --   type AllBackendsSatisfy (c :: BackendType -&gt; Constraint) =
---     ( c 'Postgres
+--     ( c ('Postgres 'Vanilla)
+--     , c ('Postgres 'Citus)
 --     , c 'MSSQL
 --     , ...
 --     )
