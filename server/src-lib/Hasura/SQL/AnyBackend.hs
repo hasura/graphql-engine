@@ -4,6 +4,17 @@
 
 -- | Dispatch over backends.
 --
+-- = Creating and consuming 'AnyBackend'
+--
+-- Creating a new value of type 'AnyBackend' is done via 'mkAnyBackend'.
+--
+-- Consuming a value of type 'AnyBackend' is done via either 'runAnyBackend' or
+-- any of the dispatch functions ('dispatchAnyBackend', 'dispatchAnyBackend'',
+-- 'dispatchAnyBackend''').
+--
+-- For implementation details, or when trying to understand this module, start
+-- from 'AnyBackend'.
+--
 -- = Backend Architecture
 --
 -- Our multiple backend architecture uses type classes and associated types
@@ -15,6 +26,12 @@
 -- as well as instances for other classes such as @BackendSchema@ from
 -- "Hasura.GraphQL.Schema.Backend", and define the associated types and
 -- functions, such as @ScalarType@ and @parseScalarValue@, which fit the backend.
+--
+-- Whenever one of these associated types (@ScalarType@, @Column@, etc.) are
+-- used, we need to either push the 'BackendType' to our caller (and making our
+-- type @BackendType -> Type@), or use 'AnyBackend' (and allow our type to be
+-- 'Type'). This is particularly useful when we need to store a container of
+-- any backend.
 --
 -- In order to actually program abstractly using type classes, we need the
 -- type class instances to be available for us to use. This module is a trick
@@ -107,7 +124,10 @@ import Language.Haskell.TH hiding (Type)
 
 -- * Types and constraints
 
--- | This type is essentially an unlabeled box for types indexed by 'BackendType'.
+-- | Allows storing types of kind @BackendType -> Type@ heterogenously.
+--
+-- Adding a new constructor to 'BackendType' will automatically create a new
+-- constructor here.
 --
 -- Given some type defined as @data T (b :: BackendType) = ...@, we can define
 -- @AnyBackend T@ without mentioning any 'BackendType'.
@@ -157,7 +177,8 @@ $( do
 -- This Template Haskell expression generates the following constraint type:
 --
 -- > type AllBackendsSatisfy (c :: BackendType -> Constraint) =
--- >   ( c 'Postgres
+-- >   ( c ('Postgres 'Vanilla)
+-- >   , c ('Postgres 'Citus)
 -- >   , c 'MSSQL
 -- >   , ...
 -- >   )
