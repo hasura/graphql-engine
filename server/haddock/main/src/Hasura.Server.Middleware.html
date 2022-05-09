@@ -15,124 +15,124 @@
 </span><span id="line-15"></span><span>
 </span><span id="line-16"></span><span class="annot"><a href="Hasura.Server.Middleware.html#corsMiddleware"><span class="hs-identifier hs-type">corsMiddleware</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html#CorsPolicy"><span class="hs-identifier hs-type">CorsPolicy</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Middleware</span></span><span>
 </span><span id="line-17"></span><span id="corsMiddleware"><span class="annot"><span class="annottext">corsMiddleware :: CorsPolicy -&gt; Middleware
-</span><a href="Hasura.Server.Middleware.html#corsMiddleware"><span class="hs-identifier hs-var hs-var">corsMiddleware</span></a></span></span><span> </span><span id="local-6989586621688608017"><span class="annot"><span class="annottext">CorsPolicy
-</span><a href="#local-6989586621688608017"><span class="hs-identifier hs-var">policy</span></a></span></span><span> </span><span id="local-6989586621688608016"><span class="annot"><span class="annottext">Application
-</span><a href="#local-6989586621688608016"><span class="hs-identifier hs-var">app</span></a></span></span><span> </span><span id="local-6989586621688608015"><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621688608015"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span id="local-6989586621688608014"><span class="annot"><span class="annottext">Response -&gt; IO ResponseReceived
-</span><a href="#local-6989586621688608014"><span class="hs-identifier hs-var">sendResp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-18"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688608013"><span class="annot"><span class="annottext">origin :: Maybe ByteString
-</span><a href="#local-6989586621688608013"><span class="hs-identifier hs-var hs-var">origin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; [Header] -&gt; Maybe ByteString
+</span><a href="Hasura.Server.Middleware.html#corsMiddleware"><span class="hs-identifier hs-var hs-var">corsMiddleware</span></a></span></span><span> </span><span id="local-6989586621688607878"><span class="annot"><span class="annottext">CorsPolicy
+</span><a href="#local-6989586621688607878"><span class="hs-identifier hs-var">policy</span></a></span></span><span> </span><span id="local-6989586621688607877"><span class="annot"><span class="annottext">Application
+</span><a href="#local-6989586621688607877"><span class="hs-identifier hs-var">app</span></a></span></span><span> </span><span id="local-6989586621688607876"><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621688607876"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span id="local-6989586621688607875"><span class="annot"><span class="annottext">Response -&gt; IO ResponseReceived
+</span><a href="#local-6989586621688607875"><span class="hs-identifier hs-var">sendResp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-18"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688607874"><span class="annot"><span class="annottext">origin :: Maybe ByteString
+</span><a href="#local-6989586621688607874"><span class="hs-identifier hs-var hs-var">origin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; [Header] -&gt; Maybe ByteString
 </span><a href="Hasura.Server.Utils.html#getRequestHeader"><span class="hs-identifier hs-var">getRequestHeader</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
 </span><span class="hs-string">&quot;Origin&quot;</span></span><span> </span><span class="annot"><span class="annottext">([Header] -&gt; Maybe ByteString) -&gt; [Header] -&gt; Maybe ByteString
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Request -&gt; [Header]
 </span><span class="hs-identifier hs-var hs-var">requestHeaders</span></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621688608015"><span class="hs-identifier hs-var">req</span></a></span><span>
+</span><a href="#local-6989586621688607876"><span class="hs-identifier hs-var">req</span></a></span><span>
 </span><span id="line-19"></span><span>  </span><span class="annot"><span class="annottext">IO ResponseReceived
 -&gt; (ByteString -&gt; IO ResponseReceived)
 -&gt; Maybe ByteString
 -&gt; IO ResponseReceived
 forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Application
-</span><a href="#local-6989586621688608016"><span class="hs-identifier hs-var">app</span></a></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621688608015"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">Response -&gt; IO ResponseReceived
-</span><a href="#local-6989586621688608014"><span class="hs-identifier hs-var">sendResp</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; IO ResponseReceived
-</span><a href="#local-6989586621688608009"><span class="hs-identifier hs-var">handleCors</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621688608013"><span class="hs-identifier hs-var">origin</span></a></span><span>
+</span><a href="#local-6989586621688607877"><span class="hs-identifier hs-var">app</span></a></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621688607876"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">Response -&gt; IO ResponseReceived
+</span><a href="#local-6989586621688607875"><span class="hs-identifier hs-var">sendResp</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; IO ResponseReceived
+</span><a href="#local-6989586621688607870"><span class="hs-identifier hs-var">handleCors</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621688607874"><span class="hs-identifier hs-var">origin</span></a></span><span>
 </span><span id="line-20"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-21"></span><span>    </span><span id="local-6989586621688608009"><span class="annot"><span class="annottext">handleCors :: ByteString -&gt; IO ResponseReceived
-</span><a href="#local-6989586621688608009"><span class="hs-identifier hs-var hs-var">handleCors</span></a></span></span><span> </span><span id="local-6989586621688608008"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688608008"><span class="hs-identifier hs-var">origin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">CorsPolicy -&gt; CorsConfig
+</span><span id="line-21"></span><span>    </span><span id="local-6989586621688607870"><span class="annot"><span class="annottext">handleCors :: ByteString -&gt; IO ResponseReceived
+</span><a href="#local-6989586621688607870"><span class="hs-identifier hs-var hs-var">handleCors</span></a></span></span><span> </span><span id="local-6989586621688607869"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688607869"><span class="hs-identifier hs-var">origin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">CorsPolicy -&gt; CorsConfig
 </span><a href="Hasura.Server.Cors.html#cpConfig"><span class="hs-identifier hs-var hs-var">cpConfig</span></a></span><span> </span><span class="annot"><span class="annottext">CorsPolicy
-</span><a href="#local-6989586621688608017"><span class="hs-identifier hs-var">policy</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688607878"><span class="hs-identifier hs-var">policy</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-22"></span><span>      </span><span class="annot"><a href="Hasura.Server.Cors.html#CCDisabled"><span class="hs-identifier hs-type">CCDisabled</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Application
-</span><a href="#local-6989586621688608016"><span class="hs-identifier hs-var">app</span></a></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621688608015"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">Response -&gt; IO ResponseReceived
-</span><a href="#local-6989586621688608014"><span class="hs-identifier hs-var">sendResp</span></a></span><span>
+</span><a href="#local-6989586621688607877"><span class="hs-identifier hs-var">app</span></a></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621688607876"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">Response -&gt; IO ResponseReceived
+</span><a href="#local-6989586621688607875"><span class="hs-identifier hs-var">sendResp</span></a></span><span>
 </span><span id="line-23"></span><span>      </span><span class="annot"><span class="annottext">CorsConfig
 </span><a href="Hasura.Server.Cors.html#CCAllowAll"><span class="hs-identifier hs-var">CCAllowAll</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; IO ResponseReceived
-</span><a href="#local-6989586621688608004"><span class="hs-identifier hs-var">sendCors</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688608008"><span class="hs-identifier hs-var">origin</span></a></span><span>
-</span><span id="line-24"></span><span>      </span><span class="annot"><a href="Hasura.Server.Cors.html#CCAllowedOrigins"><span class="hs-identifier hs-type">CCAllowedOrigins</span></a></span><span> </span><span id="local-6989586621688608002"><span class="annot"><span class="annottext">Domains
-</span><a href="#local-6989586621688608002"><span class="hs-identifier hs-var">ds</span></a></span></span><span>
+</span><a href="#local-6989586621688607865"><span class="hs-identifier hs-var">sendCors</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688607869"><span class="hs-identifier hs-var">origin</span></a></span><span>
+</span><span id="line-24"></span><span>      </span><span class="annot"><a href="Hasura.Server.Cors.html#CCAllowedOrigins"><span class="hs-identifier hs-type">CCAllowedOrigins</span></a></span><span> </span><span id="local-6989586621688607863"><span class="annot"><span class="annottext">Domains
+</span><a href="#local-6989586621688607863"><span class="hs-identifier hs-var">ds</span></a></span></span><span>
 </span><span id="line-25"></span><span>        </span><span class="hs-comment">-- if the origin is in our cors domains, send cors headers</span><span>
 </span><span id="line-26"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="Hasura.Prelude.html#bsToTxt"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688608008"><span class="hs-identifier hs-var">origin</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; HashSet Text -&gt; Bool
+</span><a href="#local-6989586621688607869"><span class="hs-identifier hs-var">origin</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; HashSet Text -&gt; Bool
 forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><span class="hs-operator hs-var">`elem`</span></span><span> </span><span class="annot"><span class="annottext">Domains -&gt; HashSet Text
 </span><a href="Hasura.Server.Cors.html#dmFqdns"><span class="hs-identifier hs-var hs-var">dmFqdns</span></a></span><span> </span><span class="annot"><span class="annottext">Domains
-</span><a href="#local-6989586621688608002"><span class="hs-identifier hs-var">ds</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; IO ResponseReceived
-</span><a href="#local-6989586621688608004"><span class="hs-identifier hs-var">sendCors</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688608008"><span class="hs-identifier hs-var">origin</span></a></span><span>
+</span><a href="#local-6989586621688607863"><span class="hs-identifier hs-var">ds</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; IO ResponseReceived
+</span><a href="#local-6989586621688607865"><span class="hs-identifier hs-var">sendCors</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688607869"><span class="hs-identifier hs-var">origin</span></a></span><span>
 </span><span id="line-27"></span><span>        </span><span class="hs-comment">-- if current origin is part of wildcard domain list, send cors</span><span>
 </span><span id="line-28"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Domains -&gt; Text -&gt; Bool
 </span><a href="Hasura.Server.Cors.html#inWildcardList"><span class="hs-identifier hs-var">inWildcardList</span></a></span><span> </span><span class="annot"><span class="annottext">Domains
-</span><a href="#local-6989586621688608002"><span class="hs-identifier hs-var">ds</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Text
+</span><a href="#local-6989586621688607863"><span class="hs-identifier hs-var">ds</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="Hasura.Prelude.html#bsToTxt"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688608008"><span class="hs-identifier hs-var">origin</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; IO ResponseReceived
-</span><a href="#local-6989586621688608004"><span class="hs-identifier hs-var">sendCors</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688608008"><span class="hs-identifier hs-var">origin</span></a></span><span>
+</span><a href="#local-6989586621688607869"><span class="hs-identifier hs-var">origin</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; IO ResponseReceived
+</span><a href="#local-6989586621688607865"><span class="hs-identifier hs-var">sendCors</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688607869"><span class="hs-identifier hs-var">origin</span></a></span><span>
 </span><span id="line-29"></span><span>        </span><span class="hs-comment">-- otherwise don't send cors headers</span><span>
 </span><span id="line-30"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Application
-</span><a href="#local-6989586621688608016"><span class="hs-identifier hs-var">app</span></a></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621688608015"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">Response -&gt; IO ResponseReceived
-</span><a href="#local-6989586621688608014"><span class="hs-identifier hs-var">sendResp</span></a></span><span>
+</span><a href="#local-6989586621688607877"><span class="hs-identifier hs-var">app</span></a></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621688607876"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">Response -&gt; IO ResponseReceived
+</span><a href="#local-6989586621688607875"><span class="hs-identifier hs-var">sendResp</span></a></span><span>
 </span><span id="line-31"></span><span>
-</span><span id="line-32"></span><span>    </span><span class="annot"><a href="#local-6989586621688608004"><span class="hs-identifier hs-type">sendCors</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ResponseReceived</span></span><span>
-</span><span id="line-33"></span><span>    </span><span id="local-6989586621688608004"><span class="annot"><span class="annottext">sendCors :: ByteString -&gt; IO ResponseReceived
-</span><a href="#local-6989586621688608004"><span class="hs-identifier hs-var hs-var">sendCors</span></a></span></span><span> </span><span id="local-6989586621688607997"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688607997"><span class="hs-identifier hs-var">origin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-32"></span><span>    </span><span class="annot"><a href="#local-6989586621688607865"><span class="hs-identifier hs-type">sendCors</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ResponseReceived</span></span><span>
+</span><span id="line-33"></span><span>    </span><span id="local-6989586621688607865"><span class="annot"><span class="annottext">sendCors :: ByteString -&gt; IO ResponseReceived
+</span><a href="#local-6989586621688607865"><span class="hs-identifier hs-var hs-var">sendCors</span></a></span></span><span> </span><span id="local-6989586621688607858"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688607858"><span class="hs-identifier hs-var">origin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-34"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Request -&gt; ByteString
 </span><span class="hs-identifier hs-var hs-var">requestMethod</span></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621688608015"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688607876"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-35"></span><span>        </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;OPTIONS&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Response -&gt; IO ResponseReceived
-</span><a href="#local-6989586621688608014"><span class="hs-identifier hs-var">sendResp</span></a></span><span> </span><span class="annot"><span class="annottext">(Response -&gt; IO ResponseReceived)
+</span><a href="#local-6989586621688607875"><span class="hs-identifier hs-var">sendResp</span></a></span><span> </span><span class="annot"><span class="annottext">(Response -&gt; IO ResponseReceived)
 -&gt; Response -&gt; IO ResponseReceived
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Response
-</span><a href="#local-6989586621688607995"><span class="hs-identifier hs-var">respondPreFlight</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688607997"><span class="hs-identifier hs-var">origin</span></a></span><span>
+</span><a href="#local-6989586621688607856"><span class="hs-identifier hs-var">respondPreFlight</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688607858"><span class="hs-identifier hs-var">origin</span></a></span><span>
 </span><span id="line-36"></span><span>        </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Application
-</span><a href="#local-6989586621688608016"><span class="hs-identifier hs-var">app</span></a></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621688608015"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">((Response -&gt; IO ResponseReceived) -&gt; IO ResponseReceived)
+</span><a href="#local-6989586621688607877"><span class="hs-identifier hs-var">app</span></a></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621688607876"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">((Response -&gt; IO ResponseReceived) -&gt; IO ResponseReceived)
 -&gt; (Response -&gt; IO ResponseReceived) -&gt; IO ResponseReceived
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Response -&gt; IO ResponseReceived
-</span><a href="#local-6989586621688608014"><span class="hs-identifier hs-var">sendResp</span></a></span><span> </span><span class="annot"><span class="annottext">(Response -&gt; IO ResponseReceived)
+</span><a href="#local-6989586621688607875"><span class="hs-identifier hs-var">sendResp</span></a></span><span> </span><span class="annot"><span class="annottext">(Response -&gt; IO ResponseReceived)
 -&gt; (Response -&gt; Response) -&gt; Response -&gt; IO ResponseReceived
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Response -&gt; Response
-</span><a href="#local-6989586621688607993"><span class="hs-identifier hs-var">injectCorsHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688607997"><span class="hs-identifier hs-var">origin</span></a></span><span>
+</span><a href="#local-6989586621688607854"><span class="hs-identifier hs-var">injectCorsHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688607858"><span class="hs-identifier hs-var">origin</span></a></span><span>
 </span><span id="line-37"></span><span>
-</span><span id="line-38"></span><span>    </span><span class="annot"><a href="#local-6989586621688607995"><span class="hs-identifier hs-type">respondPreFlight</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Response</span></span><span>
-</span><span id="line-39"></span><span>    </span><span id="local-6989586621688607995"><span class="annot"><span class="annottext">respondPreFlight :: ByteString -&gt; Response
-</span><a href="#local-6989586621688607995"><span class="hs-identifier hs-var hs-var">respondPreFlight</span></a></span></span><span> </span><span id="local-6989586621688607992"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688607992"><span class="hs-identifier hs-var">origin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-38"></span><span>    </span><span class="annot"><a href="#local-6989586621688607856"><span class="hs-identifier hs-type">respondPreFlight</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Response</span></span><span>
+</span><span id="line-39"></span><span>    </span><span id="local-6989586621688607856"><span class="annot"><span class="annottext">respondPreFlight :: ByteString -&gt; Response
+</span><a href="#local-6989586621688607856"><span class="hs-identifier hs-var hs-var">respondPreFlight</span></a></span></span><span> </span><span id="local-6989586621688607853"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688607853"><span class="hs-identifier hs-var">origin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-40"></span><span>      </span><span class="annot"><span class="annottext">[(ByteString, ByteString)] -&gt; Response -&gt; Response
-</span><a href="#local-6989586621688607991"><span class="hs-identifier hs-var">setHeaders</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; [(ByteString, ByteString)]
+</span><a href="#local-6989586621688607852"><span class="hs-identifier hs-var">setHeaders</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; [(ByteString, ByteString)]
 forall a b. (IsString a, IsString b) =&gt; b -&gt; [(a, b)]
-</span><a href="#local-6989586621688607990"><span class="hs-identifier hs-var">mkPreFlightHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688607989"><span class="hs-identifier hs-var">requestedHeaders</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Response -&gt; Response) -&gt; Response -&gt; Response
+</span><a href="#local-6989586621688607851"><span class="hs-identifier hs-var">mkPreFlightHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688607850"><span class="hs-identifier hs-var">requestedHeaders</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Response -&gt; Response) -&gt; Response -&gt; Response
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-41"></span><span>        </span><span class="annot"><span class="annottext">ByteString -&gt; Response -&gt; Response
-</span><a href="#local-6989586621688607993"><span class="hs-identifier hs-var">injectCorsHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688607992"><span class="hs-identifier hs-var">origin</span></a></span><span> </span><span class="annot"><span class="annottext">Response
-</span><a href="#local-6989586621688607988"><span class="hs-identifier hs-var">emptyResponse</span></a></span><span>
+</span><a href="#local-6989586621688607854"><span class="hs-identifier hs-var">injectCorsHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688607853"><span class="hs-identifier hs-var">origin</span></a></span><span> </span><span class="annot"><span class="annottext">Response
+</span><a href="#local-6989586621688607849"><span class="hs-identifier hs-var">emptyResponse</span></a></span><span>
 </span><span id="line-42"></span><span>
-</span><span id="line-43"></span><span>    </span><span id="local-6989586621688607988"><span class="annot"><span class="annottext">emptyResponse :: Response
-</span><a href="#local-6989586621688607988"><span class="hs-identifier hs-var hs-var">emptyResponse</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Status -&gt; [Header] -&gt; ByteString -&gt; Response
+</span><span id="line-43"></span><span>    </span><span id="local-6989586621688607849"><span class="annot"><span class="annottext">emptyResponse :: Response
+</span><a href="#local-6989586621688607849"><span class="hs-identifier hs-var hs-var">emptyResponse</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Status -&gt; [Header] -&gt; ByteString -&gt; Response
 </span><span class="hs-identifier hs-var">responseLBS</span></span><span> </span><span class="annot"><span class="annottext">Status
 </span><span class="hs-identifier hs-var">HTTP.status204</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;&quot;</span></span><span>
-</span><span id="line-44"></span><span>    </span><span id="local-6989586621688607989"><span class="annot"><span class="annottext">requestedHeaders :: ByteString
-</span><a href="#local-6989586621688607989"><span class="hs-identifier hs-var hs-var">requestedHeaders</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-44"></span><span>    </span><span id="local-6989586621688607850"><span class="annot"><span class="annottext">requestedHeaders :: ByteString
+</span><a href="#local-6989586621688607850"><span class="hs-identifier hs-var hs-var">requestedHeaders</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-45"></span><span>      </span><span class="annot"><span class="annottext">ByteString -&gt; Maybe ByteString -&gt; ByteString
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">ByteString
@@ -146,25 +146,25 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-47"></span><span>          </span><span class="annot"><span class="annottext">Request -&gt; [Header]
 </span><span class="hs-identifier hs-var hs-var">requestHeaders</span></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621688608015"><span class="hs-identifier hs-var">req</span></a></span><span>
+</span><a href="#local-6989586621688607876"><span class="hs-identifier hs-var">req</span></a></span><span>
 </span><span id="line-48"></span><span>
-</span><span id="line-49"></span><span>    </span><span class="annot"><a href="#local-6989586621688607993"><span class="hs-identifier hs-type">injectCorsHeaders</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Response</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Response</span></span><span>
-</span><span id="line-50"></span><span>    </span><span id="local-6989586621688607993"><span class="annot"><span class="annottext">injectCorsHeaders :: ByteString -&gt; Response -&gt; Response
-</span><a href="#local-6989586621688607993"><span class="hs-identifier hs-var hs-var">injectCorsHeaders</span></a></span></span><span> </span><span id="local-6989586621688607984"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688607984"><span class="hs-identifier hs-var">origin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(ByteString, ByteString)] -&gt; Response -&gt; Response
-</span><a href="#local-6989586621688607991"><span class="hs-identifier hs-var">setHeaders</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; [(ByteString, ByteString)]
-</span><a href="#local-6989586621688607983"><span class="hs-identifier hs-var">mkCorsHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688607984"><span class="hs-identifier hs-var">origin</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span>    </span><span class="annot"><a href="#local-6989586621688607854"><span class="hs-identifier hs-type">injectCorsHeaders</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Response</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Response</span></span><span>
+</span><span id="line-50"></span><span>    </span><span id="local-6989586621688607854"><span class="annot"><span class="annottext">injectCorsHeaders :: ByteString -&gt; Response -&gt; Response
+</span><a href="#local-6989586621688607854"><span class="hs-identifier hs-var hs-var">injectCorsHeaders</span></a></span></span><span> </span><span id="local-6989586621688607845"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688607845"><span class="hs-identifier hs-var">origin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(ByteString, ByteString)] -&gt; Response -&gt; Response
+</span><a href="#local-6989586621688607852"><span class="hs-identifier hs-var">setHeaders</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; [(ByteString, ByteString)]
+</span><a href="#local-6989586621688607844"><span class="hs-identifier hs-var">mkCorsHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688607845"><span class="hs-identifier hs-var">origin</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-51"></span><span>
-</span><span id="line-52"></span><span>    </span><span id="local-6989586621688607990"><span class="annot"><span class="annottext">mkPreFlightHeaders :: b -&gt; [(a, b)]
-</span><a href="#local-6989586621688607990"><span class="hs-identifier hs-var hs-var">mkPreFlightHeaders</span></a></span></span><span> </span><span id="local-6989586621688607982"><span class="annot"><span class="annottext">b
-</span><a href="#local-6989586621688607982"><span class="hs-identifier hs-var">allowReqHdrs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-52"></span><span>    </span><span id="local-6989586621688607851"><span class="annot"><span class="annottext">mkPreFlightHeaders :: b -&gt; [(a, b)]
+</span><a href="#local-6989586621688607851"><span class="hs-identifier hs-var hs-var">mkPreFlightHeaders</span></a></span></span><span> </span><span id="local-6989586621688607843"><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621688607843"><span class="hs-identifier hs-var">allowReqHdrs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-53"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
 </span><span class="hs-string">&quot;Access-Control-Max-Age&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">b
 </span><span class="hs-string">&quot;1728000&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-54"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
 </span><span class="hs-string">&quot;Access-Control-Allow-Headers&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">b
-</span><a href="#local-6989586621688607982"><span class="hs-identifier hs-var">allowReqHdrs</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688607843"><span class="hs-identifier hs-var">allowReqHdrs</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-55"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
 </span><span class="hs-string">&quot;Content-Length&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">b
 </span><span class="hs-string">&quot;0&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
@@ -173,12 +173,12 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;text/plain charset=UTF-8&quot;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-57"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-58"></span><span>
-</span><span id="line-59"></span><span>    </span><span id="local-6989586621688607983"><span class="annot"><span class="annottext">mkCorsHeaders :: ByteString -&gt; [(ByteString, ByteString)]
-</span><a href="#local-6989586621688607983"><span class="hs-identifier hs-var hs-var">mkCorsHeaders</span></a></span></span><span> </span><span id="local-6989586621688607981"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688607981"><span class="hs-identifier hs-var">origin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-59"></span><span>    </span><span id="local-6989586621688607844"><span class="annot"><span class="annottext">mkCorsHeaders :: ByteString -&gt; [(ByteString, ByteString)]
+</span><a href="#local-6989586621688607844"><span class="hs-identifier hs-var hs-var">mkCorsHeaders</span></a></span></span><span> </span><span id="local-6989586621688607842"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688607842"><span class="hs-identifier hs-var">origin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-60"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;Access-Control-Allow-Origin&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688607981"><span class="hs-identifier hs-var">origin</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688607842"><span class="hs-identifier hs-var">origin</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-61"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;Access-Control-Allow-Credentials&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;true&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
@@ -193,30 +193,30 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">CorsPolicy -&gt; [Text]
 </span><a href="Hasura.Server.Cors.html#cpMethods"><span class="hs-identifier hs-var hs-var">cpMethods</span></a></span><span> </span><span class="annot"><span class="annottext">CorsPolicy
-</span><a href="#local-6989586621688608017"><span class="hs-identifier hs-var">policy</span></a></span><span>
+</span><a href="#local-6989586621688607878"><span class="hs-identifier hs-var">policy</span></a></span><span>
 </span><span id="line-64"></span><span>        </span><span class="hs-special">)</span><span>
 </span><span id="line-65"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-66"></span><span>
-</span><span id="line-67"></span><span>    </span><span id="local-6989586621688607991"><span class="annot"><span class="annottext">setHeaders :: [(ByteString, ByteString)] -&gt; Response -&gt; Response
-</span><a href="#local-6989586621688607991"><span class="hs-identifier hs-var hs-var">setHeaders</span></a></span></span><span> </span><span id="local-6989586621688607976"><span class="annot"><span class="annottext">[(ByteString, ByteString)]
-</span><a href="#local-6989586621688607976"><span class="hs-identifier hs-var">hdrs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">([Header] -&gt; [Header]) -&gt; Response -&gt; Response
-</span><span class="hs-identifier hs-var">mapResponseHeaders</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621688607974"><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621688607974"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[(ByteString, ByteString)] -&gt; [Header]
+</span><span id="line-67"></span><span>    </span><span id="local-6989586621688607852"><span class="annot"><span class="annottext">setHeaders :: [(ByteString, ByteString)] -&gt; Response -&gt; Response
+</span><a href="#local-6989586621688607852"><span class="hs-identifier hs-var hs-var">setHeaders</span></a></span></span><span> </span><span id="local-6989586621688607837"><span class="annot"><span class="annottext">[(ByteString, ByteString)]
+</span><a href="#local-6989586621688607837"><span class="hs-identifier hs-var">hdrs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">([Header] -&gt; [Header]) -&gt; Response -&gt; Response
+</span><span class="hs-identifier hs-var">mapResponseHeaders</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621688607835"><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621688607835"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[(ByteString, ByteString)] -&gt; [Header]
 forall b. [(ByteString, b)] -&gt; [(HeaderName, b)]
-</span><a href="#local-6989586621688607973"><span class="hs-identifier hs-var">mkRespHdrs</span></a></span><span> </span><span class="annot"><span class="annottext">[(ByteString, ByteString)]
-</span><a href="#local-6989586621688607976"><span class="hs-identifier hs-var">hdrs</span></a></span><span> </span><span class="annot"><span class="annottext">[Header] -&gt; [Header] -&gt; [Header]
+</span><a href="#local-6989586621688607834"><span class="hs-identifier hs-var">mkRespHdrs</span></a></span><span> </span><span class="annot"><span class="annottext">[(ByteString, ByteString)]
+</span><a href="#local-6989586621688607837"><span class="hs-identifier hs-var">hdrs</span></a></span><span> </span><span class="annot"><span class="annottext">[Header] -&gt; [Header] -&gt; [Header]
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621688607974"><span class="hs-identifier hs-var">h</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-68"></span><span>    </span><span id="local-6989586621688607973"><span class="annot"><span class="annottext">mkRespHdrs :: [(ByteString, b)] -&gt; [(HeaderName, b)]
-</span><a href="#local-6989586621688607973"><span class="hs-identifier hs-var hs-var">mkRespHdrs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((ByteString, b) -&gt; (HeaderName, b))
+</span><a href="#local-6989586621688607835"><span class="hs-identifier hs-var">h</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-68"></span><span>    </span><span id="local-6989586621688607834"><span class="annot"><span class="annottext">mkRespHdrs :: [(ByteString, b)] -&gt; [(HeaderName, b)]
+</span><a href="#local-6989586621688607834"><span class="hs-identifier hs-var hs-var">mkRespHdrs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((ByteString, b) -&gt; (HeaderName, b))
 -&gt; [(ByteString, b)] -&gt; [(HeaderName, b)]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
-</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621688607972"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688607972"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688607971"><span class="annot"><span class="annottext">b
-</span><a href="#local-6989586621688607971"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; HeaderName
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621688607833"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688607833"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688607832"><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621688607832"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; HeaderName
 forall s. FoldCase s =&gt; s -&gt; CI s
 </span><span class="hs-identifier hs-var">CI.mk</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688607972"><span class="hs-identifier hs-var">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">b
-</span><a href="#local-6989586621688607971"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688607833"><span class="hs-identifier hs-var">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621688607832"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-69"></span></pre></body></html>
