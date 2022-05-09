@@ -70,397 +70,369 @@
   opacity: 0.1;
 }
 
-.apiRequestBody {
-  min-height: calc(100vh - 400px);
-  height: 100%;
-  padding-bottom: 40px;
+.apiCollectionWrapper {
+  background-color: #fff;
+
+  .apiCollectionTabWrapper {
+    .apiCollectionTab {
+      -webkit-padding-start: 0px;
+      -webkit-margin-before: 0;
+      -webkit-margin-after: 0;
+      -moz-padding-start: 0px;
+      -moz-margin-before: 0;
+      -moz-margin-after: 0;
+      border-bottom: 1px solid #d8d8d8;
+      position: absolute;
+      width: 20%;
+      min-width: 240px;
+      background-color: #fff;
+      z-index: 10;
+
+      .apiCollectionTabList {
+        list-style-type: none;
+        display: inline-block;
+        width: 50%;
+        text-align: center;
+        padding: 10px 11px;
+        font-weight: bold;
+        font-size: 16px;
+        color: #d8d8d8;
+        cursor: pointer;
+      }
+
+      .activeApiCollectionTab {
+        border-bottom: 3px solid #ffca27;
+        color: #6b6b6b;
+      }
+
+      .apiCollectionTabList:focus {
+        outline: none;
+      }
+    }
+
+    .apiCollectionClearHistory {
+      padding: 0 15px;
+      margin: 0;
+      border-bottom: 1px solid #e5e5e5;
+      /*
+      position: absolute;
+      bottom: 0;
+      transform: translateX(-88%);
+      */
+
+      .apiCollectionClearHistoryButton {
+        /*
+        float: right;
+        margin: 10px 0;
+        cursor: pointer;
+        */
+        margin: 10px 0;
+        cursor: pointer;
+        position: fixed;
+        bottom: 15px;
+        text-align: center;
+        width: 20%;
+        margin-left: -15px;
+        padding-top: 10px;
+        border-top: 1px solid #ccc;
+        background-color: #fff;
+        z-index: 1;
+
+        i {
+          padding-right: 5px;
+        }
+      }
+    }
+
+    .apiPaddTop {
+      padding-top: 46px !important;
+    }
+
+    .apiCollectionTabListDetails {
+      padding: 0 15px;
+      margin: 10px 0;
+      // padding-top: 46px;
+
+      .apiCollectionTabListHead {
+        padding-left: 15px;
+        padding-bottom: 10px;
+        font-weight: bold;
+        font-size: 15px;
+
+        .serviceBaseDomain {
+          color: #bbb;
+        }
+      }
+
+      .add_ellipsis {
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
+
+      .apiCollectionGetPost {
+        .apiCollectionGetWrapper {
+          padding: 5px 0;
+          cursor: pointer;
+
+          .apiCollectionGet {
+            text-align: left;
+            color: #70cd00;
+            font-size: 12px;
+            font-weight: bold;
+            padding-left: 15px;
+          }
+
+          .apiCollectionGetDetailsWrapper {
+            display: flex;
+            align-items: center;
+
+            .apiCollectionGetDetails {
+              word-wrap: break-word;
+              padding-right: 10px !important;
+            }
+
+            .apiCollectionPostDetails {
+              word-wrap: break-word;
+              padding-right: 10px !important;
+            }
+
+            .apiRightArrowWrapper {
+              padding-left: 5px;
+            }
+          }
+
+          .activeApiCollectionGetWrapperIcon {
+            display: none;
+          }
+        }
+
+        .activeApiCollectionGetWrapper {
+          background-color: #fff3d5;
+          border-radius: 4px;
+
+          .activeApiCollectionGetWrapperIcon {
+            display: block;
+          }
+        }
+
+        .apiCollectionPostWrapper {
+          padding: 5px 0;
+          cursor: pointer;
+
+          .apiCollectionPost {
+            text-align: left;
+            color: #fd9540;
+            font-size: 12px;
+            font-weight: bold;
+            padding-left: 15px;
+          }
+
+          .apiCollectionGetDetailsWrapper {
+            display: flex;
+            align-items: center;
+
+            .apiCollectionGetDetails {
+              word-wrap: break-word;
+              padding-right: 10px !important;
+            }
+
+            .apiCollectionPostDetails {
+              word-wrap: break-word;
+              padding-right: 10px !important;
+            }
+
+            .apiRightArrowWrapper {
+              padding-left: 5px;
+            }
+          }
+
+          .activeApiCollectionGetWrapperIcon {
+            display: none;
+          }
+        }
+
+        .activeApiCollectionGetWrapper {
+          background-color: #fff3d5;
+          border-radius: 4px;
+
+          .activeApiCollectionGetWrapperIcon {
+            display: block;
+          }
+        }
+      }
+    }
+  }
 }
 
-.apiExplorerWrapper {
-  margin-top: 20px;
-  display: flex;
-  height: calc(100vh - 126px);
+.apiContentPadd {
+  padding-top: 20px;
+  // padding-bottom: 10px;
+  // margin-bottom: -15px;
+}
 
-  .ApiRequestWrapperVH {
-    height: 100%;
+.closeHeader {
+  cursor: pointer;
+  font-size: 16px;
+  float: right;
+}
+
+.showAdminSecret,
+.showInspector {
+  cursor: pointer;
+  padding-right: 8px;
+  font-size: 16px;
+  float: left;
+}
+
+.showInspectorLoading {
+  cursor: pointer;
+  font-size: 16px;
+  float: left;
+}
+
+.apiRequestWrapper {
+  .headerWrapper {
+    margin-bottom: 20px;
+  }
+  .file_upload_wrapper {
     width: 100%;
-  }
-
-  .apiCollectionWrapper {
+    text-align: left;
+    display: inline-block;
+    padding: 20px;
+    border: 1px solid #ccc;
     background-color: #fff;
-    height: 100%;
-    overflow-y: auto;
-    // Changed it from overfllow-y: scroll
+    margin-bottom: 15px;
 
-    .apiCollectionTabWrapper {
-      .apiCollectionTab {
-        -webkit-padding-start: 0px;
-        -webkit-margin-before: 0;
-        -webkit-margin-after: 0;
-        -moz-padding-start: 0px;
-        -moz-margin-before: 0;
-        -moz-margin-after: 0;
-        border-bottom: 1px solid #d8d8d8;
-        position: absolute;
-        width: 20%;
-        min-width: 240px;
-        background-color: #fff;
-        z-index: 10;
-
-        .apiCollectionTabList {
-          list-style-type: none;
-          display: inline-block;
-          width: 50%;
-          text-align: center;
-          padding: 10px 11px;
-          font-weight: bold;
-          font-size: 16px;
-          color: #d8d8d8;
-          cursor: pointer;
-        }
-
-        .activeApiCollectionTab {
-          border-bottom: 3px solid #ffca27;
-          color: #6b6b6b;
-        }
-
-        .apiCollectionTabList:focus {
-          outline: none;
-        }
-      }
-
-      .apiCollectionClearHistory {
-        padding: 0 15px;
-        margin: 0;
-        border-bottom: 1px solid #e5e5e5;
-        /*
-        position: absolute;
-        bottom: 0;
-        transform: translateX(-88%);
-        */
-
-        .apiCollectionClearHistoryButton {
-          /*
-          float: right;
-          margin: 10px 0;
-          cursor: pointer;
-          */
-          margin: 10px 0;
-          cursor: pointer;
-          position: fixed;
-          bottom: 15px;
-          text-align: center;
-          width: 20%;
-          margin-left: -15px;
-          padding-top: 10px;
-          border-top: 1px solid #ccc;
-          background-color: #fff;
-          z-index: 1;
-
-          i {
-            padding-right: 5px;
-          }
-        }
-      }
-
-      .apiPaddTop {
-        padding-top: 46px !important;
-      }
-
-      .apiCollectionTabListDetails {
-        padding: 0 15px;
-        margin: 10px 0;
-        // padding-top: 46px;
-
-        .apiCollectionTabListHead {
-          padding-left: 15px;
-          padding-bottom: 10px;
-          font-weight: bold;
-          font-size: 15px;
-
-          .serviceBaseDomain {
-            color: #bbb;
-          }
-        }
-
-        .add_ellipsis {
-          white-space: nowrap;
-          text-overflow: ellipsis;
-          overflow: hidden;
-        }
-
-        .apiCollectionGetPost {
-          .apiCollectionGetWrapper {
-            padding: 5px 0;
-            cursor: pointer;
-
-            .apiCollectionGet {
-              text-align: left;
-              color: #70cd00;
-              font-size: 12px;
-              font-weight: bold;
-              padding-left: 15px;
-            }
-
-            .apiCollectionGetDetailsWrapper {
-              display: flex;
-              align-items: center;
-
-              .apiCollectionGetDetails {
-                word-wrap: break-word;
-                padding-right: 10px !important;
-              }
-
-              .apiCollectionPostDetails {
-                word-wrap: break-word;
-                padding-right: 10px !important;
-              }
-
-              .apiRightArrowWrapper {
-                padding-left: 5px;
-              }
-            }
-
-            .activeApiCollectionGetWrapperIcon {
-              display: none;
-            }
-          }
-
-          .activeApiCollectionGetWrapper {
-            background-color: #fff3d5;
-            border-radius: 4px;
-
-            .activeApiCollectionGetWrapperIcon {
-              display: block;
-            }
-          }
-
-          .apiCollectionPostWrapper {
-            padding: 5px 0;
-            cursor: pointer;
-
-            .apiCollectionPost {
-              text-align: left;
-              color: #fd9540;
-              font-size: 12px;
-              font-weight: bold;
-              padding-left: 15px;
-            }
-
-            .apiCollectionGetDetailsWrapper {
-              display: flex;
-              align-items: center;
-
-              .apiCollectionGetDetails {
-                word-wrap: break-word;
-                padding-right: 10px !important;
-              }
-
-              .apiCollectionPostDetails {
-                word-wrap: break-word;
-                padding-right: 10px !important;
-              }
-
-              .apiRightArrowWrapper {
-                padding-left: 5px;
-              }
-            }
-
-            .activeApiCollectionGetWrapperIcon {
-              display: none;
-            }
-          }
-
-          .activeApiCollectionGetWrapper {
-            background-color: #fff3d5;
-            border-radius: 4px;
-
-            .activeApiCollectionGetWrapperIcon {
-              display: block;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  .apiContentPadd {
-    padding-top: 20px;
-    // padding-bottom: 10px;
-    // margin-bottom: -15px;
-  }
-
-  .closeHeader {
-    cursor: pointer;
-    font-size: 16px;
-    float: right;
-    display: inline-block;
-  }
-
-  .showAdminSecret,
-  .showInspector {
-    cursor: pointer;
-    padding-right: 8px;
-    font-size: 16px;
-    float: left;
-    display: inline-block;
-  }
-
-  .showInspectorLoading {
-    cursor: pointer;
-    font-size: 16px;
-    float: left;
-    display: inline-block;
-  }
-
-  .apiRequestWrapper {
-    .headerWrapper {
-      margin-bottom: 20px;
-    }
-    .file_upload_wrapper {
-      width: 100%;
-      text-align: left;
+    input[type='file'] {
       display: inline-block;
-      padding: 20px;
-      border: 1px solid #ccc;
-      background-color: #fff;
-      margin-bottom: 15px;
+      width: 162px;
+    }
+  }
 
-      input[type='file'] {
-        display: inline-block;
-        width: 162px;
+  .apiRequestheader {
+    font-weight: bold;
+    font-size: 18px;
+    padding-bottom: 10px;
+    color: #000;
+  }
+
+  .apiRequestContent {
+    font-size: 14px;
+
+    a {
+      color: #fec53d;
+      text-decoration: underline;
+    }
+
+    a:hover {
+      color: #fec53d;
+      text-decoration: underline;
+    }
+
+    code {
+      background-color: transparent;
+      border: 1px solid #767e93;
+      padding: 1px 4px !important;
+      color: #767e93;
+    }
+  }
+
+  .apiPostRequestWrapper {
+    // padding: 20px 0;
+    // padding-top: 20px;
+    padding-top: 5px;
+    background-color: #f8fafb;
+
+    .inputGroupWrapper {
+      .inputGroupBtn {
+        button {
+          width: 100px;
+          border: 0;
+          padding: 10px 12px;
+          background-color: #f9f9f9;
+          color: #fd9540;
+          font-size: 14px;
+          font-weight: bold;
+          text-align: left;
+
+          .caret {
+            position: absolute;
+            right: 10px;
+            top: 16px;
+          }
+        }
+      }
+
+      .inputGroupInput {
+        border: 0;
+        box-shadow: none;
+        padding: 10px 12px;
+        height: auto;
+        background-color: #fff;
       }
     }
 
-    .apiRequestheader {
-      font-weight: bold;
-      font-size: 18px;
-      padding-bottom: 10px;
-      color: #000;
+    .sendBtn {
+      button {
+        width: 100%;
+        text-align: center;
+        height: 39px;
+        color: #606060;
+        font-weight: bold;
+        border-radius: 5px;
+        background-color: #fec53d;
+        border: 1px solid #fec53d;
+        /*
+        background-color: #FFCA27;
+        border: 1px solid #FFCA27;
+        */
+        &:hover {
+          background-color: #f2b130;
+        }
+      }
+
+      /*
+      button:hover {
+        border: 1px solid #F2B130;
+        background-color: #F2B130;
+      }
+      */
     }
 
-    .apiRequestContent {
+    .generateBtn {
+      button {
+        width: 100%;
+        background-color: transparent;
+        text-align: center;
+        height: 39px;
+        border: 1px solid #606060;
+        color: #606060;
+        font-weight: bold;
+        border-radius: 5px;
+      }
+
+      button:hover {
+        border: 1px solid #606060;
+        background-color: #efefef;
+      }
+    }
+  }
+
+  .responseWrapper {
+    clear: both;
+    display: flex;
+    align-items: center;
+
+    .responseHeader {
+      color: #788095;
+      font-weight: bold;
       font-size: 14px;
 
-      a {
-        color: #fec53d;
-        text-decoration: underline;
-      }
-
-      a:hover {
-        color: #fec53d;
-        text-decoration: underline;
-      }
-
-      code {
-        background-color: transparent;
-        border: 1px solid #767e93;
-        padding: 1px 4px !important;
-        color: #767e93;
-      }
-    }
-
-    .apiPostRequestWrapper {
-      // padding: 20px 0;
-      // padding-top: 20px;
-      padding-top: 5px;
-      background-color: #f8fafb;
-
-      .inputGroupWrapper {
-        .inputGroupBtn {
-          button {
-            width: 100px;
-            border: 0;
-            padding: 10px 12px;
-            background-color: #f9f9f9;
-            color: #fd9540;
-            font-size: 14px;
-            font-weight: bold;
-            text-align: left;
-
-            .caret {
-              position: absolute;
-              right: 10px;
-              top: 16px;
-            }
-          }
-        }
-
-        .inputGroupInput {
-          border: 0;
-          box-shadow: none;
-          padding: 10px 12px;
-          height: auto;
-          background-color: #fff;
-        }
-      }
-
-      .sendBtn {
-        button {
-          width: 100%;
-          text-align: center;
-          height: 39px;
-          color: #606060;
-          font-weight: bold;
-          border-radius: 5px;
-          background-color: #fec53d;
-          border: 1px solid #fec53d;
-          /*
-          background-color: #FFCA27;
-          border: 1px solid #FFCA27;
-          */
-          &:hover {
-            background-color: #f2b130;
-          }
-        }
-
-        /*
-        button:hover {
-          border: 1px solid #F2B130;
-          background-color: #F2B130;
-        }
-        */
-      }
-
-      .generateBtn {
-        button {
-          width: 100%;
-          background-color: transparent;
-          text-align: center;
-          height: 39px;
-          border: 1px solid #606060;
-          color: #606060;
-          font-weight: bold;
-          border-radius: 5px;
-        }
-
-        button:hover {
-          border: 1px solid #606060;
-          background-color: #efefef;
-        }
-      }
-    }
-
-    .responseWrapper {
-      clear: both;
-      display: flex;
-      align-items: center;
-
-      .responseHeader {
-        color: #788095;
-        font-weight: bold;
-        font-size: 14px;
-
-        .viewDetails {
-          padding-left: 10px;
-          font-weight: normal;
-          color: #ffca27;
-        }
-
-        .addAdminToken {
-          text-align: right;
-          padding-left: 15px;
-        }
+      .viewDetails {
+        padding-left: 10px;
+        font-weight: normal;
+        color: #ffca27;
       }
 
       .addAdminToken {
@@ -468,128 +440,132 @@
         padding-left: 15px;
       }
     }
+
+    .addAdminToken {
+      text-align: right;
+      padding-left: 15px;
+    }
   }
+}
 
-  .apiResponseWrapper {
-    .apiResponseheaderWrapper {
-      border-bottom: 1px solid #ccc;
-      margin-bottom: 20px;
+.apiResponseWrapper {
+  .apiResponseheaderWrapper {
+    border-bottom: 1px solid #ccc;
+    margin-bottom: 20px;
 
-      .apiResponseheader {
-        font-weight: bold;
-        font-size: 14px;
-        padding-bottom: 10px;
-        // color: #000;
-        color: #788095;
-      }
-
-      .statusDetails {
-        display: inline-block;
-        float: right;
-        padding-left: 20px;
-
-        .statusView {
-          padding-left: 5px;
-          font-weight: normal;
-          color: #ffca27;
-        }
-      }
-    }
-
-    .helpTextWrapper {
-      padding: 15px;
-      border: 1px solid #ccc;
-      background-color: #fff;
-      clear: both;
-      margin-bottom: 20px;
-
-      i {
-        padding-right: 10px;
-      }
-
-      pre {
-        margin-top: 10px;
-        border-radius: 0;
-      }
-
-      .copyBtn {
-        padding: 9px;
-      }
-    }
-
-    .suggestionTextColor {
-      color: #111;
-      background-color: #ffd760;
-      border-color: #ffd760;
-    }
-
-    .noResponseWrapper {
-      width: 100%;
-      min-height: 200px;
-      background-color: #fff;
-      -webkit-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
-      -moz-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
-      box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
-      clear: both;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 20px;
-
-      .noResponseContainer {
-        width: 325px;
-
-        .noResponseHeader {
-          font-size: 18px;
-          opacity: 0.6;
-        }
-
-        .barWrapper {
-          padding-top: 15px;
-          text-align: center;
-
-          .bigBar {
-            width: 56%;
-            margin-right: 7px;
-            height: 20px;
-            background-color: #eeeeee;
-            display: inline-block;
-            border-radius: 4px;
-          }
-
-          .mediumBar {
-            width: 23%;
-            margin-right: 7px;
-            height: 20px;
-            background-color: #ffca27;
-            display: inline-block;
-            border-radius: 4px;
-          }
-
-          .smallBar {
-            width: 13%;
-            margin-right: 7px;
-            height: 20px;
-            background-color: #eeeeee;
-            display: inline-block;
-            border-radius: 4px;
-          }
-        }
-      }
-    }
-
-    .responseHeader {
-      padding-top: 15px;
-      color: #788095;
+    .apiResponseheader {
       font-weight: bold;
       font-size: 14px;
-      clear: both;
+      padding-bottom: 10px;
+      // color: #000;
+      color: #788095;
+    }
 
-      .viewDetails {
-        padding-left: 10px;
+    .statusDetails {
+      float: right;
+      padding-left: 20px;
+
+      .statusView {
+        padding-left: 5px;
         font-weight: normal;
         color: #ffca27;
       }
+    }
+  }
+
+  .helpTextWrapper {
+    padding: 15px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    clear: both;
+    margin-bottom: 20px;
+
+    i {
+      padding-right: 10px;
+    }
+
+    pre {
+      margin-top: 10px;
+      border-radius: 0;
+    }
+
+    .copyBtn {
+      padding: 9px;
+    }
+  }
+
+  .suggestionTextColor {
+    color: #111;
+    background-color: #ffd760;
+    border-color: #ffd760;
+  }
+
+  .noResponseWrapper {
+    width: 100%;
+    min-height: 200px;
+    background-color: #fff;
+    -webkit-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
+    box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
+    clear: both;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+
+    .noResponseContainer {
+      width: 325px;
+
+      .noResponseHeader {
+        font-size: 18px;
+        opacity: 0.6;
+      }
+
+      .barWrapper {
+        padding-top: 15px;
+        text-align: center;
+
+        .bigBar {
+          width: 56%;
+          margin-right: 7px;
+          height: 20px;
+          background-color: #eeeeee;
+          display: inline-block;
+          border-radius: 4px;
+        }
+
+        .mediumBar {
+          width: 23%;
+          margin-right: 7px;
+          height: 20px;
+          background-color: #ffca27;
+          display: inline-block;
+          border-radius: 4px;
+        }
+
+        .smallBar {
+          width: 13%;
+          margin-right: 7px;
+          height: 20px;
+          background-color: #eeeeee;
+          display: inline-block;
+          border-radius: 4px;
+        }
+      }
+    }
+  }
+
+  .responseHeader {
+    padding-top: 15px;
+    color: #788095;
+    font-weight: bold;
+    font-size: 14px;
+    clear: both;
+
+    .viewDetails {
+      padding-left: 10px;
+      font-weight: normal;
+      color: #ffca27;
     }
   }
 }

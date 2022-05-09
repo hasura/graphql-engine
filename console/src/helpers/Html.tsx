@@ -45,12 +45,13 @@ const Html: React.FC<HtmlProps> = props => {
           dangerouslySetInnerHTML={{
             __html: `
           .content {
-            display: 'none';
+            display: none;
             opacity: 0;
             transition: opacity .20s linear;
           }
-          .content.show {
-            display: 'block';
+          .content.visible {
+            display: flex;
+            flex: 1 1 0%;
             opacity: 1;
             transition: opacity .20s linear;
           }
@@ -68,7 +69,7 @@ const Html: React.FC<HtmlProps> = props => {
               font-family: sans-serif;
               justify-content: center;
           ">
-          <span class="" style="
+          <span style="
               font-size: 2em;
               margin-top: -3em;
               color: #848484;

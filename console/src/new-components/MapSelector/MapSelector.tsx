@@ -77,7 +77,7 @@ export const MapSelector = ({
   useEffect(() => {
     updateExistingMaps(typeMappings);
     setValue(name, typeMappings);
-  }, [typeMappings]);
+  }, [name, setValue, typeMappings]);
 
   return (
     <div

@@ -5,8 +5,6 @@ import ApiResponse from './ApiResponse/ApiResponse';
 
 class ApiRequestWrapper extends Component {
   render() {
-    const styles = require('./ApiExplorer.scss');
-
     const getAPIRequestDetailsSection = () => {
       return null;
     };
@@ -35,13 +33,7 @@ class ApiRequestWrapper extends Component {
     return (
       <div
         id="apiRequestBlock"
-        className={
-          styles.padd_left +
-          ' ' +
-          styles.padd_right +
-          ' ' +
-          styles.ApiRequestWrapperVH
-        }
+        className="flex flex-1 p-4"
       >
         {getAPIRequestDetailsSection()}
 

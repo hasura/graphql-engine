@@ -36,7 +36,7 @@ class RemoteSchemaPageContainer extends React.Component {
 
     return (
       <>
-        <PageContainer helmet={helmet} leftContainer={leftContainer}>
+        <PageContainer title={helmet} leftContainer={leftContainer}>
           {children}
         </PageContainer>
       </>

@@ -264,10 +264,10 @@ class Main extends React.Component {
         mainContent = children && React.cloneElement(children);
       } else {
         mainContent = (
-          <div>
+          <>
             {' '}
             <Spinner />{' '}
-          </div>
+          </>
         );
       }
       return mainContent;
@@ -361,120 +361,118 @@ class Main extends React.Component {
     };
 
     return (
-      <div className={styles.container}>
+      <>
         <Onboarding
           dispatch={dispatch}
           console_opts={console_opts}
           metadata={metadata.metadataObject}
         />
-        <div className={styles.flexRow}>
-          <div className={styles.sidebar}>
-            <div className={styles.header_logo_wrapper}>
-              <div className={styles.logoParent}>
-                <div className={styles.logo}>
-                  <Link to="/">
-                    <img className="img img-responsive" src={logo} />
-                  </Link>
-                </div>
+        <div className={styles.sidebar}>
+          <div className={styles.header_logo_wrapper}>
+            <div className={styles.logoParent}>
+              <div className={styles.logo}>
                 <Link to="/">
-                  <div className={styles.project_version}>{serverVersion}</div>
+                  <img className="img img-responsive" src={logo} />
                 </Link>
               </div>
-            </div>
-            <div className={styles.header_items}>
-              <ul className={styles.sidebarItems}>
-                {getSidebarItem(
-                  'API',
-                  'fa-flask',
-                  tooltips.apiExplorer,
-                  '/api/api-explorer',
-                  true
-                )}
-                {getSidebarItem(
-                  'Data',
-                  'fa-database',
-                  tooltips.data,
-                  currentSource
-                    ? schemaList.length
-                      ? getSchemaBaseRoute(currentSchema, currentSource)
-                      : getDataSourceBaseRoute(currentSource)
-                    : '/data'
-                )}
-                {getSidebarItem(
-                  'Actions',
-                  'fa-cogs',
-                  tooltips.actions,
-                  '/actions/manage/actions'
-                )}
-                {getSidebarItem(
-                  'Remote Schemas',
-                  'fa-plug',
-                  tooltips.remoteSchema,
-                  '/remote-schemas/manage/schemas'
-                )}{' '}
-                {getSidebarItem(
-                  'Events',
-                  'fa-cloud',
-                  tooltips.events,
-                  '/events/data/manage'
-                )}
-              </ul>
-            </div>
-            <div
-              id="dropdown_wrapper"
-              className={`${styles.clusterInfoWrapper} ${
-                this.state.isDropdownOpen ? 'open' : ''
-              }`}
-            >
-              {getAdminSecretSection()}
-              <div
-                className={`${styles.headerRightNavbarBtn} ${styles.proWrapper}`}
-                onClick={this.onProIconClick}
-              >
-                <span
-                  className={`
-                    ${isProClicked ? styles.proNameClicked : styles.proName}
-                    ${isPopUpOpen ? styles.navActive : ''}`}
-                >
-                  CLOUD
-                </span>
-                {isPopUpOpen && <ProPopup toggleOpen={this.toggleProPopup} />}
-              </div>
-              <Link to="/settings">
-                <div className={styles.headerRightNavbarBtn}>
-                  {getMetadataStatusIcon()}
-                  {getSettingsSelectedMarker()}
-                </div>
+              <Link to="/">
+                <div className={styles.project_version}>{serverVersion}</div>
               </Link>
-              <Help isSelected={currentActiveBlock === 'support'} />
-              <NotificationSection
-                isDropDownOpen={this.state.isDropdownOpen}
-                closeDropDown={this.closeDropDown}
-                toggleDropDown={this.toggleDropDown}
-              />
-              {!this.state.loveConsentState.isDismissed ? (
-                <div
-                  id="dropdown_wrapper"
-                  className={`${this.state.isLoveSectionOpen ? 'open' : ''}`}
-                >
-                  <LoveSection
-                    closeLoveSection={this.closeLoveSection}
-                    toggleLoveSection={this.toggleLoveSection}
-                  />
-                </div>
-              ) : null}
             </div>
           </div>
-          <div className={styles.main + ' container-fluid'}>
-            {getMainContent()}
+          <div className={styles.header_items}>
+            <ul className={styles.sidebarItems}>
+              {getSidebarItem(
+                'API',
+                'fa-flask',
+                tooltips.apiExplorer,
+                '/api/api-explorer',
+                true
+              )}
+              {getSidebarItem(
+                'Data',
+                'fa-database',
+                tooltips.data,
+                currentSource
+                  ? schemaList.length
+                    ? getSchemaBaseRoute(currentSchema, currentSource)
+                    : getDataSourceBaseRoute(currentSource)
+                  : '/data'
+              )}
+              {getSidebarItem(
+                'Actions',
+                'fa-cogs',
+                tooltips.actions,
+                '/actions/manage/actions'
+              )}
+              {getSidebarItem(
+                'Remote Schemas',
+                'fa-plug',
+                tooltips.remoteSchema,
+                '/remote-schemas/manage/schemas'
+              )}{' '}
+              {getSidebarItem(
+                'Events',
+                'fa-cloud',
+                tooltips.events,
+                '/events/data/manage'
+              )}
+            </ul>
           </div>
-          <UpdateVersion
-            closeUpdateBanner={this.closeUpdateBanner}
-            dispatch={this.props.dispatch}
-            updateNotificationVersion={this.state.updateNotificationVersion}
-          />
+          <div
+            id="dropdown_wrapper"
+            className={`${styles.clusterInfoWrapper} ${
+              this.state.isDropdownOpen ? 'open' : ''
+            }`}
+          >
+            {getAdminSecretSection()}
+            <div
+              className={`${styles.headerRightNavbarBtn} ${styles.proWrapper}`}
+              onClick={this.onProIconClick}
+            >
+              <span
+                className={`
+                  ${isProClicked ? styles.proNameClicked : styles.proName}
+                  ${isPopUpOpen ? styles.navActive : ''}`}
+              >
+                CLOUD
+              </span>
+              {isPopUpOpen && <ProPopup toggleOpen={this.toggleProPopup} />}
+            </div>
+            <Link to="/settings">
+              <div className={styles.headerRightNavbarBtn}>
+                {getMetadataStatusIcon()}
+                {getSettingsSelectedMarker()}
+              </div>
+            </Link>
+            <Help isSelected={currentActiveBlock === 'support'} />
+            <NotificationSection
+              isDropDownOpen={this.state.isDropdownOpen}
+              closeDropDown={this.closeDropDown}
+              toggleDropDown={this.toggleDropDown}
+            />
+            {!this.state.loveConsentState.isDismissed ? (
+              <div
+                id="dropdown_wrapper"
+                className={`${this.state.isLoveSectionOpen ? 'open' : ''}`}
+              >
+                <LoveSection
+                  closeLoveSection={this.closeLoveSection}
+                  toggleLoveSection={this.toggleLoveSection}
+                />
+              </div>
+            ) : null}
+          </div>
         </div>
-      </div>
+        <main className={`${styles.main} flex flex-1`}>
+          {getMainContent()}
+        </main>
+        <UpdateVersion
+          closeUpdateBanner={this.closeUpdateBanner}
+          dispatch={this.props.dispatch}
+          updateNotificationVersion={this.state.updateNotificationVersion}
+        />
+      </>
     );
   }
 }

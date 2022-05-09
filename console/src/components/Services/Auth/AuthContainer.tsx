@@ -6,9 +6,7 @@ const AuthContainer = ({ children }: { children: React.ReactNode }) => {
   if (!ENABLE_AUTH_LAYER) return <>{children}</>;
 
   return (
-    <div id="auth-container">
-      <AuthContextProvider>{children}</AuthContextProvider>
-    </div>
+    <AuthContextProvider>{children}</AuthContextProvider>
   );
 };
 

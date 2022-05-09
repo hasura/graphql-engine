@@ -260,7 +260,7 @@ class OneGraphExplorer extends React.Component {
         <div className="gqlexplorer">
           {this.props.loading ? (
             <div
-              className={`${styles.height100} ${styles.display_flex}`}
+              className={`${styles.display_flex}`}
               style={{
                 width: explorerWidth,
               }}

@@ -22,12 +22,11 @@ const CollapsibleItems: React.FC<CollapsibleItemsProps> = ({
   const [isOpen, setIsOpen] = useState(true);
 
   return (
-    <div className={styles.padd_bottom_small}>
+    <div>
       <div
         onClick={() => setIsOpen(prev => !prev)}
         onKeyDown={() => setIsOpen(prev => !prev)}
         role="button"
-        className={styles.padd_bottom_small}
       >
         <span className={`${styles.title} ${isOpen ? '' : styles.titleClosed}`}>
           <FaDatabase /> {source}
