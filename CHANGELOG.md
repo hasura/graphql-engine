@@ -4,6 +4,7 @@
 
 ### Bug fixes and improvements
 
+- server: don't drop the SQL triggers defined by the graphql-engine when DDL changes are made using the `run_sql` API
 - server: fixed a bug where timestamp values sent to postgres would erroneously trim leading zeroes (#8096)
 - server: fix bug when event triggers where defined on tables that contained non lower-case alphabet characters
 - server: avoid encoding 'varchar' values to UTF8 in MSSQL backends
