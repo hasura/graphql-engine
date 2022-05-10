@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
+import { FaQuestionCircle } from 'react-icons/fa';
 import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
 
 import {
@@ -98,7 +99,7 @@ class Common extends React.Component {
           <div className={styles.subheading_text}>
             GraphQL server timeout
             <OverlayTrigger placement="right" overlay={tooltips.timeoutConf}>
-              <i className="fa fa-question-circle" aria-hidden="true" />
+              <FaQuestionCircle aria-hidden="true" className="mb-1 ml-xs" />
             </OverlayTrigger>
           </div>
           <label
@@ -128,7 +129,7 @@ class Common extends React.Component {
         <div className={styles.subheading_text + ' ' + styles.addPaddTop}>
           Remote Schema name *
           <OverlayTrigger placement="right" overlay={tooltips.schema}>
-            <i className="fa fa-question-circle" aria-hidden="true" />
+            <FaQuestionCircle aria-hidden="true" className="mb-1 ml-xs" />
           </OverlayTrigger>
         </div>
         <label
@@ -154,7 +155,7 @@ class Common extends React.Component {
         <div className={styles.subheading_text}>
           GraphQL server URL *
           <OverlayTrigger placement="right" overlay={tooltips.graphqlurl}>
-            <i className="fa fa-question-circle" aria-hidden="true" />
+            <FaQuestionCircle aria-hidden="true" className="mb-1 ml-xs" />
           </OverlayTrigger>
         </div>
         <div className={styles.wd_300}>
@@ -212,7 +213,7 @@ class Common extends React.Component {
             placement="right"
             overlay={tooltips.clientHeaderForward}
           >
-            <i className="fa fa-question-circle" aria-hidden="true" />
+            <FaQuestionCircle aria-hidden="true" />
           </OverlayTrigger>
         </div>
         <div className={styles.subheading_text + ' ' + styles.font_normal}>
@@ -221,7 +222,7 @@ class Common extends React.Component {
             placement="right"
             overlay={tooltips.additionalHeaders}
           >
-            <i className="fa fa-question-circle" aria-hidden="true" />
+            <FaQuestionCircle aria-hidden="true" className="mb-1 ml-xs" />
           </OverlayTrigger>
         </div>
         <CommonHeader
@@ -242,7 +243,7 @@ class Common extends React.Component {
         <div className={styles.subheading_text}>
           Comment
           <OverlayTrigger placement="right" overlay={tooltips.comment}>
-            <i className="fa fa-question-circle" aria-hidden="true" />
+            <FaQuestionCircle aria-hidden="true" className="mb-1 ml-xs" />
           </OverlayTrigger>
         </div>
         <label
@@ -273,7 +274,7 @@ class Common extends React.Component {
                   </Tooltip>
                 }
               >
-                <i className="fa fa-question-circle" aria-hidden="true" />
+                <FaQuestionCircle aria-hidden="true" className="mb-1 ml-xs" />
               </OverlayTrigger>
             </div>
             <GraphQLCustomizationEdit

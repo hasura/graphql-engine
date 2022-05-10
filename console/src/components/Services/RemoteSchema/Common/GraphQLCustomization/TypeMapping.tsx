@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import styles from '../../RemoteSchema.scss';
+import { FaTimes } from 'react-icons/fa';
 
 type TypeMap = { type: string; custom_name: string };
 
@@ -101,9 +101,8 @@ const TypeMapping = ({ types, typeMappings, onChange, label }: Props) => {
               />
             </div>
             <div>
-              <i
-                className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
-                data-test={`remove-type-map-${i}`}
+              <FaTimes
+                className="ml-2.5 w-4 min-w-4 cursor-pointer h-md w-md"
                 onClick={() => onDeleteItem(i)}
               />
             </div>

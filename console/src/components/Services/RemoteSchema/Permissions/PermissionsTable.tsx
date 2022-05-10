@@ -1,5 +1,6 @@
 import React, { ChangeEvent } from 'react';
 import { GraphQLSchema } from 'graphql';
+import { FaPencilAlt } from 'react-icons/fa';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import PermTableHeader from '../../../Common/Permissions/TableHeader';
 import PermTableBody from '../../../Common/Permissions/TableBody';
@@ -61,7 +62,7 @@ const PermissionsTable: React.FC<PermissionsTableProps> = ({
   const getEditIcon = () => {
     return (
       <span className={styles.editPermsIcon}>
-        <i className="fa fa-pencil" aria-hidden="true" />
+        <FaPencilAlt aria-hidden="true" />
       </span>
     );
   };

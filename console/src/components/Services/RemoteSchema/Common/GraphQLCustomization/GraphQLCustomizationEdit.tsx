@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { OverlayTrigger } from 'react-bootstrap';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 import { GraphQLSchema } from 'graphql';
+import { FaQuestionCircle } from 'react-icons/fa';
 
 import styles from '../../RemoteSchema.scss';
 import { Button } from '../../../../Common';
@@ -225,7 +226,7 @@ const GraphQLCustomizationEdit = ({
                 </Tooltip>
               }
             >
-              <i className="fa fa-question-circle" aria-hidden="true" />
+              <FaQuestionCircle aria-hidden="true" />
             </OverlayTrigger>
           </div>
 

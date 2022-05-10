@@ -1,5 +1,6 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
+import { FaChevronRight } from 'react-icons/fa';
 import { useFeatureFlagDismiss } from '../../hooks/useFeatureFlagDismiss';
 import { useFeatureFlags } from '../../hooks/useFeatureFlags';
 import { FeatureFlagDefinition, FeatureFlagId } from '../../types';
@@ -38,7 +39,7 @@ export const FeatureFlagToast = (props: FeatureFlagToastProps) => {
         onClick={() => dispatch(_push('/settings/feature-flags'))}
       >
         Try out the new feature before it gets to general availability.
-        <i className="fa fa-chevron-right ml-2" aria-hidden="true" />
+        <FaChevronRight className="ml-2" aria-hidden="true" />
       </div>
       <div className="flex p-4 justify-between border-t">
         <button onClick={() => setDismissed(true)}>Hide for now</button>
