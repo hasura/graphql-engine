@@ -7,7 +7,10 @@ module Data.HashMap.Strict.NonEmpty
     singleton,
     fromHashMap,
     fromList,
+    fromNonEmpty,
     toHashMap,
+    toList,
+    toNonEmpty,
 
     -- * Basic interface
     lookup,
@@ -15,16 +18,25 @@ module Data.HashMap.Strict.NonEmpty
     keys,
 
     -- * Combine
+    union,
     unionWith,
 
     -- * Transformations
     mapKeys,
+
+    -- * Predicates
+    isInverseOf,
   )
 where
 
+import Control.DeepSeq (NFData)
+import Data.Aeson (FromJSON, ToJSON)
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict.Extended qualified as Extended
 import Data.Hashable (Hashable)
+import Data.List.NonEmpty (NonEmpty)
+import Data.List.NonEmpty qualified as NE
 import Prelude hiding (lookup)
 
 -------------------------------------------------------------------------------
@@ -33,7 +45,7 @@ import Prelude hiding (lookup)
 -- only provides a restricted set of functionalities. It doesn't
 -- provide a 'Monoid' instance, nor an 'empty' function.
 newtype NEHashMap k v = NEHashMap {unNEHashMap :: HashMap k v}
-  deriving newtype (Show, Eq, Ord, Semigroup)
+  deriving newtype (Show, Eq, FromJSON, Hashable, NFData, Ord, Semigroup, ToJSON)
   deriving stock (Functor, Foldable, Traversable)
 
 -------------------------------------------------------------------------------
@@ -58,9 +70,22 @@ fromList :: (Eq k, Hashable k) => [(k, v)] -> Maybe (NEHashMap k v)
 fromList [] = Nothing
 fromList v = Just $ NEHashMap $ M.fromList v
 
+-- | A variant of 'fromList' that uses 'NonEmpty' inputs.
+fromNonEmpty :: (Eq k, Hashable k) => NonEmpty (k, v) -> NEHashMap k v
+fromNonEmpty (x NE.:| xs) = NEHashMap (M.fromList (x : xs))
+
 -- | Convert a non-empty map to a 'HashMap'.
 toHashMap :: NEHashMap k v -> HashMap k v
 toHashMap = unNEHashMap
+
+-- | Convert a non-empty map to a non-empty list of key/value pairs. The closed
+-- operations of 'NEHashMap' guarantee that this operation won't fail.
+toNonEmpty :: NEHashMap k v -> NonEmpty (k, v)
+toNonEmpty = NE.fromList . M.toList . unNEHashMap
+
+-- | Convert a non-empty map to a list of key/value pairs.
+toList :: NEHashMap k v -> [(k, v)]
+toList = M.toList . unNEHashMap
 
 -------------------------------------------------------------------------------
 
@@ -84,6 +109,13 @@ keys = M.keys . unNEHashMap
 
 -- | The union of two maps.
 --
+-- If a key occurs in both maps, the left map @m1@ (first argument) will be
+-- preferred.
+union :: (Eq k, Hashable k) => NEHashMap k v -> NEHashMap k v -> NEHashMap k v
+union (NEHashMap m1) (NEHashMap m2) = NEHashMap $ M.union m1 m2
+
+-- | The union of two maps using a given value-wise union function.
+--
 -- If a key occurs in both maps, the provided function (first argument) will be
 -- used to compute the result.
 unionWith :: (Eq k, Hashable k) => (v -> v -> v) -> NEHashMap k v -> NEHashMap k v -> NEHashMap k v
@@ -98,3 +130,15 @@ unionWith fun (NEHashMap m1) (NEHashMap m2) = NEHashMap $ M.unionWith fun m1 m2
 -- values is chosen for the conflicting key.
 mapKeys :: (Eq k2, Hashable k2) => (k1 -> k2) -> NEHashMap k1 v -> NEHashMap k2 v
 mapKeys fun (NEHashMap m) = NEHashMap $ M.mapKeys fun m
+
+-------------------------------------------------------------------------------
+
+-- | Determines whether the left-hand-side and the right-hand-side are inverses of each other.
+--
+-- More specifically, for two maps @A@ and @B@, 'isInverseOf' is satisfied when both of the
+-- following are true:
+-- 1. @∀ key ∈ A. A[key] ∈  B ∧ B[A[key]] == key@
+-- 2. @∀ key ∈ B. B[key] ∈  A ∧ A[B[key]] == key@
+isInverseOf ::
+  (Eq k, Hashable k, Eq v, Hashable v) => NEHashMap k v -> NEHashMap v k -> Bool
+lhs `isInverseOf` rhs = toHashMap lhs `Extended.isInverseOf` toHashMap rhs

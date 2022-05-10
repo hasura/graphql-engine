@@ -22,6 +22,8 @@ import Data.Functor.Classes (Eq1 (..), Eq2 (..))
 import Data.GADT.Compare
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.NonEmpty (NEHashMap)
+import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet.InsOrd qualified as OSet
 import Data.Int
 import Data.Scientific (Scientific)
@@ -253,6 +255,9 @@ instance (Cacheable a) => Cacheable (Vector a) where
 
 instance (Cacheable k, Cacheable v) => Cacheable (HashMap k v) where
   unchanged accesses = liftEq2 (unchanged accesses) (unchanged accesses)
+
+instance (Cacheable k, Cacheable v) => Cacheable (NEHashMap k v) where
+  unchanged accesses = unchanged accesses `on` NEHashMap.toHashMap
 
 instance (Cacheable a) => Cacheable (HashSet a) where
   unchanged = liftEq . unchanged

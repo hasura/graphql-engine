@@ -16,6 +16,7 @@ import Data.Aeson as Aeson
 import Data.ByteString.UTF8 qualified as BSUTF8
 import Data.FileEmbed (embedFile, makeRelativeToProject)
 import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet qualified as HS
 import Data.String
 import Data.Text qualified as T
@@ -171,7 +172,7 @@ transformColumn columnInfo =
 
               schemaName = SchemaName $ ssName $ sfkcJoinedReferencedSysSchema foreignKeyColumn
               _fkForeignTable = TableName (sfkcJoinedReferencedTableName foreignKeyColumn) schemaName
-              _fkColumnMapping = HM.singleton rciName $ ColumnName $ sfkcJoinedReferencedColumnName foreignKeyColumn
+              _fkColumnMapping = NEHashMap.singleton rciName $ ColumnName $ sfkcJoinedReferencedColumnName foreignKeyColumn
            in ForeignKey {..}
 
       colIsImmutable = scIsComputed columnInfo || scIsIdentity columnInfo
@@ -192,7 +193,7 @@ coalesceKeys :: [ForeignKey 'MSSQL] -> [ForeignKey 'MSSQL]
 coalesceKeys = HM.elems . foldl' coalesce HM.empty
   where
     coalesce mapping fk@(ForeignKey constraint tableName _) = HM.insertWith combine (constraint, tableName) fk mapping
-    combine oldFK newFK = oldFK {_fkColumnMapping = (HM.union `on` _fkColumnMapping) oldFK newFK}
+    combine oldFK newFK = oldFK {_fkColumnMapping = (NEHashMap.union `on` _fkColumnMapping) oldFK newFK}
 
 parseScalarType :: Text -> ScalarType
 parseScalarType = \case

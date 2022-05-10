@@ -15,6 +15,7 @@ module Hasura.RQL.DDL.Schema.Enum
 where
 
 import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
 import Hasura.Prelude
@@ -39,7 +40,7 @@ resolveEnumReferences enumTables =
   where
     resolveEnumReference :: ForeignKey b -> Maybe (Column b, EnumReference b)
     resolveEnumReference foreignKey = do
-      [(localColumn, foreignColumn)] <- pure $ M.toList (_fkColumnMapping @b foreignKey)
+      [(localColumn, foreignColumn)] <- pure $ NEHashMap.toList (_fkColumnMapping @b foreignKey)
       let foreignKeyTableName = _fkForeignTable foreignKey
       (primaryKey, tConfig, enumValues) <- M.lookup foreignKeyTableName enumTables
       let tableCustomName = _tcCustomName tConfig
