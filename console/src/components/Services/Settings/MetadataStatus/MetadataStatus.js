@@ -16,6 +16,7 @@ import {
 } from '../../Data/DataActions';
 import { setDriver } from '../../../../dataSources';
 import _push from '../../Data/push';
+import { FaExclamationCircle, FaTimes } from 'react-icons/fa';
 
 const MetadataStatus = ({ dispatch, metadata }) => {
   const [shouldShowErrorBanner, toggleErrorBanner] = useState(true);
@@ -291,16 +292,16 @@ const MetadataStatus = ({ dispatch, metadata }) => {
     }
     return (
       <div className={`${styles.errorBanner} alert alert-danger`}>
-        <i
-          className={`${styles.add_mar_right_small} ${styles.fontStyleNormal} fa fa-exclamation-circle`}
+        <FaExclamationCircle
+          className={`${styles.add_mar_right_small} ${styles.fontStyleNormal}`}
           aria-hidden="true"
         />
         <strong>
           You have been redirected because your GraphQL Engine metadata is in an
           inconsistent state
         </strong>
-        <i
-          className={`${styles.align_right} ${styles.fontStyleNormal} ${styles.cursorPointer} fa fa-times`}
+        <FaTimes
+          className={`${styles.align_right} ${styles.fontStyleNormal} ${styles.cursorPointer}`}
           aria-hidden="true"
           onClick={dismissErrorBanner}
         />

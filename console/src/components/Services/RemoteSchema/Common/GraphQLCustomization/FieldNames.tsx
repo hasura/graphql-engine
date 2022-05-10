@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { OverlayTrigger } from 'react-bootstrap';
+import { FaQuestionCircle } from 'react-icons/fa';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 import styles from '../../RemoteSchema.scss';
 import { Button } from '../../../../Common';
@@ -139,7 +140,7 @@ const FieldNames = ({
       <div className="text-lg font-bold mt-md">
         Remap Field Names{' '}
         <OverlayTrigger placement="right" overlay={tooltip}>
-          <i className="fa fa-question-circle" aria-hidden="true" />
+          <FaQuestionCircle aria-hidden="true" />
         </OverlayTrigger>
         <TypeMapping
           types={

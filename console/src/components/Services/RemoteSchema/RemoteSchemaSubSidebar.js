@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router';
+import { IoGitBranch } from 'react-icons/io5';
 
 import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
@@ -77,10 +78,7 @@ const RemoteSchemaSubSidebar = ({
                 to={`${appPrefix}/manage/${d.name}/details`}
                 data-test={d.name}
               >
-                <i
-                  className={`${styles.tableIcon} fa fa-code-fork`}
-                  aria-hidden="true"
-                />
+                <IoGitBranch className={styles.tableIcon} aria-hidden="true" />
                 {d.name}
                 {inconsistentCurrentSchema ? (
                   <WarningSymbol

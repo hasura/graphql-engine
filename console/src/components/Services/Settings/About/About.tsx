@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Connect } from 'react-redux';
 import Helmet from 'react-helmet';
+import { FaSpinner } from 'react-icons/fa';
 
 import globals from '../../../../Globals';
 
@@ -22,7 +23,7 @@ class About extends Component<ConnectInjectedProps & StateProps> {
 
     const { serverVersion } = this.props;
 
-    const spinner = <i className="fa fa-spinner fa-spin" />;
+    const spinner = <FaSpinner className="animate-spin" />;
 
     const getServerVersionSection = () => {
       return (
