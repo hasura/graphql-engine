@@ -1,5 +1,6 @@
 import React, { ComponentProps } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
+import { FaArrowRight, FaBell, FaTimes } from 'react-icons/fa';
 
 import { Box, Flex, Heading, Text, Badge } from '../UIKit/atoms';
 import {
@@ -191,7 +192,7 @@ const Notification: React.FC<UpdateProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <i className={`fa fa-arrow-right ${styles.linkArrow}`} />
+                  <FaArrowRight className={styles.linkArrow} />
                 </a>
               </div>
             ) : null}
@@ -729,7 +730,7 @@ const HasuraNotifications: React.FC<
         onClick={onClickNotificationButton}
         ref={wrapperRef}
       >
-        <i className={`fa fa-bell ${styles.bellIcon}`} />
+        <FaBell className={styles.bellIcon} />
         <ToReadBadge
           numberNotifications={numberNotifications}
           show={showBadge || !!fixedVersion}
@@ -763,7 +764,7 @@ const HasuraNotifications: React.FC<
             className={styles.closeNotificationIcon}
             onClick={onClickOutside}
           >
-            <i className="fa fa-times" />
+            <FaTimes />
           </div>
         </Flex>
         <Box className={styles.notificationsContainer}>

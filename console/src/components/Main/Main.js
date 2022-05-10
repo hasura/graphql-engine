@@ -2,6 +2,15 @@ import React from 'react';
 
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
+import {
+  FaCloud,
+  FaCog,
+  FaCogs,
+  FaDatabase,
+  FaExclamationCircle,
+  FaFlask,
+  FaPlug,
+} from 'react-icons/fa';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
 
@@ -285,15 +294,15 @@ class Main extends React.Component {
 
     const getMetadataStatusIcon = () => {
       if (metadata.inconsistentObjects.length === 0) {
-        return <i className={styles.question + ' fa fa-cog'} />;
+        return <FaCog className={styles.question} />;
       }
       return (
         <div className={styles.question}>
-          <i className={'fa fa-cog'} />
+          <FaCog />
           <div className={styles.overlappingExclamation}>
             <div className={styles.iconWhiteBackground} />
             <div>
-              <i className={'fa fa-exclamation-circle'} />
+              <FaExclamationCircle />
             </div>
           </div>
         </div>
@@ -351,7 +360,9 @@ class Main extends React.Component {
               data-test={`${title.toLowerCase()}-tab-link`}
             >
               <div className={styles.iconCenter} data-test={block}>
-                <i className={`fa ${icon}`} aria-hidden="true" />
+                {React.createElement(icon, {
+                  'aria-hidden': true,
+                })}
               </div>
               <p>{title}</p>
             </Link>
@@ -385,14 +396,14 @@ class Main extends React.Component {
               <ul className={styles.sidebarItems}>
                 {getSidebarItem(
                   'API',
-                  'fa-flask',
+                  FaFlask,
                   tooltips.apiExplorer,
                   '/api/api-explorer',
                   true
                 )}
                 {getSidebarItem(
                   'Data',
-                  'fa-database',
+                  FaDatabase,
                   tooltips.data,
                   currentSource
                     ? schemaList.length
@@ -402,19 +413,19 @@ class Main extends React.Component {
                 )}
                 {getSidebarItem(
                   'Actions',
-                  'fa-cogs',
+                  FaCogs,
                   tooltips.actions,
                   '/actions/manage/actions'
                 )}
                 {getSidebarItem(
                   'Remote Schemas',
-                  'fa-plug',
+                  FaPlug,
                   tooltips.remoteSchema,
                   '/remote-schemas/manage/schemas'
                 )}{' '}
                 {getSidebarItem(
                   'Events',
-                  'fa-cloud',
+                  FaCloud,
                   tooltips.events,
                   '/events/data/manage'
                 )}
