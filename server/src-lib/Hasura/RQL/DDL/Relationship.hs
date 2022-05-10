@@ -16,6 +16,7 @@ import Control.Lens ((.~))
 import Data.Aeson.Types
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet qualified as Set
 import Data.Text.Extended
 import Data.Tuple (swap)
@@ -140,7 +141,7 @@ objRelP2Setup source qt foreignKeys (RelDef rn ru _) = case ru of
               DRRemoteTable
           ]
             <> fmap (drUsingColumnDep @b source qt) (toList columns)
-    pure (RelInfo rn ObjRel colMap foreignTable False BeforeParent, dependencies)
+    pure (RelInfo rn ObjRel (NEHashMap.toHashMap colMap) foreignTable False BeforeParent, dependencies)
   RUFKeyOn (RemoteTable remoteTable remoteCols) ->
     mkFkeyRel ObjRel AfterParent source rn qt remoteTable remoteCols foreignKeys
 
@@ -218,7 +219,7 @@ mkFkeyRel relType io source rn sourceTable remoteTable remoteColumns foreignKeys
             DRRemoteTable
         ]
           <> fmap (drUsingColumnDep @b source remoteTable) (toList remoteColumns)
-  pure (RelInfo rn relType (reverseMap colMap) remoteTable False io, dependencies)
+  pure (RelInfo rn relType (reverseMap (NEHashMap.toHashMap colMap)) remoteTable False io, dependencies)
   where
     reverseMap :: Eq y => Hashable y => HashMap x y -> HashMap y x
     reverseMap = Map.fromList . fmap swap . Map.toList
@@ -235,7 +236,7 @@ getRequiredFkey cols fkeys =
     [] -> throw400 ConstraintError "no foreign constraint exists on the given column(s)"
     _ -> throw400 ConstraintError "more than one foreign key constraint exists on the given column(s)"
   where
-    filteredFkeys = filter ((== Set.fromList (toList cols)) . Map.keysSet . _fkColumnMapping) fkeys
+    filteredFkeys = filter ((== Set.fromList (toList cols)) . Map.keysSet . NEHashMap.toHashMap . _fkColumnMapping) fkeys
 
 drUsingColumnDep ::
   forall b.

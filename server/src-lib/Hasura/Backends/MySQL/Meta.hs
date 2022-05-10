@@ -9,6 +9,7 @@ import Control.Exception (throw)
 import Data.ByteString.Char8 qualified as B8
 import Data.FileEmbed (embedFile, makeRelativeToProject)
 import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet qualified as HS
 import Data.Sequence.NonEmpty qualified as SNE
 import Data.String (fromString)
@@ -87,7 +88,7 @@ mergeMetadata InformationSchema {..} =
                               schema = isReferencedTableSchema
                             }
                         )
-                        ( HM.singleton
+                        ( NEHashMap.singleton
                             (Column isColumnName)
                             (Column $ fromMaybe "" isReferencedColumnName)
                         )

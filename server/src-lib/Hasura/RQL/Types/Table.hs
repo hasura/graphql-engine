@@ -93,6 +93,8 @@ import Data.Aeson.TH
 import Data.Aeson.Types (Parser, prependFailure, typeMismatch)
 import Data.HashMap.Strict qualified as M
 import Data.HashMap.Strict.Extended qualified as M
+import Data.HashMap.Strict.NonEmpty (NEHashMap)
+import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet qualified as HS
 import Data.List.Extended (duplicates)
 import Data.List.NonEmpty qualified as NE
@@ -761,7 +763,7 @@ $(makeLenses ''PrimaryKey)
 data ForeignKey (b :: BackendType) = ForeignKey
   { _fkConstraint :: !(Constraint b),
     _fkForeignTable :: !(TableName b),
-    _fkColumnMapping :: !(HashMap (Column b) (Column b))
+    _fkColumnMapping :: !(NEHashMap (Column b) (Column b))
   }
   deriving (Generic)
 
@@ -861,18 +863,28 @@ instance Backend b => FromJSON (ForeignKeyMetadata b) where
     constraint <- o .: "constraint"
     foreignTable <- o .: "foreign_table"
 
-    columns <- o .: "columns"
-    foreignColumns <- o .: "foreign_columns"
-    if length columns == length foreignColumns
-      then
-        pure $
-          ForeignKeyMetadata
-            ForeignKey
-              { _fkConstraint = constraint,
-                _fkForeignTable = foreignTable,
-                _fkColumnMapping = M.fromList $ zip columns foreignColumns
-              }
-      else fail "columns and foreign_columns differ in length"
+    columns <-
+      o .: "columns" >>= \case
+        x : xs -> pure (x :| xs)
+        [] -> fail "columns must be non-empty"
+
+    foreignColumns <-
+      o .: "foreign_columns" >>= \case
+        x : xs -> pure (x :| xs)
+        [] -> fail "foreign_columns must be non-empty"
+
+    unless (length columns == length foreignColumns) do
+      fail "columns and foreign_columns differ in length"
+
+    pure $
+      ForeignKeyMetadata
+        ForeignKey
+          { _fkConstraint = constraint,
+            _fkForeignTable = foreignTable,
+            _fkColumnMapping =
+              NEHashMap.fromNonEmpty $
+                NE.zip columns foreignColumns
+          }
 
 -- | Metadata of any Backend table which is being extracted from source database
 data DBTableMetadata (b :: BackendType) = DBTableMetadata
