@@ -25,7 +25,7 @@ const buttonModesStyles: Record<ButtonModes, string> = {
   destructive:
     'text-red-600 bg-gray-50 from-transparent to-white border-gray-300 hover:border-gray-400 disabled:border-gray-300 focus:from-bg-gray-50 focus:to-bg-gray-50',
   primary:
-    'text-gray-600 bg-primary from-primary to-primary-light border-primary-dark hover:border-primary-darker focus:from-primary focus:to-primary disabled:border-primary-dark',
+    'text-gray-600 from-primary to-primary-light border-primary-dark hover:border-primary-darker focus:from-primary focus:to-primary disabled:border-primary-dark',
 };
 
 const sharedButtonStyle =

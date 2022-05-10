@@ -1,52 +1,75 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Common from '../Common/Common';
 
 import { addRemoteSchema, RESET } from './addRemoteSchemaReducer';
 import Helmet from 'react-helmet';
 import Button from '../../../Common/Button/Button';
+import { RemoteSchema } from '@/features/RemoteSchema';
+import { appPrefix, pageTitle } from '../constants';
+import {
+  availableFeatureFlagIds,
+  FeatureFlagToast,
+  useIsFeatureFlagEnabled,
+} from '@/features/FeatureFlags';
+import { exportMetadata } from '@/metadata/actions';
+import _push from '../../Data/push';
 
-import { pageTitle } from '../constants';
+const Add = ({ isRequesting, dispatch, ...props }) => {
+  const styles = require('../RemoteSchema.scss');
 
-class Add extends React.Component {
-  componentWillUnmount() {
-    this.props.dispatch({ type: RESET });
+  useEffect(() => {
+    return () => {
+      dispatch({ type: RESET });
+    };
+  }, []);
+
+  const { isLoading, enabled } = useIsFeatureFlagEnabled(
+    availableFeatureFlagIds.addRemoteSchemaId
+  );
+
+  if (isLoading) {
+    return 'Loading...';
   }
 
-  render() {
-    const styles = require('../RemoteSchema.scss');
-
-    const { isRequesting, dispatch } = this.props;
-
+  if (enabled) {
     return (
-      <div className={styles.addWrapper}>
-        <Helmet title={`Add ${pageTitle} - ${pageTitle}s | Hasura`} />
-        <div className={styles.heading_text}>Add a new remote schema</div>
-        <form
-          onSubmit={e => {
-            e.preventDefault();
-            dispatch(addRemoteSchema());
-          }}
-        >
-          <Common isNew {...this.props} />
-          <div className={styles.commonBtn}>
-            <Button
-              type="submit"
-              color="yellow"
-              size="sm"
-              // disabled={isRequesting} // TODO
-              data-test="add-remote-schema-submit"
-            >
-              {isRequesting ? 'Adding...' : 'Add Remote Schema'}
-            </Button>
-            {/*
-            <button className={styles.default_button}>Cancel</button>
-            */}
-          </div>
-        </form>
-      </div>
+      <RemoteSchema.Create
+        onSuccess={remoteSchemaName => {
+          // This only exists right now because the sidebar is reading from redux state
+          dispatch(exportMetadata()).then(() => {
+            dispatch(_push(`${appPrefix}/manage/${remoteSchemaName}/details`));
+          });
+        }}
+      />
     );
   }
-}
+
+  return (
+    <div className={styles.addWrapper}>
+      <Helmet title={`Add ${pageTitle} - ${pageTitle}s | Hasura`} />
+      <div className={styles.heading_text}>Add a new remote schema</div>
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          dispatch(addRemoteSchema());
+        }}
+      >
+        <Common isNew {...props} dispatch={dispatch} />
+        <div className={styles.commonBtn}>
+          <Button
+            type="submit"
+            color="yellow"
+            size="sm"
+            data-test="add-remote-schema-submit"
+          >
+            {isRequesting ? 'Adding...' : 'Add Remote Schema'}
+          </Button>
+        </div>
+      </form>
+      <FeatureFlagToast flagId={availableFeatureFlagIds.addRemoteSchemaId} />
+    </div>
+  );
+};
 
 const mapStateToProps = state => {
   return {

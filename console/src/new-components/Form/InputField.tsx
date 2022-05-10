@@ -2,7 +2,6 @@ import React, { ReactElement } from 'react';
 import clsx from 'clsx';
 import get from 'lodash.get';
 import { FieldError, useFormContext } from 'react-hook-form';
-
 import { FieldWrapper, FieldWrapperPassThroughProps } from './FieldWrapper';
 
 export type InputFieldProps = FieldWrapperPassThroughProps & {
@@ -33,7 +32,6 @@ export const InputField = ({
   } = useFormContext();
 
   const maybeError = get(errors, name) as FieldError | undefined;
-
   return (
     <FieldWrapper id={name} {...wrapperProps} error={maybeError}>
       <div
@@ -58,8 +56,8 @@ export const InputField = ({
           className={clsx(
             'block w-full max-w-xl h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400 placeholder-gray-500',
             maybeError
-              ? 'border-red-600 hover:border-red-700 placeholder-red-600 '
-              : 'border-gray-300 placeholder-gray-600',
+              ? 'border-red-600 hover:border-red-700'
+              : 'border-gray-300',
             disabled
               ? 'cursor-not-allowed bg-gray-100 border-gray-100'
               : 'hover:border-gray-400',
@@ -71,6 +69,7 @@ export const InputField = ({
           placeholder={placeholder}
           {...register(name)}
           disabled={disabled}
+          data-testid={name}
         />
         {iconPosition === 'end' && icon ? (
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
