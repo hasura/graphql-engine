@@ -2,6 +2,7 @@ import React, { useState, ChangeEvent, FormEvent } from 'react';
 import { Connect } from 'react-redux';
 import { push } from 'react-router-redux';
 import Helmet from 'react-helmet';
+import { FaSpinner } from 'react-icons/fa';
 import Button from '../Common/Button/Button';
 import globals from '../../Globals';
 import { verifyLogin } from './Actions';
@@ -31,7 +32,7 @@ const Login: React.FC<ConnectInjectedProps> = ({ dispatch }) => {
         loginText = (
           <span>
             Verifying...
-            <i className="fa fa-spinner fa-spin" aria-hidden="true" />
+            <FaSpinner className="animate-spin" />
           </span>
         );
       } else if (error) {

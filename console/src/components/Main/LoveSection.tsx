@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaHeart, FaStar, FaTimes, FaTwitter } from 'react-icons/fa';
 import styles from './Main.scss';
 import PixelHeart from './images/components/PixelHeart';
 import globals from '../../Globals';
@@ -23,7 +24,7 @@ const LoveSection: React.FC<LoveSectionProps> = ({
     <ul key="main_love_2" className={`dropdown-menu ${styles.dropdown_menu}`}>
       <div className={styles.dropdown_menu_container}>
         <div className={styles.closeDropDown}>
-          <i className="fa fa-close" onClick={closeLoveSection} />
+          <FaTimes onClick={closeLoveSection} />
         </div>
         <div className={styles.displayFlex}>
           <li className={styles.pixelText1}>
@@ -32,7 +33,7 @@ const LoveSection: React.FC<LoveSectionProps> = ({
             <br />
             Star us on GitHub,
             <br />
-            To make our <i className="fa fa-heart" /> go wooooo!
+            To make our <FaHeart /> go wooooo!
           </li>
           <li className="dropdown-item">
             <a
@@ -48,7 +49,7 @@ const LoveSection: React.FC<LoveSectionProps> = ({
                 />
               </div>
               <div className={styles.pixelText}>
-                <i className="fa fa-star" />
+                <FaStar />
                 &nbsp; Star
               </div>
             </a>
@@ -67,7 +68,7 @@ const LoveSection: React.FC<LoveSectionProps> = ({
                 />
               </div>
               <div className={styles.pixelText}>
-                <i className="fa fa-twitter" />
+                <FaTwitter />
                 &nbsp; Tweet
               </div>
             </a>
