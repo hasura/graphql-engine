@@ -1,6 +1,7 @@
 -- | Helper functions for HTTP requests.
 module Harness.Http
   ( get_,
+    post,
     postValue,
     postValueWithStatus,
     healthCheck,
@@ -36,15 +37,19 @@ get_ url = do
 postValue :: HasCallStack => String -> Http.RequestHeaders -> Value -> IO Value
 postValue = postValueWithStatus 200
 
--- | Post the JSON to the given URL and expected HTTP response code.
--- Produces a very descriptive exception or failure.
-postValueWithStatus :: HasCallStack => Int -> String -> Http.RequestHeaders -> Value -> IO Value
-postValueWithStatus statusCode url headers value = do
+post :: String -> Http.RequestHeaders -> Value -> IO (Http.Response L8.ByteString)
+post url headers value = do
   let request =
         Http.setRequestHeaders headers $
           Http.setRequestMethod Http.methodPost $
             Http.setRequestBodyJSON value (fromString url)
-  response <- Http.httpLbs request
+  Http.httpLbs request
+
+-- | Post the JSON to the given URL and expected HTTP response code.
+-- Produces a very descriptive exception or failure.
+postValueWithStatus :: HasCallStack => Int -> String -> Http.RequestHeaders -> Value -> IO Value
+postValueWithStatus statusCode url headers value = do
+  response <- post url headers value
   let requestBodyString = L8.unpack $ encode value
       responseBodyString = L8.unpack $ Http.getResponseBody response
       responseStatusCode = Http.getResponseStatusCode response

@@ -229,13 +229,8 @@ withMetadataCheck ::
 withMetadataCheck source cascade txAccess runSQLQuery = do
   SourceInfo _ tableCache functionCache sourceConfig _ _ <- askSourceInfo @('Postgres pgKind) source
 
-  let dropTriggersAndRunSQL = do
-        -- We need to drop existing event triggers so that no interference is caused to the sql query execution
-        dropExistingEventTriggers tableCache
-        runSQLQuery
-
   -- Run SQL query and metadata checker in a transaction
-  (queryResult, metadataUpdater) <- runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cascade dropTriggersAndRunSQL
+  (queryResult, metadataUpdater) <- runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cascade runSQLQuery
 
   -- Build schema cache with updated metadata
   withNewInconsistentObjsCheck $
@@ -248,12 +243,6 @@ withMetadataCheck source cascade txAccess runSQLQuery = do
 
   pure queryResult
   where
-    dropExistingEventTriggers :: TableCache ('Postgres pgKind) -> Q.TxET QErr m ()
-    dropExistingEventTriggers tableCache =
-      forM_ (M.elems tableCache) $ \tableInfo -> do
-        let eventTriggers = _tiEventTriggerInfoMap tableInfo
-        forM_ (M.keys eventTriggers) (liftTx . dropTriggerQ)
-
     recreateEventTriggers :: PGSourceConfig -> SchemaCache -> m ()
     recreateEventTriggers sourceConfig schemaCache = do
       let tables = fromMaybe mempty $ unsafeTableCache @('Postgres pgKind) source $ scSources schemaCache

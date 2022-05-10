@@ -1018,6 +1018,7 @@ test-suite tests-hspec
     , http-client-tls
     , http-conduit
     , http-types
+    , HUnit
     , insert-ordered-containers
     , jose
     , kan-extensions
@@ -1081,6 +1082,7 @@ test-suite tests-hspec
     Harness.Http
     Harness.RemoteServer
     Harness.TestEnvironment
+    Harness.Webhook
     Harness.Yaml
 
  -- Harness.Backend
@@ -1106,6 +1108,7 @@ test-suite tests-hspec
     Test.ColumnPresetsSpec
     Test.CustomFieldNamesSpec
     Test.DirectivesSpec
+    Test.EventTriggersRunSQLSpec
     Test.HelloWorldSpec
     Test.InsertCheckPermissionSpec
     Test.InsertEnumColumnSpec
