@@ -1079,10 +1079,10 @@ instance ToSQL SQLInsert where
   toSQL si =
     "INSERT INTO"
       <~> toSQL (siTable si)
-      <~> "("
-      <~> (", " <+> siCols si)
-      <~> ")"
-      <~> toSQL (siValues si)
+      <~> ( if null (siCols si)
+              then "DEFAULT VALUES"
+              else "(" <~> (", " <+> siCols si) <~> ")" <~> toSQL (siValues si)
+          )
       <~> maybe "" toSQL (siConflict si)
       <~> toSQL (siRet si)
 

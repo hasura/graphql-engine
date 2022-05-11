@@ -15,6 +15,7 @@
 - server: fixes remote relationships on actions (fix #8399)
 - server: fixes url/query date variable bug in REST endpoints
 - server: makes url/query variables in REST endpoints assume string if other types not applicable
+- server: fix inserting empty objects with default values to postgres, citus, and sql server (fix #8475)
 - console: add remote database relationships for views
 - console: bug fixes for RS-to-RS relationships
 - console: allow users to remove prefix / suffix / root field namespace from a remote schema
