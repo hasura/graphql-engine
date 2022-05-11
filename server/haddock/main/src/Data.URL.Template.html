@@ -19,9 +19,9 @@
 </span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Test.QuickCheck</span></span><span>
 </span><span id="line-21"></span><span>
-</span><span id="line-22"></span><span id="local-6989586621688605904"><span id="local-6989586621688605905"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="Variable"><span class="annot"><a href="Data.URL.Template.html#Variable"><span class="hs-identifier hs-var">Variable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Variable"><span class="annot"><a href="Data.URL.Template.html#Variable"><span class="hs-identifier hs-var">Variable</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unVariable"><span class="annot"><span class="annottext">Variable -&gt; Text
+</span><span id="line-22"></span><span id="local-6989586621688605940"><span id="local-6989586621688605941"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="Variable"><span class="annot"><a href="Data.URL.Template.html#Variable"><span class="hs-identifier hs-var">Variable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Variable"><span class="annot"><a href="Data.URL.Template.html#Variable"><span class="hs-identifier hs-var">Variable</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unVariable"><span class="annot"><span class="annottext">Variable -&gt; Text
 </span><a href="Data.URL.Template.html#unVariable"><span class="hs-identifier hs-var hs-var">unVariable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
-</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688605896"><span id="local-6989586621688605898"><span id="local-6989586621688605900"><span class="annot"><span class="annottext">Int -&gt; Variable -&gt; ShowS
+</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688605932"><span id="local-6989586621688605934"><span id="local-6989586621688605936"><span class="annot"><span class="annottext">Int -&gt; Variable -&gt; ShowS
 [Variable] -&gt; ShowS
 Variable -&gt; String
 (Int -&gt; Variable -&gt; ShowS)
@@ -34,7 +34,7 @@ show :: Variable -&gt; String
 $cshow :: Variable -&gt; String
 showsPrec :: Int -&gt; Variable -&gt; ShowS
 $cshowsPrec :: Int -&gt; Variable -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688605891"><span id="local-6989586621688605893"><span class="annot"><span class="annottext">Variable -&gt; Variable -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688605927"><span id="local-6989586621688605929"><span class="annot"><span class="annottext">Variable -&gt; Variable -&gt; Bool
 (Variable -&gt; Variable -&gt; Bool)
 -&gt; (Variable -&gt; Variable -&gt; Bool) -&gt; Eq Variable
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -50,7 +50,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Variable x -&gt; Variable
 $cfrom :: forall x. Variable -&gt; Rep Variable x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688605883"><span id="local-6989586621688605885"><span class="annot"><span class="annottext">Int -&gt; Variable -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688605919"><span id="local-6989586621688605921"><span class="annot"><span class="annottext">Int -&gt; Variable -&gt; Int
 Variable -&gt; Int
 (Int -&gt; Variable -&gt; Int) -&gt; (Variable -&gt; Int) -&gt; Hashable Variable
 forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -62,21 +62,21 @@ $chashWithSalt :: Int -&gt; Variable -&gt; Int
 </span><span id="line-24"></span><span>
 </span><span id="line-25"></span><span class="annot"><a href="Data.URL.Template.html#printVariable"><span class="hs-identifier hs-type">printVariable</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.URL.Template.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-26"></span><span id="printVariable"><span class="annot"><span class="annottext">printVariable :: Variable -&gt; Text
-</span><a href="Data.URL.Template.html#printVariable"><span class="hs-identifier hs-var hs-var">printVariable</span></a></span></span><span> </span><span id="local-6989586621688605880"><span class="annot"><span class="annottext">Variable
-</span><a href="#local-6989586621688605880"><span class="hs-identifier hs-var">var</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="Data.URL.Template.html#printVariable"><span class="hs-identifier hs-var hs-var">printVariable</span></a></span></span><span> </span><span id="local-6989586621688605916"><span class="annot"><span class="annottext">Variable
+</span><a href="#local-6989586621688605916"><span class="hs-identifier hs-var">var</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;{{&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Variable -&gt; Text
 </span><a href="Data.URL.Template.html#unVariable"><span class="hs-identifier hs-var hs-var">unVariable</span></a></span><span> </span><span class="annot"><span class="annottext">Variable
-</span><a href="#local-6989586621688605880"><span class="hs-identifier hs-var">var</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688605916"><span class="hs-identifier hs-var">var</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;}}&quot;</span></span><span>
 </span><span id="line-27"></span><span>
-</span><span id="line-28"></span><span id="local-6989586621688605878"><span id="local-6989586621688605879"></span></span><span class="hs-keyword">data</span><span> </span><span id="TemplateItem"><span class="annot"><a href="Data.URL.Template.html#TemplateItem"><span class="hs-identifier hs-var">TemplateItem</span></a></span></span><span>
+</span><span id="line-28"></span><span id="local-6989586621688605914"><span id="local-6989586621688605915"></span></span><span class="hs-keyword">data</span><span> </span><span id="TemplateItem"><span class="annot"><a href="Data.URL.Template.html#TemplateItem"><span class="hs-identifier hs-var">TemplateItem</span></a></span></span><span>
 </span><span id="line-29"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="TIText"><span class="annot"><a href="Data.URL.Template.html#TIText"><span class="hs-identifier hs-var">TIText</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="TIVariable"><span class="annot"><a href="Data.URL.Template.html#TIVariable"><span class="hs-identifier hs-var">TIVariable</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Data.URL.Template.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span>
-</span><span id="line-31"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688605870"><span id="local-6989586621688605872"><span id="local-6989586621688605874"><span class="annot"><span class="annottext">Int -&gt; TemplateItem -&gt; ShowS
+</span><span id="line-31"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688605906"><span id="local-6989586621688605908"><span id="local-6989586621688605910"><span class="annot"><span class="annottext">Int -&gt; TemplateItem -&gt; ShowS
 [TemplateItem] -&gt; ShowS
 TemplateItem -&gt; String
 (Int -&gt; TemplateItem -&gt; ShowS)
@@ -91,7 +91,7 @@ show :: TemplateItem -&gt; String
 $cshow :: TemplateItem -&gt; String
 showsPrec :: Int -&gt; TemplateItem -&gt; ShowS
 $cshowsPrec :: Int -&gt; TemplateItem -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688605866"><span id="local-6989586621688605868"><span class="annot"><span class="annottext">TemplateItem -&gt; TemplateItem -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688605902"><span id="local-6989586621688605904"><span class="annot"><span class="annottext">TemplateItem -&gt; TemplateItem -&gt; Bool
 (TemplateItem -&gt; TemplateItem -&gt; Bool)
 -&gt; (TemplateItem -&gt; TemplateItem -&gt; Bool) -&gt; Eq TemplateItem
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -110,24 +110,24 @@ $cto :: forall x. Rep TemplateItem x -&gt; TemplateItem
 $cfrom :: forall x. TemplateItem -&gt; Rep TemplateItem x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-32"></span><span>
-</span><span id="line-33"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688605860"><span id="local-6989586621688605862"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Data.URL.Template.html#TemplateItem"><span class="hs-identifier hs-type">TemplateItem</span></a></span></span></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688605896"><span id="local-6989586621688605898"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Data.URL.Template.html#TemplateItem"><span class="hs-identifier hs-type">TemplateItem</span></a></span></span></span><span>
 </span><span id="line-34"></span><span>
 </span><span id="line-35"></span><span class="annot"><a href="Data.URL.Template.html#printTemplateItem"><span class="hs-identifier hs-type">printTemplateItem</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.URL.Template.html#TemplateItem"><span class="hs-identifier hs-type">TemplateItem</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-36"></span><span id="printTemplateItem"><span class="annot"><span class="annottext">printTemplateItem :: TemplateItem -&gt; Text
 </span><a href="Data.URL.Template.html#printTemplateItem"><span class="hs-identifier hs-var hs-var">printTemplateItem</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-37"></span><span>  </span><span class="annot"><a href="Data.URL.Template.html#TIText"><span class="hs-identifier hs-type">TIText</span></a></span><span> </span><span id="local-6989586621688605858"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688605858"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688605858"><span class="hs-identifier hs-var">t</span></a></span><span>
-</span><span id="line-38"></span><span>  </span><span class="annot"><a href="Data.URL.Template.html#TIVariable"><span class="hs-identifier hs-type">TIVariable</span></a></span><span> </span><span id="local-6989586621688605857"><span class="annot"><span class="annottext">Variable
-</span><a href="#local-6989586621688605857"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Variable -&gt; Text
+</span><span id="line-37"></span><span>  </span><span class="annot"><a href="Data.URL.Template.html#TIText"><span class="hs-identifier hs-type">TIText</span></a></span><span> </span><span id="local-6989586621688605894"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688605894"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688605894"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-38"></span><span>  </span><span class="annot"><a href="Data.URL.Template.html#TIVariable"><span class="hs-identifier hs-type">TIVariable</span></a></span><span> </span><span id="local-6989586621688605893"><span class="annot"><span class="annottext">Variable
+</span><a href="#local-6989586621688605893"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Variable -&gt; Text
 </span><a href="Data.URL.Template.html#printVariable"><span class="hs-identifier hs-var">printVariable</span></a></span><span> </span><span class="annot"><span class="annottext">Variable
-</span><a href="#local-6989586621688605857"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621688605893"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-39"></span><span>
 </span><span id="line-40"></span><span class="hs-comment">-- | A String with environment variables enclosed in '{{' and '}}'</span><span>
 </span><span id="line-41"></span><span class="hs-comment">-- http://{{APP_HOST}}:{{APP_PORT}}/v1/api</span><span>
-</span><span id="line-42"></span><span id="local-6989586621688605855"><span id="local-6989586621688605856"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="URLTemplate"><span class="annot"><a href="Data.URL.Template.html#URLTemplate"><span class="hs-identifier hs-var">URLTemplate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="URLTemplate"><span class="annot"><a href="Data.URL.Template.html#URLTemplate"><span class="hs-identifier hs-var">URLTemplate</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unURLTemplate"><span class="annot"><span class="annottext">URLTemplate -&gt; [TemplateItem]
+</span><span id="line-42"></span><span id="local-6989586621688605891"><span id="local-6989586621688605892"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="URLTemplate"><span class="annot"><a href="Data.URL.Template.html#URLTemplate"><span class="hs-identifier hs-var">URLTemplate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="URLTemplate"><span class="annot"><a href="Data.URL.Template.html#URLTemplate"><span class="hs-identifier hs-var">URLTemplate</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unURLTemplate"><span class="annot"><span class="annottext">URLTemplate -&gt; [TemplateItem]
 </span><a href="Data.URL.Template.html#unURLTemplate"><span class="hs-identifier hs-var hs-var">unURLTemplate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Data.URL.Template.html#TemplateItem"><span class="hs-identifier hs-type">TemplateItem</span></a></span><span class="hs-special">]</span><span class="hs-special">}</span><span>
-</span><span id="line-43"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688605847"><span id="local-6989586621688605849"><span id="local-6989586621688605851"><span class="annot"><span class="annottext">Int -&gt; URLTemplate -&gt; ShowS
+</span><span id="line-43"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688605883"><span id="local-6989586621688605885"><span id="local-6989586621688605887"><span class="annot"><span class="annottext">Int -&gt; URLTemplate -&gt; ShowS
 [URLTemplate] -&gt; ShowS
 URLTemplate -&gt; String
 (Int -&gt; URLTemplate -&gt; ShowS)
@@ -142,7 +142,7 @@ show :: URLTemplate -&gt; String
 $cshow :: URLTemplate -&gt; String
 showsPrec :: Int -&gt; URLTemplate -&gt; ShowS
 $cshowsPrec :: Int -&gt; URLTemplate -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688605843"><span id="local-6989586621688605845"><span class="annot"><span class="annottext">URLTemplate -&gt; URLTemplate -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688605879"><span id="local-6989586621688605881"><span class="annot"><span class="annottext">URLTemplate -&gt; URLTemplate -&gt; Bool
 (URLTemplate -&gt; URLTemplate -&gt; Bool)
 -&gt; (URLTemplate -&gt; URLTemplate -&gt; Bool) -&gt; Eq URLTemplate
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -159,7 +159,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep URLTemplate x -&gt; URLTemplate
 $cfrom :: forall x. URLTemplate -&gt; Rep URLTemplate x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688605837"><span id="local-6989586621688605839"><span class="annot"><span class="annottext">Int -&gt; URLTemplate -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688605873"><span id="local-6989586621688605875"><span class="annot"><span class="annottext">Int -&gt; URLTemplate -&gt; Int
 URLTemplate -&gt; Int
 (Int -&gt; URLTemplate -&gt; Int)
 -&gt; (URLTemplate -&gt; Int) -&gt; Hashable URLTemplate
@@ -168,7 +168,7 @@ hash :: URLTemplate -&gt; Int
 $chash :: URLTemplate -&gt; Int
 hashWithSalt :: Int -&gt; URLTemplate -&gt; Int
 $chashWithSalt :: Int -&gt; URLTemplate -&gt; Int
-</span><a href="#local-6989586621688605837"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688605873"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-44"></span><span>
 </span><span id="line-45"></span><span class="annot"><a href="Data.URL.Template.html#printURLTemplate"><span class="hs-identifier hs-type">printURLTemplate</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.URL.Template.html#URLTemplate"><span class="hs-identifier hs-type">URLTemplate</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-46"></span><span id="printURLTemplate"><span class="annot"><span class="annottext">printURLTemplate :: URLTemplate -&gt; Text
@@ -201,23 +201,23 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-51"></span><span>
 </span><span id="line-52"></span><span class="annot"><a href="Data.URL.Template.html#parseURLTemplate"><span class="hs-identifier hs-type">parseURLTemplate</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><a href="Data.URL.Template.html#URLTemplate"><span class="hs-identifier hs-type">URLTemplate</span></a></span><span>
 </span><span id="line-53"></span><span id="parseURLTemplate"><span class="annot"><span class="annottext">parseURLTemplate :: Text -&gt; Either String URLTemplate
-</span><a href="Data.URL.Template.html#parseURLTemplate"><span class="hs-identifier hs-var hs-var">parseURLTemplate</span></a></span></span><span> </span><span id="local-6989586621688605834"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688605834"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser URLTemplate -&gt; Text -&gt; Either String URLTemplate
+</span><a href="Data.URL.Template.html#parseURLTemplate"><span class="hs-identifier hs-var hs-var">parseURLTemplate</span></a></span></span><span> </span><span id="local-6989586621688605870"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688605870"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser URLTemplate -&gt; Text -&gt; Either String URLTemplate
 forall a. Parser a -&gt; Text -&gt; Either String a
 </span><span class="hs-identifier hs-var">parseOnly</span></span><span> </span><span class="annot"><span class="annottext">Parser URLTemplate
-</span><a href="#local-6989586621688605832"><span class="hs-identifier hs-var">parseTemplate</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688605834"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><a href="#local-6989586621688605868"><span class="hs-identifier hs-var">parseTemplate</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688605870"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-54"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-55"></span><span>    </span><span class="annot"><a href="#local-6989586621688605832"><span class="hs-identifier hs-type">parseTemplate</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Parser</span></span><span> </span><span class="annot"><a href="Data.URL.Template.html#URLTemplate"><span class="hs-identifier hs-type">URLTemplate</span></a></span><span>
-</span><span id="line-56"></span><span>    </span><span id="local-6989586621688605832"><span class="annot"><span class="annottext">parseTemplate :: Parser URLTemplate
-</span><a href="#local-6989586621688605832"><span class="hs-identifier hs-var hs-var">parseTemplate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-57"></span><span>      </span><span id="local-6989586621688605831"><span class="annot"><span class="annottext">[TemplateItem]
-</span><a href="#local-6989586621688605831"><span class="hs-identifier hs-var">items</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text TemplateItem -&gt; Parser Text [TemplateItem]
+</span><span id="line-55"></span><span>    </span><span class="annot"><a href="#local-6989586621688605868"><span class="hs-identifier hs-type">parseTemplate</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Parser</span></span><span> </span><span class="annot"><a href="Data.URL.Template.html#URLTemplate"><span class="hs-identifier hs-type">URLTemplate</span></a></span><span>
+</span><span id="line-56"></span><span>    </span><span id="local-6989586621688605868"><span class="annot"><span class="annottext">parseTemplate :: Parser URLTemplate
+</span><a href="#local-6989586621688605868"><span class="hs-identifier hs-var hs-var">parseTemplate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-57"></span><span>      </span><span id="local-6989586621688605867"><span class="annot"><span class="annottext">[TemplateItem]
+</span><a href="#local-6989586621688605867"><span class="hs-identifier hs-var">items</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text TemplateItem -&gt; Parser Text [TemplateItem]
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f [a]
 </span><span class="hs-identifier hs-var">many</span></span><span> </span><span class="annot"><span class="annottext">Parser Text TemplateItem
-</span><a href="#local-6989586621688605829"><span class="hs-identifier hs-var">parseTemplateItem</span></a></span><span>
-</span><span id="line-58"></span><span>      </span><span id="local-6989586621688605828"><span class="annot"><span class="annottext">TemplateItem
-</span><a href="#local-6989586621688605828"><span class="hs-identifier hs-var">lastItem</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TemplateItem
+</span><a href="#local-6989586621688605865"><span class="hs-identifier hs-var">parseTemplateItem</span></a></span><span>
+</span><span id="line-58"></span><span>      </span><span id="local-6989586621688605864"><span class="annot"><span class="annottext">TemplateItem
+</span><a href="#local-6989586621688605864"><span class="hs-identifier hs-var">lastItem</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TemplateItem
 </span><a href="Data.URL.Template.html#TIText"><span class="hs-identifier hs-var">TIText</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; TemplateItem)
 -&gt; Parser Text Text -&gt; Parser Text TemplateItem
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -232,20 +232,20 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="Data.URL.Template.html#URLTemplate"><span class="hs-identifier hs-var">URLTemplate</span></a></span><span> </span><span class="annot"><span class="annottext">([TemplateItem] -&gt; URLTemplate) -&gt; [TemplateItem] -&gt; URLTemplate
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[TemplateItem]
-</span><a href="#local-6989586621688605831"><span class="hs-identifier hs-var">items</span></a></span><span> </span><span class="annot"><span class="annottext">[TemplateItem] -&gt; [TemplateItem] -&gt; [TemplateItem]
+</span><a href="#local-6989586621688605867"><span class="hs-identifier hs-var">items</span></a></span><span> </span><span class="annot"><span class="annottext">[TemplateItem] -&gt; [TemplateItem] -&gt; [TemplateItem]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">TemplateItem
-</span><a href="#local-6989586621688605828"><span class="hs-identifier hs-var">lastItem</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621688605864"><span class="hs-identifier hs-var">lastItem</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-60"></span><span>
-</span><span id="line-61"></span><span>    </span><span class="annot"><a href="#local-6989586621688605829"><span class="hs-identifier hs-type">parseTemplateItem</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Parser</span></span><span> </span><span class="annot"><a href="Data.URL.Template.html#TemplateItem"><span class="hs-identifier hs-type">TemplateItem</span></a></span><span>
-</span><span id="line-62"></span><span>    </span><span id="local-6989586621688605829"><span class="annot"><span class="annottext">parseTemplateItem :: Parser Text TemplateItem
-</span><a href="#local-6989586621688605829"><span class="hs-identifier hs-var hs-var">parseTemplateItem</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-61"></span><span>    </span><span class="annot"><a href="#local-6989586621688605865"><span class="hs-identifier hs-type">parseTemplateItem</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Parser</span></span><span> </span><span class="annot"><a href="Data.URL.Template.html#TemplateItem"><span class="hs-identifier hs-type">TemplateItem</span></a></span><span>
+</span><span id="line-62"></span><span>    </span><span id="local-6989586621688605865"><span class="annot"><span class="annottext">parseTemplateItem :: Parser Text TemplateItem
+</span><a href="#local-6989586621688605865"><span class="hs-identifier hs-var hs-var">parseTemplateItem</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-63"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Variable -&gt; TemplateItem
 </span><a href="Data.URL.Template.html#TIVariable"><span class="hs-identifier hs-var">TIVariable</span></a></span><span> </span><span class="annot"><span class="annottext">(Variable -&gt; TemplateItem)
 -&gt; Parser Text Variable -&gt; Parser Text TemplateItem
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser Text Variable
-</span><a href="#local-6989586621688605825"><span class="hs-identifier hs-var">parseVariable</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688605861"><span class="hs-identifier hs-var">parseVariable</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-64"></span><span>        </span><span class="annot"><span class="annottext">Parser Text TemplateItem
 -&gt; Parser Text TemplateItem -&gt; Parser Text TemplateItem
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
@@ -269,9 +269,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">string</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;{{&quot;</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-65"></span><span>
-</span><span id="line-66"></span><span>    </span><span class="annot"><a href="#local-6989586621688605825"><span class="hs-identifier hs-type">parseVariable</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Parser</span></span><span> </span><span class="annot"><a href="Data.URL.Template.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span>
-</span><span id="line-67"></span><span>    </span><span id="local-6989586621688605825"><span class="annot"><span class="annottext">parseVariable :: Parser Text Variable
-</span><a href="#local-6989586621688605825"><span class="hs-identifier hs-var hs-var">parseVariable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-66"></span><span>    </span><span class="annot"><a href="#local-6989586621688605861"><span class="hs-identifier hs-type">parseVariable</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Parser</span></span><span> </span><span class="annot"><a href="Data.URL.Template.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span>
+</span><span id="line-67"></span><span>    </span><span id="local-6989586621688605861"><span class="annot"><span class="annottext">parseVariable :: Parser Text Variable
+</span><a href="#local-6989586621688605861"><span class="hs-identifier hs-var hs-var">parseVariable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-68"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; Parser Text Text
 </span><span class="hs-identifier hs-var">string</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;{{&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser Text Text -&gt; Parser Text Variable -&gt; Parser Text Variable
@@ -291,11 +291,11 @@ forall (f :: * -&gt; *) a b. Alternative f =&gt; f a -&gt; f b -&gt; f [a]
 </span><span id="line-69"></span><span>
 </span><span id="line-70"></span><span class="annot"><a href="Data.URL.Template.html#renderURLTemplate"><span class="hs-identifier hs-type">renderURLTemplate</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.URL.Template.html#URLTemplate"><span class="hs-identifier hs-type">URLTemplate</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-71"></span><span id="renderURLTemplate"><span class="annot"><span class="annottext">renderURLTemplate :: Environment -&gt; URLTemplate -&gt; Either String Text
-</span><a href="Data.URL.Template.html#renderURLTemplate"><span class="hs-identifier hs-var hs-var">renderURLTemplate</span></a></span></span><span> </span><span id="local-6989586621688605819"><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621688605819"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621688605818"><span class="annot"><span class="annottext">URLTemplate
-</span><a href="#local-6989586621688605818"><span class="hs-identifier hs-var">template</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Data.URL.Template.html#renderURLTemplate"><span class="hs-identifier hs-var hs-var">renderURLTemplate</span></a></span></span><span> </span><span id="local-6989586621688605855"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621688605855"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621688605854"><span class="annot"><span class="annottext">URLTemplate
+</span><a href="#local-6989586621688605854"><span class="hs-identifier hs-var">template</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-72"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621688605817"><span class="hs-identifier hs-var">errorVariables</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688605853"><span class="hs-identifier hs-var">errorVariables</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-73"></span><span>    </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either String Text
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Either String Text) -&gt; Text -&gt; Either String Text
@@ -306,7 +306,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Either Text Text] -&gt; [Text]
 forall a b. [Either a b] -&gt; [b]
 </span><span class="hs-identifier hs-var">rights</span></span><span> </span><span class="annot"><span class="annottext">[Either Text Text]
-</span><a href="#local-6989586621688605815"><span class="hs-identifier hs-var">eitherResults</span></a></span><span>
+</span><a href="#local-6989586621688605851"><span class="hs-identifier hs-var">eitherResults</span></a></span><span>
 </span><span id="line-74"></span><span>    </span><span class="annot"><span class="annottext">[Text]
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-75"></span><span>      </span><span class="annot"><span class="annottext">String -&gt; Either String Text
@@ -325,60 +325,60 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
 forall t (f :: * -&gt; *). (ToTxt t, Foldable f) =&gt; f t -&gt; Text
 </span><a href="Data.Text.Extended.html#commaSeparated"><span class="hs-identifier hs-var">commaSeparated</span></a></span><span> </span><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621688605817"><span class="hs-identifier hs-var">errorVariables</span></a></span><span>
+</span><a href="#local-6989586621688605853"><span class="hs-identifier hs-var">errorVariables</span></a></span><span>
 </span><span id="line-79"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-80"></span><span>    </span><span id="local-6989586621688605815"><span class="annot"><span class="annottext">eitherResults :: [Either Text Text]
-</span><a href="#local-6989586621688605815"><span class="hs-identifier hs-var hs-var">eitherResults</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(TemplateItem -&gt; Either Text Text)
+</span><span id="line-80"></span><span>    </span><span id="local-6989586621688605851"><span class="annot"><span class="annottext">eitherResults :: [Either Text Text]
+</span><a href="#local-6989586621688605851"><span class="hs-identifier hs-var hs-var">eitherResults</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(TemplateItem -&gt; Either Text Text)
 -&gt; [TemplateItem] -&gt; [Either Text Text]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">TemplateItem -&gt; Either Text Text
-</span><a href="#local-6989586621688605812"><span class="hs-identifier hs-var">renderTemplateItem</span></a></span><span> </span><span class="annot"><span class="annottext">([TemplateItem] -&gt; [Either Text Text])
+</span><a href="#local-6989586621688605848"><span class="hs-identifier hs-var">renderTemplateItem</span></a></span><span> </span><span class="annot"><span class="annottext">([TemplateItem] -&gt; [Either Text Text])
 -&gt; [TemplateItem] -&gt; [Either Text Text]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">URLTemplate -&gt; [TemplateItem]
 </span><a href="Data.URL.Template.html#unURLTemplate"><span class="hs-identifier hs-var hs-var">unURLTemplate</span></a></span><span> </span><span class="annot"><span class="annottext">URLTemplate
-</span><a href="#local-6989586621688605818"><span class="hs-identifier hs-var">template</span></a></span><span>
-</span><span id="line-81"></span><span>    </span><span id="local-6989586621688605817"><span class="annot"><span class="annottext">errorVariables :: [Text]
-</span><a href="#local-6989586621688605817"><span class="hs-identifier hs-var hs-var">errorVariables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Either Text Text] -&gt; [Text]
+</span><a href="#local-6989586621688605854"><span class="hs-identifier hs-var">template</span></a></span><span>
+</span><span id="line-81"></span><span>    </span><span id="local-6989586621688605853"><span class="annot"><span class="annottext">errorVariables :: [Text]
+</span><a href="#local-6989586621688605853"><span class="hs-identifier hs-var hs-var">errorVariables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Either Text Text] -&gt; [Text]
 forall a b. [Either a b] -&gt; [a]
 </span><span class="hs-identifier hs-var">lefts</span></span><span> </span><span class="annot"><span class="annottext">[Either Text Text]
-</span><a href="#local-6989586621688605815"><span class="hs-identifier hs-var">eitherResults</span></a></span><span>
-</span><span id="line-82"></span><span>    </span><span id="local-6989586621688605812"><span class="annot"><span class="annottext">renderTemplateItem :: TemplateItem -&gt; Either Text Text
-</span><a href="#local-6989586621688605812"><span class="hs-identifier hs-var hs-var">renderTemplateItem</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-83"></span><span>      </span><span class="annot"><a href="Data.URL.Template.html#TIText"><span class="hs-identifier hs-type">TIText</span></a></span><span> </span><span id="local-6989586621688605810"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688605810"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text Text
+</span><a href="#local-6989586621688605851"><span class="hs-identifier hs-var">eitherResults</span></a></span><span>
+</span><span id="line-82"></span><span>    </span><span id="local-6989586621688605848"><span class="annot"><span class="annottext">renderTemplateItem :: TemplateItem -&gt; Either Text Text
+</span><a href="#local-6989586621688605848"><span class="hs-identifier hs-var hs-var">renderTemplateItem</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-83"></span><span>      </span><span class="annot"><a href="Data.URL.Template.html#TIText"><span class="hs-identifier hs-type">TIText</span></a></span><span> </span><span id="local-6989586621688605846"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688605846"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text Text
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688605810"><span class="hs-identifier hs-var">t</span></a></span><span>
-</span><span id="line-84"></span><span>      </span><span class="annot"><a href="Data.URL.Template.html#TIVariable"><span class="hs-identifier hs-type">TIVariable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.URL.Template.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span id="local-6989586621688605809"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688605809"><span class="hs-identifier hs-var">var</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-85"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688605808"><span class="annot"><span class="annottext">maybeEnvValue :: Maybe String
-</span><a href="#local-6989586621688605808"><span class="hs-identifier hs-var hs-var">maybeEnvValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; String -&gt; Maybe String
+</span><a href="#local-6989586621688605846"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-84"></span><span>      </span><span class="annot"><a href="Data.URL.Template.html#TIVariable"><span class="hs-identifier hs-type">TIVariable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.URL.Template.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span id="local-6989586621688605845"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688605845"><span class="hs-identifier hs-var">var</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-85"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688605844"><span class="annot"><span class="annottext">maybeEnvValue :: Maybe String
+</span><a href="#local-6989586621688605844"><span class="hs-identifier hs-var hs-var">maybeEnvValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; String -&gt; Maybe String
 </span><a href="Data.Environment.html#lookupEnv"><span class="hs-identifier hs-var">Env.lookupEnv</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621688605819"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Maybe String) -&gt; String -&gt; Maybe String
+</span><a href="#local-6989586621688605855"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Maybe String) -&gt; String -&gt; Maybe String
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688605809"><span class="hs-identifier hs-var">var</span></a></span><span>
+</span><a href="#local-6989586621688605845"><span class="hs-identifier hs-var">var</span></a></span><span>
 </span><span id="line-86"></span><span>         </span><span class="hs-keyword">in</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621688605808"><span class="hs-identifier hs-var">maybeEnvValue</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688605844"><span class="hs-identifier hs-var">maybeEnvValue</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-87"></span><span>              </span><span class="annot"><span class="annottext">Maybe String
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text Text
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688605809"><span class="hs-identifier hs-var">var</span></a></span><span>
-</span><span id="line-88"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688605806"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688605806"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text Text
+</span><a href="#local-6989586621688605845"><span class="hs-identifier hs-var">var</span></a></span><span>
+</span><span id="line-88"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688605842"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688605842"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text Text
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Either Text Text) -&gt; Text -&gt; Either Text Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
 </span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688605806"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621688605842"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-89"></span><span>
 </span><span id="line-90"></span><span class="hs-comment">-- QuickCheck generators</span><span>
-</span><span id="line-91"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688605803"><span class="annot"><span class="hs-identifier hs-type">Arbitrary</span></span><span> </span><span class="annot"><a href="Data.URL.Template.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-92"></span><span>  </span><span id="local-6989586621688605801"><span class="annot"><span class="annottext">arbitrary :: Gen Variable
+</span><span id="line-91"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688605839"><span class="annot"><span class="hs-identifier hs-type">Arbitrary</span></span><span> </span><span class="annot"><a href="Data.URL.Template.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-92"></span><span>  </span><span id="local-6989586621688605837"><span class="annot"><span class="annottext">arbitrary :: Gen Variable
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">arbitrary</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Variable
 </span><a href="Data.URL.Template.html#Variable"><span class="hs-identifier hs-var">Variable</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Variable) -&gt; (String -&gt; Text) -&gt; String -&gt; Variable
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -397,9 +397,9 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot; -_&quot;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-93"></span><span>
-</span><span id="line-94"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688605794"><span class="annot"><span class="hs-identifier hs-type">Arbitrary</span></span><span> </span><span class="annot"><a href="Data.URL.Template.html#URLTemplate"><span class="hs-identifier hs-type">URLTemplate</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-95"></span><span>  </span><span id="local-6989586621688605793"><span class="annot"><span class="annottext">arbitrary :: Gen URLTemplate
-</span><a href="#local-6989586621688605793"><span class="hs-identifier hs-var hs-var hs-var hs-var">arbitrary</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[TemplateItem] -&gt; URLTemplate
+</span><span id="line-94"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688605830"><span class="annot"><span class="hs-identifier hs-type">Arbitrary</span></span><span> </span><span class="annot"><a href="Data.URL.Template.html#URLTemplate"><span class="hs-identifier hs-type">URLTemplate</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-95"></span><span>  </span><span id="local-6989586621688605829"><span class="annot"><span class="annottext">arbitrary :: Gen URLTemplate
+</span><a href="#local-6989586621688605829"><span class="hs-identifier hs-var hs-var hs-var hs-var">arbitrary</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[TemplateItem] -&gt; URLTemplate
 </span><a href="Data.URL.Template.html#URLTemplate"><span class="hs-identifier hs-var">URLTemplate</span></a></span><span> </span><span class="annot"><span class="annottext">([TemplateItem] -&gt; URLTemplate)
 -&gt; Gen [TemplateItem] -&gt; Gen URLTemplate
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -408,11 +408,11 @@ forall a. Gen a -&gt; Gen [a]
 </span><span class="hs-identifier hs-var">listOf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Gen TemplateItem] -&gt; Gen TemplateItem
 forall a. [Gen a] -&gt; Gen a
 </span><span class="hs-identifier hs-var">oneof</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Gen TemplateItem
-</span><a href="#local-6989586621688605790"><span class="hs-identifier hs-var">genText</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Gen TemplateItem
-</span><a href="#local-6989586621688605789"><span class="hs-identifier hs-var">genVariable</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688605826"><span class="hs-identifier hs-var">genText</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Gen TemplateItem
+</span><a href="#local-6989586621688605825"><span class="hs-identifier hs-var">genVariable</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-96"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-97"></span><span>      </span><span id="local-6989586621688605790"><span class="annot"><span class="annottext">genText :: Gen TemplateItem
-</span><a href="#local-6989586621688605790"><span class="hs-identifier hs-var hs-var">genText</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TemplateItem
+</span><span id="line-97"></span><span>      </span><span id="local-6989586621688605826"><span class="annot"><span class="annottext">genText :: Gen TemplateItem
+</span><a href="#local-6989586621688605826"><span class="hs-identifier hs-var hs-var">genText</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TemplateItem
 </span><a href="Data.URL.Template.html#TIText"><span class="hs-identifier hs-var">TIText</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; TemplateItem)
 -&gt; (String -&gt; Text) -&gt; String -&gt; TemplateItem
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -430,8 +430,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot; ://&quot;</span></span><span class="hs-special">)</span><span>
-</span><span id="line-98"></span><span>      </span><span id="local-6989586621688605789"><span class="annot"><span class="annottext">genVariable :: Gen TemplateItem
-</span><a href="#local-6989586621688605789"><span class="hs-identifier hs-var hs-var">genVariable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Variable -&gt; TemplateItem
+</span><span id="line-98"></span><span>      </span><span id="local-6989586621688605825"><span class="annot"><span class="annottext">genVariable :: Gen TemplateItem
+</span><a href="#local-6989586621688605825"><span class="hs-identifier hs-var hs-var">genVariable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Variable -&gt; TemplateItem
 </span><a href="Data.URL.Template.html#TIVariable"><span class="hs-identifier hs-var">TIVariable</span></a></span><span> </span><span class="annot"><span class="annottext">(Variable -&gt; TemplateItem) -&gt; Gen Variable -&gt; Gen TemplateItem
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Gen Variable
