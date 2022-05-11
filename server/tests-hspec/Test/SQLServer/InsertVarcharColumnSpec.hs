@@ -33,7 +33,7 @@ spec =
 mssqlSetup :: (TestEnvironment, ()) -> IO ()
 mssqlSetup (testEnv, ()) = do
   -- Clear metadata and configure the source
-  GraphqlEngine.setSource testEnv Sqlserver.defaultSourceMetadata
+  GraphqlEngine.setSource testEnv Sqlserver.defaultSourceMetadata Nothing
 
   -- Setup DB schema
   Sqlserver.run_ setupSQL

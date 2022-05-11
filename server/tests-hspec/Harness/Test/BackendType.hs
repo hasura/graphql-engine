@@ -7,7 +7,7 @@ module Harness.Test.BackendType
   )
 where
 
-import Harness.Constants qualified as Constants (bigqueryDataset, citusDb, mysqlDb, postgresDb, sqlserverDb)
+import Harness.Constants qualified as Constants (bigqueryDataset, citusDb, dataConnectorDb, mysqlDb, postgresDb, sqlserverDb)
 import Prelude
 
 -- | A supported backend type.
@@ -17,6 +17,7 @@ data BackendType
   | SQLServer
   | BigQuery
   | Citus
+  | DataConnector
   deriving (Show)
 
 -- | The default hasura metadata source name used for a given backend in this test suite project.
@@ -27,6 +28,7 @@ defaultSource = \case
   SQLServer -> "mssql"
   BigQuery -> "bigquery"
   Citus -> "citus"
+  DataConnector -> "data-connector"
 
 -- | The default hasura metadata backend type used for a given backend in this test suite project.
 defaultBackendTypeString :: BackendType -> String
@@ -36,6 +38,7 @@ defaultBackendTypeString = \case
   SQLServer -> "mssql"
   BigQuery -> "bigquery"
   Citus -> "citus"
+  DataConnector -> "data-connector"
 
 -- | The default hasura metadata schema name used for a given backend in this test suite project.
 defaultSchema :: BackendType -> String
@@ -45,3 +48,4 @@ defaultSchema = \case
   SQLServer -> Constants.sqlserverDb
   BigQuery -> Constants.bigqueryDataset
   Citus -> Constants.citusDb
+  DataConnector -> Constants.dataConnectorDb

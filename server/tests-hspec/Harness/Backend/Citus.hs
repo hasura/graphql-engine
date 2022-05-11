@@ -223,7 +223,7 @@ untrackTable testEnvironment table =
 setup :: HasCallStack => [Schema.Table] -> (TestEnvironment, ()) -> IO ()
 setup tables (testEnvironment, _) = do
   -- Clear and reconfigure the metadata
-  GraphqlEngine.setSource testEnvironment defaultSourceMetadata
+  GraphqlEngine.setSource testEnvironment defaultSourceMetadata Nothing
   -- Setup and track tables
   for_ tables $ \table -> do
     createTable table

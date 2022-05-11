@@ -12,7 +12,7 @@ where
 import Autodocodec
 import Autodocodec.OpenAPI ()
 import Control.DeepSeq (NFData)
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Data (Data)
 import Data.Hashable (Hashable)
 import Data.OpenApi (ToSchema)
@@ -26,6 +26,7 @@ import Prelude
 newtype TableName = TableName {unTableName :: Text}
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
+  deriving newtype (FromJSONKey, ToJSONKey)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec TableName
 
 instance HasCodec TableName where

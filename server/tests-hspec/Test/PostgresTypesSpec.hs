@@ -36,7 +36,7 @@ spec =
 postgresSetup :: (TestEnvironment, ()) -> IO ()
 postgresSetup (testEnvironment, _) = do
   -- Clear and reconfigure the metadata
-  GraphqlEngine.setSource testEnvironment Postgres.defaultSourceMetadata
+  GraphqlEngine.setSource testEnvironment Postgres.defaultSourceMetadata Nothing
 
   -- Setup tables
   Postgres.run_

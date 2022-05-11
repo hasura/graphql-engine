@@ -137,19 +137,25 @@ library dc-api
                      , autodocodec-openapi3
                      , base
                      , bytestring
+                     , containers
                      , deepseq
+                     , file-embed
                      , hashable
                      , insert-ordered-containers
                      , lens
                      , lens-aeson
+                     , mtl
                      , openapi3
                      , scientific
                      , servant
                      , servant-client
                      , servant-client-core
                      , servant-openapi3
+                     , servant-server
                      , text
                      , unordered-containers
+                     , vector
+                     , warp
   if !flag(profiling)
     -- ghc-heap-view can't be built with profiling
     build-depends:     ghc-heap-view
@@ -166,6 +172,10 @@ library dc-api
                      , Hasura.Backends.DataConnector.API.V0.Scalar.Value
                      , Hasura.Backends.DataConnector.API.V0.Schema
                      , Hasura.Backends.DataConnector.API.V0.Table
+                     , Hasura.Backends.DataConnector.Agent.Data
+                     , Hasura.Backends.DataConnector.Agent.Query
+                     , Hasura.Backends.DataConnector.Agent.Schema
+                     , Hasura.Backends.DataConnector.Agent.Server
 
 library
   import: common-all
@@ -1003,6 +1013,7 @@ test-suite tests-hspec
     , dependent-map
     , dependent-sum
     , ekg-core
+    , dc-api
     , graphql-engine
     , graphql-parser
     , haskell-src-meta
@@ -1088,6 +1099,7 @@ test-suite tests-hspec
  -- Harness.Backend
     Harness.Backend.BigQuery
     Harness.Backend.Citus
+    Harness.Backend.DataConnector
     Harness.Backend.Mysql
     Harness.Backend.Postgres
     Harness.Backend.Sqlserver
@@ -1108,6 +1120,7 @@ test-suite tests-hspec
     Test.ColumnPresetsSpec
     Test.CustomFieldNamesSpec
     Test.DirectivesSpec
+    Test.DC.QuerySpec
     Test.EventTriggersRunSQLSpec
     Test.HelloWorldSpec
     Test.InsertCheckPermissionSpec

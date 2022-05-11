@@ -241,6 +241,7 @@ mkPlan session (SourceConfig {_scSchema = API.SchemaResponse {..}}) ir = transla
       ANISNOTNULL ->
         pure $ IR.E.Not (IR.E.IsNull lhs)
       AIN (IR.E.Array rhs) -> pure $ IR.E.In lhs rhs
+      ANIN (IR.E.Array rhs) -> pure $ IR.E.Not $ IR.E.In lhs rhs
       _ ->
         throw400 NotSupported "An operator is not supported by the Data Connector backend"
 

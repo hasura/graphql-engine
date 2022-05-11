@@ -34,6 +34,7 @@ module Harness.Constants
     citusConnectionString,
     citusDb,
     serveOptions,
+    dataConnectorDb,
   )
 where
 
@@ -126,6 +127,11 @@ citusConnectionString =
     ++ show citusPort
     ++ "/"
     ++ citusDb
+
+-- * DataConnector
+
+dataConnectorDb :: String
+dataConnectorDb = "data-connector"
 
 -- * Liveness
 
