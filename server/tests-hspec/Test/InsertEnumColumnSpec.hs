@@ -68,7 +68,7 @@ DROP TYPE "UserRole";
 pgSetup :: (TestEnvironment, ()) -> IO ()
 pgSetup (testEnvironment, ()) = do
   -- Clear and reconfigure the metadata
-  GraphqlEngine.setSource testEnvironment Postgres.defaultSourceMetadata
+  GraphqlEngine.setSource testEnvironment Postgres.defaultSourceMetadata Nothing
 
   -- Setup schema
   Postgres.run_ commonSetupSQL
@@ -112,7 +112,7 @@ args:
 citusSetup :: (TestEnvironment, ()) -> IO ()
 citusSetup (testEnvironment, ()) = do
   -- Clear and reconfigure the metadata
-  GraphqlEngine.setSource testEnvironment Citus.defaultSourceMetadata
+  GraphqlEngine.setSource testEnvironment Citus.defaultSourceMetadata Nothing
 
   -- Setup schema
   Citus.run_ commonSetupSQL

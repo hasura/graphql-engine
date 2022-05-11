@@ -11,9 +11,10 @@ where
 
 import Control.DeepSeq (NFData)
 import Control.Lens ((%~), (&), (.~), (^?))
-import Data.Aeson (FromJSON (..), Object, ToJSON (..), Value (..), encode, object, withObject, (.:), (.=), (<?>))
+import Data.Aeson (FromJSON (..), Object, ToJSON (..), Value (..), eitherDecode, encode, object, withObject, (.:), (.=), (<?>))
 import Data.Aeson.Lens (AsPrimitive (..), key, members, values)
 import Data.Aeson.Types (JSONPathElement (..))
+import Data.Bifunctor (first)
 import Data.ByteString.Lazy qualified as BSL
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Hashable (Hashable)
@@ -23,12 +24,16 @@ import Data.OpenApi qualified as OpenApi
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
-import Servant.API (ToHttpApiData (..))
+import Servant.API (FromHttpApiData (..), ToHttpApiData (..))
 import Prelude
 
 newtype Config = Config {unConfig :: Object}
   deriving stock (Eq, Show, Ord)
   deriving newtype (Hashable, NFData, ToJSON, FromJSON)
+
+instance FromHttpApiData Config where
+  parseUrlPiece = first Text.pack . eitherDecode . BSL.fromStrict . Text.encodeUtf8
+  parseHeader = first Text.pack . eitherDecode . BSL.fromStrict
 
 instance ToHttpApiData Config where
   toUrlPiece (Config val) = Text.decodeUtf8 . BSL.toStrict $ encode val

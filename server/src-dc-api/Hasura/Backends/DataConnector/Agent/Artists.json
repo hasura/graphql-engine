@@ -1,0 +1,1102 @@
+[
+  {
+    "id": 1,
+    "name": "AC/DC"
+  },
+  {
+    "id": 2,
+    "name": "Accept"
+  },
+  {
+    "id": 3,
+    "name": "Aerosmith"
+  },
+  {
+    "id": 4,
+    "name": "Alanis Morissette"
+  },
+  {
+    "id": 5,
+    "name": "Alice In Chains"
+  },
+  {
+    "id": 6,
+    "name": "Antônio Carlos Jobim"
+  },
+  {
+    "id": 7,
+    "name": "Apocalyptica"
+  },
+  {
+    "id": 8,
+    "name": "Audioslave"
+  },
+  {
+    "id": 9,
+    "name": "BackBeat"
+  },
+  {
+    "id": 10,
+    "name": "Billy Cobham"
+  },
+  {
+    "id": 11,
+    "name": "Black Label Society"
+  },
+  {
+    "id": 12,
+    "name": "Black Sabbath"
+  },
+  {
+    "id": 13,
+    "name": "Body Count"
+  },
+  {
+    "id": 14,
+    "name": "Bruce Dickinson"
+  },
+  {
+    "id": 15,
+    "name": "Buddy Guy"
+  },
+  {
+    "id": 16,
+    "name": "Caetano Veloso"
+  },
+  {
+    "id": 17,
+    "name": "Chico Buarque"
+  },
+  {
+    "id": 18,
+    "name": "Chico Science & Nação Zumbi"
+  },
+  {
+    "id": 19,
+    "name": "Cidade Negra"
+  },
+  {
+    "id": 20,
+    "name": "Cláudio Zoli"
+  },
+  {
+    "id": 21,
+    "name": "Various artistss"
+  },
+  {
+    "id": 22,
+    "name": "Led Zeppelin"
+  },
+  {
+    "id": 23,
+    "name": "Frank Zappa & Captain Beefheart"
+  },
+  {
+    "id": 24,
+    "name": "Marcos Valle"
+  },
+  {
+    "id": 25,
+    "name": "Milton Nascimento & Bebeto"
+  },
+  {
+    "id": 26,
+    "name": "Azymuth"
+  },
+  {
+    "id": 27,
+    "name": "Gilberto Gil"
+  },
+  {
+    "id": 28,
+    "name": "João Gilberto"
+  },
+  {
+    "id": 29,
+    "name": "Bebel Gilberto"
+  },
+  {
+    "id": 30,
+    "name": "Jorge Vercilo"
+  },
+  {
+    "id": 31,
+    "name": "Baby Consuelo"
+  },
+  {
+    "id": 32,
+    "name": "Ney Matogrosso"
+  },
+  {
+    "id": 33,
+    "name": "Luiz Melodia"
+  },
+  {
+    "id": 34,
+    "name": "Nando Reis"
+  },
+  {
+    "id": 35,
+    "name": "Pedro Luís & A Parede"
+  },
+  {
+    "id": 36,
+    "name": "O Rappa"
+  },
+  {
+    "id": 37,
+    "name": "Ed Motta"
+  },
+  {
+    "id": 38,
+    "name": "Banda Black Rio"
+  },
+  {
+    "id": 39,
+    "name": "Fernanda Porto"
+  },
+  {
+    "id": 40,
+    "name": "Os Cariocas"
+  },
+  {
+    "id": 41,
+    "name": "Elis Regina"
+  },
+  {
+    "id": 42,
+    "name": "Milton Nascimento"
+  },
+  {
+    "id": 43,
+    "name": "A Cor Do Som"
+  },
+  {
+    "id": 44,
+    "name": "Kid Abelha"
+  },
+  {
+    "id": 45,
+    "name": "Sandra De Sá"
+  },
+  {
+    "id": 46,
+    "name": "Jorge Ben"
+  },
+  {
+    "id": 47,
+    "name": "Hermeto Pascoal"
+  },
+  {
+    "id": 48,
+    "name": "Barão Vermelho"
+  },
+  {
+    "id": 49,
+    "name": "Edson, DJ Marky & DJ Patife Featuring Fernanda Porto"
+  },
+  {
+    "id": 50,
+    "name": "Metallica"
+  },
+  {
+    "id": 51,
+    "name": "Queen"
+  },
+  {
+    "id": 52,
+    "name": "Kiss"
+  },
+  {
+    "id": 53,
+    "name": "Spyro Gyra"
+  },
+  {
+    "id": 54,
+    "name": "Green Day"
+  },
+  {
+    "id": 55,
+    "name": "David Coverdale"
+  },
+  {
+    "id": 56,
+    "name": "Gonzaguinha"
+  },
+  {
+    "id": 57,
+    "name": "Os Mutantes"
+  },
+  {
+    "id": 58,
+    "name": "Deep Purple"
+  },
+  {
+    "id": 59,
+    "name": "Santana"
+  },
+  {
+    "id": 60,
+    "name": "Santana Feat. Dave Matthews"
+  },
+  {
+    "id": 61,
+    "name": "Santana Feat. Everlast"
+  },
+  {
+    "id": 62,
+    "name": "Santana Feat. Rob Thomas"
+  },
+  {
+    "id": 63,
+    "name": "Santana Feat. Lauryn Hill & Cee-Lo"
+  },
+  {
+    "id": 64,
+    "name": "Santana Feat. The Project G&B"
+  },
+  {
+    "id": 65,
+    "name": "Santana Feat. Maná"
+  },
+  {
+    "id": 66,
+    "name": "Santana Feat. Eagle-Eye Cherry"
+  },
+  {
+    "id": 67,
+    "name": "Santana Feat. Eric Clapton"
+  },
+  {
+    "id": 68,
+    "name": "Miles Davis"
+  },
+  {
+    "id": 69,
+    "name": "Gene Krupa"
+  },
+  {
+    "id": 70,
+    "name": "Toquinho & Vinícius"
+  },
+  {
+    "id": 71,
+    "name": "Vinícius De Moraes & Baden Powell"
+  },
+  {
+    "id": 72,
+    "name": "Vinícius De Moraes"
+  },
+  {
+    "id": 73,
+    "name": "Vinícius E Qurteto Em Cy"
+  },
+  {
+    "id": 74,
+    "name": "Vinícius E Odette Lara"
+  },
+  {
+    "id": 75,
+    "name": "Vinicius, Toquinho & Quarteto Em Cy"
+  },
+  {
+    "id": 76,
+    "name": "Creedence Clearwater Revival"
+  },
+  {
+    "id": 77,
+    "name": "Cássia Eller"
+  },
+  {
+    "id": 78,
+    "name": "Def Leppard"
+  },
+  {
+    "id": 79,
+    "name": "Dennis Chambers"
+  },
+  {
+    "id": 80,
+    "name": "Djavan"
+  },
+  {
+    "id": 81,
+    "name": "Eric Clapton"
+  },
+  {
+    "id": 82,
+    "name": "Faith No More"
+  },
+  {
+    "id": 83,
+    "name": "Falamansa"
+  },
+  {
+    "id": 84,
+    "name": "Foo Fighters"
+  },
+  {
+    "id": 85,
+    "name": "Frank Sinatra"
+  },
+  {
+    "id": 86,
+    "name": "Funk Como Le Gusta"
+  },
+  {
+    "id": 87,
+    "name": "Godsmack"
+  },
+  {
+    "id": 88,
+    "name": "Guns N' Roses"
+  },
+  {
+    "id": 89,
+    "name": "Incognito"
+  },
+  {
+    "id": 90,
+    "name": "Iron Maiden"
+  },
+  {
+    "id": 91,
+    "name": "James Brown"
+  },
+  {
+    "id": 92,
+    "name": "Jamiroquai"
+  },
+  {
+    "id": 93,
+    "name": "JET"
+  },
+  {
+    "id": 94,
+    "name": "Jimi Hendrix"
+  },
+  {
+    "id": 95,
+    "name": "Joe Satriani"
+  },
+  {
+    "id": 96,
+    "name": "Jota Quest"
+  },
+  {
+    "id": 97,
+    "name": "João Suplicy"
+  },
+  {
+    "id": 98,
+    "name": "Judas Priest"
+  },
+  {
+    "id": 99,
+    "name": "Legião Urbana"
+  },
+  {
+    "id": 100,
+    "name": "Lenny Kravitz"
+  },
+  {
+    "id": 101,
+    "name": "Lulu Santos"
+  },
+  {
+    "id": 102,
+    "name": "Marillion"
+  },
+  {
+    "id": 103,
+    "name": "Marisa Monte"
+  },
+  {
+    "id": 104,
+    "name": "Marvin Gaye"
+  },
+  {
+    "id": 105,
+    "name": "Men At Work"
+  },
+  {
+    "id": 106,
+    "name": "Motörhead"
+  },
+  {
+    "id": 107,
+    "name": "Motörhead & Girlschool"
+  },
+  {
+    "id": 108,
+    "name": "Mônica Marianno"
+  },
+  {
+    "id": 109,
+    "name": "Mötley Crüe"
+  },
+  {
+    "id": 110,
+    "name": "Nirvana"
+  },
+  {
+    "id": 111,
+    "name": "O Terço"
+  },
+  {
+    "id": 112,
+    "name": "Olodum"
+  },
+  {
+    "id": 113,
+    "name": "Os Paralamas Do Sucesso"
+  },
+  {
+    "id": 114,
+    "name": "Ozzy Osbourne"
+  },
+  {
+    "id": 115,
+    "name": "Page & Plant"
+  },
+  {
+    "id": 116,
+    "name": "Passengers"
+  },
+  {
+    "id": 117,
+    "name": "Paul D'Ianno"
+  },
+  {
+    "id": 118,
+    "name": "Pearl Jam"
+  },
+  {
+    "id": 119,
+    "name": "Peter Tosh"
+  },
+  {
+    "id": 120,
+    "name": "Pink Floyd"
+  },
+  {
+    "id": 121,
+    "name": "Planet Hemp"
+  },
+  {
+    "id": 122,
+    "name": "R.E.M. Feat. Kate Pearson"
+  },
+  {
+    "id": 123,
+    "name": "R.E.M. Feat. KRS-One"
+  },
+  {
+    "id": 124,
+    "name": "R.E.M."
+  },
+  {
+    "id": 125,
+    "name": "Raimundos"
+  },
+  {
+    "id": 126,
+    "name": "Raul Seixas"
+  },
+  {
+    "id": 127,
+    "name": "Red Hot Chili Peppers"
+  },
+  {
+    "id": 128,
+    "name": "Rush"
+  },
+  {
+    "id": 129,
+    "name": "Simply Red"
+  },
+  {
+    "id": 130,
+    "name": "Skank"
+  },
+  {
+    "id": 131,
+    "name": "Smashing Pumpkins"
+  },
+  {
+    "id": 132,
+    "name": "Soundgarden"
+  },
+  {
+    "id": 133,
+    "name": "Stevie Ray Vaughan & Double Trouble"
+  },
+  {
+    "id": 134,
+    "name": "Stone Temple Pilots"
+  },
+  {
+    "id": 135,
+    "name": "System Of A Down"
+  },
+  {
+    "id": 136,
+    "name": "Terry Bozzio, Tony Levin & Steve Stevens"
+  },
+  {
+    "id": 137,
+    "name": "The Black Crowes"
+  },
+  {
+    "id": 138,
+    "name": "The Clash"
+  },
+  {
+    "id": 139,
+    "name": "The Cult"
+  },
+  {
+    "id": 140,
+    "name": "The Doors"
+  },
+  {
+    "id": 141,
+    "name": "The Police"
+  },
+  {
+    "id": 142,
+    "name": "The Rolling Stones"
+  },
+  {
+    "id": 143,
+    "name": "The Tea Party"
+  },
+  {
+    "id": 144,
+    "name": "The Who"
+  },
+  {
+    "id": 145,
+    "name": "Tim Maia"
+  },
+  {
+    "id": 146,
+    "name": "Titãs"
+  },
+  {
+    "id": 147,
+    "name": "Battlestar Galactica"
+  },
+  {
+    "id": 148,
+    "name": "Heroes"
+  },
+  {
+    "id": 149,
+    "name": "Lost"
+  },
+  {
+    "id": 150,
+    "name": "U2"
+  },
+  {
+    "id": 151,
+    "name": "UB40"
+  },
+  {
+    "id": 152,
+    "name": "Van Halen"
+  },
+  {
+    "id": 153,
+    "name": "Velvet Revolver"
+  },
+  {
+    "id": 154,
+    "name": "Whitesnake"
+  },
+  {
+    "id": 155,
+    "name": "Zeca Pagodinho"
+  },
+  {
+    "id": 156,
+    "name": "The Office"
+  },
+  {
+    "id": 157,
+    "name": "Dread Zeppelin"
+  },
+  {
+    "id": 158,
+    "name": "Battlestar Galactica (Classic)"
+  },
+  {
+    "id": 159,
+    "name": "Aquaman"
+  },
+  {
+    "id": 160,
+    "name": "Christina Aguilera featuring BigElf"
+  },
+  {
+    "id": 161,
+    "name": "Aerosmith & Sierra Leone's Refugee Allstars"
+  },
+  {
+    "id": 162,
+    "name": "Los Lonely Boys"
+  },
+  {
+    "id": 163,
+    "name": "Corinne Bailey Rae"
+  },
+  {
+    "id": 164,
+    "name": "Dhani Harrison & Jakob Dylan"
+  },
+  {
+    "id": 165,
+    "name": "Jackson Browne"
+  },
+  {
+    "id": 166,
+    "name": "Avril Lavigne"
+  },
+  {
+    "id": 167,
+    "name": "Big & Rich"
+  },
+  {
+    "id": 168,
+    "name": "Youssou N'Dour"
+  },
+  {
+    "id": 169,
+    "name": "Black Eyed Peas"
+  },
+  {
+    "id": 170,
+    "name": "Jack Johnson"
+  },
+  {
+    "id": 171,
+    "name": "Ben Harper"
+  },
+  {
+    "id": 172,
+    "name": "Snow Patrol"
+  },
+  {
+    "id": 173,
+    "name": "Matisyahu"
+  },
+  {
+    "id": 174,
+    "name": "The Postal Service"
+  },
+  {
+    "id": 175,
+    "name": "Jaguares"
+  },
+  {
+    "id": 176,
+    "name": "The Flaming Lips"
+  },
+  {
+    "id": 177,
+    "name": "Jack's Mannequin & Mick Fleetwood"
+  },
+  {
+    "id": 178,
+    "name": "Regina Spektor"
+  },
+  {
+    "id": 179,
+    "name": "Scorpions"
+  },
+  {
+    "id": 180,
+    "name": "House Of Pain"
+  },
+  {
+    "id": 181,
+    "name": "Xis"
+  },
+  {
+    "id": 182,
+    "name": "Nega Gizza"
+  },
+  {
+    "id": 183,
+    "name": "Gustavo & Andres Veiga & Salazar"
+  },
+  {
+    "id": 184,
+    "name": "Rodox"
+  },
+  {
+    "id": 185,
+    "name": "Charlie Brown Jr."
+  },
+  {
+    "id": 186,
+    "name": "Pedro Luís E A Parede"
+  },
+  {
+    "id": 187,
+    "name": "Los Hermanos"
+  },
+  {
+    "id": 188,
+    "name": "Mundo Livre S/A"
+  },
+  {
+    "id": 189,
+    "name": "Otto"
+  },
+  {
+    "id": 190,
+    "name": "Instituto"
+  },
+  {
+    "id": 191,
+    "name": "Nação Zumbi"
+  },
+  {
+    "id": 192,
+    "name": "DJ Dolores & Orchestra Santa Massa"
+  },
+  {
+    "id": 193,
+    "name": "Seu Jorge"
+  },
+  {
+    "id": 194,
+    "name": "Sabotage E Instituto"
+  },
+  {
+    "id": 195,
+    "name": "Stereo Maracana"
+  },
+  {
+    "id": 196,
+    "name": "Cake"
+  },
+  {
+    "id": 197,
+    "name": "Aisha Duo"
+  },
+  {
+    "id": 198,
+    "name": "Habib Koité and Bamada"
+  },
+  {
+    "id": 199,
+    "name": "Karsh Kale"
+  },
+  {
+    "id": 200,
+    "name": "The Posies"
+  },
+  {
+    "id": 201,
+    "name": "Luciana Souza/Romero Lubambo"
+  },
+  {
+    "id": 202,
+    "name": "Aaron Goldberg"
+  },
+  {
+    "id": 203,
+    "name": "Nicolaus Esterhazy Sinfonia"
+  },
+  {
+    "id": 204,
+    "name": "Temple of the Dog"
+  },
+  {
+    "id": 205,
+    "name": "Chris Cornell"
+  },
+  {
+    "id": 206,
+    "name": "Alberto Turco & Nova Schola Gregoriana"
+  },
+  {
+    "id": 207,
+    "name": "Richard Marlow & The Choir of Trinity College, Cambridge"
+  },
+  {
+    "id": 208,
+    "name": "English Concert & Trevor Pinnock"
+  },
+  {
+    "id": 209,
+    "name": "Anne-Sophie Mutter, Herbert Von Karajan & Wiener Philharmoniker"
+  },
+  {
+    "id": 210,
+    "name": "Hilary Hahn, Jeffrey Kahane, Los Angeles Chamber Orchestra & Margaret Batjer"
+  },
+  {
+    "id": 211,
+    "name": "Wilhelm Kempff"
+  },
+  {
+    "id": 212,
+    "name": "Yo-Yo Ma"
+  },
+  {
+    "id": 213,
+    "name": "Scholars Baroque Ensemble"
+  },
+  {
+    "id": 214,
+    "name": "Academy of St. Martin in the Fields & Sir Neville Marriner"
+  },
+  {
+    "id": 215,
+    "name": "Academy of St. Martin in the Fields Chamber Ensemble & Sir Neville Marriner"
+  },
+  {
+    "id": 216,
+    "name": "Berliner Philharmoniker, Claudio Abbado & Sabine Meyer"
+  },
+  {
+    "id": 217,
+    "name": "Royal Philharmonic Orchestra & Sir Thomas Beecham"
+  },
+  {
+    "id": 218,
+    "name": "Orchestre Révolutionnaire et Romantique & John Eliot Gardiner"
+  },
+  {
+    "id": 219,
+    "name": "Britten Sinfonia, Ivor Bolton & Lesley Garrett"
+  },
+  {
+    "id": 220,
+    "name": "Chicago Symphony Chorus, Chicago Symphony Orchestra & Sir Georg Solti"
+  },
+  {
+    "id": 221,
+    "name": "Sir Georg Solti & Wiener Philharmoniker"
+  },
+  {
+    "id": 222,
+    "name": "Academy of St. Martin in the Fields, John Birch, Sir Neville Marriner & Sylvia McNair"
+  },
+  {
+    "id": 223,
+    "name": "London Symphony Orchestra & Sir Charles Mackerras"
+  },
+  {
+    "id": 224,
+    "name": "Barry Wordsworth & BBC Concert Orchestra"
+  },
+  {
+    "id": 225,
+    "name": "Herbert Von Karajan, Mirella Freni & Wiener Philharmoniker"
+  },
+  {
+    "id": 226,
+    "name": "Eugene Ormandy"
+  },
+  {
+    "id": 227,
+    "name": "Luciano Pavarotti"
+  },
+  {
+    "id": 228,
+    "name": "Leonard Bernstein & New York Philharmonic"
+  },
+  {
+    "id": 229,
+    "name": "Boston Symphony Orchestra & Seiji Ozawa"
+  },
+  {
+    "id": 230,
+    "name": "Aaron Copland & London Symphony Orchestra"
+  },
+  {
+    "id": 231,
+    "name": "Ton Koopman"
+  },
+  {
+    "id": 232,
+    "name": "Sergei Prokofiev & Yuri Temirkanov"
+  },
+  {
+    "id": 233,
+    "name": "Chicago Symphony Orchestra & Fritz Reiner"
+  },
+  {
+    "id": 234,
+    "name": "Orchestra of The Age of Enlightenment"
+  },
+  {
+    "id": 235,
+    "name": "Emanuel Ax, Eugene Ormandy & Philadelphia Orchestra"
+  },
+  {
+    "id": 236,
+    "name": "James Levine"
+  },
+  {
+    "id": 237,
+    "name": "Berliner Philharmoniker & Hans Rosbaud"
+  },
+  {
+    "id": 238,
+    "name": "Maurizio Pollini"
+  },
+  {
+    "id": 239,
+    "name": "Academy of St. Martin in the Fields, Sir Neville Marriner & William Bennett"
+  },
+  {
+    "id": 240,
+    "name": "Gustav Mahler"
+  },
+  {
+    "id": 241,
+    "name": "Felix Schmidt, London Symphony Orchestra & Rafael Frühbeck de Burgos"
+  },
+  {
+    "id": 242,
+    "name": "Edo de Waart & San Francisco Symphony"
+  },
+  {
+    "id": 243,
+    "name": "Antal Doráti & London Symphony Orchestra"
+  },
+  {
+    "id": 244,
+    "name": "Choir Of Westminster Abbey & Simon Preston"
+  },
+  {
+    "id": 245,
+    "name": "Michael Tilson Thomas & San Francisco Symphony"
+  },
+  {
+    "id": 246,
+    "name": "Chor der Wiener Staatsoper, Herbert Von Karajan & Wiener Philharmoniker"
+  },
+  {
+    "id": 247,
+    "name": "The King's Singers"
+  },
+  {
+    "id": 248,
+    "name": "Berliner Philharmoniker & Herbert Von Karajan"
+  },
+  {
+    "id": 249,
+    "name": "Sir Georg Solti, Sumi Jo & Wiener Philharmoniker"
+  },
+  {
+    "id": 250,
+    "name": "Christopher O'Riley"
+  },
+  {
+    "id": 251,
+    "name": "Fretwork"
+  },
+  {
+    "id": 252,
+    "name": "Amy Winehouse"
+  },
+  {
+    "id": 253,
+    "name": "Calexico"
+  },
+  {
+    "id": 254,
+    "name": "Otto Klemperer & Philharmonia Orchestra"
+  },
+  {
+    "id": 255,
+    "name": "Yehudi Menuhin"
+  },
+  {
+    "id": 256,
+    "name": "Philharmonia Orchestra & Sir Neville Marriner"
+  },
+  {
+    "id": 257,
+    "name": "Academy of St. Martin in the Fields, Sir Neville Marriner & Thurston Dart"
+  },
+  {
+    "id": 258,
+    "name": "Les Arts Florissants & William Christie"
+  },
+  {
+    "id": 259,
+    "name": "The 12 Cellists of The Berlin Philharmonic"
+  },
+  {
+    "id": 260,
+    "name": "Adrian Leaper & Doreen de Feis"
+  },
+  {
+    "id": 261,
+    "name": "Roger Norrington, London Classical Players"
+  },
+  {
+    "id": 262,
+    "name": "Charles Dutoit & L'Orchestre Symphonique de Montréal"
+  },
+  {
+    "id": 263,
+    "name": "Equale Brass Ensemble, John Eliot Gardiner & Munich Monteverdi Orchestra and Choir"
+  },
+  {
+    "id": 264,
+    "name": "Kent Nagano and Orchestre de l'Opéra de Lyon"
+  },
+  {
+    "id": 265,
+    "name": "Julian Bream"
+  },
+  {
+    "id": 266,
+    "name": "Martin Roscoe"
+  },
+  {
+    "id": 267,
+    "name": "Göteborgs Symfoniker & Neeme Järvi"
+  },
+  {
+    "id": 268,
+    "name": "Itzhak Perlman"
+  },
+  {
+    "id": 269,
+    "name": "Michele Campanella"
+  },
+  {
+    "id": 270,
+    "name": "Gerald Moore"
+  },
+  {
+    "id": 271,
+    "name": "Mela Tenenbaum, Pro Musica Prague & Richard Kapp"
+  },
+  {
+    "id": 272,
+    "name": "Emerson String Quartet"
+  },
+  {
+    "id": 273,
+    "name": "C. Monteverdi, Nigel Rogers - Chiaroscuro; London Baroque; London Cornett & Sackbu"
+  },
+  {
+    "id": 274,
+    "name": "Nash Ensemble"
+  },
+  {
+    "id": 275,
+    "name": "Philip Glass Ensemble"
+  }
+]

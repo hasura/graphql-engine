@@ -2,6 +2,7 @@
 module Hasura.Backends.DataConnector.API
   ( module V0,
     Api,
+    ConfigSchemaApi,
     SchemaApi,
     QueryApi,
     ConfigHeader,

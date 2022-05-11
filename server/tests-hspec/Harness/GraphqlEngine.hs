@@ -184,19 +184,21 @@ postV2Query statusCode testEnvironment =
 -- HTTP Calls - Misc.
 
 -- | Replace the engine's metadata to use the given source as the only source.
-setSource :: TestEnvironment -> Value -> IO ()
-setSource testEnvironment sourceMetadata = setSources testEnvironment [sourceMetadata]
+setSource :: TestEnvironment -> Value -> Maybe Value -> IO ()
+setSource testEnvironment sourceMetadata backendConfig = setSources testEnvironment [sourceMetadata] backendConfig
 
 -- | Replace the engine's metadata to use the given sources.
-setSources :: TestEnvironment -> [Value] -> IO ()
-setSources testEnvironment sourcesMetadata =
+setSources :: TestEnvironment -> [Value] -> Maybe Value -> IO ()
+setSources testEnvironment sourcesMetadata backendConfig =
   postMetadata_
     testEnvironment
     [yaml|
 type: replace_metadata
 args:
-  version: 3
-  sources: *sourcesMetadata
+  metadata:
+    version: 3
+    sources: *sourcesMetadata
+    backend_configs: *backendConfig
   |]
 
 -------------------------------------------------------------------------------

@@ -48,7 +48,7 @@ instance BackendMetadata 'DataConnector where
   fetchAndValidateEnumValues = error "fetchAndValidateEnumValues: not implemented for the Data Connector backend."
   buildFunctionInfo = error "buildFunctionInfo: not implemented for the Data Connector backend."
   updateColumnInEventTrigger = error "updateColumnInEventTrigger: not implemented for the Data Connector backend."
-  postDropSourceHook = error "postDropSourceHook: not implemented for the Data Connector backend."
+  postDropSourceHook _sourceConfig = pure ()
 
 resolveSourceConfig' ::
   MonadIO m =>
