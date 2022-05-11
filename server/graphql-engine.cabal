@@ -1124,6 +1124,7 @@ test-suite tests-hspec
     Test.EventTriggersRunSQLSpec
     Test.HelloWorldSpec
     Test.InsertCheckPermissionSpec
+    Test.InsertDefaultsSpec
     Test.InsertEnumColumnSpec
     Test.LimitOffsetSpec
     Test.NestedRelationshipsSpec

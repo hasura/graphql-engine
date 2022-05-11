@@ -235,12 +235,17 @@ fromInsert :: Insert -> Printer
 fromInsert Insert {..} =
   SepByPrinter
     NewlinePrinter
-    [ "INSERT INTO " <+> fromTableName insertTable,
-      "(" <+> SepByPrinter ", " (map (fromNameText . columnNameText) insertColumns) <+> ")",
-      fromInsertOutput insertOutput,
-      "INTO " <+> fromTempTable insertTempTable,
-      fromValuesList insertValues
-    ]
+    $ ["INSERT INTO " <+> fromTableName insertTable]
+      <> ( if null insertColumns
+             then []
+             else ["(" <+> SepByPrinter ", " (map (fromNameText . columnNameText) insertColumns) <+> ")"]
+         )
+      <> [ fromInsertOutput insertOutput,
+           "INTO " <+> fromTempTable insertTempTable,
+           if null insertColumns
+             then "DEFAULT VALUES"
+             else fromValuesList insertValues
+         ]
 
 fromSetValue :: SetValue -> Printer
 fromSetValue = \case
