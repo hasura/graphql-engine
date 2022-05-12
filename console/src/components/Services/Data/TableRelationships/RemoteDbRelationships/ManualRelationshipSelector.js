@@ -12,6 +12,7 @@ import {
 import { useTableColumns } from '@/features/SqlQueries';
 import { getColumnNameArrayFromHookData } from './utils';
 import { MetadataSelector, useMetadata } from '@/features/MetadataAPI';
+import { FaTimes } from 'react-icons/fa';
 
 const ColumnSelect = ({ orderedColumns, state, dispatch }) => {
   const selectTitle = !state.relTable.name
@@ -104,8 +105,8 @@ const ColumnSelect = ({ orderedColumns, state, dispatch }) => {
           </div>
           <div>
             {index + 1 !== state.relColumns.length ? (
-              <i
-                className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+              <FaTimes
+                className={`${styles.fontAwosomeClose} text-lg`}
                 onClick={() => {
                   dispatchRemoveCol(index);
                 }}

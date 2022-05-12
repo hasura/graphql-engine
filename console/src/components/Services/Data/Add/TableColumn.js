@@ -6,6 +6,7 @@ import { getDataOptions, inferDefaultValues } from '../Common/utils';
 import TableColumnDefault from './TableColumnDefault';
 import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
 import { dataSource, isFeatureSupported } from '../../../../dataSources';
+import { FaTimes } from 'react-icons/fa';
 
 /* Custom style object for searchable select box */
 const customSelectBoxStyles = {
@@ -63,11 +64,11 @@ const TableColumn = props => {
   const getRemoveIcon = colLen => {
     let removeIcon;
     if (i + 1 === colLen) {
-      removeIcon = <i className="w-4 cursor-pointer fa fa-times" />;
+      removeIcon = <FaTimes className="w-4 cursor-pointer" />;
     } else {
       removeIcon = (
-        <i
-          className="w-4 cursor-pointer fa fa-times"
+        <FaTimes
+          className="w-4 cursor-pointer"
           onClick={onRemoveColumn.bind(undefined, i)}
         />
       );

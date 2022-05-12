@@ -7,6 +7,7 @@ derive everything through viewtable as much as possible.
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { createHistory } from 'history';
+import { FaTimes } from 'react-icons/fa';
 
 import {
   setFilterCol,
@@ -119,8 +120,7 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
     let removeIcon = null;
     if (i + 1 < whereAnd.length) {
       removeIcon = (
-        <i
-          className="fa fa-times"
+        <FaTimes
           onClick={() => {
             dispatch(removeFilter(i));
           }}
@@ -167,8 +167,7 @@ const renderSorts = (orderBy, tableSchema, dispatch) => {
     let removeIcon = null;
     if (i + 1 < orderBy.length) {
       removeIcon = (
-        <i
-          className="fa fa-times"
+        <FaTimes
           onClick={() => {
             dispatch(removeOrder(i));
           }}

@@ -54,6 +54,7 @@ import ConnectedComputedFields from './ComputedFields';
 import FeatureDisabled from '../FeatureDisabled';
 import IndexFields from './IndexFields';
 import PartitionInfo from './PartitionInfo';
+import { FaFlask } from 'react-icons/fa';
 
 class ModifyTable extends React.Component {
   componentDidMount() {
@@ -186,8 +187,8 @@ class ModifyTable extends React.Component {
               {isFeatureSupported('tables.modify.readOnly') && (
                 <div className={styles.readOnly}>
                   <p className={styles.readOnlyText}>
-                    <i className="fa fa-flask" aria-hidden="true" /> Coming soon
-                    for {driverToLabel[currentDriver]}
+                    <FaFlask aria-hidden="true" /> Coming soon for{' '}
+                    {driverToLabel[currentDriver]}
                   </p>
                   <p className={styles.noMargin}>
                     This page is currently read-only, but we're actively working

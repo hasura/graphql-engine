@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaTimes } from 'react-icons/fa';
 import styles from '../../../../Common/TableCommon/Table.scss';
 
 const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
@@ -49,8 +50,8 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
         removeIcon = <div className="ml-sm w-4" />;
       } else {
         removeIcon = (
-          <i
-            className="ml-sm w-4 fa fa-times cursor-pointer"
+          <FaTimes
+            className="ml-sm w-4 cursor-pointer"
             data-test={`remove-pk-column-${i}`}
             onClick={dispatchRemove}
           />

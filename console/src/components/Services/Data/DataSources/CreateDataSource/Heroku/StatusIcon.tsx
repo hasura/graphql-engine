@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { FaCheck, FaCircleNotch } from 'react-icons/fa';
 
 import { ProgressState } from './types';
 import styles from '../styles.scss';
@@ -6,7 +7,7 @@ import styles from '../styles.scss';
 const Pending: React.FC = () => {
   return (
     <div className={styles.progressCircle}>
-      <i className="fa fa-check" aria-hidden="true" />
+      <FaCheck aria-hidden="true" />
     </div>
   );
 };
@@ -14,15 +15,13 @@ const Pending: React.FC = () => {
 const Complete: React.FC = () => {
   return (
     <div className={`${styles.progressCircle} ${styles.progressComplete}`}>
-      <i className="fa fa-check" aria-hidden="true" />
+      <FaCheck aria-hidden="true" />
     </div>
   );
 };
 
 const InProgress: React.FC = () => {
-  return (
-    <i className="fa fa-circle-o-notch fa-2x fa-spin" aria-hidden="true" />
-  );
+  return <FaCircleNotch className="animate-spin fa-2x" aria-hidden="true" />;
 };
 
 const Error: React.FC = () => {

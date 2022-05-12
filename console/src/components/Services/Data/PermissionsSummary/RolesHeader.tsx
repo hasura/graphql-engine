@@ -1,17 +1,18 @@
-import React from 'react';
+import React, { ReactElement } from 'react';
+import { FaCopy, FaTrash } from 'react-icons/fa';
 import Button from '../../../Common/Button/Button';
 import Header from './Header';
 import styles from './PermissionsSummary.scss';
 
 type IconButtonProps = {
   onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  icon: string;
+  icon: ReactElement;
   title: string;
 };
 
 const IconButton: React.FC<IconButtonProps> = ({ onClick, icon, title }) => (
   <Button color="white" size="xs" onClick={onClick} title={title}>
-    <i className={`fa ${icon} ${styles.actionIcon}`} aria-hidden="true" />
+    {icon}
   </Button>
 );
 
@@ -53,12 +54,16 @@ const RolesHeader: React.FC<RolesHeaderProps> = ({
             onClick={() => setRole(role, currentRole === role)}
             actionButtons={[
               <IconButton
-                icon="fa-copy"
+                icon={
+                  <FaCopy className={styles.actionIcon} aria-hidden="true" />
+                }
                 onClick={e => onCopyClick(e, role)}
                 title="Copy Permissions"
               />,
               <IconButton
-                icon="fa-trash"
+                icon={
+                  <FaTrash className={styles.actionIcon} aria-hidden="true" />
+                }
                 onClick={e => onDeleteClick(e, role)}
                 title="Delete Role Permissions"
               />,

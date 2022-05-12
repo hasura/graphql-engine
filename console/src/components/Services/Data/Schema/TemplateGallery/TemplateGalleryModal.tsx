@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { FaGithub } from 'react-icons/fa';
 import { useAppDispatch, useAppSelector } from '../../../../../store';
 import {
   applyTemplate,
@@ -167,7 +168,7 @@ export const TemplateGalleryModal: React.VFC<{
               window.open(currentTemplate?.details?.publicUrl, '_blank')
             }
           >
-            <i className="fa fa-github" style={{ marginRight: '6px' }} />
+            <FaGithub style={{ marginRight: '6px' }} />
             View on GitHub
           </Modal.Button>
         ) : undefined

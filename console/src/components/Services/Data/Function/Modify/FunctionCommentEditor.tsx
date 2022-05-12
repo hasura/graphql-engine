@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaEdit } from 'react-icons/fa';
 
 import { saveFunctionComment, setEditing } from '../customFunctionReducer';
 
@@ -69,7 +70,7 @@ export const FunctionCommentEditor: React.FC<FunctionCommentEditorProps> = ({
           onClick={() => dispatchIsEditing(true)}
           className="flex items-center cursor-pointer"
         >
-          <i className="fa fa-edit mr-xs" />
+          <FaEdit className="mr-xs" />
           <span className="font-semibold">
             {comment ? 'Edit Comment' : 'Add a Comment'}
           </span>

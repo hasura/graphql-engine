@@ -47,6 +47,7 @@ import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { TrackableFunctionsList } from './FunctionsList';
 import { getTrackableFunctions } from './utils';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
+import { FaDatabase, FaFolder } from 'react-icons/fa';
 
 const DeleteSchemaButton = ({ dispatch, migrationMode, currentDataSource }) => {
   const successCb = () => {
@@ -660,12 +661,12 @@ class Schema extends Component {
                 {
                   url: getDataSourceBaseRoute(currentDataSource),
                   title: currentDataSource,
-                  prefix: <i className="fa fa-database" />,
+                  prefix: <FaDatabase />,
                 },
                 {
                   url: getSchemaBaseRoute(currentSchema, currentDataSource),
                   title: currentSchema,
-                  prefix: <i className="fa fa-folder" />,
+                  prefix: <FaFolder />,
                 },
               ]}
             />

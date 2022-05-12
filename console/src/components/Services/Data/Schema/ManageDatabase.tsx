@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Helmet from 'react-helmet';
 import { connect, ConnectedProps } from 'react-redux';
+import { FaExclamationTriangle, FaEye, FaTimes } from 'react-icons/fa';
 
 import Button from '../../../Common/Button/Button';
 import styles from './styles.scss';
@@ -152,8 +153,8 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
             placement="right"
             message="Inconsistent Data Source"
           >
-            <i
-              className="fa fa-exclamation-triangle ml-xs text-red-800"
+            <FaExclamationTriangle
+              className="ml-xs text-red-800"
               aria-hidden="true"
             />
           </ToolTip>
@@ -171,7 +172,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
             className="text-secondary flex items-center cursor-pointer"
             onClick={() => setShowUrl(true)}
           >
-            <i className="fa fa-eye" aria-hidden="true" />
+            <FaEye aria-hidden="true" />
             <p className="ml-xs">Show Connection String</p>
           </span>
         )}
@@ -181,8 +182,8 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
             placement="top"
             message="Hide connection string"
           >
-            <i
-              className="ml-xs cursor-pointer fa fa-times"
+            <FaTimes
+              className="ml-xs cursor-pointer"
               aria-hidden="true"
               onClick={() => setShowUrl(false)}
             />

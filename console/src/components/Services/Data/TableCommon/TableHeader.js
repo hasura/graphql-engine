@@ -18,6 +18,7 @@ import {
   getDataSourceBaseRoute,
 } from '../../../Common/utils/routesUtils';
 import { getReadableNumber } from '../../../Common/utils/jsUtils';
+import { FaDatabase, FaFolder, FaTable } from 'react-icons/fa';
 
 const TableHeader = ({
   tabName,
@@ -56,17 +57,17 @@ const TableHeader = ({
       {
         title: source,
         url: getDataSourceBaseRoute(source),
-        prefix: <i className="fa fa-database" />,
+        prefix: <FaDatabase />,
       },
       {
         title: tableSchema,
         url: getSchemaBaseRoute(tableSchema, source),
-        prefix: <i className="fa fa-folder" />,
+        prefix: <FaFolder />,
       },
       {
         title: tableName,
         url: getTableBrowseRoute(tableSchema, source, tableName, isTableType),
-        prefix: <i className="fa fa-table" />,
+        prefix: <FaTable />,
       },
       {
         title: activeTab,
