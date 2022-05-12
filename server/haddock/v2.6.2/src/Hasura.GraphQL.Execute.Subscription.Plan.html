@@ -1,0 +1,705 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- |</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- = Reasonably efficient PostgreSQL live queries</span><span>
+</span><span id="line-6"></span><span class="hs-comment">--</span><span>
+</span><span id="line-7"></span><span class="hs-comment">-- The module implements /query multiplexing/, which is our implementation strategy for live queries</span><span>
+</span><span id="line-8"></span><span class="hs-comment">-- (i.e. GraphQL subscriptions) made against Postgres. Fundamentally, our implementation is built</span><span>
+</span><span id="line-9"></span><span class="hs-comment">-- around polling, which is never ideal, but it&#8217;s a lot easier to implement than trying to do something</span><span>
+</span><span id="line-10"></span><span class="hs-comment">-- event-based. To minimize the resource cost of polling, we use /multiplexing/, which is essentially</span><span>
+</span><span id="line-11"></span><span class="hs-comment">-- a two-tier batching strategy.</span><span>
+</span><span id="line-12"></span><span class="hs-comment">--</span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- == The high-level idea</span><span>
+</span><span id="line-14"></span><span class="hs-comment">--</span><span>
+</span><span id="line-15"></span><span class="hs-comment">-- The objective is to minimize the number of concurrent polling workers to reduce database load as</span><span>
+</span><span id="line-16"></span><span class="hs-comment">-- much as possible. A very na&#239;ve strategy would be to group identical queries together so we only have</span><span>
+</span><span id="line-17"></span><span class="hs-comment">-- one poller per /unique/ active subscription. That&#8217;s a good start, but of course, in practice, most</span><span>
+</span><span id="line-18"></span><span class="hs-comment">-- queries differ slightly. However, it happens that they very frequently /only differ in their</span><span>
+</span><span id="line-19"></span><span class="hs-comment">-- variables/ (that is, GraphQL query variables and session variables), and in those cases, we try to</span><span>
+</span><span id="line-20"></span><span class="hs-comment">-- generated parameterized SQL. This means that the same prepared SQL query can be reused, just with a</span><span>
+</span><span id="line-21"></span><span class="hs-comment">-- different set of variables.</span><span>
+</span><span id="line-22"></span><span class="hs-comment">--</span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- To give a concrete example, consider the following query:</span><span>
+</span><span id="line-24"></span><span class="hs-comment">--</span><span>
+</span><span id="line-25"></span><span class="hs-comment">-- &gt; subscription vote_count($post_id: Int!) {</span><span>
+</span><span id="line-26"></span><span class="hs-comment">-- &gt;   vote_count(where: {post_id: {_eq: $post_id}}) {</span><span>
+</span><span id="line-27"></span><span class="hs-comment">-- &gt;     votes</span><span>
+</span><span id="line-28"></span><span class="hs-comment">-- &gt;   }</span><span>
+</span><span id="line-29"></span><span class="hs-comment">-- &gt; }</span><span>
+</span><span id="line-30"></span><span class="hs-comment">--</span><span>
+</span><span id="line-31"></span><span class="hs-comment">-- No matter what the client provides for @$post_id@, we will always generate the same SQL:</span><span>
+</span><span id="line-32"></span><span class="hs-comment">--</span><span>
+</span><span id="line-33"></span><span class="hs-comment">-- &gt; SELECT votes FROM vote_count WHERE post_id = $1</span><span>
+</span><span id="line-34"></span><span class="hs-comment">--</span><span>
+</span><span id="line-35"></span><span class="hs-comment">-- If multiple clients subscribe to @vote_count@, we can certainly reuse the same prepared query. For</span><span>
+</span><span id="line-36"></span><span class="hs-comment">-- example, imagine we had 10 concurrent subscribers, each listening on a distinct @$post_id@:</span><span>
+</span><span id="line-37"></span><span class="hs-comment">--</span><span>
+</span><span id="line-38"></span><span class="hs-comment">-- &gt; let postIds = [3, 11, 32, 56, 13, 97, 24, 43, 109, 48]</span><span>
+</span><span id="line-39"></span><span class="hs-comment">--</span><span>
+</span><span id="line-40"></span><span class="hs-comment">-- We could iterate over @postIds@ in Haskell, executing the same prepared query 10 times:</span><span>
+</span><span id="line-41"></span><span class="hs-comment">--</span><span>
+</span><span id="line-42"></span><span class="hs-comment">-- &gt; for postIds $ \postId -&gt;</span><span>
+</span><span id="line-43"></span><span class="hs-comment">-- &gt;   Q.listQE defaultTxErrorHandler preparedQuery (Identity postId) True</span><span>
+</span><span id="line-44"></span><span class="hs-comment">--</span><span>
+</span><span id="line-45"></span><span class="hs-comment">-- Sadly, that on its own isn&#8217;t good enough. The overhead of running each query is large enough that</span><span>
+</span><span id="line-46"></span><span class="hs-comment">-- Postgres becomes overwhelmed if we have to serve lots of concurrent subscribers. Therefore, what we</span><span>
+</span><span id="line-47"></span><span class="hs-comment">-- want to be able to do is somehow make one query instead of ten.</span><span>
+</span><span id="line-48"></span><span class="hs-comment">--</span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- === Multiplexing</span><span>
+</span><span id="line-50"></span><span class="hs-comment">--</span><span>
+</span><span id="line-51"></span><span class="hs-comment">-- This is where multiplexing comes in. By taking advantage of Postgres</span><span>
+</span><span id="line-52"></span><span class="hs-comment">-- &lt;https://www.postgresql.org/docs/11/queries-table-expressions.html#QUERIES-LATERAL lateral joins&gt;,</span><span>
+</span><span id="line-53"></span><span class="hs-comment">-- we can do the iteration in Postgres rather than in Haskell, allowing us to pay the query overhead</span><span>
+</span><span id="line-54"></span><span class="hs-comment">-- just once for all ten subscribers. Essentially, lateral joins add 'map'-like functionality to SQL,</span><span>
+</span><span id="line-55"></span><span class="hs-comment">-- so we can run our query once per @$post_id@:</span><span>
+</span><span id="line-56"></span><span class="hs-comment">--</span><span>
+</span><span id="line-57"></span><span class="hs-comment">-- &gt; SELECT results.votes</span><span>
+</span><span id="line-58"></span><span class="hs-comment">-- &gt; FROM unnest($1::integer[]) query_variables (post_id)</span><span>
+</span><span id="line-59"></span><span class="hs-comment">-- &gt; LEFT JOIN LATERAL (</span><span>
+</span><span id="line-60"></span><span class="hs-comment">-- &gt;   SELECT coalesce(json_agg(votes), '[]')</span><span>
+</span><span id="line-61"></span><span class="hs-comment">-- &gt;   FROM vote_count WHERE vote_count.post_id = query_variables.post_id</span><span>
+</span><span id="line-62"></span><span class="hs-comment">-- &gt; ) results ON true</span><span>
+</span><span id="line-63"></span><span class="hs-comment">--</span><span>
+</span><span id="line-64"></span><span class="hs-comment">-- If we generalize this approach just a little bit more, we can apply this transformation to arbitrary</span><span>
+</span><span id="line-65"></span><span class="hs-comment">-- queries parameterized over arbitrary session and query variables!</span><span>
+</span><span id="line-66"></span><span class="hs-comment">--</span><span>
+</span><span id="line-67"></span><span class="hs-comment">-- == Implementation overview</span><span>
+</span><span id="line-68"></span><span class="hs-comment">--</span><span>
+</span><span id="line-69"></span><span class="hs-comment">-- To support query multiplexing, we maintain a tree of the following types, where @&gt;@ should be read</span><span>
+</span><span id="line-70"></span><span class="hs-comment">-- as &#8220;contains&#8221;:</span><span>
+</span><span id="line-71"></span><span class="hs-comment">--</span><span>
+</span><span id="line-72"></span><span class="hs-comment">-- @</span><span>
+</span><span id="line-73"></span><span class="hs-comment">-- 'SubscriptionsState' &gt; 'Poller' &gt; 'Cohort' &gt; 'Subscriber'</span><span>
+</span><span id="line-74"></span><span class="hs-comment">-- @</span><span>
+</span><span id="line-75"></span><span class="hs-comment">--</span><span>
+</span><span id="line-76"></span><span class="hs-comment">-- Here&#8217;s a brief summary of each type&#8217;s role:</span><span>
+</span><span id="line-77"></span><span class="hs-comment">--</span><span>
+</span><span id="line-78"></span><span class="hs-comment">--   * A 'Subscriber' is an actual client with an open websocket connection.</span><span>
+</span><span id="line-79"></span><span class="hs-comment">--</span><span>
+</span><span id="line-80"></span><span class="hs-comment">--   * A 'Cohort' is a set of 'Subscriber's that are all subscribed to the same query /with the exact</span><span>
+</span><span id="line-81"></span><span class="hs-comment">--     same variables/. (By batching these together, we can do better than multiplexing, since we can</span><span>
+</span><span id="line-82"></span><span class="hs-comment">--     just query the data once.)</span><span>
+</span><span id="line-83"></span><span class="hs-comment">--</span><span>
+</span><span id="line-84"></span><span class="hs-comment">--   * A 'Poller' is a worker thread for a single, multiplexed query. It fetches data for a set of</span><span>
+</span><span id="line-85"></span><span class="hs-comment">--     'Cohort's that all use the same parameterized query, but have different sets of variables.</span><span>
+</span><span id="line-86"></span><span class="hs-comment">--</span><span>
+</span><span id="line-87"></span><span class="hs-comment">--   * Finally, the 'SubscriptionsState' is the top-level container that holds all the active 'Poller's.</span><span>
+</span><span id="line-88"></span><span class="hs-comment">--</span><span>
+</span><span id="line-89"></span><span class="hs-comment">-- Additional details are provided by the documentation for individual bindings.</span><span>
+</span><span id="line-90"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.GraphQL.Execute.Subscription.Plan</span><span>
+</span><span id="line-91"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortId"><span class="hs-identifier">CohortId</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-92"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#dummyCohortId"><span class="hs-identifier">dummyCohortId</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-93"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#newCohortId"><span class="hs-identifier">newCohortId</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-94"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortIdArray"><span class="hs-identifier">CohortIdArray</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-95"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortVariablesArray"><span class="hs-identifier">CohortVariablesArray</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-96"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortVariables"><span class="hs-identifier">CohortVariables</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-97"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#_cvCursorVariables"><span class="hs-identifier">_cvCursorVariables</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-98"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#mkCohortVariables"><span class="hs-identifier">mkCohortVariables</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-99"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedVariables"><span class="hs-identifier">ValidatedVariables</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-100"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#mkUnsafeValidateVariables"><span class="hs-identifier">mkUnsafeValidateVariables</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-101"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#modifyCursorCohortVariables"><span class="hs-identifier">modifyCursorCohortVariables</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-102"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedQueryVariables"><span class="hs-identifier">ValidatedQueryVariables</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-103"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedSyntheticVariables"><span class="hs-identifier">ValidatedSyntheticVariables</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-104"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedCursorVariables"><span class="hs-identifier">ValidatedCursorVariables</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-105"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#SubscriptionQueryPlan"><span class="hs-identifier">SubscriptionQueryPlan</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-106"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#SubscriptionQueryPlanExplanation"><span class="hs-identifier">SubscriptionQueryPlanExplanation</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-107"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ParameterizedSubscriptionQueryPlan"><span class="hs-identifier">ParameterizedSubscriptionQueryPlan</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-108"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CursorVariableValues"><span class="hs-identifier">CursorVariableValues</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-109"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#cvSessionVariables"><span class="hs-identifier">cvSessionVariables</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-110"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#cvCursorVariables"><span class="hs-identifier">cvCursorVariables</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-111"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#cvQueryVariables"><span class="hs-identifier">cvQueryVariables</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-112"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#cvSyntheticVariables"><span class="hs-identifier">cvSyntheticVariables</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-113"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#unValidatedVariables"><span class="hs-identifier">unValidatedVariables</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-114"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-115"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-116"></span><span>
+</span><span id="line-117"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">makeLenses</span></span><span class="hs-special">)</span><span>
+</span><span id="line-118"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Aeson.Extended.html"><span class="hs-identifier">Data.Aeson.Extended</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-119"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.TH</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-120"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-121"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
+</span><span id="line-122"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.UUID</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">UUID</span></span><span class="hs-special">)</span><span>
+</span><span id="line-123"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.UUID</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">UUID</span></span><span>
+</span><span id="line-124"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.UUID.V4</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">UUID</span></span><span>
+</span><span id="line-125"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Database.PG.Query</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Q</span></span><span>
+</span><span id="line-126"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Database.PG.Query.PTI</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PTI</span></span><span>
+</span><span id="line-127"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Value.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.Value</span></a></span><span>
+</span><span id="line-128"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-129"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.html"><span class="hs-identifier">Hasura.RQL.Types</span></a></span><span>
+</span><span id="line-130"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Session.html"><span class="hs-identifier">Hasura.Session</span></a></span><span>
+</span><span id="line-131"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-132"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">PostgreSQL.Binary.Encoding</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PE</span></span><span>
+</span><span id="line-133"></span><span>
+</span><span id="line-134"></span><span class="hs-comment">----------------------------------------------------------------------------------------------------</span><span>
+</span><span id="line-135"></span><span class="hs-comment">-- Variable validation</span><span>
+</span><span id="line-136"></span><span>
+</span><span id="line-137"></span><span class="hs-comment">-- | When running multiplexed queries, we have to be especially careful about user</span><span>
+</span><span id="line-138"></span><span class="hs-comment">-- input, since invalid values will cause the query to fail, causing collateral</span><span>
+</span><span id="line-139"></span><span class="hs-comment">-- damage for anyone else multiplexed into the same query.  Therefore, we</span><span>
+</span><span id="line-140"></span><span class="hs-comment">-- pre-validate variables against Postgres by executing a no-op query of the shape</span><span>
+</span><span id="line-141"></span><span class="hs-comment">--</span><span>
+</span><span id="line-142"></span><span class="hs-comment">-- &gt; SELECT 'v1'::t1, 'v2'::t2, ..., 'vn'::tn</span><span>
+</span><span id="line-143"></span><span class="hs-comment">--</span><span>
+</span><span id="line-144"></span><span class="hs-comment">-- so if any variable values are invalid, the error will be caught early.</span><span>
+</span><span id="line-145"></span><span class="hs-keyword">newtype</span><span> </span><span id="ValidatedVariables"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedVariables"><span class="hs-identifier hs-var">ValidatedVariables</span></a></span></span><span> </span><span id="local-6989586621688471604"><span class="annot"><a href="#local-6989586621688471604"><span class="hs-identifier hs-type">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ValidatedVariables"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedVariables"><span class="hs-identifier hs-var">ValidatedVariables</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_unValidatedVariables"><span class="annot"><span class="annottext">ValidatedVariables f -&gt; f TxtEncodedVal
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#_unValidatedVariables"><span class="hs-identifier hs-var hs-var">_unValidatedVariables</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688471604"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.Value.html#TxtEncodedVal"><span class="hs-identifier hs-type">TxtEncodedVal</span></a></span><span class="hs-special">)</span><span class="hs-special">}</span><span>
+</span><span id="line-146"></span><span>
+</span><span id="line-147"></span><span id="local-6989586621688471499"><span id="local-6989586621688471501"><span id="local-6989586621688471503"><span id="local-6989586621688471505"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688471505"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.Value.html#TxtEncodedVal"><span class="hs-identifier hs-type">TxtEncodedVal</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedVariables"><span class="hs-identifier hs-type">ValidatedVariables</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688471505"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-148"></span><span>
+</span><span id="line-149"></span><span id="local-6989586621688471493"><span id="local-6989586621688471495"><span id="local-6989586621688471497"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688471497"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.Value.html#TxtEncodedVal"><span class="hs-identifier hs-type">TxtEncodedVal</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedVariables"><span class="hs-identifier hs-type">ValidatedVariables</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688471497"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-150"></span><span>
+</span><span id="line-151"></span><span id="local-6989586621688471487"><span id="local-6989586621688471489"><span id="local-6989586621688471491"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688471491"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.Value.html#TxtEncodedVal"><span class="hs-identifier hs-type">TxtEncodedVal</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedVariables"><span class="hs-identifier hs-type">ValidatedVariables</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688471491"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-152"></span><span>
+</span><span id="line-153"></span><span id="local-6989586621688471477"><span id="local-6989586621688471479"><span id="local-6989586621688471481"><span id="local-6989586621688471483"><span id="local-6989586621688471485"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688471485"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.Value.html#TxtEncodedVal"><span class="hs-identifier hs-type">TxtEncodedVal</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedVariables"><span class="hs-identifier hs-type">ValidatedVariables</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688471485"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
+</span><span id="line-154"></span><span>
+</span><span id="line-155"></span><span id="local-6989586621688471469"><span id="local-6989586621688471471"><span id="local-6989586621688471473"><span id="local-6989586621688471475"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688471475"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.Value.html#TxtEncodedVal"><span class="hs-identifier hs-type">TxtEncodedVal</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedVariables"><span class="hs-identifier hs-type">ValidatedVariables</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688471475"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-156"></span><span>
+</span><span id="line-157"></span><span id="local-6989586621688471460"><span id="local-6989586621688471462"><span id="local-6989586621688471464"><span id="local-6989586621688471467"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688471467"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.Value.html#TxtEncodedVal"><span class="hs-identifier hs-type">TxtEncodedVal</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedVariables"><span class="hs-identifier hs-type">ValidatedVariables</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688471467"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-158"></span><span>
+</span><span id="line-159"></span><span class="hs-special">$(</span><span id="local-6989586621688471458"><span id="unValidatedVariables"><span id="local-6989586621688471604"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">'</span><span class="hs-identifier">ValidatedVariables</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-160"></span><span>
+</span><span id="line-161"></span><span class="hs-keyword">type</span><span> </span><span id="ValidatedQueryVariables"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedQueryVariables"><span class="hs-identifier hs-var">ValidatedQueryVariables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedVariables"><span class="hs-identifier hs-type">ValidatedVariables</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Map.HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">)</span><span>
+</span><span id="line-162"></span><span>
+</span><span id="line-163"></span><span class="hs-keyword">type</span><span> </span><span id="ValidatedSyntheticVariables"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedSyntheticVariables"><span class="hs-identifier hs-var">ValidatedSyntheticVariables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedVariables"><span class="hs-identifier hs-type">ValidatedVariables</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-164"></span><span>
+</span><span id="line-165"></span><span class="hs-keyword">type</span><span> </span><span id="ValidatedCursorVariables"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedCursorVariables"><span class="hs-identifier hs-var">ValidatedCursorVariables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedVariables"><span class="hs-identifier hs-type">ValidatedVariables</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Map.HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">)</span><span>
+</span><span id="line-166"></span><span>
+</span><span id="line-167"></span><span id="local-6989586621688471456"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#mkUnsafeValidateVariables"><span class="hs-identifier hs-type">mkUnsafeValidateVariables</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621688471456"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.Value.html#TxtEncodedVal"><span class="hs-identifier hs-type">TxtEncodedVal</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedVariables"><span class="hs-identifier hs-type">ValidatedVariables</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688471456"><span class="hs-identifier hs-type">f</span></a></span></span><span>
+</span><span id="line-168"></span><span id="mkUnsafeValidateVariables"><span class="annot"><span class="annottext">mkUnsafeValidateVariables :: f TxtEncodedVal -&gt; ValidatedVariables f
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#mkUnsafeValidateVariables"><span class="hs-identifier hs-var hs-var">mkUnsafeValidateVariables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">f TxtEncodedVal -&gt; ValidatedVariables f
+forall (f :: * -&gt; *). f TxtEncodedVal -&gt; ValidatedVariables f
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedVariables"><span class="hs-identifier hs-var">ValidatedVariables</span></a></span><span>
+</span><span id="line-169"></span><span>
+</span><span id="line-170"></span><span class="hs-comment">----------------------------------------------------------------------------------------------------</span><span>
+</span><span id="line-171"></span><span class="hs-comment">-- Cohort</span><span>
+</span><span id="line-172"></span><span>
+</span><span id="line-173"></span><span class="hs-keyword">newtype</span><span> </span><span id="CohortId"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortId"><span class="hs-identifier hs-var">CohortId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CohortId"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortId"><span class="hs-identifier hs-var">CohortId</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unCohortId"><span class="annot"><span class="annottext">CohortId -&gt; UUID
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#unCohortId"><span class="hs-identifier hs-var hs-var">unCohortId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">UUID</span></span><span class="hs-special">}</span><span>
+</span><span id="line-174"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688471448"><span id="local-6989586621688471450"><span id="local-6989586621688471452"><span class="annot"><span class="annottext">Int -&gt; CohortId -&gt; ShowS
+[CohortId] -&gt; ShowS
+CohortId -&gt; String
+(Int -&gt; CohortId -&gt; ShowS)
+-&gt; (CohortId -&gt; String) -&gt; ([CohortId] -&gt; ShowS) -&gt; Show CohortId
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [CohortId] -&gt; ShowS
+$cshowList :: [CohortId] -&gt; ShowS
+show :: CohortId -&gt; String
+$cshow :: CohortId -&gt; String
+showsPrec :: Int -&gt; CohortId -&gt; ShowS
+$cshowsPrec :: Int -&gt; CohortId -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688471444"><span id="local-6989586621688471446"><span class="annot"><span class="annottext">CohortId -&gt; CohortId -&gt; Bool
+(CohortId -&gt; CohortId -&gt; Bool)
+-&gt; (CohortId -&gt; CohortId -&gt; Bool) -&gt; Eq CohortId
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: CohortId -&gt; CohortId -&gt; Bool
+$c/= :: CohortId -&gt; CohortId -&gt; Bool
+== :: CohortId -&gt; CohortId -&gt; Bool
+$c== :: CohortId -&gt; CohortId -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688471440"><span id="local-6989586621688471442"><span class="annot"><span class="annottext">Int -&gt; CohortId -&gt; Int
+CohortId -&gt; Int
+(Int -&gt; CohortId -&gt; Int) -&gt; (CohortId -&gt; Int) -&gt; Hashable CohortId
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: CohortId -&gt; Int
+$chash :: CohortId -&gt; Int
+hashWithSalt :: Int -&gt; CohortId -&gt; Int
+$chashWithSalt :: Int -&gt; CohortId -&gt; Int
+</span><a href="#local-6989586621688471440"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688471432"><span id="local-6989586621688471434"><span id="local-6989586621688471436"><span id="local-6989586621688471438"><span class="annot"><span class="annottext">[CohortId] -&gt; Encoding
+[CohortId] -&gt; Value
+CohortId -&gt; Encoding
+CohortId -&gt; Value
+(CohortId -&gt; Value)
+-&gt; (CohortId -&gt; Encoding)
+-&gt; ([CohortId] -&gt; Value)
+-&gt; ([CohortId] -&gt; Encoding)
+-&gt; ToJSON CohortId
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [CohortId] -&gt; Encoding
+$ctoEncodingList :: [CohortId] -&gt; Encoding
+toJSONList :: [CohortId] -&gt; Value
+$ctoJSONList :: [CohortId] -&gt; Value
+toEncoding :: CohortId -&gt; Encoding
+$ctoEncoding :: CohortId -&gt; Encoding
+toJSON :: CohortId -&gt; Value
+$ctoJSON :: CohortId -&gt; Value
+</span><a href="#local-6989586621688471432"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688471428"><span id="local-6989586621688471430"><span class="annot"><span class="annottext">Value -&gt; Parser [CohortId]
+Value -&gt; Parser CohortId
+(Value -&gt; Parser CohortId)
+-&gt; (Value -&gt; Parser [CohortId]) -&gt; FromJSON CohortId
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [CohortId]
+$cparseJSONList :: Value -&gt; Parser [CohortId]
+parseJSON :: Value -&gt; Parser CohortId
+$cparseJSON :: Value -&gt; Parser CohortId
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688471425"><span class="annot"><span class="annottext">Maybe ByteString -&gt; Either Text CohortId
+(Maybe ByteString -&gt; Either Text CohortId) -&gt; FromCol CohortId
+forall a. (Maybe ByteString -&gt; Either Text a) -&gt; FromCol a
+fromCol :: Maybe ByteString -&gt; Either Text CohortId
+$cfromCol :: Maybe ByteString -&gt; Either Text CohortId
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Q.FromCol</span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-175"></span><span>
+</span><span id="line-176"></span><span id="local-6989586621688471423"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#newCohortId"><span class="hs-identifier hs-type">newCohortId</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688471423"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688471423"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortId"><span class="hs-identifier hs-type">CohortId</span></a></span></span><span>
+</span><span id="line-177"></span><span id="newCohortId"><span class="annot"><span class="annottext">newCohortId :: m CohortId
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#newCohortId"><span class="hs-identifier hs-var hs-var">newCohortId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UUID -&gt; CohortId
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortId"><span class="hs-identifier hs-var">CohortId</span></a></span><span> </span><span class="annot"><span class="annottext">(UUID -&gt; CohortId) -&gt; m UUID -&gt; m CohortId
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">IO UUID -&gt; m UUID
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">IO UUID
+</span><span class="hs-identifier hs-var">UUID.nextRandom</span></span><span>
+</span><span id="line-178"></span><span>
+</span><span id="line-179"></span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#dummyCohortId"><span class="hs-identifier hs-type">dummyCohortId</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortId"><span class="hs-identifier hs-type">CohortId</span></a></span><span>
+</span><span id="line-180"></span><span id="dummyCohortId"><span class="annot"><span class="annottext">dummyCohortId :: CohortId
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#dummyCohortId"><span class="hs-identifier hs-var hs-var">dummyCohortId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UUID -&gt; CohortId
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortId"><span class="hs-identifier hs-var">CohortId</span></a></span><span> </span><span class="annot"><span class="annottext">UUID
+</span><span class="hs-identifier hs-var">UUID.nil</span></span><span>
+</span><span id="line-181"></span><span>
+</span><span id="line-182"></span><span id="local-6989586621688471417"><span id="local-6989586621688471418"></span></span><span class="hs-keyword">data</span><span> </span><span id="CohortVariables"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortVariables"><span class="hs-identifier hs-var">CohortVariables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CohortVariables"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortVariables"><span class="hs-identifier hs-var">CohortVariables</span></a></span></span><span>
+</span><span id="line-183"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_cvSessionVariables"><span class="annot"><span class="annottext">CohortVariables -&gt; SessionVariables
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#_cvSessionVariables"><span class="hs-identifier hs-var hs-var">_cvSessionVariables</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-184"></span><span>    </span><span id="_cvQueryVariables"><span class="annot"><span class="annottext">CohortVariables -&gt; ValidatedQueryVariables
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#_cvQueryVariables"><span class="hs-identifier hs-var hs-var">_cvQueryVariables</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedQueryVariables"><span class="hs-identifier hs-type">ValidatedQueryVariables</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-185"></span><span>    </span><span class="hs-comment">-- | To allow more queries to be multiplexed together, we introduce &#8220;synthetic&#8221;</span><span>
+</span><span id="line-186"></span><span>    </span><span class="hs-comment">-- variables for /all/ SQL literals in a query, even if they don&#8217;t correspond to</span><span>
+</span><span id="line-187"></span><span>    </span><span class="hs-comment">-- any GraphQL variable. For example, the query</span><span>
+</span><span id="line-188"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-189"></span><span>    </span><span class="hs-comment">-- &gt; subscription latest_tracks($condition: tracks_bool_exp!) {</span><span>
+</span><span id="line-190"></span><span>    </span><span class="hs-comment">-- &gt;   tracks(where: $tracks_bool_exp) {</span><span>
+</span><span id="line-191"></span><span>    </span><span class="hs-comment">-- &gt;     id</span><span>
+</span><span id="line-192"></span><span>    </span><span class="hs-comment">-- &gt;     title</span><span>
+</span><span id="line-193"></span><span>    </span><span class="hs-comment">-- &gt;   }</span><span>
+</span><span id="line-194"></span><span>    </span><span class="hs-comment">-- &gt; }</span><span>
+</span><span id="line-195"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-196"></span><span>    </span><span class="hs-comment">-- might be executed with similar values for @$condition@, such as @{&quot;album_id&quot;:</span><span>
+</span><span id="line-197"></span><span>    </span><span class="hs-comment">-- {&quot;_eq&quot;: &quot;1&quot;}}@ and @{&quot;album_id&quot;: {&quot;_eq&quot;: &quot;2&quot;}}@.</span><span>
+</span><span id="line-198"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-199"></span><span>    </span><span class="hs-comment">-- Normally, we wouldn&#8217;t bother parameterizing over the @1@ and @2@ literals in the</span><span>
+</span><span id="line-200"></span><span>    </span><span class="hs-comment">-- resulting query because we can&#8217;t cache that query plan (since different</span><span>
+</span><span id="line-201"></span><span>    </span><span class="hs-comment">-- @$condition@ values could lead to different SQL). However, for live queries, we</span><span>
+</span><span id="line-202"></span><span>    </span><span class="hs-comment">-- can still take advantage of the similarity between the two queries by</span><span>
+</span><span id="line-203"></span><span>    </span><span class="hs-comment">-- multiplexing them together, so we replace them with references to synthetic</span><span>
+</span><span id="line-204"></span><span>    </span><span class="hs-comment">-- variables.</span><span>
+</span><span id="line-205"></span><span>    </span><span id="_cvSyntheticVariables"><span class="annot"><span class="annottext">CohortVariables -&gt; ValidatedSyntheticVariables
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#_cvSyntheticVariables"><span class="hs-identifier hs-var hs-var">_cvSyntheticVariables</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedSyntheticVariables"><span class="hs-identifier hs-type">ValidatedSyntheticVariables</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-206"></span><span>    </span><span class="hs-comment">-- | Cursor variables contain the latest value of the cursor.</span><span>
+</span><span id="line-207"></span><span>    </span><span class="hs-comment">--   The value of the cursor variables are updated after every poll.</span><span>
+</span><span id="line-208"></span><span>    </span><span class="hs-comment">--   If the value has been changed - see [Streaming subscription polling].</span><span>
+</span><span id="line-209"></span><span>    </span><span class="hs-comment">--   Cursor variables are only used in the case of streaming subscriptions,</span><span>
+</span><span id="line-210"></span><span>    </span><span class="hs-comment">--   for live queries it will be empty.</span><span>
+</span><span id="line-211"></span><span>    </span><span id="_cvCursorVariables"><span class="annot"><span class="annottext">CohortVariables -&gt; ValidatedQueryVariables
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#_cvCursorVariables"><span class="hs-identifier hs-var hs-var">_cvCursorVariables</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedCursorVariables"><span class="hs-identifier hs-type">ValidatedCursorVariables</span></a></span><span>
+</span><span id="line-212"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-213"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688471407"><span id="local-6989586621688471409"><span id="local-6989586621688471411"><span class="annot"><span class="annottext">Int -&gt; CohortVariables -&gt; ShowS
+[CohortVariables] -&gt; ShowS
+CohortVariables -&gt; String
+(Int -&gt; CohortVariables -&gt; ShowS)
+-&gt; (CohortVariables -&gt; String)
+-&gt; ([CohortVariables] -&gt; ShowS)
+-&gt; Show CohortVariables
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [CohortVariables] -&gt; ShowS
+$cshowList :: [CohortVariables] -&gt; ShowS
+show :: CohortVariables -&gt; String
+$cshow :: CohortVariables -&gt; String
+showsPrec :: Int -&gt; CohortVariables -&gt; ShowS
+$cshowsPrec :: Int -&gt; CohortVariables -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688471403"><span id="local-6989586621688471405"><span class="annot"><span class="annottext">CohortVariables -&gt; CohortVariables -&gt; Bool
+(CohortVariables -&gt; CohortVariables -&gt; Bool)
+-&gt; (CohortVariables -&gt; CohortVariables -&gt; Bool)
+-&gt; Eq CohortVariables
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: CohortVariables -&gt; CohortVariables -&gt; Bool
+$c/= :: CohortVariables -&gt; CohortVariables -&gt; Bool
+== :: CohortVariables -&gt; CohortVariables -&gt; Bool
+$c== :: CohortVariables -&gt; CohortVariables -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. CohortVariables -&gt; Rep CohortVariables x)
+-&gt; (forall x. Rep CohortVariables x -&gt; CohortVariables)
+-&gt; Generic CohortVariables
+forall x. Rep CohortVariables x -&gt; CohortVariables
+forall x. CohortVariables -&gt; Rep CohortVariables x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep CohortVariables x -&gt; CohortVariables
+$cfrom :: forall x. CohortVariables -&gt; Rep CohortVariables x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-214"></span><span>
+</span><span id="line-215"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688471396"><span id="local-6989586621688471398"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortVariables"><span class="hs-identifier hs-type">CohortVariables</span></a></span></span></span><span>
+</span><span id="line-216"></span><span>
+</span><span id="line-217"></span><span class="hs-special">$(</span><span id="cvSyntheticVariables"><span id="cvQueryVariables"><span id="cvCursorVariables"><span id="cvSessionVariables"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">'</span><span class="hs-identifier">CohortVariables</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-218"></span><span>
+</span><span id="line-219"></span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#modifyCursorCohortVariables"><span class="hs-identifier hs-type">modifyCursorCohortVariables</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-220"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedCursorVariables"><span class="hs-identifier hs-type">ValidatedCursorVariables</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-221"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortVariables"><span class="hs-identifier hs-type">CohortVariables</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-222"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortVariables"><span class="hs-identifier hs-type">CohortVariables</span></a></span><span>
+</span><span id="line-223"></span><span id="modifyCursorCohortVariables"><span class="annot"><span class="annottext">modifyCursorCohortVariables :: ValidatedQueryVariables -&gt; CohortVariables -&gt; CohortVariables
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#modifyCursorCohortVariables"><span class="hs-identifier hs-var hs-var">modifyCursorCohortVariables</span></a></span></span><span> </span><span id="local-6989586621688471395"><span class="annot"><span class="annottext">ValidatedQueryVariables
+</span><a href="#local-6989586621688471395"><span class="hs-identifier hs-var">validatedCursorVariables</span></a></span></span><span> </span><span id="local-6989586621688471394"><span class="annot"><span class="annottext">CohortVariables
+</span><a href="#local-6989586621688471394"><span class="hs-identifier hs-var">cohortVariables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-224"></span><span>  </span><span class="annot"><span class="annottext">CohortVariables
+</span><a href="#local-6989586621688471394"><span class="hs-identifier hs-var">cohortVariables</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_cvCursorVariables :: ValidatedQueryVariables
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#_cvCursorVariables"><span class="hs-identifier hs-var">_cvCursorVariables</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ValidatedQueryVariables
+</span><a href="#local-6989586621688471395"><span class="hs-identifier hs-var">validatedCursorVariables</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-225"></span><span>
+</span><span id="line-226"></span><span class="hs-comment">-- | Builds a cohort's variables by only using the session variables that</span><span>
+</span><span id="line-227"></span><span class="hs-comment">-- are required for the subscription</span><span>
+</span><span id="line-228"></span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#mkCohortVariables"><span class="hs-identifier hs-type">mkCohortVariables</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-229"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Set.HashSet</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariable"><span class="hs-identifier hs-type">SessionVariable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-230"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-231"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedQueryVariables"><span class="hs-identifier hs-type">ValidatedQueryVariables</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-232"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedSyntheticVariables"><span class="hs-identifier hs-type">ValidatedSyntheticVariables</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-233"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedCursorVariables"><span class="hs-identifier hs-type">ValidatedCursorVariables</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-234"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortVariables"><span class="hs-identifier hs-type">CohortVariables</span></a></span><span>
+</span><span id="line-235"></span><span id="mkCohortVariables"><span class="annot"><span class="annottext">mkCohortVariables :: HashSet SessionVariable
+-&gt; SessionVariables
+-&gt; ValidatedQueryVariables
+-&gt; ValidatedSyntheticVariables
+-&gt; ValidatedQueryVariables
+-&gt; CohortVariables
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#mkCohortVariables"><span class="hs-identifier hs-var hs-var">mkCohortVariables</span></a></span></span><span> </span><span id="local-6989586621688471393"><span class="annot"><span class="annottext">HashSet SessionVariable
+</span><a href="#local-6989586621688471393"><span class="hs-identifier hs-var">requiredSessionVariables</span></a></span></span><span> </span><span id="local-6989586621688471392"><span class="annot"><span class="annottext">SessionVariables
+</span><a href="#local-6989586621688471392"><span class="hs-identifier hs-var">sessionVariableValues</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-236"></span><span>  </span><span class="annot"><span class="annottext">SessionVariables
+-&gt; ValidatedQueryVariables
+-&gt; ValidatedSyntheticVariables
+-&gt; ValidatedQueryVariables
+-&gt; CohortVariables
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortVariables"><span class="hs-identifier hs-var">CohortVariables</span></a></span><span> </span><span class="annot"><span class="annottext">(SessionVariables
+ -&gt; ValidatedQueryVariables
+ -&gt; ValidatedSyntheticVariables
+ -&gt; ValidatedQueryVariables
+ -&gt; CohortVariables)
+-&gt; SessionVariables
+-&gt; ValidatedQueryVariables
+-&gt; ValidatedSyntheticVariables
+-&gt; ValidatedQueryVariables
+-&gt; CohortVariables
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-237"></span><span>    </span><span class="annot"><span class="annottext">(SessionVariable -&gt; Text -&gt; Bool)
+-&gt; SessionVariables -&gt; SessionVariables
+</span><a href="Hasura.Session.html#filterSessionVariables"><span class="hs-identifier hs-var">filterSessionVariables</span></a></span><span>
+</span><span id="line-238"></span><span>      </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621688471390"><span class="annot"><span class="annottext">SessionVariable
+</span><a href="#local-6989586621688471390"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; HashSet SessionVariable -&gt; Bool
+forall a. (Eq a, Hashable a) =&gt; a -&gt; HashSet a -&gt; Bool
+</span><span class="hs-identifier hs-var">Set.member</span></span><span> </span><span class="annot"><span class="annottext">SessionVariable
+</span><a href="#local-6989586621688471390"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet SessionVariable
+</span><a href="#local-6989586621688471393"><span class="hs-identifier hs-var">requiredSessionVariables</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-239"></span><span>      </span><span class="annot"><span class="annottext">SessionVariables
+</span><a href="#local-6989586621688471392"><span class="hs-identifier hs-var">sessionVariableValues</span></a></span><span>
+</span><span id="line-240"></span><span>
+</span><span id="line-241"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688471382"><span id="local-6989586621688471384"><span id="local-6989586621688471386"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortVariables"><span class="hs-identifier hs-type">CohortVariables</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-242"></span><span>  </span><span id="local-6989586621688471381"><span class="annot"><span class="annottext">toJSON :: CohortVariables -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortVariables"><span class="hs-identifier hs-type">CohortVariables</span></a></span><span> </span><span id="local-6989586621688471379"><span class="annot"><span class="annottext">SessionVariables
+</span><a href="#local-6989586621688471379"><span class="hs-identifier hs-var">sessionVars</span></a></span></span><span> </span><span id="local-6989586621688471378"><span class="annot"><span class="annottext">ValidatedQueryVariables
+</span><a href="#local-6989586621688471378"><span class="hs-identifier hs-var">queryVars</span></a></span></span><span> </span><span id="local-6989586621688471377"><span class="annot"><span class="annottext">ValidatedSyntheticVariables
+</span><a href="#local-6989586621688471377"><span class="hs-identifier hs-var">syntheticVars</span></a></span></span><span> </span><span id="local-6989586621688471376"><span class="annot"><span class="annottext">ValidatedQueryVariables
+</span><a href="#local-6989586621688471376"><span class="hs-identifier hs-var">cursorVars</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-243"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span class="hs-identifier hs-var">J.object</span></span><span>
+</span><span id="line-244"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;session&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; SessionVariables -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">SessionVariables
+</span><a href="#local-6989586621688471379"><span class="hs-identifier hs-var">sessionVars</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-245"></span><span>        </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;query&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ValidatedQueryVariables -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">ValidatedQueryVariables
+</span><a href="#local-6989586621688471378"><span class="hs-identifier hs-var">queryVars</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-246"></span><span>        </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;synthetic&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ValidatedSyntheticVariables -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">ValidatedSyntheticVariables
+</span><a href="#local-6989586621688471377"><span class="hs-identifier hs-var">syntheticVars</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-247"></span><span>        </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;cursor&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ValidatedQueryVariables -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">ValidatedQueryVariables
+</span><a href="#local-6989586621688471376"><span class="hs-identifier hs-var">cursorVars</span></a></span><span>
+</span><span id="line-248"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-249"></span><span>
+</span><span id="line-250"></span><span class="hs-comment">-- These types exist only to use the Postgres array encoding.</span><span>
+</span><span id="line-251"></span><span class="hs-keyword">newtype</span><span> </span><span id="CohortIdArray"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortIdArray"><span class="hs-identifier hs-var">CohortIdArray</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CohortIdArray"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortIdArray"><span class="hs-identifier hs-var">CohortIdArray</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unCohortIdArray"><span class="annot"><span class="annottext">CohortIdArray -&gt; [CohortId]
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#unCohortIdArray"><span class="hs-identifier hs-var hs-var">unCohortIdArray</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortId"><span class="hs-identifier hs-type">CohortId</span></a></span><span class="hs-special">]</span><span class="hs-special">}</span><span>
+</span><span id="line-252"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688471366"><span id="local-6989586621688471368"><span id="local-6989586621688471370"><span class="annot"><span class="annottext">Int -&gt; CohortIdArray -&gt; ShowS
+[CohortIdArray] -&gt; ShowS
+CohortIdArray -&gt; String
+(Int -&gt; CohortIdArray -&gt; ShowS)
+-&gt; (CohortIdArray -&gt; String)
+-&gt; ([CohortIdArray] -&gt; ShowS)
+-&gt; Show CohortIdArray
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [CohortIdArray] -&gt; ShowS
+$cshowList :: [CohortIdArray] -&gt; ShowS
+show :: CohortIdArray -&gt; String
+$cshow :: CohortIdArray -&gt; String
+showsPrec :: Int -&gt; CohortIdArray -&gt; ShowS
+$cshowsPrec :: Int -&gt; CohortIdArray -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688471362"><span id="local-6989586621688471364"><span class="annot"><span class="annottext">CohortIdArray -&gt; CohortIdArray -&gt; Bool
+(CohortIdArray -&gt; CohortIdArray -&gt; Bool)
+-&gt; (CohortIdArray -&gt; CohortIdArray -&gt; Bool) -&gt; Eq CohortIdArray
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: CohortIdArray -&gt; CohortIdArray -&gt; Bool
+$c/= :: CohortIdArray -&gt; CohortIdArray -&gt; Bool
+== :: CohortIdArray -&gt; CohortIdArray -&gt; Bool
+$c== :: CohortIdArray -&gt; CohortIdArray -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-253"></span><span>
+</span><span id="line-254"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.ToPrepArg</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortIdArray"><span class="hs-identifier hs-type">CohortIdArray</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-255"></span><span>  </span><span id="local-6989586621688471359"><span class="annot"><span class="annottext">toPrepVal :: CohortIdArray -&gt; PrepArg
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toPrepVal</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortIdArray"><span class="hs-identifier hs-type">CohortIdArray</span></a></span><span> </span><span id="local-6989586621688471357"><span class="annot"><span class="annottext">[CohortId]
+</span><a href="#local-6989586621688471357"><span class="hs-identifier hs-var">l</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Oid -&gt; ([UUID] -&gt; Encoding) -&gt; [UUID] -&gt; PrepArg
+forall a. Oid -&gt; (a -&gt; Encoding) -&gt; a -&gt; PrepArg
+</span><span class="hs-identifier hs-var">Q.toPrepValHelper</span></span><span> </span><span class="annot"><span class="annottext">Oid
+</span><span class="hs-identifier hs-var">PTI.unknown</span></span><span> </span><span class="annot"><span class="annottext">[UUID] -&gt; Encoding
+</span><a href="#local-6989586621688471354"><span class="hs-identifier hs-var">encoder</span></a></span><span> </span><span class="annot"><span class="annottext">([UUID] -&gt; PrepArg) -&gt; [UUID] -&gt; PrepArg
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(CohortId -&gt; UUID) -&gt; [CohortId] -&gt; [UUID]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">CohortId -&gt; UUID
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#unCohortId"><span class="hs-identifier hs-var hs-var">unCohortId</span></a></span><span> </span><span class="annot"><span class="annottext">[CohortId]
+</span><a href="#local-6989586621688471357"><span class="hs-identifier hs-var">l</span></a></span><span>
+</span><span id="line-256"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-257"></span><span>      </span><span id="local-6989586621688471354"><span class="annot"><span class="annottext">encoder :: [UUID] -&gt; Encoding
+</span><a href="#local-6989586621688471354"><span class="hs-identifier hs-var hs-var">encoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Array -&gt; Encoding
+</span><span class="hs-identifier hs-var">PE.array</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><span class="hs-number">2950</span></span><span> </span><span class="annot"><span class="annottext">(Array -&gt; Encoding) -&gt; ([UUID] -&gt; Array) -&gt; [UUID] -&gt; Encoding
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(forall b. (b -&gt; UUID -&gt; b) -&gt; b -&gt; [UUID] -&gt; b)
+-&gt; (UUID -&gt; Array) -&gt; [UUID] -&gt; Array
+forall a c.
+(forall b. (b -&gt; a -&gt; b) -&gt; b -&gt; c -&gt; b)
+-&gt; (a -&gt; Array) -&gt; c -&gt; Array
+</span><span class="hs-identifier hs-var">PE.dimensionArray</span></span><span> </span><span class="annot"><span class="annottext">forall b. (b -&gt; UUID -&gt; b) -&gt; b -&gt; [UUID] -&gt; b
+forall (t :: * -&gt; *) b a.
+Foldable t =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b
+</span><span class="hs-identifier hs-var">foldl'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Encoding -&gt; Array
+</span><span class="hs-identifier hs-var">PE.encodingArray</span></span><span> </span><span class="annot"><span class="annottext">(Encoding -&gt; Array) -&gt; (UUID -&gt; Encoding) -&gt; UUID -&gt; Array
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">UUID -&gt; Encoding
+</span><span class="hs-identifier hs-var">PE.uuid</span></span><span class="hs-special">)</span><span>
+</span><span id="line-258"></span><span>
+</span><span id="line-259"></span><span class="hs-keyword">newtype</span><span> </span><span id="CohortVariablesArray"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortVariablesArray"><span class="hs-identifier hs-var">CohortVariablesArray</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CohortVariablesArray"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortVariablesArray"><span class="hs-identifier hs-var">CohortVariablesArray</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unCohortVariablesArray"><span class="annot"><span class="annottext">CohortVariablesArray -&gt; [CohortVariables]
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#unCohortVariablesArray"><span class="hs-identifier hs-var hs-var">unCohortVariablesArray</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortVariables"><span class="hs-identifier hs-type">CohortVariables</span></a></span><span class="hs-special">]</span><span class="hs-special">}</span><span>
+</span><span id="line-260"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688471340"><span id="local-6989586621688471342"><span id="local-6989586621688471344"><span class="annot"><span class="annottext">Int -&gt; CohortVariablesArray -&gt; ShowS
+[CohortVariablesArray] -&gt; ShowS
+CohortVariablesArray -&gt; String
+(Int -&gt; CohortVariablesArray -&gt; ShowS)
+-&gt; (CohortVariablesArray -&gt; String)
+-&gt; ([CohortVariablesArray] -&gt; ShowS)
+-&gt; Show CohortVariablesArray
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [CohortVariablesArray] -&gt; ShowS
+$cshowList :: [CohortVariablesArray] -&gt; ShowS
+show :: CohortVariablesArray -&gt; String
+$cshow :: CohortVariablesArray -&gt; String
+showsPrec :: Int -&gt; CohortVariablesArray -&gt; ShowS
+$cshowsPrec :: Int -&gt; CohortVariablesArray -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688471336"><span id="local-6989586621688471338"><span class="annot"><span class="annottext">CohortVariablesArray -&gt; CohortVariablesArray -&gt; Bool
+(CohortVariablesArray -&gt; CohortVariablesArray -&gt; Bool)
+-&gt; (CohortVariablesArray -&gt; CohortVariablesArray -&gt; Bool)
+-&gt; Eq CohortVariablesArray
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: CohortVariablesArray -&gt; CohortVariablesArray -&gt; Bool
+$c/= :: CohortVariablesArray -&gt; CohortVariablesArray -&gt; Bool
+== :: CohortVariablesArray -&gt; CohortVariablesArray -&gt; Bool
+$c== :: CohortVariablesArray -&gt; CohortVariablesArray -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-261"></span><span>
+</span><span id="line-262"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.ToPrepArg</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortVariablesArray"><span class="hs-identifier hs-type">CohortVariablesArray</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-263"></span><span>  </span><span id="local-6989586621688471334"><span class="annot"><span class="annottext">toPrepVal :: CohortVariablesArray -&gt; PrepArg
+</span><a href="#local-6989586621688471334"><span class="hs-identifier hs-var hs-var hs-var hs-var">toPrepVal</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortVariablesArray"><span class="hs-identifier hs-type">CohortVariablesArray</span></a></span><span> </span><span id="local-6989586621688471333"><span class="annot"><span class="annottext">[CohortVariables]
+</span><a href="#local-6989586621688471333"><span class="hs-identifier hs-var">l</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-264"></span><span>    </span><span class="annot"><span class="annottext">Oid -&gt; ([Value] -&gt; Encoding) -&gt; [Value] -&gt; PrepArg
+forall a. Oid -&gt; (a -&gt; Encoding) -&gt; a -&gt; PrepArg
+</span><span class="hs-identifier hs-var">Q.toPrepValHelper</span></span><span> </span><span class="annot"><span class="annottext">Oid
+</span><span class="hs-identifier hs-var">PTI.unknown</span></span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; Encoding
+</span><a href="#local-6989586621688471332"><span class="hs-identifier hs-var">encoder</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(CohortVariables -&gt; Value) -&gt; [CohortVariables] -&gt; [Value]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">CohortVariables -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">[CohortVariables]
+</span><a href="#local-6989586621688471333"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-265"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-266"></span><span>      </span><span id="local-6989586621688471332"><span class="annot"><span class="annottext">encoder :: [Value] -&gt; Encoding
+</span><a href="#local-6989586621688471332"><span class="hs-identifier hs-var hs-var">encoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Array -&gt; Encoding
+</span><span class="hs-identifier hs-var">PE.array</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><span class="hs-number">114</span></span><span> </span><span class="annot"><span class="annottext">(Array -&gt; Encoding) -&gt; ([Value] -&gt; Array) -&gt; [Value] -&gt; Encoding
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(forall b. (b -&gt; Value -&gt; b) -&gt; b -&gt; [Value] -&gt; b)
+-&gt; (Value -&gt; Array) -&gt; [Value] -&gt; Array
+forall a c.
+(forall b. (b -&gt; a -&gt; b) -&gt; b -&gt; c -&gt; b)
+-&gt; (a -&gt; Array) -&gt; c -&gt; Array
+</span><span class="hs-identifier hs-var">PE.dimensionArray</span></span><span> </span><span class="annot"><span class="annottext">forall b. (b -&gt; Value -&gt; b) -&gt; b -&gt; [Value] -&gt; b
+forall (t :: * -&gt; *) b a.
+Foldable t =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b
+</span><span class="hs-identifier hs-var">foldl'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Encoding -&gt; Array
+</span><span class="hs-identifier hs-var">PE.encodingArray</span></span><span> </span><span class="annot"><span class="annottext">(Encoding -&gt; Array) -&gt; (Value -&gt; Encoding) -&gt; Value -&gt; Array
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Encoding
+</span><span class="hs-identifier hs-var">PE.json_ast</span></span><span class="hs-special">)</span><span>
+</span><span id="line-267"></span><span>
+</span><span id="line-268"></span><span class="hs-comment">----------------------------------------------------------------------------------------------------</span><span>
+</span><span id="line-269"></span><span class="hs-comment">-- Live query plans</span><span>
+</span><span id="line-270"></span><span>
+</span><span id="line-271"></span><span class="hs-comment">-- | A self-contained, ready-to-execute subscription plan. Contains enough information</span><span>
+</span><span id="line-272"></span><span class="hs-comment">-- to find an existing poller that this can be added to /or/ to create a new poller</span><span>
+</span><span id="line-273"></span><span class="hs-comment">-- if necessary.</span><span>
+</span><span id="line-274"></span><span class="hs-keyword">data</span><span> </span><span id="SubscriptionQueryPlan"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#SubscriptionQueryPlan"><span class="hs-identifier hs-var">SubscriptionQueryPlan</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688471330"><span class="annot"><a href="#local-6989586621688471330"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688471329"><span class="annot"><a href="#local-6989586621688471329"><span class="hs-identifier hs-type">q</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SubscriptionQueryPlan"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#SubscriptionQueryPlan"><span class="hs-identifier hs-var">SubscriptionQueryPlan</span></a></span></span><span>
+</span><span id="line-275"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_sqpParameterizedPlan"><span class="annot"><span class="annottext">SubscriptionQueryPlan b q -&gt; ParameterizedSubscriptionQueryPlan b q
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#_sqpParameterizedPlan"><span class="hs-identifier hs-var hs-var">_sqpParameterizedPlan</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ParameterizedSubscriptionQueryPlan"><span class="hs-identifier hs-type">ParameterizedSubscriptionQueryPlan</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688471330"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688471329"><span class="hs-identifier hs-type">q</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-276"></span><span>    </span><span id="_sqpSourceConfig"><span class="annot"><span class="annottext">SubscriptionQueryPlan b q -&gt; SourceConfig b
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#_sqpSourceConfig"><span class="hs-identifier hs-var hs-var">_sqpSourceConfig</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688471330"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-277"></span><span>    </span><span id="_sqpVariables"><span class="annot"><span class="annottext">SubscriptionQueryPlan b q -&gt; CohortVariables
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#_sqpVariables"><span class="hs-identifier hs-var hs-var">_sqpVariables</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortVariables"><span class="hs-identifier hs-type">CohortVariables</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-278"></span><span>    </span><span class="hs-comment">-- | We need to know if the source has a namespace so that we can wrap it around</span><span>
+</span><span id="line-279"></span><span>    </span><span class="hs-comment">-- the response from the DB</span><span>
+</span><span id="line-280"></span><span>    </span><span id="_sqpNamespace"><span class="annot"><span class="annottext">SubscriptionQueryPlan b q -&gt; Maybe Name
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#_sqpNamespace"><span class="hs-identifier hs-var hs-var">_sqpNamespace</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">)</span><span>
+</span><span id="line-281"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-282"></span><span>
+</span><span id="line-283"></span><span class="hs-keyword">data</span><span> </span><span id="ParameterizedSubscriptionQueryPlan"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ParameterizedSubscriptionQueryPlan"><span class="hs-identifier hs-var">ParameterizedSubscriptionQueryPlan</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688471323"><span class="annot"><a href="#local-6989586621688471323"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688471322"><span class="annot"><a href="#local-6989586621688471322"><span class="hs-identifier hs-type">q</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ParameterizedSubscriptionQueryPlan"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ParameterizedSubscriptionQueryPlan"><span class="hs-identifier hs-var">ParameterizedSubscriptionQueryPlan</span></a></span></span><span>
+</span><span id="line-284"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_plqpRole"><span class="annot"><span class="annottext">ParameterizedSubscriptionQueryPlan b q -&gt; RoleName
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#_plqpRole"><span class="hs-identifier hs-var hs-var">_plqpRole</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-285"></span><span>    </span><span id="_plqpQuery"><span class="annot"><span class="annottext">ParameterizedSubscriptionQueryPlan b q -&gt; q
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#_plqpQuery"><span class="hs-identifier hs-var hs-var">_plqpQuery</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621688471322"><span class="hs-identifier hs-type">q</span></a></span><span>
+</span><span id="line-286"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-287"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688471313"><span id="local-6989586621688471315"><span id="local-6989586621688471317"><span class="annot"><span class="annottext">Int -&gt; ParameterizedSubscriptionQueryPlan b q -&gt; ShowS
+[ParameterizedSubscriptionQueryPlan b q] -&gt; ShowS
+ParameterizedSubscriptionQueryPlan b q -&gt; String
+(Int -&gt; ParameterizedSubscriptionQueryPlan b q -&gt; ShowS)
+-&gt; (ParameterizedSubscriptionQueryPlan b q -&gt; String)
+-&gt; ([ParameterizedSubscriptionQueryPlan b q] -&gt; ShowS)
+-&gt; Show (ParameterizedSubscriptionQueryPlan b q)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+forall (b :: BackendType) q.
+Show q =&gt;
+Int -&gt; ParameterizedSubscriptionQueryPlan b q -&gt; ShowS
+forall (b :: BackendType) q.
+Show q =&gt;
+[ParameterizedSubscriptionQueryPlan b q] -&gt; ShowS
+forall (b :: BackendType) q.
+Show q =&gt;
+ParameterizedSubscriptionQueryPlan b q -&gt; String
+showList :: [ParameterizedSubscriptionQueryPlan b q] -&gt; ShowS
+$cshowList :: forall (b :: BackendType) q.
+Show q =&gt;
+[ParameterizedSubscriptionQueryPlan b q] -&gt; ShowS
+show :: ParameterizedSubscriptionQueryPlan b q -&gt; String
+$cshow :: forall (b :: BackendType) q.
+Show q =&gt;
+ParameterizedSubscriptionQueryPlan b q -&gt; String
+showsPrec :: Int -&gt; ParameterizedSubscriptionQueryPlan b q -&gt; ShowS
+$cshowsPrec :: forall (b :: BackendType) q.
+Show q =&gt;
+Int -&gt; ParameterizedSubscriptionQueryPlan b q -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-288"></span><span>
+</span><span id="line-289"></span><span class="hs-special">$(</span><span id="local-6989586621688471305"><span id="local-6989586621688471307"><span id="local-6989586621688471309"><span id="local-6989586621688471311"><span id="local-6989586621688471322"><span id="local-6989586621688471323"><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ParameterizedSubscriptionQueryPlan</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-290"></span><span>
+</span><span id="line-291"></span><span class="hs-keyword">data</span><span> </span><span id="SubscriptionQueryPlanExplanation"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#SubscriptionQueryPlanExplanation"><span class="hs-identifier hs-var">SubscriptionQueryPlanExplanation</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SubscriptionQueryPlanExplanation"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#SubscriptionQueryPlanExplanation"><span class="hs-identifier hs-var">SubscriptionQueryPlanExplanation</span></a></span></span><span>
+</span><span id="line-292"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_sqpeSql"><span class="annot"><span class="annottext">SubscriptionQueryPlanExplanation -&gt; Text
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#_sqpeSql"><span class="hs-identifier hs-var hs-var">_sqpeSql</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
+</span><span id="line-293"></span><span>    </span><span id="_sqpePlan"><span class="annot"><span class="annottext">SubscriptionQueryPlanExplanation -&gt; [Text]
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#_sqpePlan"><span class="hs-identifier hs-var hs-var">_sqpePlan</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-294"></span><span>    </span><span id="_sqpeVariables"><span class="annot"><span class="annottext">SubscriptionQueryPlanExplanation -&gt; CohortVariables
+</span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#_sqpeVariables"><span class="hs-identifier hs-var hs-var">_sqpeVariables</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortVariables"><span class="hs-identifier hs-type">CohortVariables</span></a></span><span>
+</span><span id="line-295"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-296"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688471294"><span id="local-6989586621688471296"><span id="local-6989586621688471298"><span class="annot"><span class="annottext">Int -&gt; SubscriptionQueryPlanExplanation -&gt; ShowS
+[SubscriptionQueryPlanExplanation] -&gt; ShowS
+SubscriptionQueryPlanExplanation -&gt; String
+(Int -&gt; SubscriptionQueryPlanExplanation -&gt; ShowS)
+-&gt; (SubscriptionQueryPlanExplanation -&gt; String)
+-&gt; ([SubscriptionQueryPlanExplanation] -&gt; ShowS)
+-&gt; Show SubscriptionQueryPlanExplanation
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [SubscriptionQueryPlanExplanation] -&gt; ShowS
+$cshowList :: [SubscriptionQueryPlanExplanation] -&gt; ShowS
+show :: SubscriptionQueryPlanExplanation -&gt; String
+$cshow :: SubscriptionQueryPlanExplanation -&gt; String
+showsPrec :: Int -&gt; SubscriptionQueryPlanExplanation -&gt; ShowS
+$cshowsPrec :: Int -&gt; SubscriptionQueryPlanExplanation -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-297"></span><span>
+</span><span id="line-298"></span><span class="hs-special">$(</span><span id="local-6989586621688471286"><span id="local-6989586621688471288"><span id="local-6989586621688471290"><span id="local-6989586621688471292"><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">SubscriptionQueryPlanExplanation</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-299"></span><span>
+</span><span id="line-300"></span><span class="hs-comment">--------------------------------------------------------------------------</span><span>
+</span><span id="line-301"></span><span class="hs-comment">--- Streaming Subscriptions</span><span>
+</span><span id="line-302"></span><span>
+</span><span id="line-303"></span><span class="hs-keyword">newtype</span><span> </span><span id="CursorVariableValues"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CursorVariableValues"><span class="hs-identifier hs-var">CursorVariableValues</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CursorVariableValues"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CursorVariableValues"><span class="hs-identifier hs-var">CursorVariableValues</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="annot"><a href="Hasura.SQL.Value.html#TxtEncodedVal"><span class="hs-identifier hs-type">TxtEncodedVal</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-304"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688471281"><span id="local-6989586621688471283"><span class="annot"><span class="annottext">Value -&gt; Parser [CursorVariableValues]
+Value -&gt; Parser CursorVariableValues
+(Value -&gt; Parser CursorVariableValues)
+-&gt; (Value -&gt; Parser [CursorVariableValues])
+-&gt; FromJSON CursorVariableValues
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [CursorVariableValues]
+$cparseJSONList :: Value -&gt; Parser [CursorVariableValues]
+parseJSON :: Value -&gt; Parser CursorVariableValues
+$cparseJSON :: Value -&gt; Parser CursorVariableValues
+</span><a href="#local-6989586621688471281"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688471273"><span id="local-6989586621688471275"><span id="local-6989586621688471277"><span id="local-6989586621688471279"><span class="annot"><span class="annottext">[CursorVariableValues] -&gt; Encoding
+[CursorVariableValues] -&gt; Value
+CursorVariableValues -&gt; Encoding
+CursorVariableValues -&gt; Value
+(CursorVariableValues -&gt; Value)
+-&gt; (CursorVariableValues -&gt; Encoding)
+-&gt; ([CursorVariableValues] -&gt; Value)
+-&gt; ([CursorVariableValues] -&gt; Encoding)
+-&gt; ToJSON CursorVariableValues
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [CursorVariableValues] -&gt; Encoding
+$ctoEncodingList :: [CursorVariableValues] -&gt; Encoding
+toJSONList :: [CursorVariableValues] -&gt; Value
+$ctoJSONList :: [CursorVariableValues] -&gt; Value
+toEncoding :: CursorVariableValues -&gt; Encoding
+$ctoEncoding :: CursorVariableValues -&gt; Encoding
+toJSON :: CursorVariableValues -&gt; Value
+$ctoJSON :: CursorVariableValues -&gt; Value
+</span><a href="#local-6989586621688471273"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688471269"><span id="local-6989586621688471271"><span class="annot"><span class="annottext">CursorVariableValues -&gt; CursorVariableValues -&gt; Bool
+(CursorVariableValues -&gt; CursorVariableValues -&gt; Bool)
+-&gt; (CursorVariableValues -&gt; CursorVariableValues -&gt; Bool)
+-&gt; Eq CursorVariableValues
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: CursorVariableValues -&gt; CursorVariableValues -&gt; Bool
+$c/= :: CursorVariableValues -&gt; CursorVariableValues -&gt; Bool
+== :: CursorVariableValues -&gt; CursorVariableValues -&gt; Bool
+$c== :: CursorVariableValues -&gt; CursorVariableValues -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688471263"><span id="local-6989586621688471265"><span id="local-6989586621688471267"><span class="annot"><span class="annottext">Int -&gt; CursorVariableValues -&gt; ShowS
+[CursorVariableValues] -&gt; ShowS
+CursorVariableValues -&gt; String
+(Int -&gt; CursorVariableValues -&gt; ShowS)
+-&gt; (CursorVariableValues -&gt; String)
+-&gt; ([CursorVariableValues] -&gt; ShowS)
+-&gt; Show CursorVariableValues
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [CursorVariableValues] -&gt; ShowS
+$cshowList :: [CursorVariableValues] -&gt; ShowS
+show :: CursorVariableValues -&gt; String
+$cshow :: CursorVariableValues -&gt; String
+showsPrec :: Int -&gt; CursorVariableValues -&gt; ShowS
+$cshowsPrec :: Int -&gt; CursorVariableValues -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-305"></span></pre></body></html>
