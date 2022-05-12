@@ -3,6 +3,8 @@ import {
   permKeys,
 } from '@/components/Services/Data/mergeData';
 import type { Permission, ComputedField } from '@/dataSources/types';
+import { DataTarget } from '@/features/Datasources';
+
 import type {
   QualifiedTable,
   RemoteRelationship,
@@ -90,24 +92,26 @@ export namespace MetadataSelector {
     );
   };
 
-  interface DbToRemoteSchemaArgs {
-    dataSource: string;
-    tableName: string;
-  }
+  export const getDbToRemoteSchemaRelationships = (target: DataTarget) => (
+    m: MetadataResponse
+  ) => {
+    // FIXME: currently the underlying hooks (useTable) only uses QualifiedTable.
+    // Qualified table needs to be replaced with DataTarget everywhere so that we can support all targets
+    if (!('schema' in target)) {
+      throw Error('Big query is not yet supported');
+    }
 
-  export const getDbToRemoteSchemaRelationships = ({
-    dataSource,
-    tableName,
-  }: DbToRemoteSchemaArgs) => (m: MetadataResponse) => {
     // find relevant table from metadata
     const tableEntry = m.metadata.sources
-      .find(s => s.name === dataSource)
-      ?.tables.find(t => t.table.name === tableName);
+      .find(s => s.name === target.database)
+      ?.tables.find(
+        t => t.table.name === target.table && target.schema === t.table.schema
+      );
 
-    return {
-      table: tableEntry?.table,
-      remote_relationships: tableEntry?.remote_relationships,
-    };
+    // ensure relationship is to remote schema not remote db
+    return tableEntry?.remote_relationships?.filter(
+      relationship => !relationship.definition.to_source
+    );
   };
 
   export const getTables = (dataSource: string) => (m: MetadataResponse) => {
@@ -171,11 +175,21 @@ export namespace MetadataSelector {
     return computed_fields;
   };
 
-  export const getRemoteDatabaseRelationships = (
-    currentDataSource: string,
-    table: QualifiedTable
-  ) => (m: MetadataResponse) => {
-    const metadataTable = getTable(currentDataSource, table)(m);
+  export const getRemoteDatabaseRelationships = ({
+    target,
+  }: {
+    target: DataTarget;
+  }) => (m: MetadataResponse) => {
+    // FIXME: currently the underlying hooks (useTable) only uses QualifiedTable.
+    // Qualified table needs to be replaced with DataTarget everywhere so that we can support all targets
+    if (!('schema' in target)) {
+      throw Error('Big query is not yet supported');
+    }
+
+    const metadataTable = getTable(target.database, {
+      name: target.table,
+      schema: target.schema,
+    })(m);
     const remote_database_relationships: RemoteRelationship[] = (
       metadataTable?.remote_relationships ?? []
     ).filter(field => 'to_source' in field.definition);

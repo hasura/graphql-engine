@@ -1,3 +1,4 @@
+import { DataTarget } from '@/features/Datasources';
 import { QualifiedTable } from '@/metadata/types';
 import { MetadataSelector } from './metadataSelectors';
 import { useMetadata } from './useMetadata';
@@ -10,12 +11,9 @@ export const useTables = (database: string) => {
   return useMetadata(MetadataSelector.getTables(database));
 };
 
-export const useRemoteDatabaseRelationships = (
-  database: string,
-  table: QualifiedTable
-) => {
+export const useRemoteDatabaseRelationships = (target: DataTarget) => {
   return useMetadata(
-    MetadataSelector.getRemoteDatabaseRelationships(database, table)
+    MetadataSelector.getRemoteDatabaseRelationships({ target })
   );
 };
 

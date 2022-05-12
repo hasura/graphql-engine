@@ -12,7 +12,11 @@ function GetRemoteDatabaseRelationshipsComponent({
   database: string;
   qualifiedTable: QualifiedTable;
 }) {
-  const query = useRemoteDatabaseRelationships(database, qualifiedTable);
+  const query = useRemoteDatabaseRelationships({
+    database,
+    table: qualifiedTable.name,
+    schema: qualifiedTable.schema,
+  });
   return (
     <div>
       <b>Get Remote Database Relationship Query</b>

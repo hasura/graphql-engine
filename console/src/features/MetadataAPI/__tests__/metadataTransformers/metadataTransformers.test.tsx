@@ -25,16 +25,17 @@ test('transformDbToRemoteSchema returns new and legacy formats consistently', ()
             },
           },
         },
-        "table": Object {
-          "name": "user",
+        "target": Object {
+          "database": "default",
           "schema": "public",
+          "table": "user",
         },
       },
       Object {
         "lhs_fields": Array [
           "id",
         ],
-        "relationshipName": "t",
+        "relationshipName": "old_payload",
         "remoteSchemaName": "remoteSchema3",
         "remote_field": Object {
           "test": Object {
@@ -47,9 +48,10 @@ test('transformDbToRemoteSchema returns new and legacy formats consistently', ()
             },
           },
         },
-        "table": Object {
-          "name": "user",
+        "target": Object {
+          "database": "default",
           "schema": "public",
+          "table": "user",
         },
       },
     ]

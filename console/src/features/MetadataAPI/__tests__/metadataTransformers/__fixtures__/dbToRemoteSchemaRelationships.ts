@@ -1,9 +1,10 @@
 import { RemoteRelationship } from '@/metadata/types';
 
 export const dbToRemoteSchemaRelationships = {
-  table: {
+  target: {
+    database: 'default',
     schema: 'public',
-    name: 'user',
+    table: 'user',
   },
   remote_relationships: ([
     {
@@ -42,7 +43,7 @@ export const dbToRemoteSchemaRelationships = {
         hasura_fields: ['id'],
         remote_schema: 'remoteSchema3',
       },
-      name: 't',
+      name: 'old_payload',
     },
   ] as unknown) as RemoteRelationship[],
 };

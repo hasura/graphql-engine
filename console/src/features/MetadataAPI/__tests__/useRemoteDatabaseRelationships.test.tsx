@@ -102,9 +102,10 @@ describe('The useRemoteDatabaseRelationships hook', () => {
   it('should show loading status whilst fetching data', () => {
     const { result } = renderHook(
       () =>
-        useRemoteDatabaseRelationships('default', {
+        useRemoteDatabaseRelationships({
+          database: 'default',
           schema: 'public',
-          name: 'test',
+          table: 'test',
         }),
       {
         wrapper,
@@ -118,9 +119,10 @@ describe('The useRemoteDatabaseRelationships hook', () => {
   it('should show success status after fetching data and data format should be correct', async () => {
     const { result, waitForNextUpdate } = renderHook(
       () =>
-        useRemoteDatabaseRelationships('default', {
+        useRemoteDatabaseRelationships({
+          database: 'default',
           schema: 'public',
-          name: 'test',
+          table: 'test',
         }),
       {
         wrapper,
