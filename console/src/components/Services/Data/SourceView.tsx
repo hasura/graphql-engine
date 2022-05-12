@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import Helmet from 'react-helmet';
+import { FaDatabase, FaTrash } from 'react-icons/fa';
 import { Dispatch, ReduxState } from '../../../types';
 import { mapDispatchToPropsEmpty } from '../../Common/utils/reactUtils';
 import styles from '../../Common/Common.scss';
@@ -127,7 +128,7 @@ const SourceView: React.FC<Props> = props => {
               {
                 url: getDataSourceBaseRoute(currentDataSource),
                 title: currentDataSource,
-                prefix: <i className="fa fa-database" />,
+                prefix: <FaDatabase />,
               },
             ]}
           />
@@ -173,7 +174,7 @@ const SourceView: React.FC<Props> = props => {
                       className={styles.mar_small_left}
                       onClick={() => handleDelete(schema)}
                     >
-                      <i className="fa fa-trash" aria-hidden="true" />
+                      <FaTrash aria-hidden="true" />
                     </Button>
                   ) : null}
                   <div

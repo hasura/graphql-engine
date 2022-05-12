@@ -1,4 +1,5 @@
 import React, { Dispatch, useState } from 'react';
+import { FaCaretDown, FaCaretRight } from 'react-icons/fa';
 
 import { ConnectDBActions, ConnectDBState } from './state';
 import { LabeledInput } from '../../../Common/LabeledInput';
@@ -43,9 +44,9 @@ const ConnectionSettingsForm: React.FC<ConnectionSettingsFormProps> = ({
               }
             >
               {currentConnectionParamState ? (
-                <i className="fa fa-caret-down" />
+                <FaCaretDown className="fa fa-caret-down" />
               ) : (
-                <i className="fa fa-caret-right" />
+                <FaCaretRight className="fa fa-caret-right" />
               )}
               {'  '}
               Connection Settings
@@ -235,9 +236,9 @@ const ConnectionSettingsForm: React.FC<ConnectionSettingsFormProps> = ({
                     className={styles.connection_settings_header}
                   >
                     {certificateSettingsState ? (
-                      <i className="fa fa-caret-down" />
+                      <FaCaretDown />
                     ) : (
-                      <i className="fa fa-caret-right" />
+                      <FaCaretRight />
                     )}
                     {'  '}
                     SSL Certificates Settings

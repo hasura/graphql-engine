@@ -51,6 +51,7 @@ import {
   checkFeatureSupport,
   READ_ONLY_RUN_SQL_QUERIES,
 } from '../../../helpers/versionUtils';
+import { FiRefreshCw } from 'react-icons/fi';
 
 const SET_TABLE = 'Data/SET_TABLE';
 const LOAD_FUNCTIONS = 'Data/LOAD_FUNCTIONS';
@@ -724,7 +725,7 @@ export const handleOutOfDateMetadata = dispatch => {
         action: {
           label: (
             <>
-              <i className="fa fa-refresh" aria-hidden="true" /> Fetch metadata
+              <FiRefreshCw aria-hidden="true" /> Fetch metadata
             </>
           ),
           callback: () => {

@@ -37,6 +37,7 @@ import {
 import Header from './Header';
 import RolesHeader from './RolesHeader';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
+import { FaPencilAlt, FaPlus } from 'react-icons/fa';
 
 class PermissionsSummary extends Component {
   initState = {
@@ -147,10 +148,10 @@ class PermissionsSummary extends Component {
       );
     };
 
-    const getActionIcon = (faIconType, onClick = null) => {
+    const getActionIcon = (onClick = null) => {
       return (
-        <i
-          className={`fa ${faIconType} ${styles.actionIcon}`}
+        <FaPencilAlt
+          className={styles.actionIcon}
           aria-hidden="true"
           onClick={onClick}
         />
@@ -158,7 +159,7 @@ class PermissionsSummary extends Component {
     };
 
     const getEditIcon = () => {
-      return getActionIcon('fa-pencil');
+      return getActionIcon();
     };
 
     // ------------------------------------------------------------------------------
@@ -896,7 +897,7 @@ class PermissionsSummary extends Component {
               title="Create new role"
               className={styles.add_mar_left_mid}
             >
-              <i className="fa fa-plus" aria-hidden="true" />
+              <FaPlus aria-hidden="true" />
             </Button>
           </div>
         );

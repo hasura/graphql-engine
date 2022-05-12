@@ -3,6 +3,7 @@ import { fkViolationOnUpdate, fkViolationOnDelete } from '../TooltipMessages';
 import { updateSchemaInfo } from '../../DataActions';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
 import { dataSource } from '../../../../../dataSources';
+import { FaTimes } from 'react-icons/fa';
 
 const ForeignKeySelector = ({
   foreignKey,
@@ -202,8 +203,8 @@ const ForeignKeySelector = ({
             removeIcon = null;
           } else {
             removeIcon = (
-              <i
-                className="w-4 fa fa-times cursor-pointer"
+              <FaTimes
+                className="w-4 cursor-pointer"
                 onClick={dispatchRemoveCol}
               />
             );

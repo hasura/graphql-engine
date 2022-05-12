@@ -1,4 +1,5 @@
 import React, { ChangeEvent, Dispatch } from 'react';
+import { FaCheckCircle, FaInfoCircle } from 'react-icons/fa';
 
 import { ConnectDBActions, ConnectDBState, connectionTypes } from './state';
 import { LabeledInput } from '../../../Common/LabeledInput';
@@ -207,8 +208,8 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
         <div className={styles.add_mar_bottom_mid}>
           {connectionTypeState.includes(connectionTypes.ENV_VAR) ? (
             <div className={styles.add_mar_bottom_mid}>
-              <i
-                className={`fa fa-check-circle ${styles.color_green} ${styles.padd_small_right}`}
+              <FaCheckCircle
+                className={`${styles.color_green} ${styles.padd_small_right}`}
               />
               <span className={styles.text_muted}>
                 Environment variable recommended
@@ -217,7 +218,7 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
           ) : null}
           {driverToLabel[connectionDBState.dbType].info ? (
             <div>
-              <i className={`fa fa-info-circle ${styles.padd_small_right}`} />
+              <FaInfoCircle className={`${styles.padd_small_right}`} />
               <span className={styles.text_muted}>
                 {driverToLabel[connectionDBState.dbType].info}
               </span>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { FaColumns, FaTable } from 'react-icons/fa';
 import { Table, Partition } from '../../../../dataSources/types';
 import { Dispatch } from '../../../../types';
 import { fetchPartitionDetails } from '../DataActions';
@@ -59,7 +60,7 @@ const PartitionInfo: React.FC<Props> = ({ table, dispatch }) => {
           {Object.keys(partitions).map(key => (
             <div>
               <span className="font-semibold mr-xs">
-                <i className="fa fa-columns" aria-hidden="true" />
+                <FaColumns aria-hidden="true" />
                 created_at -{' '}
               </span>
               <span className="mr-xs">{key}</span>
@@ -67,8 +68,8 @@ const PartitionInfo: React.FC<Props> = ({ table, dispatch }) => {
                 return (
                   <div className="mt-sm">
                     <span className="font-semibold mr-xs">
-                      <i
-                        className={`fa fa-table ${styles.partitionLabel}`}
+                      <FaTable
+                        className={styles.partitionLabel}
                         aria-hidden="true"
                       />{' '}
                       {p.partition_name} -{' '}

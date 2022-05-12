@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import 'react-table/react-table.css';
+import {
+  FaCaretDown,
+  FaCaretUp,
+  FaClone,
+  FaCompress,
+  FaEdit,
+  FaExpand,
+  FaRegCaretSquareRight,
+  FaSort,
+  FaTrash,
+} from 'react-icons/fa';
 import '../../../Common/TableCommon/ReactTableOverrides.css';
 import DragFoldTable, {
   getColWidth,
@@ -171,11 +182,11 @@ const ViewRows = props => {
     _columns.map(col => {
       const columnName = col.column_name;
 
-      let sortIcon = 'fa-sort';
+      let sortIcon = <FaSort />;
       if (curQuery.order_by && curQuery.order_by.length) {
         curQuery.order_by.forEach(orderBy => {
           if (orderBy.column === col.id) {
-            sortIcon = orderBy.type === 'asc' ? 'fa-caret-up' : 'fa-caret-down';
+            sortIcon = orderBy.type === 'asc' ? <FaCaretUp /> : <FaCaretDown />;
           }
         });
       }
@@ -184,7 +195,7 @@ const ViewRows = props => {
         Header: (
           <div className="ellipsis">
             <span className={styles.tableHeaderCell}>
-              {columnName} <i className={'fa ' + sortIcon} />
+              {columnName} {sortIcon}
             </span>
           </div>
         ),
@@ -318,22 +329,22 @@ const ViewRows = props => {
           };
 
           if (isExpanded) {
-            icon = 'fa-compress';
+            icon = <FaCompress />;
             title = 'Collapse row';
             handleClick = handleCollapse;
           } else {
-            icon = 'fa-expand';
+            icon = <FaExpand />;
             title = 'Expand row';
             handleClick = handleExpand;
           }
 
-          const expanderIcon = <i className={`fa ${icon}`} />;
+          const expanderIcon = { icon };
 
           return getActionButton('expand', expanderIcon, title, handleClick);
         };
 
         const getEditButton = pkClause => {
-          const editIcon = <i className="fa fa-edit" />;
+          const editIcon = <FaEdit />;
 
           const handleEditClick = () => {
             dispatch({ type: E_SET_EDITITEM, oldItem: row, pkClause });
@@ -361,7 +372,7 @@ const ViewRows = props => {
         };
 
         const getDeleteButton = pkClause => {
-          const deleteIcon = <i className="fa fa-trash" />;
+          const deleteIcon = <FaTrash />;
 
           const handleDeleteClick = () => {
             setSelectedRows(prev =>
@@ -382,7 +393,7 @@ const ViewRows = props => {
         };
 
         const getCloneButton = () => {
-          const cloneIcon = <i className="fa fa-clone" />;
+          const cloneIcon = <FaClone />;
 
           const handleCloneClick = () => {
             dispatch({ type: I_SET_CLONE, clone: row });
@@ -432,7 +443,7 @@ const ViewRows = props => {
             };
           });
 
-          const triggerIcon = <i className="fa fa-caret-square-o-right" />;
+          const triggerIcon = <FaRegCaretSquareRight />;
           const triggerTitle = 'Invoke event trigger';
 
           return (
@@ -749,7 +760,7 @@ const ViewRows = props => {
             onClick={handleDeleteItems}
             data-test="bulk-delete"
           >
-            <i className="fa fa-trash" />
+            <FaTrash />
           </button>
         </div>
       );

@@ -23,7 +23,7 @@ const ToolTip: React.FC<TooltipProps> = ({
   <OverlayTrigger placement={placement} overlay={tooltipGen(message)}>
     {children || (
       <FaInfoCircle
-        className={`cursor-pointer ${styles.tooltipIcon} ${tooltipStyle}`}
+        className={`cursor-pointer ${styles.tooltipIcon} ${tooltipStyle} text-sm`}
         aria-hidden="true"
       />
     )}

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { FaCircleNotch } from 'react-icons/fa';
 import styles from '../styles.scss';
 import { HerokuSession } from './types';
 import {
@@ -143,7 +144,7 @@ const DBCreation: React.FC<Props> = ({
       </div>
       <div className={`${styles.display_flex} ${styles.add_mar_bottom_mid}`}>
         <p>
-          <i className="fa fa-circle-o-notch fa-spin" aria-hidden="true" />
+          <FaCircleNotch className="animate-spin" aria-hidden="true" />
           &nbsp;{statusText}
         </p>
       </div>

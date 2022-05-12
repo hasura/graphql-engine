@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router';
+import {
+  FaDatabase,
+  FaFolder,
+  FaFolderOpen,
+  FaListUl,
+  FaTable,
+} from 'react-icons/fa';
+
 import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
 import {
   getFunctionModifyRoute,
@@ -130,9 +138,9 @@ const LeafItemsView: React.FC<LeafItemsViewProps> = ({
                 style={isActive ? activeStyle : {}}
               >
                 {item.type === 'enum' ? (
-                  <i className="fa fa-list-ul" />
+                  <FaListUl />
                 ) : (
-                  <i className="fa fa-table" />
+                  <FaTable className="mr-1" />
                 )}
                 {item.type === 'view' ? <i>{item.name}</i> : item.name}
               </Link>
@@ -206,8 +214,7 @@ const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
             `${styles.title} ${isOpen ? '' : styles.titleClosed}`
           }
         >
-          <i className={`${isOpen ? 'fa fa-folder-open' : 'fa fa-folder'}`} />{' '}
-          {item.name}
+          {isOpen ? <FaFolderOpen /> : <FaFolder />} {item.name}
         </span>
       </div>
       {isOpen && itemSearchResults ? (
@@ -249,7 +256,7 @@ const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
           <span
             className={`${styles.sidebarTablePadding} ${styles.padd_bottom_small}`}
           >
-            <i className="fa fa-table" />
+            <FaTable />
             <span className={styles.loaderBar} />
           </span>
         )
@@ -336,7 +343,7 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
           <span
             className={`${styles.title} ${styles.titleClosed} ${styles.padd_bottom_small}`}
           >
-            <i className="fa fa-folder" />
+            <FaFolder />
             <span className={styles.loaderBar} />
           </span>
         </li>
@@ -375,18 +382,18 @@ const TreeView: React.FC<TreeViewProps> = ({
     return preLoadState ? (
       <div className={styles.treeNav}>
         <span className={`${styles.title} ${styles.padd_bottom_small}`}>
-          <i className="fa fa-database" />
+          <FaDatabase />
         </span>
         <span className={styles.loaderBar} />
         <li>
           <span className={`${styles.title} ${styles.padd_bottom_small}`}>
-            <i className="fa fa-folder" />
+            <FaFolder />
             <span className={styles.loaderBar} />
             <ul className={styles.reducedChildPadding}>
               <li
                 className={`${styles.sidebarTablePadding} ${styles.add_mar_left_mid}`}
               >
-                <i className="fa fa-table" />
+                <FaTable />
                 <span className={styles.loaderBar} />
               </li>
             </ul>

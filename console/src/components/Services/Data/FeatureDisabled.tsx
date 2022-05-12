@@ -1,5 +1,6 @@
 import React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
+import { FaFlask } from 'react-icons/fa';
 
 import { mapDispatchToPropsEmpty } from '../../Common/utils/reactUtils';
 import { ReduxState } from '../../../types';
@@ -54,7 +55,7 @@ function FeatureDisabled({
         }}
       >
         <p style={{ marginBottom: '5px' }}>
-          <i className="fa fa-flask" aria-hidden="true" />{' '}
+          <FaFlask aria-hidden="true" />{' '}
           <b>Coming soon for {driverToLabel.mssql}</b>
         </p>
         <p style={{ marginBottom: '5px' }}>

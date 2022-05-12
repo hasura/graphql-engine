@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 
 import { driverToLabel } from '../../../../dataSources';
 import { DataSource } from '../../../../metadata/types';
@@ -31,11 +32,7 @@ const CollapsibleToggle: React.FC<CollapsibleToggleProps> = ({
               </span>
             )}
             <span className="ml-auto text-sm">
-              <i
-                className={`fa ${!isOpen && 'fa-chevron-down'} ${
-                  isOpen && 'fa-chevron-up'
-                }`}
-              />{' '}
+              {isOpen ? <FaChevronUp /> : <FaChevronDown />}{' '}
               {isOpen ? <span>Less Info</span> : <span>More Info</span>}
             </span>
           </div>

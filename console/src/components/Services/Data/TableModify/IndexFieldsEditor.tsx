@@ -185,7 +185,7 @@ const CreateIndexForm: React.FC<CreateIndexProps> = ({
         />
       </div>
       <div className="mb-md">
-        <span className="flex items-center">
+        <span className="flex items-center mb-formlabel">
           <input
             type="checkbox"
             id="index-unique"
@@ -194,10 +194,7 @@ const CreateIndexForm: React.FC<CreateIndexProps> = ({
             style={{ margin: 0 }}
             className="legacy-input-fix"
           />
-          <label
-            className="ml-xs text-gray-600 font-semibold"
-            htmlFor="index-unique"
-          >
+          <label className="ml-xs text-gray-600 mb-0" htmlFor="index-unique">
             Unique?
           </label>
           {formTooltips?.unique ? (

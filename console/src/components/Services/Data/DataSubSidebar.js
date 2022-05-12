@@ -21,6 +21,7 @@ import _push from './push';
 import Button from '../../Common/Button/Button';
 import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
 import Spinner from '../../Common/Spinner/Spinner';
+import { FaCheckCircle } from 'react-icons/fa';
 
 const DATA_SIDEBAR_SET_LOADING = 'dataSidebar/DATA_SIDEBAR_SET_LOADING';
 
@@ -258,8 +259,8 @@ const DataSubSidebar = props => {
                 <Spinner className={styles.spinner} />
               </div>
             ) : (
-              <i
-                className={`fa fa-check-circle ${styles.padd_left_sm} ${styles.color_green}`}
+              <FaCheckCircle
+                className={`${styles.padd_left_sm} ${styles.color_green}`}
                 aria-hidden="true"
               />
             )}

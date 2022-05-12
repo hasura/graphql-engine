@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaEdit } from 'react-icons/fa';
 import {
   activateCommentEdit,
   updateCommentInput,
@@ -33,7 +34,7 @@ const TableCommentEditor = ({
       onClick={editCommentClicked}
       className="flex items-center cursor-pointer"
     >
-      <i className="fa fa-edit mr-xs" />
+      <FaEdit className="mr-xs" />
       <span className="font-semibold">Add a Comment</span>
     </div>
   );
@@ -49,7 +50,7 @@ const TableCommentEditor = ({
             onClick={editCommentClicked}
             className="flex items-center cursor-pointer"
           >
-            <i className="fa fa-edit mr-xs" />
+            <FaEdit className="mr-xs" />
             <span className="font-semibold">Edit Comment</span>
           </div>
         )}

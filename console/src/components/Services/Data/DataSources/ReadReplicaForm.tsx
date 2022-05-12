@@ -1,4 +1,5 @@
 import React, { useState, Dispatch, ChangeEvent } from 'react';
+import { FaEye, FaTimes } from 'react-icons/fa';
 
 import {
   ReadReplicaState,
@@ -162,7 +163,7 @@ const ReadReplicaListItem: React.FC<ReadReplicaListItemProps> = ({
               className="text-secondary flex items-center cursor-pointer"
               onClick={() => setShowUrl(true)}
             >
-              <i className="fa fa-eye" aria-hidden="true" />
+              <FaEye aria-hidden="true" />
               <p style={{ marginLeft: 6 }}>Show Connection String</p>
             </span>
           )}
@@ -172,8 +173,8 @@ const ReadReplicaListItem: React.FC<ReadReplicaListItemProps> = ({
               placement="right"
               message="Hide connection string"
             >
-              <i
-                className={`${styles.closeHeader} fa fa-times`}
+              <FaTimes
+                className={`${styles.closeHeader}`}
                 aria-hidden="true"
                 onClick={() => setShowUrl(false)}
                 style={{ paddingLeft: 10 }}

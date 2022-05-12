@@ -87,6 +87,12 @@ import PermButtonSection from './PermButtonsSection';
 import { rolesSelector } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import FeatureDisabled from '../FeatureDisabled';
+import {
+  FaInfoCircle,
+  FaPencilAlt,
+  FaQuestionCircle,
+  FaTimes,
+} from 'react-icons/fa';
 
 class Permissions extends Component {
   constructor() {
@@ -251,7 +257,7 @@ class Permissions extends Component {
         <span>
           <span className={styles.add_mar_right_small}>{text}</span>
           <OverlayTrigger placement="right" overlay={tooltip}>
-            <i className="fa fa-question-circle" aria-hidden="true" />
+            <FaQuestionCircle aria-hidden="true" />
           </OverlayTrigger>
         </span>
       );
@@ -337,7 +343,7 @@ class Permissions extends Component {
         if (unsupportedQueryTypes.length) {
           note = (
             <div className={styles.permissionsLegend}>
-              <i className="fa fa-info-circle" aria-hidden="true" />
+              <FaInfoCircle aria-hidden="true" />
               &nbsp; You cannot {unsupportedQueryTypes.join('/')} into this view
             </div>
           );
@@ -401,7 +407,7 @@ class Permissions extends Component {
           const getEditIcon = () => {
             return (
               <span className={styles.editPermsIcon}>
-                <i className="fa fa-pencil" aria-hidden="true" />
+                <FaPencilAlt aria-hidden="true" />
               </span>
             );
           };
@@ -793,7 +799,7 @@ class Permissions extends Component {
               <span data-test="custom-check">
                 <span className={styles.add_mar_right}>With custom check:</span>
                 <OverlayTrigger placement="right" overlay={customCheckToolTip}>
-                  <i className="fa fa-question-circle" aria-hidden="true" />
+                  <FaQuestionCircle aria-hidden="true" />
                 </OverlayTrigger>
               </span>
             );
@@ -1432,8 +1438,8 @@ class Permissions extends Component {
 
             if (presetType) {
               _deleteBtn = (
-                <i
-                  className="fa-lg fa fa-times"
+                <FaTimes
+                  className="text-lg"
                   onClick={deletePreset}
                   data-preset-column={preset.column}
                   data-index-id={index}
@@ -1658,8 +1664,8 @@ class Permissions extends Component {
 
               if (applyTo.table && applyTo.role && applyTo.action) {
                 _removeIcon = (
-                  <i
-                    className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+                  <FaTimes
+                    className={`${styles.fontAwosomeClose} text-lg`}
                     onClick={removeApplyTo}
                   />
                 );

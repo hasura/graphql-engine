@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaTimes } from 'react-icons/fa';
 
 const UniqueKeySelector = ({
   uniqueKeys,
@@ -53,8 +54,8 @@ const UniqueKeySelector = ({
     const setUniqueCol = e => dispatchSelectUniqueCol(e, i);
 
     const removeIcon = (
-      <i
-        className="w-4 ml-sm fa fa-times cursor-pointer"
+      <FaTimes
+        className="w-4 ml-sm cursor-pointer"
         data-test={`remove-uk-${index}-column-${i}`}
         onClick={removeUniqueCol}
       />
