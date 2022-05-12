@@ -1,10 +1,17 @@
+import { makeConnectionStringFromConnectionParams } from '@/components/Services/Data/DataSources/ManageDBUtils';
+import { Driver } from '@/dataSources';
 import { Nullable } from './../components/Common/utils/tsUtils';
 import {
   inconsistentObjectsQuery,
   getReloadMetadataQuery,
   getReloadRemoteSchemaCacheQuery,
 } from './queryUtils';
-import { AllowList, QueryCollectionEntry, HasuraMetadataV3 } from './types';
+import {
+  AllowList,
+  QueryCollectionEntry,
+  HasuraMetadataV3,
+  ConnectionParams,
+} from './types';
 import { AllowedQueriesCollection } from './reducer';
 
 export const allowedQueriesCollection = 'allowed-queries';
@@ -395,3 +402,27 @@ export const getRemoteSchemaNameFromInconsistentObjects = (
     }
     return rsNameList;
   }, []);
+
+export const getDatabaseUrlFromSource = (
+  kind: Driver,
+  dbUrl:
+    | string
+    | { from_env: string }
+    | {
+        connection_parameters: ConnectionParams;
+      }
+    | undefined
+) => {
+  if (!dbUrl) return '';
+  if (typeof dbUrl !== 'string' && 'connection_parameters' in dbUrl) {
+    return makeConnectionStringFromConnectionParams({
+      dbType: kind,
+      host: dbUrl.connection_parameters.host,
+      port: dbUrl.connection_parameters.port.toString(),
+      username: dbUrl.connection_parameters.username,
+      database: dbUrl.connection_parameters.database,
+      password: dbUrl.connection_parameters.password,
+    });
+  }
+  return dbUrl;
+};

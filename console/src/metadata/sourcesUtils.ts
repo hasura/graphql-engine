@@ -1,5 +1,6 @@
 import { Driver, sourceNames } from '../dataSources';
 import {
+  ConnectionParams,
   ConnectionPoolSettings,
   IsolationLevelOptions,
   SourceConnectionInfo,
@@ -11,6 +12,7 @@ export const addSource = (
   payload: {
     name: string;
     dbUrl: string | { from_env: string };
+    connection_parameters?: ConnectionParams;
     connection_pool_settings?: ConnectionPoolSettings;
     replace_configuration?: boolean;
     bigQuery: {
@@ -75,7 +77,9 @@ export const addSource = (
       name: payload.name,
       configuration: {
         connection_info: {
-          database_url: payload.dbUrl,
+          database_url: payload.connection_parameters
+            ? { connection_parameters: payload.connection_parameters }
+            : payload.dbUrl,
           use_prepared_statements: payload.preparedStatements,
           isolation_level: payload.isolationLevel,
           pool_settings: payload.connection_pool_settings,

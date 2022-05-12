@@ -44,16 +44,18 @@ export type ConnectDBState = {
   preparedStatements?: boolean;
 };
 
+const defaultConnectionParamState = {
+  host: '',
+  port: '',
+  username: '',
+  password: '',
+  database: '',
+};
+
 export const defaultState: ConnectDBState = {
   displayName: '',
   dbType: 'postgres',
-  connectionParamState: {
-    host: '',
-    port: '',
-    username: '',
-    password: '',
-    database: '',
-  },
+  connectionParamState: defaultConnectionParamState,
   databaseURLState: {
     dbURL: '',
     serviceAccount: '',
@@ -124,6 +126,7 @@ export const connectDataSource = (
   isRenameSource = false,
   currentName = ''
 ) => {
+  let connectionParams: ConnectionParams | undefined;
   let databaseURL: string | { from_env: string } =
     currentState.dbType === 'bigquery'
       ? currentState.databaseURLState.serviceAccount.trim()
@@ -142,6 +145,9 @@ export const connectDataSource = (
       currentState.dbType
     )
   ) {
+    if (currentState.dbType === 'postgres' || currentState.dbType === 'citus') {
+      connectionParams = currentState.connectionParamState;
+    }
     databaseURL = makeConnectionStringFromConnectionParams({
       dbType: currentState.dbType,
       ...currentState.connectionParamState,
@@ -153,6 +159,12 @@ export const connectDataSource = (
     payload: {
       name: currentState.displayName.trim(),
       dbUrl: databaseURL,
+      connection_parameters: connectionParams
+        ? {
+            ...connectionParams,
+            port: Number(connectionParams?.port),
+          }
+        : undefined,
       replace_configuration: isEditState,
       bigQuery: {
         projectId: currentState.databaseURLState.projectId,
@@ -190,6 +202,7 @@ export type ConnectDBActions =
         name: string;
         driver: Driver;
         databaseUrl: string;
+        connectionParamState?: ConnectionParams;
         connectionSettings?: ConnectionPoolSettings;
         preparedStatements: boolean;
         isolationLevel: IsolationLevelOptions;
@@ -239,6 +252,8 @@ export const connectDBReducer = (
           ...state.databaseURLState,
           dbURL: action.data.databaseUrl,
         },
+        connectionParamState:
+          action.data.connectionParamState || defaultConnectionParamState,
         connectionSettings: action.data.connectionSettings,
         preparedStatements: action.data.preparedStatements,
         isolationLevel: action.data.isolationLevel,

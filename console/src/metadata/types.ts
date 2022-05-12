@@ -1022,11 +1022,22 @@ export interface ConnectionPoolSettings {
   connection_lifetime?: number;
 }
 
+export type ConnectionParams = {
+  username: string;
+  password?: string;
+  database: string;
+  host: string;
+  port: number;
+};
+
 export interface SourceConnectionInfo {
   // used for SQL Server
   connection_string?: string | { from_env: string };
   // used for Postgres
-  database_url?: string | { from_env: string };
+  database_url?:
+    | string
+    | { from_env: string }
+    | { connection_parameters: ConnectionParams };
   use_prepared_statements?: boolean;
   isolation_level?: IsolationLevelOptions;
   pool_settings?: ConnectionPoolSettings;

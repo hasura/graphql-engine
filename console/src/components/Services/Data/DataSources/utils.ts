@@ -1,11 +1,14 @@
+import { Driver } from '@/dataSources';
 import { addSource } from './../../../../metadata/sourcesUtils';
 import { isObject, isEqual } from './../../../Common/utils/jsUtils';
 import { Table } from '../../../../dataSources/types';
 import {
+  ConnectionParams,
   MetadataDataSource,
   SourceConnectionInfo,
 } from '../../../../metadata/types';
 import { connectionTypes } from './state';
+import { makeConnectionStringFromConnectionParams } from './ManageDBUtils';
 
 export const getErrorMessageFromMissingFields = (
   host: string,
@@ -33,7 +36,12 @@ export const getErrorMessageFromMissingFields = (
 };
 
 export const getDatasourceURL = (
-  link: string | { from_env: string } | undefined
+  kind: Driver,
+  link:
+    | string
+    | { from_env: string }
+    | { connection_parameters: ConnectionParams }
+    | undefined
 ) => {
   if (!link) {
     return '';
@@ -41,7 +49,36 @@ export const getDatasourceURL = (
   if (typeof link === 'string') {
     return link.toString();
   }
+  if ('connection_parameters' in link) {
+    return makeConnectionStringFromConnectionParams({
+      dbType: kind,
+      host: link.connection_parameters.host,
+      port: link.connection_parameters.port.toString(),
+      username: link.connection_parameters.username,
+      database: link.connection_parameters.database,
+      password: link.connection_parameters.password,
+    });
+  }
   return link.from_env.toString();
+};
+
+export const getDatasourceConnectionParams = (
+  link:
+    | string
+    | { from_env: string }
+    | { connection_parameters: ConnectionParams }
+    | undefined
+) => {
+  if (link && typeof link !== 'string' && 'connection_parameters' in link) {
+    return {
+      host: link.connection_parameters.host,
+      port: link.connection_parameters.port.toString(),
+      username: link.connection_parameters.username,
+      database: link.connection_parameters.database,
+      password: link.connection_parameters.password ?? '',
+    };
+  }
+  return undefined;
 };
 
 export function parsePgUrl(
@@ -160,7 +197,10 @@ export const getReadReplicaDBUrlInfo = (
     return {
       connectionType: connectionTypes.ENV_VAR,
       envVarState: {
-        envVar: replica?.database_url?.from_env ?? '',
+        envVar:
+          replica?.database_url && 'from_env' in replica?.database_url
+            ? replica?.database_url?.from_env
+            : '',
       },
     };
   }

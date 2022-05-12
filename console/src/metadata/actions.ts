@@ -2,6 +2,7 @@ import { MetadataResponse } from '@/features/MetadataAPI';
 import requestAction from '../utils/requestAction';
 import Endpoints, { globalCookiePolicy } from '../Endpoints';
 import {
+  ConnectionParams,
   ConnectionPoolSettings,
   HasuraMetadataV2,
   HasuraMetadataV3,
@@ -141,6 +142,7 @@ export interface AddDataSourceRequest {
         datasets: string;
         global_select_limit: number;
       };
+      connection_parameters?: ConnectionParams;
       sslConfiguration?: SSLConfigOptions;
       preparedStatements?: boolean;
       isolationLevel?: IsolationLevelOptions;
