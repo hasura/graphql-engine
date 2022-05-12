@@ -70,26 +70,23 @@ export const RemoteSchemaToDbForm = ({
   onSuccess,
   relModeHandler,
 }: RemoteSchemaToDbFormProps) => {
-  const mutation = useMetadataMigration(
-    {
-      onSuccess: () => {
-        fireNotification({
-          title: 'Success!',
-          message: 'Relationship saved successfully',
-          type: 'success',
-        });
-        if (onSuccess) onSuccess();
-      },
-      onError: (error: Error) => {
-        fireNotification({
-          title: 'Error',
-          message: error?.message ?? 'Error while creating the relationship',
-          type: 'error',
-        });
-      },
+  const mutation = useMetadataMigration({
+    onSuccess: () => {
+      fireNotification({
+        title: 'Success!',
+        message: 'Relationship saved successfully',
+        type: 'success',
+      });
+      if (onSuccess) onSuccess();
     },
-    true
-  );
+    onError: (error: Error) => {
+      fireNotification({
+        title: 'Error',
+        message: error?.message ?? 'Error while creating the relationship',
+        type: 'error',
+      });
+    },
+  });
 
   const submit = (values: Schema) => {
     const field_mapping: Record<string, string> = values.mapping.reduce(
@@ -124,9 +121,7 @@ export const RemoteSchemaToDbForm = ({
       },
     };
     mutation.mutate({
-      source: '',
       query: requestBody,
-      migrationName: 'createRSToDBRelationship',
     });
   };
 

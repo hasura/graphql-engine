@@ -69,9 +69,7 @@ export const useDeletePermission = ({
     });
 
     await mutate.mutateAsync({
-      source: dataSource,
       query: body,
-      migrationName: 'deletePermission',
     });
   };
 

@@ -57,33 +57,30 @@ export const RemoteDBRelationshipWidget = ({
     existingRelationshipName,
   });
 
-  const mutation = useMetadataMigration(
-    {
-      onSuccess: () => {
-        const status: StatusType = {
-          title: 'Success!',
-          message: 'Relationship saved successfully',
-          type: 'success',
-        };
-        fireNotification(status);
-        if (onComplete) {
-          onComplete(status);
-        }
-      },
-      onError: (error: Error) => {
-        const status: StatusType = {
-          title: 'Error',
-          message: error?.message ?? 'Error while creating the relationship',
-          type: 'error',
-        };
-        fireNotification(status);
-        if (onComplete) {
-          onComplete(status);
-        }
-      },
+  const mutation = useMetadataMigration({
+    onSuccess: () => {
+      const status: StatusType = {
+        title: 'Success!',
+        message: 'Relationship saved successfully',
+        type: 'success',
+      };
+      fireNotification(status);
+      if (onComplete) {
+        onComplete(status);
+      }
     },
-    true
-  );
+    onError: (error: Error) => {
+      const status: StatusType = {
+        title: 'Error',
+        message: error?.message ?? 'Error while creating the relationship',
+        type: 'error',
+      };
+      fireNotification(status);
+      if (onComplete) {
+        onComplete(status);
+      }
+    },
+  });
 
   const submit = (values: Schema) => {
     const remote_table: {
@@ -124,11 +121,7 @@ export const RemoteDBRelationshipWidget = ({
         );
 
     mutation.mutate({
-      source: '',
       query: requestBody as MetadataPayloadType,
-      migrationName: existingRelationshipName
-        ? 'updateRemoteDBToDBRelationship'
-        : 'createRemoteDBToDBRelationship',
     });
   };
 

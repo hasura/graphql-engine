@@ -34,25 +34,22 @@ export const LocalRelationshipWidget = ({
     existingRelationshipName,
   });
 
-  const mutation = useMetadataMigration(
-    {
-      onSuccess: () => {
-        fireNotification({
-          title: 'Success!',
-          message: 'Relationship saved successfully',
-          type: 'success',
-        });
-      },
-      onError: (error: Error) => {
-        fireNotification({
-          title: 'Error',
-          message: error?.message ?? 'Error while creating the relationship',
-          type: 'error',
-        });
-      },
+  const mutation = useMetadataMigration({
+    onSuccess: () => {
+      fireNotification({
+        title: 'Success!',
+        message: 'Relationship saved successfully',
+        type: 'success',
+      });
     },
-    true
-  );
+    onError: (error: Error) => {
+      fireNotification({
+        title: 'Error',
+        message: error?.message ?? 'Error while creating the relationship',
+        type: 'error',
+      });
+    },
+  });
 
   const submit = (values: Schema) => {
     const remote_table: {
@@ -81,9 +78,7 @@ export const LocalRelationshipWidget = ({
     );
 
     mutation.mutate({
-      source: '',
       query: requestBody as MetadataPayloadType,
-      migrationName: 'createLocalDBToDBRelationship',
     });
   };
 

@@ -44,25 +44,22 @@ export const RemoteSchemaRelationRenderer = ({
   });
   const [formState, setFormState] = useState<RemoteRelOption>('remoteSchema');
 
-  const mutation = useMetadataMigration(
-    {
-      onSuccess: () => {
-        fireNotification({
-          title: 'Success!',
-          message: 'Relationship deleted successfully',
-          type: 'success',
-        });
-      },
-      onError: (error: Error) => {
-        fireNotification({
-          title: 'Error',
-          message: error?.message ?? 'Error while deleting the relationship',
-          type: 'error',
-        });
-      },
+  const mutation = useMetadataMigration({
+    onSuccess: () => {
+      fireNotification({
+        title: 'Success!',
+        message: 'Relationship deleted successfully',
+        type: 'success',
+      });
     },
-    true
-  );
+    onError: (error: Error) => {
+      fireNotification({
+        title: 'Error',
+        message: error?.message ?? 'Error while deleting the relationship',
+        type: 'error',
+      });
+    },
+  });
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -86,7 +83,6 @@ export const RemoteSchemaRelationRenderer = ({
     }
 
     mutation.mutate({
-      source: '',
       query: {
         type: 'delete_remote_schema_remote_relationship' as allowedMetadataTypes,
         args: {
@@ -95,7 +91,6 @@ export const RemoteSchemaRelationRenderer = ({
           name: relationshipName,
         },
       },
-      migrationName: 'deleteRSToDBRelationship',
     });
     setIsFormOpen(false);
   };

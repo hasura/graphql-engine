@@ -111,9 +111,7 @@ export const useBulkDeletePermissions = ({
     });
 
     await mutateAsync({
-      source: dataSource,
       query: body,
-      migrationName: 'bulkDeletePermissions',
     });
   };
 

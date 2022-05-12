@@ -74,26 +74,23 @@ export const RemoteSchemaToRemoteSchemaForm = (
     closeHandler,
     relModeHandler,
   } = props;
-  const mutation = useMetadataMigration(
-    {
-      onSuccess: () => {
-        fireNotification({
-          title: 'Success!',
-          message: 'Relationship saved successfully',
-          type: 'success',
-        });
-        if (closeHandler) closeHandler();
-      },
-      onError: (error: Error) => {
-        fireNotification({
-          title: 'Error',
-          message: error?.message ?? 'Error while creating the relationship',
-          type: 'error',
-        });
-      },
+  const mutation = useMetadataMigration({
+    onSuccess: () => {
+      fireNotification({
+        title: 'Success!',
+        message: 'Relationship saved successfully',
+        type: 'success',
+      });
+      if (closeHandler) closeHandler();
     },
-    true
-  );
+    onError: (error: Error) => {
+      fireNotification({
+        title: 'Error',
+        message: error?.message ?? 'Error while creating the relationship',
+        type: 'error',
+      });
+    },
+  });
 
   const submit = (values: RsToRsSchema) => {
     const lhs_fields = generateLhsFields(
@@ -117,9 +114,7 @@ export const RemoteSchemaToRemoteSchemaForm = (
       },
     };
     mutation.mutate({
-      source: '',
       query: requestBody,
-      migrationName: 'createRSToRSRelationship',
     });
   };
 

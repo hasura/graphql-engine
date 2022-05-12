@@ -19,36 +19,31 @@ type Props = {
 export const Create = ({ onSuccess }: Props) => {
   const [remoteSchemaName, setRemoteSchemaName] = useState('');
 
-  const mutation = useMetadataMigration(
-    {
-      onError: (error: APIError) => {
-        fireNotification({
-          type: 'error',
-          title: 'Error',
-          message: error?.message ?? 'Unable to create Remote Schema',
-        });
-      },
-      onSuccess: () => {
-        fireNotification({
-          type: 'success',
-          title: 'Success!',
-          message: 'Remote Schema created successfully',
-        });
-
-        if (onSuccess) onSuccess(remoteSchemaName);
-      },
+  const mutation = useMetadataMigration({
+    onError: (error: APIError) => {
+      fireNotification({
+        type: 'error',
+        title: 'Error',
+        message: error?.message ?? 'Unable to create Remote Schema',
+      });
     },
-    true
-  );
+    onSuccess: () => {
+      fireNotification({
+        type: 'success',
+        title: 'Success!',
+        message: 'Remote Schema created successfully',
+      });
+
+      if (onSuccess) onSuccess(remoteSchemaName);
+    },
+  });
 
   const onSubmit = (values: Schema) => {
     const args = transformFormData(values);
     setRemoteSchemaName(values.name);
 
     mutation.mutate({
-      source: '',
       query: { type: 'add_remote_schema', args },
-      migrationName: 'createRemoteSchema',
     });
   };
   const defaultValues: Schema = {
