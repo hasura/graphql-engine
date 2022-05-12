@@ -65,9 +65,7 @@ describe('using the mutation in server mode', () => {
           <button
             onClick={() => {
               mutation.mutate({
-                source: 'default',
                 query: { type: 'pg_create_remote_relationship', args: {} },
-                migrationName: '',
               });
             }}
           >
@@ -117,9 +115,7 @@ describe('using the mutation in server mode', () => {
     });
 
     result.current.mutate({
-      source: 'default',
       query: { type: 'pg_create_remote_relationship', args: {} },
-      migrationName: '',
     });
 
     await waitFor(() => result.current.isSuccess);

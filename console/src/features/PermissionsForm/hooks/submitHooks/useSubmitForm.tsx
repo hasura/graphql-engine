@@ -71,9 +71,7 @@ export const useSubmitForm = (args: UseSubmitFormArgs) => {
     });
 
     await mutate.mutateAsync({
-      source: dataSource,
       query: body,
-      migrationName: 'permissionsUpdate',
     });
   };
 

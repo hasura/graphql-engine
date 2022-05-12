@@ -109,9 +109,7 @@ export const DbToRsForm = ({
     );
 
     mutation.mutate({
-      source: sourceTableInfo.database,
       query: requestBody as MetadataPayloadType,
-      migrationName: 'createDBToRSRelationship',
     });
   };
 
