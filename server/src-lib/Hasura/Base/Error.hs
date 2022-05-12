@@ -250,6 +250,12 @@ instance Q.FromPGConnErr QErr where
     | "too many clients" `T.isInfixOf` (Q.getConnErr c) =
       let e = err500 PostgresMaxConnectionsError "max connections reached on postgres"
        in e {qeInternal = Just $ ExtraInternal $ toJSON c}
+    | "root certificate file" `T.isInfixOf` (Q.getConnErr c) =
+      err500 PostgresError "root certificate error"
+    | "certificate file" `T.isInfixOf` (Q.getConnErr c) =
+      err500 PostgresError "certificate error"
+    | "private key file" `T.isInfixOf` (Q.getConnErr c) =
+      err500 PostgresError "private-key error"
   fromPGConnErr c =
     let e = err500 PostgresError "connection error"
      in e {qeInternal = Just $ ExtraInternal $ toJSON c}
