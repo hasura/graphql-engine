@@ -10,6 +10,7 @@ import {
   RESET,
 } from './InvokeManualTriggerAction';
 import styles from './InvokeManualTrigger.scss';
+import { FaSpinner } from 'react-icons/fa';
 
 /* This component accepts for following props
  *  1) Trigger name
@@ -86,7 +87,7 @@ class InvokeManualTrigger extends React.PureComponent {
       err,
       identifier,
     } = invokeEventTrigger;
-    const loader = () => <i className="fa fa-spinner fa-spin" />;
+    const loader = () => <FaSpinner className="animate-spin" />;
     const getEventId = () =>
       (isCreatingManualTrigger && loader()) || success.event_id;
     const getEventPayload = () => {

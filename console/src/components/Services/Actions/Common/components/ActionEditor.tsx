@@ -1,6 +1,7 @@
 import React from 'react';
 import { GraphQLError } from 'graphql';
 import { Tooltip, OverlayTrigger } from 'react-bootstrap';
+import { FaQuestionCircle } from 'react-icons/fa';
 import HandlerEditor from './HandlerEditor';
 import ExecutionEditor from './ExecutionEditor';
 import HeaderConfEditor from './HeaderConfEditor';
@@ -196,7 +197,7 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
               </Tooltip>
             }
           >
-            <i className="ml-xs fa fa-question-circle" aria-hidden="true" />
+            <FaQuestionCircle className="ml-xs" aria-hidden="true" />
           </OverlayTrigger>
         </h2>
         <div className="mb-lg w-4/12">

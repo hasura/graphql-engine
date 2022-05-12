@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { FaBook, FaEdit, FaWrench } from 'react-icons/fa';
 import { Link } from 'react-router';
 
 import LeftSubSidebar from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
@@ -40,11 +41,11 @@ const LeftSidebar = ({
   const getActionIcon = action => {
     switch (action.definition.type) {
       case 'mutation':
-        return 'fa-pencil-square-o';
+        return <FaEdit className={styles.tableIcon} aria-hidden="true" />;
       case 'query':
-        return 'fa-book';
+        return <FaBook className={styles.tableIcon} aria-hidden="true" />;
       default:
-        return 'fa-wrench';
+        return <FaWrench className={styles.tableIcon} aria-hidden="true" />;
     }
   };
 
@@ -78,10 +79,7 @@ const LeftSidebar = ({
               to={appPrefix + '/manage/' + a.name + '/modify'}
               data-test={a.name}
             >
-              <i
-                className={styles.tableIcon + ' fa ' + actionIcon}
-                aria-hidden="true"
-              />
+              {actionIcon}
               {a.name}
             </Link>
           </li>
