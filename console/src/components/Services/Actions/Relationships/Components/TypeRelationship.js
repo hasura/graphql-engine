@@ -19,6 +19,7 @@ import { addActionRel, removeActionRel } from '../../ServerIO';
 import { showErrorNotification } from '../../../Common/Notification';
 import tableStyles from '../../../../Common/TableCommon/TableStyles.scss';
 import { getSupportedDrivers } from '../../../../../dataSources';
+import { FaTimes } from 'react-icons/fa';
 
 const RelationshipEditor = ({
   objectType,
@@ -316,8 +317,8 @@ const RelationshipEditor = ({
             removeIcon = null;
           } else {
             removeIcon = (
-              <i
-                className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+              <FaTimes
+                className={`${styles.fontAwosomeClose} h-md w-md`}
                 onClick={removeField}
               />
             );

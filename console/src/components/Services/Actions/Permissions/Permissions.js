@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaPencilAlt } from 'react-icons/fa';
 import { getActionPermissions, findActionPermission } from '../utils';
 import Helmet from 'react-helmet';
 import PermTableHeader from '../../../Common/Permissions/TableHeader';
@@ -55,7 +56,7 @@ const Permissions = ({
       const getEditIcon = () => {
         return (
           <span className={styles.editPermsIcon}>
-            <i className="fa fa-pencil" aria-hidden="true" />
+            <FaPencilAlt aria-hidden="true" />
           </span>
         );
       };

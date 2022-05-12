@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaCompress, FaExpand } from 'react-icons/fa';
 import Button from '../../../../Common/Button';
 
 interface Props extends React.ComponentProps<React.FC> {
@@ -16,11 +17,7 @@ const ExpanderButton: React.FC<Props> = ({ isExpanded }) => (
     }}
     data-test={isExpanded ? 'collapse-event' : 'expand-event'}
   >
-    {isExpanded ? (
-      <i className="fa fa-compress" />
-    ) : (
-      <i className="fa fa-expand" />
-    )}
+    {isExpanded ? <FaCompress /> : <FaExpand />}
   </Button>
 );
 

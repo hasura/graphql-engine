@@ -4,6 +4,7 @@ import ReactTable, {
   ComponentPropsGetter0,
 } from 'react-table';
 import 'react-table/react-table.css';
+import { FaTimes } from 'react-icons/fa';
 
 import { FilterTableProps, GridHeadingProps } from './types';
 import { ordinalColSort } from '../../../Data/utils';
@@ -37,7 +38,7 @@ const CancelEventButton: React.FC<CancelButtonProps> = ({
       e.preventDefault();
     }}
   >
-    <i className="fa fa-close" />
+    <FaTimes />
   </Button>
 );
 
