@@ -3,7 +3,7 @@ import { useRemoteDatabaseRelationships } from '@/features/MetadataAPI';
 import { NormalizedTable } from '@/dataSources/types';
 import { Dispatch } from '@/types';
 import { currentDriver } from '@/dataSources';
-import { QualifiedTable } from '@/metadata/types';
+
 import styles from '../../TableModify/ModifyTable.scss';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
@@ -20,28 +20,28 @@ export const RemoteDbRelationships: React.FC<Props> = ({
   reduxDispatch,
   currentSource,
 }) => {
-  let qualifiedTable = {};
-  if (currentDriver !== 'bigquery') {
-    qualifiedTable = {
-      name: tableSchema.table_name,
+  const target = React.useMemo(() => {
+    if (currentDriver === 'bigquery') {
+      return {
+        database: currentSource,
+        table: tableSchema.table_name,
+        dataset: tableSchema.table_schema,
+      };
+    }
+
+    return {
+      database: currentSource,
+      table: tableSchema.table_name,
       schema: tableSchema.table_schema,
     };
-  } else {
-    qualifiedTable = {
-      name: tableSchema.table_name,
-      dataset: tableSchema.table_schema,
-    };
-  }
+  }, [currentSource, tableSchema]);
 
   const {
     isLoading,
     isError,
     isSuccess,
     data,
-  } = useRemoteDatabaseRelationships(
-    currentSource,
-    qualifiedTable as QualifiedTable
-  ); // get data from hook
+  } = useRemoteDatabaseRelationships(target); // get data from hook
 
   if (isLoading) {
     return <p>Loading</p>;

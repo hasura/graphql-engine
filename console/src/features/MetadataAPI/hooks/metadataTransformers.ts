@@ -1,18 +1,15 @@
-import {
-  QualifiedTable,
-  RemoteRelationship,
-  ToRemoteSchema,
-} from '@/metadata/types';
-import { DbToRemoteSchemaRelationship } from '../types';
+import { DataTarget } from '@/features/Datasources';
+import { RemoteRelationship, ToRemoteSchema } from '@/metadata/types';
+import { DbToDbRelationship, DbToRemoteSchemaRelationship } from '../types';
 
 interface TransformDbToRemoteSchemaArgs {
-  table: QualifiedTable;
+  target: DataTarget;
   remote_relationships: RemoteRelationship[];
 }
 
 export namespace MetadataTransformer {
   export const transformDbToRemoteSchema = ({
-    table,
+    target,
     remote_relationships,
   }: TransformDbToRemoteSchemaArgs): DbToRemoteSchemaRelationship[] => {
     return (
@@ -22,7 +19,7 @@ export namespace MetadataTransformer {
         // if to_remote_schema is not defined, it's in the legacy format
         if (!relationship.definition.to_remote_schema) {
           return {
-            table,
+            target,
             relationshipName: name,
             remoteSchemaName: definition.remote_schema || '',
             lhs_fields: definition.hasura_fields || [],
@@ -38,7 +35,7 @@ export namespace MetadataTransformer {
 
         // otherwise it's the new format
         return {
-          table,
+          target,
           relationshipName: name,
           remoteSchemaName: remote_schema || '',
           lhs_fields: lhs_fields || [],
@@ -46,5 +43,22 @@ export namespace MetadataTransformer {
         };
       }) || []
     );
+  };
+  export const transformDbToDb = ({
+    target,
+    remote_relationships,
+  }: TransformDbToRemoteSchemaArgs): DbToDbRelationship[] => {
+    return remote_relationships.map(relationship => {
+      const { name, definition } = relationship;
+
+      return {
+        target,
+        relationshipName: name,
+        remoteDbName: definition.to_source.source || '',
+        relationshipType: (definition.to_source.relationship_type ||
+          'object') as 'object' | 'array',
+        fieldMapping: definition.to_source.field_mapping || {},
+      };
+    });
   };
 }

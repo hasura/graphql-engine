@@ -1,7 +1,8 @@
-import { HasuraMetadataV3, QualifiedTable } from '@/metadata/types';
+import { HasuraMetadataV3 } from '@/metadata/types';
 import { MetadataQueryType } from '@/metadata/queryUtils';
 import { IntrospectionQuery } from 'graphql';
 import { RemoteField } from '../RemoteRelationships/RemoteSchemaRelationships/types';
+import { DataTarget } from '../Datasources';
 
 export interface MetadataResponse {
   resource_version: number;
@@ -40,12 +41,21 @@ export const allowedMetadataTypesArr = [
 ] as const;
 
 export interface DbToRemoteSchemaRelationship {
+  target: DataTarget;
   relationshipName: string;
   remoteSchemaName: string;
-  table: QualifiedTable;
   lhs_fields: string[];
   remote_field: RemoteField;
 }
+
+export interface DbToDbRelationship {
+  target: DataTarget;
+  relationshipName: string;
+  relationshipType: 'object' | 'array';
+  remoteDbName: string;
+  fieldMapping: Record<string, string>;
+}
+
 type SupportedDataSourcesPrefix =
   | 'mysql_'
   | 'mssql_'
