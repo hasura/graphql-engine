@@ -24,6 +24,7 @@ import {
   ExtendedConnectDBState,
 } from './state';
 import {
+  getDatasourceConnectionParams,
   getDatasourceURL,
   getErrorMessageFromMissingFields,
   getReadReplicaDBUrlInfo,
@@ -84,8 +85,10 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
           name: currentSourceInfo.name,
           driver: currentSourceInfo.kind ?? 'postgres',
           databaseUrl: getDatasourceURL(
+            currentSourceInfo.kind,
             databaseUrl ?? connectionInfo?.connection_string
           ),
+          connectionParamState: getDatasourceConnectionParams(databaseUrl),
           connectionSettings: connectionInfo?.pool_settings,
           preparedStatements: connectionInfo?.use_prepared_statements ?? false,
           isolationLevel: connectionInfo?.isolation_level ?? 'read-committed',
@@ -147,7 +150,12 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
         });
       }
 
-      if (typeof databaseUrl !== 'string' && databaseUrl?.from_env) {
+      if (
+        databaseUrl &&
+        typeof databaseUrl !== 'string' &&
+        'from_env' in databaseUrl &&
+        databaseUrl?.from_env
+      ) {
         changeConnectionType(connectionTypes.ENV_VAR);
         connectDBDispatch({
           type: 'UPDATE_DB_URL_ENV_VAR',

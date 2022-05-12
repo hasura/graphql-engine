@@ -6,6 +6,7 @@ import { filterInconsistentMetadataObjects } from '../components/Services/Settin
 import { parseCustomTypes } from '../shared/utils/hasuraCustomTypeUtils';
 import { Driver, drivers } from '../dataSources';
 import { EventTrigger } from '../components/Services/Events/types';
+import { getDatabaseUrlFromSource } from './utils';
 
 export const getDataSourceMetadata = (state: ReduxState) => {
   const currentDataSource = state.tables?.currentDataSource;
@@ -372,7 +373,10 @@ export const getDataSources = createSelector(getMetadata, metadata => {
       } else {
         url = source.configuration?.connection_info?.connection_string
           ? source.configuration?.connection_info.connection_string
-          : source.configuration?.connection_info?.database_url || '';
+          : getDatabaseUrlFromSource(
+              source.kind,
+              source.configuration?.connection_info?.database_url
+            );
       }
       sources.push({
         name: source.name,
