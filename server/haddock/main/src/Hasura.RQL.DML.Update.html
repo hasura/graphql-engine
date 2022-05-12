@@ -37,129 +37,129 @@
 </span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Session.html"><span class="hs-identifier">Hasura.Session</span></a></span><span>
 </span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.html"><span class="hs-identifier">Hasura.Tracing</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Tracing</span></span><span>
 </span><span id="line-39"></span><span>
-</span><span id="line-40"></span><span id="local-6989586621688739825"><span class="annot"><a href="Hasura.RQL.DML.Update.html#convInc"><span class="hs-identifier hs-type">convInc</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-41"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688739825"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-42"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ValueParser"><span class="hs-identifier hs-type">ValueParser</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688739825"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-40"></span><span id="local-6989586621688739985"><span class="annot"><a href="Hasura.RQL.DML.Update.html#convInc"><span class="hs-identifier hs-type">convInc</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688739985"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-42"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ValueParser"><span class="hs-identifier hs-type">ValueParser</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688739985"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-43"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-44"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-45"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-46"></span><span>  </span><span class="annot"><a href="#local-6989586621688739825"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-46"></span><span>  </span><span class="annot"><a href="#local-6989586621688739985"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-47"></span><span id="convInc"><span class="annot"><span class="annottext">convInc :: ValueParser ('Postgres 'Vanilla) m SQLExp
 -&gt; PGCol
 -&gt; ColumnType ('Postgres 'Vanilla)
 -&gt; Value
 -&gt; m (PGCol, SQLExp)
-</span><a href="Hasura.RQL.DML.Update.html#convInc"><span class="hs-identifier hs-var hs-var">convInc</span></a></span></span><span> </span><span id="local-6989586621688739823"><span class="annot"><span class="annottext">ValueParser ('Postgres 'Vanilla) m SQLExp
-</span><a href="#local-6989586621688739823"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621688739822"><span class="annot"><span class="annottext">PGCol
-</span><a href="#local-6989586621688739822"><span class="hs-identifier hs-var">col</span></a></span></span><span> </span><span id="local-6989586621688739821"><span class="annot"><span class="annottext">ColumnType ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739821"><span class="hs-identifier hs-var">colType</span></a></span></span><span> </span><span id="local-6989586621688739820"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621688739820"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-48"></span><span>  </span><span id="local-6989586621688739819"><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621688739819"><span class="hs-identifier hs-var">prepExp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ValueParser ('Postgres 'Vanilla) m SQLExp
-</span><a href="#local-6989586621688739823"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnType ('Postgres 'Vanilla)
+</span><a href="Hasura.RQL.DML.Update.html#convInc"><span class="hs-identifier hs-var hs-var">convInc</span></a></span></span><span> </span><span id="local-6989586621688739983"><span class="annot"><span class="annottext">ValueParser ('Postgres 'Vanilla) m SQLExp
+</span><a href="#local-6989586621688739983"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621688739982"><span class="annot"><span class="annottext">PGCol
+</span><a href="#local-6989586621688739982"><span class="hs-identifier hs-var">col</span></a></span></span><span> </span><span id="local-6989586621688739981"><span class="annot"><span class="annottext">ColumnType ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739981"><span class="hs-identifier hs-var">colType</span></a></span></span><span> </span><span id="local-6989586621688739980"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688739980"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-48"></span><span>  </span><span id="local-6989586621688739979"><span class="annot"><span class="annottext">SQLExp
+</span><a href="#local-6989586621688739979"><span class="hs-identifier hs-var">prepExp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ValueParser ('Postgres 'Vanilla) m SQLExp
+</span><a href="#local-6989586621688739983"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnType ('Postgres 'Vanilla)
 -&gt; CollectableType (ColumnType ('Postgres 'Vanilla))
 forall a. a -&gt; CollectableType a
 </span><a href="Hasura.SQL.Types.html#CollectableTypeScalar"><span class="hs-identifier hs-var">CollectableTypeScalar</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739821"><span class="hs-identifier hs-var">colType</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621688739820"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><a href="#local-6989586621688739981"><span class="hs-identifier hs-var">colType</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688739980"><span class="hs-identifier hs-var">val</span></a></span><span>
 </span><span id="line-49"></span><span>  </span><span class="annot"><span class="annottext">(PGCol, SQLExp) -&gt; m (PGCol, SQLExp)
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGCol
-</span><a href="#local-6989586621688739822"><span class="hs-identifier hs-var">col</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SQLOp -&gt; [SQLExp] -&gt; SQLExp
+</span><a href="#local-6989586621688739982"><span class="hs-identifier hs-var">col</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SQLOp -&gt; [SQLExp] -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEOpApp"><span class="hs-identifier hs-var">S.SEOpApp</span></a></span><span> </span><span class="annot"><span class="annottext">SQLOp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#incOp"><span class="hs-identifier hs-var">S.incOp</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">PGCol -&gt; SQLExp
 forall a. IsIdentifier a =&gt; a -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#mkSIdenExp"><span class="hs-identifier hs-var">S.mkSIdenExp</span></a></span><span> </span><span class="annot"><span class="annottext">PGCol
-</span><a href="#local-6989586621688739822"><span class="hs-identifier hs-var">col</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621688739819"><span class="hs-identifier hs-var">prepExp</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688739982"><span class="hs-identifier hs-var">col</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SQLExp
+</span><a href="#local-6989586621688739979"><span class="hs-identifier hs-var">prepExp</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-50"></span><span>
-</span><span id="line-51"></span><span id="local-6989586621688739814"><span class="annot"><a href="Hasura.RQL.DML.Update.html#convMul"><span class="hs-identifier hs-type">convMul</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-52"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688739814"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-53"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ValueParser"><span class="hs-identifier hs-type">ValueParser</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688739814"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-51"></span><span id="local-6989586621688739974"><span class="annot"><a href="Hasura.RQL.DML.Update.html#convMul"><span class="hs-identifier hs-type">convMul</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-52"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688739974"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-53"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ValueParser"><span class="hs-identifier hs-type">ValueParser</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688739974"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-54"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-55"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-56"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-57"></span><span>  </span><span class="annot"><a href="#local-6989586621688739814"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-57"></span><span>  </span><span class="annot"><a href="#local-6989586621688739974"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-58"></span><span id="convMul"><span class="annot"><span class="annottext">convMul :: ValueParser ('Postgres 'Vanilla) m SQLExp
 -&gt; PGCol
 -&gt; ColumnType ('Postgres 'Vanilla)
 -&gt; Value
 -&gt; m (PGCol, SQLExp)
-</span><a href="Hasura.RQL.DML.Update.html#convMul"><span class="hs-identifier hs-var hs-var">convMul</span></a></span></span><span> </span><span id="local-6989586621688739812"><span class="annot"><span class="annottext">ValueParser ('Postgres 'Vanilla) m SQLExp
-</span><a href="#local-6989586621688739812"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621688739811"><span class="annot"><span class="annottext">PGCol
-</span><a href="#local-6989586621688739811"><span class="hs-identifier hs-var">col</span></a></span></span><span> </span><span id="local-6989586621688739810"><span class="annot"><span class="annottext">ColumnType ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739810"><span class="hs-identifier hs-var">colType</span></a></span></span><span> </span><span id="local-6989586621688739809"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621688739809"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-59"></span><span>  </span><span id="local-6989586621688739808"><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621688739808"><span class="hs-identifier hs-var">prepExp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ValueParser ('Postgres 'Vanilla) m SQLExp
-</span><a href="#local-6989586621688739812"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnType ('Postgres 'Vanilla)
+</span><a href="Hasura.RQL.DML.Update.html#convMul"><span class="hs-identifier hs-var hs-var">convMul</span></a></span></span><span> </span><span id="local-6989586621688739972"><span class="annot"><span class="annottext">ValueParser ('Postgres 'Vanilla) m SQLExp
+</span><a href="#local-6989586621688739972"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621688739971"><span class="annot"><span class="annottext">PGCol
+</span><a href="#local-6989586621688739971"><span class="hs-identifier hs-var">col</span></a></span></span><span> </span><span id="local-6989586621688739970"><span class="annot"><span class="annottext">ColumnType ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739970"><span class="hs-identifier hs-var">colType</span></a></span></span><span> </span><span id="local-6989586621688739969"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688739969"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-59"></span><span>  </span><span id="local-6989586621688739968"><span class="annot"><span class="annottext">SQLExp
+</span><a href="#local-6989586621688739968"><span class="hs-identifier hs-var">prepExp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ValueParser ('Postgres 'Vanilla) m SQLExp
+</span><a href="#local-6989586621688739972"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnType ('Postgres 'Vanilla)
 -&gt; CollectableType (ColumnType ('Postgres 'Vanilla))
 forall a. a -&gt; CollectableType a
 </span><a href="Hasura.SQL.Types.html#CollectableTypeScalar"><span class="hs-identifier hs-var">CollectableTypeScalar</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739810"><span class="hs-identifier hs-var">colType</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621688739809"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><a href="#local-6989586621688739970"><span class="hs-identifier hs-var">colType</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688739969"><span class="hs-identifier hs-var">val</span></a></span><span>
 </span><span id="line-60"></span><span>  </span><span class="annot"><span class="annottext">(PGCol, SQLExp) -&gt; m (PGCol, SQLExp)
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGCol
-</span><a href="#local-6989586621688739811"><span class="hs-identifier hs-var">col</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SQLOp -&gt; [SQLExp] -&gt; SQLExp
+</span><a href="#local-6989586621688739971"><span class="hs-identifier hs-var">col</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SQLOp -&gt; [SQLExp] -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEOpApp"><span class="hs-identifier hs-var">S.SEOpApp</span></a></span><span> </span><span class="annot"><span class="annottext">SQLOp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#mulOp"><span class="hs-identifier hs-var">S.mulOp</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">PGCol -&gt; SQLExp
 forall a. IsIdentifier a =&gt; a -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#mkSIdenExp"><span class="hs-identifier hs-var">S.mkSIdenExp</span></a></span><span> </span><span class="annot"><span class="annottext">PGCol
-</span><a href="#local-6989586621688739811"><span class="hs-identifier hs-var">col</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621688739808"><span class="hs-identifier hs-var">prepExp</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688739971"><span class="hs-identifier hs-var">col</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SQLExp
+</span><a href="#local-6989586621688739968"><span class="hs-identifier hs-var">prepExp</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-61"></span><span>
-</span><span id="line-62"></span><span id="local-6989586621688739937"><span class="annot"><a href="Hasura.RQL.DML.Update.html#convSet"><span class="hs-identifier hs-type">convSet</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-63"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688739937"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-64"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ValueParser"><span class="hs-identifier hs-type">ValueParser</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688739937"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-62"></span><span id="local-6989586621688740097"><span class="annot"><a href="Hasura.RQL.DML.Update.html#convSet"><span class="hs-identifier hs-type">convSet</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688740097"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-64"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ValueParser"><span class="hs-identifier hs-type">ValueParser</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688740097"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-65"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-66"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-67"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-68"></span><span>  </span><span class="annot"><a href="#local-6989586621688739937"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-68"></span><span>  </span><span class="annot"><a href="#local-6989586621688740097"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-69"></span><span id="convSet"><span class="annot"><span class="annottext">convSet :: ValueParser ('Postgres 'Vanilla) m SQLExp
 -&gt; PGCol
 -&gt; ColumnType ('Postgres 'Vanilla)
 -&gt; Value
 -&gt; m (PGCol, SQLExp)
-</span><a href="Hasura.RQL.DML.Update.html#convSet"><span class="hs-identifier hs-var hs-var">convSet</span></a></span></span><span> </span><span id="local-6989586621688739805"><span class="annot"><span class="annottext">ValueParser ('Postgres 'Vanilla) m SQLExp
-</span><a href="#local-6989586621688739805"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621688739804"><span class="annot"><span class="annottext">PGCol
-</span><a href="#local-6989586621688739804"><span class="hs-identifier hs-var">col</span></a></span></span><span> </span><span id="local-6989586621688739803"><span class="annot"><span class="annottext">ColumnType ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739803"><span class="hs-identifier hs-var">colType</span></a></span></span><span> </span><span id="local-6989586621688739802"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621688739802"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-70"></span><span>  </span><span id="local-6989586621688739801"><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621688739801"><span class="hs-identifier hs-var">prepExp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ValueParser ('Postgres 'Vanilla) m SQLExp
-</span><a href="#local-6989586621688739805"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnType ('Postgres 'Vanilla)
+</span><a href="Hasura.RQL.DML.Update.html#convSet"><span class="hs-identifier hs-var hs-var">convSet</span></a></span></span><span> </span><span id="local-6989586621688739965"><span class="annot"><span class="annottext">ValueParser ('Postgres 'Vanilla) m SQLExp
+</span><a href="#local-6989586621688739965"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621688739964"><span class="annot"><span class="annottext">PGCol
+</span><a href="#local-6989586621688739964"><span class="hs-identifier hs-var">col</span></a></span></span><span> </span><span id="local-6989586621688739963"><span class="annot"><span class="annottext">ColumnType ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739963"><span class="hs-identifier hs-var">colType</span></a></span></span><span> </span><span id="local-6989586621688739962"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688739962"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-70"></span><span>  </span><span id="local-6989586621688739961"><span class="annot"><span class="annottext">SQLExp
+</span><a href="#local-6989586621688739961"><span class="hs-identifier hs-var">prepExp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ValueParser ('Postgres 'Vanilla) m SQLExp
+</span><a href="#local-6989586621688739965"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnType ('Postgres 'Vanilla)
 -&gt; CollectableType (ColumnType ('Postgres 'Vanilla))
 forall a. a -&gt; CollectableType a
 </span><a href="Hasura.SQL.Types.html#CollectableTypeScalar"><span class="hs-identifier hs-var">CollectableTypeScalar</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739803"><span class="hs-identifier hs-var">colType</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621688739802"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><a href="#local-6989586621688739963"><span class="hs-identifier hs-var">colType</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688739962"><span class="hs-identifier hs-var">val</span></a></span><span>
 </span><span id="line-71"></span><span>  </span><span class="annot"><span class="annottext">(PGCol, SQLExp) -&gt; m (PGCol, SQLExp)
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGCol
-</span><a href="#local-6989586621688739804"><span class="hs-identifier hs-var">col</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621688739801"><span class="hs-identifier hs-var">prepExp</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688739964"><span class="hs-identifier hs-var">col</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SQLExp
+</span><a href="#local-6989586621688739961"><span class="hs-identifier hs-var">prepExp</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-72"></span><span>
-</span><span id="line-73"></span><span id="local-6989586621688739936"><span class="annot"><a href="Hasura.RQL.DML.Update.html#convDefault"><span class="hs-identifier hs-type">convDefault</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621688739936"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688739936"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-73"></span><span id="local-6989586621688740096"><span class="annot"><a href="Hasura.RQL.DML.Update.html#convDefault"><span class="hs-identifier hs-type">convDefault</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621688740096"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688740096"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-74"></span><span id="convDefault"><span class="annot"><span class="annottext">convDefault :: PGCol -&gt; ColumnType ('Postgres 'Vanilla) -&gt; () -&gt; m (PGCol, SQLExp)
-</span><a href="Hasura.RQL.DML.Update.html#convDefault"><span class="hs-identifier hs-var hs-var">convDefault</span></a></span></span><span> </span><span id="local-6989586621688739799"><span class="annot"><span class="annottext">PGCol
-</span><a href="#local-6989586621688739799"><span class="hs-identifier hs-var">col</span></a></span></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres 'Vanilla)
+</span><a href="Hasura.RQL.DML.Update.html#convDefault"><span class="hs-identifier hs-var hs-var">convDefault</span></a></span></span><span> </span><span id="local-6989586621688739959"><span class="annot"><span class="annottext">PGCol
+</span><a href="#local-6989586621688739959"><span class="hs-identifier hs-var">col</span></a></span></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres 'Vanilla)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">()
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PGCol, SQLExp) -&gt; m (PGCol, SQLExp)
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGCol
-</span><a href="#local-6989586621688739799"><span class="hs-identifier hs-var">col</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text -&gt; SQLExp
+</span><a href="#local-6989586621688739959"><span class="hs-identifier hs-var">col</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEUnsafe"><span class="hs-identifier hs-var">S.SEUnsafe</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;DEFAULT&quot;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-75"></span><span>
-</span><span id="line-76"></span><span id="local-6989586621688739941"><span id="local-6989586621688739942"><span class="annot"><a href="Hasura.RQL.DML.Update.html#convOp"><span class="hs-identifier hs-type">convOp</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-77"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688739942"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688739942"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-76"></span><span id="local-6989586621688740101"><span id="local-6989586621688740102"><span class="annot"><a href="Hasura.RQL.DML.Update.html#convOp"><span class="hs-identifier hs-type">convOp</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-77"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688740102"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688740102"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-78"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FieldInfoMap"><span class="hs-identifier hs-type">FieldInfoMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-79"></span><span>  </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-80"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#UpdPermInfo"><span class="hs-identifier hs-type">UpdPermInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-81"></span><span>  </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621688739941"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-82"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688739941"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688739942"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-83"></span><span>  </span><span class="annot"><a href="#local-6989586621688739942"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span></span></span><span>
+</span><span id="line-81"></span><span>  </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621688740101"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-82"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688740101"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688740102"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-83"></span><span>  </span><span class="annot"><a href="#local-6989586621688740102"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span></span></span><span>
 </span><span id="line-84"></span><span id="convOp"><span class="annot"><span class="annottext">convOp :: FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
 -&gt; [PGCol]
 -&gt; UpdPermInfo ('Postgres 'Vanilla)
@@ -167,39 +167,39 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 -&gt; (PGCol
     -&gt; ColumnType ('Postgres 'Vanilla) -&gt; a -&gt; m (PGCol, SQLExp))
 -&gt; m [(PGCol, SQLExp)]
-</span><a href="Hasura.RQL.DML.Update.html#convOp"><span class="hs-identifier hs-var hs-var">convOp</span></a></span></span><span> </span><span id="local-6989586621688739796"><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
-</span><a href="#local-6989586621688739796"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span></span><span> </span><span id="local-6989586621688739795"><span class="annot"><span class="annottext">[PGCol]
-</span><a href="#local-6989586621688739795"><span class="hs-identifier hs-var">preSetCols</span></a></span></span><span> </span><span id="local-6989586621688739794"><span class="annot"><span class="annottext">UpdPermInfo ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739794"><span class="hs-identifier hs-var">updPerm</span></a></span></span><span> </span><span id="local-6989586621688739793"><span class="annot"><span class="annottext">[(PGCol, a)]
-</span><a href="#local-6989586621688739793"><span class="hs-identifier hs-var">objs</span></a></span></span><span> </span><span id="local-6989586621688739792"><span class="annot"><span class="annottext">PGCol -&gt; ColumnType ('Postgres 'Vanilla) -&gt; a -&gt; m (PGCol, SQLExp)
-</span><a href="#local-6989586621688739792"><span class="hs-identifier hs-var">conv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.RQL.DML.Update.html#convOp"><span class="hs-identifier hs-var hs-var">convOp</span></a></span></span><span> </span><span id="local-6989586621688739956"><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
+</span><a href="#local-6989586621688739956"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span></span><span> </span><span id="local-6989586621688739955"><span class="annot"><span class="annottext">[PGCol]
+</span><a href="#local-6989586621688739955"><span class="hs-identifier hs-var">preSetCols</span></a></span></span><span> </span><span id="local-6989586621688739954"><span class="annot"><span class="annottext">UpdPermInfo ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739954"><span class="hs-identifier hs-var">updPerm</span></a></span></span><span> </span><span id="local-6989586621688739953"><span class="annot"><span class="annottext">[(PGCol, a)]
+</span><a href="#local-6989586621688739953"><span class="hs-identifier hs-var">objs</span></a></span></span><span> </span><span id="local-6989586621688739952"><span class="annot"><span class="annottext">PGCol -&gt; ColumnType ('Postgres 'Vanilla) -&gt; a -&gt; m (PGCol, SQLExp)
+</span><a href="#local-6989586621688739952"><span class="hs-identifier hs-var">conv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-85"></span><span>  </span><span class="annot"><span class="annottext">[(PGCol, a)]
 -&gt; ((PGCol, a) -&gt; m (PGCol, SQLExp)) -&gt; m [(PGCol, SQLExp)]
 forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (Traversable t, Monad m) =&gt;
 t a -&gt; (a -&gt; m b) -&gt; m (t b)
 </span><span class="hs-identifier hs-var">forM</span></span><span> </span><span class="annot"><span class="annottext">[(PGCol, a)]
-</span><a href="#local-6989586621688739793"><span class="hs-identifier hs-var">objs</span></a></span><span> </span><span class="annot"><span class="annottext">(((PGCol, a) -&gt; m (PGCol, SQLExp)) -&gt; m [(PGCol, SQLExp)])
+</span><a href="#local-6989586621688739953"><span class="hs-identifier hs-var">objs</span></a></span><span> </span><span class="annot"><span class="annottext">(((PGCol, a) -&gt; m (PGCol, SQLExp)) -&gt; m [(PGCol, SQLExp)])
 -&gt; ((PGCol, a) -&gt; m (PGCol, SQLExp)) -&gt; m [(PGCol, SQLExp)]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621688739790"><span class="annot"><span class="annottext">PGCol
-</span><a href="#local-6989586621688739790"><span class="hs-identifier hs-var">pgCol</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688739789"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621688739789"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621688739950"><span class="annot"><span class="annottext">PGCol
+</span><a href="#local-6989586621688739950"><span class="hs-identifier hs-var">pgCol</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688739949"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688739949"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-86"></span><span>    </span><span class="hs-comment">-- if column has predefined value then throw error</span><span>
 </span><span id="line-87"></span><span>    </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGCol
-</span><a href="#local-6989586621688739790"><span class="hs-identifier hs-var">pgCol</span></a></span><span> </span><span class="annot"><span class="annottext">PGCol -&gt; [PGCol] -&gt; Bool
+</span><a href="#local-6989586621688739950"><span class="hs-identifier hs-var">pgCol</span></a></span><span> </span><span class="annot"><span class="annottext">PGCol -&gt; [PGCol] -&gt; Bool
 forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><span class="hs-operator hs-var">`elem`</span></span><span> </span><span class="annot"><span class="annottext">[PGCol]
-</span><a href="#local-6989586621688739795"><span class="hs-identifier hs-var">preSetCols</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+</span><a href="#local-6989586621688739955"><span class="hs-identifier hs-var">preSetCols</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">PGCol -&gt; m ()
 forall (m :: * -&gt; *) t b.
 (UserInfoM m, MonadError QErr m, ToTxt t) =&gt;
 t -&gt; m b
-</span><a href="#local-6989586621688739786"><span class="hs-identifier hs-var">throwNotUpdErr</span></a></span><span> </span><span class="annot"><span class="annottext">PGCol
-</span><a href="#local-6989586621688739790"><span class="hs-identifier hs-var">pgCol</span></a></span><span>
+</span><a href="#local-6989586621688739946"><span class="hs-identifier hs-var">throwNotUpdErr</span></a></span><span> </span><span class="annot"><span class="annottext">PGCol
+</span><a href="#local-6989586621688739950"><span class="hs-identifier hs-var">pgCol</span></a></span><span>
 </span><span id="line-88"></span><span>    </span><span class="annot"><span class="annottext">PermType
 -&gt; HashSet (Column ('Postgres 'Vanilla))
 -&gt; Column ('Postgres 'Vanilla)
@@ -209,11 +209,11 @@ forall (b :: BackendType) (m :: * -&gt; *).
 PermType -&gt; HashSet (Column b) -&gt; Column b -&gt; m ()
 </span><a href="Hasura.RQL.DML.Internal.html#checkPermOnCol"><span class="hs-identifier hs-var">checkPermOnCol</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">PermType
 </span><a href="Hasura.RQL.Types.Permission.html#PTUpdate"><span class="hs-identifier hs-var">PTUpdate</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet (Column ('Postgres 'Vanilla))
-</span><a href="#local-6989586621688739783"><span class="hs-identifier hs-var">allowedCols</span></a></span><span> </span><span class="annot"><span class="annottext">Column ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739943"><span class="hs-identifier hs-var">allowedCols</span></a></span><span> </span><span class="annot"><span class="annottext">Column ('Postgres 'Vanilla)
 PGCol
-</span><a href="#local-6989586621688739790"><span class="hs-identifier hs-var">pgCol</span></a></span><span>
-</span><span id="line-89"></span><span>    </span><span id="local-6989586621688739782"><span class="annot"><span class="annottext">ColumnType ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739782"><span class="hs-identifier hs-var">colType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
+</span><a href="#local-6989586621688739950"><span class="hs-identifier hs-var">pgCol</span></a></span><span>
+</span><span id="line-89"></span><span>    </span><span id="local-6989586621688739942"><span class="annot"><span class="annottext">ColumnType ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739942"><span class="hs-identifier hs-var">colType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
 -&gt; Column ('Postgres 'Vanilla)
 -&gt; Text
 -&gt; m (ColumnType ('Postgres 'Vanilla))
@@ -222,43 +222,43 @@ forall (m :: * -&gt; *) (backend :: BackendType).
 FieldInfoMap (FieldInfo backend)
 -&gt; Column backend -&gt; Text -&gt; m (ColumnType backend)
 </span><a href="Hasura.RQL.Types.Table.html#askColumnType"><span class="hs-identifier hs-var">askColumnType</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
-</span><a href="#local-6989586621688739796"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">Column ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739956"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">Column ('Postgres 'Vanilla)
 PGCol
-</span><a href="#local-6989586621688739790"><span class="hs-identifier hs-var">pgCol</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688739780"><span class="hs-identifier hs-var">relWhenPgErr</span></a></span><span>
-</span><span id="line-90"></span><span>    </span><span id="local-6989586621688739779"><span class="annot"><span class="annottext">(PGCol, SQLExp)
-</span><a href="#local-6989586621688739779"><span class="hs-identifier hs-var">res</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">PGCol -&gt; ColumnType ('Postgres 'Vanilla) -&gt; a -&gt; m (PGCol, SQLExp)
-</span><a href="#local-6989586621688739792"><span class="hs-identifier hs-var">conv</span></a></span><span> </span><span class="annot"><span class="annottext">PGCol
-</span><a href="#local-6989586621688739790"><span class="hs-identifier hs-var">pgCol</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739782"><span class="hs-identifier hs-var">colType</span></a></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621688739789"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><a href="#local-6989586621688739950"><span class="hs-identifier hs-var">pgCol</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688739940"><span class="hs-identifier hs-var">relWhenPgErr</span></a></span><span>
+</span><span id="line-90"></span><span>    </span><span id="local-6989586621688739939"><span class="annot"><span class="annottext">(PGCol, SQLExp)
+</span><a href="#local-6989586621688739939"><span class="hs-identifier hs-var">res</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">PGCol -&gt; ColumnType ('Postgres 'Vanilla) -&gt; a -&gt; m (PGCol, SQLExp)
+</span><a href="#local-6989586621688739952"><span class="hs-identifier hs-var">conv</span></a></span><span> </span><span class="annot"><span class="annottext">PGCol
+</span><a href="#local-6989586621688739950"><span class="hs-identifier hs-var">pgCol</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739942"><span class="hs-identifier hs-var">colType</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688739949"><span class="hs-identifier hs-var">a</span></a></span><span>
 </span><span id="line-91"></span><span>    </span><span class="hs-comment">-- build a set expression's entry</span><span>
 </span><span id="line-92"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; m (PGCol, SQLExp) -&gt; m (PGCol, SQLExp)
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
 </span><a href="Hasura.Base.Error.html#withPathK"><span class="hs-identifier hs-var">withPathK</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGCol -&gt; Text
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#getPGColTxt"><span class="hs-identifier hs-var hs-var">getPGColTxt</span></a></span><span> </span><span class="annot"><span class="annottext">PGCol
-</span><a href="#local-6989586621688739790"><span class="hs-identifier hs-var">pgCol</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m (PGCol, SQLExp) -&gt; m (PGCol, SQLExp))
+</span><a href="#local-6989586621688739950"><span class="hs-identifier hs-var">pgCol</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m (PGCol, SQLExp) -&gt; m (PGCol, SQLExp))
 -&gt; m (PGCol, SQLExp) -&gt; m (PGCol, SQLExp)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(PGCol, SQLExp) -&gt; m (PGCol, SQLExp)
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(PGCol, SQLExp)
-</span><a href="#local-6989586621688739779"><span class="hs-identifier hs-var">res</span></a></span><span>
+</span><a href="#local-6989586621688739939"><span class="hs-identifier hs-var">res</span></a></span><span>
 </span><span id="line-93"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-94"></span><span>    </span><span id="local-6989586621688739783"><span class="annot"><span class="annottext">allowedCols :: HashSet (Column ('Postgres 'Vanilla))
-</span><a href="#local-6989586621688739783"><span class="hs-identifier hs-var hs-var">allowedCols</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UpdPermInfo ('Postgres 'Vanilla)
+</span><span id="line-94"></span><span>    </span><span id="local-6989586621688739943"><span class="annot"><span class="annottext">allowedCols :: HashSet (Column ('Postgres 'Vanilla))
+</span><a href="#local-6989586621688739943"><span class="hs-identifier hs-var hs-var">allowedCols</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UpdPermInfo ('Postgres 'Vanilla)
 -&gt; HashSet (Column ('Postgres 'Vanilla))
 forall (b :: BackendType). UpdPermInfo b -&gt; HashSet (Column b)
 </span><a href="Hasura.RQL.Types.Table.html#upiCols"><span class="hs-identifier hs-var hs-var">upiCols</span></a></span><span> </span><span class="annot"><span class="annottext">UpdPermInfo ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739794"><span class="hs-identifier hs-var">updPerm</span></a></span><span>
-</span><span id="line-95"></span><span>    </span><span id="local-6989586621688739780"><span class="annot"><span class="annottext">relWhenPgErr :: Text
-</span><a href="#local-6989586621688739780"><span class="hs-identifier hs-var hs-var">relWhenPgErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688739954"><span class="hs-identifier hs-var">updPerm</span></a></span><span>
+</span><span id="line-95"></span><span>    </span><span id="local-6989586621688739940"><span class="annot"><span class="annottext">relWhenPgErr :: Text
+</span><a href="#local-6989586621688739940"><span class="hs-identifier hs-var hs-var">relWhenPgErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;relationships can't be updated&quot;</span></span><span>
-</span><span id="line-96"></span><span>    </span><span id="local-6989586621688739786"><span class="annot"><span class="annottext">throwNotUpdErr :: t -&gt; m b
-</span><a href="#local-6989586621688739786"><span class="hs-identifier hs-var hs-var">throwNotUpdErr</span></a></span></span><span> </span><span id="local-6989586621688739775"><span class="annot"><span class="annottext">t
-</span><a href="#local-6989586621688739775"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-97"></span><span>      </span><span id="local-6989586621688739774"><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621688739774"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">UserInfo -&gt; RoleName
+</span><span id="line-96"></span><span>    </span><span id="local-6989586621688739946"><span class="annot"><span class="annottext">throwNotUpdErr :: t -&gt; m b
+</span><a href="#local-6989586621688739946"><span class="hs-identifier hs-var hs-var">throwNotUpdErr</span></a></span></span><span> </span><span id="local-6989586621688739935"><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621688739935"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-97"></span><span>      </span><span id="local-6989586621688739934"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621688739934"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">UserInfo -&gt; RoleName
 </span><a href="Hasura.Session.html#_uiRole"><span class="hs-identifier hs-var hs-var">_uiRole</span></a></span><span> </span><span class="annot"><span class="annottext">(UserInfo -&gt; RoleName) -&gt; m UserInfo -&gt; m RoleName
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">m UserInfo
@@ -274,7 +274,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;column &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">t
-</span><a href="#local-6989586621688739775"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">t -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688739935"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">t -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; is not updatable&quot;</span></span><span>
@@ -285,31 +285,31 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-101"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621688739774"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; Text -&gt; Text
+</span><a href="#local-6989586621688739934"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;; its value is predefined in permission&quot;</span></span><span>
 </span><span id="line-102"></span><span>
-</span><span id="line-103"></span><span id="local-6989586621688739869"><span class="annot"><a href="Hasura.RQL.DML.Update.html#validateUpdateQueryWith"><span class="hs-identifier hs-type">validateUpdateQueryWith</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-104"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688739869"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688739869"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#TableInfoRM"><span class="hs-identifier hs-type">TableInfoRM</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688739869"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-105"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DML.Internal.html#SessionVariableBuilder"><span class="hs-identifier hs-type">SessionVariableBuilder</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688739869"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-106"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ValueParser"><span class="hs-identifier hs-type">ValueParser</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688739869"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-103"></span><span id="local-6989586621688740029"><span class="annot"><a href="Hasura.RQL.DML.Update.html#validateUpdateQueryWith"><span class="hs-identifier hs-type">validateUpdateQueryWith</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-104"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688740029"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688740029"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#TableInfoRM"><span class="hs-identifier hs-type">TableInfoRM</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688740029"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-105"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DML.Internal.html#SessionVariableBuilder"><span class="hs-identifier hs-type">SessionVariableBuilder</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688740029"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-106"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ValueParser"><span class="hs-identifier hs-type">ValueParser</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688740029"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-107"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#UpdateQuery"><span class="hs-identifier hs-type">UpdateQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-108"></span><span>  </span><span class="annot"><a href="#local-6989586621688739869"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Update.html#AnnotatedUpdate"><span class="hs-identifier hs-type">AnnotatedUpdate</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-108"></span><span>  </span><span class="annot"><a href="#local-6989586621688740029"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Update.html#AnnotatedUpdate"><span class="hs-identifier hs-type">AnnotatedUpdate</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
 </span><span id="line-109"></span><span id="validateUpdateQueryWith"><span class="annot"><span class="annottext">validateUpdateQueryWith :: SessionVariableBuilder ('Postgres 'Vanilla) m
 -&gt; ValueParser ('Postgres 'Vanilla) m SQLExp
 -&gt; UpdateQuery
 -&gt; m (AnnotatedUpdate ('Postgres 'Vanilla))
-</span><a href="Hasura.RQL.DML.Update.html#validateUpdateQueryWith"><span class="hs-identifier hs-var hs-var">validateUpdateQueryWith</span></a></span></span><span> </span><span id="local-6989586621688739766"><span class="annot"><span class="annottext">SessionVariableBuilder ('Postgres 'Vanilla) m
-</span><a href="#local-6989586621688739766"><span class="hs-identifier hs-var">sessVarBldr</span></a></span></span><span> </span><span id="local-6989586621688739765"><span class="annot"><span class="annottext">ValueParser ('Postgres 'Vanilla) m SQLExp
-</span><a href="#local-6989586621688739765"><span class="hs-identifier hs-var">prepValBldr</span></a></span></span><span> </span><span id="local-6989586621688739764"><span class="annot"><span class="annottext">UpdateQuery
-</span><a href="#local-6989586621688739764"><span class="hs-identifier hs-var">uq</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-110"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688739763"><span class="annot"><span class="annottext">tableName :: QualifiedTable
-</span><a href="#local-6989586621688739763"><span class="hs-identifier hs-var hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UpdateQuery -&gt; QualifiedTable
+</span><a href="Hasura.RQL.DML.Update.html#validateUpdateQueryWith"><span class="hs-identifier hs-var hs-var">validateUpdateQueryWith</span></a></span></span><span> </span><span id="local-6989586621688739926"><span class="annot"><span class="annottext">SessionVariableBuilder ('Postgres 'Vanilla) m
+</span><a href="#local-6989586621688739926"><span class="hs-identifier hs-var">sessVarBldr</span></a></span></span><span> </span><span id="local-6989586621688739925"><span class="annot"><span class="annottext">ValueParser ('Postgres 'Vanilla) m SQLExp
+</span><a href="#local-6989586621688739925"><span class="hs-identifier hs-var">prepValBldr</span></a></span></span><span> </span><span id="local-6989586621688739924"><span class="annot"><span class="annottext">UpdateQuery
+</span><a href="#local-6989586621688739924"><span class="hs-identifier hs-var">uq</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-110"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688739923"><span class="annot"><span class="annottext">tableName :: QualifiedTable
+</span><a href="#local-6989586621688739923"><span class="hs-identifier hs-var hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UpdateQuery -&gt; QualifiedTable
 </span><a href="Hasura.RQL.DML.Types.html#uqTable"><span class="hs-identifier hs-var hs-var">uqTable</span></a></span><span> </span><span class="annot"><span class="annottext">UpdateQuery
-</span><a href="#local-6989586621688739764"><span class="hs-identifier hs-var">uq</span></a></span><span>
-</span><span id="line-111"></span><span>  </span><span id="local-6989586621688739761"><span class="annot"><span class="annottext">TableInfo ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739761"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621688739924"><span class="hs-identifier hs-var">uq</span></a></span><span>
+</span><span id="line-111"></span><span>  </span><span id="local-6989586621688739921"><span class="annot"><span class="annottext">TableInfo ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739921"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text
 -&gt; m (TableInfo ('Postgres 'Vanilla))
 -&gt; m (TableInfo ('Postgres 'Vanilla))
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
@@ -326,13 +326,13 @@ forall (b :: BackendType) (m :: * -&gt; *).
 TableName b -&gt; m (TableInfo b)
 </span><a href="Hasura.RQL.DML.Internal.html#askTableInfoSource"><span class="hs-identifier hs-var">askTableInfoSource</span></a></span><span> </span><span class="annot"><span class="annottext">TableName ('Postgres 'Vanilla)
 QualifiedTable
-</span><a href="#local-6989586621688739763"><span class="hs-identifier hs-var">tableName</span></a></span><span>
-</span><span id="line-112"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688739759"><span class="annot"><span class="annottext">coreInfo :: TableCoreInfo ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739759"><span class="hs-identifier hs-var hs-var">coreInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739923"><span class="hs-identifier hs-var">tableName</span></a></span><span>
+</span><span id="line-112"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688739919"><span class="annot"><span class="annottext">coreInfo :: TableCoreInfo ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739919"><span class="hs-identifier hs-var hs-var">coreInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres 'Vanilla)
 -&gt; TableCoreInfo ('Postgres 'Vanilla)
 forall (b :: BackendType). TableInfo b -&gt; TableCoreInfo b
 </span><a href="Hasura.RQL.Types.Table.html#_tiCoreInfo"><span class="hs-identifier hs-var hs-var">_tiCoreInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739761"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><a href="#local-6989586621688739921"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-113"></span><span>
 </span><span id="line-114"></span><span>  </span><span class="hs-comment">-- If it is view then check if it is updatable</span><span>
 </span><span id="line-115"></span><span>  </span><span class="annot"><span class="annottext">QualifiedTable
@@ -343,26 +343,26 @@ QualifiedTable
 -&gt; (ViewInfo -&gt; Bool) -&gt; Maybe ViewInfo -&gt; Text -&gt; m ()
 </span><a href="Hasura.Backends.Postgres.Types.Table.html#mutableView"><span class="hs-identifier hs-var">mutableView</span></a></span><span>
 </span><span id="line-116"></span><span>    </span><span class="annot"><span class="annottext">QualifiedTable
-</span><a href="#local-6989586621688739763"><span class="hs-identifier hs-var">tableName</span></a></span><span>
+</span><a href="#local-6989586621688739923"><span class="hs-identifier hs-var">tableName</span></a></span><span>
 </span><span id="line-117"></span><span>    </span><span class="annot"><span class="annottext">ViewInfo -&gt; Bool
 </span><a href="Hasura.RQL.Types.Table.html#viIsUpdatable"><span class="hs-identifier hs-var hs-var">viIsUpdatable</span></a></span><span>
 </span><span id="line-118"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TableCoreInfo ('Postgres 'Vanilla) -&gt; Maybe ViewInfo
 forall (b :: BackendType) field primaryKeyColumn.
 TableCoreInfoG b field primaryKeyColumn -&gt; Maybe ViewInfo
 </span><a href="Hasura.RQL.Types.Table.html#_tciViewInfo"><span class="hs-identifier hs-var hs-var">_tciViewInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableCoreInfo ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739759"><span class="hs-identifier hs-var">coreInfo</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688739919"><span class="hs-identifier hs-var">coreInfo</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-119"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;updatable&quot;</span></span><span>
 </span><span id="line-120"></span><span>
 </span><span id="line-121"></span><span>  </span><span class="hs-comment">-- Check if the role has update permissions</span><span>
-</span><span id="line-122"></span><span>  </span><span id="local-6989586621688739754"><span class="annot"><span class="annottext">UpdPermInfo ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739754"><span class="hs-identifier hs-var">updPerm</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres 'Vanilla)
+</span><span id="line-122"></span><span>  </span><span id="local-6989586621688739914"><span class="annot"><span class="annottext">UpdPermInfo ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739914"><span class="hs-identifier hs-var">updPerm</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres 'Vanilla)
 -&gt; m (UpdPermInfo ('Postgres 'Vanilla))
 forall (m :: * -&gt; *) (b :: BackendType).
 (UserInfoM m, QErrM m, Backend b) =&gt;
 TableInfo b -&gt; m (UpdPermInfo b)
 </span><a href="Hasura.RQL.DML.Internal.html#askUpdPermInfo"><span class="hs-identifier hs-var">askUpdPermInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739761"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><a href="#local-6989586621688739921"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-123"></span><span>
 </span><span id="line-124"></span><span>  </span><span class="hs-comment">-- Check if all dependent headers are present</span><span>
 </span><span id="line-125"></span><span>  </span><span class="annot"><span class="annottext">HashSet Text -&gt; m ()
@@ -374,11 +374,11 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">UpdPermInfo ('Postgres 'Vanilla) -&gt; HashSet Text
 forall (b :: BackendType). UpdPermInfo b -&gt; HashSet Text
 </span><a href="Hasura.RQL.Types.Table.html#upiRequiredHeaders"><span class="hs-identifier hs-var hs-var">upiRequiredHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">UpdPermInfo ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739754"><span class="hs-identifier hs-var">updPerm</span></a></span><span>
+</span><a href="#local-6989586621688739914"><span class="hs-identifier hs-var">updPerm</span></a></span><span>
 </span><span id="line-126"></span><span>
 </span><span id="line-127"></span><span>  </span><span class="hs-comment">-- Check if select is allowed</span><span>
-</span><span id="line-128"></span><span>  </span><span id="local-6989586621688739750"><span class="annot"><span class="annottext">SelPermInfo ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739750"><span class="hs-identifier hs-var">selPerm</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-128"></span><span>  </span><span id="local-6989586621688739910"><span class="annot"><span class="annottext">SelPermInfo ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739910"><span class="hs-identifier hs-var">selPerm</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-129"></span><span>    </span><span class="annot"><span class="annottext">(Text -&gt; Text)
 -&gt; m (SelPermInfo ('Postgres 'Vanilla))
 -&gt; m (SelPermInfo ('Postgres 'Vanilla))
@@ -386,7 +386,7 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; (Text -&gt; Text) -&gt; m a -&gt; m a
 </span><a href="Hasura.Base.Error.html#modifyErr"><span class="hs-identifier hs-var">modifyErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688739748"><span class="hs-identifier hs-var">selNecessaryMsg</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m (SelPermInfo ('Postgres 'Vanilla))
+</span><a href="#local-6989586621688739908"><span class="hs-identifier hs-var">selNecessaryMsg</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m (SelPermInfo ('Postgres 'Vanilla))
  -&gt; m (SelPermInfo ('Postgres 'Vanilla)))
 -&gt; m (SelPermInfo ('Postgres 'Vanilla))
 -&gt; m (SelPermInfo ('Postgres 'Vanilla))
@@ -398,38 +398,38 @@ forall (m :: * -&gt; *) (b :: BackendType).
 (UserInfoM m, QErrM m, Backend b) =&gt;
 TableInfo b -&gt; m (SelPermInfo b)
 </span><a href="Hasura.RQL.DML.Internal.html#askSelPermInfo"><span class="hs-identifier hs-var">askSelPermInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739761"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><a href="#local-6989586621688739921"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-131"></span><span>
-</span><span id="line-132"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688739746"><span class="annot"><span class="annottext">fieldInfoMap :: FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
-</span><a href="#local-6989586621688739746"><span class="hs-identifier hs-var hs-var">fieldInfoMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableCoreInfo ('Postgres 'Vanilla)
+</span><span id="line-132"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688739906"><span class="annot"><span class="annottext">fieldInfoMap :: FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
+</span><a href="#local-6989586621688739906"><span class="hs-identifier hs-var hs-var">fieldInfoMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableCoreInfo ('Postgres 'Vanilla)
 -&gt; FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
 forall (b :: BackendType) field primaryKeyColumn.
 TableCoreInfoG b field primaryKeyColumn -&gt; FieldInfoMap field
 </span><a href="Hasura.RQL.Types.Table.html#_tciFieldInfoMap"><span class="hs-identifier hs-var hs-var">_tciFieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">TableCoreInfo ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739759"><span class="hs-identifier hs-var">coreInfo</span></a></span><span>
-</span><span id="line-133"></span><span>      </span><span id="local-6989586621688739744"><span class="annot"><span class="annottext">allCols :: [ColumnInfo ('Postgres 'Vanilla)]
-</span><a href="#local-6989586621688739744"><span class="hs-identifier hs-var hs-var">allCols</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
+</span><a href="#local-6989586621688739919"><span class="hs-identifier hs-var">coreInfo</span></a></span><span>
+</span><span id="line-133"></span><span>      </span><span id="local-6989586621688739904"><span class="annot"><span class="annottext">allCols :: [ColumnInfo ('Postgres 'Vanilla)]
+</span><a href="#local-6989586621688739904"><span class="hs-identifier hs-var hs-var">allCols</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
 -&gt; [ColumnInfo ('Postgres 'Vanilla)]
 forall (backend :: BackendType).
 FieldInfoMap (FieldInfo backend) -&gt; [ColumnInfo backend]
 </span><a href="Hasura.RQL.Types.Table.html#getCols"><span class="hs-identifier hs-var">getCols</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
-</span><a href="#local-6989586621688739746"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span><span>
-</span><span id="line-134"></span><span>      </span><span id="local-6989586621688739742"><span class="annot"><span class="annottext">preSetObj :: PreSetColsPartial ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739742"><span class="hs-identifier hs-var hs-var">preSetObj</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UpdPermInfo ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739906"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span><span>
+</span><span id="line-134"></span><span>      </span><span id="local-6989586621688739902"><span class="annot"><span class="annottext">preSetObj :: PreSetColsPartial ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739902"><span class="hs-identifier hs-var hs-var">preSetObj</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UpdPermInfo ('Postgres 'Vanilla)
 -&gt; PreSetColsPartial ('Postgres 'Vanilla)
 forall (b :: BackendType). UpdPermInfo b -&gt; PreSetColsPartial b
 </span><a href="Hasura.RQL.Types.Table.html#upiSet"><span class="hs-identifier hs-var hs-var">upiSet</span></a></span><span> </span><span class="annot"><span class="annottext">UpdPermInfo ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739754"><span class="hs-identifier hs-var">updPerm</span></a></span><span>
-</span><span id="line-135"></span><span>      </span><span id="local-6989586621688739740"><span class="annot"><span class="annottext">preSetCols :: [PGCol]
-</span><a href="#local-6989586621688739740"><span class="hs-identifier hs-var hs-var">preSetCols</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap PGCol (PartialSQLExp ('Postgres 'Vanilla)) -&gt; [PGCol]
+</span><a href="#local-6989586621688739914"><span class="hs-identifier hs-var">updPerm</span></a></span><span>
+</span><span id="line-135"></span><span>      </span><span id="local-6989586621688739900"><span class="annot"><span class="annottext">preSetCols :: [PGCol]
+</span><a href="#local-6989586621688739900"><span class="hs-identifier hs-var hs-var">preSetCols</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap PGCol (PartialSQLExp ('Postgres 'Vanilla)) -&gt; [PGCol]
 forall k v. HashMap k v -&gt; [k]
 </span><span class="hs-identifier hs-var">M.keys</span></span><span> </span><span class="annot"><span class="annottext">PreSetColsPartial ('Postgres 'Vanilla)
 HashMap PGCol (PartialSQLExp ('Postgres 'Vanilla))
-</span><a href="#local-6989586621688739742"><span class="hs-identifier hs-var">preSetObj</span></a></span><span>
+</span><a href="#local-6989586621688739902"><span class="hs-identifier hs-var">preSetObj</span></a></span><span>
 </span><span id="line-136"></span><span>
 </span><span id="line-137"></span><span>  </span><span class="hs-comment">-- convert the object to SQL set expression</span><span>
-</span><span id="line-138"></span><span>  </span><span id="local-6989586621688739738"><span class="annot"><span class="annottext">[(PGCol, SQLExp)]
-</span><a href="#local-6989586621688739738"><span class="hs-identifier hs-var">setItems</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-138"></span><span>  </span><span id="local-6989586621688739898"><span class="annot"><span class="annottext">[(PGCol, SQLExp)]
+</span><a href="#local-6989586621688739898"><span class="hs-identifier hs-var">setItems</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-139"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; m [(PGCol, SQLExp)] -&gt; m [(PGCol, SQLExp)]
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
 </span><a href="Hasura.Base.Error.html#withPathK"><span class="hs-identifier hs-var">withPathK</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -454,16 +454,16 @@ FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
     -&gt; ColumnType ('Postgres 'Vanilla) -&gt; a -&gt; m (PGCol, SQLExp))
 -&gt; m [(PGCol, SQLExp)]
 </span><a href="Hasura.RQL.DML.Update.html#convOp"><span class="hs-identifier hs-var">convOp</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
-</span><a href="#local-6989586621688739746"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">[PGCol]
-</span><a href="#local-6989586621688739740"><span class="hs-identifier hs-var">preSetCols</span></a></span><span> </span><span class="annot"><span class="annottext">UpdPermInfo ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739754"><span class="hs-identifier hs-var">updPerm</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap PGCol Value -&gt; [(PGCol, Value)]
+</span><a href="#local-6989586621688739906"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">[PGCol]
+</span><a href="#local-6989586621688739900"><span class="hs-identifier hs-var">preSetCols</span></a></span><span> </span><span class="annot"><span class="annottext">UpdPermInfo ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739914"><span class="hs-identifier hs-var">updPerm</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap PGCol Value -&gt; [(PGCol, Value)]
 forall k v. HashMap k v -&gt; [(k, v)]
 </span><span class="hs-identifier hs-var">M.toList</span></span><span> </span><span class="annot"><span class="annottext">(HashMap PGCol Value -&gt; [(PGCol, Value)])
 -&gt; HashMap PGCol Value -&gt; [(PGCol, Value)]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">UpdateQuery -&gt; UpdVals ('Postgres 'Vanilla)
 </span><a href="Hasura.RQL.DML.Types.html#uqSet"><span class="hs-identifier hs-var hs-var">uqSet</span></a></span><span> </span><span class="annot"><span class="annottext">UpdateQuery
-</span><a href="#local-6989586621688739764"><span class="hs-identifier hs-var">uq</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((PGCol
+</span><a href="#local-6989586621688739924"><span class="hs-identifier hs-var">uq</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((PGCol
   -&gt; ColumnType ('Postgres 'Vanilla) -&gt; Value -&gt; m (PGCol, SQLExp))
  -&gt; m [(PGCol, SQLExp)])
 -&gt; (PGCol
@@ -483,10 +483,10 @@ ValueParser ('Postgres 'Vanilla) m SQLExp
 -&gt; Value
 -&gt; m (PGCol, SQLExp)
 </span><a href="Hasura.RQL.DML.Update.html#convSet"><span class="hs-identifier hs-var">convSet</span></a></span><span> </span><span class="annot"><span class="annottext">ValueParser ('Postgres 'Vanilla) m SQLExp
-</span><a href="#local-6989586621688739765"><span class="hs-identifier hs-var">prepValBldr</span></a></span><span>
+</span><a href="#local-6989586621688739925"><span class="hs-identifier hs-var">prepValBldr</span></a></span><span>
 </span><span id="line-141"></span><span>
-</span><span id="line-142"></span><span>  </span><span id="local-6989586621688739735"><span class="annot"><span class="annottext">[(PGCol, SQLExp)]
-</span><a href="#local-6989586621688739735"><span class="hs-identifier hs-var">incItems</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-142"></span><span>  </span><span id="local-6989586621688739895"><span class="annot"><span class="annottext">[(PGCol, SQLExp)]
+</span><a href="#local-6989586621688739895"><span class="hs-identifier hs-var">incItems</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-143"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; m [(PGCol, SQLExp)] -&gt; m [(PGCol, SQLExp)]
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
 </span><a href="Hasura.Base.Error.html#withPathK"><span class="hs-identifier hs-var">withPathK</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -511,16 +511,16 @@ FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
     -&gt; ColumnType ('Postgres 'Vanilla) -&gt; a -&gt; m (PGCol, SQLExp))
 -&gt; m [(PGCol, SQLExp)]
 </span><a href="Hasura.RQL.DML.Update.html#convOp"><span class="hs-identifier hs-var">convOp</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
-</span><a href="#local-6989586621688739746"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">[PGCol]
-</span><a href="#local-6989586621688739740"><span class="hs-identifier hs-var">preSetCols</span></a></span><span> </span><span class="annot"><span class="annottext">UpdPermInfo ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739754"><span class="hs-identifier hs-var">updPerm</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap PGCol Value -&gt; [(PGCol, Value)]
+</span><a href="#local-6989586621688739906"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">[PGCol]
+</span><a href="#local-6989586621688739900"><span class="hs-identifier hs-var">preSetCols</span></a></span><span> </span><span class="annot"><span class="annottext">UpdPermInfo ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739914"><span class="hs-identifier hs-var">updPerm</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap PGCol Value -&gt; [(PGCol, Value)]
 forall k v. HashMap k v -&gt; [(k, v)]
 </span><span class="hs-identifier hs-var">M.toList</span></span><span> </span><span class="annot"><span class="annottext">(HashMap PGCol Value -&gt; [(PGCol, Value)])
 -&gt; HashMap PGCol Value -&gt; [(PGCol, Value)]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">UpdateQuery -&gt; UpdVals ('Postgres 'Vanilla)
 </span><a href="Hasura.RQL.DML.Types.html#uqInc"><span class="hs-identifier hs-var hs-var">uqInc</span></a></span><span> </span><span class="annot"><span class="annottext">UpdateQuery
-</span><a href="#local-6989586621688739764"><span class="hs-identifier hs-var">uq</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((PGCol
+</span><a href="#local-6989586621688739924"><span class="hs-identifier hs-var">uq</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((PGCol
   -&gt; ColumnType ('Postgres 'Vanilla) -&gt; Value -&gt; m (PGCol, SQLExp))
  -&gt; m [(PGCol, SQLExp)])
 -&gt; (PGCol
@@ -540,10 +540,10 @@ ValueParser ('Postgres 'Vanilla) m SQLExp
 -&gt; Value
 -&gt; m (PGCol, SQLExp)
 </span><a href="Hasura.RQL.DML.Update.html#convInc"><span class="hs-identifier hs-var">convInc</span></a></span><span> </span><span class="annot"><span class="annottext">ValueParser ('Postgres 'Vanilla) m SQLExp
-</span><a href="#local-6989586621688739765"><span class="hs-identifier hs-var">prepValBldr</span></a></span><span>
+</span><a href="#local-6989586621688739925"><span class="hs-identifier hs-var">prepValBldr</span></a></span><span>
 </span><span id="line-145"></span><span>
-</span><span id="line-146"></span><span>  </span><span id="local-6989586621688739733"><span class="annot"><span class="annottext">[(PGCol, SQLExp)]
-</span><a href="#local-6989586621688739733"><span class="hs-identifier hs-var">mulItems</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-146"></span><span>  </span><span id="local-6989586621688739893"><span class="annot"><span class="annottext">[(PGCol, SQLExp)]
+</span><a href="#local-6989586621688739893"><span class="hs-identifier hs-var">mulItems</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-147"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; m [(PGCol, SQLExp)] -&gt; m [(PGCol, SQLExp)]
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
 </span><a href="Hasura.Base.Error.html#withPathK"><span class="hs-identifier hs-var">withPathK</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -568,16 +568,16 @@ FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
     -&gt; ColumnType ('Postgres 'Vanilla) -&gt; a -&gt; m (PGCol, SQLExp))
 -&gt; m [(PGCol, SQLExp)]
 </span><a href="Hasura.RQL.DML.Update.html#convOp"><span class="hs-identifier hs-var">convOp</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
-</span><a href="#local-6989586621688739746"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">[PGCol]
-</span><a href="#local-6989586621688739740"><span class="hs-identifier hs-var">preSetCols</span></a></span><span> </span><span class="annot"><span class="annottext">UpdPermInfo ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739754"><span class="hs-identifier hs-var">updPerm</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap PGCol Value -&gt; [(PGCol, Value)]
+</span><a href="#local-6989586621688739906"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">[PGCol]
+</span><a href="#local-6989586621688739900"><span class="hs-identifier hs-var">preSetCols</span></a></span><span> </span><span class="annot"><span class="annottext">UpdPermInfo ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739914"><span class="hs-identifier hs-var">updPerm</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap PGCol Value -&gt; [(PGCol, Value)]
 forall k v. HashMap k v -&gt; [(k, v)]
 </span><span class="hs-identifier hs-var">M.toList</span></span><span> </span><span class="annot"><span class="annottext">(HashMap PGCol Value -&gt; [(PGCol, Value)])
 -&gt; HashMap PGCol Value -&gt; [(PGCol, Value)]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">UpdateQuery -&gt; UpdVals ('Postgres 'Vanilla)
 </span><a href="Hasura.RQL.DML.Types.html#uqMul"><span class="hs-identifier hs-var hs-var">uqMul</span></a></span><span> </span><span class="annot"><span class="annottext">UpdateQuery
-</span><a href="#local-6989586621688739764"><span class="hs-identifier hs-var">uq</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((PGCol
+</span><a href="#local-6989586621688739924"><span class="hs-identifier hs-var">uq</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((PGCol
   -&gt; ColumnType ('Postgres 'Vanilla) -&gt; Value -&gt; m (PGCol, SQLExp))
  -&gt; m [(PGCol, SQLExp)])
 -&gt; (PGCol
@@ -597,10 +597,10 @@ ValueParser ('Postgres 'Vanilla) m SQLExp
 -&gt; Value
 -&gt; m (PGCol, SQLExp)
 </span><a href="Hasura.RQL.DML.Update.html#convMul"><span class="hs-identifier hs-var">convMul</span></a></span><span> </span><span class="annot"><span class="annottext">ValueParser ('Postgres 'Vanilla) m SQLExp
-</span><a href="#local-6989586621688739765"><span class="hs-identifier hs-var">prepValBldr</span></a></span><span>
+</span><a href="#local-6989586621688739925"><span class="hs-identifier hs-var">prepValBldr</span></a></span><span>
 </span><span id="line-149"></span><span>
-</span><span id="line-150"></span><span>  </span><span id="local-6989586621688739731"><span class="annot"><span class="annottext">[(PGCol, SQLExp)]
-</span><a href="#local-6989586621688739731"><span class="hs-identifier hs-var">defItems</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-150"></span><span>  </span><span id="local-6989586621688739891"><span class="annot"><span class="annottext">[(PGCol, SQLExp)]
+</span><a href="#local-6989586621688739891"><span class="hs-identifier hs-var">defItems</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-151"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; m [(PGCol, SQLExp)] -&gt; m [(PGCol, SQLExp)]
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
 </span><a href="Hasura.Base.Error.html#withPathK"><span class="hs-identifier hs-var">withPathK</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -625,34 +625,34 @@ FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
     -&gt; ColumnType ('Postgres 'Vanilla) -&gt; a -&gt; m (PGCol, SQLExp))
 -&gt; m [(PGCol, SQLExp)]
 </span><a href="Hasura.RQL.DML.Update.html#convOp"><span class="hs-identifier hs-var">convOp</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
-</span><a href="#local-6989586621688739746"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">[PGCol]
-</span><a href="#local-6989586621688739740"><span class="hs-identifier hs-var">preSetCols</span></a></span><span> </span><span class="annot"><span class="annottext">UpdPermInfo ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739754"><span class="hs-identifier hs-var">updPerm</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="hs-special">,</span></span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(PGCol -&gt; (PGCol, ())) -&gt; [PGCol] -&gt; [(PGCol, ())]
+</span><a href="#local-6989586621688739906"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">[PGCol]
+</span><a href="#local-6989586621688739900"><span class="hs-identifier hs-var">preSetCols</span></a></span><span> </span><span class="annot"><span class="annottext">UpdPermInfo ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739914"><span class="hs-identifier hs-var">updPerm</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="hs-special">,</span></span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(PGCol -&gt; (PGCol, ())) -&gt; [PGCol] -&gt; [(PGCol, ())]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">UpdateQuery -&gt; [PGCol]
 </span><a href="Hasura.RQL.DML.Types.html#uqDefault"><span class="hs-identifier hs-var hs-var">uqDefault</span></a></span><span> </span><span class="annot"><span class="annottext">UpdateQuery
-</span><a href="#local-6989586621688739764"><span class="hs-identifier hs-var">uq</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">PGCol -&gt; ColumnType ('Postgres 'Vanilla) -&gt; () -&gt; m (PGCol, SQLExp)
+</span><a href="#local-6989586621688739924"><span class="hs-identifier hs-var">uq</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">PGCol -&gt; ColumnType ('Postgres 'Vanilla) -&gt; () -&gt; m (PGCol, SQLExp)
 forall (m :: * -&gt; *).
 Monad m =&gt;
 PGCol -&gt; ColumnType ('Postgres 'Vanilla) -&gt; () -&gt; m (PGCol, SQLExp)
 </span><a href="Hasura.RQL.DML.Update.html#convDefault"><span class="hs-identifier hs-var">convDefault</span></a></span><span>
 </span><span id="line-153"></span><span>
 </span><span id="line-154"></span><span>  </span><span class="hs-comment">-- convert the returning cols into sql returing exp</span><span>
-</span><span id="line-155"></span><span>  </span><span id="local-6989586621688739729"><span class="annot"><span class="annottext">Maybe [ColumnInfo ('Postgres 'Vanilla)]
-</span><a href="#local-6989586621688739729"><span class="hs-identifier hs-var">mAnnRetCols</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe [PGCol]
+</span><span id="line-155"></span><span>  </span><span id="local-6989586621688739889"><span class="annot"><span class="annottext">Maybe [ColumnInfo ('Postgres 'Vanilla)]
+</span><a href="#local-6989586621688739889"><span class="hs-identifier hs-var">mAnnRetCols</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe [PGCol]
 -&gt; ([PGCol] -&gt; m [ColumnInfo ('Postgres 'Vanilla)])
 -&gt; m (Maybe [ColumnInfo ('Postgres 'Vanilla)])
 forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (Traversable t, Monad m) =&gt;
 t a -&gt; (a -&gt; m b) -&gt; m (t b)
 </span><span class="hs-identifier hs-var">forM</span></span><span> </span><span class="annot"><span class="annottext">Maybe [PGCol]
-</span><a href="#local-6989586621688739728"><span class="hs-identifier hs-var">mRetCols</span></a></span><span> </span><span class="annot"><span class="annottext">(([PGCol] -&gt; m [ColumnInfo ('Postgres 'Vanilla)])
+</span><a href="#local-6989586621688739888"><span class="hs-identifier hs-var">mRetCols</span></a></span><span> </span><span class="annot"><span class="annottext">(([PGCol] -&gt; m [ColumnInfo ('Postgres 'Vanilla)])
  -&gt; m (Maybe [ColumnInfo ('Postgres 'Vanilla)]))
 -&gt; ([PGCol] -&gt; m [ColumnInfo ('Postgres 'Vanilla)])
 -&gt; m (Maybe [ColumnInfo ('Postgres 'Vanilla)])
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688739727"><span class="annot"><span class="annottext">[PGCol]
-</span><a href="#local-6989586621688739727"><span class="hs-identifier hs-var">retCols</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688739887"><span class="annot"><span class="annottext">[PGCol]
+</span><a href="#local-6989586621688739887"><span class="hs-identifier hs-var">retCols</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-156"></span><span>    </span><span class="annot"><span class="annottext">Text
 -&gt; m [ColumnInfo ('Postgres 'Vanilla)]
 -&gt; m [ColumnInfo ('Postgres 'Vanilla)]
@@ -674,12 +674,12 @@ FieldInfoMap (FieldInfo ('Postgres pgKind))
 -&gt; [PGCol]
 -&gt; m [ColumnInfo ('Postgres pgKind)]
 </span><a href="Hasura.RQL.DML.Internal.html#checkRetCols"><span class="hs-identifier hs-var">checkRetCols</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
-</span><a href="#local-6989586621688739746"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">SelPermInfo ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739750"><span class="hs-identifier hs-var">selPerm</span></a></span><span> </span><span class="annot"><span class="annottext">[PGCol]
-</span><a href="#local-6989586621688739727"><span class="hs-identifier hs-var">retCols</span></a></span><span>
+</span><a href="#local-6989586621688739906"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">SelPermInfo ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739910"><span class="hs-identifier hs-var">selPerm</span></a></span><span> </span><span class="annot"><span class="annottext">[PGCol]
+</span><a href="#local-6989586621688739887"><span class="hs-identifier hs-var">retCols</span></a></span><span>
 </span><span id="line-157"></span><span>
-</span><span id="line-158"></span><span>  </span><span id="local-6989586621688739725"><span class="annot"><span class="annottext">[(PGCol, SQLExp)]
-</span><a href="#local-6989586621688739725"><span class="hs-identifier hs-var">resolvedPreSetItems</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-158"></span><span>  </span><span id="local-6989586621688739885"><span class="annot"><span class="annottext">[(PGCol, SQLExp)]
+</span><a href="#local-6989586621688739885"><span class="hs-identifier hs-var">resolvedPreSetItems</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-159"></span><span>    </span><span class="annot"><span class="annottext">HashMap PGCol SQLExp -&gt; [(PGCol, SQLExp)]
 forall k v. HashMap k v -&gt; [(k, v)]
 </span><span class="hs-identifier hs-var">M.toList</span></span><span>
@@ -700,37 +700,37 @@ Applicative f =&gt;
 SessionVariableBuilder backend f
 -&gt; PartialSQLExp backend -&gt; f (SQLExpression backend)
 </span><a href="Hasura.RQL.DML.Internal.html#convPartialSQLExp"><span class="hs-identifier hs-var">convPartialSQLExp</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariableBuilder ('Postgres 'Vanilla) m
-</span><a href="#local-6989586621688739766"><span class="hs-identifier hs-var">sessVarBldr</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">PreSetColsPartial ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739926"><span class="hs-identifier hs-var">sessVarBldr</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">PreSetColsPartial ('Postgres 'Vanilla)
 HashMap PGCol (PartialSQLExp ('Postgres 'Vanilla))
-</span><a href="#local-6989586621688739742"><span class="hs-identifier hs-var">preSetObj</span></a></span><span>
+</span><a href="#local-6989586621688739902"><span class="hs-identifier hs-var">preSetObj</span></a></span><span>
 </span><span id="line-161"></span><span>
-</span><span id="line-162"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688739722"><span class="annot"><span class="annottext">setExpItems :: [(PGCol, SQLExp)]
-</span><a href="#local-6989586621688739722"><span class="hs-identifier hs-var hs-var">setExpItems</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-162"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688739882"><span class="annot"><span class="annottext">setExpItems :: [(PGCol, SQLExp)]
+</span><a href="#local-6989586621688739882"><span class="hs-identifier hs-var hs-var">setExpItems</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-163"></span><span>        </span><span class="annot"><span class="annottext">[(PGCol, SQLExp)]
-</span><a href="#local-6989586621688739725"><span class="hs-identifier hs-var">resolvedPreSetItems</span></a></span><span>
+</span><a href="#local-6989586621688739885"><span class="hs-identifier hs-var">resolvedPreSetItems</span></a></span><span>
 </span><span id="line-164"></span><span>          </span><span class="annot"><span class="annottext">[(PGCol, SQLExp)] -&gt; [(PGCol, SQLExp)] -&gt; [(PGCol, SQLExp)]
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">[(PGCol, SQLExp)]
-</span><a href="#local-6989586621688739738"><span class="hs-identifier hs-var">setItems</span></a></span><span>
+</span><a href="#local-6989586621688739898"><span class="hs-identifier hs-var">setItems</span></a></span><span>
 </span><span id="line-165"></span><span>          </span><span class="annot"><span class="annottext">[(PGCol, SQLExp)] -&gt; [(PGCol, SQLExp)] -&gt; [(PGCol, SQLExp)]
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">[(PGCol, SQLExp)]
-</span><a href="#local-6989586621688739735"><span class="hs-identifier hs-var">incItems</span></a></span><span>
+</span><a href="#local-6989586621688739895"><span class="hs-identifier hs-var">incItems</span></a></span><span>
 </span><span id="line-166"></span><span>          </span><span class="annot"><span class="annottext">[(PGCol, SQLExp)] -&gt; [(PGCol, SQLExp)] -&gt; [(PGCol, SQLExp)]
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">[(PGCol, SQLExp)]
-</span><a href="#local-6989586621688739733"><span class="hs-identifier hs-var">mulItems</span></a></span><span>
+</span><a href="#local-6989586621688739893"><span class="hs-identifier hs-var">mulItems</span></a></span><span>
 </span><span id="line-167"></span><span>          </span><span class="annot"><span class="annottext">[(PGCol, SQLExp)] -&gt; [(PGCol, SQLExp)] -&gt; [(PGCol, SQLExp)]
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">[(PGCol, SQLExp)]
-</span><a href="#local-6989586621688739731"><span class="hs-identifier hs-var">defItems</span></a></span><span>
+</span><a href="#local-6989586621688739891"><span class="hs-identifier hs-var">defItems</span></a></span><span>
 </span><span id="line-168"></span><span>
 </span><span id="line-169"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[(PGCol, SQLExp)] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">[(PGCol, SQLExp)]
-</span><a href="#local-6989586621688739722"><span class="hs-identifier hs-var">setExpItems</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+</span><a href="#local-6989586621688739882"><span class="hs-identifier hs-var">setExpItems</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-170"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
@@ -740,8 +740,8 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><span class="hs-string">&quot;atleast one of $set, $inc, $mul has to be present&quot;</span></span><span>
 </span><span id="line-171"></span><span>
 </span><span id="line-172"></span><span>  </span><span class="hs-comment">-- convert the where clause</span><span>
-</span><span id="line-173"></span><span>  </span><span id="local-6989586621688739719"><span class="annot"><span class="annottext">AnnBoolExp ('Postgres 'Vanilla) SQLExp
-</span><a href="#local-6989586621688739719"><span class="hs-identifier hs-var">annSQLBoolExp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-173"></span><span>  </span><span id="local-6989586621688739879"><span class="annot"><span class="annottext">AnnBoolExp ('Postgres 'Vanilla) SQLExp
+</span><a href="#local-6989586621688739879"><span class="hs-identifier hs-var">annSQLBoolExp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-174"></span><span>    </span><span class="annot"><span class="annottext">Text
 -&gt; m (AnnBoolExp ('Postgres 'Vanilla) SQLExp)
 -&gt; m (AnnBoolExp ('Postgres 'Vanilla) SQLExp)
@@ -771,19 +771,19 @@ FieldInfoMap (FieldInfo b)
 -&gt; ValueParser b m (SQLExpression b)
 -&gt; m (AnnBoolExpSQL b)
 </span><a href="Hasura.RQL.DML.Internal.html#convBoolExp"><span class="hs-identifier hs-var">convBoolExp</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
-</span><a href="#local-6989586621688739746"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">SelPermInfo ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739750"><span class="hs-identifier hs-var">selPerm</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UpdateQuery -&gt; BoolExp ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739906"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">SelPermInfo ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739910"><span class="hs-identifier hs-var">selPerm</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UpdateQuery -&gt; BoolExp ('Postgres 'Vanilla)
 </span><a href="Hasura.RQL.DML.Types.html#uqWhere"><span class="hs-identifier hs-var hs-var">uqWhere</span></a></span><span> </span><span class="annot"><span class="annottext">UpdateQuery
-</span><a href="#local-6989586621688739764"><span class="hs-identifier hs-var">uq</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SessionVariableBuilder ('Postgres 'Vanilla) m
-</span><a href="#local-6989586621688739766"><span class="hs-identifier hs-var">sessVarBldr</span></a></span><span> </span><span class="annot"><span class="annottext">TableName ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739924"><span class="hs-identifier hs-var">uq</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SessionVariableBuilder ('Postgres 'Vanilla) m
+</span><a href="#local-6989586621688739926"><span class="hs-identifier hs-var">sessVarBldr</span></a></span><span> </span><span class="annot"><span class="annottext">TableName ('Postgres 'Vanilla)
 QualifiedTable
-</span><a href="#local-6989586621688739763"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">ValueParser
+</span><a href="#local-6989586621688739923"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">ValueParser
   ('Postgres 'Vanilla) m (SQLExpression ('Postgres 'Vanilla))
 ValueParser ('Postgres 'Vanilla) m SQLExp
-</span><a href="#local-6989586621688739765"><span class="hs-identifier hs-var">prepValBldr</span></a></span><span>
+</span><a href="#local-6989586621688739925"><span class="hs-identifier hs-var">prepValBldr</span></a></span><span>
 </span><span id="line-176"></span><span>
-</span><span id="line-177"></span><span>  </span><span id="local-6989586621688739716"><span class="annot"><span class="annottext">AnnBoolExp ('Postgres 'Vanilla) SQLExp
-</span><a href="#local-6989586621688739716"><span class="hs-identifier hs-var">resolvedUpdFltr</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-177"></span><span>  </span><span id="local-6989586621688739876"><span class="annot"><span class="annottext">AnnBoolExp ('Postgres 'Vanilla) SQLExp
+</span><a href="#local-6989586621688739876"><span class="hs-identifier hs-var">resolvedUpdFltr</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-178"></span><span>    </span><span class="annot"><span class="annottext">SessionVariableBuilder ('Postgres 'Vanilla) m
 -&gt; AnnBoolExpPartialSQL ('Postgres 'Vanilla)
 -&gt; m (AnnBoolExpSQL ('Postgres 'Vanilla))
@@ -792,7 +792,7 @@ forall (f :: * -&gt; *) (backend :: BackendType).
 SessionVariableBuilder backend f
 -&gt; AnnBoolExpPartialSQL backend -&gt; f (AnnBoolExpSQL backend)
 </span><a href="Hasura.RQL.DML.Internal.html#convAnnBoolExpPartialSQL"><span class="hs-identifier hs-var">convAnnBoolExpPartialSQL</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariableBuilder ('Postgres 'Vanilla) m
-</span><a href="#local-6989586621688739766"><span class="hs-identifier hs-var">sessVarBldr</span></a></span><span> </span><span class="annot"><span class="annottext">(AnnBoolExpPartialSQL ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739926"><span class="hs-identifier hs-var">sessVarBldr</span></a></span><span> </span><span class="annot"><span class="annottext">(AnnBoolExpPartialSQL ('Postgres 'Vanilla)
  -&gt; m (AnnBoolExpSQL ('Postgres 'Vanilla)))
 -&gt; AnnBoolExpPartialSQL ('Postgres 'Vanilla)
 -&gt; m (AnnBoolExpSQL ('Postgres 'Vanilla))
@@ -802,9 +802,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; AnnBoolExpPartialSQL ('Postgres 'Vanilla)
 forall (b :: BackendType). UpdPermInfo b -&gt; AnnBoolExpPartialSQL b
 </span><a href="Hasura.RQL.Types.Table.html#upiFilter"><span class="hs-identifier hs-var hs-var">upiFilter</span></a></span><span> </span><span class="annot"><span class="annottext">UpdPermInfo ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739754"><span class="hs-identifier hs-var">updPerm</span></a></span><span>
-</span><span id="line-180"></span><span>  </span><span id="local-6989586621688739713"><span class="annot"><span class="annottext">AnnBoolExp ('Postgres 'Vanilla) SQLExp
-</span><a href="#local-6989586621688739713"><span class="hs-identifier hs-var">resolvedUpdCheck</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621688739914"><span class="hs-identifier hs-var">updPerm</span></a></span><span>
+</span><span id="line-180"></span><span>  </span><span id="local-6989586621688739873"><span class="annot"><span class="annottext">AnnBoolExp ('Postgres 'Vanilla) SQLExp
+</span><a href="#local-6989586621688739873"><span class="hs-identifier hs-var">resolvedUpdCheck</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-181"></span><span>    </span><span class="annot"><span class="annottext">AnnBoolExp ('Postgres 'Vanilla) SQLExp
 -&gt; Maybe (AnnBoolExp ('Postgres 'Vanilla) SQLExp)
 -&gt; AnnBoolExp ('Postgres 'Vanilla) SQLExp
@@ -833,13 +833,13 @@ forall (f :: * -&gt; *) (backend :: BackendType).
 SessionVariableBuilder backend f
 -&gt; AnnBoolExpPartialSQL backend -&gt; f (AnnBoolExpSQL backend)
 </span><a href="Hasura.RQL.DML.Internal.html#convAnnBoolExpPartialSQL"><span class="hs-identifier hs-var">convAnnBoolExpPartialSQL</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariableBuilder ('Postgres 'Vanilla) m
-</span><a href="#local-6989586621688739766"><span class="hs-identifier hs-var">sessVarBldr</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688739926"><span class="hs-identifier hs-var">sessVarBldr</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-184"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UpdPermInfo ('Postgres 'Vanilla)
 -&gt; Maybe (AnnBoolExpPartialSQL ('Postgres 'Vanilla))
 forall (b :: BackendType).
 UpdPermInfo b -&gt; Maybe (AnnBoolExpPartialSQL b)
 </span><a href="Hasura.RQL.Types.Table.html#upiCheck"><span class="hs-identifier hs-var hs-var">upiCheck</span></a></span><span> </span><span class="annot"><span class="annottext">UpdPermInfo ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688739754"><span class="hs-identifier hs-var">updPerm</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688739914"><span class="hs-identifier hs-var">updPerm</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-185"></span><span>
 </span><span id="line-186"></span><span>  </span><span class="annot"><span class="annottext">AnnotatedUpdateG ('Postgres 'Vanilla) Void SQLExp
 -&gt; m (AnnotatedUpdateG ('Postgres 'Vanilla) Void SQLExp)
@@ -869,12 +869,12 @@ TableName b
 </span><a href="Hasura.RQL.IR.Update.html#AnnotatedUpdateG"><span class="hs-identifier hs-var">AnnotatedUpdateG</span></a></span><span>
 </span><span id="line-188"></span><span>      </span><span class="annot"><span class="annottext">TableName ('Postgres 'Vanilla)
 QualifiedTable
-</span><a href="#local-6989586621688739763"><span class="hs-identifier hs-var">tableName</span></a></span><span>
+</span><a href="#local-6989586621688739923"><span class="hs-identifier hs-var">tableName</span></a></span><span>
 </span><span id="line-189"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnBoolExp ('Postgres 'Vanilla) SQLExp
-</span><a href="#local-6989586621688739716"><span class="hs-identifier hs-var">resolvedUpdFltr</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">AnnBoolExp ('Postgres 'Vanilla) SQLExp
-</span><a href="#local-6989586621688739719"><span class="hs-identifier hs-var">annSQLBoolExp</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688739876"><span class="hs-identifier hs-var">resolvedUpdFltr</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">AnnBoolExp ('Postgres 'Vanilla) SQLExp
+</span><a href="#local-6989586621688739879"><span class="hs-identifier hs-var">annSQLBoolExp</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-190"></span><span>      </span><span class="annot"><span class="annottext">AnnBoolExp ('Postgres 'Vanilla) SQLExp
-</span><a href="#local-6989586621688739713"><span class="hs-identifier hs-var">resolvedUpdCheck</span></a></span><span>
+</span><a href="#local-6989586621688739873"><span class="hs-identifier hs-var">resolvedUpdCheck</span></a></span><span>
 </span><span id="line-191"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap PGCol (UpdateOpExpression SQLExp) -&gt; BackendUpdate SQLExp
 forall v. HashMap PGCol (UpdateOpExpression v) -&gt; BackendUpdate v
 </span><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-var">BackendUpdate</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap PGCol (UpdateOpExpression SQLExp) -&gt; BackendUpdate SQLExp)
@@ -898,7 +898,7 @@ forall v. v -&gt; UpdateOpExpression v
 -&gt; [(PGCol, SQLExp)] -&gt; [(PGCol, UpdateOpExpression SQLExp)]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[(PGCol, SQLExp)]
-</span><a href="#local-6989586621688739722"><span class="hs-identifier hs-var">setExpItems</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688739882"><span class="hs-identifier hs-var">setExpItems</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-192"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe [ColumnInfo ('Postgres 'Vanilla)]
 -&gt; MutationOutput ('Postgres 'Vanilla)
 forall (pgKind :: PostgresKind).
@@ -906,16 +906,16 @@ Backend ('Postgres pgKind) =&gt;
 Maybe [ColumnInfo ('Postgres pgKind)]
 -&gt; MutationOutput ('Postgres pgKind)
 </span><a href="Hasura.Backends.Postgres.Translate.Returning.html#mkDefaultMutFlds"><span class="hs-identifier hs-var">mkDefaultMutFlds</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe [ColumnInfo ('Postgres 'Vanilla)]
-</span><a href="#local-6989586621688739729"><span class="hs-identifier hs-var">mAnnRetCols</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688739889"><span class="hs-identifier hs-var">mAnnRetCols</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-193"></span><span>      </span><span class="annot"><span class="annottext">[ColumnInfo ('Postgres 'Vanilla)]
-</span><a href="#local-6989586621688739744"><span class="hs-identifier hs-var">allCols</span></a></span><span>
+</span><a href="#local-6989586621688739904"><span class="hs-identifier hs-var">allCols</span></a></span><span>
 </span><span id="line-194"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-195"></span><span>    </span><span id="local-6989586621688739728"><span class="annot"><span class="annottext">mRetCols :: Maybe [PGCol]
-</span><a href="#local-6989586621688739728"><span class="hs-identifier hs-var hs-var">mRetCols</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UpdateQuery -&gt; Maybe [PGCol]
+</span><span id="line-195"></span><span>    </span><span id="local-6989586621688739888"><span class="annot"><span class="annottext">mRetCols :: Maybe [PGCol]
+</span><a href="#local-6989586621688739888"><span class="hs-identifier hs-var hs-var">mRetCols</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UpdateQuery -&gt; Maybe [PGCol]
 </span><a href="Hasura.RQL.DML.Types.html#uqReturning"><span class="hs-identifier hs-var hs-var">uqReturning</span></a></span><span> </span><span class="annot"><span class="annottext">UpdateQuery
-</span><a href="#local-6989586621688739764"><span class="hs-identifier hs-var">uq</span></a></span><span>
-</span><span id="line-196"></span><span>    </span><span id="local-6989586621688739748"><span class="annot"><span class="annottext">selNecessaryMsg :: Text
-</span><a href="#local-6989586621688739748"><span class="hs-identifier hs-var hs-var">selNecessaryMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621688739924"><span class="hs-identifier hs-var">uq</span></a></span><span>
+</span><span id="line-196"></span><span>    </span><span id="local-6989586621688739908"><span class="annot"><span class="annottext">selNecessaryMsg :: Text
+</span><a href="#local-6989586621688739908"><span class="hs-identifier hs-var hs-var">selNecessaryMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-197"></span><span>      </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;; \&quot;update\&quot; is only allowed if the role &quot;</span></span><span>
 </span><span id="line-198"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
@@ -927,19 +927,19 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;without \&quot;select\&quot; permission on the table&quot;</span></span><span>
 </span><span id="line-200"></span><span>
-</span><span id="line-201"></span><span id="local-6989586621688739847"><span class="annot"><a href="Hasura.RQL.DML.Update.html#validateUpdateQuery"><span class="hs-identifier hs-type">validateUpdateQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-202"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688739847"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688739847"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#CacheRM"><span class="hs-identifier hs-type">CacheRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688739847"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-201"></span><span id="local-6989586621688740007"><span class="annot"><a href="Hasura.RQL.DML.Update.html#validateUpdateQuery"><span class="hs-identifier hs-type">validateUpdateQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-202"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688740007"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688740007"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#CacheRM"><span class="hs-identifier hs-type">CacheRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688740007"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-203"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#UpdateQuery"><span class="hs-identifier hs-type">UpdateQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-204"></span><span>  </span><span class="annot"><a href="#local-6989586621688739847"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Update.html#AnnotatedUpdate"><span class="hs-identifier hs-type">AnnotatedUpdate</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">DS.Seq</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.PrepArg</span></span><span class="hs-special">)</span></span><span>
+</span><span id="line-204"></span><span>  </span><span class="annot"><a href="#local-6989586621688740007"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Update.html#AnnotatedUpdate"><span class="hs-identifier hs-type">AnnotatedUpdate</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">DS.Seq</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.PrepArg</span></span><span class="hs-special">)</span></span><span>
 </span><span id="line-205"></span><span id="validateUpdateQuery"><span class="annot"><span class="annottext">validateUpdateQuery :: UpdateQuery
 -&gt; m (AnnotatedUpdate ('Postgres 'Vanilla), Seq PrepArg)
-</span><a href="Hasura.RQL.DML.Update.html#validateUpdateQuery"><span class="hs-identifier hs-var hs-var">validateUpdateQuery</span></a></span></span><span> </span><span id="local-6989586621688739701"><span class="annot"><span class="annottext">UpdateQuery
-</span><a href="#local-6989586621688739701"><span class="hs-identifier hs-var">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-206"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688739700"><span class="annot"><span class="annottext">source :: SourceName
-</span><a href="#local-6989586621688739700"><span class="hs-identifier hs-var hs-var">source</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UpdateQuery -&gt; SourceName
+</span><a href="Hasura.RQL.DML.Update.html#validateUpdateQuery"><span class="hs-identifier hs-var hs-var">validateUpdateQuery</span></a></span></span><span> </span><span id="local-6989586621688739861"><span class="annot"><span class="annottext">UpdateQuery
+</span><a href="#local-6989586621688739861"><span class="hs-identifier hs-var">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-206"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688739860"><span class="annot"><span class="annottext">source :: SourceName
+</span><a href="#local-6989586621688739860"><span class="hs-identifier hs-var hs-var">source</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UpdateQuery -&gt; SourceName
 </span><a href="Hasura.RQL.DML.Types.html#uqSource"><span class="hs-identifier hs-var hs-var">uqSource</span></a></span><span> </span><span class="annot"><span class="annottext">UpdateQuery
-</span><a href="#local-6989586621688739701"><span class="hs-identifier hs-var">query</span></a></span><span>
-</span><span id="line-207"></span><span>  </span><span id="local-6989586621688739698"><span class="annot"><a href="#local-6989586621688739698"><span class="hs-identifier hs-var">tableCache</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableCache"><span class="hs-identifier hs-type">TableCache</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe (HashMap QualifiedTable (TableInfo ('Postgres 'Vanilla)))
+</span><a href="#local-6989586621688739861"><span class="hs-identifier hs-var">query</span></a></span><span>
+</span><span id="line-207"></span><span>  </span><span id="local-6989586621688739858"><span class="annot"><a href="#local-6989586621688739858"><span class="hs-identifier hs-var">tableCache</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableCache"><span class="hs-identifier hs-type">TableCache</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe (HashMap QualifiedTable (TableInfo ('Postgres 'Vanilla)))
 -&gt; HashMap QualifiedTable (TableInfo ('Postgres 'Vanilla))
 forall (t :: * -&gt; *) m. (Foldable t, Monoid m) =&gt; t m -&gt; m
 </span><span class="hs-identifier hs-var">fold</span></span><span> </span><span class="annot"><span class="annottext">(Maybe (HashMap QualifiedTable (TableInfo ('Postgres 'Vanilla)))
@@ -953,7 +953,7 @@ forall (b :: BackendType) (m :: * -&gt; *).
 (Backend b, CacheRM m) =&gt;
 SourceName -&gt; m (Maybe (TableCache b))
 </span><a href="Hasura.RQL.Types.SchemaCache.html#askTableCache"><span class="hs-identifier hs-var">askTableCache</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688739700"><span class="hs-identifier hs-var">source</span></a></span><span>
+</span><a href="#local-6989586621688739860"><span class="hs-identifier hs-var">source</span></a></span><span>
 </span><span id="line-208"></span><span>  </span><span class="annot"><span class="annottext">(TableCacheRT
    ('Postgres 'Vanilla)
    m
@@ -982,9 +982,9 @@ forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 forall (b :: BackendType) (m :: * -&gt; *) a.
 TableCacheRT b m a -&gt; (SourceName, TableCache b) -&gt; m a
 </span><a href="Hasura.RQL.Types.SchemaCache.html#runTableCacheRT"><span class="hs-identifier hs-var hs-var">runTableCacheRT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688739700"><span class="hs-identifier hs-var">source</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TableCache ('Postgres 'Vanilla)
+</span><a href="#local-6989586621688739860"><span class="hs-identifier hs-var">source</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TableCache ('Postgres 'Vanilla)
 HashMap QualifiedTable (TableInfo ('Postgres 'Vanilla))
-</span><a href="#local-6989586621688739698"><span class="hs-identifier hs-var">tableCache</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(TableCacheRT
+</span><a href="#local-6989586621688739858"><span class="hs-identifier hs-var">tableCache</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(TableCacheRT
    ('Postgres 'Vanilla)
    m
    (AnnotatedUpdateG ('Postgres 'Vanilla) Void SQLExp, Seq PrepArg)
@@ -1061,38 +1061,38 @@ forall (pgKind :: PostgresKind) (m :: * -&gt; *).
 (Backend ('Postgres pgKind), QErrM m) =&gt;
 ColumnType ('Postgres pgKind) -&gt; Value -&gt; DMLP1T m SQLExp
 </span><a href="Hasura.RQL.DML.Internal.html#binRHSBuilder"><span class="hs-identifier hs-var">binRHSBuilder</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">UpdateQuery
-</span><a href="#local-6989586621688739701"><span class="hs-identifier hs-var">query</span></a></span><span>
+</span><a href="#local-6989586621688739861"><span class="hs-identifier hs-var">query</span></a></span><span>
 </span><span id="line-211"></span><span>
 </span><span id="line-212"></span><span class="annot"><a href="Hasura.RQL.DML.Update.html#runUpdate"><span class="hs-identifier hs-type">runUpdate</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-213"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688739689"><span class="annot"><a href="#local-6989586621688739689"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-214"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688739689"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-215"></span><span>    </span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688739689"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-216"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#CacheRM"><span class="hs-identifier hs-type">CacheRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688739689"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-217"></span><span>    </span><span class="annot"><a href="Hasura.Server.Types.html#HasServerConfigCtx"><span class="hs-identifier hs-type">HasServerConfigCtx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688739689"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-218"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688739689"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-219"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688739689"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-220"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.html#MonadTrace"><span class="hs-identifier hs-type">Tracing.MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688739689"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-221"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688739689"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-213"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688739849"><span class="annot"><a href="#local-6989586621688739849"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-214"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688739849"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-215"></span><span>    </span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688739849"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-216"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#CacheRM"><span class="hs-identifier hs-type">CacheRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688739849"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-217"></span><span>    </span><span class="annot"><a href="Hasura.Server.Types.html#HasServerConfigCtx"><span class="hs-identifier hs-type">HasServerConfigCtx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688739849"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-218"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688739849"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-219"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688739849"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-220"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.html#MonadTrace"><span class="hs-identifier hs-type">Tracing.MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688739849"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-221"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688739849"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-222"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-223"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#UpdateQuery"><span class="hs-identifier hs-type">UpdateQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-224"></span><span>  </span><span class="annot"><a href="#local-6989586621688739689"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
+</span><span id="line-224"></span><span>  </span><span class="annot"><a href="#local-6989586621688739849"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
 </span><span id="line-225"></span><span id="runUpdate"><span class="annot"><span class="annottext">runUpdate :: UpdateQuery -&gt; m EncJSON
-</span><a href="Hasura.RQL.DML.Update.html#runUpdate"><span class="hs-identifier hs-var hs-var">runUpdate</span></a></span></span><span> </span><span id="local-6989586621688739688"><span class="annot"><span class="annottext">UpdateQuery
-</span><a href="#local-6989586621688739688"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-226"></span><span>  </span><span id="local-6989586621688739687"><span class="annot"><span class="annottext">PGSourceConfig
-</span><a href="#local-6989586621688739687"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; m (SourceConfig ('Postgres 'Vanilla))
+</span><a href="Hasura.RQL.DML.Update.html#runUpdate"><span class="hs-identifier hs-var hs-var">runUpdate</span></a></span></span><span> </span><span id="local-6989586621688739848"><span class="annot"><span class="annottext">UpdateQuery
+</span><a href="#local-6989586621688739848"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-226"></span><span>  </span><span id="local-6989586621688739847"><span class="annot"><span class="annottext">PGSourceConfig
+</span><a href="#local-6989586621688739847"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; m (SourceConfig ('Postgres 'Vanilla))
 forall (b :: BackendType) (m :: * -&gt; *).
 (CacheRM m, MonadError QErr m, Backend b, MetadataM m) =&gt;
 SourceName -&gt; m (SourceConfig b)
 </span><a href="Hasura.RQL.Types.SchemaCache.html#askSourceConfig"><span class="hs-identifier hs-var">askSourceConfig</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UpdateQuery -&gt; SourceName
 </span><a href="Hasura.RQL.DML.Types.html#uqSource"><span class="hs-identifier hs-var hs-var">uqSource</span></a></span><span> </span><span class="annot"><span class="annottext">UpdateQuery
-</span><a href="#local-6989586621688739688"><span class="hs-identifier hs-var">q</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-227"></span><span>  </span><span id="local-6989586621688739685"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621688739685"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m UserInfo
+</span><a href="#local-6989586621688739848"><span class="hs-identifier hs-var">q</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-227"></span><span>  </span><span id="local-6989586621688739845"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621688739845"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m UserInfo
 forall (m :: * -&gt; *). UserInfoM m =&gt; m UserInfo
 </span><a href="Hasura.Session.html#askUserInfo"><span class="hs-identifier hs-var">askUserInfo</span></a></span><span>
-</span><span id="line-228"></span><span>  </span><span id="local-6989586621688739684"><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="#local-6989586621688739684"><span class="hs-identifier hs-var">strfyNum</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SQLGenCtx -&gt; StringifyNumbers
+</span><span id="line-228"></span><span>  </span><span id="local-6989586621688739844"><span class="annot"><span class="annottext">StringifyNumbers
+</span><a href="#local-6989586621688739844"><span class="hs-identifier hs-var">strfyNum</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SQLGenCtx -&gt; StringifyNumbers
 </span><a href="Hasura.RQL.Types.Common.html#stringifyNum"><span class="hs-identifier hs-var hs-var">stringifyNum</span></a></span><span> </span><span class="annot"><span class="annottext">(SQLGenCtx -&gt; StringifyNumbers)
 -&gt; (ServerConfigCtx -&gt; SQLGenCtx)
 -&gt; ServerConfigCtx
@@ -1112,7 +1112,7 @@ forall (m :: * -&gt; *).
 UpdateQuery
 -&gt; m (AnnotatedUpdate ('Postgres 'Vanilla), Seq PrepArg)
 </span><a href="Hasura.RQL.DML.Update.html#validateUpdateQuery"><span class="hs-identifier hs-var">validateUpdateQuery</span></a></span><span> </span><span class="annot"><span class="annottext">UpdateQuery
-</span><a href="#local-6989586621688739688"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><a href="#local-6989586621688739848"><span class="hs-identifier hs-var">q</span></a></span><span>
 </span><span id="line-230"></span><span>    </span><span class="annot"><span class="annottext">m (AnnotatedUpdateG ('Postgres 'Vanilla) Void SQLExp, Seq PrepArg)
 -&gt; ((AnnotatedUpdateG ('Postgres 'Vanilla) Void SQLExp,
      Seq PrepArg)
@@ -1126,7 +1126,7 @@ forall (m :: * -&gt; *) a.
 PGExecCtx -&gt; TxAccess -&gt; TxET QErr m a -&gt; m a
 </span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#runTxWithCtx"><span class="hs-identifier hs-var">runTxWithCtx</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGSourceConfig -&gt; PGExecCtx
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#_pscExecCtx"><span class="hs-identifier hs-var hs-var">_pscExecCtx</span></a></span><span> </span><span class="annot"><span class="annottext">PGSourceConfig
-</span><a href="#local-6989586621688739687"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TxAccess
+</span><a href="#local-6989586621688739847"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TxAccess
 </span><span class="hs-identifier hs-var">Q.ReadWrite</span></span><span>
 </span><span id="line-231"></span><span>      </span><span class="annot"><span class="annottext">(TxET QErr m EncJSON -&gt; m EncJSON)
 -&gt; ((AnnotatedUpdateG ('Postgres 'Vanilla) Void SQLExp,
@@ -1167,6 +1167,6 @@ StringifyNumbers
 -&gt; (AnnotatedUpdate ('Postgres pgKind), Seq PrepArg)
 -&gt; m EncJSON
 </span><a href="Hasura.Backends.Postgres.Execute.Mutation.html#execUpdateQuery"><span class="hs-identifier hs-var">execUpdateQuery</span></a></span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="#local-6989586621688739684"><span class="hs-identifier hs-var">strfyNum</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621688739685"><span class="hs-identifier hs-var">userInfo</span></a></span><span>
+</span><a href="#local-6989586621688739844"><span class="hs-identifier hs-var">strfyNum</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621688739845"><span class="hs-identifier hs-var">userInfo</span></a></span><span>
 </span><span id="line-233"></span></pre></body></html>

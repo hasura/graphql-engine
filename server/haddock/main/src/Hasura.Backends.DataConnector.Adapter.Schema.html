@@ -31,9 +31,9 @@
 </span><span id="line-31"></span><span>
 </span><span id="line-32"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-33"></span><span>
-</span><span id="line-34"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688745284"><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#BackendSchema"><span class="hs-identifier hs-type">BackendSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-34"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688745444"><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#BackendSchema"><span class="hs-identifier hs-type">BackendSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-35"></span><span>  </span><span class="hs-comment">-- top level parsers</span><span>
-</span><span id="line-36"></span><span>  </span><span id="local-6989586621688745271"><span class="annot"><span class="annottext">buildTableQueryFields :: SourceName
+</span><span id="line-36"></span><span>  </span><span id="local-6989586621688745431"><span class="annot"><span class="annottext">buildTableQueryFields :: SourceName
 -&gt; TableName 'DataConnector
 -&gt; TableInfo 'DataConnector
 -&gt; Name
@@ -65,7 +65,7 @@ SourceName
            b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 </span><a href="Hasura.GraphQL.Schema.Build.html#buildTableQueryFields"><span class="hs-identifier hs-var">GS.B.buildTableQueryFields</span></a></span><span>
 </span><span id="line-37"></span><span>
-</span><span id="line-38"></span><span>  </span><span id="local-6989586621688745268"><span class="annot"><span class="annottext">buildTableRelayQueryFields :: SourceName
+</span><span id="line-38"></span><span>  </span><span id="local-6989586621688745428"><span class="annot"><span class="annottext">buildTableRelayQueryFields :: SourceName
 -&gt; TableName 'DataConnector
 -&gt; TableInfo 'DataConnector
 -&gt; Name
@@ -97,7 +97,7 @@ SourceName
 -&gt; m [a]
 </span><a href="Hasura.Backends.DataConnector.Adapter.Schema.html#experimentalBuildTableRelayQueryFields"><span class="hs-identifier hs-var">experimentalBuildTableRelayQueryFields</span></a></span><span>
 </span><span id="line-39"></span><span>
-</span><span id="line-40"></span><span>  </span><span id="local-6989586621688745265"><span class="annot"><span class="annottext">buildFunctionQueryFields :: SourceName
+</span><span id="line-40"></span><span>  </span><span id="local-6989586621688745425"><span class="annot"><span class="annottext">buildFunctionQueryFields :: SourceName
 -&gt; FunctionName 'DataConnector
 -&gt; FunctionInfo 'DataConnector
 -&gt; TableName 'DataConnector
@@ -125,7 +125,7 @@ SourceName
            (UnpreparedValue 'DataConnector))]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-41"></span><span>  </span><span id="local-6989586621688745263"><span class="annot"><span class="annottext">buildFunctionRelayQueryFields :: SourceName
+</span><span id="line-41"></span><span>  </span><span id="local-6989586621688745423"><span class="annot"><span class="annottext">buildFunctionRelayQueryFields :: SourceName
 -&gt; FunctionName 'DataConnector
 -&gt; FunctionInfo 'DataConnector
 -&gt; TableName 'DataConnector
@@ -155,7 +155,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
            (UnpreparedValue 'DataConnector))]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-42"></span><span>  </span><span id="local-6989586621688745261"><span class="annot"><span class="annottext">buildFunctionMutationFields :: SourceName
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621688745421"><span class="annot"><span class="annottext">buildFunctionMutationFields :: SourceName
 -&gt; FunctionName 'DataConnector
 -&gt; FunctionInfo 'DataConnector
 -&gt; TableName 'DataConnector
@@ -183,7 +183,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
            (UnpreparedValue 'DataConnector))]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-43"></span><span>  </span><span id="local-6989586621688745259"><span class="annot"><span class="annottext">buildTableInsertMutationFields :: Scenario
+</span><span id="line-43"></span><span>  </span><span id="local-6989586621688745419"><span class="annot"><span class="annottext">buildTableInsertMutationFields :: Scenario
 -&gt; SourceName
 -&gt; TableName 'DataConnector
 -&gt; TableInfo 'DataConnector
@@ -213,7 +213,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
            (UnpreparedValue 'DataConnector))]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-44"></span><span>  </span><span id="local-6989586621688745257"><span class="annot"><span class="annottext">buildTableUpdateMutationFields :: SourceName
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621688745417"><span class="annot"><span class="annottext">buildTableUpdateMutationFields :: SourceName
 -&gt; TableName 'DataConnector
 -&gt; TableInfo 'DataConnector
 -&gt; Name
@@ -241,7 +241,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
            (UnpreparedValue 'DataConnector))]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-45"></span><span>  </span><span id="local-6989586621688745255"><span class="annot"><span class="annottext">buildTableDeleteMutationFields :: SourceName
+</span><span id="line-45"></span><span>  </span><span id="local-6989586621688745415"><span class="annot"><span class="annottext">buildTableDeleteMutationFields :: SourceName
 -&gt; TableName 'DataConnector
 -&gt; TableInfo 'DataConnector
 -&gt; Name
@@ -269,7 +269,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
            (UnpreparedValue 'DataConnector))]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-46"></span><span>  </span><span id="local-6989586621688745253"><span class="annot"><span class="annottext">buildTableStreamingSubscriptionFields :: SourceName
+</span><span id="line-46"></span><span>  </span><span id="local-6989586621688745413"><span class="annot"><span class="annottext">buildTableStreamingSubscriptionFields :: SourceName
 -&gt; TableName 'DataConnector
 -&gt; TableInfo 'DataConnector
 -&gt; Name
@@ -299,21 +299,21 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-47"></span><span>
 </span><span id="line-48"></span><span>  </span><span class="hs-comment">-- backend extensions</span><span>
-</span><span id="line-49"></span><span>  </span><span id="local-6989586621688745251"><span class="annot"><span class="annottext">relayExtension :: Maybe (XRelay 'DataConnector)
+</span><span id="line-49"></span><span>  </span><span id="local-6989586621688745411"><span class="annot"><span class="annottext">relayExtension :: Maybe (XRelay 'DataConnector)
 </span><a href="Hasura.GraphQL.Schema.Backend.html#relayExtension"><span class="hs-identifier hs-var hs-var hs-var hs-var">relayExtension</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (XRelay 'DataConnector)
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-50"></span><span>  </span><span id="local-6989586621688745249"><span class="annot"><span class="annottext">nodesAggExtension :: Maybe (XNodesAgg 'DataConnector)
+</span><span id="line-50"></span><span>  </span><span id="local-6989586621688745409"><span class="annot"><span class="annottext">nodesAggExtension :: Maybe (XNodesAgg 'DataConnector)
 </span><a href="Hasura.GraphQL.Schema.Backend.html#nodesAggExtension"><span class="hs-identifier hs-var hs-var hs-var hs-var">nodesAggExtension</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (XNodesAgg 'DataConnector)
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-51"></span><span>  </span><span id="local-6989586621688745247"><span class="annot"><span class="annottext">streamSubscriptionExtension :: Maybe (XStreamingSubscription 'DataConnector)
+</span><span id="line-51"></span><span>  </span><span id="local-6989586621688745407"><span class="annot"><span class="annottext">streamSubscriptionExtension :: Maybe (XStreamingSubscription 'DataConnector)
 </span><a href="Hasura.GraphQL.Schema.Backend.html#streamSubscriptionExtension"><span class="hs-identifier hs-var hs-var hs-var hs-var">streamSubscriptionExtension</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (XStreamingSubscription 'DataConnector)
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-52"></span><span>
 </span><span id="line-53"></span><span>  </span><span class="hs-comment">-- table arguments</span><span>
-</span><span id="line-54"></span><span>  </span><span id="local-6989586621688745245"><span class="annot"><span class="annottext">tableArguments :: SourceName
+</span><span id="line-54"></span><span>  </span><span id="local-6989586621688745405"><span class="annot"><span class="annottext">tableArguments :: SourceName
 -&gt; TableInfo 'DataConnector
 -&gt; m (InputFieldsParser
         n (SelectArgsG 'DataConnector (UnpreparedValue 'DataConnector)))
@@ -330,7 +330,7 @@ SourceName
 </span><a href="Hasura.Backends.DataConnector.Adapter.Schema.html#tableArgs%27"><span class="hs-identifier hs-var">tableArgs'</span></a></span><span>
 </span><span id="line-55"></span><span>
 </span><span id="line-56"></span><span>  </span><span class="hs-comment">-- individual components</span><span>
-</span><span id="line-57"></span><span>  </span><span id="local-6989586621688745242"><span class="annot"><span class="annottext">columnParser :: ColumnType 'DataConnector
+</span><span id="line-57"></span><span>  </span><span id="local-6989586621688745402"><span class="annot"><span class="annottext">columnParser :: ColumnType 'DataConnector
 -&gt; Nullability
 -&gt; m (Parser
         'Both n (ValueWithOrigin (ColumnValue 'DataConnector)))
@@ -345,7 +345,7 @@ ColumnType 'DataConnector
 -&gt; m (Parser
         'Both n (ValueWithOrigin (ColumnValue 'DataConnector)))
 </span><a href="Hasura.Backends.DataConnector.Adapter.Schema.html#columnParser%27"><span class="hs-identifier hs-var">columnParser'</span></a></span><span>
-</span><span id="line-58"></span><span>  </span><span id="local-6989586621688745239"><span class="annot"><span class="annottext">scalarSelectionArgumentsParser :: ColumnType 'DataConnector
+</span><span id="line-58"></span><span>  </span><span id="local-6989586621688745399"><span class="annot"><span class="annottext">scalarSelectionArgumentsParser :: ColumnType 'DataConnector
 -&gt; InputFieldsParser
      n (Maybe (ScalarSelectionArguments 'DataConnector))
 </span><a href="Hasura.GraphQL.Schema.Backend.html#scalarSelectionArgumentsParser"><span class="hs-identifier hs-var hs-var hs-var hs-var">scalarSelectionArgumentsParser</span></a></span></span><span> </span><span class="annot"><span class="annottext">ColumnType 'DataConnector
@@ -354,14 +354,14 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe Void
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-59"></span><span>  </span><span id="local-6989586621688745237"><span class="annot"><span class="annottext">orderByOperators :: NonEmpty
+</span><span id="line-59"></span><span>  </span><span id="local-6989586621688745397"><span class="annot"><span class="annottext">orderByOperators :: NonEmpty
   (Definition EnumValueInfo,
    (BasicOrderType 'DataConnector, NullsOrderType 'DataConnector))
 </span><a href="Hasura.GraphQL.Schema.Backend.html#orderByOperators"><span class="hs-identifier hs-var hs-var hs-var hs-var">orderByOperators</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmpty
   (Definition EnumValueInfo,
    (BasicOrderType 'DataConnector, NullsOrderType 'DataConnector))
 </span><a href="Hasura.Backends.DataConnector.Adapter.Schema.html#orderByOperators%27"><span class="hs-identifier hs-var">orderByOperators'</span></a></span><span>
-</span><span id="line-60"></span><span>  </span><span id="local-6989586621688745234"><span class="annot"><span class="annottext">comparisonExps :: ColumnType 'DataConnector
+</span><span id="line-60"></span><span>  </span><span id="local-6989586621688745394"><span class="annot"><span class="annottext">comparisonExps :: ColumnType 'DataConnector
 -&gt; m (Parser 'Input n [ComparisonExp 'DataConnector])
 </span><a href="Hasura.GraphQL.Schema.Backend.html#comparisonExps"><span class="hs-identifier hs-var hs-var hs-var hs-var">comparisonExps</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnType 'DataConnector
 -&gt; m (Parser 'Input n [ComparisonExp 'DataConnector])
@@ -372,7 +372,7 @@ ColumnType 'DataConnector
 -&gt; m (Parser 'Input n [ComparisonExp 'DataConnector])
 </span><a href="Hasura.Backends.DataConnector.Adapter.Schema.html#comparisonExps%27"><span class="hs-identifier hs-var">comparisonExps'</span></a></span><span>
 </span><span id="line-61"></span><span>
-</span><span id="line-62"></span><span>  </span><span id="local-6989586621688745231"><span class="annot"><span class="annottext">countTypeInput :: Maybe (Parser 'Both n (Column 'DataConnector))
+</span><span id="line-62"></span><span>  </span><span id="local-6989586621688745391"><span class="annot"><span class="annottext">countTypeInput :: Maybe (Parser 'Both n (Column 'DataConnector))
 -&gt; InputFieldsParser n (CountDistinct -&gt; CountType 'DataConnector)
 </span><a href="Hasura.GraphQL.Schema.Backend.html#countTypeInput"><span class="hs-identifier hs-var hs-var hs-var hs-var">countTypeInput</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-63"></span><span>    </span><span class="annot"><span class="annottext">[Char]
@@ -381,13 +381,13 @@ ColumnType 'DataConnector
 forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;countTypeInput: not implemented for the Data Connector backend.&quot;</span></span><span>
-</span><span id="line-64"></span><span>  </span><span id="local-6989586621688745228"><span class="annot"><span class="annottext">aggregateOrderByCountType :: ScalarType 'DataConnector
+</span><span id="line-64"></span><span>  </span><span id="local-6989586621688745388"><span class="annot"><span class="annottext">aggregateOrderByCountType :: ScalarType 'DataConnector
 </span><a href="Hasura.GraphQL.Schema.Backend.html#aggregateOrderByCountType"><span class="hs-identifier hs-var hs-var hs-var hs-var">aggregateOrderByCountType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-65"></span><span>    </span><span class="annot"><span class="annottext">[Char] -&gt; Type
 forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;aggregateOrderByCountType: not implemented for the Data Connector backend.&quot;</span></span><span>
-</span><span id="line-66"></span><span>  </span><span id="local-6989586621688745226"><span class="annot"><span class="annottext">computedField :: SourceName
+</span><span id="line-66"></span><span>  </span><span id="local-6989586621688745386"><span class="annot"><span class="annottext">computedField :: SourceName
 -&gt; ComputedFieldInfo 'DataConnector
 -&gt; TableName 'DataConnector
 -&gt; TableInfo 'DataConnector
@@ -402,7 +402,7 @@ forall a. HasCallStack =&gt; [Char] -&gt; a
 forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;computedField: not implemented for the Data Connector backend.&quot;</span></span><span>
-</span><span id="line-68"></span><span>  </span><span id="local-6989586621688745224"><span class="annot"><span class="annottext">node :: m (Parser
+</span><span id="line-68"></span><span>  </span><span id="local-6989586621688745384"><span class="annot"><span class="annottext">node :: m (Parser
      'Output
      n
      (HashMap
@@ -426,45 +426,45 @@ forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><span id="line-70"></span><span>
 </span><span id="line-71"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-72"></span><span>
-</span><span id="line-73"></span><span id="local-6989586621688745450"><span id="local-6989586621688745451"><span id="local-6989586621688745452"><span id="local-6989586621688745453"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Schema.html#experimentalBuildTableRelayQueryFields"><span class="hs-identifier hs-type">experimentalBuildTableRelayQueryFields</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-74"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745453"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745452"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745451"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-73"></span><span id="local-6989586621688745610"><span id="local-6989586621688745611"><span id="local-6989586621688745612"><span id="local-6989586621688745613"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Schema.html#experimentalBuildTableRelayQueryFields"><span class="hs-identifier hs-type">experimentalBuildTableRelayQueryFields</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-74"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745613"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745612"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745611"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-75"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">RQL.SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-76"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">RQL.TableName</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-77"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">RQL.TableInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-78"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">GQL.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-79"></span><span>  </span><span class="annot"><a href="Data.Sequence.NonEmpty.html#NESeq"><span class="hs-identifier hs-type">NESeq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">RQL.ColumnInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-80"></span><span>  </span><span class="annot"><a href="#local-6989586621688745452"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621688745450"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span></span></span></span></span><span>
+</span><span id="line-80"></span><span>  </span><span class="annot"><a href="#local-6989586621688745612"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621688745610"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span></span></span></span></span><span>
 </span><span id="line-81"></span><span id="experimentalBuildTableRelayQueryFields"><span class="annot"><span class="annottext">experimentalBuildTableRelayQueryFields :: SourceName
 -&gt; TableName 'DataConnector
 -&gt; TableInfo 'DataConnector
 -&gt; Name
 -&gt; NESeq (ColumnInfo 'DataConnector)
 -&gt; m [a]
-</span><a href="Hasura.Backends.DataConnector.Adapter.Schema.html#experimentalBuildTableRelayQueryFields"><span class="hs-identifier hs-var hs-var">experimentalBuildTableRelayQueryFields</span></a></span></span><span> </span><span id="local-6989586621688745222"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688745222"><span class="hs-identifier hs-var">_sourceName</span></a></span></span><span> </span><span id="local-6989586621688745221"><span class="annot"><span class="annottext">TableName 'DataConnector
-</span><a href="#local-6989586621688745221"><span class="hs-identifier hs-var">_tableName</span></a></span></span><span> </span><span id="local-6989586621688745220"><span class="annot"><span class="annottext">TableInfo 'DataConnector
-</span><a href="#local-6989586621688745220"><span class="hs-identifier hs-var">_tableInfo</span></a></span></span><span> </span><span id="local-6989586621688745219"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688745219"><span class="hs-identifier hs-var">_gqlName</span></a></span></span><span> </span><span id="local-6989586621688745218"><span class="annot"><span class="annottext">NESeq (ColumnInfo 'DataConnector)
-</span><a href="#local-6989586621688745218"><span class="hs-identifier hs-var">_pkeyColumns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.DataConnector.Adapter.Schema.html#experimentalBuildTableRelayQueryFields"><span class="hs-identifier hs-var hs-var">experimentalBuildTableRelayQueryFields</span></a></span></span><span> </span><span id="local-6989586621688745382"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688745382"><span class="hs-identifier hs-var">_sourceName</span></a></span></span><span> </span><span id="local-6989586621688745381"><span class="annot"><span class="annottext">TableName 'DataConnector
+</span><a href="#local-6989586621688745381"><span class="hs-identifier hs-var">_tableName</span></a></span></span><span> </span><span id="local-6989586621688745380"><span class="annot"><span class="annottext">TableInfo 'DataConnector
+</span><a href="#local-6989586621688745380"><span class="hs-identifier hs-var">_tableInfo</span></a></span></span><span> </span><span id="local-6989586621688745379"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688745379"><span class="hs-identifier hs-var">_gqlName</span></a></span></span><span> </span><span id="local-6989586621688745378"><span class="annot"><span class="annottext">NESeq (ColumnInfo 'DataConnector)
+</span><a href="#local-6989586621688745378"><span class="hs-identifier hs-var">_pkeyColumns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-82"></span><span>  </span><span class="annot"><span class="annottext">[a] -&gt; m [a]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-83"></span><span>
-</span><span id="line-84"></span><span id="local-6989586621688745427"><span id="local-6989586621688745428"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Schema.html#columnParser%27"><span class="hs-identifier hs-type">columnParser'</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-85"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.html#MonadSchema"><span class="hs-identifier hs-type">MonadSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745428"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745427"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745427"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-84"></span><span id="local-6989586621688745587"><span id="local-6989586621688745588"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Schema.html#columnParser%27"><span class="hs-identifier hs-type">columnParser'</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-85"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.html#MonadSchema"><span class="hs-identifier hs-type">MonadSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745588"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745587"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745587"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-86"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">RQL.ColumnType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-87"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">GQL.Nullability</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-88"></span><span>  </span><span class="annot"><a href="#local-6989586621688745427"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">P.Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Both"><span class="hs-identifier hs-type">P.Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745428"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#ValueWithOrigin"><span class="hs-identifier hs-type">P.ValueWithOrigin</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">RQL.ColumnValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-88"></span><span>  </span><span class="annot"><a href="#local-6989586621688745587"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">P.Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Both"><span class="hs-identifier hs-type">P.Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745588"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#ValueWithOrigin"><span class="hs-identifier hs-type">P.ValueWithOrigin</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">RQL.ColumnValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-89"></span><span id="columnParser%27"><span class="annot"><span class="annottext">columnParser' :: ColumnType 'DataConnector
 -&gt; Nullability
 -&gt; m (Parser
         'Both n (ValueWithOrigin (ColumnValue 'DataConnector)))
-</span><a href="Hasura.Backends.DataConnector.Adapter.Schema.html#columnParser%27"><span class="hs-identifier hs-var hs-var">columnParser'</span></a></span></span><span> </span><span id="local-6989586621688745217"><span class="annot"><span class="annottext">ColumnType 'DataConnector
-</span><a href="#local-6989586621688745217"><span class="hs-identifier hs-var">columnType</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">GQL.Nullability</span></span><span> </span><span id="local-6989586621688745215"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688745215"><span class="hs-identifier hs-var">isNullable</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-90"></span><span>  </span><span id="local-6989586621688745214"><span class="annot"><span class="annottext">Parser 'Both n Value
-</span><a href="#local-6989586621688745214"><span class="hs-identifier hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ColumnType 'DataConnector
-</span><a href="#local-6989586621688745217"><span class="hs-identifier hs-var">columnType</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="Hasura.Backends.DataConnector.Adapter.Schema.html#columnParser%27"><span class="hs-identifier hs-var hs-var">columnParser'</span></a></span></span><span> </span><span id="local-6989586621688745377"><span class="annot"><span class="annottext">ColumnType 'DataConnector
+</span><a href="#local-6989586621688745377"><span class="hs-identifier hs-var">columnType</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">GQL.Nullability</span></span><span> </span><span id="local-6989586621688745375"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688745375"><span class="hs-identifier hs-var">isNullable</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-90"></span><span>  </span><span id="local-6989586621688745374"><span class="annot"><span class="annottext">Parser 'Both n Value
+</span><a href="#local-6989586621688745374"><span class="hs-identifier hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ColumnType 'DataConnector
+</span><a href="#local-6989586621688745377"><span class="hs-identifier hs-var">columnType</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-91"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnScalar"><span class="hs-identifier hs-type">RQL.ColumnScalar</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType 'DataConnector
 </span><a href="Hasura.Backends.DataConnector.IR.Scalar.Type.html#String"><span class="hs-identifier hs-var">IR.S.T.String</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Parser 'Both n Value -&gt; m (Parser 'Both n Value)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -533,7 +533,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 forall (b :: BackendType).
 ColumnType b -&gt; ScalarValue b -&gt; ColumnValue b
 </span><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-var">RQL.ColumnValue</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'DataConnector
-</span><a href="#local-6989586621688745217"><span class="hs-identifier hs-var">columnType</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Parser 'Both n Value
+</span><a href="#local-6989586621688745377"><span class="hs-identifier hs-var">columnType</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Parser 'Both n Value
  -&gt; Parser 'Both n (ColumnValue 'DataConnector))
 -&gt; (Parser 'Both n Value -&gt; Parser 'Both n Value)
 -&gt; Parser 'Both n Value
@@ -543,7 +543,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall (m :: * -&gt; *).
 MonadParse m =&gt;
 Parser 'Both m Value -&gt; Parser 'Both m Value
-</span><a href="#local-6989586621688745197"><span class="hs-identifier hs-var">possiblyNullable</span></a></span><span> </span><span class="annot"><span class="annottext">(Parser 'Both n Value
+</span><a href="#local-6989586621688745357"><span class="hs-identifier hs-var">possiblyNullable</span></a></span><span> </span><span class="annot"><span class="annottext">(Parser 'Both n Value
  -&gt; m (Parser
          'Both n (ValueWithOrigin (ColumnValue 'DataConnector))))
 -&gt; Parser 'Both n Value
@@ -551,16 +551,16 @@ Parser 'Both m Value -&gt; Parser 'Both m Value
         'Both n (ValueWithOrigin (ColumnValue 'DataConnector)))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Parser 'Both n Value
-</span><a href="#local-6989586621688745214"><span class="hs-identifier hs-var">parser</span></a></span><span>
+</span><a href="#local-6989586621688745374"><span class="hs-identifier hs-var">parser</span></a></span><span>
 </span><span id="line-96"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-97"></span><span>    </span><span id="local-6989586621688745378"><span class="annot"><a href="#local-6989586621688745197"><span class="hs-identifier hs-type">possiblyNullable</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-98"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.Parse.html#MonadParse"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745378"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-99"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">P.Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Both"><span class="hs-identifier hs-type">P.Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745378"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Value"><span class="hs-identifier hs-type">IR.S.V.Value</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-100"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">P.Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Both"><span class="hs-identifier hs-type">P.Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745378"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Value"><span class="hs-identifier hs-type">IR.S.V.Value</span></a></span></span><span>
-</span><span id="line-101"></span><span>    </span><span id="local-6989586621688745197"><span class="annot"><span class="annottext">possiblyNullable :: Parser 'Both m Value -&gt; Parser 'Both m Value
-</span><a href="#local-6989586621688745197"><span class="hs-identifier hs-var hs-var">possiblyNullable</span></a></span></span><span>
+</span><span id="line-97"></span><span>    </span><span id="local-6989586621688745538"><span class="annot"><a href="#local-6989586621688745357"><span class="hs-identifier hs-type">possiblyNullable</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-98"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.Parse.html#MonadParse"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745538"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-99"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">P.Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Both"><span class="hs-identifier hs-type">P.Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745538"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Value"><span class="hs-identifier hs-type">IR.S.V.Value</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-100"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">P.Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Both"><span class="hs-identifier hs-type">P.Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745538"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Value"><span class="hs-identifier hs-type">IR.S.V.Value</span></a></span></span><span>
+</span><span id="line-101"></span><span>    </span><span id="local-6989586621688745357"><span class="annot"><span class="annottext">possiblyNullable :: Parser 'Both m Value -&gt; Parser 'Both m Value
+</span><a href="#local-6989586621688745357"><span class="hs-identifier hs-var hs-var">possiblyNullable</span></a></span></span><span>
 </span><span id="line-102"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688745215"><span class="hs-identifier hs-var">isNullable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Maybe Value -&gt; Value)
+</span><a href="#local-6989586621688745375"><span class="hs-identifier hs-var">isNullable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Maybe Value -&gt; Value)
 -&gt; Parser 'Both m (Maybe Value) -&gt; Parser 'Both m Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value -&gt; Maybe Value -&gt; Value
@@ -591,42 +591,42 @@ forall a. a -&gt; a
 forall a. [a] -&gt; NonEmpty a
 </span><span class="hs-identifier hs-var">NE.fromList</span></span><span>
 </span><span id="line-108"></span><span>    </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Description -&gt; Definition EnumValueInfo
-</span><a href="#local-6989586621688745191"><span class="hs-identifier hs-var">define</span></a></span><span> </span><span class="hs-special">$$(</span><span class="annot"><span class="hs-identifier hs-type">GQL.litName</span></span><span> </span><span class="annot"><span class="hs-string">&quot;asc&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Description
+</span><a href="#local-6989586621688745351"><span class="hs-identifier hs-var">define</span></a></span><span> </span><span class="hs-special">$$(</span><span class="annot"><span class="hs-identifier hs-type">GQL.litName</span></span><span> </span><span class="annot"><span class="hs-string">&quot;asc&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Description
 </span><span class="hs-string">&quot;in ascending order&quot;</span></span><span class="hs-special">,</span><span>
 </span><span id="line-109"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OrderType
 </span><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#Ascending"><span class="hs-identifier hs-var">IR.O.Ascending</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-110"></span><span>      </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-111"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Description -&gt; Definition EnumValueInfo
-</span><a href="#local-6989586621688745191"><span class="hs-identifier hs-var">define</span></a></span><span> </span><span class="hs-special">$$(</span><span class="annot"><span class="hs-identifier hs-type">GQL.litName</span></span><span> </span><span class="annot"><span class="hs-string">&quot;desc&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Description
+</span><a href="#local-6989586621688745351"><span class="hs-identifier hs-var">define</span></a></span><span> </span><span class="hs-special">$$(</span><span class="annot"><span class="hs-identifier hs-type">GQL.litName</span></span><span> </span><span class="annot"><span class="hs-string">&quot;desc&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Description
 </span><span class="hs-string">&quot;in descending order&quot;</span></span><span class="hs-special">,</span><span>
 </span><span id="line-112"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OrderType
 </span><a href="Hasura.Backends.DataConnector.IR.OrderBy.html#Descending"><span class="hs-identifier hs-var">IR.O.Descending</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-113"></span><span>      </span><span class="hs-special">)</span><span>
 </span><span id="line-114"></span><span>    </span><span class="hs-special">]</span><span>
 </span><span id="line-115"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-116"></span><span>    </span><span id="local-6989586621688745191"><span class="annot"><span class="annottext">define :: Name -&gt; Description -&gt; Definition EnumValueInfo
-</span><a href="#local-6989586621688745191"><span class="hs-identifier hs-var hs-var">define</span></a></span></span><span> </span><span id="local-6989586621688745185"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688745185"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621688745184"><span class="annot"><span class="annottext">Description
-</span><a href="#local-6989586621688745184"><span class="hs-identifier hs-var">desc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><span id="line-116"></span><span>    </span><span id="local-6989586621688745351"><span class="annot"><span class="annottext">define :: Name -&gt; Description -&gt; Definition EnumValueInfo
+</span><a href="#local-6989586621688745351"><span class="hs-identifier hs-var hs-var">define</span></a></span></span><span> </span><span id="local-6989586621688745345"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688745345"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621688745344"><span class="annot"><span class="annottext">Description
+</span><a href="#local-6989586621688745344"><span class="hs-identifier hs-var">desc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Description -&gt; EnumValueInfo -&gt; Definition EnumValueInfo
 forall a. Name -&gt; Maybe Description -&gt; a -&gt; Definition a
 </span><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-var">P.Definition</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688745185"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
+</span><a href="#local-6989586621688745345"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Description
-</span><a href="#local-6989586621688745184"><span class="hs-identifier hs-var">desc</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">EnumValueInfo
+</span><a href="#local-6989586621688745344"><span class="hs-identifier hs-var">desc</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">EnumValueInfo
 </span><a href="Hasura.GraphQL.Parser.Schema.html#EnumValueInfo"><span class="hs-identifier hs-var">P.EnumValueInfo</span></a></span><span>
 </span><span id="line-117"></span><span>
 </span><span id="line-118"></span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Schema.html#comparisonExps%27"><span class="hs-identifier hs-type">comparisonExps'</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-119"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688745421"><span class="annot"><a href="#local-6989586621688745421"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688745422"><span class="annot"><a href="#local-6989586621688745422"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span id="local-6989586621688745420"><span class="annot"><a href="#local-6989586621688745420"><span class="hs-identifier hs-type">r</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-119"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688745581"><span class="annot"><a href="#local-6989586621688745581"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688745582"><span class="annot"><a href="#local-6989586621688745582"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span id="local-6989586621688745580"><span class="annot"><a href="#local-6989586621688745580"><span class="hs-identifier hs-type">r</span></a></span></span><span class="hs-operator">.</span><span>
 </span><span id="line-120"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#BackendSchema"><span class="hs-identifier hs-type">BackendSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-121"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.html#MonadSchema"><span class="hs-identifier hs-type">MonadSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745422"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745421"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-122"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745421"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-123"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621688745420"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745421"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-124"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#QueryContext"><span class="hs-identifier hs-type">GS.C.QueryContext</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745420"><span class="hs-identifier hs-type">r</span></a></span><span>
+</span><span id="line-121"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.html#MonadSchema"><span class="hs-identifier hs-type">MonadSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745582"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745581"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-122"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745581"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-123"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621688745580"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745581"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-124"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#QueryContext"><span class="hs-identifier hs-type">GS.C.QueryContext</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745580"><span class="hs-identifier hs-type">r</span></a></span><span>
 </span><span id="line-125"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-126"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">RQL.ColumnType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-127"></span><span>  </span><span class="annot"><a href="#local-6989586621688745421"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">P.Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Input"><span class="hs-identifier hs-type">P.Input</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745422"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#ComparisonExp"><span class="hs-identifier hs-type">ComparisonExp</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-127"></span><span>  </span><span class="annot"><a href="#local-6989586621688745581"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">P.Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Input"><span class="hs-identifier hs-type">P.Input</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745582"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#ComparisonExp"><span class="hs-identifier hs-type">ComparisonExp</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-128"></span><span id="comparisonExps%27"><span class="annot"><span class="annottext">comparisonExps' :: ColumnType 'DataConnector
 -&gt; m (Parser 'Input n [ComparisonExp 'DataConnector])
 </span><a href="Hasura.Backends.DataConnector.Adapter.Schema.html#comparisonExps%27"><span class="hs-identifier hs-var hs-var">comparisonExps'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
@@ -647,10 +647,10 @@ Name -&gt; (a -&gt; m (Parser k n b)) -&gt; a -&gt; m (Parser k n b)
 -&gt; ColumnType 'DataConnector
 -&gt; m (Parser 'Input n [ComparisonExp 'DataConnector])
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688745180"><span class="annot"><span class="annottext">ColumnType 'DataConnector
-</span><a href="#local-6989586621688745180"><span class="hs-identifier hs-var">columnType</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-129"></span><span>  </span><span id="local-6989586621688745179"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688745179"><span class="hs-identifier hs-var">collapseIfNull</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(r -&gt; Bool) -&gt; m Bool
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688745340"><span class="annot"><span class="annottext">ColumnType 'DataConnector
+</span><a href="#local-6989586621688745340"><span class="hs-identifier hs-var">columnType</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-129"></span><span>  </span><span id="local-6989586621688745339"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621688745339"><span class="hs-identifier hs-var">collapseIfNull</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(r -&gt; Bool) -&gt; m Bool
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">((r -&gt; Bool) -&gt; m Bool) -&gt; (r -&gt; Bool) -&gt; m Bool
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -660,8 +660,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; QueryContext
 forall a t. Has a t =&gt; t -&gt; a
 </span><span class="hs-identifier hs-var">getter</span></span><span>
-</span><span id="line-130"></span><span>  </span><span id="local-6989586621688745175"><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'DataConnector))
-</span><a href="#local-6989586621688745175"><span class="hs-identifier hs-var">typedParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ColumnType 'DataConnector
+</span><span id="line-130"></span><span>  </span><span id="local-6989586621688745335"><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'DataConnector))
+</span><a href="#local-6989586621688745335"><span class="hs-identifier hs-var">typedParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ColumnType 'DataConnector
 -&gt; Nullability
 -&gt; m (Parser
         'Both n (ValueWithOrigin (ColumnValue 'DataConnector)))
@@ -672,11 +672,11 @@ ColumnType 'DataConnector
 -&gt; m (Parser
         'Both n (ValueWithOrigin (ColumnValue 'DataConnector)))
 </span><a href="Hasura.Backends.DataConnector.Adapter.Schema.html#columnParser%27"><span class="hs-identifier hs-var">columnParser'</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'DataConnector
-</span><a href="#local-6989586621688745180"><span class="hs-identifier hs-var">columnType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Nullability
+</span><a href="#local-6989586621688745340"><span class="hs-identifier hs-var">columnType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Nullability
 </span><span class="hs-identifier hs-var">GQL.Nullability</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">)</span><span>
-</span><span id="line-131"></span><span>  </span><span id="local-6989586621688745174"><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'DataConnector))
-</span><a href="#local-6989586621688745174"><span class="hs-identifier hs-var">nullableTextParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ColumnType 'DataConnector
+</span><span id="line-131"></span><span>  </span><span id="local-6989586621688745334"><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'DataConnector))
+</span><a href="#local-6989586621688745334"><span class="hs-identifier hs-var">nullableTextParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ColumnType 'DataConnector
 -&gt; Nullability
 -&gt; m (Parser
         'Both n (ValueWithOrigin (ColumnValue 'DataConnector)))
@@ -693,8 +693,8 @@ ScalarType 'DataConnector
 </span><a href="Hasura.Backends.DataConnector.IR.Scalar.Type.html#String"><span class="hs-identifier hs-var">IR.S.T.String</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Nullability
 </span><span class="hs-identifier hs-var">GQL.Nullability</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">)</span><span>
-</span><span id="line-132"></span><span>  </span><span id="local-6989586621688745173"><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'DataConnector))
-</span><a href="#local-6989586621688745173"><span class="hs-identifier hs-var">textParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ColumnType 'DataConnector
+</span><span id="line-132"></span><span>  </span><span id="local-6989586621688745333"><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'DataConnector))
+</span><a href="#local-6989586621688745333"><span class="hs-identifier hs-var">textParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ColumnType 'DataConnector
 -&gt; Nullability
 -&gt; m (Parser
         'Both n (ValueWithOrigin (ColumnValue 'DataConnector)))
@@ -711,16 +711,16 @@ ScalarType 'DataConnector
 </span><a href="Hasura.Backends.DataConnector.IR.Scalar.Type.html#String"><span class="hs-identifier hs-var">IR.S.T.String</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Nullability
 </span><span class="hs-identifier hs-var">GQL.Nullability</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">)</span><span>
-</span><span id="line-133"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688745172"><span class="annot"><span class="annottext">name :: Name
-</span><a href="#local-6989586621688745172"><span class="hs-identifier hs-var hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'DataConnector))
+</span><span id="line-133"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688745332"><span class="annot"><span class="annottext">name :: Name
+</span><a href="#local-6989586621688745332"><span class="hs-identifier hs-var hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'DataConnector))
 -&gt; Name
 forall a. HasName a =&gt; a -&gt; Name
 </span><a href="Hasura.GraphQL.Parser.Schema.html#getName"><span class="hs-identifier hs-var">P.getName</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'DataConnector))
-</span><a href="#local-6989586621688745175"><span class="hs-identifier hs-var">typedParser</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
+</span><a href="#local-6989586621688745335"><span class="hs-identifier hs-var">typedParser</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="hs-special">$$(</span><span class="annot"><span class="hs-identifier hs-type">GQL.litName</span></span><span> </span><span class="annot"><span class="hs-string">&quot;_Dynamic_comparison_exp&quot;</span></span><span class="hs-special">)</span><span>
-</span><span id="line-134"></span><span>      </span><span id="local-6989586621688745170"><span class="annot"><span class="annottext">desc :: Description
-</span><a href="#local-6989586621688745170"><span class="hs-identifier hs-var hs-var">desc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-134"></span><span>      </span><span id="local-6989586621688745330"><span class="annot"><span class="annottext">desc :: Description
+</span><a href="#local-6989586621688745330"><span class="hs-identifier hs-var hs-var">desc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-135"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; Description
 </span><span class="hs-identifier hs-var">GQL.Description</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Description) -&gt; Text -&gt; Description
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -733,13 +733,13 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 -&gt; Name
 forall a. HasName a =&gt; a -&gt; Name
 </span><a href="Hasura.GraphQL.Parser.Schema.html#getName"><span class="hs-identifier hs-var">P.getName</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'DataConnector))
-</span><a href="#local-6989586621688745175"><span class="hs-identifier hs-var">typedParser</span></a></span><span>
+</span><a href="#local-6989586621688745335"><span class="hs-identifier hs-var">typedParser</span></a></span><span>
 </span><span id="line-138"></span><span>            </span><span class="annot"><span class="annottext">Name -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;. All fields are combined with logical 'AND'.&quot;</span></span><span>
-</span><span id="line-139"></span><span>      </span><span id="local-6989586621688745168"><span class="annot"><span class="annottext">textListParser :: Parser 'Both n [ColumnValue 'DataConnector]
-</span><a href="#local-6989586621688745168"><span class="hs-identifier hs-var hs-var">textListParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ValueWithOrigin (ColumnValue 'DataConnector)
+</span><span id="line-139"></span><span>      </span><span id="local-6989586621688745328"><span class="annot"><span class="annottext">textListParser :: Parser 'Both n [ColumnValue 'DataConnector]
+</span><a href="#local-6989586621688745328"><span class="hs-identifier hs-var hs-var">textListParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ValueWithOrigin (ColumnValue 'DataConnector)
  -&gt; ColumnValue 'DataConnector)
 -&gt; [ValueWithOrigin (ColumnValue 'DataConnector)]
 -&gt; [ColumnValue 'DataConnector]
@@ -758,9 +758,9 @@ forall (k :: Kind) (m :: * -&gt; *) a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Parser k m a -&gt; Parser k m [a]
 </span><a href="Hasura.GraphQL.Parser.Internal.Input.html#list"><span class="hs-identifier hs-var">P.list</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'DataConnector))
-</span><a href="#local-6989586621688745173"><span class="hs-identifier hs-var">textParser</span></a></span><span>
-</span><span id="line-140"></span><span>      </span><span id="local-6989586621688745165"><span class="annot"><span class="annottext">columnListParser :: Parser 'Both n [ColumnValue 'DataConnector]
-</span><a href="#local-6989586621688745165"><span class="hs-identifier hs-var hs-var">columnListParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ValueWithOrigin (ColumnValue 'DataConnector)
+</span><a href="#local-6989586621688745333"><span class="hs-identifier hs-var">textParser</span></a></span><span>
+</span><span id="line-140"></span><span>      </span><span id="local-6989586621688745325"><span class="annot"><span class="annottext">columnListParser :: Parser 'Both n [ColumnValue 'DataConnector]
+</span><a href="#local-6989586621688745325"><span class="hs-identifier hs-var hs-var">columnListParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ValueWithOrigin (ColumnValue 'DataConnector)
  -&gt; ColumnValue 'DataConnector)
 -&gt; [ValueWithOrigin (ColumnValue 'DataConnector)]
 -&gt; [ColumnValue 'DataConnector]
@@ -779,7 +779,7 @@ forall (k :: Kind) (m :: * -&gt; *) a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Parser k m a -&gt; Parser k m [a]
 </span><a href="Hasura.GraphQL.Parser.Internal.Input.html#list"><span class="hs-identifier hs-var">P.list</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'DataConnector))
-</span><a href="#local-6989586621688745175"><span class="hs-identifier hs-var">typedParser</span></a></span><span>
+</span><a href="#local-6989586621688745335"><span class="hs-identifier hs-var">typedParser</span></a></span><span>
 </span><span id="line-141"></span><span>  </span><span class="annot"><span class="annottext">Parser 'Input n [ComparisonExp 'DataConnector]
 -&gt; m (Parser 'Input n [ComparisonExp 'DataConnector])
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -798,10 +798,10 @@ MonadParse m =&gt;
 Name
 -&gt; Maybe Description -&gt; InputFieldsParser m a -&gt; Parser 'Input m a
 </span><a href="Hasura.GraphQL.Parser.Internal.Input.html#object"><span class="hs-identifier hs-var">P.object</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621688745172"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
+</span><a href="#local-6989586621688745332"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Description
-</span><a href="#local-6989586621688745170"><span class="hs-identifier hs-var">desc</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(InputFieldsParser n [ComparisonExp 'DataConnector]
+</span><a href="#local-6989586621688745330"><span class="hs-identifier hs-var">desc</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(InputFieldsParser n [ComparisonExp 'DataConnector]
  -&gt; Parser 'Input n [ComparisonExp 'DataConnector])
 -&gt; InputFieldsParser n [ComparisonExp 'DataConnector]
 -&gt; Parser 'Input n [ComparisonExp 'DataConnector]
@@ -848,7 +848,7 @@ Bool
 -&gt; [InputFieldsParser n (Maybe (OpExpG b (UnpreparedValue b)))]
 </span><a href="Hasura.GraphQL.Schema.BoolExp.html#equalityOperators"><span class="hs-identifier hs-var">GS.BE.equalityOperators</span></a></span><span>
 </span><span id="line-147"></span><span>                </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688745179"><span class="hs-identifier hs-var">collapseIfNull</span></a></span><span>
+</span><a href="#local-6989586621688745339"><span class="hs-identifier hs-var">collapseIfNull</span></a></span><span>
 </span><span id="line-148"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ValueWithOrigin (ColumnValue 'DataConnector)
 -&gt; UnpreparedValue 'DataConnector
 forall (b :: BackendType).
@@ -859,14 +859,14 @@ ValueWithOrigin (ColumnValue b) -&gt; UnpreparedValue b
 -&gt; Parser 'Both n (UnpreparedValue 'DataConnector)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'DataConnector))
-</span><a href="#local-6989586621688745175"><span class="hs-identifier hs-var">typedParser</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688745335"><span class="hs-identifier hs-var">typedParser</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-149"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[ColumnValue 'DataConnector] -&gt; UnpreparedValue 'DataConnector
-</span><a href="#local-6989586621688745158"><span class="hs-identifier hs-var">mkListLiteral</span></a></span><span> </span><span class="annot"><span class="annottext">([ColumnValue 'DataConnector] -&gt; UnpreparedValue 'DataConnector)
+</span><a href="#local-6989586621688745318"><span class="hs-identifier hs-var">mkListLiteral</span></a></span><span> </span><span class="annot"><span class="annottext">([ColumnValue 'DataConnector] -&gt; UnpreparedValue 'DataConnector)
 -&gt; Parser 'Both n [ColumnValue 'DataConnector]
 -&gt; Parser 'Both n (UnpreparedValue 'DataConnector)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser 'Both n [ColumnValue 'DataConnector]
-</span><a href="#local-6989586621688745165"><span class="hs-identifier hs-var">columnListParser</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688745325"><span class="hs-identifier hs-var">columnListParser</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-150"></span><span>              </span><span class="annot"><span class="annottext">Bool
 -&gt; Parser 'Both n (UnpreparedValue 'DataConnector)
 -&gt; [InputFieldsParser n (Maybe (ComparisonExp 'DataConnector))]
@@ -877,7 +877,7 @@ Bool
 -&gt; [InputFieldsParser n (Maybe (OpExpG b (UnpreparedValue b)))]
 </span><a href="Hasura.GraphQL.Schema.BoolExp.html#comparisonOperators"><span class="hs-identifier hs-var">GS.BE.comparisonOperators</span></a></span><span>
 </span><span id="line-151"></span><span>                </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621688745179"><span class="hs-identifier hs-var">collapseIfNull</span></a></span><span>
+</span><a href="#local-6989586621688745339"><span class="hs-identifier hs-var">collapseIfNull</span></a></span><span>
 </span><span id="line-152"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ValueWithOrigin (ColumnValue 'DataConnector)
 -&gt; UnpreparedValue 'DataConnector
 forall (b :: BackendType).
@@ -888,13 +888,13 @@ ValueWithOrigin (ColumnValue b) -&gt; UnpreparedValue b
 -&gt; Parser 'Both n (UnpreparedValue 'DataConnector)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'DataConnector))
-</span><a href="#local-6989586621688745175"><span class="hs-identifier hs-var">typedParser</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688745335"><span class="hs-identifier hs-var">typedParser</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-153"></span><span>            </span><span class="hs-special">]</span><span>
 </span><span id="line-154"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-155"></span><span>    </span><span class="annot"><a href="#local-6989586621688745158"><span class="hs-identifier hs-type">mkListLiteral</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">RQL.ColumnValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">P.UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span>
-</span><span id="line-156"></span><span>    </span><span id="local-6989586621688745158"><span class="annot"><span class="annottext">mkListLiteral :: [ColumnValue 'DataConnector] -&gt; UnpreparedValue 'DataConnector
-</span><a href="#local-6989586621688745158"><span class="hs-identifier hs-var hs-var">mkListLiteral</span></a></span></span><span> </span><span id="local-6989586621688745156"><span class="annot"><span class="annottext">[ColumnValue 'DataConnector]
-</span><a href="#local-6989586621688745156"><span class="hs-identifier hs-var">columnValues</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-155"></span><span>    </span><span class="annot"><a href="#local-6989586621688745318"><span class="hs-identifier hs-type">mkListLiteral</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">RQL.ColumnValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">P.UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span>
+</span><span id="line-156"></span><span>    </span><span id="local-6989586621688745318"><span class="annot"><span class="annottext">mkListLiteral :: [ColumnValue 'DataConnector] -&gt; UnpreparedValue 'DataConnector
+</span><a href="#local-6989586621688745318"><span class="hs-identifier hs-var hs-var">mkListLiteral</span></a></span></span><span> </span><span id="local-6989586621688745316"><span class="annot"><span class="annottext">[ColumnValue 'DataConnector]
+</span><a href="#local-6989586621688745316"><span class="hs-identifier hs-var">columnValues</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-157"></span><span>      </span><span class="annot"><span class="annottext">SQLExpression 'DataConnector -&gt; UnpreparedValue 'DataConnector
 forall (b :: BackendType). SQLExpression b -&gt; UnpreparedValue b
 </span><a href="Hasura.GraphQL.Parser.Column.html#UVLiteral"><span class="hs-identifier hs-var">P.UVLiteral</span></a></span><span> </span><span class="annot"><span class="annottext">(SQLExpression 'DataConnector -&gt; UnpreparedValue 'DataConnector)
@@ -907,7 +907,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; [ColumnValue 'DataConnector] -&gt; [Value]
 forall a b. (a -&gt; Maybe b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">mapMaybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Expression -&gt; Maybe Value
-</span><a href="#local-6989586621688745152"><span class="hs-identifier hs-var">extractLiteral</span></a></span><span> </span><span class="annot"><span class="annottext">(Expression -&gt; Maybe Value)
+</span><a href="#local-6989586621688745312"><span class="hs-identifier hs-var">extractLiteral</span></a></span><span> </span><span class="annot"><span class="annottext">(Expression -&gt; Maybe Value)
 -&gt; (ColumnValue 'DataConnector -&gt; Expression)
 -&gt; ColumnValue 'DataConnector
 -&gt; Maybe Value
@@ -921,38 +921,38 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ColumnValue 'DataConnector -&gt; Value
 forall (b :: BackendType). ColumnValue b -&gt; ScalarValue b
 </span><a href="Hasura.RQL.Types.Column.html#cvValue"><span class="hs-identifier hs-var hs-var">RQL.cvValue</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[ColumnValue 'DataConnector]
-</span><a href="#local-6989586621688745156"><span class="hs-identifier hs-var">columnValues</span></a></span><span>
+</span><a href="#local-6989586621688745316"><span class="hs-identifier hs-var">columnValues</span></a></span><span>
 </span><span id="line-158"></span><span>
-</span><span id="line-159"></span><span>    </span><span class="annot"><a href="#local-6989586621688745152"><span class="hs-identifier hs-type">extractLiteral</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#Expression"><span class="hs-identifier hs-type">IR.E.Expression</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Value"><span class="hs-identifier hs-type">IR.S.V.Value</span></a></span><span>
-</span><span id="line-160"></span><span>    </span><span id="local-6989586621688745152"><span class="annot"><span class="annottext">extractLiteral :: Expression -&gt; Maybe Value
-</span><a href="#local-6989586621688745152"><span class="hs-identifier hs-var hs-var">extractLiteral</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#Literal"><span class="hs-identifier hs-type">IR.E.Literal</span></a></span><span> </span><span id="local-6989586621688745149"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621688745149"><span class="hs-identifier hs-var">lit</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Maybe Value
+</span><span id="line-159"></span><span>    </span><span class="annot"><a href="#local-6989586621688745312"><span class="hs-identifier hs-type">extractLiteral</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#Expression"><span class="hs-identifier hs-type">IR.E.Expression</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Value"><span class="hs-identifier hs-type">IR.S.V.Value</span></a></span><span>
+</span><span id="line-160"></span><span>    </span><span id="local-6989586621688745312"><span class="annot"><span class="annottext">extractLiteral :: Expression -&gt; Maybe Value
+</span><a href="#local-6989586621688745312"><span class="hs-identifier hs-var hs-var">extractLiteral</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#Literal"><span class="hs-identifier hs-type">IR.E.Literal</span></a></span><span> </span><span id="local-6989586621688745309"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621688745309"><span class="hs-identifier hs-var">lit</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Maybe Value
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621688745149"><span class="hs-identifier hs-var">lit</span></a></span><span>
-</span><span id="line-161"></span><span>    </span><span class="annot"><a href="#local-6989586621688745152"><span class="hs-identifier hs-var">extractLiteral</span></a></span><span> </span><span class="annot"><span class="annottext">Expression
+</span><a href="#local-6989586621688745309"><span class="hs-identifier hs-var">lit</span></a></span><span>
+</span><span id="line-161"></span><span>    </span><span class="annot"><a href="#local-6989586621688745312"><span class="hs-identifier hs-var">extractLiteral</span></a></span><span> </span><span class="annot"><span class="annottext">Expression
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Value
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-162"></span><span>
 </span><span id="line-163"></span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Schema.html#tableArgs%27"><span class="hs-identifier hs-type">tableArgs'</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-164"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688745148"><span class="annot"><a href="#local-6989586621688745148"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621688745147"><span class="annot"><a href="#local-6989586621688745147"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688745146"><span class="annot"><a href="#local-6989586621688745146"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-165"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745148"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745147"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745146"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-164"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688745308"><span class="annot"><a href="#local-6989586621688745308"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621688745307"><span class="annot"><a href="#local-6989586621688745307"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688745306"><span class="annot"><a href="#local-6989586621688745306"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-165"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745308"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745307"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745306"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-166"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">RQL.SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-167"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">RQL.TableInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-168"></span><span>  </span><span class="annot"><a href="#local-6989586621688745147"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-type">P.InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745146"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.html#SelectArgsG"><span class="hs-identifier hs-type">SelectArgsG</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">P.UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-168"></span><span>  </span><span class="annot"><a href="#local-6989586621688745307"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-type">P.InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688745306"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.html#SelectArgsG"><span class="hs-identifier hs-type">SelectArgsG</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Column.html#UnpreparedValue"><span class="hs-identifier hs-type">P.UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-169"></span><span id="tableArgs%27"><span class="annot"><span class="annottext">tableArgs' :: SourceName
 -&gt; TableInfo 'DataConnector
 -&gt; m (InputFieldsParser
         n (SelectArgsG 'DataConnector (UnpreparedValue 'DataConnector)))
-</span><a href="Hasura.Backends.DataConnector.Adapter.Schema.html#tableArgs%27"><span class="hs-identifier hs-var hs-var">tableArgs'</span></a></span></span><span> </span><span id="local-6989586621688745145"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688745145"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621688745144"><span class="annot"><span class="annottext">TableInfo 'DataConnector
-</span><a href="#local-6989586621688745144"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-170"></span><span>  </span><span id="local-6989586621688745143"><span class="annot"><span class="annottext">InputFieldsParser
+</span><a href="Hasura.Backends.DataConnector.Adapter.Schema.html#tableArgs%27"><span class="hs-identifier hs-var hs-var">tableArgs'</span></a></span></span><span> </span><span id="local-6989586621688745305"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688745305"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621688745304"><span class="annot"><span class="annottext">TableInfo 'DataConnector
+</span><a href="#local-6989586621688745304"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-170"></span><span>  </span><span id="local-6989586621688745303"><span class="annot"><span class="annottext">InputFieldsParser
   n
   (Maybe
      (AnnBoolExp 'DataConnector (UnpreparedValue 'DataConnector)))
-</span><a href="#local-6989586621688745143"><span class="hs-identifier hs-var">whereParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688745303"><span class="hs-identifier hs-var">whereParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceName
 -&gt; TableInfo 'DataConnector
 -&gt; m (InputFieldsParser
         n
@@ -965,15 +965,15 @@ SourceName
 -&gt; m (InputFieldsParser
         n (Maybe (AnnBoolExp b (UnpreparedValue b))))
 </span><a href="Hasura.GraphQL.Schema.Select.html#tableWhereArg"><span class="hs-identifier hs-var">GS.S.tableWhereArg</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688745145"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'DataConnector
-</span><a href="#local-6989586621688745144"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-171"></span><span>  </span><span id="local-6989586621688745141"><span class="annot"><span class="annottext">InputFieldsParser
+</span><a href="#local-6989586621688745305"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'DataConnector
+</span><a href="#local-6989586621688745304"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-171"></span><span>  </span><span id="local-6989586621688745301"><span class="annot"><span class="annottext">InputFieldsParser
   n
   (Maybe
      (NonEmpty
         (AnnotatedOrderByItemG
            'DataConnector (UnpreparedValue 'DataConnector))))
-</span><a href="#local-6989586621688745141"><span class="hs-identifier hs-var">orderByParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621688745301"><span class="hs-identifier hs-var">orderByParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceName
 -&gt; TableInfo 'DataConnector
 -&gt; m (InputFieldsParser
         n
@@ -988,18 +988,18 @@ SourceName
 -&gt; m (InputFieldsParser
         n (Maybe (NonEmpty (AnnotatedOrderByItemG b (UnpreparedValue b)))))
 </span><a href="Hasura.GraphQL.Schema.Select.html#tableOrderByArg"><span class="hs-identifier hs-var">GS.S.tableOrderByArg</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621688745145"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'DataConnector
-</span><a href="#local-6989586621688745144"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-172"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688745139"><span class="annot"><span class="annottext">mkSelectArgs :: Maybe (AnnBoolExp b v)
+</span><a href="#local-6989586621688745305"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'DataConnector
+</span><a href="#local-6989586621688745304"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-172"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688745299"><span class="annot"><span class="annottext">mkSelectArgs :: Maybe (AnnBoolExp b v)
 -&gt; Maybe (NonEmpty (AnnotatedOrderByItemG b v))
 -&gt; Maybe Int
 -&gt; Maybe Int64
 -&gt; SelectArgsG b v
-</span><a href="#local-6989586621688745139"><span class="hs-identifier hs-var hs-var">mkSelectArgs</span></a></span></span><span> </span><span id="local-6989586621688745138"><span class="annot"><span class="annottext">Maybe (AnnBoolExp b v)
-</span><a href="#local-6989586621688745138"><span class="hs-identifier hs-var">whereArg</span></a></span></span><span> </span><span id="local-6989586621688745137"><span class="annot"><span class="annottext">Maybe (NonEmpty (AnnotatedOrderByItemG b v))
-</span><a href="#local-6989586621688745137"><span class="hs-identifier hs-var">orderByArg</span></a></span></span><span> </span><span id="local-6989586621688745136"><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621688745136"><span class="hs-identifier hs-var">limitArg</span></a></span></span><span> </span><span id="local-6989586621688745135"><span class="annot"><span class="annottext">Maybe Int64
-</span><a href="#local-6989586621688745135"><span class="hs-identifier hs-var">offsetArg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621688745299"><span class="hs-identifier hs-var hs-var">mkSelectArgs</span></a></span></span><span> </span><span id="local-6989586621688745298"><span class="annot"><span class="annottext">Maybe (AnnBoolExp b v)
+</span><a href="#local-6989586621688745298"><span class="hs-identifier hs-var">whereArg</span></a></span></span><span> </span><span id="local-6989586621688745297"><span class="annot"><span class="annottext">Maybe (NonEmpty (AnnotatedOrderByItemG b v))
+</span><a href="#local-6989586621688745297"><span class="hs-identifier hs-var">orderByArg</span></a></span></span><span> </span><span id="local-6989586621688745296"><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621688745296"><span class="hs-identifier hs-var">limitArg</span></a></span></span><span> </span><span id="local-6989586621688745295"><span class="annot"><span class="annottext">Maybe Int64
+</span><a href="#local-6989586621688745295"><span class="hs-identifier hs-var">offsetArg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-173"></span><span>        </span><span class="annot"><span class="annottext">SelectArgs :: forall (b :: BackendType) v.
 Maybe (AnnBoolExp b v)
 -&gt; Maybe (NonEmpty (AnnotatedOrderByItemG b v))
@@ -1010,16 +1010,16 @@ Maybe (AnnBoolExp b v)
 </span><a href="Hasura.RQL.IR.Select.html#SelectArgs"><span class="hs-identifier hs-type">SelectArgs</span></a></span><span>
 </span><span id="line-174"></span><span>          </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_saWhere :: Maybe (AnnBoolExp b v)
 </span><a href="Hasura.RQL.IR.Select.html#_saWhere"><span class="hs-identifier hs-var">_saWhere</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (AnnBoolExp b v)
-</span><a href="#local-6989586621688745138"><span class="hs-identifier hs-var">whereArg</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688745298"><span class="hs-identifier hs-var">whereArg</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-175"></span><span>            </span><span class="annot"><span class="annottext">_saOrderBy :: Maybe (NonEmpty (AnnotatedOrderByItemG b v))
 </span><a href="Hasura.RQL.IR.Select.html#_saOrderBy"><span class="hs-identifier hs-var">_saOrderBy</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (NonEmpty (AnnotatedOrderByItemG b v))
-</span><a href="#local-6989586621688745137"><span class="hs-identifier hs-var">orderByArg</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688745297"><span class="hs-identifier hs-var">orderByArg</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-176"></span><span>            </span><span class="annot"><span class="annottext">_saLimit :: Maybe Int
 </span><a href="Hasura.RQL.IR.Select.html#_saLimit"><span class="hs-identifier hs-var">_saLimit</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621688745136"><span class="hs-identifier hs-var">limitArg</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688745296"><span class="hs-identifier hs-var">limitArg</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-177"></span><span>            </span><span class="annot"><span class="annottext">_saOffset :: Maybe Int64
 </span><a href="Hasura.RQL.IR.Select.html#_saOffset"><span class="hs-identifier hs-var">_saOffset</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Int64
-</span><a href="#local-6989586621688745135"><span class="hs-identifier hs-var">offsetArg</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688745295"><span class="hs-identifier hs-var">offsetArg</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-178"></span><span>            </span><span class="annot"><span class="annottext">_saDistinct :: Maybe (NonEmpty (Column b))
 </span><a href="Hasura.RQL.IR.Select.html#_saDistinct"><span class="hs-identifier hs-var">_saDistinct</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (NonEmpty (Column b))
 forall a. Maybe a
@@ -1054,7 +1054,7 @@ Maybe (AnnBoolExp b v)
 -&gt; Maybe Int
 -&gt; Maybe Int64
 -&gt; SelectArgsG b v
-</span><a href="#local-6989586621688745139"><span class="hs-identifier hs-var">mkSelectArgs</span></a></span><span>
+</span><a href="#local-6989586621688745299"><span class="hs-identifier hs-var">mkSelectArgs</span></a></span><span>
 </span><span id="line-182"></span><span>      </span><span class="annot"><span class="annottext">(Maybe (AnnBoolExp 'DataConnector (UnpreparedValue 'DataConnector))
  -&gt; Maybe
       (NonEmpty
@@ -1081,7 +1081,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
   n
   (Maybe
      (AnnBoolExp 'DataConnector (UnpreparedValue 'DataConnector)))
-</span><a href="#local-6989586621688745143"><span class="hs-identifier hs-var">whereParser</span></a></span><span>
+</span><a href="#local-6989586621688745303"><span class="hs-identifier hs-var">whereParser</span></a></span><span>
 </span><span id="line-183"></span><span>      </span><span class="annot"><span class="annottext">InputFieldsParser
   n
   (Maybe
@@ -1109,7 +1109,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
      (NonEmpty
         (AnnotatedOrderByItemG
            'DataConnector (UnpreparedValue 'DataConnector))))
-</span><a href="#local-6989586621688745141"><span class="hs-identifier hs-var">orderByParser</span></a></span><span>
+</span><a href="#local-6989586621688745301"><span class="hs-identifier hs-var">orderByParser</span></a></span><span>
 </span><span id="line-184"></span><span>      </span><span class="annot"><span class="annottext">InputFieldsParser
   n
   (Maybe Int
