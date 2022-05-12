@@ -1088,6 +1088,7 @@ test-suite tests-hspec
     Test.CustomFieldNamesSpec
     Test.DirectivesSpec
     Test.HelloWorldSpec
+    Test.InsertDefaultsSpec
     Test.LimitOffsetSpec
     Test.NestedRelationshipsSpec
     Test.ObjectRelationshipsLimitSpec

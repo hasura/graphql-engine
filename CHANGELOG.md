@@ -4,6 +4,8 @@
 
 ### Bug fixes and improvements
 
+- server: fix inserting empty objects with default values to postgres, citus, and sql server (fix #8475)
+
 ## v2.6.1
 
 - server: fix bug when event triggers where defined on tables that contained non lower-case alphabet characters (fix #8454)
