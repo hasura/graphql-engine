@@ -4,6 +4,16 @@
 
 ### Bug fixes and improvements
 
+## v2.6.2
+
+### Bug fixes and improvements
+
+- server: fix inserting empty objects with default values to postgres, citus, and sql server (fix #8475)
+
+## v2.7.0-beta.1
+
+### Bug fixes and improvements
+
 - server: don't drop the SQL triggers defined by the graphql-engine when DDL changes are made using the `run_sql` API
 - server: fixed a bug where timestamp values sent to postgres would erroneously trim leading zeroes (#8096)
 - server: fix bug when event triggers where defined on tables that contained non lower-case alphabet characters
