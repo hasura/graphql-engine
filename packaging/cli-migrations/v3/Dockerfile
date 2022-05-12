@@ -29,4 +29,4 @@ ENV HASURA_GRAPHQL_CLI_ENVIRONMENT=server-on-docker
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 
-CMD ["graphql-engine", "serve"]
+# CMD ["graphql-engine", "serve"]

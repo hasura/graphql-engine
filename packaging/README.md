@@ -23,3 +23,11 @@ It is generally published with format `hasura/graphql-engine-base:<SHA256>.<OS>.
 - `<SHA256>` is the `sha256sum` of the dockerfile used to build the image
 - `OS` is the operating system. It could be any of these values: `debian`, `ubuntu`, `centos`
 - `ARCH` is the architecture. It could be any of these values: `amd64`, `arm64`
+
+## Devfolio Specific
+
+### How to publish images
+
+```
+docker buildx build --build-arg BASE_IMAGE=hasura/graphql-engine:v2.6.1 --no-cache -t ghcr.io/devfolioco/graphql-engine:v0.2.6.1.cli-migrations-v3 --platform linux/amd64,linux/arm64 --push .
+```
