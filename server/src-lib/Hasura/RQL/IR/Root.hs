@@ -15,12 +15,12 @@ where
 import Data.Aeson.Ordered qualified as JO
 import Data.Kind (Type)
 import Hasura.Prelude
+import Hasura.RQL.IR.Action
 import Hasura.RQL.IR.Delete
 import Hasura.RQL.IR.Insert
 import Hasura.RQL.IR.RemoteSchema
 import Hasura.RQL.IR.Select
 import Hasura.RQL.IR.Update
-import Hasura.RQL.Types.Action qualified as RQL
 import Hasura.RQL.Types.Backend qualified as RQL
 import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.RQL.Types.QueryTags qualified as RQL
@@ -50,13 +50,13 @@ data MutationDB (b :: BackendType) (r :: Type) v
   deriving stock (Generic, Functor, Foldable, Traversable)
 
 data ActionQuery (r :: Type)
-  = AQQuery !(RQL.AnnActionExecution r)
-  | AQAsync !(RQL.AnnActionAsyncQuery ('Postgres 'Vanilla) r)
+  = AQQuery !(AnnActionExecution r)
+  | AQAsync !(AnnActionAsyncQuery ('Postgres 'Vanilla) r)
   deriving stock (Functor, Foldable, Traversable)
 
 data ActionMutation (r :: Type)
-  = AMSync !(RQL.AnnActionExecution r)
-  | AMAsync !RQL.AnnActionMutationAsync
+  = AMSync !(AnnActionExecution r)
+  | AMAsync !AnnActionMutationAsync
 
 -- The `db` type argument of @RootField@ expects only one type argument, the backend `b`, as not all
 -- types stored in a RootField will have a second parameter like @QueryDB@ does: they all only have

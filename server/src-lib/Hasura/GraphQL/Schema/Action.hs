@@ -31,8 +31,8 @@ import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Select
 import Hasura.Prelude
-import Hasura.RQL.IR.Action qualified as RQL
-import Hasura.RQL.IR.Root qualified as RQL
+import Hasura.RQL.IR.Action qualified as IR
+import Hasura.RQL.IR.Root qualified as IR
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
@@ -63,7 +63,7 @@ actionExecute ::
   MonadBuildSchema ('Postgres 'Vanilla) r m n =>
   AnnotatedCustomTypes ->
   ActionInfo ->
-  m (Maybe (FieldParser n (AnnActionExecution (RQL.RemoteRelationshipField UnpreparedValue))))
+  m (Maybe (FieldParser n (IR.AnnActionExecution (IR.RemoteRelationshipField UnpreparedValue))))
 actionExecute customTypes actionInfo = runMaybeT do
   roleName <- asks getter
   guard (roleName == adminRoleName || roleName `Map.member` permissions)
@@ -80,12 +80,12 @@ actionExecute customTypes actionInfo = runMaybeT do
   pure $
     parserOutput
       <&> \(argsJson, fields) ->
-        AnnActionExecution
+        IR.AnnActionExecution
           { _aaeName = actionName,
             _aaeFields = fields,
             _aaePayload = argsJson,
             _aaeOutputType = _adOutputType definition,
-            _aaeOutputFields = getActionOutputFields outputObject,
+            _aaeOutputFields = IR.getActionOutputFields outputObject,
             _aaeWebhook = _adHandler definition,
             _aaeHeaders = _adHeaders definition,
             _aaeForwardClientHeaders = _adForwardClientHeaders definition,
@@ -107,7 +107,7 @@ actionAsyncMutation ::
   MonadBuildSchemaBase r m n =>
   NonObjectTypeMap ->
   ActionInfo ->
-  m (Maybe (FieldParser n AnnActionMutationAsync))
+  m (Maybe (FieldParser n IR.AnnActionMutationAsync))
 actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
   roleName <- asks getter
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
@@ -116,7 +116,7 @@ actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
       description = G.Description <$> comment
   pure $
     P.selection fieldName description inputArguments actionIdParser
-      <&> AnnActionMutationAsync actionName forwardClientHeaders
+      <&> IR.AnnActionMutationAsync actionName forwardClientHeaders
   where
     ActionInfo actionName _ definition permissions forwardClientHeaders comment = actionInfo
 
@@ -138,7 +138,7 @@ actionAsyncQuery ::
   MonadBuildSchema ('Postgres 'Vanilla) r m n =>
   AnnotatedObjects ->
   ActionInfo ->
-  m (Maybe (FieldParser n (AnnActionAsyncQuery ('Postgres 'Vanilla) (RQL.RemoteRelationshipField UnpreparedValue))))
+  m (Maybe (FieldParser n (IR.AnnActionAsyncQuery ('Postgres 'Vanilla) (IR.RemoteRelationshipField UnpreparedValue))))
 actionAsyncQuery objectTypes actionInfo = runMaybeT do
   roleName <- asks getter
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
@@ -153,25 +153,25 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
       actionIdInputField =
         P.field idFieldName (Just idFieldDescription) actionIdParser
       allFieldParsers actionOutputParser =
-        let idField = P.selection_ idFieldName (Just idFieldDescription) actionIdParser $> AsyncId
+        let idField = P.selection_ idFieldName (Just idFieldDescription) actionIdParser $> IR.AsyncId
             createdAtField =
               P.selection_
                 G._created_at
                 (Just "the time at which this action was created")
                 createdAtFieldParser
-                $> AsyncCreatedAt
+                $> IR.AsyncCreatedAt
             errorsField =
               P.selection_
                 G._errors
                 (Just "errors related to the invocation")
                 errorsFieldParser
-                $> AsyncErrors
+                $> IR.AsyncErrors
             outputField =
               P.subselection_
                 G._output
                 (Just "the output fields of this action")
                 actionOutputParser
-                <&> AsyncOutput
+                <&> IR.AsyncOutput
          in [idField, createdAtField, errorsField, outputField]
   parserOutput <- case outputObject of
     AOTObject aot -> do
@@ -179,7 +179,7 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
       let desc = G.Description $ "fields of action: " <>> actionName
           selectionSet =
             P.selectionSet outputTypeName (Just desc) (allFieldParsers actionOutputParser)
-              <&> parsedSelectionsToFields AsyncTypename
+              <&> parsedSelectionsToFields IR.AsyncTypename
       pure $ P.subselection fieldName description actionIdInputField selectionSet
     AOTScalar ast -> do
       let selectionSet = customScalarParser ast
@@ -189,7 +189,7 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
   pure $
     parserOutput
       <&> \(idArg, fields) ->
-        AnnActionAsyncQuery
+        IR.AnnActionAsyncQuery
           { _aaaqName = actionName,
             _aaaqActionId = idArg,
             _aaaqOutputType = _adOutputType definition,
@@ -197,7 +197,7 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
             _aaaqDefinitionList = mkDefinitionList outputObject,
             _aaaqStringifyNum = stringifyNum,
             _aaaqForwardClientHeaders = forwardClientHeaders,
-            _aaaqSource = getActionSourceInfo outputObject
+            _aaaqSource = IR.getActionSourceInfo outputObject
           }
   where
     ActionInfo actionName (outputType, outputObject) definition permissions forwardClientHeaders comment = actionInfo
@@ -228,7 +228,7 @@ actionOutputFields outputType annotatedObject objectTypes = do
   pure $
     outputParserModifier outputType $
       P.selectionSet outputTypeName outputTypeDescription allFieldParsers
-        <&> parsedSelectionsToFields RQL.ACFExpression
+        <&> parsedSelectionsToFields IR.ACFExpression
   where
     outputParserModifier :: G.GType -> Parser 'Output n a -> Parser 'Output n a
     outputParserModifier = \case
@@ -248,14 +248,14 @@ actionOutputFields outputType annotatedObject objectTypes = do
           wrapScalar $ customEnumParser def
         AOFTObject objectName -> do
           def <- Map.lookup objectName objectTypes `onNothing` throw500 ("Custom type " <> objectName <<> " not found")
-          parser <- fmap (RQL.ACFNestedObject fieldName) <$> actionOutputFields gType def objectTypes
+          parser <- fmap (IR.ACFNestedObject fieldName) <$> actionOutputFields gType def objectTypes
           pure $ P.subselection_ fieldName description parser
       where
         fieldName = unObjectFieldName name
         wrapScalar parser =
           pure $
             P.wrapFieldParser gType (P.selection_ fieldName description parser)
-              $> RQL.ACFScalar fieldName
+              $> IR.ACFScalar fieldName
 
     relationshipFieldParser ::
       TypeRelationship (TableInfo ('Postgres 'Vanilla)) (ColumnInfo ('Postgres 'Vanilla)) ->
@@ -296,7 +296,7 @@ actionOutputFields outputType annotatedObject objectTypes = do
                         }
               }
       remoteRelationshipFieldParsers <- MaybeT $ remoteRelationshipField remoteFieldInfo
-      pure $ remoteRelationshipFieldParsers <&> fmap (RQL.ACFRemote . RQL.ActionRemoteRelationshipSelect lhsJoinFields)
+      pure $ remoteRelationshipFieldParsers <&> fmap (IR.ACFRemote . IR.ActionRemoteRelationshipSelect lhsJoinFields)
 
 mkDefinitionList :: AnnotatedOutputType -> [(PGCol, ScalarType ('Postgres 'Vanilla))]
 mkDefinitionList (AOTScalar _) = []

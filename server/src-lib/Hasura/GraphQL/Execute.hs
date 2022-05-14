@@ -241,7 +241,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
           throw400 NotSupported "Remote relationships are not allowed in subscriptions"
         case noRelsDBAST of
           IR.AQAsync q -> do
-            let actionId = _aaaqActionId q
+            let actionId = IR._aaaqActionId q
             case EA.resolveAsyncActionQuery userInfo q of
               EA.AAQENoRelationships respMaker ->
                 pure $ (second (OMap.insert gName (actionId, respMaker)) accLiveQueryFields, accStreamingFields)

@@ -57,7 +57,7 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.DDL.Webhook.Transform.Class (mkReqTransformCtx)
-import Hasura.RQL.IR.Action qualified as RA
+import Hasura.RQL.IR.Action qualified as IR
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Select qualified as RS
 import Hasura.RQL.Types.Action
@@ -133,11 +133,11 @@ resolveActionExecution ::
   Env.Environment ->
   L.Logger L.Hasura ->
   UserInfo ->
-  AnnActionExecution Void ->
+  IR.AnnActionExecution Void ->
   ActionExecContext ->
   Maybe GQLQueryText ->
   ActionExecution
-resolveActionExecution env logger _userInfo AnnActionExecution {..} ActionExecContext {..} gqlQueryText =
+resolveActionExecution env logger _userInfo IR.AnnActionExecution {..} ActionExecContext {..} gqlQueryText =
   ActionExecution $ first (encJFromOrderedValue . makeActionResponseNoRelations _aaeFields) <$> runWebhook
   where
     handlerPayload = ActionWebhookPayload (ActionContext _aaeName) _aecSessionVariables _aaePayload gqlQueryText
@@ -162,17 +162,17 @@ resolveActionExecution env logger _userInfo AnnActionExecution {..} ActionExecCo
           _aaeResponseTransform
 
 -- | Build action response from the Webhook JSON response when there are no relationships defined
-makeActionResponseNoRelations :: RA.ActionFields -> ActionWebhookResponse -> AO.Value
+makeActionResponseNoRelations :: IR.ActionFields -> ActionWebhookResponse -> AO.Value
 makeActionResponseNoRelations annFields webhookResponse =
-  let mkResponseObject :: RA.ActionFields -> HashMap Text J.Value -> AO.Value
+  let mkResponseObject :: IR.ActionFields -> HashMap Text J.Value -> AO.Value
       mkResponseObject fields obj =
         AO.object $
           flip mapMaybe fields $ \(fieldName, annField) ->
             let fieldText = getFieldNameTxt fieldName
              in (fieldText,) <$> case annField of
-                  RA.ACFExpression t -> Just $ AO.String t
-                  RA.ACFScalar fname -> AO.toOrdered <$> Map.lookup (G.unName fname) obj
-                  RA.ACFNestedObject _ nestedFields -> do
+                  IR.ACFExpression t -> Just $ AO.String t
+                  IR.ACFScalar fname -> AO.toOrdered <$> Map.lookup (G.unName fname) obj
+                  IR.ACFNestedObject _ nestedFields -> do
                     let mkValue :: J.Value -> Maybe AO.Value
                         mkValue = \case
                           J.Object o -> Just $ mkResponseObject nestedFields o
@@ -207,14 +207,14 @@ metadata storage. See Note [Resolving async action query] below.
 -- | Resolve asynchronous action mutation which returns only the action uuid
 resolveActionMutationAsync ::
   (MonadMetadataStorage m) =>
-  AnnActionMutationAsync ->
+  IR.AnnActionMutationAsync ->
   [HTTP.Header] ->
   SessionVariables ->
   m ActionId
 resolveActionMutationAsync annAction reqHeaders sessionVariables =
   insertAction actionName sessionVariables reqHeaders inputArgs
   where
-    AnnActionMutationAsync actionName _ inputArgs = annAction
+    IR.AnnActionMutationAsync actionName _ inputArgs = annAction
 
 {- Note: [Resolving async action query]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -245,38 +245,38 @@ Resolving async action query happens in two steps;
 -- | See Note: [Resolving async action query]
 resolveAsyncActionQuery ::
   UserInfo ->
-  AnnActionAsyncQuery ('Postgres 'Vanilla) Void ->
+  IR.AnnActionAsyncQuery ('Postgres 'Vanilla) Void ->
   AsyncActionQueryExecution (UnpreparedValue ('Postgres 'Vanilla))
 resolveAsyncActionQuery userInfo annAction =
   case actionSource of
-    ASINoSource -> AAQENoRelationships \actionLogResponse -> runExcept do
+    IR.ASINoSource -> AAQENoRelationships \actionLogResponse -> runExcept do
       let ActionLogResponse {..} = actionLogResponse
       resolvedFields <- for asyncFields $ \(fieldName, fld) -> do
         let fieldText = getFieldNameTxt fieldName
         (fieldText,) <$> case fld of
-          AsyncTypename t -> pure $ AO.String t
-          AsyncOutput annFields ->
+          IR.AsyncTypename t -> pure $ AO.String t
+          IR.AsyncOutput annFields ->
             fromMaybe AO.Null <$> forM
               _alrResponsePayload
               \response -> makeActionResponseNoRelations annFields <$> decodeValue response
-          AsyncId -> pure $ AO.String $ actionIdToText actionId
-          AsyncCreatedAt -> pure $ AO.toOrdered $ J.toJSON _alrCreatedAt
-          AsyncErrors -> pure $ AO.toOrdered $ J.toJSON _alrErrors
+          IR.AsyncId -> pure $ AO.String $ actionIdToText actionId
+          IR.AsyncCreatedAt -> pure $ AO.toOrdered $ J.toJSON _alrCreatedAt
+          IR.AsyncErrors -> pure $ AO.toOrdered $ J.toJSON _alrErrors
       pure $ encJFromOrderedValue $ AO.object resolvedFields
-    ASISource sourceName sourceConfig ->
+    IR.ASISource sourceName sourceConfig ->
       let jsonAggSelect = mkJsonAggSelect outputType
        in AAQEOnSourceDB sourceConfig $
             AsyncActionQuerySourceExecution sourceName jsonAggSelect $ \actionLogResponse ->
               let annotatedFields =
                     asyncFields <&> second \case
-                      AsyncTypename t -> RS.AFExpression t
-                      AsyncOutput annFields ->
+                      IR.AsyncTypename t -> RS.AFExpression t
+                      IR.AsyncOutput annFields ->
                         RS.AFComputedField () (ComputedFieldName [nonEmptyTextQQ|__action_computed_field|]) $
                           RS.CFSTable jsonAggSelect $
                             processOutputSelectionSet RS.AEActionResponsePayload outputType definitionList annFields stringifyNumerics
-                      AsyncId -> mkAnnFldFromPGCol idColumn
-                      AsyncCreatedAt -> mkAnnFldFromPGCol createdAtColumn
-                      AsyncErrors -> mkAnnFldFromPGCol errorsColumn
+                      IR.AsyncId -> mkAnnFldFromPGCol idColumn
+                      IR.AsyncCreatedAt -> mkAnnFldFromPGCol createdAtColumn
+                      IR.AsyncErrors -> mkAnnFldFromPGCol errorsColumn
 
                   jsonbToRecordSet = QualifiedObject "pg_catalog" $ FunctionName "jsonb_to_recordset"
                   actionLogInput =
@@ -297,7 +297,7 @@ resolveAsyncActionQuery userInfo annAction =
                   tablePermissions = RS.TablePerm annBoolExpTrue Nothing
                in RS.AnnSelectG annotatedFields tableFromExp tablePermissions tableArguments stringifyNumerics
   where
-    AnnActionAsyncQuery _ actionId outputType asyncFields definitionList stringifyNumerics _ actionSource = annAction
+    IR.AnnActionAsyncQuery _ actionId outputType asyncFields definitionList stringifyNumerics _ actionSource = annAction
 
     idColumn = (unsafePGCol "id", PGUUID)
     responsePayloadColumn = (unsafePGCol RS.actionResponsePayloadColumn, PGJSONB)
@@ -400,7 +400,7 @@ asyncActionsProcessor env logger getSCFromRef' lockedActionEvents httpManager sl
         Nothing -> return ()
         Just actionInfo -> do
           let definition = _aiDefinition actionInfo
-              outputFields = getActionOutputFields $ snd $ _aiOutputType actionInfo
+              outputFields = IR.getActionOutputFields $ snd $ _aiOutputType actionInfo
               webhookUrl = _adHandler definition
               forwardClientHeaders = _adForwardClientHeaders definition
               confHeaders = _adHeaders definition
@@ -443,7 +443,7 @@ callWebhook ::
   Env.Environment ->
   HTTP.Manager ->
   GraphQLType ->
-  ActionOutputFields ->
+  IR.ActionOutputFields ->
   [HTTP.Header] ->
   [HeaderConf] ->
   Bool ->
@@ -632,7 +632,7 @@ processOutputSelectionSet ::
   RS.ArgumentExp v ->
   GraphQLType ->
   [(PGCol, PGScalarType)] ->
-  RA.ActionFields ->
+  IR.ActionFields ->
   StringifyNumbers ->
   RS.AnnSimpleSelectG ('Postgres 'Vanilla) Void v
 processOutputSelectionSet tableRowInput actionOutputType definitionList actionFields =
@@ -648,11 +648,11 @@ processOutputSelectionSet tableRowInput actionOutputType definitionList actionFi
     functionArgs = RS.FunctionArgsExp [tableRowInput] mempty
     selectFrom = RS.FromFunction jsonbToPostgresRecordFunction functionArgs $ Just definitionList
 
-actionFieldToAnnField :: RA.ActionFieldG Void -> RS.AnnFieldG ('Postgres 'Vanilla) Void v
+actionFieldToAnnField :: IR.ActionFieldG Void -> RS.AnnFieldG ('Postgres 'Vanilla) Void v
 actionFieldToAnnField = \case
-  RA.ACFScalar asf -> RS.mkAnnColumnField (unsafePGCol $ toTxt asf) (ColumnScalar PGJSON) Nothing Nothing
-  RA.ACFExpression txt -> RS.AFExpression txt
-  RA.ACFNestedObject fieldName _ -> RS.mkAnnColumnField (unsafePGCol $ toTxt fieldName) (ColumnScalar PGJSON) Nothing Nothing
+  IR.ACFScalar asf -> RS.mkAnnColumnField (unsafePGCol $ toTxt asf) (ColumnScalar PGJSON) Nothing Nothing
+  IR.ACFExpression txt -> RS.AFExpression txt
+  IR.ACFNestedObject fieldName _ -> RS.mkAnnColumnField (unsafePGCol $ toTxt fieldName) (ColumnScalar PGJSON) Nothing Nothing
 
 mkJsonAggSelect :: GraphQLType -> JsonAggSelect
 mkJsonAggSelect =

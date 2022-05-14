@@ -8,6 +8,7 @@ module Hasura.RQL.Types.Action
     ActionMutationKind (..),
     _ActionAsynchronous,
     ActionDefinition (..),
+    GraphQLType,
     adArguments,
     adOutputType,
     adType,
@@ -23,8 +24,6 @@ module Hasura.RQL.Types.Action
     InputWebhook (..),
     ResolvedWebhook (..),
     ResolvedActionDefinition,
-    ActionOutputFields,
-    getActionOutputFields,
     ActionInfo (..),
     aiName,
     aiOutputType,
@@ -41,37 +40,7 @@ module Hasura.RQL.Types.Action
     amDefinition,
     amPermissions,
     ActionPermissionMetadata (..),
-    ActionSourceInfo (..),
-    getActionSourceInfo,
-    AnnActionExecution (..),
-    aaeName,
-    aaeOutputType,
-    aaeFields,
-    aaePayload,
-    aaeOutputFields,
-    aaeWebhook,
-    aaeHeaders,
-    aaeForwardClientHeaders,
-    aaeTimeOut,
-    aaeRequestTransform,
-    aaeResponseTransform,
-    AnnActionMutationAsync (..),
     ActionExecContext (..),
-    AsyncActionQueryFieldG (..),
-    _AsyncTypename,
-    _AsyncOutput,
-    _AsyncId,
-    _AsyncCreatedAt,
-    _AsyncErrors,
-    AnnActionAsyncQuery (..),
-    aaaqName,
-    aaaqActionId,
-    aaaqOutputType,
-    aaaqFields,
-    aaaqDefinitionList,
-    aaaqStringifyNum,
-    aaaqForwardClientHeaders,
-    aaaqSource,
     ActionId (..),
     LockedActionEventId,
     LockedActionIdArray (..),
@@ -92,7 +61,6 @@ import Data.Aeson.Casing qualified as J
 import Data.Aeson.Extended
 import Data.Aeson.TH qualified as J
 import Data.HashMap.Strict qualified as Map
-import Data.Kind (Type)
 import Data.Text.Extended
 import Data.Time.Clock qualified as UTC
 import Data.UUID qualified as UUID
@@ -103,12 +71,9 @@ import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
-import Hasura.RQL.IR.Action
-import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Eventing (EventId (..))
-import Hasura.SQL.Backend
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client qualified as HTTP
@@ -266,13 +231,6 @@ $(J.deriveToJSON hasuraJSON ''ActionPermissionInfo)
 
 type ActionPermissionMap = Map.HashMap RoleName ActionPermissionInfo
 
-type ActionOutputFields = Map.HashMap G.Name G.GType
-
-getActionOutputFields :: AnnotatedOutputType -> ActionOutputFields
-getActionOutputFields inp = case inp of
-  AOTObject aot -> Map.fromList . map ((unObjectFieldName . _ofdName) &&& (fst . _ofdType)) . toList . _otdFields . _aotDefinition $ aot
-  AOTScalar _ -> Map.empty
-
 data ActionInfo = ActionInfo
   { _aiName :: !ActionName,
     _aiOutputType :: !(G.GType, AnnotatedOutputType),
@@ -333,65 +291,6 @@ instance J.FromJSON ActionMetadata where
 
 ----------------- Resolve Types ----------------
 
-data ActionSourceInfo b
-  = -- | No relationships defined on the action output object
-    ASINoSource
-  | -- | All relationships refer to tables in one source
-    ASISource !SourceName !(SourceConfig b)
-
-getActionSourceInfo :: AnnotatedOutputType -> ActionSourceInfo ('Postgres 'Vanilla)
-getActionSourceInfo (AOTObject aot) = maybe ASINoSource (uncurry ASISource) . _aotSource $ aot
-getActionSourceInfo (AOTScalar _) = ASINoSource
-
-data AnnActionExecution (r :: Type) = AnnActionExecution
-  { _aaeName :: !ActionName,
-    -- | output type
-    _aaeOutputType :: !GraphQLType,
-    -- | output selection
-    _aaeFields :: !(ActionFieldsG r),
-    -- | jsonified input arguments
-    _aaePayload :: !J.Value,
-    -- | to validate the response fields from webhook
-    _aaeOutputFields :: !ActionOutputFields,
-    _aaeWebhook :: !ResolvedWebhook,
-    _aaeHeaders :: ![HeaderConf],
-    _aaeForwardClientHeaders :: !Bool,
-    _aaeTimeOut :: !Timeout,
-    _aaeRequestTransform :: !(Maybe RequestTransform),
-    _aaeResponseTransform :: !(Maybe MetadataResponseTransform)
-  }
-  deriving stock (Functor, Foldable, Traversable)
-
-data AnnActionMutationAsync = AnnActionMutationAsync
-  { _aamaName :: !ActionName,
-    _aamaForwardClientHeaders :: !Bool,
-    -- | jsonified input arguments
-    _aamaPayload :: !J.Value
-  }
-  deriving (Show, Eq)
-
-data AsyncActionQueryFieldG (r :: Type)
-  = AsyncTypename !Text
-  | AsyncOutput !(ActionFieldsG r)
-  | AsyncId
-  | AsyncCreatedAt
-  | AsyncErrors
-  deriving stock (Functor, Foldable, Traversable)
-
-type AsyncActionQueryFieldsG r = Fields (AsyncActionQueryFieldG r)
-
-data AnnActionAsyncQuery (b :: BackendType) (r :: Type) = AnnActionAsyncQuery
-  { _aaaqName :: !ActionName,
-    _aaaqActionId :: !ActionId,
-    _aaaqOutputType :: !GraphQLType,
-    _aaaqFields :: !(AsyncActionQueryFieldsG r),
-    _aaaqDefinitionList :: ![(Column b, ScalarType b)],
-    _aaaqStringifyNum :: !StringifyNumbers,
-    _aaaqForwardClientHeaders :: !Bool,
-    _aaaqSource :: !(ActionSourceInfo b)
-  }
-  deriving stock (Functor, Foldable, Traversable)
-
 data ActionExecContext = ActionExecContext
   { _aecManager :: !HTTP.Manager,
     _aecHeaders :: !HTTP.RequestHeaders,
@@ -448,10 +347,4 @@ instance Q.ToPrepArg LockedActionIdArray where
     where
       encoder = PE.array 2950 . PE.dimensionArray foldl' (PE.encodingArray . PE.uuid)
 
-$(makeLenses ''AnnActionAsyncQuery)
-
-$(makeLenses ''AnnActionExecution)
-
 $(makeLenses ''ActionsInfo)
-
-$(makePrisms ''AsyncActionQueryFieldG)
