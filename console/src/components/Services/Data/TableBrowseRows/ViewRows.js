@@ -338,9 +338,7 @@ const ViewRows = props => {
             handleClick = handleExpand;
           }
 
-          const expanderIcon = { icon };
-
-          return getActionButton('expand', expanderIcon, title, handleClick);
+          return getActionButton('expand', icon, title, handleClick);
         };
 
         const getEditButton = pkClause => {
