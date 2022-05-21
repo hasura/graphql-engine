@@ -437,6 +437,7 @@ def validate_http_anyq_with_allowed_responses(hge_ctx, url, query, headers, exp_
 def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs={}, skip_if_err_msg=False, skip_assertion=False, exp_resp_hdrs={}):
     print('Reponse Headers: ', resp_hdrs)
     print(exp_resp_hdrs)
+
     # Prepare actual and expected responses so comparison takes into
     # consideration only the ordering that we care about:
     resp         = collapse_order_not_selset(resp_orig,         query)

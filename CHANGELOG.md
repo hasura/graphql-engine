@@ -4,6 +4,8 @@
 
 ### Bug fixes and improvements
 
+- server: do not serialize env vars in logs or errors for remote schemas
+
 ## v2.6.2
 
 ### Bug fixes and improvements

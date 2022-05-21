@@ -167,7 +167,7 @@ execRemoteGQ env manager userInfo reqHdrs rsdef gqlReq@GQLReq {..} = do
         ]
       headers = Map.toList $ foldr Map.union Map.empty hdrMaps
       finalHeaders = addDefaultHeaders headers
-  initReq <- onLeft (HTTP.mkRequestEither $ tshow url) (throwRemoteSchemaHttp url)
+  initReq <- onLeft (HTTP.mkRequestEither $ tshow url) (throwRemoteSchemaHttp webhookEnvRecord)
   let req =
         initReq & set HTTP.method "POST"
           & set HTTP.headers finalHeaders
@@ -176,11 +176,11 @@ execRemoteGQ env manager userInfo reqHdrs rsdef gqlReq@GQLReq {..} = do
 
   Tracing.tracedHttpRequest req \req' -> do
     (time, res) <- withElapsedTime $ liftIO $ try $ HTTP.performRequest req' manager
-    resp <- onLeft res (throwRemoteSchemaHttp url)
+    resp <- onLeft res (throwRemoteSchemaHttp webhookEnvRecord)
     pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)
   where
-    ValidatedRemoteSchemaDef url hdrConf fwdClientHdrs timeout _mPrefix = rsdef
-
+    ValidatedRemoteSchemaDef webhookEnvRecord hdrConf fwdClientHdrs timeout _mPrefix = rsdef
+    url = _envVarValue webhookEnvRecord
     userInfoToHdrs = sessionVariablesToHeaders $ _uiSession userInfo
 
 -------------------------------------------------------------------------------
@@ -554,14 +554,14 @@ throwRemoteSchema = throw400 RemoteSchemaError
 
 throwRemoteSchemaHttp ::
   QErrM m =>
-  URI ->
+  EnvRecord URI ->
   HTTP.HttpException ->
   m a
-throwRemoteSchemaHttp url exception =
+throwRemoteSchemaHttp urlEnvRecord exception =
   throwError $
-    baseError
-      { qeInternal = Just $ ExtraInternal $ httpExceptToJSON exception
+    (baseError urlEnvRecord)
+      { qeInternal = Just $ ExtraInternal $ J.toJSON $ HttpException exception
       }
   where
-    baseError = err400 RemoteSchemaError httpExceptMsg
-    httpExceptMsg = "HTTP exception occurred while sending the request to " <> tshow url
+    baseError val = err400 RemoteSchemaError (httpExceptMsg val)
+    httpExceptMsg val = "HTTP exception occurred while sending the request to " <> tshow (_envVarName val)

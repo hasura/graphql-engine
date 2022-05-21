@@ -25,6 +25,7 @@ import Hasura.GraphQL.Schema.Remote
 import Hasura.Prelude
 import Hasura.RQL.IR.RemoteSchema
 import Hasura.RQL.IR.Root
+import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
@@ -109,7 +110,7 @@ buildQueryParsers ::
   IO (P.FieldParser TestMonad (GraphQLField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))
 buildQueryParsers introspection = do
   let introResult = IntrospectionResult introspection G._Query Nothing Nothing
-      remoteSchemaInfo = RemoteSchemaInfo (ValidatedRemoteSchemaDef N.nullURI [] False 60 Nothing) identityCustomizer
+      remoteSchemaInfo = RemoteSchemaInfo (ValidatedRemoteSchemaDef (EnvRecord "" N.nullURI) [] False 60 Nothing) identityCustomizer
       remoteSchemaRels = mempty
       -- Since remote schemas can theoretically join against tables, we need to
       -- have access to all relevant sources-specific information to build their
