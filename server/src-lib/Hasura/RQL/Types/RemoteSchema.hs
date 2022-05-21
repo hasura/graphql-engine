@@ -51,6 +51,7 @@ import Data.HashSet qualified as Set
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
+import Data.URL.Template (printURLTemplate)
 import Database.PG.Query qualified as Q
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Schema
@@ -156,7 +157,7 @@ $(J.deriveJSON hasuraJSON {J.omitNothingFields = True} ''RemoteSchemaCustomizati
 
 -- | 'RemoteSchemaDef' after validation and baking-in of defaults in 'validateRemoteSchemaDef'.
 data ValidatedRemoteSchemaDef = ValidatedRemoteSchemaDef
-  { _vrsdUrl :: !N.URI,
+  { _vrsdUrl :: EnvRecord N.URI,
     _vrsdHeaders :: ![HeaderConf],
     _vrsdFwdClientHeaders :: !Bool,
     _vrsdTimeoutSeconds :: !Int,
@@ -277,13 +278,15 @@ newtype RemoteSchemaNameQuery = RemoteSchemaNameQuery
 
 $(J.deriveJSON hasuraJSON ''RemoteSchemaNameQuery)
 
-getUrlFromEnv :: (MonadIO m, MonadError QErr m) => Env.Environment -> Text -> m N.URI
+getUrlFromEnv :: (MonadIO m, MonadError QErr m) => Env.Environment -> Text -> m (EnvRecord N.URI)
 getUrlFromEnv env urlFromEnv = do
   let mEnv = Env.lookupEnv env $ T.unpack urlFromEnv
   uri <- onNothing mEnv (throw400 InvalidParams $ envNotFoundMsg urlFromEnv)
-  onNothing (N.parseURI uri) (throw400 InvalidParams $ invalidUri uri)
+  case (N.parseURI uri) of
+    Just uri' -> pure $ EnvRecord urlFromEnv uri'
+    Nothing -> throw400 InvalidParams $ invalidUri urlFromEnv
   where
-    invalidUri x = "not a valid URI: " <> T.pack x
+    invalidUri x = "not a valid URI in environment variable: " <> x
     envNotFoundMsg e = "environment variable '" <> e <> "' not set"
 
 validateRemoteSchemaCustomization ::
@@ -308,22 +311,26 @@ validateRemoteSchemaDef ::
 validateRemoteSchemaDef env (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout customization) = do
   validateRemoteSchemaCustomization customization
   case (mUrl, mUrlEnv) of
+    -- case 1: URL is supplied as a template
     (Just url, Nothing) -> do
       resolvedWebhookTxt <- unResolvedWebhook <$> resolveWebhook env url
       case N.parseURI $ T.unpack resolvedWebhookTxt of
-        Nothing -> throw400 InvalidParams $ "not a valid URI: " <> resolvedWebhookTxt
-        Just uri -> return $ ValidatedRemoteSchemaDef uri hdrs fwdHdrs timeout customization
+        Nothing -> throw400 InvalidParams $ "not a valid URI generated from the template: " <> getTemplateFromUrl url
+        Just uri -> return $ ValidatedRemoteSchemaDef (EnvRecord (getTemplateFromUrl url) uri) hdrs fwdHdrs timeout customization
+    -- case 2: URL is supplied as an environment variable
     (Nothing, Just urlEnv) -> do
-      url <- getUrlFromEnv env urlEnv
-      return $ ValidatedRemoteSchemaDef url hdrs fwdHdrs timeout customization
+      urlEnv' <- getUrlFromEnv env urlEnv
+      return $ ValidatedRemoteSchemaDef urlEnv' hdrs fwdHdrs timeout customization
+    -- case 3: No url is supplied, throws an error 400
     (Nothing, Nothing) ->
       throw400 InvalidParams "both `url` and `url_from_env` can't be empty"
+    -- case 4: Both template and environment variables are supplied, throws an error 400
     (Just _, Just _) ->
       throw400 InvalidParams "both `url` and `url_from_env` can't be present"
   where
     hdrs = fromMaybe [] hdrC
-
     timeout = fromMaybe 60 mTimeout
+    getTemplateFromUrl url = printURLTemplate $ unInputWebhook url
 
 newtype RemoteSchemaPermissionDefinition = RemoteSchemaPermissionDefinition
   { _rspdSchema :: G.SchemaDocument

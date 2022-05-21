@@ -599,7 +599,7 @@ class TestRemoteSchemaTimeout:
 
     @pytest.fixture(autouse=True)
     def transact(self, hge_ctx):
-        q = mk_add_remote_q('simple 1', 'http://localhost:5000/hello-graphql', timeout = 5)
+        q = mk_add_remote_q('simple 1', '{{REMOTE_SCHEMAS_WEBHOOK_DOMAIN}}/hello-graphql', timeout = 5)
         st_code, resp = hge_ctx.v1q(q)
         assert st_code == 200, resp
         yield
@@ -607,7 +607,17 @@ class TestRemoteSchemaTimeout:
 
     @pytest.mark.allow_server_upgrade_test
     def test_remote_query_timeout(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir + '/basic_timeout_query.yaml')
+        with open(self.dir + '/basic_timeout_query.yaml') as f:
+            query = yaml.load(f)
+        resp, _ = check_query(hge_ctx, query)
+
+        # tests for query timeout
+        assert resp["errors"][0]["extensions"]["internal"]["type"] == "http_exception"
+        assert resp["errors"][0]["extensions"]["internal"]["message"] == "Response timeout"
+        
+        # tests that graphql server url environment variable template did not serialize in the error message
+        assert resp["errors"][0]["message"] == 'HTTP exception occurred while sending the request to "{{REMOTE_SCHEMAS_WEBHOOK_DOMAIN}}/hello-graphql"'
+        
         # wait for graphql server to finish else teardown throws
         time.sleep(6)
 

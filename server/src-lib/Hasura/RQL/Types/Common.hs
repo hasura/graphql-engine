@@ -50,6 +50,7 @@ module Hasura.RQL.Types.Common
     commentToMaybeText,
     commentFromMaybeText,
     StringifyNumbers (..),
+    EnvRecord (..),
   )
 where
 
@@ -536,3 +537,22 @@ commentToMaybeText (Explicit (Just val)) = Just (toTxt val)
 commentFromMaybeText :: Maybe Text -> Comment
 commentFromMaybeText Nothing = Automatic
 commentFromMaybeText (Just val) = Explicit $ mkNonEmptyText val
+
+-- | We use the following type, after we resolve the env var.
+-- | This will store both the env var name and the resolved datatype.
+data EnvRecord a = EnvRecord
+  { _envVarName :: Text,
+    _envVarValue :: a
+  }
+  deriving (Show, Eq, Generic)
+
+instance NFData a => NFData (EnvRecord a)
+
+instance Cacheable a => Cacheable (EnvRecord a)
+
+instance Hashable a => Hashable (EnvRecord a)
+
+instance (ToJSON a) => ToJSON (EnvRecord a) where
+  toJSON (EnvRecord envVar _envValue) = object ["env_var" .= envVar]
+
+instance (FromJSON a) => FromJSON (EnvRecord a)
