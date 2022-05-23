@@ -220,7 +220,7 @@ instance (J.ToJSON a, J.ToJSON b) => J.ToJSON (ActionDefinition a b) where
             <> typeAndKind
 
 type ResolvedActionDefinition =
-  ActionDefinition (ArgumentDefinition (G.GType, NonObjectCustomType)) ResolvedWebhook
+  ActionDefinition (ArgumentDefinition (G.GType, NonObjectCustomType)) (EnvRecord ResolvedWebhook)
 
 data ActionPermissionInfo = ActionPermissionInfo
   { _apiRole :: !RoleName

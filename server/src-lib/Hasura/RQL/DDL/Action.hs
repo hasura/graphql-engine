@@ -32,6 +32,7 @@ import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.List.NonEmpty qualified as NEList
 import Data.Text.Extended
+import Data.URL.Template (printURLTemplate)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Metadata.Class
@@ -193,6 +194,7 @@ resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = d
                 "Async action relations cannot be used with object fields : " <> commaSeparated (dquote . _ofdName <$> nestedObjects)
     pure aot
   resolvedWebhook <- resolveWebhook env _adHandler
+  let webhookEnvRecord = EnvRecord (printURLTemplate $ unInputWebhook _adHandler) resolvedWebhook
   pure
     ( ActionDefinition
         resolvedArguments
@@ -201,7 +203,7 @@ resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = d
         _adHeaders
         _adForwardClientHeaders
         _adTimeout
-        resolvedWebhook
+        webhookEnvRecord
         _adRequestTransform
         _adResponseTransform,
       outputObject

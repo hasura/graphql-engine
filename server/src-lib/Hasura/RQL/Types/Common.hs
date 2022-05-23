@@ -539,7 +539,7 @@ commentFromMaybeText Nothing = Automatic
 commentFromMaybeText (Just val) = Explicit $ mkNonEmptyText val
 
 -- | We use the following type, after we resolve the env var.
--- | This will store both the env var name and the resolved datatype.
+-- | This will store both the env var name and the resolved value.
 data EnvRecord a = EnvRecord
   { _envVarName :: Text,
     _envVarValue :: a
