@@ -33,7 +33,7 @@ GIT_DIRTY=$(test -n "`git status --porcelain`" && echo "-dirty" || echo "")
 VERSION="${GIT_TAG_EXACT}"
 # IMPORTANT: SHA hash needs to come first so we get a unique version string,
 # even in the presence of truncation below
-test -n "$VERSION" || VERSION="${GIT_SHA}${GIT_DIRTY}-${GIT_BRANCH}"
+test -n "$VERSION" || VERSION="dev-${GIT_SHA}${GIT_DIRTY}-${GIT_BRANCH}"
 
 VERSION="$(echo $VERSION | tr -cd '[[:alnum:]]._-')"
 # Truncate to 50 chars. See: https://github.com/hasura/graphql-engine-mono/pull/4183
