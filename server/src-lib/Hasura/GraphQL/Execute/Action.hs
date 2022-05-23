@@ -447,7 +447,7 @@ callWebhook ::
   [HTTP.Header] ->
   [HeaderConf] ->
   Bool ->
-  ResolvedWebhook ->
+  EnvRecord ResolvedWebhook ->
   ActionWebhookPayload ->
   Timeout ->
   Maybe RequestTransform ->
@@ -475,9 +475,11 @@ callWebhook
         requestBody = J.encode postPayload
         requestBodySize = BL.length requestBody
         responseTimeout = HTTP.responseTimeoutMicro $ (unTimeout timeoutSeconds) * 1000000
-        url = unResolvedWebhook resolvedWebhook
+        (EnvRecord webhookEnvName resolvedWebhookValue) = resolvedWebhook
+        webhookUrl = unResolvedWebhook resolvedWebhookValue
         sessionVars = Just $ _awpSessionVariables actionWebhookPayload
-    initReq <- liftIO $ HTTP.mkRequestThrow url
+
+    initReq <- liftIO $ HTTP.mkRequestThrow webhookUrl
 
     let req =
           initReq
@@ -489,7 +491,7 @@ callWebhook
     (transformedReq, transformedReqSize, reqTransformCtx) <- case metadataRequestTransform of
       Nothing -> pure (Nothing, Nothing, Nothing)
       Just RequestTransform {..} ->
-        let reqTransformCtx = mkReqTransformCtx url sessionVars templateEngine
+        let reqTransformCtx = mkReqTransformCtx webhookUrl sessionVars templateEngine
          in case applyRequestTransform reqTransformCtx requestFields req of
               Left err -> do
                 -- Log The Transformation Error
@@ -508,7 +510,7 @@ callWebhook
       Tracing.tracedHttpRequest actualReq $ \request ->
         liftIO . try $ HTTP.performRequest request manager
 
-    let requestInfo = ActionRequestInfo url postPayload (confHeaders <> toHeadersConf clientHeaders) transformedReq
+    let requestInfo = ActionRequestInfo webhookEnvName postPayload (confHeaders <> toHeadersConf clientHeaders) transformedReq
 
     case httpResponse of
       Left e ->

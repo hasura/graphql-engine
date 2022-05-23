@@ -53,7 +53,7 @@ import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types.Action qualified as RQL
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.Common (FieldName, Fields, ResolvedWebhook, SourceName, StringifyNumbers, Timeout)
+import Hasura.RQL.Types.Common (EnvRecord, FieldName, Fields, ResolvedWebhook, SourceName, StringifyNumbers, Timeout)
 import Hasura.RQL.Types.CustomTypes
   ( AnnotatedObjectType (..),
     AnnotatedOutputType (..),
@@ -108,7 +108,7 @@ data AnnActionExecution (r :: Type) = AnnActionExecution
     _aaePayload :: !J.Value,
     -- | to validate the response fields from webhook
     _aaeOutputFields :: !ActionOutputFields,
-    _aaeWebhook :: !ResolvedWebhook,
+    _aaeWebhook :: !(EnvRecord ResolvedWebhook),
     _aaeHeaders :: ![HeaderConf],
     _aaeForwardClientHeaders :: !Bool,
     _aaeTimeOut :: !Timeout,

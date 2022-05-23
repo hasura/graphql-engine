@@ -873,5 +873,9 @@ class TestActionTimeout:
         # of the handler's execution. So, total time taken for this test will be 4 seconds.
         time.sleep(4)
         response, _ = check_query(hge_ctx, conf)
+                
         assert 'errors' in response['data']['create_user']
         assert 'Response timeout' == response['data']['create_user']['errors']['internal']['error']['message']
+        
+        # tests that actions webhook url environment variable template did not serialize in the error message
+        assert "{{ACTION_WEBHOOK_HANDLER}}/create-user-timeout" == response['data']['create_user']['errors']['internal']['request']['url']

@@ -42,4 +42,4 @@ args:
         type: String!
       output_type: UserId
       timeout: 2
-      handler: http://127.0.0.1:5593/create-user-timeout
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/create-user-timeout"
