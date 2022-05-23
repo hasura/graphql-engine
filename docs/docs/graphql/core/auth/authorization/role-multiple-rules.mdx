@@ -99,9 +99,11 @@ set to `user` and `2` respectively, we'll get the following result:
     id
     name
     city
-    email
-    phone
-    address
+    private_info {         
+      email
+      phone
+      address
+    }         
   }
  }`}
   response={
@@ -119,10 +121,10 @@ set to `user` and `2` respectively, we'll get the following result:
         "name": "Josh",
         "city": "Bangalore",
         "private_info": {
-        "email": "josh@josh.com",
-        "phone": "+91-9787675678",
-        "address": "#141, 7th Main Road, Koramangala 3rd Block",
-      }
+          "email": "josh@josh.com",
+          "phone": "+91-9787675678",
+          "address": "Koramangala 3rd Block",
+        }
       },
       {
         "id": 3,
