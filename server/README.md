@@ -10,8 +10,8 @@ You can also get started with a list of [tips and tricks](tips.md).
 
 ## Haddock documentation
 
-You can browse the generated [haddock documentation](haddock/) for the engine's
-code; we automatically update it on every push to a branch of interest:
+You can browse the generated haddock documentation for the engine's code; we
+automatically update it on every push to a branch of interest:
 
 * [stable branch](haddock/stable)
 * [alpha branch](haddock/alpha)
