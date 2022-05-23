@@ -1,6 +1,6 @@
 This note is in [Hasura.RQL.DDL.CustomTypes](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/CustomTypes.hs#L36).
 It is referenced at:
-  - line 118 of [Hasura.RQL.DDL.Action](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Action.hs#L118)
+  - line 119 of [Hasura.RQL.DDL.Action](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Action.hs#L119)
   - line 68 of [Hasura.RQL.DDL.CustomTypes](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/CustomTypes.hs#L68)
   - line 274 of [Hasura.RQL.DDL.CustomTypes](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/CustomTypes.hs#L274)
 
