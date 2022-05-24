@@ -4,23 +4,23 @@
       - name: getAlbums
         query: |
           query getAlbums {
-          	albums {
-          		id
-          		title
-          	}
+            albums {
+              id
+              title
+            }
           }
       - name: getArtists
         query: |
           query getArtists {
-          	artists {
-          		id
-          		name
-          	}
+            artists {
+              id
+              name
+            }
           }
       - name: get-artists
         query: |
           query getArtists {
-          	artists {
-          		name
-          	}
+            artists {
+              name
+            }
           }
