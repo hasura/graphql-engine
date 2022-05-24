@@ -4,6 +4,8 @@
 
 ### Bug fixes and improvements
 
+- server: fix regression introduced in v2.7.0-beta.1: the `kind` field in source metadata was inadvertently made a required field, breaking upgrades from v1 and new cloud projects
+
 ## v2.6.2
 
 ### Bug fixes and improvements
