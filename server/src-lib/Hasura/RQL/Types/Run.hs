@@ -32,14 +32,12 @@ newtype RunT m a = RunT {unRunT :: ReaderT RunCtx (ExceptT QErr m) a}
       MonadReader RunCtx,
       MonadIO,
       MonadMetadataStorage,
-      Tracing.MonadTrace
+      Tracing.MonadTrace,
+      MonadBase b,
+      MonadBaseControl b
     )
 
 instance (MonadMetadataStorage m) => MonadMetadataStorageQueryAPI (RunT m)
-
-deriving instance (MonadIO m, MonadBase IO m) => MonadBase IO (RunT m)
-
-deriving instance (MonadIO m, MonadBaseControl IO m) => MonadBaseControl IO (RunT m)
 
 instance (Monad m) => UserInfoM (RunT m) where
   askUserInfo = asks _rcUserInfo

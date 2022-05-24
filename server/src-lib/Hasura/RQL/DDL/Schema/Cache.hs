@@ -173,12 +173,10 @@ newtype CacheRWT m a
       MonadMetadataStorage,
       MonadMetadataStorageQueryAPI,
       Tracing.MonadTrace,
-      HasServerConfigCtx
+      HasServerConfigCtx,
+      MonadBase b,
+      MonadBaseControl b
     )
-
-deriving instance (MonadBase IO m) => MonadBase IO (CacheRWT m)
-
-deriving instance (MonadBaseControl IO m) => MonadBaseControl IO (CacheRWT m)
 
 runCacheRWT ::
   Functor m =>

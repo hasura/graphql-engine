@@ -394,12 +394,10 @@ newtype MetadataStorageT m a = MetadataStorageT {unMetadataStorageT :: ExceptT Q
       Tracing.MonadTrace,
       MonadResolveSource,
       HasHttpManagerM,
-      HasServerConfigCtx
+      HasServerConfigCtx,
+      MonadBase b,
+      MonadBaseControl b
     )
-
-deriving instance (MonadBase IO m) => MonadBase IO (MetadataStorageT m)
-
-deriving instance (MonadBaseControl IO m) => MonadBaseControl IO (MetadataStorageT m)
 
 runMetadataStorageT ::
   MetadataStorageT m a -> m (Either QErr a)

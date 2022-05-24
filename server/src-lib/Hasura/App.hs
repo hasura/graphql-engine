@@ -321,24 +321,15 @@ newtype PGMetadataStorageAppT m a = PGMetadataStorageAppT {runPGMetadataStorageA
       MonadMask,
       HasHttpManagerM,
       HasServerConfigCtx,
-      MonadReader (Q.PGPool, Q.PGLogger)
+      MonadReader (Q.PGPool, Q.PGLogger),
+      MonadBase b,
+      MonadBaseControl b
     )
     via (ReaderT (Q.PGPool, Q.PGLogger) m)
-
-deriving via
-  (ReaderT (Q.PGPool, Q.PGLogger) m)
-  instance
-    MonadBase IO m => MonadBase IO (PGMetadataStorageAppT m)
-
-deriving via
-  (ReaderT (Q.PGPool, Q.PGLogger) m)
-  instance
-    MonadBaseControl IO m => MonadBaseControl IO (PGMetadataStorageAppT m)
-
-deriving via
-  (ReaderT (Q.PGPool, Q.PGLogger))
-  instance
-    MonadTrans PGMetadataStorageAppT
+  deriving
+    ( MonadTrans
+    )
+    via (ReaderT (Q.PGPool, Q.PGLogger))
 
 resolvePostgresConnInfo ::
   (MonadIO m) => Env.Environment -> UrlConf -> Maybe Int -> m Q.ConnInfo
