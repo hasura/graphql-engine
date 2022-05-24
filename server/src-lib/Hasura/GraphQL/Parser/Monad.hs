@@ -31,7 +31,7 @@ import Type.Reflection (Typeable, typeRep, (:~:) (..))
 newtype SchemaT n m a = SchemaT
   { unSchemaT :: StateT (DMap ParserId (ParserById n)) m a
   }
-  deriving (Functor, Applicative, Monad, MonadError e)
+  deriving (Functor, Applicative, Monad, MonadError e, MonadReader r)
 
 runSchemaT :: forall m n a. Monad m => SchemaT n m a -> m a
 runSchemaT = flip evalStateT mempty . unSchemaT
@@ -85,12 +85,6 @@ instance
         parser <- unSchemaT buildParser
         liftIO $ writeIORef cell (Just parser)
         pure parser
-
--- We can add a reader in two places.  I'm not sure which one is the correct
--- one.  But since we don't seem to change the values that are being read, I
--- don't think it matters.
-
-deriving instance Monad m => MonadReader a (SchemaT n (ReaderT a m))
 
 instance
   (MonadIO m, MonadParse n) =>

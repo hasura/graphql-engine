@@ -27,10 +27,7 @@ data CheckPermission permissionType
   = CPUndefined
   | CPInconsistent
   | CPDefined permissionType
-
-deriving instance (Show permissionType) => Show (CheckPermission permissionType)
-
-deriving instance (Eq permissionType) => Eq (CheckPermission permissionType)
+  deriving stock (Show, Eq)
 
 instance
   (OnlyRelevantEq permissionType) =>

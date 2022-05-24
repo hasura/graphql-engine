@@ -253,12 +253,10 @@ newtype MetadataT m a = MetadataT {unMetadataT :: StateT Metadata m a}
       CacheRM,
       CacheRWM,
       MFunctor,
-      Tracing.MonadTrace
+      Tracing.MonadTrace,
+      MonadBase b,
+      MonadBaseControl b
     )
-
-deriving instance (MonadBase IO m) => MonadBase IO (MetadataT m)
-
-deriving instance (MonadBaseControl IO m) => MonadBaseControl IO (MetadataT m)
 
 instance (Monad m) => MetadataM (MetadataT m) where
   getMetadata = MetadataT get
