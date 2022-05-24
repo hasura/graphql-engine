@@ -23,15 +23,15 @@ spec =
     [ Context.Context
         { name = Context.Backend Context.BigQuery,
           mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = bigQuerySetup,
-          teardown = const bigQueryTeardown,
+          setup = bigquerySetup,
+          teardown = Bigquery.teardown [author],
           customOptions = Nothing
         }
     ]
     tests
 
-authorTable :: Schema.Table
-authorTable =
+author :: Schema.Table
+author =
   Schema.Table
     { tableName = "author",
       tableColumns = [],
@@ -40,8 +40,8 @@ authorTable =
       tableData = []
     }
 
-bigQuerySetup :: (TestEnvironment, ()) -> IO ()
-bigQuerySetup (testEnvironment, _) = do
+bigquerySetup :: (TestEnvironment, ()) -> IO ()
+bigquerySetup (testEnvironment, _) = do
   sourceMetadata <- Bigquery.defaultSourceMetadata
   GraphqlEngine.postMetadata_ testEnvironment sourceMetadata
 
@@ -60,11 +60,7 @@ bigQuerySetup (testEnvironment, _) = do
         VALUES (1, "sibi", 5555555555555556666, 5555555555555556666);
         |]
 
-  Bigquery.trackTable testEnvironment authorTable
-
-bigQueryTeardown :: IO ()
-bigQueryTeardown = do
-  Bigquery.dropTable authorTable
+  Bigquery.trackTable testEnvironment author
 
 tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = describe "SerializationSpec" $ do
