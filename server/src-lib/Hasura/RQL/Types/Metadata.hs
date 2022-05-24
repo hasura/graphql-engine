@@ -103,7 +103,7 @@ where
 
 import Control.Lens hiding (set, (.=))
 import Data.Aeson.Casing
-import Data.Aeson.Extended (mapWithJSONPath)
+import Data.Aeson.Extended (FromJSONWithContext (..), mapWithJSONPath)
 import Data.Aeson.Ordered qualified as AO
 import Data.Aeson.TH
 import Data.Aeson.Types
@@ -465,10 +465,9 @@ deriving instance (Backend b) => Eq (SourceMetadata b)
 
 instance (Backend b) => Cacheable (SourceMetadata b)
 
-instance (Backend b) => FromJSON (SourceMetadata b) where
-  parseJSON = withObject "Object" $ \o -> do
+instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (SourceMetadata b) where
+  parseJSONWithContext _smKind = withObject "Object" $ \o -> do
     _smName <- o .: "name"
-    _smKind <- o .: "kind"
     _smTables <- oMapFromL _tmTable <$> o .: "tables"
     _smFunctions <- oMapFromL _fmFunction <$> o .:? "functions" .!= []
     _smConfiguration <- o .: "configuration"
@@ -620,11 +619,11 @@ instance FromJSON Metadata where
     where
       parseSourceMetadata :: Value -> Parser (AB.AnyBackend SourceMetadata)
       parseSourceMetadata = withObject "SourceMetadata" \o -> do
-        backendSourceKind <- explicitParseField AB.parseBackendSourceKindFromJSON o "kind"
-        AB.dispatchAnyBackend'' @FromJSON @Backend
+        backendSourceKind <- explicitParseFieldMaybe AB.parseBackendSourceKindFromJSON o "kind" .!= AB.mkAnyBackend PostgresVanillaKind
+        AB.dispatchAnyBackend @Backend
           backendSourceKind
-          ( \(_kind :: BackendSourceKind b) ->
-              AB.mkAnyBackend @b <$> parseJSON (Object o)
+          ( \(kind :: BackendSourceKind b) ->
+              AB.mkAnyBackend @b <$> parseJSONWithContext kind (Object o)
           )
 
 emptyMetadata :: Metadata

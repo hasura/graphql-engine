@@ -5,6 +5,7 @@
 ### Bug fixes and improvements
 
 - server: do not serialize env vars in logs or errors for remote schemas
+- server: fix regression introduced in v2.7.0-beta.1: the `kind` field in source metadata was inadvertently made a required field, breaking upgrades from v1 and new cloud projects
 
 ## v2.6.2
 

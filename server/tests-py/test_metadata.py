@@ -136,6 +136,39 @@ class TestMetadata:
             "code": "unexpected"
         }
 
+    """Test that missing "kind" key in metadata source defaults to "postgres".
+    Regression test for https://github.com/hasura/graphql-engine-mono/issues/4501"""
+    def test_replace_metadata_default_kind(self, hge_ctx):
+        st_code, resp = hge_ctx.v1metadataq({"type": "export_metadata", "args": {}})
+        assert st_code == 200, resp
+        default_source_config = {}
+        default_source = list(filter(lambda source: (source["name"] == "default"), resp["sources"]))
+        if default_source:
+            default_source_config = default_source[0]["configuration"]
+        else:
+            assert False, "default source config not found"
+            return
+        st_code, resp = hge_ctx.v1metadataq({
+               "type": "replace_metadata",
+               "version": 2,
+               "args": {
+                 "metadata": {
+                   "version": 3,
+                   "sources": [
+                     {
+                       "name": "default",
+                       "tables": [],
+                       "configuration": default_source_config
+                     }
+                   ]
+                 }
+               }
+             })
+        assert st_code == 200, resp
+        st_code, resp = hge_ctx.v1metadataq({"type": "export_metadata", "args": {}})
+        assert st_code == 200, resp
+        assert resp["sources"][0]["kind"] == "postgres"
+
     def test_dump_internal_state(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/dump_internal_state.yaml')
 
