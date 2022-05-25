@@ -6,36 +6,29 @@
 module Hasura.Backends.Postgres.Translate.BoolExp
   ( toSQLBoolExp,
     annBoolExp,
-    BoolExpRHSParser (..),
   )
 where
 
 import Data.HashMap.Strict qualified as M
-import Data.Text.Extended (ToTxt, (<<>))
+import Data.Text.Extended (ToTxt)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import Hasura.Backends.Postgres.Types.BoolExp
+import Hasura.Backends.Postgres.Types.Function (onArgumentExp)
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BoolExp
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Hasura.SQL.Types
-
--- | Context to parse a RHS value in a boolean expression
-data BoolExpRHSParser (b :: BackendType) m v = BoolExpRHSParser
-  { -- | Parse a JSON value with enforcing a column type
-    _berpValueParser :: !(ValueParser b m v),
-    -- | Required for a computed field SQL function with session argument
-    _berpSessionValue :: !v
-  }
 
 -- This convoluted expression instead of col = val
 -- to handle the case of col : null
@@ -98,28 +91,9 @@ annColExp rhsParser rootTable colInfoMap (ColExp fieldName colVal) = do
       relFieldInfoMap <- askFieldInfoMapSource $ riRTable relInfo
       annRelBoolExp <- annBoolExp rhsParser rootTable relFieldInfoMap $ unBoolExp relBoolExp
       return $ AVRelationship relInfo annRelBoolExp
-    FIComputedField ComputedFieldInfo {..} -> do
-      let ComputedFieldFunction {..} = _cfiFunction
-      case toList _cffInputArgs of
-        [] -> do
-          let hasuraSession = _berpSessionValue rhsParser
-              sessionArgPresence = mkSessionArgumentPresence hasuraSession _cffSessionArgument _cffTableArgument
-          AVComputedField . AnnComputedFieldBoolExp _cfiXComputedFieldInfo _cfiName _cffName sessionArgPresence
-            <$> case _cfiReturnType of
-              CFRScalar scalarType ->
-                CFBEScalar
-                  <$> parseBoolExpOperations (_berpValueParser rhsParser) rootTable colInfoMap (ColumnReferenceComputedField _cfiName scalarType) colVal
-              CFRSetofTable table -> do
-                tableBoolExp <- decodeValue colVal
-                tableFieldInfoMap <- askFieldInfoMapSource table
-                annTableBoolExp <- annBoolExp rhsParser table tableFieldInfoMap $ unBoolExp tableBoolExp
-                pure $ CFBETable table annTableBoolExp
-        _ ->
-          throw400
-            UnexpectedPayload
-            "Computed columns with input arguments can not be part of the where clause"
-
-    -- TODO Rakesh (from master)
+    FIComputedField computedFieldInfo ->
+      AVComputedField <$> buildComputedFieldBooleanExp (BoolExpResolver annBoolExp) rhsParser rootTable colInfoMap computedFieldInfo colVal
+    -- Using remote fields in the boolean expression is not supported.
     FIRemoteRelationship {} ->
       throw400 UnexpectedPayload "remote field unsupported"
 
@@ -239,22 +213,21 @@ translateBoolExp = \case
 
 data LHSField b
   = LColumn !FieldName
-  | LComputedField !QualifiedFunction !(SessionArgumentPresence (SQLExpression b))
+  | LComputedField !QualifiedFunction !(FunctionArgsExp b (SQLExpression b))
 
 mkComputedFieldFunctionExp ::
   S.Qual ->
   QualifiedFunction ->
-  SessionArgumentPresence (SQLExpression ('Postgres pgKind)) ->
+  FunctionArgsExp ('Postgres pgKind) (SQLExpression ('Postgres pgKind)) ->
   Maybe S.Alias ->
   S.FunctionExp
-mkComputedFieldFunctionExp qual function sessionArgPresence alias =
+mkComputedFieldFunctionExp qual function functionArgs alias =
   -- "function_schema"."function_name"("qual".*)
   let tableRowInput = S.SEStar $ Just qual
-      functionArgs = flip S.FunctionArgs mempty $ case sessionArgPresence of
-        SAPNotPresent -> [tableRowInput] -- No session argument
-        SAPFirst sessArg -> [sessArg, tableRowInput]
-        SAPSecond sessArg -> [tableRowInput, sessArg]
-   in S.FunctionExp function functionArgs $ flip S.FunctionAlias Nothing <$> alias
+      resolvedFunctionArgs =
+        let FunctionArgsExp {..} = fmap (onArgumentExp tableRowInput (S.SEIdentifier . Identifier)) functionArgs
+         in S.FunctionArgs _faePositional _faeNamed
+   in S.FunctionExp function resolvedFunctionArgs $ flip S.FunctionAlias Nothing <$> alias
 
 mkFieldCompExp ::
   S.Qual -> S.Qual -> LHSField ('Postgres pgKind) -> OpExpG ('Postgres pgKind) S.SQLExp -> S.BoolExp
@@ -345,16 +318,3 @@ mkFieldCompExp rootReference currTableReference lhsField = mkCompExp qLhsField
              in sqlAll $ map (mkCompExp (S.SETyAnn lhs targetAnn)) operations
 
         sqlAll = foldr (S.BEBin S.AndOp) (S.BELit True)
-
--------------------------------------------------------------------------------
-
--- | Asking for a table's fields info without explicit @'SourceName' argument.
--- The source name is implicitly inferred from @'SourceM' via @'TableCoreInfoRM'.
-askFieldInfoMapSource ::
-  (QErrM m, Backend b, TableCoreInfoRM b m) =>
-  TableName b ->
-  m (FieldInfoMap (FieldInfo b))
-askFieldInfoMapSource tableName = do
-  fmap _tciFieldInfoMap $
-    onNothingM (lookupTableCoreInfo tableName) $
-      throw400 NotExists $ "table " <> tableName <<> " does not exist"

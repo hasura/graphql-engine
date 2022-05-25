@@ -16,6 +16,7 @@ import Data.Sequence qualified as Seq
 import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types hiding (FunctionName)
+import Hasura.Backends.Postgres.Types.Function
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
@@ -28,7 +29,7 @@ import Hasura.SQL.Backend
 import Hasura.Server.Utils
 import Language.GraphQL.Draft.Syntax qualified as G
 
-mkFunctionArgs :: Int -> [QualifiedPGType] -> [FunctionArgName] -> [FunctionArg ('Postgres pgKind)]
+mkFunctionArgs :: Int -> [QualifiedPGType] -> [FunctionArgName] -> [FunctionArg]
 mkFunctionArgs defArgsNo tys argNames =
   bool withNames withNoNames $ null argNames
   where

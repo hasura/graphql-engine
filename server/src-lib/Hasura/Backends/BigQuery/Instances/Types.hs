@@ -20,7 +20,7 @@ instance Backend 'BigQuery where
   type TableName 'BigQuery = BigQuery.TableName
   type FunctionName 'BigQuery = BigQuery.FunctionName
   type RawFunctionInfo 'BigQuery = BigQuery.RestRoutine
-  type FunctionArgType 'BigQuery = Void
+  type FunctionArgument 'BigQuery = BigQuery.FunctionArgument
   type ConstraintName 'BigQuery = Void
   type BasicOrderType 'BigQuery = BigQuery.Order
   type NullsOrderType 'BigQuery = BigQuery.NullsOrder
@@ -32,18 +32,18 @@ instance Backend 'BigQuery where
   type ScalarSelectionArguments 'BigQuery = Void
   type BooleanOperators 'BigQuery = BigQuery.BooleanOperators
   type ComputedFieldDefinition 'BigQuery = BigQuery.ComputedFieldDefinition
-  type XStreamingSubscription 'BigQuery = XDisable
+  type FunctionArgumentExp 'BigQuery = BigQuery.ArgumentExp
+  type ComputedFieldImplicitArguments 'BigQuery = BigQuery.ComputedFieldImplicitArguments
+  type ComputedFieldReturn 'BigQuery = BigQuery.ComputedFieldReturn
 
-  type XComputedField 'BigQuery = XDisable
+  type XStreamingSubscription 'BigQuery = XDisable
+  type XComputedField 'BigQuery = XEnable
   type XRelay 'BigQuery = XDisable
   type XNodesAgg 'BigQuery = XEnable
   type XNestedInserts 'BigQuery = XDisable
   type XStreamingSubscription 'BigQuery = XDisable
 
   type ExtraTableMetadata 'BigQuery = ()
-
-  functionArgScalarType :: FunctionArgType 'BigQuery -> ScalarType 'BigQuery
-  functionArgScalarType = absurd
 
   isComparableType :: ScalarType 'BigQuery -> Bool
   isComparableType = BigQuery.isComparableType
@@ -85,3 +85,14 @@ instance Backend 'BigQuery where
 
   computedFieldFunction :: ComputedFieldDefinition 'BigQuery -> FunctionName 'BigQuery
   computedFieldFunction = BigQuery._bqcfdFunction
+
+  computedFieldReturnType :: ComputedFieldReturn 'BigQuery -> ComputedFieldReturnType 'BigQuery
+  computedFieldReturnType = \case
+    BigQuery.ReturnExistingTable tableName -> ReturnsTable tableName
+    BigQuery.ReturnTableSchema _ -> ReturnsOthers
+
+  fromComputedFieldImplicitArguments :: v -> ComputedFieldImplicitArguments 'BigQuery -> [FunctionArgumentExp 'BigQuery v]
+  fromComputedFieldImplicitArguments _ _ =
+    -- As of now, computed fields are not supported in boolean and order by expressions.
+    -- We don't have to generate arguments expression from implicit arguments.
+    []

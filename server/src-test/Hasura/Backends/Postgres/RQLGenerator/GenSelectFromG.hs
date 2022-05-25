@@ -6,7 +6,7 @@ where
 import Hasura.Backends.Postgres.RQLGenerator.GenAssociatedTypes
 import Hasura.Generator.Common (defaultRange)
 import Hasura.Prelude hiding (choice, maybe)
-import Hasura.RQL.IR.Generator (genArgumentExp, genFunctionArgsExpG, genIdentifier)
+import Hasura.RQL.IR.Generator (genFunctionArgsExpG, genIdentifier)
 import Hasura.RQL.IR.Select (SelectFromG (..))
 import Hasura.SQL.Backend (BackendType (..), PostgresKind (..))
 import Hedgehog (MonadGen)
@@ -24,6 +24,6 @@ genSelectFromG genA = Gen.choice [fromTable, fromIdentifier, fromFunction]
     fromIdentifier = FromIdentifier <$> genIdentifier
     fromFunction = do
       funcName <- genFunctionName
-      funcArgsExp <- genFunctionArgsExpG $ genArgumentExp genA
+      funcArgsExp <- genFunctionArgsExpG $ genFunctionArgumentExp genA
       defList <- Gen.maybe . Gen.list defaultRange $ liftA2 (,) genColumn genScalarType
       pure $ FromFunction funcName funcArgsExp defList

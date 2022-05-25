@@ -21,9 +21,11 @@ where
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types (Identifier (..), QualifiedFunction, qualifiedObjectToText, toIdentifier)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
+import Hasura.Backends.Postgres.Types.Function
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Common (FieldName)
+import Hasura.RQL.Types.Function
 import Hasura.SQL.Backend
 
 -- | First element extractor expression from given record set
@@ -76,7 +78,7 @@ encodeBase64 =
       S.SEFnApp "regexp_replace" [e, S.SELit "\\n", S.SELit "", S.SELit "g"] Nothing
 
 fromTableRowArgs ::
-  Identifier -> FunctionArgsExpTableRow S.SQLExp -> S.FunctionArgs
+  Identifier -> FunctionArgsExpG (ArgumentExp S.SQLExp) -> S.FunctionArgs
 fromTableRowArgs prefix = toFunctionArgs . fmap toSQLExp
   where
     toFunctionArgs (FunctionArgsExp positional named) =

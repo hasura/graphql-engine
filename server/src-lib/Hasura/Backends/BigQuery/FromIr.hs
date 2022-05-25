@@ -29,6 +29,7 @@ import Hasura.Prelude
 import Hasura.RQL.IR qualified as Ir
 import Hasura.RQL.Types.Column qualified as Rql
 import Hasura.RQL.Types.Common qualified as Rql
+import Hasura.RQL.Types.Function qualified as Rql
 import Hasura.RQL.Types.Relationships.Local qualified as Rql
 import Hasura.SQL.Backend
 
@@ -52,6 +53,9 @@ data Error
   | InvalidIntegerishSql Expression
   | ConnectionsNotSupported
   | ActionsNotSupported
+  | -- | TODO: SQL generation for computed fields is not being added now.
+    -- See https://github.com/hasura/graphql-engine-mono/issues/4369
+    ComputedFieldsNotSupported
 
 instance Show Error where
   show =
@@ -71,6 +75,7 @@ instance Show Error where
       InvalidIntegerishSql {} -> "InvalidIntegerishSql"
       ConnectionsNotSupported {} -> "ConnectionsNotSupported"
       ActionsNotSupported {} -> "ActionsNotSupported"
+      ComputedFieldsNotSupported {} -> "ComputedFieldsNotSupported"
 
 -- | The base monad used throughout this module for all conversion
 -- functions.
@@ -186,7 +191,7 @@ fromSelectRows annSelectG = do
   selectFrom <-
     case from of
       Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
-      Ir.FromFunction nm (Ir.FunctionArgsExp [Ir.AEInput json] _) (Just columns)
+      Ir.FromFunction nm (Rql.FunctionArgsExp [BigQuery.AEInput json] _) (Just columns)
         | functionName nm == "unnest" -> fromUnnestedJSON json columns (map fst fields)
       _ -> refute (pure (FromTypeUnsupported from))
   Args
@@ -663,6 +668,7 @@ unfurlAnnotatedOrderByElement =
           { fieldNameEntity = entityAliasText joinAlias,
             fieldName = alias
           }
+    Ir.AOCComputedField {} -> refute $ pure ComputedFieldsNotSupported
 
 --------------------------------------------------------------------------------
 -- Conversion functions
@@ -726,6 +732,7 @@ fromAnnBoolExpFld =
                 selectOffset = Nothing
               }
         )
+    Ir.AVComputedField {} -> refute $ pure ComputedFieldsNotSupported
 
 fromColumnInfo :: Rql.ColumnInfo 'BigQuery -> ReaderT EntityAlias FromIr FieldName
 fromColumnInfo Rql.ColumnInfo {ciColumn = ColumnName column} = do
@@ -932,6 +939,7 @@ fromAnnFieldsG existingJoins stringifyNumbers (Rql.FieldName name, field) =
             JoinFieldSource (Aliased {aliasedThing, aliasedAlias = name})
         )
         (fromArraySelectG arraySelectG)
+    Ir.AFComputedField {} -> refute $ pure ComputedFieldsNotSupported
 
 -- | Here is where we project a field as a column expression. If
 -- number stringification is on, then we wrap it in a

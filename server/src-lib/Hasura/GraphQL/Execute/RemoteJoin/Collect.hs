@@ -22,6 +22,7 @@ import Hasura.RQL.IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.SQL.AnyBackend qualified as AB
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -395,12 +396,13 @@ transformAnnFields fields = do
        in (fmap snd annotatedJoinColumns, phantomFields_)
 
     mkScalarComputedFieldSelect ::
+      forall b.
+      (Backend b) =>
       ScalarComputedField b ->
       AnnFieldG b Void (UnpreparedValue b)
     mkScalarComputedFieldSelect ScalarComputedField {..} =
       let functionArgs =
-            flip FunctionArgsExp mempty $
-              functionArgsWithTableRowAndSession UVSession _scfTableArgument _scfSessionArgument
+            flip FunctionArgsExp mempty $ fromComputedFieldImplicitArguments @b UVSession _scfComputedFieldImplicitArgs
           fieldSelect =
             flip CFSScalar Nothing $
               ComputedFieldScalarSelect _scfFunction functionArgs _scfType Nothing

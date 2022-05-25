@@ -38,7 +38,7 @@ import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.DDL.Source.Version
 import Hasura.Backends.Postgres.SQL.Types hiding (FunctionName)
-import Hasura.Backends.Postgres.Types.ComputedFieldDefinition
+import Hasura.Backends.Postgres.Types.ComputedField
 import Hasura.Base.Error
 import Hasura.Logging
 import Hasura.Prelude

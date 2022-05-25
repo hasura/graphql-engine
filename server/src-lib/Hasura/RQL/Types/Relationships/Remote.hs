@@ -266,8 +266,7 @@ data ScalarComputedField (b :: BackendType) = ScalarComputedField
   { _scfXField :: !(XComputedField b),
     _scfName :: !ComputedFieldName,
     _scfFunction :: !(FunctionName b),
-    _scfTableArgument :: !FunctionTableArgument,
-    _scfSessionArgument :: !(Maybe FunctionSessionArgument),
+    _scfComputedFieldImplicitArgs :: !(ComputedFieldImplicitArguments b),
     _scfType :: !(ScalarType b)
   }
   deriving (Generic)
@@ -285,8 +284,7 @@ instance Backend b => ToJSON (ScalarComputedField b) where
     object
       [ "name" .= _scfName,
         "function" .= _scfFunction,
-        "table_argument" .= _scfTableArgument,
-        "session_argument" .= _scfSessionArgument,
+        "function_implicit_arguments" .= _scfComputedFieldImplicitArgs,
         "type" .= _scfType
       ]
 

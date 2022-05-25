@@ -27,6 +27,7 @@ module Hasura.RQL.Types.SchemaCache
     askTableFieldInfoMap,
     askTableMetadata,
     askFunctionInfo,
+    askFieldInfoMapSource,
     TableCoreCache,
     TableCache,
     ActionCache,
@@ -108,7 +109,6 @@ module Hasura.RQL.Types.SchemaCache
     getDependentObjs,
     getDependentObjsWith,
     FunctionVolatility (..),
-    FunctionArg (..),
     FunctionArgName (..),
     FunctionInfo (..),
     FunctionCache,
@@ -783,3 +783,14 @@ getColExpDeps bexp = do
               IsRoot -> rootTable
               IsCurrent -> currTable
         pure $ mkColDep @b DROnType source table col
+
+-- | Asking for a table's fields info without explicit @'SourceName' argument.
+-- The source name is implicitly inferred from @'SourceM' via @'TableCoreInfoRM'.
+askFieldInfoMapSource ::
+  (QErrM m, Backend b, TableCoreInfoRM b m) =>
+  TableName b ->
+  m (FieldInfoMap (FieldInfo b))
+askFieldInfoMapSource tableName = do
+  fmap _tciFieldInfoMap $
+    onNothingM (lookupTableCoreInfo tableName) $
+      throw400 NotExists $ "table " <> tableName <<> " does not exist"

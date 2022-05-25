@@ -40,12 +40,13 @@ buildComputedFieldInfo ::
   (MonadError QErr m) =>
   HashSet (TableName 'MSSQL) ->
   TableName 'MSSQL ->
+  HashSet (Column 'MSSQL) ->
   ComputedFieldName ->
   ComputedFieldDefinition 'MSSQL ->
   RawFunctionInfo 'MSSQL ->
   Comment ->
   m (ComputedFieldInfo 'MSSQL)
-buildComputedFieldInfo _ _ _ _ _ _ =
+buildComputedFieldInfo _ _ _ _ _ _ _ =
   throw400 NotSupported "Computed fields aren't supported for MSSQL sources"
 
 fetchAndValidateEnumValues ::

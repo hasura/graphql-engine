@@ -269,14 +269,18 @@ buildSelPermInfo source tn fieldInfoMap sp = withPathK "permission" $ do
     withPathK "computed_fields" $
       indexedForM computedFields $ \fieldName -> do
         computedFieldInfo <- askComputedFieldInfo fieldInfoMap fieldName
-        case _cfiReturnType computedFieldInfo of
-          CFRScalar _ -> pure fieldName
-          CFRSetofTable returnTable ->
+        case computedFieldReturnType @b (_cfiReturnType computedFieldInfo) of
+          ReturnsScalar _ -> pure fieldName
+          ReturnsTable returnTable ->
             throw400 NotSupported $
               "select permissions on computed field " <> fieldName
                 <<> " are auto-derived from the permissions on its returning table "
                 <> returnTable
                 <<> " and cannot be specified manually"
+          ReturnsOthers ->
+            throw400 NotSupported $
+              "cannot define select permissions on computed field " <> fieldName
+                <<> " which does not return existing table or scalar type"
 
   let deps =
         mkParentDep @b source tn :

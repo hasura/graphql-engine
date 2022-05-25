@@ -16,7 +16,7 @@ import Hasura.Backends.DataConnector.IR.Scalar.Value qualified as IR.S.V
 import Hasura.Backends.DataConnector.IR.Table as IR.T
 import Hasura.Base.Error (Code (ValidationFailed), QErr, throw400)
 import Hasura.Prelude
-import Hasura.RQL.Types.Backend (Backend (..), XDisable)
+import Hasura.RQL.Types.Backend (Backend (..), ComputedFieldReturnType, XDisable)
 import Hasura.RQL.Types.Common as RQL (boolScalar, floatScalar, stringScalar)
 import Hasura.SQL.Backend (BackendType (DataConnector))
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -41,7 +41,7 @@ instance Backend 'DataConnector where
   type TableName 'DataConnector = IR.T.Name
   type FunctionName 'DataConnector = IR.F.Name
   type RawFunctionInfo 'DataConnector = XDisable
-  type FunctionArgType 'DataConnector = XDisable
+  type FunctionArgument 'DataConnector = XDisable
   type ConstraintName 'DataConnector = Unimplemented
   type BasicOrderType 'DataConnector = IR.O.OrderType
   type NullsOrderType 'DataConnector = Unimplemented
@@ -54,15 +54,15 @@ instance Backend 'DataConnector where
   type BooleanOperators 'DataConnector = Const XDisable
   type ExtraTableMetadata 'DataConnector = Unimplemented
   type ComputedFieldDefinition 'DataConnector = Unimplemented
+  type FunctionArgumentExp 'DataConnector = Const Unimplemented
+  type ComputedFieldImplicitArguments 'DataConnector = Unimplemented
+  type ComputedFieldReturn 'DataConnector = Unimplemented
 
   type XComputedField 'DataConnector = XDisable
   type XRelay 'DataConnector = XDisable
   type XNodesAgg 'DataConnector = XDisable
   type XNestedInserts 'DataConnector = XDisable
   type XStreamingSubscription 'DataConnector = XDisable
-
-  functionArgScalarType :: FunctionArgType 'DataConnector -> ScalarType 'DataConnector
-  functionArgScalarType = error "functionArgScalarType: not implemented for the Data Connector backend."
 
   isComparableType :: ScalarType 'DataConnector -> Bool
   isComparableType = isNumType @'DataConnector
@@ -85,6 +85,12 @@ instance Backend 'DataConnector where
 
   computedFieldFunction :: ComputedFieldDefinition 'DataConnector -> FunctionName 'DataConnector
   computedFieldFunction = error "computedFieldFunction: not implemented for the Data Connector backend"
+
+  computedFieldReturnType :: ComputedFieldReturn 'DataConnector -> ComputedFieldReturnType 'DataConnector
+  computedFieldReturnType = error "computedFieldReturnType: not implemented for the Data Connector backend"
+
+  fromComputedFieldImplicitArguments :: v -> ComputedFieldImplicitArguments 'DataConnector -> [FunctionArgumentExp 'DataConnector v]
+  fromComputedFieldImplicitArguments = error "fromComputedFieldImplicitArguments: not implemented for the Data Connector backend"
 
   -- phil said this was cursed
   tableToFunction :: TableName 'DataConnector -> FunctionName 'DataConnector

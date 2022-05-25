@@ -23,6 +23,7 @@ import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BoolExp
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Permission

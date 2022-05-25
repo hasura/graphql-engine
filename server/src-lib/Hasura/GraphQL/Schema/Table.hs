@@ -173,12 +173,13 @@ tableSelectFields sourceName tableInfo = do
       tableInfo' <- askTableInfo sourceName $ riRTable relationshipInfo
       isJust <$> tableSelectPermissions @b tableInfo'
     canBeSelected (Just permissions) (FIComputedField computedFieldInfo) =
-      case _cfiReturnType computedFieldInfo of
-        CFRScalar _ ->
+      case computedFieldReturnType @b (_cfiReturnType computedFieldInfo) of
+        ReturnsScalar _ ->
           pure $ Map.member (_cfiName computedFieldInfo) $ spiScalarComputedFields permissions
-        CFRSetofTable tableName -> do
+        ReturnsTable tableName -> do
           tableInfo' <- askTableInfo sourceName tableName
           isJust <$> tableSelectPermissions @b tableInfo'
+        ReturnsOthers -> pure False
     canBeSelected _ (FIRemoteRelationship _) = pure True
 
 tableColumns ::

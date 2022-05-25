@@ -30,6 +30,6 @@ data AnnDelG (b :: BackendType) (r :: Type) v = AnnDel
 
 type AnnDel b = AnnDelG b Void (SQLExpression b)
 
-deriving instance (Show (MutationOutputG b r a), Backend b, Show (BooleanOperators b a), Show a) => Show (AnnDelG b r a)
+deriving instance (Show (MutationOutputG b r a), Backend b, Show (BooleanOperators b a), Show (FunctionArgumentExp b a), Show a) => Show (AnnDelG b r a)
 
 $(makeLenses ''AnnDelG)

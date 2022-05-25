@@ -2,7 +2,6 @@
 
 module Hasura.RQL.Types.Function
   ( DBFunctionsMetadata,
-    FunctionArg (..),
     FunctionArgName (..),
     FunctionCache,
     FunctionConfig (..),
@@ -14,8 +13,9 @@ module Hasura.RQL.Types.Function
     FunctionPermissionsCtx (..),
     FunctionPermissionsMap,
     FunctionVolatility (..),
-    HasDefault (..),
     InputArgument (..),
+    FunctionArgsExpG (..),
+    FunctionArgsExp,
     emptyFunctionConfig,
     emptyFunctionCustomRootFields,
     fiComment,
@@ -37,6 +37,7 @@ module Hasura.RQL.Types.Function
     getFunctionArgsGQLName,
     getFunctionGQLName,
     getInputArgs,
+    emptyFunctionArgsExp,
     _IASessionVariables,
     _IAUserProvided,
   )
@@ -47,6 +48,7 @@ import Data.Aeson
 import Data.Aeson.Casing
 import Data.Aeson.TH
 import Data.Char (toLower)
+import Data.HashMap.Strict qualified as HM
 import Data.List.Extended as LE
 import Data.Sequence qualified as Seq
 import Data.Text qualified as T
@@ -59,6 +61,7 @@ import Hasura.RQL.Types.Common
 import Hasura.SQL.Backend
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
+import Language.Haskell.TH.Syntax
 
 -- | https://www.postgresql.org/docs/current/xfunc-volatility.html
 data FunctionVolatility
@@ -82,30 +85,7 @@ instance Show FunctionVolatility where
   show = T.unpack . funcTypToTxt
 
 newtype FunctionArgName = FunctionArgName {getFuncArgNameTxt :: Text}
-  deriving (Show, Eq, NFData, ToJSON, FromJSON, ToTxt, IsString, Generic, Cacheable, Hashable)
-
-newtype HasDefault = HasDefault {unHasDefault :: Bool}
-  deriving (Show, Eq, ToJSON, Cacheable, NFData, Hashable)
-
-data FunctionArg (b :: BackendType) = FunctionArg
-  { faName :: !(Maybe FunctionArgName),
-    faType :: !(FunctionArgType b),
-    faHasDefault :: !HasDefault
-  }
-  deriving (Generic)
-
-deriving instance Backend b => Show (FunctionArg b)
-
-deriving instance Backend b => Eq (FunctionArg b)
-
-instance Backend b => Cacheable (FunctionArg b)
-
-instance Backend b => NFData (FunctionArg b)
-
-instance Backend b => Hashable (FunctionArg b)
-
-instance (Backend b) => ToJSON (FunctionArg b) where
-  toJSON = genericToJSON hasuraJSON
+  deriving (Show, Eq, Ord, NFData, ToJSON, ToJSONKey, FromJSON, FromJSONKey, ToTxt, IsString, Generic, Cacheable, Hashable, Lift, Data)
 
 data InputArgument a
   = IAUserProvided !a
@@ -121,7 +101,7 @@ $( deriveToJSON
  )
 $(makePrisms ''InputArgument)
 
-type FunctionInputArgument b = InputArgument (FunctionArg b)
+type FunctionInputArgument b = InputArgument (FunctionArgument b)
 
 -- | Indicates whether the user requested the corresponding function to be
 -- tracked as a mutation or a query/subscription, in @track_function@.
@@ -275,7 +255,7 @@ getFunctionAggregateGQLName
       ]
       & fromMaybe (funcGivenName <> G.__aggregate)
 
-getInputArgs :: FunctionInfo b -> Seq.Seq (FunctionArg b)
+getInputArgs :: FunctionInfo b -> Seq.Seq (FunctionArgument b)
 getInputArgs =
   Seq.fromList . mapMaybe (^? _IAUserProvided) . toList . _fiInputArgs
 
@@ -333,3 +313,20 @@ instance ToJSON FunctionPermissionsCtx where
   toJSON = \case
     FunctionPermissionsInferred -> Bool True
     FunctionPermissionsManual -> Bool False
+
+data FunctionArgsExpG a = FunctionArgsExp
+  { _faePositional :: [a],
+    _faeNamed :: (HM.HashMap Text a)
+  }
+  deriving stock (Show, Eq, Functor, Foldable, Traversable, Generic)
+
+instance (Hashable a) => Hashable (FunctionArgsExpG a)
+
+instance (Cacheable a) => Cacheable (FunctionArgsExpG a)
+
+instance (NFData a) => NFData (FunctionArgsExpG a)
+
+type FunctionArgsExp b v = FunctionArgsExpG (FunctionArgumentExp b v)
+
+emptyFunctionArgsExp :: FunctionArgsExpG a
+emptyFunctionArgsExp = FunctionArgsExp [] HM.empty

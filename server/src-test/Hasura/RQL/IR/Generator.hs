@@ -10,7 +10,6 @@ module Hasura.RQL.IR.Generator
     genAnnotatedOrderByItemG,
     genAnnotatedOrderByElement,
     genAnnotatedAggregateOrderBy,
-    genArgumentExp,
     genColumnInfo,
     genFields,
     genFunctionArgsExpG,
@@ -30,6 +29,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Local
 import Hedgehog
 import Hedgehog.Gen
@@ -49,17 +49,6 @@ genFunctionArgsExpG genA =
   FunctionArgsExp
     <$> list defaultRange genA
     <*> genHashMap (genArbitraryUnicodeText defaultRange) genA defaultRange
-
-genArgumentExp :: MonadGen m => m a -> m (ArgumentExp a)
-genArgumentExp genA = choice [tableRow, session, input]
-  where
-    -- Don't actually generate this except manually, as it presumes
-    -- that the root table has a specific column.
-    --
-    -- responsePayload = pure AEActionResponsePayload
-    tableRow = pure AETableRow
-    session = AESession <$> genA
-    input = AEInput <$> genA
 
 genGExists ::
   MonadGen m =>
@@ -100,6 +89,7 @@ genAnnBoolExpFld ::
   m (FunctionName b) ->
   m (XComputedField b) ->
   m (BooleanOperators b a) ->
+  m (FunctionArgumentExp b a) ->
   m a ->
   m (AnnBoolExpFld b a)
 genAnnBoolExpFld
@@ -109,6 +99,7 @@ genAnnBoolExpFld
   genFunctionName
   genXComputedField
   genBooleanOperators
+  genFunctionArgumentExp
   genA =
     choice [column, relationship, computedField]
     where
@@ -138,6 +129,7 @@ genAnnBoolExpFld
                 genFunctionName
                 genXComputedField
                 genBooleanOperators
+                genFunctionArgumentExp
                 genA
             )
             genTableName
@@ -150,6 +142,7 @@ genAnnBoolExpFld
             genBooleanOperators
             genXComputedField
             genFunctionName
+            genFunctionArgumentExp
             genA
 
 genRelInfo ::
@@ -189,6 +182,7 @@ genAnnComputedFieldBolExp ::
   m (BooleanOperators b a) ->
   m (XComputedField b) ->
   m (FunctionName b) ->
+  m (FunctionArgumentExp b a) ->
   m a ->
   m (AnnComputedFieldBoolExp b a)
 genAnnComputedFieldBolExp
@@ -198,12 +192,13 @@ genAnnComputedFieldBolExp
   genBooleanOperators
   genXComputedField
   genFunctionName
+  genFunctionArgumentExp
   genA =
     AnnComputedFieldBoolExp
       <$> genXComputedField
       <*> genComputedFieldName
       <*> genFunctionName
-      <*> genSessionArgumentPresence genA
+      <*> genFunctionArgsExpG genFunctionArgumentExp
       <*> genComputedFieldBoolExp
         genTableName
         genColumn
@@ -211,6 +206,7 @@ genAnnComputedFieldBolExp
         genFunctionName
         genXComputedField
         genBooleanOperators
+        genFunctionArgumentExp
         genA
 
 genComputedFieldBoolExp ::
@@ -225,6 +221,7 @@ genComputedFieldBoolExp ::
   m (FunctionName b) ->
   m (XComputedField b) ->
   m (BooleanOperators b a) ->
+  m (FunctionArgumentExp b a) ->
   m a ->
   m (ComputedFieldBoolExp b a)
 genComputedFieldBoolExp
@@ -234,6 +231,7 @@ genComputedFieldBoolExp
   genFunctionName
   genXComputedField
   genBooleanOperators
+  genFunctionArgumentExp
   genA =
     choice
       [ CFBEScalar
@@ -256,6 +254,7 @@ genComputedFieldBoolExp
                 genFunctionName
                 genXComputedField
                 genBooleanOperators
+                genFunctionArgumentExp
                 genA
             )
             genTableName
@@ -263,14 +262,6 @@ genComputedFieldBoolExp
 
 genComputedFieldName :: MonadGen m => m ComputedFieldName
 genComputedFieldName = ComputedFieldName <$> genNonEmptyText defaultRange
-
-genSessionArgumentPresence :: MonadGen m => m a -> m (SessionArgumentPresence a)
-genSessionArgumentPresence genA =
-  choice
-    [ pure SAPNotPresent,
-      SAPFirst <$> genA,
-      SAPSecond <$> genA
-    ]
 
 genOpExpG ::
   MonadGen m =>
@@ -422,6 +413,7 @@ genAnnotatedOrderByElement ::
   m (FunctionName b) ->
   m (XComputedField b) ->
   m (BooleanOperators b a) ->
+  m (FunctionArgumentExp b a) ->
   m a ->
   m (AnnotatedOrderByElement b a)
 genAnnotatedOrderByElement
@@ -431,6 +423,7 @@ genAnnotatedOrderByElement
   genFunctionName
   genXComputedField
   genBooleanOperators
+  genFunctionArgumentExp
   genA =
     choice
       [ column,
@@ -456,6 +449,7 @@ genAnnotatedOrderByElement
                 genFunctionName
                 genXComputedField
                 genBooleanOperators
+                genFunctionArgumentExp
                 genA
             )
             genTableName
@@ -466,6 +460,7 @@ genAnnotatedOrderByElement
             genFunctionName
             genXComputedField
             genBooleanOperators
+            genFunctionArgumentExp
             genA
       arrayAggregation =
         AOCArrayAggregation
@@ -478,6 +473,7 @@ genAnnotatedOrderByElement
                 genFunctionName
                 genXComputedField
                 genBooleanOperators
+                genFunctionArgumentExp
                 genA
             )
             genTableName
@@ -494,6 +490,7 @@ genAnnotatedOrderByElement
             genFunctionName
             genXComputedField
             genBooleanOperators
+            genFunctionArgumentExp
             genA
 
 genAnnotatedAggregateOrderBy ::
@@ -528,6 +525,7 @@ genComputedFieldOrderBy ::
   m (FunctionName b) ->
   m (XComputedField b) ->
   m (BooleanOperators b a) ->
+  m (FunctionArgumentExp b a) ->
   m a ->
   m (ComputedFieldOrderBy b a)
 genComputedFieldOrderBy
@@ -537,13 +535,13 @@ genComputedFieldOrderBy
   genFunctionName
   genXComputedField
   genBooleanOperators
+  genFunctionArgumentExp
   genA =
     ComputedFieldOrderBy
       <$> genXComputedField
       <*> genComputedFieldName
       <*> genFunctionName
-      <*> genFunctionArgsExpG
-        (genArgumentExp genA)
+      <*> genFunctionArgsExpG genFunctionArgumentExp
       <*> genComputedFieldOrderByElement
         genColumn
         genScalarType
@@ -551,6 +549,7 @@ genComputedFieldOrderBy
         genFunctionName
         genXComputedField
         genBooleanOperators
+        genFunctionArgumentExp
         genA
 
 genComputedFieldOrderByElement ::
@@ -565,6 +564,7 @@ genComputedFieldOrderByElement ::
   m (FunctionName b) ->
   m (XComputedField b) ->
   m (BooleanOperators b a) ->
+  m (FunctionArgumentExp b a) ->
   m a ->
   m (ComputedFieldOrderByElement b a)
 genComputedFieldOrderByElement
@@ -574,6 +574,7 @@ genComputedFieldOrderByElement
   genFunctionName
   genXComputedField
   genBooleanOperators
+  genFunctionArgumentExp
   genA =
     choice
       [ CFOBEScalar <$> genScalarType,
@@ -587,6 +588,7 @@ genComputedFieldOrderByElement
                 genFunctionName
                 genXComputedField
                 genBooleanOperators
+                genFunctionArgumentExp
                 genA
             )
             genTableName

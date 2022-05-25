@@ -7,6 +7,7 @@
 module Hasura.Backends.MSSQL.Instances.Metadata () where
 
 import Hasura.Backends.MSSQL.DDL qualified as MSSQL
+import Hasura.Base.Error (throw500)
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.SQL.Backend
 
@@ -21,3 +22,5 @@ instance BackendMetadata 'MSSQL where
   updateColumnInEventTrigger = MSSQL.updateColumnInEventTrigger
   parseCollectableType = MSSQL.parseCollectableType
   postDropSourceHook = MSSQL.postDropSourceHook
+  buildComputedFieldBooleanExp _ _ _ _ _ _ =
+    throw500 "Computed fields are not yet defined for MSSQL backends"

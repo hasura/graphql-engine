@@ -31,6 +31,7 @@ import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Function
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Session
@@ -217,8 +218,8 @@ bqDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argume
     jsonToRecordSet =
       IR.FromFunction
         (BigQuery.FunctionName "unnest" Nothing)
-        ( IR.FunctionArgsExp
-            [IR.AEInput rowsArgument]
+        ( FunctionArgsExp
+            [BigQuery.AEInput rowsArgument]
             mempty
         )
         (Just recordSetDefinitionList)

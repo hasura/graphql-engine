@@ -1,12 +1,17 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Hasura.RQL.Types.Backend
   ( Backend (..),
     Representable,
     SessionVarType,
     XDisable,
     XEnable,
+    ComputedFieldReturnType (..),
+    _ReturnsScalar,
   )
 where
 
+import Control.Lens.TH (makePrisms)
 import Data.Aeson.Extended
 import Data.Kind (Type)
 import Data.Text.Extended
@@ -22,6 +27,11 @@ import Language.GraphQL.Draft.Syntax qualified as G
 type Representable a = (Show a, Eq a, Hashable a, Cacheable a, NFData a)
 
 type SessionVarType b = CollectableType (ScalarType b)
+
+data ComputedFieldReturnType (b :: BackendType)
+  = ReturnsScalar (ScalarType b)
+  | ReturnsTable (TableName b)
+  | ReturnsOthers
 
 -- Used for extension types.
 type XEnable = ()
@@ -48,7 +58,7 @@ type XDisable = Void
 class
   ( Representable (TableName b),
     Representable (FunctionName b),
-    Representable (FunctionArgType b),
+    Representable (FunctionArgument b),
     Representable (ConstraintName b),
     Representable (BasicOrderType b),
     Representable (NullsOrderType b),
@@ -60,6 +70,8 @@ class
     Representable (ExtraTableMetadata b),
     Representable (XComputedField b),
     Representable (ComputedFieldDefinition b),
+    Representable (ComputedFieldImplicitArguments b),
+    Representable (ComputedFieldReturn b),
     Ord (TableName b),
     Ord (FunctionName b),
     Ord (ScalarType b),
@@ -79,7 +91,7 @@ class
     ToJSON (BackendConfig b),
     ToJSON (Column b),
     ToJSON (ConstraintName b),
-    ToJSON (FunctionArgType b),
+    ToJSON (FunctionArgument b),
     ToJSON (FunctionName b),
     ToJSON (ScalarType b),
     ToJSON (SourceConfig b),
@@ -88,6 +100,8 @@ class
     ToJSON (ExtraTableMetadata b),
     ToJSON (SQLExpression b),
     ToJSON (ComputedFieldDefinition b),
+    ToJSON (ComputedFieldImplicitArguments b),
+    ToJSON (ComputedFieldReturn b),
     ToJSONKey (Column b),
     ToJSONKey (FunctionName b),
     ToJSONKey (ScalarType b),
@@ -103,6 +117,10 @@ class
     Typeable (ConstraintName b),
     Typeable b,
     HasTag b,
+    -- constraints of function argument
+    Functor (FunctionArgumentExp b),
+    Foldable (FunctionArgumentExp b),
+    Traversable (FunctionArgumentExp b),
     -- Type constraints.
     Eq (BackendConfig b),
     Show (BackendConfig b),
@@ -148,9 +166,6 @@ class
   -- database
   type RawFunctionInfo b :: Type
 
-  -- Type of a function argument
-  type FunctionArgType b :: Type
-
   -- Fully qualified name of a constraint
   type ConstraintName b :: Type
 
@@ -181,6 +196,18 @@ class
 
   type ExtraTableMetadata b :: Type
 
+  -- | FunctionArgument
+  type FunctionArgument b :: Type
+
+  -- | Function input argument expression
+  type FunctionArgumentExp b :: Type -> Type
+
+  -- | Computed field function argument values which are being implicitly inferred from table and/or session information
+  type ComputedFieldImplicitArguments b :: Type
+
+  -- | Computed field return information
+  type ComputedFieldReturn b :: Type
+
   -- Backend-specific IR types
 
   -- | Intermediate Representation of Update Mutations.
@@ -206,7 +233,6 @@ class
   type XStreamingSubscription b :: Type
 
   -- functions on types
-  functionArgScalarType :: FunctionArgType b -> ScalarType b
   isComparableType :: ScalarType b -> Bool
   isNumType :: ScalarType b -> Bool
   textToScalarValue :: Maybe Text -> ScalarValue b
@@ -215,6 +241,10 @@ class
   functionToTable :: FunctionName b -> TableName b
   tableToFunction :: TableName b -> FunctionName b
   computedFieldFunction :: ComputedFieldDefinition b -> FunctionName b
+  computedFieldReturnType :: ComputedFieldReturn b -> ComputedFieldReturnType b
+
+  -- | Build function arguments expression from computed field implicit arguments
+  fromComputedFieldImplicitArguments :: v -> ComputedFieldImplicitArguments b -> [FunctionArgumentExp b v]
 
   -- functions on names
   tableGraphQLName :: TableName b -> Either QErr G.Name
@@ -227,3 +257,6 @@ class
 
   -- TODO: metadata related functions
   snakeCaseTableName :: TableName b -> Text
+
+-- Prisms
+$(makePrisms ''ComputedFieldReturnType)

@@ -24,9 +24,11 @@ import Hasura.GraphQL.Schema.Common (askTableInfo, partialSQLExpToUnpreparedValu
 import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Table
@@ -96,14 +98,17 @@ boolExp sourceName tableInfo = memoizeOn 'boolExp (sourceName, tableName) $ do
           -- For a computed field to qualify in boolean expression it shouldn't have any input arguments
           case toList _cffInputArgs of
             [] -> do
-              let sessionArgPresence =
-                    mkSessionArgumentPresence P.UVSession _cffSessionArgument _cffTableArgument
-              fmap (AVComputedField . AnnComputedFieldBoolExp _cfiXComputedFieldInfo _cfiName _cffName sessionArgPresence)
-                <$> case _cfiReturnType of
-                  CFRScalar scalarType -> lift $ fmap CFBEScalar <$> comparisonExps @b (ColumnScalar scalarType)
-                  CFRSetofTable table -> do
-                    info <- askTableInfo sourceName table
+              let functionArgs =
+                    flip FunctionArgsExp mempty $
+                      fromComputedFieldImplicitArguments @b P.UVSession _cffComputedFieldImplicitArgs
+
+              fmap (AVComputedField . AnnComputedFieldBoolExp _cfiXComputedFieldInfo _cfiName _cffName functionArgs)
+                <$> case computedFieldReturnType @b _cfiReturnType of
+                  ReturnsScalar scalarType -> lift $ fmap CFBEScalar <$> comparisonExps @b (ColumnScalar scalarType)
+                  ReturnsTable table -> do
+                    info <- askTableInfo @b sourceName table
                     lift $ fmap (CFBETable table) <$> boolExp sourceName info
+                  ReturnsOthers -> hoistMaybe Nothing
             _ -> hoistMaybe Nothing
 
         -- Using remote relationship fields in boolean expressions is not supported.

@@ -7,6 +7,7 @@ import Data.Int (Int64)
 import Hasura.Backends.Postgres.RQLGenerator.GenAssociatedTypes
   ( genBooleanOperators,
     genColumn,
+    genFunctionArgumentExp,
     genFunctionName,
     genScalarType,
     genTableName,
@@ -51,6 +52,7 @@ genSelectArgsG genA = do
               genFunctionName
               genXComputedField
               (genBooleanOperators genA)
+              (genFunctionArgumentExp genA)
               genA
           )
           genTableName
@@ -68,6 +70,7 @@ genSelectArgsG genA = do
               genFunctionName
               genXComputedField
               (genBooleanOperators genA)
+              (genFunctionArgumentExp genA)
               genA
           )
 

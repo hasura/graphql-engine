@@ -4,6 +4,7 @@ module Hasura.Backends.BigQuery.DDL.Source
   ( resolveSource,
     postDropSourceHook,
     resolveSourceConfig,
+    restTypeToScalarType,
   )
 where
 
