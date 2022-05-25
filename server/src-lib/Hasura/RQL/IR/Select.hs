@@ -48,7 +48,6 @@ module Hasura.RQL.IR.Select
     AnnotatedOrderByElement (..),
     AnnotatedOrderByItem,
     AnnotatedOrderByItemG,
-    ArgumentExp (..),
     ArrayAggregateSelect,
     ArrayAggregateSelectG,
     ArrayConnectionSelect,
@@ -70,9 +69,6 @@ module Hasura.RQL.IR.Select
     ConnectionSplitKind (..),
     EdgeField (..),
     EdgeFields,
-    FunctionArgExp,
-    FunctionArgsExpG (..),
-    FunctionArgsExpTableRow,
     FIIdentifier (..),
     ObjectRelationSelect,
     ObjectRelationSelectG,
@@ -96,7 +92,6 @@ module Hasura.RQL.IR.Select
     TablePerm,
     TablePermG (..),
     CountDistinct (..),
-    actionResponsePayloadColumn,
     aarRelationshipName,
     aarColumnMapping,
     aarAnnSelect,
@@ -114,14 +109,11 @@ module Hasura.RQL.IR.Select
     csSplit,
     csSlice,
     csSelect,
-    emptyFunctionArgsExp,
-    functionArgsWithTableRowAndSession,
     insertFunctionArg,
     mkAnnColumnField,
     mkAnnColumnFieldAsText,
     noSelectArgs,
     noTablePermissions,
-    onArgumentExp,
     saDistinct,
     saLimit,
     saOffset,
@@ -205,6 +197,7 @@ data AnnSelectG (b :: BackendType) (f :: Type -> Type) (v :: Type) = AnnSelectG
 deriving stock instance
   ( Backend b,
     Eq (BooleanOperators b v),
+    Eq (FunctionArgumentExp b v),
     Eq v,
     Eq (f v)
   ) =>
@@ -213,6 +206,7 @@ deriving stock instance
 deriving stock instance
   ( Backend b,
     Show (BooleanOperators b v),
+    Show (FunctionArgumentExp b v),
     Show v,
     Show (f v)
   ) =>
@@ -242,6 +236,7 @@ data
 deriving instance
   ( Backend b,
     Eq (BooleanOperators b v),
+    Eq (FunctionArgumentExp b v),
     Eq v,
     Eq (f v)
   ) =>
@@ -250,6 +245,7 @@ deriving instance
 deriving instance
   ( Backend b,
     Show (BooleanOperators b v),
+    Show (FunctionArgumentExp b v),
     Show v,
     Show (f v)
   ) =>
@@ -298,6 +294,7 @@ data ConnectionSelect (b :: BackendType) (r :: Type) v = ConnectionSelect
 deriving stock instance
   ( Backend b,
     Eq (BooleanOperators b v),
+    Eq (FunctionArgumentExp b v),
     Eq v,
     Eq r
   ) =>
@@ -306,6 +303,7 @@ deriving stock instance
 deriving stock instance
   ( Backend b,
     Show (BooleanOperators b v),
+    Show (FunctionArgumentExp b v),
     Show v,
     Show r
   ) =>
@@ -326,20 +324,23 @@ data ConnectionSplit (b :: BackendType) v = ConnectionSplit
 deriving stock instance
   ( Backend b,
     Eq v,
-    Eq (BooleanOperators b v)
+    Eq (BooleanOperators b v),
+    Eq (FunctionArgumentExp b v)
   ) =>
   Eq (ConnectionSplit b v)
 
 deriving stock instance
   ( Backend b,
     Show v,
-    Show (BooleanOperators b v)
+    Show (BooleanOperators b v),
+    Show (FunctionArgumentExp b v)
   ) =>
   Show (ConnectionSplit b v)
 
 instance
   ( Backend b,
     Hashable (BooleanOperators b v),
+    Hashable (FunctionArgumentExp b v),
     Hashable (ColumnInfo b),
     Hashable v
   ) =>
@@ -376,16 +377,22 @@ data SelectFromG (b :: BackendType) v
   | FromIdentifier FIIdentifier
   | FromFunction
       (FunctionName b)
-      (FunctionArgsExpTableRow v)
+      (FunctionArgsExp b v)
       -- a definition list
       (Maybe [(Column b, ScalarType b)])
-  deriving stock (Functor, Foldable, Traversable, Generic)
+  deriving stock (Generic)
 
-deriving stock instance (Backend b, Eq v) => Eq (SelectFromG b v)
+deriving stock instance (Backend b) => Functor (SelectFromG b)
 
-deriving stock instance (Backend b, Show v) => Show (SelectFromG b v)
+deriving stock instance (Backend b) => Foldable (SelectFromG b)
 
-instance (Backend b, Hashable v) => Hashable (SelectFromG b v)
+deriving stock instance (Backend b) => Traversable (SelectFromG b)
+
+deriving stock instance (Backend b, Eq v, Eq (FunctionArgumentExp b v)) => Eq (SelectFromG b v)
+
+deriving stock instance (Backend b, Show v, Show (FunctionArgumentExp b v)) => Show (SelectFromG b v)
+
+instance (Backend b, Hashable v, Hashable (FunctionArgumentExp b v)) => Hashable (SelectFromG b v)
 
 type SelectFrom b = SelectFromG b (SQLExpression b)
 
@@ -407,6 +414,7 @@ type SelectStreamArgs b = SelectStreamArgsG b (SQLExpression b)
 deriving instance
   ( Backend b,
     Eq (BooleanOperators b v),
+    Eq (FunctionArgumentExp b v),
     Eq v
   ) =>
   Eq (SelectStreamArgsG b v)
@@ -414,6 +422,7 @@ deriving instance
 deriving instance
   ( Backend b,
     Show (BooleanOperators b v),
+    Show (FunctionArgumentExp b v),
     Show v
   ) =>
   Show (SelectStreamArgsG b v)
@@ -430,6 +439,7 @@ data SelectArgsG (b :: BackendType) v = SelectArgs
 deriving stock instance
   ( Backend b,
     Eq (BooleanOperators b v),
+    Eq (FunctionArgumentExp b v),
     Eq v
   ) =>
   Eq (SelectArgsG b v)
@@ -437,6 +447,7 @@ deriving stock instance
 instance
   ( Backend b,
     Hashable (BooleanOperators b v),
+    Hashable (FunctionArgumentExp b v),
     Hashable v
   ) =>
   Hashable (SelectArgsG b v)
@@ -444,6 +455,7 @@ instance
 deriving stock instance
   ( Backend b,
     Show (BooleanOperators b v),
+    Show (FunctionArgumentExp b v),
     Show v
   ) =>
   Show (SelectArgsG b v)
@@ -467,26 +479,32 @@ data ComputedFieldOrderByElement (b :: BackendType) v
       -- ^ Sort by aggregation fields of table rows returned by computed field
   deriving stock (Generic, Functor, Foldable, Traversable)
 
-deriving stock instance (Backend b, Eq v, Eq (BooleanOperators b v)) => Eq (ComputedFieldOrderByElement b v)
+deriving stock instance (Backend b, Eq v, Eq (BooleanOperators b v), Eq (FunctionArgumentExp b v)) => Eq (ComputedFieldOrderByElement b v)
 
-deriving stock instance (Backend b, Show v, Show (BooleanOperators b v)) => Show (ComputedFieldOrderByElement b v)
+deriving stock instance (Backend b, Show v, Show (BooleanOperators b v), Show (FunctionArgumentExp b v)) => Show (ComputedFieldOrderByElement b v)
 
-instance (Backend b, Hashable v, Hashable (BooleanOperators b v)) => Hashable (ComputedFieldOrderByElement b v)
+instance (Backend b, Hashable v, Hashable (BooleanOperators b v), Hashable (FunctionArgumentExp b v)) => Hashable (ComputedFieldOrderByElement b v)
 
 data ComputedFieldOrderBy (b :: BackendType) v = ComputedFieldOrderBy
   { _cfobXField :: XComputedField b,
     _cfobName :: ComputedFieldName,
     _cfobFunction :: FunctionName b,
-    _cfobFunctionArgsExp :: FunctionArgsExpTableRow v,
+    _cfobFunctionArgsExp :: FunctionArgsExp b v,
     _cfobOrderByElement :: (ComputedFieldOrderByElement b v)
   }
-  deriving stock (Generic, Functor, Foldable, Traversable)
+  deriving stock (Generic)
 
-deriving stock instance (Backend b, Eq v, Eq (BooleanOperators b v)) => Eq (ComputedFieldOrderBy b v)
+deriving stock instance (Backend b) => Functor (ComputedFieldOrderBy b)
 
-deriving stock instance (Backend b, Show v, Show (BooleanOperators b v)) => Show (ComputedFieldOrderBy b v)
+deriving stock instance (Backend b) => Foldable (ComputedFieldOrderBy b)
 
-instance (Backend b, Hashable v, Hashable (BooleanOperators b v)) => Hashable (ComputedFieldOrderBy b v)
+deriving stock instance (Backend b) => Traversable (ComputedFieldOrderBy b)
+
+deriving stock instance (Backend b, Eq v, Eq (BooleanOperators b v), Eq (FunctionArgumentExp b v)) => Eq (ComputedFieldOrderBy b v)
+
+deriving stock instance (Backend b, Show v, Show (BooleanOperators b v), Show (FunctionArgumentExp b v)) => Show (ComputedFieldOrderBy b v)
+
+instance (Backend b, Hashable v, Hashable (BooleanOperators b v), Hashable (FunctionArgumentExp b v)) => Hashable (ComputedFieldOrderBy b v)
 
 data AnnotatedOrderByElement (b :: BackendType) v
   = AOCColumn (ColumnInfo b)
@@ -503,11 +521,11 @@ data AnnotatedOrderByElement (b :: BackendType) v
   | AOCComputedField (ComputedFieldOrderBy b v)
   deriving stock (Generic, Functor, Foldable, Traversable)
 
-deriving stock instance (Backend b, Eq v, Eq (BooleanOperators b v)) => Eq (AnnotatedOrderByElement b v)
+deriving stock instance (Backend b, Eq v, Eq (BooleanOperators b v), Eq (FunctionArgumentExp b v)) => Eq (AnnotatedOrderByElement b v)
 
-deriving stock instance (Backend b, Show v, Show (BooleanOperators b v)) => Show (AnnotatedOrderByElement b v)
+deriving stock instance (Backend b, Show v, Show (BooleanOperators b v), Show (FunctionArgumentExp b v)) => Show (AnnotatedOrderByElement b v)
 
-instance (Backend b, Hashable v, Hashable (BooleanOperators b v)) => Hashable (AnnotatedOrderByElement b v)
+instance (Backend b, Hashable v, Hashable (BooleanOperators b v), Hashable (FunctionArgumentExp b v)) => Hashable (AnnotatedOrderByElement b v)
 
 data AnnotatedAggregateOrderBy (b :: BackendType)
   = AAOCount
@@ -568,6 +586,7 @@ data AnnFieldG (b :: BackendType) (r :: Type) v
 deriving stock instance
   ( Backend b,
     Eq (BooleanOperators b v),
+    Eq (FunctionArgumentExp b v),
     Eq v,
     Eq r
   ) =>
@@ -576,6 +595,7 @@ deriving stock instance
 deriving stock instance
   ( Backend b,
     Show (BooleanOperators b v),
+    Show (FunctionArgumentExp b v),
     Show v,
     Show r
   ) =>
@@ -634,6 +654,7 @@ data TableAggregateFieldG (b :: BackendType) (r :: Type) v
 deriving stock instance
   ( Backend b,
     Eq (BooleanOperators b v),
+    Eq (FunctionArgumentExp b v),
     Eq v,
     Eq r
   ) =>
@@ -642,6 +663,7 @@ deriving stock instance
 deriving stock instance
   ( Backend b,
     Show (BooleanOperators b v),
+    Show (FunctionArgumentExp b v),
     Show v,
     Show r
   ) =>
@@ -696,6 +718,7 @@ data ConnectionField (b :: BackendType) (r :: Type) v
 deriving stock instance
   ( Backend b,
     Eq (BooleanOperators b v),
+    Eq (FunctionArgumentExp b v),
     Eq v,
     Eq r
   ) =>
@@ -704,6 +727,7 @@ deriving stock instance
 deriving stock instance
   ( Backend b,
     Show (BooleanOperators b v),
+    Show (FunctionArgumentExp b v),
     Show v,
     Show r
   ) =>
@@ -732,6 +756,7 @@ data EdgeField (b :: BackendType) (r :: Type) v
 deriving stock instance
   ( Backend b,
     Eq (BooleanOperators b v),
+    Eq (FunctionArgumentExp b v),
     Eq v,
     Eq r
   ) =>
@@ -740,6 +765,7 @@ deriving stock instance
 deriving stock instance
   ( Backend b,
     Show (BooleanOperators b v),
+    Show (FunctionArgumentExp b v),
     Show v,
     Show r
   ) =>
@@ -779,6 +805,7 @@ data AnnColumnField (b :: BackendType) v = AnnColumnField
 deriving stock instance
   ( Backend b,
     Eq (BooleanOperators b v),
+    Eq (FunctionArgumentExp b v),
     Eq v
   ) =>
   Eq (AnnColumnField b v)
@@ -786,6 +813,7 @@ deriving stock instance
 deriving stock instance
   ( Backend b,
     Show (BooleanOperators b v),
+    Show (FunctionArgumentExp b v),
     Show v
   ) =>
   Show (AnnColumnField b v)
@@ -794,15 +822,20 @@ deriving stock instance
 
 data ComputedFieldScalarSelect (b :: BackendType) v = ComputedFieldScalarSelect
   { _cfssFunction :: FunctionName b,
-    _cfssArguments :: FunctionArgsExpTableRow v,
+    _cfssArguments :: FunctionArgsExp b v,
     _cfssType :: ScalarType b,
     _cfssScalarArguments :: (Maybe (ScalarSelectionArguments b))
   }
-  deriving stock (Functor, Foldable, Traversable)
 
-deriving stock instance (Backend b, Show v) => Show (ComputedFieldScalarSelect b v)
+deriving stock instance (Backend b) => Functor (ComputedFieldScalarSelect b)
 
-deriving stock instance (Backend b, Eq v) => Eq (ComputedFieldScalarSelect b v)
+deriving stock instance (Backend b) => Foldable (ComputedFieldScalarSelect b)
+
+deriving stock instance (Backend b) => Traversable (ComputedFieldScalarSelect b)
+
+deriving stock instance (Backend b, Show v, Show (FunctionArgumentExp b v)) => Show (ComputedFieldScalarSelect b v)
+
+deriving stock instance (Backend b, Eq v, Eq (FunctionArgumentExp b v)) => Eq (ComputedFieldScalarSelect b v)
 
 data ComputedFieldSelect (b :: BackendType) (r :: Type) v
   = CFSScalar
@@ -820,6 +853,7 @@ data ComputedFieldSelect (b :: BackendType) (r :: Type) v
 deriving stock instance
   ( Backend b,
     Eq (BooleanOperators b v),
+    Eq (FunctionArgumentExp b v),
     Eq v,
     Eq r
   ) =>
@@ -828,6 +862,7 @@ deriving stock instance
 deriving stock instance
   ( Backend b,
     Show (BooleanOperators b v),
+    Show (FunctionArgumentExp b v),
     Show v,
     Show r
   ) =>
@@ -869,6 +904,7 @@ data AnnObjectSelectG (b :: BackendType) (r :: Type) v = AnnObjectSelectG
 deriving stock instance
   ( Backend b,
     Eq (BooleanOperators b v),
+    Eq (FunctionArgumentExp b v),
     Eq v,
     Eq r
   ) =>
@@ -877,6 +913,7 @@ deriving stock instance
 deriving stock instance
   ( Backend b,
     Show (BooleanOperators b v),
+    Show (FunctionArgumentExp b v),
     Show v,
     Show r
   ) =>
@@ -901,6 +938,7 @@ data ArraySelectG (b :: BackendType) (r :: Type) v
 deriving stock instance
   ( Backend b,
     Eq (BooleanOperators b v),
+    Eq (FunctionArgumentExp b v),
     Eq v,
     Eq r
   ) =>
@@ -909,6 +947,7 @@ deriving stock instance
 deriving stock instance
   ( Backend b,
     Show (BooleanOperators b v),
+    Show (FunctionArgumentExp b v),
     Show v,
     Show r
   ) =>
@@ -937,6 +976,7 @@ data
 deriving stock instance
   ( Backend b,
     Eq (BooleanOperators b (v b)),
+    Eq (FunctionArgumentExp b (v b)),
     Eq (v b),
     Eq r
   ) =>
@@ -945,6 +985,7 @@ deriving stock instance
 deriving stock instance
   ( Backend b,
     Show (BooleanOperators b (v b)),
+    Show (FunctionArgumentExp b (v b)),
     Show (v b),
     Show r
   ) =>
@@ -982,6 +1023,7 @@ data TablePermG (b :: BackendType) v = TablePerm
 deriving stock instance
   ( Backend b,
     Eq (BooleanOperators b v),
+    Eq (FunctionArgumentExp b v),
     Eq v
   ) =>
   Eq (TablePermG b v)
@@ -989,6 +1031,7 @@ deriving stock instance
 deriving stock instance
   ( Backend b,
     Show (BooleanOperators b v),
+    Show (FunctionArgumentExp b v),
     Show v
   ) =>
   Show (TablePermG b v)
@@ -996,6 +1039,7 @@ deriving stock instance
 instance
   ( Backend b,
     Hashable (BooleanOperators b v),
+    Hashable (FunctionArgumentExp b v),
     Hashable (ColumnInfo b),
     Hashable v
   ) =>
@@ -1005,65 +1049,6 @@ type TablePerm b = TablePermG b (SQLExpression b)
 
 noTablePermissions :: TablePermG backend v
 noTablePermissions = TablePerm annBoolExpTrue Nothing
-
--- Function arguments
-
-data ArgumentExp a
-  = -- | Table row accessor
-    AETableRow
-  | -- | Hardcoded reference to @hdb_catalog.hdb_action_log.response_payload@
-    AEActionResponsePayload
-  | -- | JSON/JSONB hasura session variable object
-    AESession a
-  | AEInput a
-  deriving stock (Eq, Show, Functor, Foldable, Traversable, Generic)
-  deriving anyclass (Hashable)
-
--- | Eliminate 'ArgumentExp'
---
--- Used to ensure that the right column is used for 'AEActionResponsePayload'.
-onArgumentExp ::
-  -- | Value to return for 'AETableRow'
-  a ->
-  -- | Create value to return for 'AEResponsePayload' given column text
-  (Text -> a) ->
-  -- | 'ArgumentExp' to eliminate
-  ArgumentExp a ->
-  a
-onArgumentExp tableRow fromColumn = \case
-  AETableRow -> tableRow
-  AEActionResponsePayload -> fromColumn actionResponsePayloadColumn
-  AESession a -> a
-  AEInput a -> a
-
--- | Hardcoded @hdb_catalog.hdb_action_log.response_payload@ column name
-actionResponsePayloadColumn :: Text
-actionResponsePayloadColumn = "response_payload"
-{-# INLINE actionResponsePayloadColumn #-}
-
-data FunctionArgsExpG a = FunctionArgsExp
-  { _faePositional :: [a],
-    _faeNamed :: (HM.HashMap Text a)
-  }
-  deriving stock (Show, Eq, Functor, Foldable, Traversable, Generic)
-  deriving anyclass (Hashable)
-
-type FunctionArgsExpTableRow v = FunctionArgsExpG (ArgumentExp v)
-
-type FunctionArgExp b = FunctionArgsExpG (SQLExpression b)
-
-emptyFunctionArgsExp :: FunctionArgsExpG a
-emptyFunctionArgsExp = FunctionArgsExp [] HM.empty
-
-functionArgsWithTableRowAndSession ::
-  v ->
-  FunctionTableArgument ->
-  Maybe FunctionSessionArgument ->
-  [ArgumentExp v]
-functionArgsWithTableRowAndSession _ _ Nothing = [AETableRow] -- No session argument
-functionArgsWithTableRowAndSession sess (FTAFirst) _ = [AETableRow, AESession sess]
-functionArgsWithTableRowAndSession sess (FTANamed _ 0) _ = [AETableRow, AESession sess] -- Index is 0 implies table argument is first
-functionArgsWithTableRowAndSession sess _ _ = [AESession sess, AETableRow]
 
 -- | If argument positional index is less than or equal to length of
 -- 'positional' arguments then insert the value in 'positional' arguments else

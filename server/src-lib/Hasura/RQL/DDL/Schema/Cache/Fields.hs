@@ -88,13 +88,16 @@ addNonColumnFields =
       buildInfoMapPreservingMetadata
         (_cfmName . (^. _4))
         (\(s, _, t, c) -> mkComputedFieldMetadataObject (s, t, c))
-        ( proc (a, (b, c, d, e)) -> do
-            o <- interpretWriter -< buildComputedField a b c d e
+        ( proc ((a, b), (c, d, e, f)) -> do
+            o <- interpretWriter -< buildComputedField a b c d e f
             arrM liftEither -< o
         )
         -<
-          (HS.fromList $ M.keys rawTableInfo, map (source,pgFunctions,_nctiTable,) _nctiComputedFields)
-
+          ( ( HS.fromList $ M.keys rawTableInfo,
+              HS.fromList $ map ciColumn $ M.elems columns
+            ),
+            map (source,pgFunctions,_nctiTable,) _nctiComputedFields
+          )
     -- the fields that can be used for defining join conditions to other sources/remote schemas:
     -- 1. all columns
     -- 2. computed fields which don't expect arguments other than the table row and user session
@@ -103,9 +106,10 @@ addNonColumnFields =
               computedFields = M.fromList $
                 flip mapMaybe (M.toList computedFieldInfos) $
                   \(cfName, (ComputedFieldInfo {..}, _)) -> do
-                    scalarType <- case _cfiReturnType of
-                      CFRScalar ty -> pure ty
-                      CFRSetofTable {} -> Nothing
+                    scalarType <- case computedFieldReturnType @b _cfiReturnType of
+                      ReturnsScalar ty -> pure ty
+                      ReturnsTable {} -> Nothing
+                      ReturnsOthers {} -> Nothing
                     let ComputedFieldFunction {..} = _cfiFunction
                     case toList _cffInputArgs of
                       [] ->
@@ -116,8 +120,7 @@ addNonColumnFields =
                                 _cfiXComputedFieldInfo
                                 _cfiName
                                 _cffName
-                                _cffTableArgument
-                                _cffSessionArgument
+                                _cffComputedFieldImplicitArgs
                                 scalarType
                       _ -> Nothing
            in M.union columnFields computedFields
@@ -295,19 +298,20 @@ buildComputedField ::
     BackendMetadata b
   ) =>
   HashSet (TableName b) ->
+  HashSet (Column b) ->
   SourceName ->
   DBFunctionsMetadata b ->
   TableName b ->
   ComputedFieldMetadata b ->
   m (Either QErr (Maybe (ComputedFieldInfo b)))
-buildComputedField trackedTableNames source pgFunctions table cf@ComputedFieldMetadata {..} = runExceptT do
+buildComputedField trackedTableNames tableColumns source pgFunctions table cf@ComputedFieldMetadata {..} = runExceptT do
   let addComputedFieldContext e = "in computed field " <> _cfmName <<> ": " <> e
       function = computedFieldFunction @b _cfmDefinition
       funcDefs = fromMaybe [] $ M.lookup function pgFunctions
   withRecordInconsistencyM (mkComputedFieldMetadataObject (source, table, cf)) $
     modifyErr (addTableContext @b table . addComputedFieldContext) $ do
       rawfi <- handleMultipleFunctions @b (computedFieldFunction @b _cfmDefinition) funcDefs
-      buildComputedFieldInfo trackedTableNames table _cfmName _cfmDefinition rawfi _cfmComment
+      buildComputedFieldInfo trackedTableNames table tableColumns _cfmName _cfmDefinition rawfi _cfmComment
 
 mkRemoteRelationshipMetadataObject ::
   forall b.

@@ -28,16 +28,14 @@ import Data.Aeson qualified as Aeson
 import Data.Foldable
 import Data.Maybe
 import Data.Sequence qualified as Seq
-import Data.Text (Text)
 import Data.Text qualified as T
 import GHC.Generics
 import Hasura.Backends.BigQuery.Connection
 import Hasura.Backends.BigQuery.Source
 import Hasura.Backends.BigQuery.Types
-import Hasura.Prelude (hasuraJSON)
+import Hasura.Prelude
 import Network.HTTP.Simple
 import Network.HTTP.Types
-import Prelude
 
 --------------------------------------------------------------------------------
 -- Types
@@ -298,7 +296,7 @@ data RestRoutineType
   | SCALAR_FUNCTION
   | PROCEDURE
   | TABLE_VALUED_FUNCTION
-  deriving (Show, Generic)
+  deriving (Show, Eq, Generic)
 
 instance FromJSON RestRoutineType
 
@@ -306,23 +304,41 @@ instance FromJSON RestRoutineType
 -- Ref: https://cloud.google.com/bigquery/docs/reference/rest/v2/routines#Argument
 data RestArgument = RestArgument
   { -- | The name of this argument. Can be absent for function return argument.
-    _raName :: Maybe Text
+    _raName :: Maybe Text,
+    _raDataType :: Maybe RestType
   }
   deriving (Show, Generic)
 
 instance FromJSON RestArgument where
-  parseJSON = genericParseJSON hasuraJSON
+  parseJSON =
+    withObject
+      "RestArgument"
+      ( \o -> do
+          name <- o .:? "name"
+          typeObject <- o .:? "dataType"
+          type' <- mapM (.: "typeKind") typeObject
+          pure $ RestArgument name type'
+      )
 
 -- | A field or a column.
 -- Ref: https://cloud.google.com/bigquery/docs/reference/rest/v2/StandardSqlField
 data RestStandardSqlField = RestStandardSqlField
   { -- | The field name is optional and is absent for fields with STRUCT type.
-    _rssfName :: Maybe Text
+    _rssfName :: Maybe Text,
+    _rssType :: Maybe RestType
   }
   deriving (Show, Generic)
 
 instance FromJSON RestStandardSqlField where
-  parseJSON = genericParseJSON hasuraJSON
+  parseJSON =
+    withObject
+      "RestStandardSqlField"
+      ( \o -> do
+          name <- o .:? "name"
+          typeObject <- o .:? "type"
+          type' <- mapM (.: "typeKind") typeObject
+          pure $ RestStandardSqlField name type'
+      )
 
 -- | A table type, which has only list of columns with names and types.
 -- Ref: https://cloud.google.com/bigquery/docs/reference/rest/v2/routines#StandardSqlTableType
@@ -422,9 +438,10 @@ getRoutinesForDataSet conn dataSet = do
             <> T.unpack dataSet
             <> "/routines?alt=json&"
             <> T.unpack (encodeParams extraParameters)
-        extraParameters = pageTokenParam
+        extraParameters = pageTokenParam <> readMaskParam
           where
             pageTokenParam =
               case pageToken of
                 Nothing -> []
                 Just token -> [("pageToken", token)]
+            readMaskParam = [("readMask", "routineType,arguments,returnTableType")]

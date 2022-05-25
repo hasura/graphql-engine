@@ -16,11 +16,13 @@ import Hasura.GraphQL.Parser hiding (EnumValueInfo, field)
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Internal.Parser hiding (field)
+import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Select
+import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Select qualified as IR
@@ -29,7 +31,7 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Function
-import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -373,15 +375,108 @@ geographyWithinDistanceInput = do
         <*> (mkParameter <$> P.fieldWithDefault G._use_spheroid Nothing (G.VBoolean False) booleanParser)
 
 -- | Computed field parser.
--- Currently unsupported: returns Nothing for now.
 bqComputedField ::
+  forall r m n.
   MonadBuildSchema 'BigQuery r m n =>
   SourceName ->
   ComputedFieldInfo 'BigQuery ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   m (Maybe (FieldParser n (AnnotatedField 'BigQuery)))
-bqComputedField _sourceName _fieldInfo _table _tableInfo = pure Nothing
+bqComputedField sourceName ComputedFieldInfo {..} tableName _tableInfo = runMaybeT do
+  stringifyNum <- asks $ qcStringifyNum . getter
+  fieldName <- lift $ textToName $ computedFieldNameToText _cfiName
+  functionArgsParser <- lift $ computedFieldFunctionArgs _cfiFunction
+  case _cfiReturnType of
+    BigQuery.ReturnExistingTable returnTable -> do
+      returnTableInfo <- lift $ askTableInfo sourceName returnTable
+      returnTablePermissions <- MaybeT $ tableSelectPermissions returnTableInfo
+      selectionSetParser <- MaybeT (fmap (P.multiple . P.nonNullableParser) <$> tableSelectionSet sourceName returnTableInfo)
+      selectArgsParser <- lift $ tableArguments sourceName returnTableInfo
+      let fieldArgsParser = liftA2 (,) functionArgsParser selectArgsParser
+      pure $
+        P.subselection fieldName fieldDescription fieldArgsParser selectionSetParser
+          <&> \((functionArgs', args), fields) ->
+            IR.AFComputedField _cfiXComputedFieldInfo _cfiName $
+              IR.CFSTable JASMultipleRows $
+                IR.AnnSelectG
+                  { IR._asnFields = fields,
+                    IR._asnFrom = IR.FromFunction (_cffName _cfiFunction) functionArgs' Nothing,
+                    IR._asnPerm = tablePermissionsInfo returnTablePermissions,
+                    IR._asnArgs = args,
+                    IR._asnStrfyNum = stringifyNum
+                  }
+    BigQuery.ReturnTableSchema returnFields -> do
+      objectTypeName <-
+        P.mkTypename =<< do
+          computedFieldGQLName <- textToName $ computedFieldNameToText _cfiName
+          pure $ computedFieldGQLName <> G.__ <> G.__fields
+      selectionSetParser <- do
+        fieldParsers <- lift $ for returnFields selectArbitraryField
+        let description = G.Description $ "column fields returning by " <>> _cfiName
+        pure $
+          P.selectionSetObject objectTypeName (Just description) fieldParsers []
+            <&> parsedSelectionsToFields IR.AFExpression
+      pure $
+        P.subselection fieldName fieldDescription functionArgsParser selectionSetParser
+          <&> \(functionArgs', fields) ->
+            IR.AFComputedField _cfiXComputedFieldInfo _cfiName $
+              IR.CFSTable JASMultipleRows $
+                IR.AnnSelectG
+                  { IR._asnFields = fields,
+                    IR._asnFrom = IR.FromFunction (_cffName _cfiFunction) functionArgs' Nothing,
+                    IR._asnPerm = IR.noTablePermissions,
+                    IR._asnArgs = IR.noSelectArgs,
+                    IR._asnStrfyNum = stringifyNum
+                  }
+  where
+    fieldDescription :: Maybe G.Description
+    fieldDescription = G.Description <$> _cfiDescription
+
+    selectArbitraryField ::
+      (BigQuery.ColumnName, G.Name, BigQuery.ScalarType) ->
+      m (FieldParser n (AnnotatedField 'BigQuery))
+    selectArbitraryField (columnName, graphQLName, columnType) = do
+      field <- columnParser @'BigQuery (ColumnScalar columnType) (G.Nullability True)
+      pure $
+        P.selection_ graphQLName Nothing field
+          $> IR.mkAnnColumnField columnName (ColumnScalar columnType) Nothing Nothing
+
+    computedFieldFunctionArgs ::
+      ComputedFieldFunction 'BigQuery ->
+      m (InputFieldsParser n (FunctionArgsExp 'BigQuery (UnpreparedValue 'BigQuery)))
+    computedFieldFunctionArgs ComputedFieldFunction {..} = do
+      let fieldName = G._args
+          fieldDesc =
+            G.Description $
+              "input parameters for computed field "
+                <> _cfiName <<> " defined on table " <>> tableName
+
+      objectName <-
+        P.mkTypename =<< do
+          tableInfo <- askTableInfo sourceName tableName
+          computedFieldGQLName <- textToName $ computedFieldNameToText _cfiName
+          tableGQLName <- getTableGQLName @'BigQuery tableInfo
+          pure $ computedFieldGQLName <> G.__ <> tableGQLName <> G.__args
+
+      let userInputArgs = filter (not . flip Map.member _cffComputedFieldImplicitArgs . BigQuery._faName) (toList _cffInputArgs)
+
+      argumentParsers <- sequenceA <$> forM userInputArgs parseArgument
+
+      let objectParser =
+            P.object objectName Nothing argumentParsers `P.bind` \inputArguments -> do
+              let tableColumnInputs = Map.map BigQuery.AETableColumn $ Map.mapKeys getFuncArgNameTxt _cffComputedFieldImplicitArgs
+              pure $ FunctionArgsExp mempty $ Map.fromList inputArguments <> tableColumnInputs
+
+      pure $ P.field fieldName (Just fieldDesc) objectParser
+
+    parseArgument :: BigQuery.FunctionArgument -> m (InputFieldsParser n (Text, BigQuery.ArgumentExp (UnpreparedValue 'BigQuery)))
+    parseArgument arg = do
+      typedParser <- columnParser (ColumnScalar $ BigQuery._faType arg) (G.Nullability False)
+      let argumentName = getFuncArgNameTxt $ BigQuery._faName arg
+      fieldName <- textToName argumentName
+      let argParser = P.field fieldName Nothing typedParser
+      pure $ argParser `P.bindFields` \inputValue -> pure ((argumentName, BigQuery.AEInput $ mkParameter inputValue))
 
 {-
 NOTE: Unused. Should we remove?

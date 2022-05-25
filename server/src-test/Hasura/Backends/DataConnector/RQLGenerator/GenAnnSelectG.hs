@@ -21,7 +21,7 @@ genAnnSelectG :: forall m f a. MonadGen m => m a -> m (f a) -> m (AnnSelectG 'Da
 genAnnSelectG genA genFA =
   AnnSelectG
     <$> genFields genFA defaultRange defaultRange
-    <*> genSelectFromG genA
+    <*> genSelectFromG
     <*> genTablePermG genA
     <*> genArgs
     <*> genStringifyNumbers

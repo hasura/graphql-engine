@@ -314,26 +314,30 @@ data InsPermInfo (b :: BackendType) = InsPermInfo
 
 deriving instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b))
+    Eq (BooleanOperators b (PartialSQLExp b)),
+    Eq (FunctionArgumentExp b (PartialSQLExp b))
   ) =>
   Eq (InsPermInfo b)
 
 deriving instance
   ( Backend b,
-    Show (BooleanOperators b (PartialSQLExp b))
+    Show (BooleanOperators b (PartialSQLExp b)),
+    Show (FunctionArgumentExp b (PartialSQLExp b))
   ) =>
   Show (InsPermInfo b)
 
 instance
   ( Backend b,
-    NFData (BooleanOperators b (PartialSQLExp b))
+    NFData (BooleanOperators b (PartialSQLExp b)),
+    NFData (FunctionArgumentExp b (PartialSQLExp b))
   ) =>
   NFData (InsPermInfo b)
 
 instance
   ( Backend b,
     Hashable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (BooleanOperators b (PartialSQLExp b))
+    Cacheable (BooleanOperators b (PartialSQLExp b)),
+    Cacheable (FunctionArgumentExp b (PartialSQLExp b))
   ) =>
   Cacheable (InsPermInfo b)
 
@@ -427,26 +431,30 @@ data SelPermInfo (b :: BackendType) = SelPermInfo
 
 deriving instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b))
+    Eq (BooleanOperators b (PartialSQLExp b)),
+    Eq (FunctionArgumentExp b (PartialSQLExp b))
   ) =>
   Eq (SelPermInfo b)
 
 deriving instance
   ( Backend b,
-    Show (BooleanOperators b (PartialSQLExp b))
+    Show (BooleanOperators b (PartialSQLExp b)),
+    Show (FunctionArgumentExp b (PartialSQLExp b))
   ) =>
   Show (SelPermInfo b)
 
 instance
   ( Backend b,
-    NFData (BooleanOperators b (PartialSQLExp b))
+    NFData (BooleanOperators b (PartialSQLExp b)),
+    NFData (FunctionArgumentExp b (PartialSQLExp b))
   ) =>
   NFData (SelPermInfo b)
 
 instance
   ( Backend b,
     Hashable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (BooleanOperators b (PartialSQLExp b))
+    Cacheable (BooleanOperators b (PartialSQLExp b)),
+    Cacheable (FunctionArgumentExp b (PartialSQLExp b))
   ) =>
   Cacheable (SelPermInfo b)
 
@@ -470,26 +478,30 @@ data UpdPermInfo (b :: BackendType) = UpdPermInfo
 
 deriving instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b))
+    Eq (BooleanOperators b (PartialSQLExp b)),
+    Eq (FunctionArgumentExp b (PartialSQLExp b))
   ) =>
   Eq (UpdPermInfo b)
 
 deriving instance
   ( Backend b,
-    Show (BooleanOperators b (PartialSQLExp b))
+    Show (BooleanOperators b (PartialSQLExp b)),
+    Show (FunctionArgumentExp b (PartialSQLExp b))
   ) =>
   Show (UpdPermInfo b)
 
 instance
   ( Backend b,
-    NFData (BooleanOperators b (PartialSQLExp b))
+    NFData (BooleanOperators b (PartialSQLExp b)),
+    NFData (FunctionArgumentExp b (PartialSQLExp b))
   ) =>
   NFData (UpdPermInfo b)
 
 instance
   ( Backend b,
     Hashable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (BooleanOperators b (PartialSQLExp b))
+    Cacheable (BooleanOperators b (PartialSQLExp b)),
+    Cacheable (FunctionArgumentExp b (PartialSQLExp b))
   ) =>
   Cacheable (UpdPermInfo b)
 
@@ -510,26 +522,30 @@ data DelPermInfo (b :: BackendType) = DelPermInfo
 
 deriving instance
   ( Backend b,
-    Eq (BooleanOperators b (PartialSQLExp b))
+    Eq (BooleanOperators b (PartialSQLExp b)),
+    Eq (FunctionArgumentExp b (PartialSQLExp b))
   ) =>
   Eq (DelPermInfo b)
 
 deriving instance
   ( Backend b,
-    Show (BooleanOperators b (PartialSQLExp b))
+    Show (BooleanOperators b (PartialSQLExp b)),
+    Show (FunctionArgumentExp b (PartialSQLExp b))
   ) =>
   Show (DelPermInfo b)
 
 instance
   ( Backend b,
-    NFData (BooleanOperators b (PartialSQLExp b))
+    NFData (BooleanOperators b (PartialSQLExp b)),
+    NFData (FunctionArgumentExp b (PartialSQLExp b))
   ) =>
   NFData (DelPermInfo b)
 
 instance
   ( Backend b,
     Hashable (BooleanOperators b (PartialSQLExp b)),
-    Cacheable (BooleanOperators b (PartialSQLExp b))
+    Cacheable (BooleanOperators b (PartialSQLExp b)),
+    Cacheable (FunctionArgumentExp b (PartialSQLExp b))
   ) =>
   Cacheable (DelPermInfo b)
 
@@ -549,7 +565,7 @@ data RolePermInfo (b :: BackendType) = RolePermInfo
   }
   deriving (Generic)
 
-instance (Backend b, NFData (BooleanOperators b (PartialSQLExp b))) => NFData (RolePermInfo b)
+instance (Backend b, NFData (BooleanOperators b (PartialSQLExp b)), NFData (FunctionArgumentExp b (PartialSQLExp b))) => NFData (RolePermInfo b)
 
 instance (Backend b, ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))) => ToJSON (RolePermInfo b) where
   toJSON = genericToJSON hasuraJSON

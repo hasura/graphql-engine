@@ -429,6 +429,7 @@ library
                      , Hasura.Backends.BigQuery.DDL.BoolExp
                      , Hasura.Backends.BigQuery.DDL.RunSQL
                      , Hasura.Backends.BigQuery.DDL.Source
+                     , Hasura.Backends.BigQuery.DDL.ComputedField
                      , Hasura.Backends.BigQuery.FromIr
                      , Hasura.Backends.BigQuery.Instances.API
                      , Hasura.Backends.BigQuery.Instances.Execute
@@ -532,7 +533,8 @@ library
                      , Hasura.Backends.Postgres.Translate.Update
                      , Hasura.Backends.Postgres.Types.BoolExp
                      , Hasura.Backends.Postgres.Types.CitusExtraTableMetadata
-                     , Hasura.Backends.Postgres.Types.ComputedFieldDefinition
+                     , Hasura.Backends.Postgres.Types.ComputedField
+                     , Hasura.Backends.Postgres.Types.Function
                      , Hasura.Backends.Postgres.Types.Column
                      , Hasura.Backends.Postgres.Types.Insert
                      , Hasura.Backends.Postgres.Types.Table
@@ -648,6 +650,7 @@ library
                      , Hasura.RQL.Types.GraphqlSchemaIntrospection
                      , Hasura.RQL.Types.Function
                      , Hasura.RQL.Types.Instances
+                     , Hasura.RQL.Types.BoolExp
                      , Hasura.RQL.Types.Metadata
                      , Hasura.RQL.Types.Metadata.Backend
                      , Hasura.RQL.Types.Metadata.Instances

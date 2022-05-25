@@ -88,7 +88,8 @@ type MonadBuildSchema b r m n =
 -- See <#modelling Note BackendSchema modelling principles>.
 class
   ( Backend b,
-    Eq (BooleanOperators b (UnpreparedValue b))
+    Eq (BooleanOperators b (UnpreparedValue b)),
+    Eq (FunctionArgumentExp b (UnpreparedValue b))
   ) =>
   BackendSchema (b :: BackendType)
   where

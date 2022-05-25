@@ -6,10 +6,7 @@ module Hasura.RQL.Types.ComputedField
   ( ComputedFieldFunction (..),
     ComputedFieldInfo (..),
     ComputedFieldName (..),
-    ComputedFieldReturn (..),
     CustomFunctionNames (..),
-    FunctionSessionArgument (..),
-    FunctionTableArgument (..),
     FunctionTrackedAs (..),
     cfiDescription,
     cfiFunction,
@@ -19,14 +16,11 @@ module Hasura.RQL.Types.ComputedField
     computedFieldNameToText,
     fromComputedField,
     onlyScalarComputedFields,
-    _CFRScalar,
-    _CFRSetofTable,
   )
 where
 
 import Control.Lens hiding ((.=))
 import Data.Aeson
-import Data.Aeson.Casing
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Data.Text.NonEmpty (NonEmptyText (..))
@@ -36,7 +30,6 @@ import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Function
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax (Name)
 
@@ -48,46 +41,6 @@ computedFieldNameToText = unNonEmptyText . unComputedFieldName
 
 fromComputedField :: ComputedFieldName -> FieldName
 fromComputedField = FieldName . computedFieldNameToText
-
--- | The function table argument is either the very first argument or the named
--- argument with an index. The index is 0 if the named argument is the first.
-data FunctionTableArgument
-  = FTAFirst
-  | FTANamed
-      !FunctionArgName
-      -- ^ argument name
-      !Int
-      -- ^ argument index
-  deriving (Show, Eq, Generic)
-
-instance Cacheable FunctionTableArgument
-
-instance NFData FunctionTableArgument
-
-instance Hashable FunctionTableArgument
-
-instance ToJSON FunctionTableArgument where
-  toJSON FTAFirst = String "first_argument"
-  toJSON (FTANamed argName _) = object ["name" .= argName]
-
--- | The session argument, which passes Hasura session variables to a
--- SQL function as a JSON object.
-data FunctionSessionArgument
-  = FunctionSessionArgument
-      !FunctionArgName
-      -- ^ The argument name
-      !Int
-      -- ^ The ordinal position in the function input parameters
-  deriving (Show, Eq, Generic)
-
-instance Cacheable FunctionSessionArgument
-
-instance NFData FunctionSessionArgument
-
-instance Hashable FunctionSessionArgument
-
-instance ToJSON FunctionSessionArgument where
-  toJSON (FunctionSessionArgument argName _) = toJSON argName
 
 data FunctionTrackedAs (b :: BackendType)
   = FTAComputedField ComputedFieldName SourceName (TableName b)
@@ -107,39 +60,17 @@ deriving instance Backend b => Show (FunctionTrackedAs b)
 
 deriving instance Backend b => Eq (FunctionTrackedAs b)
 
-data ComputedFieldReturn (b :: BackendType)
-  = CFRScalar !(ScalarType b)
-  | CFRSetofTable !(TableName b)
-  deriving (Generic)
-
-deriving instance Backend b => Show (ComputedFieldReturn b)
-
-deriving instance Backend b => Eq (ComputedFieldReturn b)
-
-instance Backend b => Cacheable (ComputedFieldReturn b)
-
-instance Backend b => NFData (ComputedFieldReturn b)
-
-instance Backend b => Hashable (ComputedFieldReturn b)
-
-instance Backend b => ToJSON (ComputedFieldReturn b) where
-  toJSON =
-    genericToJSON $
-      defaultOptions
-        { constructorTagModifier = snakeCase . drop 3,
-          sumEncoding = TaggedObject "type" "info"
-        }
-
-$(makePrisms ''ComputedFieldReturn)
-
 data ComputedFieldFunction (b :: BackendType) = ComputedFieldFunction
   { _cffName :: !(FunctionName b),
-    _cffInputArgs :: !(Seq.Seq (FunctionArg b)),
-    _cffTableArgument :: !FunctionTableArgument,
-    _cffSessionArgument :: !(Maybe FunctionSessionArgument),
+    _cffInputArgs :: !(Seq.Seq (FunctionArgument b)),
+    _cffComputedFieldImplicitArgs :: !(ComputedFieldImplicitArguments b),
     _cffDescription :: !(Maybe PGDescription)
   }
-  deriving (Show, Eq, Generic)
+  deriving (Generic)
+
+deriving instance (Backend b) => Show (ComputedFieldFunction b)
+
+deriving instance (Backend b) => Eq (ComputedFieldFunction b)
 
 instance (Backend b) => Cacheable (ComputedFieldFunction b)
 
@@ -176,5 +107,5 @@ instance (Backend b) => ToJSON (ComputedFieldInfo b) where
 
 $(makeLenses ''ComputedFieldInfo)
 
-onlyScalarComputedFields :: [ComputedFieldInfo backend] -> [ComputedFieldInfo backend]
-onlyScalarComputedFields = filter (has (cfiReturnType . _CFRScalar))
+onlyScalarComputedFields :: forall backend. (Backend backend) => [ComputedFieldInfo backend] -> [ComputedFieldInfo backend]
+onlyScalarComputedFields = filter (has _ReturnsScalar . computedFieldReturnType @backend . _cfiReturnType)

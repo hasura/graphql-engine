@@ -59,13 +59,17 @@ module Hasura.Backends.BigQuery.Types
     scalarTypeGraphQLName,
     scientificToText,
     FunctionName (..),
-    ArgumentName (..),
     ComputedFieldDefinition (..),
+    ArgumentExp (..),
+    ComputedFieldImplicitArguments,
+    ComputedFieldReturn (..),
+    FunctionArgument (..),
   )
 where
 
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Aeson qualified as J
+import Data.Aeson.Casing qualified as J
 import Data.Aeson.Extended qualified as J
 import Data.Aeson.Types qualified as J
 import Data.ByteString (ByteString)
@@ -87,6 +91,7 @@ import Hasura.Incremental.Internal.Dependency
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Common qualified as RQL
+import Hasura.RQL.Types.Function (FunctionArgName)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.Haskell.TH.Syntax
 import Text.ParserCombinators.ReadP (eof, readP_to_S)
@@ -893,7 +898,11 @@ instance FromJSON FunctionName where
 instance ToJSON FunctionName where
   toJSON FunctionName {..} = J.object ["name" J..= functionName, "dataset" J..= functionNameSchema]
 
-instance ToTxt FunctionName where toTxt = tshow
+instance ToTxt FunctionName where
+  toTxt FunctionName {..} =
+    case functionNameSchema of
+      Nothing -> functionName
+      Just schemaName -> schemaName <> "." <> functionName
 
 instance Hashable FunctionName
 
@@ -903,18 +912,15 @@ instance ToJSONKey FunctionName
 
 instance NFData FunctionName
 
-newtype ArgumentName = ArgumentName {getArgumentName :: Text}
-  deriving (Eq, Show, Generic, Data, Lift, Ord, NFData, Hashable, Cacheable, ToJSON, ToJSONKey, FromJSON, FromJSONKey)
-
 -- | The metadata required to define a computed field for a BigQuery table
 data ComputedFieldDefinition = ComputedFieldDefinition
   { -- | Name of the user defined routine
     _bqcfdFunction :: FunctionName,
     -- | Name of the table which the function returns. If not provided
-    -- the return table is inferred from the routine API metadata.
+    -- the return table schema is inferred from the routine API metadata.
     _bqcfdReturnTable :: Maybe TableName,
     -- | A mapping context to determine argument value from table column
-    _bqcfdArgumentMapping :: HashMap ArgumentName ColumnName
+    _bqcfdArgumentMapping :: HashMap FunctionArgName ColumnName
   }
   deriving (Eq, Show, Generic, Data, Lift, Ord)
 
@@ -929,6 +935,59 @@ instance ToJSON ComputedFieldDefinition where
 
 instance FromJSON ComputedFieldDefinition where
   parseJSON = J.genericParseJSON hasuraJSON
+
+-- | A argument expression for SQL functions
+data ArgumentExp v
+  = -- | Value coming from user's input through GraphQL query
+    AEInput v
+  | -- | For computed fields, value of column from the table
+    AETableColumn ColumnName
+  deriving stock (Eq, Show, Functor, Foldable, Traversable, Generic)
+
+instance (Hashable v) => Hashable (ArgumentExp v)
+
+type ComputedFieldImplicitArguments = HashMap FunctionArgName ColumnName
+
+-- | Returning type of the function underlying a computed field
+data ComputedFieldReturn
+  = -- | Returns existing table, needs to be present in the metadata
+    ReturnExistingTable TableName
+  | -- | An arbitrary table schema specified by column name and type pairs
+    ReturnTableSchema [(ColumnName, G.Name, ScalarType)]
+  deriving (Show, Eq, Generic)
+
+instance Cacheable ComputedFieldReturn
+
+instance NFData ComputedFieldReturn
+
+instance Hashable ComputedFieldReturn
+
+instance ToJSON ComputedFieldReturn where
+  toJSON =
+    J.genericToJSON $
+      J.defaultOptions
+        { J.constructorTagModifier = J.snakeCase,
+          J.sumEncoding = J.TaggedObject "type" "info"
+        }
+
+-- | Function input argument specification
+data FunctionArgument = FunctionArgument
+  { -- | Argument name of a table valued function is required
+    -- Ref: https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#create_table_function_statement
+    _faName :: FunctionArgName,
+    -- | The data type of the argument
+    _faType :: ScalarType
+  }
+  deriving (Show, Eq, Generic)
+
+instance Cacheable FunctionArgument
+
+instance NFData FunctionArgument
+
+instance Hashable FunctionArgument
+
+instance ToJSON FunctionArgument where
+  toJSON = J.genericToJSON hasuraJSON
 
 --------------------------------------------------------------------------------
 -- Backend-related stuff

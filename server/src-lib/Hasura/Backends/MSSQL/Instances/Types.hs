@@ -28,7 +28,7 @@ instance Backend 'MSSQL where
   -- It's something of a wart that we have to
   -- specify this here, as we don't support functions for MSSQL.
   type FunctionName 'MSSQL = Text
-  type FunctionArgType 'MSSQL = Void
+  type FunctionArgument 'MSSQL = Void
   type ConstraintName 'MSSQL = Text
   type BasicOrderType 'MSSQL = MSSQL.Order
   type NullsOrderType 'MSSQL = MSSQL.NullsOrder
@@ -43,6 +43,9 @@ instance Backend 'MSSQL where
   type BackendUpdate 'MSSQL = MSSQL.BackendUpdate
 
   type ComputedFieldDefinition 'MSSQL = Void
+  type FunctionArgumentExp 'MSSQL = Const Void
+  type ComputedFieldImplicitArguments 'MSSQL = Void
+  type ComputedFieldReturn 'MSSQL = Void
 
   type ExtraTableMetadata 'MSSQL = [MSSQL.ColumnName] -- List of identity columns
   type BackendInsert 'MSSQL = MSSQL.BackendInsert
@@ -52,9 +55,6 @@ instance Backend 'MSSQL where
   type XNodesAgg 'MSSQL = XEnable
   type XNestedInserts 'MSSQL = XDisable
   type XStreamingSubscription 'MSSQL = XDisable
-
-  functionArgScalarType :: FunctionArgType 'MSSQL -> ScalarType 'MSSQL
-  functionArgScalarType = absurd
 
   isComparableType :: ScalarType 'MSSQL -> Bool
   isComparableType = MSSQL.isComparableType
@@ -92,3 +92,9 @@ instance Backend 'MSSQL where
 
   computedFieldFunction :: ComputedFieldDefinition 'MSSQL -> FunctionName 'MSSQL
   computedFieldFunction = absurd
+
+  computedFieldReturnType :: ComputedFieldReturn 'MSSQL -> ComputedFieldReturnType 'MSSQL
+  computedFieldReturnType = absurd
+
+  fromComputedFieldImplicitArguments :: v -> ComputedFieldImplicitArguments 'MSSQL -> [FunctionArgumentExp 'MSSQL v]
+  fromComputedFieldImplicitArguments _ = absurd

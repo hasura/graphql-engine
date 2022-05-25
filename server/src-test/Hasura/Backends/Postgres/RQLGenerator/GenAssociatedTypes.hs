@@ -6,6 +6,7 @@ module Hasura.Backends.Postgres.RQLGenerator.GenAssociatedTypes
     genScalarType,
     genTableName,
     genXComputedField,
+    genFunctionArgumentExp,
   )
 where
 
@@ -15,9 +16,11 @@ import Data.Functor ((<$>))
 import Data.Int (Int)
 import Data.Text (Text)
 import Data.Text qualified as T
+import Hasura.Backends.Postgres.Instances.Types ()
 import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Backends.Postgres.SQL.Types qualified as PGTypes
 import Hasura.Backends.Postgres.Types.BoolExp qualified as B
+import Hasura.Backends.Postgres.Types.Function qualified as PGTypes
 import Hasura.Generator.Common (defaultRange, genArbitraryUnicodeText)
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
@@ -116,6 +119,15 @@ genBooleanOperators genA =
       B.AMatches <$> genA,
       B.AMatchesAny <$> genA,
       B.AMatchesFulltext <$> genA
+    ]
+
+genFunctionArgumentExp :: MonadGen m => m a -> m (FunctionArgumentExp ('Postgres 'Vanilla) a)
+genFunctionArgumentExp genA =
+  Gen.choice
+    [ pure PGTypes.AETableRow,
+      pure PGTypes.AEActionResponsePayload,
+      PGTypes.AESession <$> genA,
+      PGTypes.AEInput <$> genA
     ]
 
 --------------------------------------------------------------------------------

@@ -5,6 +5,7 @@
 -- See 'Hasura.RQL.DDL.Schema.Cache' and 'Hasura.RQL.Types.Eventing.Backend'.
 module Hasura.Backends.Postgres.DDL.BoolExp
   ( parseBoolExpOperations,
+    buildComputedFieldBooleanExp,
   )
 where
 
@@ -12,13 +13,17 @@ import Data.Aeson
 import Data.HashMap.Strict qualified as Map
 import Data.Text qualified as T
 import Data.Text.Extended
-import Hasura.Backends.Postgres.SQL.Types
+import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import Hasura.Backends.Postgres.Types.BoolExp
+import Hasura.Backends.Postgres.Types.ComputedField as PG
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BoolExp
 import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
@@ -288,3 +293,37 @@ parseBoolExpOperations rhsParser rootTable fim columnRef value = do
 
         parseVal :: (FromJSON a) => m a
         parseVal = decodeValue val
+
+buildComputedFieldBooleanExp ::
+  forall pgKind m v.
+  ( MonadError QErr m,
+    Backend ('Postgres pgKind),
+    TableCoreInfoRM ('Postgres pgKind) m
+  ) =>
+  BoolExpResolver ('Postgres pgKind) m v ->
+  BoolExpRHSParser ('Postgres pgKind) m v ->
+  TableName ('Postgres pgKind) ->
+  FieldInfoMap (FieldInfo ('Postgres pgKind)) ->
+  ComputedFieldInfo ('Postgres pgKind) ->
+  Value ->
+  m (AnnComputedFieldBoolExp ('Postgres pgKind) v)
+buildComputedFieldBooleanExp boolExpResolver rhsParser rootTable colInfoMap ComputedFieldInfo {..} colVal = do
+  let ComputedFieldFunction {..} = _cfiFunction
+  case toList _cffInputArgs of
+    [] -> do
+      let hasuraSession = _berpSessionValue rhsParser
+          computedFieldFunctionArgs = flip FunctionArgsExp mempty $ PG.fromComputedFieldImplicitArguments hasuraSession _cffComputedFieldImplicitArgs
+      AnnComputedFieldBoolExp _cfiXComputedFieldInfo _cfiName _cffName computedFieldFunctionArgs
+        <$> case _cfiReturnType of
+          CFRScalar scalarType ->
+            CFBEScalar
+              <$> parseBoolExpOperations (_berpValueParser rhsParser) rootTable colInfoMap (ColumnReferenceComputedField _cfiName scalarType) colVal
+          CFRSetofTable table -> do
+            tableBoolExp <- decodeValue colVal
+            tableFieldInfoMap <- askFieldInfoMapSource table
+            annTableBoolExp <- (getBoolExpResolver boolExpResolver) rhsParser table tableFieldInfoMap $ unBoolExp tableBoolExp
+            pure $ CFBETable table annTableBoolExp
+    _ ->
+      throw400
+        UnexpectedPayload
+        "Computed columns with input arguments can not be part of the where clause"

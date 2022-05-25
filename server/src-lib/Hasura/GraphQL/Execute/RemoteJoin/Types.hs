@@ -215,14 +215,16 @@ deriving instance
   ( Backend b,
     Show (ScalarValue b),
     Show (SourceConfig b),
-    Show (BooleanOperators b (P.UnpreparedValue b))
+    Show (BooleanOperators b (P.UnpreparedValue b)),
+    Show (FunctionArgumentExp b (P.UnpreparedValue b))
   ) =>
   Show (RemoteSourceJoin b)
 
 deriving instance
   ( Backend b,
     Eq (ScalarValue b),
-    Eq (BooleanOperators b (P.UnpreparedValue b))
+    Eq (BooleanOperators b (P.UnpreparedValue b)),
+    Eq (FunctionArgumentExp b (P.UnpreparedValue b))
   ) =>
   Eq (RemoteSourceJoin b)
 

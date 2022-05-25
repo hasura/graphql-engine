@@ -10,6 +10,7 @@ import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BoolExp
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
@@ -27,7 +28,9 @@ import Hasura.SQL.Types
 class
   ( Backend b,
     Eq (BooleanOperators b (PartialSQLExp b)),
-    Hashable (BooleanOperators b (PartialSQLExp b))
+    Eq (FunctionArgumentExp b (PartialSQLExp b)),
+    Hashable (BooleanOperators b (PartialSQLExp b)),
+    Hashable (FunctionArgumentExp b (PartialSQLExp b))
   ) =>
   BackendMetadata (b :: BackendType)
   where
@@ -35,6 +38,7 @@ class
     (MonadError QErr m) =>
     HashSet (TableName b) ->
     TableName b ->
+    HashSet (Column b) ->
     ComputedFieldName ->
     ComputedFieldDefinition b ->
     RawFunctionInfo b ->
@@ -122,6 +126,19 @@ class
     Either (ObjRelDef b) (ArrRelDef b) ->
     m ()
   validateRelationship _ _ _ = pure ()
+
+  -- | Function that that builds a boolean expression field out of a computed field
+  buildComputedFieldBooleanExp ::
+    ( MonadError QErr m,
+      TableCoreInfoRM b m
+    ) =>
+    BoolExpResolver b m v ->
+    BoolExpRHSParser b m v ->
+    TableName b ->
+    FieldInfoMap (FieldInfo b) ->
+    ComputedFieldInfo b ->
+    Value ->
+    m (AnnComputedFieldBoolExp b v)
 
   -- | Run all operations required to create, update, or migrate the internal
   -- catalog used by the backend for internal bookkeeping, if any. The return

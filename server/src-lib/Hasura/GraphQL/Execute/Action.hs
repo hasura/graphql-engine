@@ -43,6 +43,7 @@ import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.SQL.Value (PGScalarValue (..))
 import Hasura.Backends.Postgres.Translate.Select qualified as RS
+import Hasura.Backends.Postgres.Types.Function qualified as TF
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Eventing.Common
@@ -66,6 +67,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Eventing
+import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.Backend
 import Hasura.SQL.Types
@@ -273,7 +275,7 @@ resolveAsyncActionQuery userInfo annAction =
                       IR.AsyncOutput annFields ->
                         RS.AFComputedField () (ComputedFieldName [nonEmptyTextQQ|__action_computed_field|]) $
                           RS.CFSTable jsonAggSelect $
-                            processOutputSelectionSet RS.AEActionResponsePayload outputType definitionList annFields stringifyNumerics
+                            processOutputSelectionSet TF.AEActionResponsePayload outputType definitionList annFields stringifyNumerics
                       IR.AsyncId -> mkAnnFldFromPGCol idColumn
                       IR.AsyncCreatedAt -> mkAnnFldFromPGCol createdAtColumn
                       IR.AsyncErrors -> mkAnnFldFromPGCol errorsColumn
@@ -285,7 +287,7 @@ resolveAsyncActionQuery userInfo annAction =
                         PGValJSONB $
                           Q.JSONB $
                             J.toJSON [actionLogResponse]
-                  functionArgs = RS.FunctionArgsExp [RS.AEInput actionLogInput] mempty
+                  functionArgs = FunctionArgsExp [TF.AEInput actionLogInput] mempty
                   tableFromExp =
                     RS.FromFunction jsonbToRecordSet functionArgs $
                       Just
@@ -300,7 +302,7 @@ resolveAsyncActionQuery userInfo annAction =
     IR.AnnActionAsyncQuery _ actionId outputType asyncFields definitionList stringifyNumerics _ actionSource = annAction
 
     idColumn = (unsafePGCol "id", PGUUID)
-    responsePayloadColumn = (unsafePGCol RS.actionResponsePayloadColumn, PGJSONB)
+    responsePayloadColumn = (unsafePGCol TF.actionResponsePayloadColumn, PGJSONB)
     createdAtColumn = (unsafePGCol "created_at", PGTimeStampTZ)
     errorsColumn = (unsafePGCol "errors", PGJSONB)
     sessionVarsColumn = (unsafePGCol "session_variables", PGJSONB)
@@ -631,7 +633,7 @@ callWebhook
         | otherwise = False
 
 processOutputSelectionSet ::
-  RS.ArgumentExp v ->
+  TF.ArgumentExp v ->
   GraphQLType ->
   [(PGCol, PGScalarType)] ->
   IR.ActionFields ->
@@ -647,7 +649,7 @@ processOutputSelectionSet tableRowInput actionOutputType definitionList actionFi
           if isListType actionOutputType
             then "jsonb_to_recordset" -- Multirow array response
             else "jsonb_to_record" -- Single object response
-    functionArgs = RS.FunctionArgsExp [tableRowInput] mempty
+    functionArgs = FunctionArgsExp [tableRowInput] mempty
     selectFrom = RS.FromFunction jsonbToPostgresRecordFunction functionArgs $ Just definitionList
 
 actionFieldToAnnField :: IR.ActionFieldG Void -> RS.AnnFieldG ('Postgres 'Vanilla) Void v

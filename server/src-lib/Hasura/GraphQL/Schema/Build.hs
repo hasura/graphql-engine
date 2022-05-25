@@ -44,8 +44,8 @@
 -- they have the sizes and shapes that result in the most elegant uses of them
 -- that we can manage.
 module Hasura.GraphQL.Schema.Build
-  ( buildFunctionMutationFields,
-    buildFunctionQueryFields,
+  ( buildFunctionMutationFieldsPG,
+    buildFunctionQueryFieldsPG,
     buildTableDeleteMutationFields,
     buildTableInsertMutationFields,
     buildTableQueryFields,
@@ -71,6 +71,7 @@ import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
+import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 buildTableQueryFields ::
@@ -231,15 +232,15 @@ buildTableDeleteMutationFields sourceName tableName tableInfo gqlName = do
     defaultDeletePKDesc = "delete single row from the table: " <>> tableName
     TableCustomRootFields {..} = _tcCustomRootFields . _tciCustomConfig $ _tiCoreInfo tableInfo
 
-buildFunctionQueryFields ::
-  forall b r m n.
-  MonadBuildSchema b r m n =>
+buildFunctionQueryFieldsPG ::
+  forall r m n pgKind.
+  MonadBuildSchema ('Postgres pgKind) r m n =>
   SourceName ->
-  FunctionName b ->
-  FunctionInfo b ->
-  TableName b ->
-  m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-buildFunctionQueryFields sourceName functionName functionInfo tableName = do
+  FunctionName ('Postgres pgKind) ->
+  FunctionInfo ('Postgres pgKind) ->
+  TableName ('Postgres pgKind) ->
+  m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
+buildFunctionQueryFieldsPG sourceName functionName functionInfo tableName = do
   let -- select function
       funcDesc =
         Just . G.Description $
@@ -259,15 +260,15 @@ buildFunctionQueryFields sourceName functionName functionInfo tableName = do
         optionalFieldParser (QDBAggregation) $ selectFunctionAggregate sourceName functionInfo funcAggDesc
       ]
 
-buildFunctionMutationFields ::
-  forall b r m n.
-  MonadBuildSchema b r m n =>
+buildFunctionMutationFieldsPG ::
+  forall r m n pgKind.
+  MonadBuildSchema ('Postgres pgKind) r m n =>
   SourceName ->
-  FunctionName b ->
-  FunctionInfo b ->
-  TableName b ->
-  m [FieldParser n (MutationDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-buildFunctionMutationFields sourceName functionName functionInfo tableName = do
+  FunctionName ('Postgres pgKind) ->
+  FunctionInfo ('Postgres pgKind) ->
+  TableName ('Postgres pgKind) ->
+  m [FieldParser n (MutationDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
+buildFunctionMutationFieldsPG sourceName functionName functionInfo tableName = do
   let funcDesc = Just $ G.Description $ "execute VOLATILE function " <> functionName <<> " which returns " <>> tableName
       jsonAggSelect = _fiJsonAggSelect functionInfo
   catMaybes

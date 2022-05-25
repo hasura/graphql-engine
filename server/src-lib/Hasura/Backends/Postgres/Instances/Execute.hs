@@ -39,6 +39,7 @@ import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Backends.Postgres.SQL.Value qualified as PG
 import Hasura.Backends.Postgres.Translate.Select (PostgresAnnotatedFieldJSON)
 import Hasura.Backends.Postgres.Translate.Select qualified as DS
+import Hasura.Backends.Postgres.Types.Function qualified as PG
 import Hasura.Backends.Postgres.Types.Update
 import Hasura.Base.Error (QErr)
 import Hasura.EncJSON (EncJSON, encJFromBS, encJFromJValue)
@@ -86,6 +87,7 @@ import Hasura.RQL.Types.Common
     SourceName,
     StringifyNumbers,
   )
+import Hasura.RQL.Types.Function
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Session (UserInfo (..))
@@ -488,7 +490,7 @@ pgDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argume
     jsonToRecordSet =
       IR.FromFunction
         (PG.QualifiedObject "pg_catalog" $ PG.FunctionName "jsonb_to_recordset")
-        (IR.FunctionArgsExp [IR.AEInput rowsArgument] mempty)
+        (FunctionArgsExp [PG.AEInput rowsArgument] mempty)
         (Just recordSetDefinitionList)
 
     rootSelection =

@@ -130,3 +130,4 @@ instance
   parseCollectableType = PG.parseCollectableType
   postDropSourceHook = PG.postDropSourceHook
   validateRelationship = validateRel @pgKind
+  buildComputedFieldBooleanExp = PG.buildComputedFieldBooleanExp

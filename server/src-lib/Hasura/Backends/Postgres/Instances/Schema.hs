@@ -139,9 +139,9 @@ instance
   buildTableInsertMutationFields = GSB.buildTableInsertMutationFields backendInsertParser
   buildTableUpdateMutationFields = pgkBuildTableUpdateMutationFields
   buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
-  buildFunctionQueryFields = GSB.buildFunctionQueryFields
+  buildFunctionQueryFields = GSB.buildFunctionQueryFieldsPG
   buildFunctionRelayQueryFields = pgkBuildFunctionRelayQueryFields
-  buildFunctionMutationFields = GSB.buildFunctionMutationFields
+  buildFunctionMutationFields = GSB.buildFunctionMutationFieldsPG
 
   -- table components
   tableArguments = defaultTableArgs

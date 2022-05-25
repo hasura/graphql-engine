@@ -19,7 +19,7 @@ instance Backend 'MySQL where
   type TableName 'MySQL = MySQL.TableName
   type FunctionName 'MySQL = MySQL.FunctionName
   type RawFunctionInfo 'MySQL = Void -- MySQL.FunctionName
-  type FunctionArgType 'MySQL = Void
+  type FunctionArgument 'MySQL = Void
   type ConstraintName 'MySQL = MySQL.ConstraintName
   type BasicOrderType 'MySQL = MySQL.Order
   type NullsOrderType 'MySQL = MySQL.NullsOrder
@@ -31,15 +31,15 @@ instance Backend 'MySQL where
   type ScalarSelectionArguments 'MySQL = Void
   type BooleanOperators 'MySQL = Const Void
   type ComputedFieldDefinition 'MySQL = Void
+  type FunctionArgumentExp 'MySQL = Const Void
+  type ComputedFieldImplicitArguments 'MySQL = Void
+  type ComputedFieldReturn 'MySQL = Void
   type XComputedField 'MySQL = Void
   type XRelay 'MySQL = Void
   type XNodesAgg 'MySQL = XEnable
   type ExtraTableMetadata 'MySQL = ()
   type XNestedInserts 'MySQL = XDisable
   type XStreamingSubscription 'MySQL = XDisable
-
-  functionArgScalarType :: FunctionArgType 'MySQL -> ScalarType 'MySQL
-  functionArgScalarType = error "functionArgScalarType: not implemented yet"
 
   isComparableType :: ScalarType 'MySQL -> Bool
   isComparableType = isNumType @'MySQL -- TODO: For now we only allow comparisons for numeric types
@@ -108,3 +108,9 @@ instance Backend 'MySQL where
 
   computedFieldFunction :: ComputedFieldDefinition 'MySQL -> FunctionName 'MySQL
   computedFieldFunction = error "computedFieldFunction: MySQL backend does not support this operation yet"
+
+  computedFieldReturnType :: ComputedFieldReturn 'MySQL -> ComputedFieldReturnType 'MySQL
+  computedFieldReturnType = error "computedFieldReturnType: MySQL backend does not support this operation yet"
+
+  fromComputedFieldImplicitArguments :: v -> ComputedFieldImplicitArguments 'MySQL -> [FunctionArgumentExp 'MySQL v]
+  fromComputedFieldImplicitArguments = error "fromComputedFieldImplicitArguments: MySQL backend does not support this operation yet"

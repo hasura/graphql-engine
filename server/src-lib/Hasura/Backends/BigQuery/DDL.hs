@@ -1,6 +1,5 @@
 module Hasura.Backends.BigQuery.DDL
-  ( buildComputedFieldInfo,
-    fetchAndValidateEnumValues,
+  ( fetchAndValidateEnumValues,
     buildFunctionInfo,
     updateColumnInEventTrigger,
     parseBoolExpOperations,
@@ -11,6 +10,7 @@ where
 
 import Data.Aeson
 import Hasura.Backends.BigQuery.DDL.BoolExp
+import Hasura.Backends.BigQuery.DDL.ComputedField as M
 import Hasura.Backends.BigQuery.DDL.Source as M
 import Hasura.Backends.BigQuery.Types qualified as BigQuery
 import Hasura.Base.Error
@@ -19,7 +19,6 @@ import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.SchemaCache
@@ -28,18 +27,6 @@ import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Server.Utils
 import Hasura.Session
-
-buildComputedFieldInfo ::
-  (MonadError QErr m) =>
-  HashSet (TableName 'BigQuery) ->
-  TableName 'BigQuery ->
-  ComputedFieldName ->
-  ComputedFieldDefinition 'BigQuery ->
-  RawFunctionInfo 'BigQuery ->
-  Comment ->
-  m (ComputedFieldInfo 'BigQuery)
-buildComputedFieldInfo _ _ _ _ _ _ =
-  throw400 NotSupported "Computed fields aren't supported for BigQuery sources"
 
 fetchAndValidateEnumValues ::
   (Monad m) =>

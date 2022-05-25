@@ -7,9 +7,11 @@ module Hasura.Backends.DataConnector.RQLGenerator.GenCommon
     genTableName,
     genScalarType,
     genFunctionName,
+    genFunctionArgumentExp,
   )
 where
 
+import Data.Functor.Const
 import Hasura.Backends.DataConnector.IR.Name qualified as Name
 import Hasura.Backends.DataConnector.IR.Scalar.Type qualified as ScalarType
 import Hasura.Generator.Common (defaultRange, genArbitraryUnicodeText, genHashMap)
@@ -93,6 +95,9 @@ genScalarType =
 
 genFunctionName :: MonadGen m => m (FunctionName 'DataConnector)
 genFunctionName = coerce <$> genArbitraryUnicodeText defaultRange
+
+genFunctionArgumentExp :: MonadGen m => m (FunctionArgumentExp 'DataConnector a)
+genFunctionArgumentExp = pure (Const ())
 
 --------------------------------------------------------------------------------
 -- Unexported

@@ -27,6 +27,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Table
@@ -89,18 +90,18 @@ orderByExp sourceName tableInfo = memoizeOn 'orderByExp (sourceName, tableInfoNa
           let ComputedFieldFunction {..} = _cfiFunction
               mkComputedFieldOrderBy =
                 let functionArgs =
-                      flip IR.FunctionArgsExp mempty $
-                        IR.functionArgsWithTableRowAndSession P.UVSession _cffTableArgument _cffSessionArgument
+                      flip FunctionArgsExp mempty $
+                        fromComputedFieldImplicitArguments @b P.UVSession _cffComputedFieldImplicitArgs
                  in IR.ComputedFieldOrderBy _cfiXComputedFieldInfo _cfiName _cffName functionArgs
           fieldName <- hoistMaybe $ G.mkName $ toTxt _cfiName
           guard $ _cffInputArgs == mempty -- No input arguments other than table row and session argument
-          case _cfiReturnType of
-            CFRScalar scalarType -> do
+          case computedFieldReturnType @b _cfiReturnType of
+            ReturnsScalar scalarType -> do
               let computedFieldOrderBy = mkComputedFieldOrderBy $ IR.CFOBEScalar scalarType
               pure $
                 P.fieldOptional fieldName Nothing (orderByOperator @b)
                   <&> fmap (pure . mkOrderByItemG @b (IR.AOCComputedField computedFieldOrderBy)) . join
-            CFRSetofTable table -> do
+            ReturnsTable table -> do
               let aggregateFieldName = fieldName <> G.__aggregate
               tableInfo' <- askTableInfo @b sourceName table
               perms <- MaybeT $ tableSelectPermissions tableInfo'
@@ -117,6 +118,7 @@ orderByExp sourceName tableInfo = memoizeOn 'orderByExp (sourceName, tableInfoNa
                             . IR.CFOBETableAggregation table newPerms
                     )
                     aggregationOrderBy
+            ReturnsOthers -> empty
         FIRemoteRelationship _ -> empty
 
 -- FIXME!

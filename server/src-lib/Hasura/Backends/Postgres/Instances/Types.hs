@@ -19,7 +19,8 @@ import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Backends.Postgres.SQL.Value qualified as PG
 import Hasura.Backends.Postgres.Types.BoolExp qualified as PG
 import Hasura.Backends.Postgres.Types.CitusExtraTableMetadata qualified as Citus
-import Hasura.Backends.Postgres.Types.ComputedFieldDefinition qualified as PG
+import Hasura.Backends.Postgres.Types.ComputedField qualified as PG
+import Hasura.Backends.Postgres.Types.Function qualified as PG
 import Hasura.Backends.Postgres.Types.Insert qualified as PG (BackendInsert)
 import Hasura.Backends.Postgres.Types.Update qualified as PG
 import Hasura.Base.Error
@@ -69,7 +70,7 @@ instance
   type SourceConnConfiguration ('Postgres pgKind) = PG.PostgresConnConfiguration
   type TableName ('Postgres pgKind) = PG.QualifiedTable
   type FunctionName ('Postgres pgKind) = PG.QualifiedFunction
-  type FunctionArgType ('Postgres pgKind) = PG.QualifiedPGType
+  type FunctionArgument ('Postgres pgKind) = PG.FunctionArg
   type RawFunctionInfo ('Postgres pgKind) = PG.PGRawFunctionInfo
   type ConstraintName ('Postgres pgKind) = PG.ConstraintName
   type BasicOrderType ('Postgres pgKind) = PG.OrderType
@@ -83,6 +84,10 @@ instance
   type ComputedFieldDefinition ('Postgres pgKind) = PG.ComputedFieldDefinition
   type ScalarSelectionArguments ('Postgres pgKind) = PG.ColumnOp
 
+  type FunctionArgumentExp ('Postgres pgKind) = PG.ArgumentExp
+  type ComputedFieldImplicitArguments ('Postgres pgKind) = PG.ComputedFieldImplicitArguments
+  type ComputedFieldReturn ('Postgres pgKind) = PG.ComputedFieldReturn
+
   type BackendUpdate ('Postgres pgKind) = PG.BackendUpdate
 
   type ExtraTableMetadata ('Postgres pgKind) = PgExtraTableMetadata pgKind
@@ -94,7 +99,6 @@ instance
   type XNestedInserts ('Postgres pgKind) = XEnable
   type XStreamingSubscription ('Postgres pgKind) = XEnable
 
-  functionArgScalarType = PG.mkFunctionArgScalarType
   isComparableType = PG.isComparableType
   isNumType = PG.isNumType
   textToScalarValue = PG.textToScalarValue
@@ -103,6 +107,10 @@ instance
   functionToTable = fmap (PG.TableName . PG.getFunctionTxt)
   tableToFunction = fmap (PG.FunctionName . PG.getTableTxt)
   computedFieldFunction = PG._cfdFunction
+  computedFieldReturnType = \case
+    PG.CFRScalar scalarType -> ReturnsScalar scalarType
+    PG.CFRSetofTable table -> ReturnsTable table
+  fromComputedFieldImplicitArguments = PG.fromComputedFieldImplicitArguments
 
   tableGraphQLName = PG.qualifiedObjectToName
   functionGraphQLName = PG.qualifiedObjectToName
