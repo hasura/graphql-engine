@@ -89,7 +89,7 @@ const Headers: React.FC<HeadersListProps> = ({
             </div>
             {i < headers.length - 1 ? (
               <FaTimes
-                className={`${styles.fontAwosomeClose} fa-lg`}
+                className={`${styles.fontAwosomeClose} text-lg`}
                 onClick={removeHeader}
               />
             ) : null}

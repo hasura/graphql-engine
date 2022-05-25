@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaInfoCircle } from 'react-icons/fa';
 
 const styles = require('../ApiExplorer.scss');
 
@@ -11,10 +12,7 @@ const generateSuggestionBox = (response, parseFunc) => {
         styles.clear_fix + ' ' + styles.alertDanger + ' alert alert-danger'
       }
     >
-      <i
-        className={styles.padd_right + ' fa fa-info-circle'}
-        aria-hidden="true"
-      />
+      <FaInfoCircle className={styles.padd_right} aria-hidden="true" />
       {suggestionText}
     </div>
   ) : (

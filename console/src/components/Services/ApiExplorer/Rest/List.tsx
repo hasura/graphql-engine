@@ -1,6 +1,7 @@
 import React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import { Link } from 'react-router';
+import { FaEdit, FaTimes } from 'react-icons/fa';
 
 import { ReduxState } from '../../../../types';
 import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
@@ -146,12 +147,9 @@ const ListComponent: React.FC<Props> = ({
                         findQuery(endpoint.name)
                       )}
                       color="white"
-                      style={{ marginRight: '4px' }}
+                      className="mr-1"
                     >
-                      <i
-                        className="fa fa-times"
-                        style={{ marginRight: '4px' }}
-                      />
+                      <FaTimes className="mr-1" />
                       Delete
                     </Button>
                     <Button
@@ -159,10 +157,7 @@ const ListComponent: React.FC<Props> = ({
                       onClick={onClickEdit(endpoint.name)}
                       color="white"
                     >
-                      <i
-                        className="fa fa-edit"
-                        style={{ marginRight: '4px' }}
-                      />
+                      <FaEdit className="mr-1" />
                       Edit
                     </Button>
                   </td>

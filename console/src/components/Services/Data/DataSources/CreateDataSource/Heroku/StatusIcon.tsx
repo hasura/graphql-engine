@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { FaCheck, FaCircleNotch } from 'react-icons/fa';
+import { FaCheck, FaCircleNotch, FaTimes } from 'react-icons/fa';
 
 import { ProgressState } from './types';
 import styles from '../styles.scss';
@@ -21,13 +21,13 @@ const Complete: React.FC = () => {
 };
 
 const InProgress: React.FC = () => {
-  return <FaCircleNotch className="animate-spin fa-2x" aria-hidden="true" />;
+  return <FaCircleNotch className="animate-spin text-2xl" aria-hidden="true" />;
 };
 
 const Error: React.FC = () => {
   return (
     <div className={`${styles.progressCircle} ${styles.progressError}`}>
-      <i className="fa fa-times" aria-hidden="true" />
+      <FaTimes aria-hidden="true" />
     </div>
   );
 };

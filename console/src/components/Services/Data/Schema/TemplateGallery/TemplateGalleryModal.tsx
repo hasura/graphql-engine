@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { FaGithub } from 'react-icons/fa';
+import { FaGithub, FaSpinner, FaUpload } from 'react-icons/fa';
 import { useAppDispatch, useAppSelector } from '../../../../../store';
 import {
   applyTemplate,
@@ -45,7 +45,7 @@ export const TemplateGalleryModalBody: React.VFC<{
   ) {
     return (
       <div>
-        <span className={`fa fa-spinner fa-spin ${styles.mr_md}`} />
+        <FaSpinner className={`animate-spin ${styles.mr_md}`} />
         Loading template
       </div>
     );
@@ -153,10 +153,7 @@ export const TemplateGalleryModal: React.VFC<{
       submitText={
         shouldDisplaySubmit ? (
           <>
-            <span
-              className={`fa fa-upload ${styles.icon_padding}`}
-              aria-hidden
-            />
+            <FaUpload className={styles.icon_padding} aria-hidden />
             Install Template
           </>
         ) : undefined

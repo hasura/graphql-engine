@@ -43,11 +43,7 @@ const ConnectionSettingsForm: React.FC<ConnectionSettingsFormProps> = ({
                 setConnectionParamState(!currentConnectionParamState)
               }
             >
-              {currentConnectionParamState ? (
-                <FaCaretDown className="fa fa-caret-down" />
-              ) : (
-                <FaCaretRight className="fa fa-caret-right" />
-              )}
+              {currentConnectionParamState ? <FaCaretDown /> : <FaCaretRight />}
               {'  '}
               Connection Settings
             </a>

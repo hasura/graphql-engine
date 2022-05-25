@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { FaChevronRight } from 'react-icons/fa';
 
 import styles from '../RESTStyles.scss';
 
@@ -31,8 +32,8 @@ const CollapsibleToggle: React.FC<CollapsibleToggleProps> = ({
         tabIndex={0}
       >
         <span className={styles.collapsibleIndicatorWrapper}>
-          <i
-            className={`fa fa-chevron-right ${styles.collapsibleIndicator} ${
+          <FaChevronRight
+            className={`${styles.collapsibleIndicator} ${
               isOpen && styles.collapsibleIndicatorOpen
             }`}
           />

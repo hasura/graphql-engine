@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react';
-import { FaShareSquare } from 'react-icons/fa';
+import { FaShareSquare, FaSpinner } from 'react-icons/fa';
 import { useAppDispatch, useAppSelector } from '../../../../../store';
 import {
   fetchGlobalSchemaSharingConfiguration,
@@ -45,7 +45,7 @@ export const TemplateGalleryBody: React.VFC<{ onModalOpen: modalOpenFn }> = ({
   if (globalStatusFetching === 'fetching' || globalStatusFetching === 'none') {
     return (
       <div>
-        <span className={`fa fa-spinner fa-spin ${styles.mr_md}`} />
+        <FaSpinner className={`animate-spin ${styles.mr_md}`} />
         Loading templates
       </div>
     );

@@ -1,5 +1,6 @@
 /* eslint-disable */
 import React, { Component } from 'react';
+import { FaChevronDown, FaChevronUp, FaTrash } from 'react-icons/fa';
 import PropTypes from 'prop-types';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import Globals from 'Globals';
@@ -117,7 +118,6 @@ class ApiCollectionPanel extends Component {
               </div>
             );
             if (index + 1 === currentContentLength) {
-              let circleClass = 'fa fa-chevron-down';
               if (apiDetails.title !== authApiExpanded) {
                 finalCategorisedArray.push(
                   <div
@@ -137,12 +137,11 @@ class ApiCollectionPanel extends Component {
                       }}
                     >
                       <span>{apiDetails.title}</span>
-                      <i className={circleClass} aria-hidden="true" />
+                      <FaChevronDown aria-hidden="true" />
                     </button>
                   </div>
                 );
               } else {
-                circleClass = 'fa fa-chevron-up';
                 finalCategorisedArray.push(
                   <div
                     key={index + 1 + apiDetails.title}
@@ -163,7 +162,7 @@ class ApiCollectionPanel extends Component {
                       <span className={styles.padd_bottom}>
                         {apiDetails.title}
                       </span>
-                      <i className={circleClass} aria-hidden="true" />
+                      <FaChevronUp aria-hidden="true" />
                     </button>
                     {categorisedArray}
                   </div>
@@ -287,7 +286,7 @@ class ApiCollectionPanel extends Component {
               onClick={this.onClearHistoryClicked}
               className={styles.apiCollectionClearHistoryButton}
             >
-              <i className="fa fa-trash-o" aria-hidden="true" />
+              <FaTrash aria-hidden="true" />
               Clear History
             </div>
           </div>

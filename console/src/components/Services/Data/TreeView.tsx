@@ -319,7 +319,7 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
           }
           style={showActiveStyle ? activeStyle : {}}
         >
-          <i className={`fa fa-${item.type}`} /> {item.name}
+          {item.name}
         </span>
       </div>
       {isOpen && item.children

@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import GraphiQL from 'graphiql';
 import { connect } from 'react-redux';
+import { FaCheckCircle } from 'react-icons/fa';
 import PropTypes from 'prop-types';
 import GraphiQLErrorBoundary from './GraphiQLErrorBoundary';
 import OneGraphExplorer from '../OneGraphExplorer/OneGraphExplorer';
@@ -206,7 +207,7 @@ class GraphiQLWrapper extends Component {
                   placement="top"
                   tooltipStyle="graphiql_footer_icon"
                 />
-                <i className="fa fa-check-circle color_green" />
+                <FaCheckCircle className="color_green" />
               </>
             )}
           </div>

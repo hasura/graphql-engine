@@ -1,4 +1,5 @@
 import React, { ChangeEvent, useReducer, useCallback, Dispatch } from 'react';
+import { FaPlay, FaPlusCircle } from 'react-icons/fa';
 
 import {
   composeEndpoint,
@@ -248,7 +249,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
             onClick={onClickAddHeader}
             className={styles.float_right}
           >
-            <i className={`fa fa-plus-circle ${styles.icon_margin}`} />
+            <FaPlusCircle className={styles.icon_margin} />
             Add Header
           </Button>
         </CollapsibleToggle>
@@ -273,7 +274,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
           color="yellow"
           className={styles.float_right}
         >
-          <i className={`fa fa-play ${styles.icon_margin}`} />
+          <FaPlay className={styles.icon_margin} />
           Run Request
         </Button>
       </div>

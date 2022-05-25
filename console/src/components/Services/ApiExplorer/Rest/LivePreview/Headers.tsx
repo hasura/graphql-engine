@@ -1,4 +1,5 @@
 import React, { ChangeEvent } from 'react';
+import { FaTimesCircle } from 'react-icons/fa';
 
 import { HeaderState } from './state';
 import Input from './Input';
@@ -88,7 +89,7 @@ const Headers: React.FC<HeaderComponentProps> = ({
               className={styles.rest_preview_clear_btn}
               onClick={onClickRemove(header.index)}
             >
-              <i className="fa fa-times-circle" />
+              <FaTimesCircle />
             </div>
           </td>
         </tr>

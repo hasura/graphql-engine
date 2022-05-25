@@ -1,4 +1,5 @@
 import React from 'react';
+import { ImCopy } from 'react-icons/im';
 import PropTypes from 'prop-types';
 import Modal from 'react-modal';
 import sqlFormatter from 'sql-formatter';
@@ -70,8 +71,7 @@ export default class QueryAnalyser extends React.Component {
                       <span className="tooltiptext" id="copySql">
                         Copy
                       </span>
-                      <i
-                        className={'fa fa-copy'}
+                      <ImCopy
                         onClick={this.copyToClip.bind(this, 'sql', 'copySql')}
                         onMouseLeave={this.resetCopy.bind(this, 'copySql')}
                       />
@@ -103,8 +103,7 @@ export default class QueryAnalyser extends React.Component {
                       <span className="tooltiptext" id="copyPlan">
                         Copy
                       </span>
-                      <i
-                        className={'fa fa-copy'}
+                      <ImCopy
                         onClick={this.copyToClip.bind(this, 'plan', 'copyPlan')}
                         onMouseLeave={this.resetCopy.bind(this, 'copyPlan')}
                       />

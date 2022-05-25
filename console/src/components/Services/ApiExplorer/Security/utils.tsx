@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaCheck, FaGlobe, FaTimes } from 'react-icons/fa';
 import { HasuraMetadataV3 } from '../../../../metadata/types';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { ApiLimitsFormSate } from './state';
@@ -93,7 +94,7 @@ export const getLimitsforUnknownRole = (metadata: HasuraMetadataV3) => {
 };
 
 export const Legends = {
-  Enabled: () => <i className="fa fa-check" style={{ color: 'green' }} />,
-  Disabled: () => <i className="fa fa-times" style={{ color: 'red' }} />,
-  Global: () => <i className="fa fa-globe" style={{ color: '#6b7280' }} />,
+  Enabled: () => <FaCheck className="text-green-500" />,
+  Disabled: () => <FaTimes className="text-red-500" />,
+  Global: () => <FaGlobe className="text-gray-500" />,
 };
