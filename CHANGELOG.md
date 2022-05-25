@@ -4,7 +4,80 @@
 
 ### Bug fixes and improvements
 
+## v2.7.0
+
+### Streaming subscriptions
+
+Streaming subscriptions can be used to subscribe only to the data which has been changed in the
+query. The streaming is done on the basis of a cursor, which is chosen by the user. 
+See [docs](https://hasura.io/docs/latest/graphql/core/databases/postgres/subscriptions/streaming/index/).
+
+Request payload:
+
+```graphql
+subscription GetUserLatestMessages ($user_id: uuid!) {
+  messages_stream (
+    cursor: {
+      initial_value: {id: 0}, 
+      ordering: ASC
+    }, 
+    batch_size: 1, 
+    where: {user_id: {_eq: $user_id}} 
+  ) {
+    id
+    message
+  }
+}
+```
+
+The above subscription streams the messages of the user corresponding to the ``user_id`` in batches of 1 message per batch.
+
+Suppose there are two messages to be streamed, then the server will send two responses as following:
+
+Response 1:
+
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "message": "How are you!"
+    }
+  ]
+}
+```
+
+Response 2:
+
+```json
+{
+  "data": [
+    {
+      "id": 5,
+      "message": "I am fine"
+    }
+  ]
+}
+```
+
+### Bug fixes and improvements
+
+- server: add support for MSSQL event triggers (#7228)
+- server: update pg_dump to be compatible with postgres 14 (#7676)
+- server: fix bug where timestamp values sent to postgres would erroneously trim leading zeroes (#8096)
+- server: fix metadata handling bug when event triggers were defined on tables that contained non lower-case alphabet characters (#8454)
+- server: avoid encoding 'varchar' values to UTF8 in MSSQL backends
+- server: fix dropping of nested typed null fields in actions (#8237)
+- server: fix url/query date variable parsing bug in REST endpoints
+- server: make url/query variables in REST endpoints assume string if other types not applicable
+- server: fix inserting empty objects with default values to postgres, citus, and sql server (#8475)
+- server: don't drop the SQL triggers defined by the graphql-engine when DDL changes are made using the `run_sql` API
 - server: fix regression introduced in v2.7.0-beta.1: the `kind` field in source metadata was inadvertently made a required field, breaking upgrades from v1 and new cloud projects
+- console: new "add remote schema" page with GQL customization
+- console: allow users to remove prefix / suffix / root field namespace from a remote schema
+- console: fix console crash on adding pg sources with connection params through api (#8416)
+- cli: avoid exporting hasura-specific schemas during hasura init (#8352)
+- cli: fix performance regression in `migrate status` command (#8398)
 
 ## v2.6.2
 
