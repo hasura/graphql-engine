@@ -135,7 +135,7 @@ You can enable JWT mode by using the `--jwt-secret` flag or
 `HASURA_GRAPHQL_JWT_SECRET` environment variable; the value of which is
 a JSON object:
 
-```none
+```json
 {
   "type": "<optional-type-of-key>",
   "key": "<optional-key-as-string>",
@@ -145,8 +145,8 @@ a JSON object:
   "claims_format": "json|stringified_json",
   "audience": <optional-string-or-list-of-strings-to-verify-audience>,
   "issuer": "<optional-string-to-verify-issuer>",
-  "claims_map": "<optional-object-of-session-variable-to-claim-jsonpath-or-literal-value>",
-  "allowed_skew": "<optional-number-of-seconds-in-integer>",
+  "claims_map": <optional-object-of-session-variable-to-claim-jsonpath-or-literal-value>,
+  "allowed_skew": <optional-number-of-seconds-in-integer>,
   "header": "<optional-key-to-indicate-cookie-or-authorization-header>"
 }
 ```
