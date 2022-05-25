@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaLightbulb } from 'react-icons/fa';
 import PropTypes from 'prop-types';
 import AceEditor from 'react-ace';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
@@ -115,7 +116,7 @@ class ApiResponse extends React.Component {
 
         {showHelpBulb ? (
           <div className={styles.helpTextWrapper}>
-            <i className="fa fa-lightbulb-o" aria-hidden="true" />
+            <FaLightbulb aria-hidden="true" />
             Embed in your HTML as follows
             <div className="input-group">
               <pre>{imgHTMLTag}</pre>

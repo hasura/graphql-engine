@@ -1,4 +1,12 @@
 import React, { Component } from 'react';
+import {
+  FaCheck,
+  FaEye,
+  FaQuestionCircle,
+  FaSpinner,
+  FaTimes,
+  FaUserSecret,
+} from 'react-icons/fa';
 import PropTypes from 'prop-types';
 import jwt from 'jsonwebtoken';
 
@@ -56,8 +64,8 @@ import {
 
 const ActionIcon = ({ message, dataHeaderID }) => (
   <Tooltip placement="left" message={message}>
-    <i
-      className={`${styles.headerInfoIcon} fa fa-question-circle`}
+    <FaQuestionCircle
+      className={styles.headerInfoIcon}
       data-header-id={dataHeaderID}
       aria-hidden="true"
     />
@@ -451,8 +459,8 @@ class ApiRequest extends Component {
                   placement="left"
                   message="Show admin secret"
                 >
-                  <i
-                    className="cursor-pointer mr-md fa fa-eye"
+                  <FaEye
+                    className="cursor-pointer mr-md"
                     data-header-id={i}
                     aria-hidden="true"
                     onClick={onShowAdminSecretClicked}
@@ -475,12 +483,12 @@ class ApiRequest extends Component {
 
               if (isAnalyzingToken && analyzingHeaderRow === i) {
                 analyzeIcon = (
-                  <i className="cursor-pointer mr-md fa fa-spinner fa-spin" />
+                  <FaSpinner className="cursor-pointer mr-md animate-spin" />
                 );
               } else {
                 analyzeIcon = (
-                  <i
-                    className="cursor-pointer mr-md fa fa-user-secret"
+                  <FaUserSecret
+                    className="cursor-pointer mr-md"
                     token={token}
                     data-header-index={i}
                     onClick={this.analyzeBearerToken}
@@ -508,8 +516,8 @@ class ApiRequest extends Component {
 
           const getHeaderRemoveBtn = () => {
             return (
-              <i
-                className="cursor-pointer mr-md fa fa-times"
+              <FaTimes
+                className="cursor-pointer mr-md"
                 data-header-id={i}
                 aria-hidden="true"
                 onClick={onDeleteHeaderClicked}
@@ -652,14 +660,14 @@ class ApiRequest extends Component {
                   message="Valid JWT token"
                 >
                   <span className={styles.valid_jwt_token}>
-                    <i className="fa fa-check" />
+                    <FaCheck />
                   </span>
                 </Tooltip>
               );
             case !tokenVerified && JWTError.length > 0:
               return (
                 <span className={styles.invalid_jwt_icon}>
-                  <i className="fa fa-times" />
+                  <FaTimes />
                 </span>
               );
             default:

@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaTimes } from 'react-icons/fa';
 
 import globals from '../../../Globals';
 import { checkStableVersion } from '../../../helpers/versionUtils';
@@ -92,7 +93,7 @@ export const UpdateVersion: React.FC<UpdateVersionProps> = ({
             className={styles.updateBannerClose}
             onClick={closeUpdateBanner}
           >
-            <i className="fa fa-times" />
+            <FaTimes />
           </span>
         </div>
       </div>

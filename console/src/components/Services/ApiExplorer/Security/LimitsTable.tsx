@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { FaGlobe } from 'react-icons/fa';
 import { HasuraMetadataV3 } from '../../../../metadata/types';
 import { Dispatch } from '../../../../types';
 import {
@@ -92,7 +93,7 @@ const LimitsTable: React.FC<Props> = ({
               renderItem={item =>
                 item === 'global' ? (
                   <div>
-                    <i className={`${styles.margin_right} fa fa-globe`} />
+                    <FaGlobe className={styles.margin_right} />
                     Global
                   </div>
                 ) : (

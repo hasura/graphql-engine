@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaTable } from 'react-icons/fa';
 
 type ExplainPayload = {
   field: string;
@@ -28,7 +29,7 @@ const RootFields: React.FC<RootFieldsProps> = ({
             data-key={i}
             onClick={onClick}
           >
-            <i className="fa fa-table" aria-hidden="true" />
+            <FaTable className="text-sm mr-2" aria-hidden="true" />
             {analysis.field}
           </li>
         )
