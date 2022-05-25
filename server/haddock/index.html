@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Haddocks index</title>
+    <link rel="stylesheet" href="https://hasura.github.io/graphql-engine/assets/css/style.css?v=d1646ba039dc90cf440daaa125ed0d4d69ece53d">
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      <h1>Available haddocks</h1>
+      <p>Haddocks are maintained for the <code>main</code> and
+      <code>stable</code> branches, as well as every released version.</p>
+
+      <ul id="haddocks"></ul>
+    </div>
+
+    <script>
+      fetch('https://api.github.com/repos/hasura/graphql-engine/contents/server/haddock?ref=gh-pages')
+      .then(function (res) { return res.json() })
+      .then(function (branches) {
+        var list = document.getElementById('haddocks')
+
+        branches.forEach(function (branch) {
+          list.innerHTML += '<li><a href="/' + branch.path + '">' + branch.name + '</a></li>'
+        })
+      })
+    </script>
+  </body>
+</html>
