@@ -29,28 +29,28 @@
 </span><span id="line-29"></span><span>
 </span><span id="line-30"></span><span class="annot"><a href="Hasura.HTTP.html#hdrsToText"><span class="hs-identifier hs-type">hdrsToText</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-31"></span><span id="hdrsToText"><span class="annot"><span class="annottext">hdrsToText :: [Header] -&gt; [(Text, Text)]
-</span><a href="Hasura.HTTP.html#hdrsToText"><span class="hs-identifier hs-var hs-var">hdrsToText</span></a></span></span><span> </span><span id="local-6989586621688782272"><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621688782272"><span class="hs-identifier hs-var">hdrs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.HTTP.html#hdrsToText"><span class="hs-identifier hs-var hs-var">hdrsToText</span></a></span></span><span> </span><span id="local-6989586621688782352"><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621688782352"><span class="hs-identifier hs-var">hdrs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-32"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="Hasura.Prelude.html#bsToTxt"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Text) -&gt; ByteString -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">CI ByteString -&gt; ByteString
 forall s. CI s -&gt; s
 </span><span class="hs-identifier hs-var hs-var">original</span></span><span> </span><span class="annot"><span class="annottext">CI ByteString
-</span><a href="#local-6989586621688782270"><span class="hs-identifier hs-var">hdrName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
+</span><a href="#local-6989586621688782350"><span class="hs-identifier hs-var">hdrName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="Hasura.Prelude.html#bsToTxt"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688782269"><span class="hs-identifier hs-var">hdrVal</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-33"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688782270"><span class="annot"><span class="annottext">CI ByteString
-</span><a href="#local-6989586621688782270"><span class="hs-identifier hs-var">hdrName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688782269"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621688782269"><span class="hs-identifier hs-var">hdrVal</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621688782272"><span class="hs-identifier hs-var">hdrs</span></a></span><span>
+</span><a href="#local-6989586621688782349"><span class="hs-identifier hs-var">hdrVal</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688782350"><span class="annot"><span class="annottext">CI ByteString
+</span><a href="#local-6989586621688782350"><span class="hs-identifier hs-var">hdrName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688782349"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688782349"><span class="hs-identifier hs-var">hdrVal</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621688782352"><span class="hs-identifier hs-var">hdrs</span></a></span><span>
 </span><span id="line-34"></span><span>  </span><span class="hs-special">]</span><span>
 </span><span id="line-35"></span><span>
 </span><span id="line-36"></span><span class="annot"><a href="Hasura.HTTP.html#wreqOptions"><span class="hs-identifier hs-type">wreqOptions</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.Manager</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Wreq.Options</span></span><span>
 </span><span id="line-37"></span><span id="wreqOptions"><span class="annot"><span class="annottext">wreqOptions :: Manager -&gt; [Header] -&gt; Options
-</span><a href="Hasura.HTTP.html#wreqOptions"><span class="hs-identifier hs-var hs-var">wreqOptions</span></a></span></span><span> </span><span id="local-6989586621688782268"><span class="annot"><span class="annottext">Manager
-</span><a href="#local-6989586621688782268"><span class="hs-identifier hs-var">manager</span></a></span></span><span> </span><span id="local-6989586621688782267"><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621688782267"><span class="hs-identifier hs-var">hdrs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.HTTP.html#wreqOptions"><span class="hs-identifier hs-var hs-var">wreqOptions</span></a></span></span><span> </span><span id="local-6989586621688782348"><span class="annot"><span class="annottext">Manager
+</span><a href="#local-6989586621688782348"><span class="hs-identifier hs-var">manager</span></a></span></span><span> </span><span id="local-6989586621688782347"><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621688782347"><span class="hs-identifier hs-var">hdrs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-38"></span><span>  </span><span class="annot"><span class="annottext">Options
 </span><span class="hs-identifier hs-var">Wreq.defaults</span></span><span>
 </span><span id="line-39"></span><span>    </span><span class="annot"><span class="annottext">Options -&gt; (Options -&gt; Options) -&gt; Options
@@ -62,7 +62,7 @@ Lens' Options [Header]
 forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
 </span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">[Header] -&gt; [Header]
 </span><a href="Hasura.HTTP.html#addDefaultHeaders"><span class="hs-identifier hs-var">addDefaultHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621688782267"><span class="hs-identifier hs-var">hdrs</span></a></span><span>
+</span><a href="#local-6989586621688782347"><span class="hs-identifier hs-var">hdrs</span></a></span><span>
 </span><span id="line-40"></span><span>    </span><span class="annot"><span class="annottext">Options -&gt; (Options -&gt; Options) -&gt; Options
 forall a b. a -&gt; (a -&gt; b) -&gt; b
 </span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">(Maybe ResponseChecker -&gt; Identity (Maybe ResponseChecker))
@@ -91,21 +91,21 @@ forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
 </span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">Manager -&gt; Either ManagerSettings Manager
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">Manager
-</span><a href="#local-6989586621688782268"><span class="hs-identifier hs-var">manager</span></a></span><span>
+</span><a href="#local-6989586621688782348"><span class="hs-identifier hs-var">manager</span></a></span><span>
 </span><span id="line-42"></span><span>
 </span><span id="line-43"></span><span class="hs-comment">-- Adds defaults headers overwriting any existing ones</span><span>
 </span><span id="line-44"></span><span class="annot"><a href="Hasura.HTTP.html#addDefaultHeaders"><span class="hs-identifier hs-type">addDefaultHeaders</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span>
 </span><span id="line-45"></span><span id="addDefaultHeaders"><span class="annot"><span class="annottext">addDefaultHeaders :: [Header] -&gt; [Header]
-</span><a href="Hasura.HTTP.html#addDefaultHeaders"><span class="hs-identifier hs-var hs-var">addDefaultHeaders</span></a></span></span><span> </span><span id="local-6989586621688782259"><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621688782259"><span class="hs-identifier hs-var">hdrs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Header]
+</span><a href="Hasura.HTTP.html#addDefaultHeaders"><span class="hs-identifier hs-var hs-var">addDefaultHeaders</span></a></span></span><span> </span><span id="local-6989586621688782339"><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621688782339"><span class="hs-identifier hs-var">hdrs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Header]
 </span><a href="Hasura.HTTP.html#defaultHeaders"><span class="hs-identifier hs-var">defaultHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">[Header] -&gt; [Header] -&gt; [Header]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Header] -&gt; [Header]
-</span><a href="#local-6989586621688782258"><span class="hs-identifier hs-var">rmDefaultHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621688782259"><span class="hs-identifier hs-var">hdrs</span></a></span><span>
+</span><a href="#local-6989586621688782338"><span class="hs-identifier hs-var">rmDefaultHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621688782339"><span class="hs-identifier hs-var">hdrs</span></a></span><span>
 </span><span id="line-46"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-47"></span><span>    </span><span id="local-6989586621688782258"><span class="annot"><span class="annottext">rmDefaultHeaders :: [Header] -&gt; [Header]
-</span><a href="#local-6989586621688782258"><span class="hs-identifier hs-var hs-var">rmDefaultHeaders</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Header -&gt; Bool) -&gt; [Header] -&gt; [Header]
+</span><span id="line-47"></span><span>    </span><span id="local-6989586621688782338"><span class="annot"><span class="annottext">rmDefaultHeaders :: [Header] -&gt; [Header]
+</span><a href="#local-6989586621688782338"><span class="hs-identifier hs-var hs-var">rmDefaultHeaders</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Header -&gt; Bool) -&gt; [Header] -&gt; [Header]
 forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Bool) -&gt; (Header -&gt; Bool) -&gt; Header -&gt; Bool
@@ -115,10 +115,10 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-48"></span><span>
 </span><span id="line-49"></span><span class="annot"><a href="Hasura.HTTP.html#isDefaultHeader"><span class="hs-identifier hs-type">isDefaultHeader</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-50"></span><span id="isDefaultHeader"><span class="annot"><span class="annottext">isDefaultHeader :: Header -&gt; Bool
-</span><a href="Hasura.HTTP.html#isDefaultHeader"><span class="hs-identifier hs-var hs-var">isDefaultHeader</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688782254"><span class="annot"><span class="annottext">CI ByteString
-</span><a href="#local-6989586621688782254"><span class="hs-identifier hs-var">hdrName</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="Hasura.HTTP.html#isDefaultHeader"><span class="hs-identifier hs-var hs-var">isDefaultHeader</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688782334"><span class="annot"><span class="annottext">CI ByteString
+</span><a href="#local-6989586621688782334"><span class="hs-identifier hs-var">hdrName</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CI ByteString
-</span><a href="#local-6989586621688782254"><span class="hs-identifier hs-var">hdrName</span></a></span><span> </span><span class="annot"><span class="annottext">CI ByteString -&gt; [CI ByteString] -&gt; Bool
+</span><a href="#local-6989586621688782334"><span class="hs-identifier hs-var">hdrName</span></a></span><span> </span><span class="annot"><span class="annottext">CI ByteString -&gt; [CI ByteString] -&gt; Bool
 forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><span class="hs-operator hs-var">`elem`</span></span><span> </span><span class="annot"><span class="annottext">(Header -&gt; CI ByteString) -&gt; [Header] -&gt; [CI ByteString]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
@@ -130,15 +130,15 @@ forall a b. (a, b) -&gt; a
 </span><span id="line-52"></span><span class="annot"><a href="Hasura.HTTP.html#defaultHeaders"><span class="hs-identifier hs-type">defaultHeaders</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span>
 </span><span id="line-53"></span><span id="defaultHeaders"><span class="annot"><span class="annottext">defaultHeaders :: [Header]
 </span><a href="Hasura.HTTP.html#defaultHeaders"><span class="hs-identifier hs-var hs-var">defaultHeaders</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Header
-</span><a href="#local-6989586621688782252"><span class="hs-identifier hs-var">contentType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Header
-</span><a href="#local-6989586621688782251"><span class="hs-identifier hs-var">userAgent</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621688782332"><span class="hs-identifier hs-var">contentType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Header
+</span><a href="#local-6989586621688782331"><span class="hs-identifier hs-var">userAgent</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-54"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-55"></span><span>    </span><span id="local-6989586621688782252"><span class="annot"><span class="annottext">contentType :: Header
-</span><a href="#local-6989586621688782252"><span class="hs-identifier hs-var hs-var">contentType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CI ByteString
+</span><span id="line-55"></span><span>    </span><span id="local-6989586621688782332"><span class="annot"><span class="annottext">contentType :: Header
+</span><a href="#local-6989586621688782332"><span class="hs-identifier hs-var hs-var">contentType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CI ByteString
 </span><span class="hs-string">&quot;Content-Type&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;application/json&quot;</span></span><span class="hs-special">)</span><span>
-</span><span id="line-56"></span><span>    </span><span id="local-6989586621688782251"><span class="annot"><span class="annottext">userAgent :: Header
-</span><a href="#local-6989586621688782251"><span class="hs-identifier hs-var hs-var">userAgent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-56"></span><span>    </span><span id="local-6989586621688782331"><span class="annot"><span class="annottext">userAgent :: Header
+</span><a href="#local-6989586621688782331"><span class="hs-identifier hs-var hs-var">userAgent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-57"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">CI ByteString
 </span><span class="hs-string">&quot;User-Agent&quot;</span></span><span class="hs-special">,</span><span>
 </span><span id="line-58"></span><span>        </span><span class="annot"><span class="annottext">ByteString
@@ -155,7 +155,7 @@ forall a b. (ToText a, FromText b) =&gt; a -&gt; b
 </span><span id="line-61"></span><span class="hs-keyword">newtype</span><span> </span><span id="HttpException"><span class="annot"><a href="Hasura.HTTP.html#HttpException"><span class="hs-identifier hs-var">HttpException</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HttpException"><span class="annot"><a href="Hasura.HTTP.html#HttpException"><span class="hs-identifier hs-var">HttpException</span></a></span></span><span>
 </span><span id="line-62"></span><span>  </span><span class="hs-special">{</span><span id="unHttpException"><span class="annot"><span class="annottext">HttpException -&gt; HttpException
 </span><a href="Hasura.HTTP.html#unHttpException"><span class="hs-identifier hs-var hs-var">unHttpException</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.HttpException</span></span><span class="hs-special">}</span><span>
-</span><span id="line-63"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688782242"><span id="local-6989586621688782244"><span id="local-6989586621688782246"><span class="annot"><span class="annottext">Int -&gt; HttpException -&gt; ShowS
+</span><span id="line-63"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688782322"><span id="local-6989586621688782324"><span id="local-6989586621688782326"><span class="annot"><span class="annottext">Int -&gt; HttpException -&gt; ShowS
 [HttpException] -&gt; ShowS
 HttpException -&gt; String
 (Int -&gt; HttpException -&gt; ShowS)
@@ -176,12 +176,12 @@ $cshowsPrec :: Int -&gt; HttpException -&gt; ShowS
 </span><span id="line-66"></span><span id="getHTTPExceptionStatus"><span class="annot"><span class="annottext">getHTTPExceptionStatus :: HttpException -&gt; Maybe Int
 </span><a href="Hasura.HTTP.html#getHTTPExceptionStatus"><span class="hs-identifier hs-var hs-var">getHTTPExceptionStatus</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-67"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.HTTP.html#HttpException"><span class="hs-identifier hs-type">HttpException</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HTTP.HttpExceptionRequest</span></span><span> </span><span class="annot"><span class="annottext">Request
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688782239"><span class="annot"><span class="annottext">HttpExceptionContent
-</span><a href="#local-6989586621688782239"><span class="hs-identifier hs-var">httpExceptionContent</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688782319"><span class="annot"><span class="annottext">HttpExceptionContent
+</span><a href="#local-6989586621688782319"><span class="hs-identifier hs-var">httpExceptionContent</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-68"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">HttpExceptionContent
-</span><a href="#local-6989586621688782239"><span class="hs-identifier hs-var">httpExceptionContent</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-69"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">HTTP.StatusCodeException</span></span><span> </span><span id="local-6989586621688782237"><span class="annot"><span class="annottext">Response ()
-</span><a href="#local-6989586621688782237"><span class="hs-identifier hs-var">response</span></a></span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621688782319"><span class="hs-identifier hs-var">httpExceptionContent</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-69"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">HTTP.StatusCodeException</span></span><span> </span><span id="local-6989586621688782317"><span class="annot"><span class="annottext">Response ()
+</span><a href="#local-6989586621688782317"><span class="hs-identifier hs-var">response</span></a></span></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Maybe Int
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Maybe Int) -&gt; Int -&gt; Maybe Int
@@ -192,17 +192,17 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Response () -&gt; Status
 forall body. Response body -&gt; Status
 </span><span class="hs-identifier hs-var hs-var">HTTP.responseStatus</span></span><span> </span><span class="annot"><span class="annottext">Response ()
-</span><a href="#local-6989586621688782237"><span class="hs-identifier hs-var">response</span></a></span><span>
+</span><a href="#local-6989586621688782317"><span class="hs-identifier hs-var">response</span></a></span><span>
 </span><span id="line-70"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">HTTP.ProxyConnectException</span></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688782233"><span class="annot"><span class="annottext">Status
-</span><a href="#local-6989586621688782233"><span class="hs-identifier hs-var">status</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Maybe Int
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688782313"><span class="annot"><span class="annottext">Status
+</span><a href="#local-6989586621688782313"><span class="hs-identifier hs-var">status</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Maybe Int
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Maybe Int) -&gt; Int -&gt; Maybe Int
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Status -&gt; Int
 </span><span class="hs-identifier hs-var hs-var">HTTP.statusCode</span></span><span> </span><span class="annot"><span class="annottext">Status
-</span><a href="#local-6989586621688782233"><span class="hs-identifier hs-var">status</span></a></span><span>
+</span><a href="#local-6989586621688782313"><span class="hs-identifier hs-var">status</span></a></span><span>
 </span><span id="line-71"></span><span>      </span><span class="annot"><span class="annottext">HttpExceptionContent
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe Int
 forall a. Maybe a
@@ -216,10 +216,10 @@ forall a. Maybe a
 </span><span id="line-74"></span><span class="annot"><a href="Hasura.HTTP.html#serializeHTTPExceptionMessage"><span class="hs-identifier hs-type">serializeHTTPExceptionMessage</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.HTTP.html#HttpException"><span class="hs-identifier hs-type">HttpException</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-75"></span><span id="serializeHTTPExceptionMessage"><span class="annot"><span class="annottext">serializeHTTPExceptionMessage :: HttpException -&gt; Text
 </span><a href="Hasura.HTTP.html#serializeHTTPExceptionMessage"><span class="hs-identifier hs-var hs-var">serializeHTTPExceptionMessage</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.HTTP.html#HttpException"><span class="hs-identifier hs-type">HttpException</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HTTP.HttpExceptionRequest</span></span><span> </span><span class="annot"><span class="annottext">Request
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688782231"><span class="annot"><span class="annottext">HttpExceptionContent
-</span><a href="#local-6989586621688782231"><span class="hs-identifier hs-var">httpExceptionContent</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688782311"><span class="annot"><span class="annottext">HttpExceptionContent
+</span><a href="#local-6989586621688782311"><span class="hs-identifier hs-var">httpExceptionContent</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-76"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">HttpExceptionContent
-</span><a href="#local-6989586621688782231"><span class="hs-identifier hs-var">httpExceptionContent</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688782311"><span class="hs-identifier hs-var">httpExceptionContent</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-77"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">HTTP.StatusCodeException</span></span><span> </span><span class="annot"><span class="annottext">Response ()
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
@@ -242,11 +242,11 @@ forall a. Maybe a
 </span><span id="line-83"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">HTTP.InvalidStatusLine</span></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Invalid HTTP Status Line&quot;</span></span><span>
-</span><span id="line-84"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">HTTP.InternalException</span></span><span> </span><span id="local-6989586621688782223"><span class="annot"><span class="annottext">SomeException
-</span><a href="#local-6989586621688782223"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">SomeException -&gt; Maybe ConnectionRestricted
+</span><span id="line-84"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">HTTP.InternalException</span></span><span> </span><span id="local-6989586621688782303"><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621688782303"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">SomeException -&gt; Maybe ConnectionRestricted
 forall e. Exception e =&gt; SomeException -&gt; Maybe e
 </span><span class="hs-identifier hs-var">fromException</span></span><span> </span><span class="annot"><span class="annottext">SomeException
-</span><a href="#local-6989586621688782223"><span class="hs-identifier hs-var">err</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688782303"><span class="hs-identifier hs-var">err</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-85"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Network.HTTP.Client.Restricted.html#ConnectionRestricted"><span class="hs-identifier hs-type">Restricted.ConnectionRestricted</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">AddrInfo
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
@@ -291,27 +291,27 @@ forall e. Exception e =&gt; SomeException -&gt; Maybe e
 </span><span id="line-97"></span><span>    </span><span class="annot"><span class="annottext">HttpExceptionContent
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;unexpected&quot;</span></span><span>
-</span><span id="line-98"></span><span class="annot"><a href="Hasura.HTTP.html#serializeHTTPExceptionMessage"><span class="hs-identifier hs-var">serializeHTTPExceptionMessage</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.HTTP.html#HttpException"><span class="hs-identifier hs-type">HttpException</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HTTP.InvalidUrlException</span></span><span> </span><span id="local-6989586621688782212"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688782212"><span class="hs-identifier hs-var">url</span></a></span></span><span> </span><span id="local-6989586621688782211"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688782211"><span class="hs-identifier hs-var">reason</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><span id="line-98"></span><span class="annot"><a href="Hasura.HTTP.html#serializeHTTPExceptionMessage"><span class="hs-identifier hs-var">serializeHTTPExceptionMessage</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.HTTP.html#HttpException"><span class="hs-identifier hs-type">HttpException</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HTTP.InvalidUrlException</span></span><span> </span><span id="local-6989586621688782292"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688782292"><span class="hs-identifier hs-var">url</span></a></span></span><span> </span><span id="local-6989586621688782291"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688782291"><span class="hs-identifier hs-var">reason</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
 </span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Text) -&gt; String -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;URL: &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688782212"><span class="hs-identifier hs-var">url</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><a href="#local-6989586621688782292"><span class="hs-identifier hs-var">url</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot; is invalid because &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688782211"><span class="hs-identifier hs-var">reason</span></a></span><span>
+</span><a href="#local-6989586621688782291"><span class="hs-identifier hs-var">reason</span></a></span><span>
 </span><span id="line-99"></span><span>
 </span><span id="line-100"></span><span class="annot"><a href="Hasura.HTTP.html#encodeHTTPRequestJSON"><span class="hs-identifier hs-type">encodeHTTPRequestJSON</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.Request</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
 </span><span id="line-101"></span><span id="encodeHTTPRequestJSON"><span class="annot"><span class="annottext">encodeHTTPRequestJSON :: Request -&gt; Value
-</span><a href="Hasura.HTTP.html#encodeHTTPRequestJSON"><span class="hs-identifier hs-var hs-var">encodeHTTPRequestJSON</span></a></span></span><span> </span><span id="local-6989586621688782208"><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621688782208"><span class="hs-identifier hs-var">request</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.HTTP.html#encodeHTTPRequestJSON"><span class="hs-identifier hs-var hs-var">encodeHTTPRequestJSON</span></a></span></span><span> </span><span id="local-6989586621688782288"><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621688782288"><span class="hs-identifier hs-var">request</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-102"></span><span>  </span><span class="annot"><span class="annottext">Object -&gt; Value
 </span><span class="hs-identifier hs-var">J.Object</span></span><span> </span><span class="annot"><span class="annottext">(Object -&gt; Value) -&gt; Object -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -329,7 +329,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Request -&gt; ByteString
 </span><span class="hs-identifier hs-var hs-var">HTTP.host</span></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621688782208"><span class="hs-identifier hs-var">request</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688782288"><span class="hs-identifier hs-var">request</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-105"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;port&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
@@ -337,7 +337,7 @@ forall a. ToJSON a =&gt; a -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Request -&gt; Int
 </span><span class="hs-identifier hs-var hs-var">HTTP.port</span></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621688782208"><span class="hs-identifier hs-var">request</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688782288"><span class="hs-identifier hs-var">request</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-106"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;secure&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
@@ -345,7 +345,7 @@ forall a. ToJSON a =&gt; a -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Request -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var">HTTP.secure</span></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621688782208"><span class="hs-identifier hs-var">request</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688782288"><span class="hs-identifier hs-var">request</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-107"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;requestHeaders&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">HashMap Text Text -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
@@ -366,7 +366,7 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Request -&gt; [Header]
 </span><span class="hs-identifier hs-var hs-var">HTTP.requestHeaders</span></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621688782208"><span class="hs-identifier hs-var">request</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688782288"><span class="hs-identifier hs-var">request</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-108"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;path&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
@@ -377,7 +377,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Request -&gt; ByteString
 </span><span class="hs-identifier hs-var hs-var">HTTP.path</span></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621688782208"><span class="hs-identifier hs-var">request</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688782288"><span class="hs-identifier hs-var">request</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-109"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;queryString&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
@@ -388,7 +388,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Request -&gt; ByteString
 </span><span class="hs-identifier hs-var hs-var">HTTP.queryString</span></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621688782208"><span class="hs-identifier hs-var">request</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688782288"><span class="hs-identifier hs-var">request</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-110"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;method&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
@@ -399,7 +399,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Request -&gt; ByteString
 </span><span class="hs-identifier hs-var hs-var">HTTP.method</span></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621688782208"><span class="hs-identifier hs-var">request</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688782288"><span class="hs-identifier hs-var">request</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-111"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;responseTimeout&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; Text -&gt; Value
@@ -410,18 +410,18 @@ forall a. Show a =&gt; a -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Request -&gt; ResponseTimeout
 </span><span class="hs-identifier hs-var hs-var">HTTP.responseTimeout</span></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621688782208"><span class="hs-identifier hs-var">request</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688782288"><span class="hs-identifier hs-var">request</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-112"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-113"></span><span>
-</span><span id="line-114"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688782187"><span id="local-6989586621688782189"><span id="local-6989586621688782191"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.HTTP.html#HttpException"><span class="hs-identifier hs-type">HttpException</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-115"></span><span>  </span><span id="local-6989586621688782185"><span class="annot"><span class="annottext">toJSON :: HttpException -&gt; Value
-</span><a href="#local-6989586621688782185"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span id="local-6989586621688782184"><span class="annot"><span class="annottext">HttpException
-</span><a href="#local-6989586621688782184"><span class="hs-identifier hs-var">httpException</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-114"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688782267"><span id="local-6989586621688782269"><span id="local-6989586621688782271"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.HTTP.html#HttpException"><span class="hs-identifier hs-type">HttpException</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-115"></span><span>  </span><span id="local-6989586621688782265"><span class="annot"><span class="annottext">toJSON :: HttpException -&gt; Value
+</span><a href="#local-6989586621688782265"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span id="local-6989586621688782264"><span class="annot"><span class="annottext">HttpException
+</span><a href="#local-6989586621688782264"><span class="hs-identifier hs-var">httpException</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-116"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">HttpException
-</span><a href="#local-6989586621688782184"><span class="hs-identifier hs-var">httpException</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621688782264"><span class="hs-identifier hs-var">httpException</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-117"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.HTTP.html#HttpException"><span class="hs-identifier hs-type">HttpException</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HTTP.InvalidUrlException</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688782183"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688782183"><span class="hs-identifier hs-var">e</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688782263"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621688782263"><span class="hs-identifier hs-var">e</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-118"></span><span>        </span><span class="annot"><span class="annottext">[(Text, Value)] -&gt; Value
 </span><span class="hs-identifier hs-var">J.object</span></span><span>
 </span><span id="line-119"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
@@ -433,23 +433,23 @@ forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
 </span><span class="hs-string">&quot;message&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String -&gt; (Text, Value)
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621688782183"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><a href="#local-6989586621688782263"><span class="hs-identifier hs-var">e</span></a></span><span>
 </span><span id="line-121"></span><span>          </span><span class="hs-special">]</span><span>
-</span><span id="line-122"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.HTTP.html#HttpException"><span class="hs-identifier hs-type">HttpException</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HTTP.HttpExceptionRequest</span></span><span> </span><span id="local-6989586621688782180"><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621688782180"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span class="annot"><span class="annottext">HttpExceptionContent
+</span><span id="line-122"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.HTTP.html#HttpException"><span class="hs-identifier hs-type">HttpException</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HTTP.HttpExceptionRequest</span></span><span> </span><span id="local-6989586621688782260"><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621688782260"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span class="annot"><span class="annottext">HttpExceptionContent
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-123"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688782179"><span class="annot"><span class="annottext">statusMaybe :: Maybe Int
-</span><a href="#local-6989586621688782179"><span class="hs-identifier hs-var hs-var">statusMaybe</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HttpException -&gt; Maybe Int
+</span><span id="line-123"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621688782259"><span class="annot"><span class="annottext">statusMaybe :: Maybe Int
+</span><a href="#local-6989586621688782259"><span class="hs-identifier hs-var hs-var">statusMaybe</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HttpException -&gt; Maybe Int
 </span><a href="Hasura.HTTP.html#getHTTPExceptionStatus"><span class="hs-identifier hs-var">getHTTPExceptionStatus</span></a></span><span> </span><span class="annot"><span class="annottext">HttpException
-</span><a href="#local-6989586621688782184"><span class="hs-identifier hs-var">httpException</span></a></span><span>
-</span><span id="line-124"></span><span>            </span><span id="local-6989586621688782178"><span class="annot"><span class="annottext">exceptionContent :: Text
-</span><a href="#local-6989586621688782178"><span class="hs-identifier hs-var hs-var">exceptionContent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HttpException -&gt; Text
+</span><a href="#local-6989586621688782264"><span class="hs-identifier hs-var">httpException</span></a></span><span>
+</span><span id="line-124"></span><span>            </span><span id="local-6989586621688782258"><span class="annot"><span class="annottext">exceptionContent :: Text
+</span><a href="#local-6989586621688782258"><span class="hs-identifier hs-var hs-var">exceptionContent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HttpException -&gt; Text
 </span><a href="Hasura.HTTP.html#serializeHTTPExceptionMessage"><span class="hs-identifier hs-var">serializeHTTPExceptionMessage</span></a></span><span> </span><span class="annot"><span class="annottext">HttpException
-</span><a href="#local-6989586621688782184"><span class="hs-identifier hs-var">httpException</span></a></span><span>
-</span><span id="line-125"></span><span>            </span><span id="local-6989586621688782177"><span class="annot"><span class="annottext">reqJSON :: Value
-</span><a href="#local-6989586621688782177"><span class="hs-identifier hs-var hs-var">reqJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Request -&gt; Value
+</span><a href="#local-6989586621688782264"><span class="hs-identifier hs-var">httpException</span></a></span><span>
+</span><span id="line-125"></span><span>            </span><span id="local-6989586621688782257"><span class="annot"><span class="annottext">reqJSON :: Value
+</span><a href="#local-6989586621688782257"><span class="hs-identifier hs-var hs-var">reqJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Request -&gt; Value
 </span><a href="Hasura.HTTP.html#encodeHTTPRequestJSON"><span class="hs-identifier hs-var">encodeHTTPRequestJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621688782180"><span class="hs-identifier hs-var">req</span></a></span><span>
+</span><a href="#local-6989586621688782260"><span class="hs-identifier hs-var">req</span></a></span><span>
 </span><span id="line-126"></span><span>         </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">[(Text, Value)] -&gt; Value
 </span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="annot"><span class="annottext">([(Text, Value)] -&gt; Value) -&gt; [(Text, Value)] -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -463,12 +463,12 @@ forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
 </span><span class="hs-string">&quot;message&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; (Text, Value)
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688782178"><span class="hs-identifier hs-var">exceptionContent</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621688782258"><span class="hs-identifier hs-var">exceptionContent</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-129"></span><span>                </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;request&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value -&gt; (Text, Value)
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621688782177"><span class="hs-identifier hs-var">reqJSON</span></a></span><span>
+</span><a href="#local-6989586621688782257"><span class="hs-identifier hs-var">reqJSON</span></a></span><span>
 </span><span id="line-130"></span><span>              </span><span class="hs-special">]</span><span>
 </span><span id="line-131"></span><span>                </span><span class="annot"><span class="annottext">[(Text, Value)] -&gt; [(Text, Value)] -&gt; [(Text, Value)]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
@@ -477,21 +477,21 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="annot"><span class="annottext">[(Text, Value)]
 forall a. Monoid a =&gt; a
-</span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621688782175"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621688782175"><span class="hs-identifier hs-var">status</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621688782255"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621688782255"><span class="hs-identifier hs-var">status</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;status&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Int -&gt; (Text, Value)
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621688782175"><span class="hs-identifier hs-var">status</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621688782179"><span class="hs-identifier hs-var">statusMaybe</span></a></span><span>
+</span><a href="#local-6989586621688782255"><span class="hs-identifier hs-var">status</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621688782259"><span class="hs-identifier hs-var">statusMaybe</span></a></span><span>
 </span><span id="line-132"></span><span>
-</span><span id="line-133"></span><span class="hs-keyword">data</span><span> </span><span id="HttpResponse"><span class="annot"><a href="Hasura.HTTP.html#HttpResponse"><span class="hs-identifier hs-var">HttpResponse</span></a></span></span><span> </span><span id="local-6989586621688782286"><span class="annot"><a href="#local-6989586621688782286"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HttpResponse"><span class="annot"><a href="Hasura.HTTP.html#HttpResponse"><span class="hs-identifier hs-var">HttpResponse</span></a></span></span><span>
+</span><span id="line-133"></span><span class="hs-keyword">data</span><span> </span><span id="HttpResponse"><span class="annot"><a href="Hasura.HTTP.html#HttpResponse"><span class="hs-identifier hs-var">HttpResponse</span></a></span></span><span> </span><span id="local-6989586621688782366"><span class="annot"><a href="#local-6989586621688782366"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HttpResponse"><span class="annot"><a href="Hasura.HTTP.html#HttpResponse"><span class="hs-identifier hs-var">HttpResponse</span></a></span></span><span>
 </span><span id="line-134"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_hrBody"><span class="annot"><span class="annottext">HttpResponse a -&gt; a
-</span><a href="Hasura.HTTP.html#_hrBody"><span class="hs-identifier hs-var hs-var">_hrBody</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621688782286"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.HTTP.html#_hrBody"><span class="hs-identifier hs-var hs-var">_hrBody</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621688782366"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-135"></span><span>    </span><span id="_hrHeaders"><span class="annot"><span class="annottext">HttpResponse a -&gt; [Header]
 </span><a href="Hasura.HTTP.html#_hrHeaders"><span class="hs-identifier hs-var hs-var">_hrHeaders</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">HTTP.ResponseHeaders</span></span><span>
 </span><span id="line-136"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-137"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688782167"><span id="local-6989586621688782169"><span class="annot"><span class="annottext">a -&gt; HttpResponse b -&gt; HttpResponse a
+</span><span id="line-137"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688782247"><span id="local-6989586621688782249"><span class="annot"><span class="annottext">a -&gt; HttpResponse b -&gt; HttpResponse a
 (a -&gt; b) -&gt; HttpResponse a -&gt; HttpResponse b
 (forall a b. (a -&gt; b) -&gt; HttpResponse a -&gt; HttpResponse b)
 -&gt; (forall a b. a -&gt; HttpResponse b -&gt; HttpResponse a)
@@ -505,7 +505,7 @@ forall (f :: * -&gt; *).
 $c&lt;$ :: forall a b. a -&gt; HttpResponse b -&gt; HttpResponse a
 fmap :: (a -&gt; b) -&gt; HttpResponse a -&gt; HttpResponse b
 $cfmap :: forall a b. (a -&gt; b) -&gt; HttpResponse a -&gt; HttpResponse b
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688782132"><span id="local-6989586621688782134"><span id="local-6989586621688782136"><span id="local-6989586621688782138"><span id="local-6989586621688782140"><span id="local-6989586621688782142"><span id="local-6989586621688782144"><span id="local-6989586621688782146"><span id="local-6989586621688782148"><span id="local-6989586621688782150"><span id="local-6989586621688782152"><span id="local-6989586621688782154"><span id="local-6989586621688782156"><span id="local-6989586621688782158"><span id="local-6989586621688782160"><span id="local-6989586621688782162"><span id="local-6989586621688782164"><span class="annot"><span class="annottext">HttpResponse a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688782212"><span id="local-6989586621688782214"><span id="local-6989586621688782216"><span id="local-6989586621688782218"><span id="local-6989586621688782220"><span id="local-6989586621688782222"><span id="local-6989586621688782224"><span id="local-6989586621688782226"><span id="local-6989586621688782228"><span id="local-6989586621688782230"><span id="local-6989586621688782232"><span id="local-6989586621688782234"><span id="local-6989586621688782236"><span id="local-6989586621688782238"><span id="local-6989586621688782240"><span id="local-6989586621688782242"><span id="local-6989586621688782244"><span class="annot"><span class="annottext">HttpResponse a -&gt; Bool
 (a -&gt; m) -&gt; HttpResponse a -&gt; m
 (a -&gt; b -&gt; b) -&gt; b -&gt; HttpResponse a -&gt; b
 (forall m. Monoid m =&gt; HttpResponse m -&gt; m)
@@ -590,7 +590,7 @@ foldMap :: (a -&gt; m) -&gt; HttpResponse a -&gt; m
 $cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; HttpResponse a -&gt; m
 fold :: HttpResponse m -&gt; m
 $cfold :: forall m. Monoid m =&gt; HttpResponse m -&gt; m
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688782121"><span id="local-6989586621688782123"><span id="local-6989586621688782125"><span id="local-6989586621688782127"><span class="annot"><span class="annottext">Functor HttpResponse
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688782201"><span id="local-6989586621688782203"><span id="local-6989586621688782205"><span id="local-6989586621688782207"><span class="annot"><span class="annottext">Functor HttpResponse
 Foldable HttpResponse
 Functor HttpResponse
 -&gt; Foldable HttpResponse
@@ -652,17 +652,17 @@ $cp2Traversable :: Foldable HttpResponse
 $cp1Traversable :: Functor HttpResponse
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-138"></span><span>
-</span><span id="line-139"></span><span id="local-6989586621688782119"><span class="annot"><a href="Hasura.HTTP.html#addHttpResponseHeaders"><span class="hs-identifier hs-type">addHttpResponseHeaders</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.ResponseHeaders</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.HTTP.html#HttpResponse"><span class="hs-identifier hs-type">HttpResponse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688782119"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.HTTP.html#HttpResponse"><span class="hs-identifier hs-type">HttpResponse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688782119"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-139"></span><span id="local-6989586621688782199"><span class="annot"><a href="Hasura.HTTP.html#addHttpResponseHeaders"><span class="hs-identifier hs-type">addHttpResponseHeaders</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.ResponseHeaders</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.HTTP.html#HttpResponse"><span class="hs-identifier hs-type">HttpResponse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688782199"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.HTTP.html#HttpResponse"><span class="hs-identifier hs-type">HttpResponse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688782199"><span class="hs-identifier hs-type">a</span></a></span></span><span>
 </span><span id="line-140"></span><span id="addHttpResponseHeaders"><span class="annot"><span class="annottext">addHttpResponseHeaders :: [Header] -&gt; HttpResponse a -&gt; HttpResponse a
-</span><a href="Hasura.HTTP.html#addHttpResponseHeaders"><span class="hs-identifier hs-var hs-var">addHttpResponseHeaders</span></a></span></span><span> </span><span id="local-6989586621688782118"><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621688782118"><span class="hs-identifier hs-var">newHeaders</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.HTTP.html#HttpResponse"><span class="hs-identifier hs-type">HttpResponse</span></a></span><span> </span><span id="local-6989586621688782117"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621688782117"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621688782116"><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621688782116"><span class="hs-identifier hs-var">h</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; [Header] -&gt; HttpResponse a
+</span><a href="Hasura.HTTP.html#addHttpResponseHeaders"><span class="hs-identifier hs-var hs-var">addHttpResponseHeaders</span></a></span></span><span> </span><span id="local-6989586621688782198"><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621688782198"><span class="hs-identifier hs-var">newHeaders</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.HTTP.html#HttpResponse"><span class="hs-identifier hs-type">HttpResponse</span></a></span><span> </span><span id="local-6989586621688782197"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688782197"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621688782196"><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621688782196"><span class="hs-identifier hs-var">h</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; [Header] -&gt; HttpResponse a
 forall a. a -&gt; [Header] -&gt; HttpResponse a
 </span><a href="Hasura.HTTP.html#HttpResponse"><span class="hs-identifier hs-var">HttpResponse</span></a></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621688782117"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621688782118"><span class="hs-identifier hs-var">newHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">[Header] -&gt; [Header] -&gt; [Header]
+</span><a href="#local-6989586621688782197"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621688782198"><span class="hs-identifier hs-var">newHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">[Header] -&gt; [Header] -&gt; [Header]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621688782116"><span class="hs-identifier hs-var">h</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621688782196"><span class="hs-identifier hs-var">h</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-141"></span></pre></body></html>
