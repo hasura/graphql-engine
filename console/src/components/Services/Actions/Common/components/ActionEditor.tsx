@@ -96,7 +96,7 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
           onChange={commentOnChange}
           type="text"
           name="comment"
-          className={`${inputStyles}`}
+          className={inputStyles}
         />
       </div>
 

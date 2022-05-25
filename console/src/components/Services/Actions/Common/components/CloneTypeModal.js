@@ -4,8 +4,8 @@ import { connect } from 'react-redux';
 import { isInputObjectType, isObjectType, isEnumType } from 'graphql';
 import { deriveExistingType } from '../utils';
 import Tooltip from './Tooltip';
-import styles from './Styles.scss';
 import { useIntrospectionSchema } from '../../../../Common/utils/graphqlUtils';
+import { inputStyles } from '../../constants';
 
 const CloneType = ({ headers, toggleModal, handleClonedTypes, dispatch }) => {
   const [prefix, setPrefix] = React.useState('_');
@@ -59,26 +59,22 @@ const CloneType = ({ headers, toggleModal, handleClonedTypes, dispatch }) => {
 
   return (
     <div>
-      <div
-        className={`row ${styles.add_mar_bottom_mid} ${styles.display_flex}`}
-      >
-        <div className={'col-md-3'}>
+      <div className="flex-row mb-2.5 flex">
+        <div className={`w-1/4 ${inputStyles}`}>
           Prefix <Tooltip text={prefixTooltipText} id="clone-prefix" />
         </div>
         <input
           type="text"
           value={prefix}
           onChange={prefixOnChange}
-          className={`form-control col-md-3 ${styles.inputWidth}`}
+          className={`w-1/4 ${inputStyles}`}
         />
       </div>
-      <div
-        className={`row ${styles.add_mar_bottom_mid} ${styles.display_flex}`}
-      >
+      <div className="flex-row mb-2.5 flex">
         <div className="col-md-3"> Type to clone</div>
         <select
           value=""
-          className={`form-control col-md-3 ${styles.inputWidth}`}
+          className={`w-1/4 input`}
           onChange={onSelection}
           disabled={prefix === ''}
           title={dropdownTitle}

@@ -1,7 +1,6 @@
 import React from 'react';
 import CustomTypesContainer from '../../Containers/CustomTypesContainer';
 import Button from '../../../../Common/Button/Button';
-import styles from '../../Common/components/Styles.scss';
 import {
   getTypesSdl,
   getTypesFromSdl,
@@ -69,7 +68,7 @@ const Manage = ({ allTypes, dispatch, readOnlyMode, ...manageProps }) => {
         onClick={onSave}
         disabled={!allowSave}
         color="yellow"
-        className={styles.add_mar_right}
+        className="mr-5"
       >
         Save
       </Button>

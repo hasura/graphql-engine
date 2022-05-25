@@ -1,6 +1,5 @@
 import React from 'react';
 import Headers, { Header } from '../../../../Common/Headers/Headers';
-import { focusYellowRing } from '../../constants';
 
 const editorLabel = 'Headers';
 const editorSecText =
@@ -34,7 +33,7 @@ const HeaderConfEditor: React.FC<HeaderConfEditorProps> = ({
           checked={forwardClientHeaders}
           onChange={toggleForwardClientHeaders}
           disabled={disabled}
-          className={`mr-sm border-gray-400 rounded ${focusYellowRing}`}
+          className="mr-sm border-gray-400 rounded input-border"
         />
         <label className="pt-sm pl-sm" htmlFor="checkbox-1">
           Forward client headers to webhook

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useDebouncedEffect } from '@/hooks/useDebounceEffect';
-import { inputStyles } from '../../constants';
 
 const editorLabel = 'Webhook (HTTP/S) Handler';
 
@@ -42,7 +41,7 @@ const HandlerEditor: React.FC<HandlerEditorProps> = ({
         value={localValue}
         onChange={e => setLocalValue(e.target.value)}
         placeholder="http://custom-logic.com/api"
-        className={`${inputStyles} mb-sm`}
+        className="input mb-sm"
         data-test="action-create-handler-input"
       />
       <p className="text-sm text-gray-600">

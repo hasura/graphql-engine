@@ -1,6 +1,5 @@
 import React from 'react';
 import Button from '../../../Common/Button/Button';
-import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import { saveActionPermission, removeActionPermission } from '../ServerIO';
 import { permCloseEdit } from './reducer';
 
@@ -31,7 +30,7 @@ const PermissionEditor = ({
     );
   }
 
-  const buttonStyle = styles.add_mar_right;
+  const buttonStyle = 'mr-5';
 
   const closeEditor = () => {
     dispatch(permCloseEdit());
@@ -81,8 +80,8 @@ const PermissionEditor = ({
   };
 
   return (
-    <div className={styles.activeEdit}>
-      <div className={styles.add_mar_bottom}>{permText}</div>
+    <div className="bg-white mb-15 border-gray-300 p-3 border">
+      <div className="mb-5">{permText}</div>
       {getSaveButton()}
       {getRemoveButton()}
       {getCancelButton()}

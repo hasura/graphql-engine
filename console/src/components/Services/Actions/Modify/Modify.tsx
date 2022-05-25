@@ -35,7 +35,6 @@ import {
   RequestTransformContentType,
   RequestTransformMethod,
 } from '@/metadata/types';
-import styles from '../../../Common/Common.scss';
 import ActionEditor from '../Common/components/ActionEditor';
 import Button from '../../../Common/Button';
 import ActionContainer from '../Containers/ActionContainer';
@@ -425,7 +424,7 @@ const ModifyAction: React.FC<ModifyProps> = ({
                   type="submit"
                   onClick={onSave}
                   disabled={!allowSave}
-                  className={styles.add_mar_right}
+                  className="mb-5 mr-5"
                   data-test="save-modify-action-changes"
                 >
                   Save Action

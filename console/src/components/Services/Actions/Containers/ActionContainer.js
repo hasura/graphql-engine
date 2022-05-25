@@ -5,7 +5,6 @@ import { NotFoundError } from '../../../Error/PageNotFound';
 import { appPrefix } from '../constants';
 import { setCurrentAction } from '../reducer';
 import { findAction } from '../utils';
-import styles from '../Actions.scss';
 
 const ActionContainer = ({
   params: { actionName },
@@ -52,9 +51,7 @@ const ActionContainer = ({
   );
 
   return (
-    <div
-      className={styles.view_stitch_schema_wrapper + ' ' + styles.addWrapper}
-    >
+    <div>
       <CommonTabLayout
         appPrefix={appPrefix}
         currentTab={tabName}
@@ -63,7 +60,7 @@ const ActionContainer = ({
         breadCrumbs={breadCrumbs}
         baseUrl={`${appPrefix}/manage/${actionName}`}
       />
-      <div className={styles.add_pad_top}>{childrenWithProps}</div>
+      <div className="pt-xl">{childrenWithProps}</div>
     </div>
   );
 };

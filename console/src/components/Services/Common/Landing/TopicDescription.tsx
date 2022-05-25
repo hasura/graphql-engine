@@ -24,15 +24,15 @@ const TopicDescription = (props: TopicDescriptionProps) => {
   } = props;
   return (
     <div>
-      <div className={styles.subHeaderText}>
-        <img className="img-responsive" src={Rectangle} alt="Rectangle" />
+      <div className="flex font-bold text-lg">
+        <img className="mr-2" src={Rectangle} alt="Rectangle" />
         {title}
       </div>
       <div className={styles.remoteSchemaImg}>
-        {imgUrl && <img className="img-responsive" src={imgUrl} alt={imgAlt} />}
+        {imgUrl && <img src={imgUrl} alt={imgAlt} />}
         {imgElement ?? null}
       </div>
-      <div className={`${styles.descriptionText} ${styles.wd60}`}>
+      <div className="text-lg font-normalleading-6 w-8/12">
         {description} {knowMoreHref && <KnowMoreLink href={knowMoreHref} />}
       </div>
     </div>
