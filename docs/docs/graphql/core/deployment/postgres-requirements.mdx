@@ -16,7 +16,7 @@ sidebar_position: 4
 
 Hasura GraphQL engine supports **Postgres versions 9.5 and above**.
 
-### Feature requirements
+### Feature wise requirements
 
 - [Hasura actions](/graphql/core/actions/index.mdx) are supported in Postgres 10 and above.
 
@@ -26,35 +26,36 @@ If you're running in a controlled environment, you might need to
 configure the Hasura GraphQL engine to use a specific Postgres user that
 your DBA gives you.
 
-The Hasura GraphQL engine needs access to your Postgres database with
-the following permissions.
+The Hasura GraphQL engine needs access to your Postgres database(s) with
+the following permissions. You may have a dedicated metadata database as described
+[here](/graphql/core/deployment/graphql-engine-flags/config-examples.mdx#add-metadata-database).
 
-### Metadata Database Permissions:
+### Metadata Database Permissions
 
-- (required) Read & write access on 2 schemas: `hdb_catalog`.
+- (required) Read & write access on the schema `hdb_catalog`.
+
+### User Database Permissions
+
 - (required) Read access to the `information_schema` and `pg_catalog`
     schemas, to query for list of tables. Note that these permissions
     are usually available by default to all postgres users via
     [PUBLIC](https://www.postgresql.org/docs/current/sql-grant.html)
     grant.
-
-#### User Database Permissions:
-
-- (required) Read access to the schemas (public or otherwise) if you
+- (required) Read access to the schemas (`public` or otherwise) if you
     only want to support queries.
 - (optional) Write access to the schemas if you want to support
     mutations as well.
 - (optional) To create tables and views via the Hasura console (the
     admin UI) you'll need the privilege to create tables/views. This
     might not be required when you're working with an existing database.
+- (required only if event triggers are needed) Read & write access on schema: `hdb_catalog`.
 
-## Different Scenarios:
+## Sample scenarios
 
 Following are sample SQL blocks that you can run on your database (as a
 **superuser**) to create the right credentials for a sample Hasura user:
 
-**1. Different roles to manage** `user database` **and**
-`metadata database`
+### 1. Different roles to manage **metadata database** and **user database**
 
 ```sql
 -- We will create separate users to manage the user database 
@@ -63,20 +64,19 @@ Following are sample SQL blocks that you can run on your database (as a
 -- These permissions/grants are required for Hasura to work properly.
 
 -- create a separate user for to manage metadata database
-CREATE USER hasura_metadata_user WITH PASSWORD 'hasura_metadata_user';
+CREATE USER hasura_metadata_user WITH PASSWORD 'hasura_metadata_user_password';
 
 -- create the schemas required by the hasura system
 -- NOTE: If you are starting from scratch: drop the below schemas first, if they exist.
 CREATE SCHEMA IF NOT EXISTS hdb_catalog;
 
--- make the user an owner of system schemas
+-- make the user an owner of the schema
 ALTER SCHEMA hdb_catalog OWNER TO hasura_metadata_user;
+ALTER ROLE hasura_metadata_user SET search_path TO hdb_catalog;
 
--- grant select permissions on information_schema and pg_catalog. This is
--- required for hasura to query the list of available tables.
--- NOTE: these permissions are usually available by default to all users via PUBLIC grant
-GRANT SELECT ON ALL TABLES IN SCHEMA information_schema TO hasura_metadata_user;
-GRANT SELECT ON ALL TABLES IN SCHEMA pg_catalog TO hasura_metadata_user;
+-- Hasura needs pgcrypto extension
+-- See section below on pgcrypto in PG search path
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 ------------------------------------------------------------------------------
 
@@ -84,6 +84,7 @@ GRANT SELECT ON ALL TABLES IN SCHEMA pg_catalog TO hasura_metadata_user;
 CREATE USER hasurauser WITH PASSWORD 'hasurauser';
 
 -- create pgcrypto extension, required for UUID
+-- See section below on pgcrypto in PG search path
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- The below permissions are optional. This is dependent on what access to your
@@ -108,8 +109,7 @@ GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO hasurauser;
 -- GRANT ALL ON ALL FUNCTIONS IN SCHEMA <schema-name> TO hasurauser;
 ```
 
-**2. A single role to manage** `user database` **and**
-`metadata database`
+### 2. A single role to manage metadata and user objects in the **same database**
 
 ```sql
 -- We will create a separate user to grant permissions on hasura-specific  
@@ -123,20 +123,17 @@ CREATE USER hasurauser WITH PASSWORD 'hasurauser';
 -- NOTE: If you are starting from scratch: drop the below schemas first, if they exist.
 CREATE SCHEMA IF NOT EXISTS hdb_catalog;
 
--- make the user an owner of system schemas
+-- make the user an owner of the schema
 ALTER SCHEMA hdb_catalog OWNER TO hasurauser;
+
+-- See section below on pgcrypto in PG search path
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- grant select permissions on information_schema and pg_catalog. This is
 -- required for hasura to query the list of available tables.
 -- NOTE: these permissions are usually available by default to all users via PUBLIC grant
 GRANT SELECT ON ALL TABLES IN SCHEMA information_schema TO hasurauser;
 GRANT SELECT ON ALL TABLES IN SCHEMA pg_catalog TO hasurauser;
-
--- create a separate user for to manage user database
-CREATE USER hasurauser WITH PASSWORD 'hasurauser';
-
--- create pgcrypto extension, required for UUID
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- The below permissions are optional. This is dependent on what access to your
 -- tables/schemas you want give to hasura. If you want expose the public
