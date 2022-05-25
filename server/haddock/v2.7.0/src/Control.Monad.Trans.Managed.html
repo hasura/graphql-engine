@@ -1,0 +1,297 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Control.Monad.Trans.Managed</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Control.Monad.Trans.Managed.html#ManagedT"><span class="hs-identifier">ManagedT</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Control.Monad.Trans.Managed.html#allocate"><span class="hs-identifier">allocate</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Control.Monad.Trans.Managed.html#allocate_"><span class="hs-identifier">allocate_</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Control.Monad.Trans.Managed.html#lowerManagedT"><span class="hs-identifier">lowerManagedT</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Control.Monad.Trans.Managed.html#hoistManagedTReaderT"><span class="hs-identifier">hoistManagedTReaderT</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Concurrent</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">C</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Exception.Lifted</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">bracket</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">bracket_</span></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Codensity</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Codensity</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Fix</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadFix</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.IO.Class</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadIO</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">liftIO</span></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Reader.Class</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadReader</span></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.State.Class</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadState</span></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Trans</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadTrans</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Trans.Control</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadBaseControl</span></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Trans.Reader</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ReaderT</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">GHC.IO.Unsafe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">unsafeDupableInterleaveIO</span></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- | This type is like a transformer version of the @Managed@ monad from the</span><span>
+</span><span id="line-24"></span><span class="hs-comment">-- @managed@ library. It can be used to manage resources by pairing together</span><span>
+</span><span id="line-25"></span><span class="hs-comment">-- their allocation with their finalizers.</span><span>
+</span><span id="line-26"></span><span class="hs-comment">--</span><span>
+</span><span id="line-27"></span><span class="hs-comment">-- The documentation for the @managed@ library is an excellent introduction to</span><span>
+</span><span id="line-28"></span><span class="hs-comment">-- the idea here.</span><span>
+</span><span id="line-29"></span><span class="hs-comment">--</span><span>
+</span><span id="line-30"></span><span class="hs-comment">-- We could use 'Codensity' directly, but we'd have to define an orphan instance</span><span>
+</span><span id="line-31"></span><span class="hs-comment">-- for 'MonadFix'. This also gives us the opportunity to give it a slightly more</span><span>
+</span><span id="line-32"></span><span class="hs-comment">-- friendly name.</span><span>
+</span><span id="line-33"></span><span class="hs-comment">--</span><span>
+</span><span id="line-34"></span><span class="hs-comment">-- We could also have used @ResourceT@, but that would have involved writing</span><span>
+</span><span id="line-35"></span><span class="hs-comment">-- instances for @MonadUnliftIO@. That could still be a good option to consider</span><span>
+</span><span id="line-36"></span><span class="hs-comment">-- later, however.</span><span>
+</span><span id="line-37"></span><span class="hs-keyword">newtype</span><span> </span><span id="ManagedT"><span class="annot"><a href="Control.Monad.Trans.Managed.html#ManagedT"><span class="hs-identifier hs-var">ManagedT</span></a></span></span><span> </span><span id="local-6989586621688599019"><span class="annot"><a href="#local-6989586621688599019"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688599020"><span class="annot"><a href="#local-6989586621688599020"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ManagedT"><span class="annot"><a href="Control.Monad.Trans.Managed.html#ManagedT"><span class="hs-identifier hs-var">ManagedT</span></a></span></span><span> </span><span class="hs-special">{</span><span id="runManagedT"><span class="annot"><span class="annottext">ManagedT m a -&gt; forall r. (a -&gt; m r) -&gt; m r
+</span><a href="Control.Monad.Trans.Managed.html#runManagedT"><span class="hs-identifier hs-var hs-var">runManagedT</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688599095"><span class="annot"><a href="#local-6989586621688599095"><span class="hs-identifier hs-type">r</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688599020"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688599019"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688599095"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688599019"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688599095"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-keyword">deriving</span><span>
+</span><span id="line-39"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621688598964"><span id="local-6989586621688598966"><span class="annot"><span class="annottext">a -&gt; ManagedT m b -&gt; ManagedT m a
+(a -&gt; b) -&gt; ManagedT m a -&gt; ManagedT m b
+(forall a b. (a -&gt; b) -&gt; ManagedT m a -&gt; ManagedT m b)
+-&gt; (forall a b. a -&gt; ManagedT m b -&gt; ManagedT m a)
+-&gt; Functor (ManagedT m)
+forall a b. a -&gt; ManagedT m b -&gt; ManagedT m a
+forall a b. (a -&gt; b) -&gt; ManagedT m a -&gt; ManagedT m b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+forall (m :: * -&gt; *) a b. a -&gt; ManagedT m b -&gt; ManagedT m a
+forall (m :: * -&gt; *) a b. (a -&gt; b) -&gt; ManagedT m a -&gt; ManagedT m b
+&lt;$ :: a -&gt; ManagedT m b -&gt; ManagedT m a
+$c&lt;$ :: forall (m :: * -&gt; *) a b. a -&gt; ManagedT m b -&gt; ManagedT m a
+fmap :: (a -&gt; b) -&gt; ManagedT m a -&gt; ManagedT m b
+$cfmap :: forall (m :: * -&gt; *) a b. (a -&gt; b) -&gt; ManagedT m a -&gt; ManagedT m b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>      </span><span id="local-6989586621688598952"><span id="local-6989586621688598954"><span id="local-6989586621688598956"><span id="local-6989586621688598958"><span id="local-6989586621688598960"><span class="annot"><span class="annottext">Functor (ManagedT m)
+a -&gt; ManagedT m a
+Functor (ManagedT m)
+-&gt; (forall a. a -&gt; ManagedT m a)
+-&gt; (forall a b.
+    ManagedT m (a -&gt; b) -&gt; ManagedT m a -&gt; ManagedT m b)
+-&gt; (forall a b c.
+    (a -&gt; b -&gt; c) -&gt; ManagedT m a -&gt; ManagedT m b -&gt; ManagedT m c)
+-&gt; (forall a b. ManagedT m a -&gt; ManagedT m b -&gt; ManagedT m b)
+-&gt; (forall a b. ManagedT m a -&gt; ManagedT m b -&gt; ManagedT m a)
+-&gt; Applicative (ManagedT m)
+ManagedT m a -&gt; ManagedT m b -&gt; ManagedT m b
+ManagedT m a -&gt; ManagedT m b -&gt; ManagedT m a
+ManagedT m (a -&gt; b) -&gt; ManagedT m a -&gt; ManagedT m b
+(a -&gt; b -&gt; c) -&gt; ManagedT m a -&gt; ManagedT m b -&gt; ManagedT m c
+forall a. a -&gt; ManagedT m a
+forall a b. ManagedT m a -&gt; ManagedT m b -&gt; ManagedT m a
+forall a b. ManagedT m a -&gt; ManagedT m b -&gt; ManagedT m b
+forall a b. ManagedT m (a -&gt; b) -&gt; ManagedT m a -&gt; ManagedT m b
+forall a b c.
+(a -&gt; b -&gt; c) -&gt; ManagedT m a -&gt; ManagedT m b -&gt; ManagedT m c
+forall (m :: * -&gt; *). Functor (ManagedT m)
+forall (f :: * -&gt; *).
+Functor f
+-&gt; (forall a. a -&gt; f a)
+-&gt; (forall a b. f (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b c. (a -&gt; b -&gt; c) -&gt; f a -&gt; f b -&gt; f c)
+-&gt; (forall a b. f a -&gt; f b -&gt; f b)
+-&gt; (forall a b. f a -&gt; f b -&gt; f a)
+-&gt; Applicative f
+forall (m :: * -&gt; *) a. a -&gt; ManagedT m a
+forall (m :: * -&gt; *) a b.
+ManagedT m a -&gt; ManagedT m b -&gt; ManagedT m a
+forall (m :: * -&gt; *) a b.
+ManagedT m a -&gt; ManagedT m b -&gt; ManagedT m b
+forall (m :: * -&gt; *) a b.
+ManagedT m (a -&gt; b) -&gt; ManagedT m a -&gt; ManagedT m b
+forall (m :: * -&gt; *) a b c.
+(a -&gt; b -&gt; c) -&gt; ManagedT m a -&gt; ManagedT m b -&gt; ManagedT m c
+&lt;* :: ManagedT m a -&gt; ManagedT m b -&gt; ManagedT m a
+$c&lt;* :: forall (m :: * -&gt; *) a b.
+ManagedT m a -&gt; ManagedT m b -&gt; ManagedT m a
+*&gt; :: ManagedT m a -&gt; ManagedT m b -&gt; ManagedT m b
+$c*&gt; :: forall (m :: * -&gt; *) a b.
+ManagedT m a -&gt; ManagedT m b -&gt; ManagedT m b
+liftA2 :: (a -&gt; b -&gt; c) -&gt; ManagedT m a -&gt; ManagedT m b -&gt; ManagedT m c
+$cliftA2 :: forall (m :: * -&gt; *) a b c.
+(a -&gt; b -&gt; c) -&gt; ManagedT m a -&gt; ManagedT m b -&gt; ManagedT m c
+&lt;*&gt; :: ManagedT m (a -&gt; b) -&gt; ManagedT m a -&gt; ManagedT m b
+$c&lt;*&gt; :: forall (m :: * -&gt; *) a b.
+ManagedT m (a -&gt; b) -&gt; ManagedT m a -&gt; ManagedT m b
+pure :: a -&gt; ManagedT m a
+$cpure :: forall (m :: * -&gt; *) a. a -&gt; ManagedT m a
+$cp1Applicative :: forall (m :: * -&gt; *). Functor (ManagedT m)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Applicative</span></span></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>      </span><span id="local-6989586621688598944"><span id="local-6989586621688598946"><span id="local-6989586621688598948"><span class="annot"><span class="annottext">Applicative (ManagedT m)
+a -&gt; ManagedT m a
+Applicative (ManagedT m)
+-&gt; (forall a b.
+    ManagedT m a -&gt; (a -&gt; ManagedT m b) -&gt; ManagedT m b)
+-&gt; (forall a b. ManagedT m a -&gt; ManagedT m b -&gt; ManagedT m b)
+-&gt; (forall a. a -&gt; ManagedT m a)
+-&gt; Monad (ManagedT m)
+ManagedT m a -&gt; (a -&gt; ManagedT m b) -&gt; ManagedT m b
+ManagedT m a -&gt; ManagedT m b -&gt; ManagedT m b
+forall a. a -&gt; ManagedT m a
+forall a b. ManagedT m a -&gt; ManagedT m b -&gt; ManagedT m b
+forall a b. ManagedT m a -&gt; (a -&gt; ManagedT m b) -&gt; ManagedT m b
+forall (m :: * -&gt; *). Applicative (ManagedT m)
+forall (m :: * -&gt; *).
+Applicative m
+-&gt; (forall a b. m a -&gt; (a -&gt; m b) -&gt; m b)
+-&gt; (forall a b. m a -&gt; m b -&gt; m b)
+-&gt; (forall a. a -&gt; m a)
+-&gt; Monad m
+forall (m :: * -&gt; *) a. a -&gt; ManagedT m a
+forall (m :: * -&gt; *) a b.
+ManagedT m a -&gt; ManagedT m b -&gt; ManagedT m b
+forall (m :: * -&gt; *) a b.
+ManagedT m a -&gt; (a -&gt; ManagedT m b) -&gt; ManagedT m b
+return :: a -&gt; ManagedT m a
+$creturn :: forall (m :: * -&gt; *) a. a -&gt; ManagedT m a
+&gt;&gt; :: ManagedT m a -&gt; ManagedT m b -&gt; ManagedT m b
+$c&gt;&gt; :: forall (m :: * -&gt; *) a b.
+ManagedT m a -&gt; ManagedT m b -&gt; ManagedT m b
+&gt;&gt;= :: ManagedT m a -&gt; (a -&gt; ManagedT m b) -&gt; ManagedT m b
+$c&gt;&gt;= :: forall (m :: * -&gt; *) a b.
+ManagedT m a -&gt; (a -&gt; ManagedT m b) -&gt; ManagedT m b
+$cp1Monad :: forall (m :: * -&gt; *). Applicative (ManagedT m)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monad</span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>      </span><span id="local-6989586621688598940"><span class="annot"><span class="annottext">Monad (ManagedT m)
+Monad (ManagedT m)
+-&gt; (forall a. IO a -&gt; ManagedT m a) -&gt; MonadIO (ManagedT m)
+IO a -&gt; ManagedT m a
+forall a. IO a -&gt; ManagedT m a
+forall (m :: * -&gt; *).
+Monad m -&gt; (forall a. IO a -&gt; m a) -&gt; MonadIO m
+forall (m :: * -&gt; *). MonadIO m =&gt; Monad (ManagedT m)
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; ManagedT m a
+liftIO :: IO a -&gt; ManagedT m a
+$cliftIO :: forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; ManagedT m a
+$cp1MonadIO :: forall (m :: * -&gt; *). MonadIO m =&gt; Monad (ManagedT m)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadIO</span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>      </span><span id="local-6989586621688598932"><span id="local-6989586621688598934"><span id="local-6989586621688598936"><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621688598930"><span class="hs-identifier hs-type">r</span></a></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-44"></span><span>      </span><span id="local-6989586621688598923"><span id="local-6989586621688598925"><span id="local-6989586621688598927"><span class="annot"><span class="hs-identifier hs-type">MonadState</span></span><span> </span><span class="annot"><a href="#local-6989586621688598921"><span class="hs-identifier hs-type">s</span></a></span></span></span></span><span>
+</span><span id="line-45"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span>    </span><span id="local-6989586621688598921"><span id="local-6989586621688598930"><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Codensity</span></span><span> </span><span class="annot"><a href="#local-6989586621688599019"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688598919"><span class="annot"><span class="annottext">m a -&gt; ManagedT m a
+(forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; ManagedT m a)
+-&gt; MonadTrans ManagedT
+forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; ManagedT m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *).
+(forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; t m a) -&gt; MonadTrans t
+lift :: m a -&gt; ManagedT m a
+$clift :: forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; ManagedT m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">MonadTrans</span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Codensity</span></span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- | Allocate a resource by providing setup and finalizer actions.</span><span>
+</span><span id="line-50"></span><span id="local-6989586621688598915"><span id="local-6989586621688598916"><span id="local-6989586621688598917"><span class="annot"><a href="Control.Monad.Trans.Managed.html#allocate"><span class="hs-identifier hs-type">allocate</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688598917"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688598917"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688598916"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688598916"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688598917"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688598915"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Control.Monad.Trans.Managed.html#ManagedT"><span class="hs-identifier hs-type">ManagedT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688598917"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688598916"><span class="hs-identifier hs-type">a</span></a></span></span></span></span><span>
+</span><span id="line-51"></span><span id="allocate"><span class="annot"><span class="annottext">allocate :: m a -&gt; (a -&gt; m b) -&gt; ManagedT m a
+</span><a href="Control.Monad.Trans.Managed.html#allocate"><span class="hs-identifier hs-var hs-var">allocate</span></a></span></span><span> </span><span id="local-6989586621688598914"><span class="annot"><span class="annottext">m a
+</span><a href="#local-6989586621688598914"><span class="hs-identifier hs-var">setup</span></a></span></span><span> </span><span id="local-6989586621688598913"><span class="annot"><span class="annottext">a -&gt; m b
+</span><a href="#local-6989586621688598913"><span class="hs-identifier hs-var">finalize</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(forall r. (a -&gt; m r) -&gt; m r) -&gt; ManagedT m a
+forall (m :: * -&gt; *) a.
+(forall r. (a -&gt; m r) -&gt; m r) -&gt; ManagedT m a
+</span><a href="Control.Monad.Trans.Managed.html#ManagedT"><span class="hs-identifier hs-var">ManagedT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">m a -&gt; (a -&gt; m b) -&gt; (a -&gt; m r) -&gt; m r
+forall (m :: * -&gt; *) a b c.
+MonadBaseControl IO m =&gt;
+m a -&gt; (a -&gt; m b) -&gt; (a -&gt; m c) -&gt; m c
+</span><span class="hs-identifier hs-var">bracket</span></span><span> </span><span class="annot"><span class="annottext">m a
+</span><a href="#local-6989586621688598914"><span class="hs-identifier hs-var">setup</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; m b
+</span><a href="#local-6989586621688598913"><span class="hs-identifier hs-var">finalize</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span class="hs-comment">-- | Allocate a resource but do not return a reference to it.</span><span>
+</span><span id="line-54"></span><span id="local-6989586621688598910"><span id="local-6989586621688598911"><span id="local-6989586621688598912"><span class="annot"><a href="Control.Monad.Trans.Managed.html#allocate_"><span class="hs-identifier hs-type">allocate_</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621688598912"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688598912"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688598911"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688598912"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688598910"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Control.Monad.Trans.Managed.html#ManagedT"><span class="hs-identifier hs-type">ManagedT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688598912"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-55"></span><span id="allocate_"><span class="annot"><span class="annottext">allocate_ :: m a -&gt; m b -&gt; ManagedT m ()
+</span><a href="Control.Monad.Trans.Managed.html#allocate_"><span class="hs-identifier hs-var hs-var">allocate_</span></a></span></span><span> </span><span id="local-6989586621688598909"><span class="annot"><span class="annottext">m a
+</span><a href="#local-6989586621688598909"><span class="hs-identifier hs-var">setup</span></a></span></span><span> </span><span id="local-6989586621688598908"><span class="annot"><span class="annottext">m b
+</span><a href="#local-6989586621688598908"><span class="hs-identifier hs-var">finalize</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(forall r. (() -&gt; m r) -&gt; m r) -&gt; ManagedT m ()
+forall (m :: * -&gt; *) a.
+(forall r. (a -&gt; m r) -&gt; m r) -&gt; ManagedT m a
+</span><a href="Control.Monad.Trans.Managed.html#ManagedT"><span class="hs-identifier hs-var">ManagedT</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621688598907"><span class="annot"><span class="annottext">() -&gt; m r
+</span><a href="#local-6989586621688598907"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m a -&gt; m b -&gt; m r -&gt; m r
+forall (m :: * -&gt; *) a b c.
+MonadBaseControl IO m =&gt;
+m a -&gt; m b -&gt; m c -&gt; m c
+</span><span class="hs-identifier hs-var">bracket_</span></span><span> </span><span class="annot"><span class="annottext">m a
+</span><a href="#local-6989586621688598909"><span class="hs-identifier hs-var">setup</span></a></span><span> </span><span class="annot"><span class="annottext">m b
+</span><a href="#local-6989586621688598908"><span class="hs-identifier hs-var">finalize</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">() -&gt; m r
+</span><a href="#local-6989586621688598907"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span class="hs-comment">-- | Run the provided computation by returning its result, and run any finalizers.</span><span>
+</span><span id="line-58"></span><span class="hs-comment">-- Watch out: this function might leak finalized resources.</span><span>
+</span><span id="line-59"></span><span id="local-6989586621688598905"><span id="local-6989586621688598906"><span class="annot"><a href="Control.Monad.Trans.Managed.html#lowerManagedT"><span class="hs-identifier hs-type">lowerManagedT</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621688598906"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Control.Monad.Trans.Managed.html#ManagedT"><span class="hs-identifier hs-type">ManagedT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688598906"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688598905"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688598906"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688598905"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-60"></span><span id="lowerManagedT"><span class="annot"><span class="annottext">lowerManagedT :: ManagedT m a -&gt; m a
+</span><a href="Control.Monad.Trans.Managed.html#lowerManagedT"><span class="hs-identifier hs-var hs-var">lowerManagedT</span></a></span></span><span> </span><span id="local-6989586621688598904"><span class="annot"><span class="annottext">ManagedT m a
+</span><a href="#local-6989586621688598904"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ManagedT m a -&gt; (a -&gt; m a) -&gt; m a
+forall (m :: * -&gt; *) a. ManagedT m a -&gt; forall r. (a -&gt; m r) -&gt; m r
+</span><a href="Control.Monad.Trans.Managed.html#runManagedT"><span class="hs-identifier hs-var hs-var">runManagedT</span></a></span><span> </span><span class="annot"><span class="annottext">ManagedT m a
+</span><a href="#local-6989586621688598904"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; m a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span>
+</span><span id="line-61"></span><span>
+</span><span id="line-62"></span><span id="local-6989586621688598901"><span id="local-6989586621688598902"><span id="local-6989586621688598903"><span class="annot"><a href="Control.Monad.Trans.Managed.html#hoistManagedTReaderT"><span class="hs-identifier hs-type">hoistManagedTReaderT</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621688598903"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688598902"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Control.Monad.Trans.Managed.html#ManagedT"><span class="hs-identifier hs-type">ManagedT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="annot"><a href="#local-6989586621688598902"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688598903"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688598901"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Control.Monad.Trans.Managed.html#ManagedT"><span class="hs-identifier hs-type">ManagedT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688598903"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688598901"><span class="hs-identifier hs-type">a</span></a></span></span></span></span><span>
+</span><span id="line-63"></span><span id="hoistManagedTReaderT"><span class="annot"><span class="annottext">hoistManagedTReaderT :: r -&gt; ManagedT (ReaderT r m) a -&gt; ManagedT m a
+</span><a href="Control.Monad.Trans.Managed.html#hoistManagedTReaderT"><span class="hs-identifier hs-var hs-var">hoistManagedTReaderT</span></a></span></span><span> </span><span id="local-6989586621688598900"><span class="annot"><span class="annottext">r
+</span><a href="#local-6989586621688598900"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span id="local-6989586621688598899"><span class="annot"><span class="annottext">ManagedT (ReaderT r m) a
+</span><a href="#local-6989586621688598899"><span class="hs-identifier hs-var">cod</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(forall r. (a -&gt; m r) -&gt; m r) -&gt; ManagedT m a
+forall (m :: * -&gt; *) a.
+(forall r. (a -&gt; m r) -&gt; m r) -&gt; ManagedT m a
+</span><a href="Control.Monad.Trans.Managed.html#ManagedT"><span class="hs-identifier hs-var">ManagedT</span></a></span><span> </span><span class="annot"><span class="annottext">((forall r. (a -&gt; m r) -&gt; m r) -&gt; ManagedT m a)
+-&gt; (forall r. (a -&gt; m r) -&gt; m r) -&gt; ManagedT m a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688598898"><span class="annot"><span class="annottext">a -&gt; m r
+</span><a href="#local-6989586621688598898"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-64"></span><span>  </span><span class="annot"><span class="annottext">ReaderT r m r -&gt; r -&gt; m r
+forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
+</span><span class="hs-identifier hs-var hs-var">runReaderT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ManagedT (ReaderT r m) a -&gt; (a -&gt; ReaderT r m r) -&gt; ReaderT r m r
+forall (m :: * -&gt; *) a. ManagedT m a -&gt; forall r. (a -&gt; m r) -&gt; m r
+</span><a href="Control.Monad.Trans.Managed.html#runManagedT"><span class="hs-identifier hs-var hs-var">runManagedT</span></a></span><span> </span><span class="annot"><span class="annottext">ManagedT (ReaderT r m) a
+</span><a href="#local-6989586621688598899"><span class="hs-identifier hs-var">cod</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">m r -&gt; ReaderT r m r
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(m r -&gt; ReaderT r m r) -&gt; (a -&gt; m r) -&gt; a -&gt; ReaderT r m r
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; m r
+</span><a href="#local-6989586621688598898"><span class="hs-identifier hs-var">k</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">r
+</span><a href="#local-6989586621688598900"><span class="hs-identifier hs-var">r</span></a></span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="hs-comment">-- | We need this instance to tie the knot when initializing resources.</span><span>
+</span><span id="line-67"></span><span class="hs-comment">-- It'd be nice if we could do this with a 'MonadFix' constraint on the underlying</span><span>
+</span><span id="line-68"></span><span class="hs-comment">-- monad, but here we just use 'MonadIO' to tie the knot using a lazily-evaluated</span><span>
+</span><span id="line-69"></span><span class="hs-comment">-- 'MVar'-based promise for the eventual result.</span><span>
+</span><span id="line-70"></span><span class="hs-comment">--</span><span>
+</span><span id="line-71"></span><span class="hs-comment">-- We need to be careful not to leak allocated resources via the use of</span><span>
+</span><span id="line-72"></span><span class="hs-comment">-- recursively-defined monadic actions when making use of this instance.</span><span>
+</span><span id="line-73"></span><span id="local-6989586621688598894"><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688598894"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadFix</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Monad.Trans.Managed.html#ManagedT"><span class="hs-identifier hs-type">ManagedT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688598894"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-74"></span><span>  </span><span id="local-6989586621688598890"><span class="annot"><span class="annottext">mfix :: (a -&gt; ManagedT m a) -&gt; ManagedT m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">mfix</span></span></span><span> </span><span id="local-6989586621688598889"><span class="annot"><span class="annottext">a -&gt; ManagedT m a
+</span><a href="#local-6989586621688598889"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(forall r. (a -&gt; m r) -&gt; m r) -&gt; ManagedT m a
+forall (m :: * -&gt; *) a.
+(forall r. (a -&gt; m r) -&gt; m r) -&gt; ManagedT m a
+</span><a href="Control.Monad.Trans.Managed.html#ManagedT"><span class="hs-identifier hs-var">ManagedT</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688598888"><span class="annot"><span class="annottext">a -&gt; m r
+</span><a href="#local-6989586621688598888"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-75"></span><span>    </span><span id="local-6989586621688598887"><span class="annot"><span class="annottext">MVar a
+</span><a href="#local-6989586621688598887"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (MVar a) -&gt; m (MVar a)
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">IO (MVar a)
+forall a. IO (MVar a)
+</span><span class="hs-identifier hs-var">C.newEmptyMVar</span></span><span>
+</span><span id="line-76"></span><span>    </span><span id="local-6989586621688598885"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688598885"><span class="hs-identifier hs-var">ans</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO a -&gt; m a
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO a -&gt; m a) -&gt; IO a -&gt; m a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">IO a -&gt; IO a
+forall a. IO a -&gt; IO a
+</span><span class="hs-identifier hs-var">unsafeDupableInterleaveIO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MVar a -&gt; IO a
+forall a. MVar a -&gt; IO a
+</span><span class="hs-identifier hs-var">C.readMVar</span></span><span> </span><span class="annot"><span class="annottext">MVar a
+</span><a href="#local-6989586621688598887"><span class="hs-identifier hs-var">m</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-77"></span><span>    </span><span class="annot"><span class="annottext">ManagedT m a -&gt; (a -&gt; m r) -&gt; m r
+forall (m :: * -&gt; *) a. ManagedT m a -&gt; forall r. (a -&gt; m r) -&gt; m r
+</span><a href="Control.Monad.Trans.Managed.html#runManagedT"><span class="hs-identifier hs-var hs-var">runManagedT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; ManagedT m a
+</span><a href="#local-6989586621688598889"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688598885"><span class="hs-identifier hs-var">ans</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688598883"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688598883"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-78"></span><span>      </span><span class="annot"><span class="annottext">IO () -&gt; m ()
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MVar a -&gt; a -&gt; IO ()
+forall a. MVar a -&gt; a -&gt; IO ()
+</span><span class="hs-identifier hs-var">C.putMVar</span></span><span> </span><span class="annot"><span class="annottext">MVar a
+</span><a href="#local-6989586621688598887"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688598883"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><span id="line-79"></span><span>      </span><span class="annot"><span class="annottext">a -&gt; m r
+</span><a href="#local-6989586621688598888"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688598883"><span class="hs-identifier hs-var">a</span></a></span></span><span>
+</span><span id="line-80"></span></pre></body></html>

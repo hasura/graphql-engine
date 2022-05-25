@@ -1,0 +1,344 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# OPTIONS_GHC -fno-warn-orphans #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.DataConnector.Adapter.Transport</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Exception.Safe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">throwIO</span></span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator">(&lt;&gt;&gt;)</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Execute.html"><span class="hs-identifier">Hasura.Backends.DataConnector.Adapter.Execute</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html"><span class="hs-identifier">Hasura.Backends.DataConnector.Adapter.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier">SourceConfig</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Plan.html"><span class="hs-identifier">Hasura.Backends.DataConnector.Plan</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">DC</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Base.Error.html#Code"><span class="hs-identifier">Code</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier">NotSupported</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier">QErr</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier">throw400</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html"><span class="hs-identifier">Hasura.EncJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier">EncJSON</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html"><span class="hs-identifier">Hasura.GraphQL.Execute.Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#DBStepInfo"><span class="hs-identifier">DBStepInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Logging.html"><span class="hs-identifier">Hasura.GraphQL.Logging</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HGL</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html"><span class="hs-identifier">Hasura.GraphQL.Namespace</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier">RootFieldAlias</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.Backend.html"><span class="hs-identifier">Hasura.GraphQL.Transport.Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.Backend.html#BackendTransport"><span class="hs-identifier">BackendTransport</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html"><span class="hs-identifier">Hasura.GraphQL.Transport.HTTP.Protocol</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReqUnparsed"><span class="hs-identifier">GQLReqUnparsed</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Logging.html"><span class="hs-identifier">Hasura.Logging</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier">Hasura</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier">Logger</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier">BackendType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier">DataConnector</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html"><span class="hs-identifier">Hasura.Server.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Types.html#RequestId"><span class="hs-identifier">RequestId</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Session.html"><span class="hs-identifier">Hasura.Session</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier">UserInfo</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.html"><span class="hs-identifier">Hasura.Tracing</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Tracing</span></span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.Backend.html#BackendTransport"><span class="hs-identifier hs-type">BackendTransport</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-30"></span><span>  </span><span id="local-6989586621688755440"><span class="annot"><span class="annottext">runDBQuery :: RequestId
+-&gt; GQLReqUnparsed
+-&gt; RootFieldAlias
+-&gt; UserInfo
+-&gt; Logger Hasura
+-&gt; SourceConfig 'DataConnector
+-&gt; ExecutionMonad 'DataConnector EncJSON
+-&gt; Maybe (PreparedQuery 'DataConnector)
+-&gt; m (DiffTime, EncJSON)
+</span><a href="Hasura.GraphQL.Transport.Backend.html#runDBQuery"><span class="hs-identifier hs-var hs-var hs-var hs-var">runDBQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RequestId
+-&gt; GQLReqUnparsed
+-&gt; RootFieldAlias
+-&gt; UserInfo
+-&gt; Logger Hasura
+-&gt; SourceConfig 'DataConnector
+-&gt; ExecutionMonad 'DataConnector EncJSON
+-&gt; Maybe (PreparedQuery 'DataConnector)
+-&gt; m (DiffTime, EncJSON)
+forall (m :: * -&gt; *) a.
+(MonadIO m, MonadError QErr m, MonadTrace m, MonadQueryLog m) =&gt;
+RequestId
+-&gt; GQLReqUnparsed
+-&gt; RootFieldAlias
+-&gt; UserInfo
+-&gt; Logger Hasura
+-&gt; SourceConfig
+-&gt; TraceT (ExceptT QErr IO) a
+-&gt; Maybe Plan
+-&gt; m (DiffTime, a)
+</span><a href="Hasura.Backends.DataConnector.Adapter.Transport.html#runDBQuery%27"><span class="hs-identifier hs-var">runDBQuery'</span></a></span><span>
+</span><span id="line-31"></span><span>  </span><span id="local-6989586621688755437"><span class="annot"><span class="annottext">runDBQueryExplain :: DBStepInfo 'DataConnector -&gt; m EncJSON
+</span><a href="Hasura.GraphQL.Transport.Backend.html#runDBQueryExplain"><span class="hs-identifier hs-var hs-var hs-var hs-var">runDBQueryExplain</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DBStepInfo 'DataConnector -&gt; m EncJSON
+forall (m :: * -&gt; *).
+(MonadIO m, MonadError QErr m) =&gt;
+DBStepInfo 'DataConnector -&gt; m EncJSON
+</span><a href="Hasura.Backends.DataConnector.Adapter.Transport.html#runDBQueryExplain%27"><span class="hs-identifier hs-var">runDBQueryExplain'</span></a></span><span>
+</span><span id="line-32"></span><span>  </span><span id="local-6989586621688755434"><span class="annot"><span class="annottext">runDBMutation :: RequestId
+-&gt; GQLReqUnparsed
+-&gt; RootFieldAlias
+-&gt; UserInfo
+-&gt; Logger Hasura
+-&gt; SourceConfig 'DataConnector
+-&gt; ExecutionMonad 'DataConnector EncJSON
+-&gt; Maybe (PreparedQuery 'DataConnector)
+-&gt; m (DiffTime, EncJSON)
+</span><a href="Hasura.GraphQL.Transport.Backend.html#runDBMutation"><span class="hs-identifier hs-var hs-var hs-var hs-var">runDBMutation</span></a></span></span><span> </span><span class="annot"><span class="annottext">RequestId
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">GQLReqUnparsed
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">UserInfo
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataConnector
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">ExecutionMonad 'DataConnector EncJSON
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe (PreparedQuery 'DataConnector)
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-33"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m (DiffTime, EncJSON)
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;runDBMutation: not implemented for the Data Connector backend.&quot;</span></span><span>
+</span><span id="line-34"></span><span>  </span><span id="local-6989586621688755432"><span class="annot"><span class="annottext">runDBStreamingSubscription :: SourceConfig 'DataConnector
+-&gt; MultiplexedQuery 'DataConnector
+-&gt; [(CohortId, CohortVariables)]
+-&gt; m (DiffTime,
+      Either QErr [(CohortId, ByteString, CursorVariableValues)])
+</span><a href="Hasura.GraphQL.Transport.Backend.html#runDBStreamingSubscription"><span class="hs-identifier hs-var hs-var hs-var hs-var">runDBStreamingSubscription</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataConnector
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">MultiplexedQuery 'DataConnector
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">[(CohortId, CohortVariables)]
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-35"></span><span>    </span><span class="annot"><span class="annottext">IO
+  (DiffTime,
+   Either QErr [(CohortId, ByteString, CursorVariableValues)])
+-&gt; m (DiffTime,
+      Either QErr [(CohortId, ByteString, CursorVariableValues)])
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO
+   (DiffTime,
+    Either QErr [(CohortId, ByteString, CursorVariableValues)])
+ -&gt; m (DiffTime,
+       Either QErr [(CohortId, ByteString, CursorVariableValues)]))
+-&gt; (IOError
+    -&gt; IO
+         (DiffTime,
+          Either QErr [(CohortId, ByteString, CursorVariableValues)]))
+-&gt; IOError
+-&gt; m (DiffTime,
+      Either QErr [(CohortId, ByteString, CursorVariableValues)])
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">IOError
+-&gt; IO
+     (DiffTime,
+      Either QErr [(CohortId, ByteString, CursorVariableValues)])
+forall (m :: * -&gt; *) e a. (MonadThrow m, Exception e) =&gt; e -&gt; m a
+</span><span class="hs-identifier hs-var">throwIO</span></span><span> </span><span class="annot"><span class="annottext">(IOError
+ -&gt; m (DiffTime,
+       Either QErr [(CohortId, ByteString, CursorVariableValues)]))
+-&gt; IOError
+-&gt; m (DiffTime,
+      Either QErr [(CohortId, ByteString, CursorVariableValues)])
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; IOError
+</span><span class="hs-identifier hs-var">userError</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;runDBStreamingSubscription: not implemented for the Data Connector backend.&quot;</span></span><span>
+</span><span id="line-36"></span><span>  </span><span id="local-6989586621688755427"><span class="annot"><span class="annottext">runDBSubscription :: SourceConfig 'DataConnector
+-&gt; MultiplexedQuery 'DataConnector
+-&gt; [(CohortId, CohortVariables)]
+-&gt; m (DiffTime, Either QErr [(CohortId, ByteString)])
+</span><a href="Hasura.GraphQL.Transport.Backend.html#runDBSubscription"><span class="hs-identifier hs-var hs-var hs-var hs-var">runDBSubscription</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataConnector
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">MultiplexedQuery 'DataConnector
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">[(CohortId, CohortVariables)]
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-37"></span><span>    </span><span class="annot"><span class="annottext">IO (DiffTime, Either QErr [(CohortId, ByteString)])
+-&gt; m (DiffTime, Either QErr [(CohortId, ByteString)])
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (DiffTime, Either QErr [(CohortId, ByteString)])
+ -&gt; m (DiffTime, Either QErr [(CohortId, ByteString)]))
+-&gt; (IOError -&gt; IO (DiffTime, Either QErr [(CohortId, ByteString)]))
+-&gt; IOError
+-&gt; m (DiffTime, Either QErr [(CohortId, ByteString)])
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">IOError -&gt; IO (DiffTime, Either QErr [(CohortId, ByteString)])
+forall (m :: * -&gt; *) e a. (MonadThrow m, Exception e) =&gt; e -&gt; m a
+</span><span class="hs-identifier hs-var">throwIO</span></span><span> </span><span class="annot"><span class="annottext">(IOError -&gt; m (DiffTime, Either QErr [(CohortId, ByteString)]))
+-&gt; IOError -&gt; m (DiffTime, Either QErr [(CohortId, ByteString)])
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; IOError
+</span><span class="hs-identifier hs-var">userError</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;runDBSubscription: not implemented for the Data Connector backend.&quot;</span></span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span id="local-6989586621688755512"><span id="local-6989586621688755515"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Transport.html#runDBQuery%27"><span class="hs-identifier hs-type">runDBQuery'</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688755515"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688755515"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.html#MonadTrace"><span class="hs-identifier hs-type">Tracing.MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688755515"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Logging.html#MonadQueryLog"><span class="hs-identifier hs-type">HGL.MonadQueryLog</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688755515"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-45"></span><span>  </span><span class="annot"><a href="Hasura.Server.Types.html#RequestId"><span class="hs-identifier hs-type">RequestId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-46"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReqUnparsed"><span class="hs-identifier hs-type">GQLReqUnparsed</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-47"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-48"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-49"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-50"></span><span>  </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-51"></span><span>  </span><span class="annot"><a href="Hasura.Tracing.html#TraceT"><span class="hs-identifier hs-type">Tracing.TraceT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688755512"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-52"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Plan.html#Plan"><span class="hs-identifier hs-type">DC.Plan</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-53"></span><span>  </span><span class="annot"><a href="#local-6989586621688755515"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">DiffTime</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621688755512"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-54"></span><span id="runDBQuery%27"><span class="annot"><span class="annottext">runDBQuery' :: RequestId
+-&gt; GQLReqUnparsed
+-&gt; RootFieldAlias
+-&gt; UserInfo
+-&gt; Logger Hasura
+-&gt; SourceConfig
+-&gt; TraceT (ExceptT QErr IO) a
+-&gt; Maybe Plan
+-&gt; m (DiffTime, a)
+</span><a href="Hasura.Backends.DataConnector.Adapter.Transport.html#runDBQuery%27"><span class="hs-identifier hs-var hs-var">runDBQuery'</span></a></span></span><span> </span><span id="local-6989586621688755425"><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621688755425"><span class="hs-identifier hs-var">requestId</span></a></span></span><span> </span><span id="local-6989586621688755424"><span class="annot"><span class="annottext">GQLReqUnparsed
+</span><a href="#local-6989586621688755424"><span class="hs-identifier hs-var">query</span></a></span></span><span> </span><span id="local-6989586621688755423"><span class="annot"><span class="annottext">RootFieldAlias
+</span><a href="#local-6989586621688755423"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span id="local-6989586621688755422"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621688755422"><span class="hs-identifier hs-var">_userInfo</span></a></span></span><span> </span><span id="local-6989586621688755421"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688755421"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621688755420"><span class="annot"><span class="annottext">SourceConfig
+</span><a href="#local-6989586621688755420"><span class="hs-identifier hs-var">_sourceConfig</span></a></span></span><span> </span><span id="local-6989586621688755419"><span class="annot"><span class="annottext">TraceT (ExceptT QErr IO) a
+</span><a href="#local-6989586621688755419"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span id="local-6989586621688755418"><span class="annot"><span class="annottext">Maybe Plan
+</span><a href="#local-6989586621688755418"><span class="hs-identifier hs-var">ir</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-55"></span><span>  </span><span class="annot"><span class="annottext">m () -&gt; m ()
+forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
+</span><span class="hs-identifier hs-var">void</span></span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Logger Hasura -&gt; QueryLog -&gt; m ()
+forall (m :: * -&gt; *).
+MonadQueryLog m =&gt;
+Logger Hasura -&gt; QueryLog -&gt; m ()
+</span><a href="Hasura.GraphQL.Logging.html#logQueryLog"><span class="hs-identifier hs-var">HGL.logQueryLog</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621688755421"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(QueryLog -&gt; m ()) -&gt; QueryLog -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">GQLReqUnparsed
+-&gt; RootFieldAlias -&gt; Maybe Plan -&gt; RequestId -&gt; QueryLog
+</span><a href="Hasura.Backends.DataConnector.Adapter.Transport.html#mkQueryLog"><span class="hs-identifier hs-var">mkQueryLog</span></a></span><span> </span><span class="annot"><span class="annottext">GQLReqUnparsed
+</span><a href="#local-6989586621688755424"><span class="hs-identifier hs-var">query</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
+</span><a href="#local-6989586621688755423"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Plan
+</span><a href="#local-6989586621688755418"><span class="hs-identifier hs-var">ir</span></a></span><span> </span><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621688755425"><span class="hs-identifier hs-var">requestId</span></a></span><span>
+</span><span id="line-56"></span><span>  </span><span class="annot"><span class="annottext">m a -&gt; m (DiffTime, a)
+forall (m :: * -&gt; *) a. MonadIO m =&gt; m a -&gt; m (DiffTime, a)
+</span><a href="Hasura.Prelude.html#withElapsedTime"><span class="hs-identifier hs-var">withElapsedTime</span></a></span><span>
+</span><span id="line-57"></span><span>    </span><span class="annot"><span class="annottext">(m a -&gt; m (DiffTime, a))
+-&gt; (TraceT (ExceptT QErr IO) a -&gt; m a)
+-&gt; TraceT (ExceptT QErr IO) a
+-&gt; m (DiffTime, a)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; m a -&gt; m a
+forall (m :: * -&gt; *) a. MonadTrace m =&gt; Text -&gt; m a -&gt; m a
+</span><a href="Hasura.Tracing.html#trace"><span class="hs-identifier hs-var">Tracing.trace</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Data Connector backend query for root field &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; RootFieldAlias -&gt; Text
+forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
+</span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
+</span><a href="#local-6989586621688755423"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span>    </span><span class="annot"><span class="annottext">(m a -&gt; m a)
+-&gt; (TraceT (ExceptT QErr IO) a -&gt; m a)
+-&gt; TraceT (ExceptT QErr IO) a
+-&gt; m a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(ExceptT QErr IO (a, TracingMetadata) -&gt; m (a, TracingMetadata))
+-&gt; TraceT (ExceptT QErr IO) a -&gt; m a
+forall (n :: * -&gt; *) (m :: * -&gt; *) a b.
+MonadTrace n =&gt;
+(m (a, TracingMetadata) -&gt; n (b, TracingMetadata))
+-&gt; TraceT m a -&gt; n b
+</span><a href="Hasura.Tracing.html#interpTraceT"><span class="hs-identifier hs-var">Tracing.interpTraceT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">m (Either QErr (a, TracingMetadata)) -&gt; m (a, TracingMetadata)
+forall e (m :: * -&gt; *) a. MonadError e m =&gt; m (Either e a) -&gt; m a
+</span><a href="Hasura.Prelude.html#liftEitherM"><span class="hs-identifier hs-var">liftEitherM</span></a></span><span> </span><span class="annot"><span class="annottext">(m (Either QErr (a, TracingMetadata)) -&gt; m (a, TracingMetadata))
+-&gt; (ExceptT QErr IO (a, TracingMetadata)
+    -&gt; m (Either QErr (a, TracingMetadata)))
+-&gt; ExceptT QErr IO (a, TracingMetadata)
+-&gt; m (a, TracingMetadata)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">IO (Either QErr (a, TracingMetadata))
+-&gt; m (Either QErr (a, TracingMetadata))
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (Either QErr (a, TracingMetadata))
+ -&gt; m (Either QErr (a, TracingMetadata)))
+-&gt; (ExceptT QErr IO (a, TracingMetadata)
+    -&gt; IO (Either QErr (a, TracingMetadata)))
+-&gt; ExceptT QErr IO (a, TracingMetadata)
+-&gt; m (Either QErr (a, TracingMetadata))
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ExceptT QErr IO (a, TracingMetadata)
+-&gt; IO (Either QErr (a, TracingMetadata))
+forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
+</span><span class="hs-identifier hs-var">runExceptT</span></span><span class="hs-special">)</span><span>
+</span><span id="line-59"></span><span>    </span><span class="annot"><span class="annottext">(TraceT (ExceptT QErr IO) a -&gt; m (DiffTime, a))
+-&gt; TraceT (ExceptT QErr IO) a -&gt; m (DiffTime, a)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TraceT (ExceptT QErr IO) a
+</span><a href="#local-6989586621688755419"><span class="hs-identifier hs-var">action</span></a></span><span>
+</span><span id="line-60"></span><span>
+</span><span id="line-61"></span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Transport.html#mkQueryLog"><span class="hs-identifier hs-type">mkQueryLog</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-62"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReqUnparsed"><span class="hs-identifier hs-type">GQLReqUnparsed</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-64"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Plan.html#Plan"><span class="hs-identifier hs-type">DC.Plan</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-65"></span><span>  </span><span class="annot"><a href="Hasura.Server.Types.html#RequestId"><span class="hs-identifier hs-type">RequestId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-66"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Logging.html#QueryLog"><span class="hs-identifier hs-type">HGL.QueryLog</span></a></span><span>
+</span><span id="line-67"></span><span id="mkQueryLog"><span class="annot"><span class="annottext">mkQueryLog :: GQLReqUnparsed
+-&gt; RootFieldAlias -&gt; Maybe Plan -&gt; RequestId -&gt; QueryLog
+</span><a href="Hasura.Backends.DataConnector.Adapter.Transport.html#mkQueryLog"><span class="hs-identifier hs-var hs-var">mkQueryLog</span></a></span></span><span> </span><span id="local-6989586621688755409"><span class="annot"><span class="annottext">GQLReqUnparsed
+</span><a href="#local-6989586621688755409"><span class="hs-identifier hs-var">gqlQuery</span></a></span></span><span> </span><span id="local-6989586621688755408"><span class="annot"><span class="annottext">RootFieldAlias
+</span><a href="#local-6989586621688755408"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span id="local-6989586621688755407"><span class="annot"><span class="annottext">Maybe Plan
+</span><a href="#local-6989586621688755407"><span class="hs-identifier hs-var">maybePlan</span></a></span></span><span> </span><span id="local-6989586621688755406"><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621688755406"><span class="hs-identifier hs-var">requestId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-68"></span><span>  </span><span class="annot"><span class="annottext">GQLReqUnparsed
+-&gt; Maybe (RootFieldAlias, GeneratedQuery)
+-&gt; RequestId
+-&gt; QueryLogKind
+-&gt; QueryLog
+</span><a href="Hasura.GraphQL.Logging.html#QueryLog"><span class="hs-identifier hs-var">HGL.QueryLog</span></a></span><span>
+</span><span id="line-69"></span><span>    </span><span class="annot"><span class="annottext">GQLReqUnparsed
+</span><a href="#local-6989586621688755409"><span class="hs-identifier hs-var">gqlQuery</span></a></span><span>
+</span><span id="line-70"></span><span>    </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621688755404"><span class="annot"><span class="annottext">Plan
+</span><a href="#local-6989586621688755404"><span class="hs-identifier hs-var">plan</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RootFieldAlias
+</span><a href="#local-6989586621688755408"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value -&gt; GeneratedQuery
+</span><a href="Hasura.GraphQL.Logging.html#GeneratedQuery"><span class="hs-identifier hs-var">HGL.GeneratedQuery</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Plan -&gt; Text
+</span><a href="Hasura.Backends.DataConnector.Plan.html#renderPlan"><span class="hs-identifier hs-var">DC.renderPlan</span></a></span><span> </span><span class="annot"><span class="annottext">Plan
+</span><a href="#local-6989586621688755404"><span class="hs-identifier hs-var">plan</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier hs-var">J.Null</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Plan -&gt; (RootFieldAlias, GeneratedQuery))
+-&gt; Maybe Plan -&gt; Maybe (RootFieldAlias, GeneratedQuery)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Plan
+</span><a href="#local-6989586621688755407"><span class="hs-identifier hs-var">maybePlan</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span>    </span><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621688755406"><span class="hs-identifier hs-var">requestId</span></a></span><span>
+</span><span id="line-72"></span><span>    </span><span class="annot"><span class="annottext">QueryLogKind
+</span><a href="Hasura.GraphQL.Logging.html#QueryLogKindDatabase"><span class="hs-identifier hs-var">HGL.QueryLogKindDatabase</span></a></span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span id="local-6989586621688755398"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Transport.html#runDBQueryExplain%27"><span class="hs-identifier hs-type">runDBQueryExplain'</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-75"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621688755398"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688755398"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-76"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#DBStepInfo"><span class="hs-identifier hs-type">DBStepInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-77"></span><span>  </span><span class="annot"><a href="#local-6989586621688755398"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-78"></span><span id="runDBQueryExplain%27"><span class="annot"><span class="annottext">runDBQueryExplain' :: DBStepInfo 'DataConnector -&gt; m EncJSON
+</span><a href="Hasura.Backends.DataConnector.Adapter.Transport.html#runDBQueryExplain%27"><span class="hs-identifier hs-var hs-var">runDBQueryExplain'</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#DBStepInfo"><span class="hs-identifier hs-type">DBStepInfo</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataConnector
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe (PreparedQuery 'DataConnector)
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621688755396"><span class="annot"><span class="annottext">ExecutionMonad 'DataConnector EncJSON
+</span><a href="#local-6989586621688755396"><span class="hs-identifier hs-var">action</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-79"></span><span>  </span><span class="annot"><span class="annottext">m (Either QErr EncJSON) -&gt; m EncJSON
+forall e (m :: * -&gt; *) a. MonadError e m =&gt; m (Either e a) -&gt; m a
+</span><a href="Hasura.Prelude.html#liftEitherM"><span class="hs-identifier hs-var">liftEitherM</span></a></span><span> </span><span class="annot"><span class="annottext">(m (Either QErr EncJSON) -&gt; m EncJSON)
+-&gt; m (Either QErr EncJSON) -&gt; m EncJSON
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-80"></span><span>    </span><span class="annot"><span class="annottext">IO (Either QErr EncJSON) -&gt; m (Either QErr EncJSON)
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (Either QErr EncJSON) -&gt; m (Either QErr EncJSON))
+-&gt; IO (Either QErr EncJSON) -&gt; m (Either QErr EncJSON)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-81"></span><span>      </span><span class="annot"><span class="annottext">ExceptT QErr IO EncJSON -&gt; IO (Either QErr EncJSON)
+forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
+</span><span class="hs-identifier hs-var">runExceptT</span></span><span> </span><span class="annot"><span class="annottext">(ExceptT QErr IO EncJSON -&gt; IO (Either QErr EncJSON))
+-&gt; ExceptT QErr IO EncJSON -&gt; IO (Either QErr EncJSON)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-82"></span><span>        </span><span class="annot"><span class="annottext">Reporter
+-&gt; Text
+-&gt; TraceT (ExceptT QErr IO) EncJSON
+-&gt; ExceptT QErr IO EncJSON
+forall (m :: * -&gt; *) a.
+MonadIO m =&gt;
+Reporter -&gt; Text -&gt; TraceT m a -&gt; m a
+</span><a href="Hasura.Tracing.html#runTraceTWithReporter"><span class="hs-identifier hs-var">Tracing.runTraceTWithReporter</span></a></span><span> </span><span class="annot"><span class="annottext">Reporter
+</span><a href="Hasura.Tracing.html#noReporter"><span class="hs-identifier hs-var">Tracing.noReporter</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;explain&quot;</span></span><span> </span><span class="annot"><span class="annottext">(TraceT (ExceptT QErr IO) EncJSON -&gt; ExceptT QErr IO EncJSON)
+-&gt; TraceT (ExceptT QErr IO) EncJSON -&gt; ExceptT QErr IO EncJSON
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-83"></span><span>          </span><span class="annot"><span class="annottext">TraceT (ExceptT QErr IO) EncJSON
+ExecutionMonad 'DataConnector EncJSON
+</span><a href="#local-6989586621688755396"><span class="hs-identifier hs-var">action</span></a></span><span>
+</span><span id="line-84"></span></pre></body></html>

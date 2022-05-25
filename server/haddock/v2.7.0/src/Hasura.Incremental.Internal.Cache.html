@@ -1,0 +1,591 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# OPTIONS_HADDOCK not-home #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Incremental.Internal.Cache</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#ArrowCache"><span class="hs-identifier">ArrowCache</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#DependT"><span class="hs-identifier">DependT</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#MonadDepend"><span class="hs-identifier">MonadDepend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Control.Arrow.Extended.html"><span class="hs-identifier">Control.Arrow.Extended</span></a></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Control.Monad.Unique.html"><span class="hs-identifier">Control.Monad.Unique</span></a></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html"><span class="hs-identifier">Hasura.Incremental.Internal.Dependency</span></a></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Rule.html"><span class="hs-identifier">Hasura.Incremental.Internal.Rule</span></a></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.Select.html"><span class="hs-identifier">Hasura.Incremental.Select</span></a></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">class</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Arrow.Extended.html#ArrowKleisli"><span class="hs-identifier hs-type">ArrowKleisli</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617207"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617206"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="ArrowCache"><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#ArrowCache"><span class="hs-identifier hs-var">ArrowCache</span></a></span></span><span> </span><span id="local-6989586621688617207"><span class="annot"><a href="#local-6989586621688617207"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688617206"><span class="annot"><a href="#local-6989586621688617206"><span class="hs-identifier hs-type">arr</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><a href="#local-6989586621688617206"><span class="hs-identifier hs-type">arr</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688617207"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-comment">-- | Adds equality-based caching to the given arrow. After each execution of the arrow, its input</span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-comment">-- and result values are cached. On the next execution, the new input value is compared via '=='</span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-comment">-- to the previous input value. If they are the same, the previous result is returned /without/</span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-comment">-- re-executing the arrow. Otherwise, the old cached values are discarded, and the arrow is</span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-comment">-- re-executed to produce a new set of cached values.</span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-comment">-- Indescriminate use of 'cache' is likely to have little effect except to increase memory usage,</span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-comment">-- since the input and result of each execution must be retained in memory. Avoid using 'cache'</span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-comment">-- around arrows with large input or output that is likely to change often unless profiling</span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-comment">-- indicates it is computationally expensive enough to be worth the memory overhead.</span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-comment">-- __Note that only direct inputs and outputs of the given arrow are cached.__ If an arrow</span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-comment">-- provides access to values through a side-channel, they will __not__ participate in caching.</span><span>
+</span><span id="line-32"></span><span>  </span><span id="local-6989586621688617214"><span id="local-6989586621688617216"><span id="cache"><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#cache"><span class="hs-identifier hs-type">cache</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617216"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688617206"><span class="hs-identifier hs-type">arr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617216"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617214"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688617206"><span class="hs-identifier hs-type">arr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617216"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617214"><span class="hs-identifier hs-type">b</span></a></span></span></span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-comment">-- | Creates a new 'Dependency', which allows fine-grained caching of composite values; see the</span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-comment">-- documentation for 'Dependency' for more details.</span><span>
+</span><span id="line-36"></span><span>  </span><span id="local-6989586621688617213"><span id="newDependency"><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#newDependency"><span class="hs-identifier hs-type">newDependency</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621688617206"><span class="hs-identifier hs-type">arr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617213"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Dependency"><span class="hs-identifier hs-type">Dependency</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617213"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-comment">-- | Extract the value from a 'Dependency', incurring a dependency on its entirety. To depend on</span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-comment">-- only a portion of the value, use 'selectD' or 'selectKeyD' before passing it to 'dependOn'.</span><span>
+</span><span id="line-40"></span><span>  </span><span id="local-6989586621688617211"><span id="dependOn"><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#dependOn"><span class="hs-identifier hs-type">dependOn</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617211"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688617206"><span class="hs-identifier hs-type">arr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Dependency"><span class="hs-identifier hs-type">Dependency</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617211"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688617211"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span>  </span><span class="hs-comment">-- | Run a monadic sub-computation with the ability to access dependencies; see 'MonadDepend' for</span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-comment">-- more details.</span><span>
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621688617210"><span id="bindDepend"><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#bindDepend"><span class="hs-identifier hs-type">bindDepend</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621688617206"><span class="hs-identifier hs-type">arr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#DependT"><span class="hs-identifier hs-type">DependT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617207"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617210"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621688617210"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span id="local-6989586621688617038"><span id="local-6989586621688617039"><span id="local-6989586621688617040"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ArrowChoice</span></span><span> </span><span class="annot"><a href="#local-6989586621688617040"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#ArrowCache"><span class="hs-identifier hs-type">ArrowCache</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617039"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617040"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#ArrowCache"><span class="hs-identifier hs-type">ArrowCache</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617039"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Arrow.Trans.html#ErrorA"><span class="hs-identifier hs-type">ErrorA</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617038"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617040"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-47"></span><span>  </span><span id="local-6989586621688617031"><span class="annot"><span class="annottext">cache :: ErrorA e arr a b -&gt; ErrorA e arr a b
+</span><a href="#local-6989586621688617031"><span class="hs-identifier hs-var hs-var hs-var hs-var">cache</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Arrow.Trans.html#ErrorA"><span class="hs-identifier hs-type">ErrorA</span></a></span><span> </span><span id="local-6989586621688617029"><span class="annot"><span class="annottext">arr a (Either e b)
+</span><a href="#local-6989586621688617029"><span class="hs-identifier hs-var">f</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">arr a (Either e b) -&gt; ErrorA e arr a b
+forall e (arr :: * -&gt; * -&gt; *) a b.
+arr a (Either e b) -&gt; ErrorA e arr a b
+</span><a href="Control.Arrow.Trans.html#ErrorA"><span class="hs-identifier hs-var">ErrorA</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">arr a (Either e b) -&gt; arr a (Either e b)
+forall (m :: * -&gt; *) (arr :: * -&gt; * -&gt; *) a b.
+(ArrowCache m arr, Cacheable a) =&gt;
+arr a b -&gt; arr a b
+</span><a href="Hasura.Incremental.Internal.Cache.html#cache"><span class="hs-identifier hs-var">cache</span></a></span><span> </span><span class="annot"><span class="annottext">arr a (Either e b)
+</span><a href="#local-6989586621688617029"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-pragma">{-# INLINE</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#cache"><span class="hs-pragma hs-type">cache</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-49"></span><span>  </span><span id="local-6989586621688617028"><span class="annot"><span class="annottext">newDependency :: ErrorA e arr a (Dependency a)
+</span><a href="#local-6989586621688617028"><span class="hs-identifier hs-var hs-var hs-var hs-var">newDependency</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">arr a (Dependency a) -&gt; ErrorA e arr a (Dependency a)
+forall (t :: (* -&gt; * -&gt; *) -&gt; * -&gt; * -&gt; *) (arr :: * -&gt; * -&gt; *) a
+       b.
+ArrowTrans t arr =&gt;
+arr a b -&gt; t arr a b
+</span><a href="Control.Arrow.Trans.html#liftA"><span class="hs-identifier hs-var">liftA</span></a></span><span> </span><span class="annot"><span class="annottext">arr a (Dependency a)
+forall (m :: * -&gt; *) (arr :: * -&gt; * -&gt; *) a.
+ArrowCache m arr =&gt;
+arr a (Dependency a)
+</span><a href="Hasura.Incremental.Internal.Cache.html#newDependency"><span class="hs-identifier hs-var">newDependency</span></a></span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-pragma">{-# INLINE</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#newDependency"><span class="hs-pragma hs-type">newDependency</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-51"></span><span>  </span><span id="local-6989586621688617026"><span class="annot"><span class="annottext">dependOn :: ErrorA e arr (Dependency a) a
+</span><a href="#local-6989586621688617026"><span class="hs-identifier hs-var hs-var hs-var hs-var">dependOn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">arr (Dependency a) a -&gt; ErrorA e arr (Dependency a) a
+forall (t :: (* -&gt; * -&gt; *) -&gt; * -&gt; * -&gt; *) (arr :: * -&gt; * -&gt; *) a
+       b.
+ArrowTrans t arr =&gt;
+arr a b -&gt; t arr a b
+</span><a href="Control.Arrow.Trans.html#liftA"><span class="hs-identifier hs-var">liftA</span></a></span><span> </span><span class="annot"><span class="annottext">arr (Dependency a) a
+forall (m :: * -&gt; *) (arr :: * -&gt; * -&gt; *) a.
+(ArrowCache m arr, Cacheable a) =&gt;
+arr (Dependency a) a
+</span><a href="Hasura.Incremental.Internal.Cache.html#dependOn"><span class="hs-identifier hs-var">dependOn</span></a></span><span>
+</span><span id="line-52"></span><span>  </span><span class="hs-pragma">{-# INLINE</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#dependOn"><span class="hs-pragma hs-type">dependOn</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621688617025"><span class="annot"><span class="annottext">bindDepend :: ErrorA e arr (DependT m a) a
+</span><a href="#local-6989586621688617025"><span class="hs-identifier hs-var hs-var hs-var hs-var">bindDepend</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">arr (DependT m a) a -&gt; ErrorA e arr (DependT m a) a
+forall (t :: (* -&gt; * -&gt; *) -&gt; * -&gt; * -&gt; *) (arr :: * -&gt; * -&gt; *) a
+       b.
+ArrowTrans t arr =&gt;
+arr a b -&gt; t arr a b
+</span><a href="Control.Arrow.Trans.html#liftA"><span class="hs-identifier hs-var">liftA</span></a></span><span> </span><span class="annot"><span class="annottext">arr (DependT m a) a
+forall (m :: * -&gt; *) (arr :: * -&gt; * -&gt; *) a.
+ArrowCache m arr =&gt;
+arr (DependT m a) a
+</span><a href="Hasura.Incremental.Internal.Cache.html#bindDepend"><span class="hs-identifier hs-var">bindDepend</span></a></span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-pragma">{-# INLINE</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#bindDepend"><span class="hs-pragma hs-type">bindDepend</span></a></span><span> </span><span class="hs-pragma">#-}</span></span></span></span><span>
+</span><span id="line-55"></span><span>
+</span><span id="line-56"></span><span id="local-6989586621688617022"><span id="local-6989586621688617023"><span id="local-6989586621688617024"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="#local-6989586621688617024"><span class="hs-identifier hs-type">w</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#ArrowCache"><span class="hs-identifier hs-type">ArrowCache</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617023"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617022"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#ArrowCache"><span class="hs-identifier hs-type">ArrowCache</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617023"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Arrow.Trans.html#WriterA"><span class="hs-identifier hs-type">WriterA</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617024"><span class="hs-identifier hs-type">w</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617022"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-57"></span><span>  </span><span id="local-6989586621688617016"><span class="annot"><span class="annottext">cache :: WriterA w arr a b -&gt; WriterA w arr a b
+</span><a href="#local-6989586621688617016"><span class="hs-identifier hs-var hs-var hs-var hs-var">cache</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Arrow.Trans.html#WriterA"><span class="hs-identifier hs-type">WriterA</span></a></span><span> </span><span id="local-6989586621688617014"><span class="annot"><span class="annottext">arr a (b, w)
+</span><a href="#local-6989586621688617014"><span class="hs-identifier hs-var">f</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">arr a (b, w) -&gt; WriterA w arr a b
+forall w (arr :: * -&gt; * -&gt; *) a b.
+(Monoid w, Arrow arr) =&gt;
+arr a (b, w) -&gt; WriterA w arr a b
+</span><a href="Control.Arrow.Trans.html#WriterA"><span class="hs-identifier hs-var">WriterA</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">arr a (b, w) -&gt; arr a (b, w)
+forall (m :: * -&gt; *) (arr :: * -&gt; * -&gt; *) a b.
+(ArrowCache m arr, Cacheable a) =&gt;
+arr a b -&gt; arr a b
+</span><a href="Hasura.Incremental.Internal.Cache.html#cache"><span class="hs-identifier hs-var">cache</span></a></span><span> </span><span class="annot"><span class="annottext">arr a (b, w)
+</span><a href="#local-6989586621688617014"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-pragma">{-# INLINE</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#cache"><span class="hs-pragma hs-type">cache</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-59"></span><span>  </span><span id="local-6989586621688617013"><span class="annot"><span class="annottext">newDependency :: WriterA w arr a (Dependency a)
+</span><a href="#local-6989586621688617013"><span class="hs-identifier hs-var hs-var hs-var hs-var">newDependency</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">arr a (Dependency a) -&gt; WriterA w arr a (Dependency a)
+forall (t :: (* -&gt; * -&gt; *) -&gt; * -&gt; * -&gt; *) (arr :: * -&gt; * -&gt; *) a
+       b.
+ArrowTrans t arr =&gt;
+arr a b -&gt; t arr a b
+</span><a href="Control.Arrow.Trans.html#liftA"><span class="hs-identifier hs-var">liftA</span></a></span><span> </span><span class="annot"><span class="annottext">arr a (Dependency a)
+forall (m :: * -&gt; *) (arr :: * -&gt; * -&gt; *) a.
+ArrowCache m arr =&gt;
+arr a (Dependency a)
+</span><a href="Hasura.Incremental.Internal.Cache.html#newDependency"><span class="hs-identifier hs-var">newDependency</span></a></span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-pragma">{-# INLINE</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#newDependency"><span class="hs-pragma hs-type">newDependency</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-61"></span><span>  </span><span id="local-6989586621688617012"><span class="annot"><span class="annottext">dependOn :: WriterA w arr (Dependency a) a
+</span><a href="#local-6989586621688617012"><span class="hs-identifier hs-var hs-var hs-var hs-var">dependOn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">arr (Dependency a) a -&gt; WriterA w arr (Dependency a) a
+forall (t :: (* -&gt; * -&gt; *) -&gt; * -&gt; * -&gt; *) (arr :: * -&gt; * -&gt; *) a
+       b.
+ArrowTrans t arr =&gt;
+arr a b -&gt; t arr a b
+</span><a href="Control.Arrow.Trans.html#liftA"><span class="hs-identifier hs-var">liftA</span></a></span><span> </span><span class="annot"><span class="annottext">arr (Dependency a) a
+forall (m :: * -&gt; *) (arr :: * -&gt; * -&gt; *) a.
+(ArrowCache m arr, Cacheable a) =&gt;
+arr (Dependency a) a
+</span><a href="Hasura.Incremental.Internal.Cache.html#dependOn"><span class="hs-identifier hs-var">dependOn</span></a></span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-pragma">{-# INLINE</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#dependOn"><span class="hs-pragma hs-type">dependOn</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-63"></span><span>  </span><span id="local-6989586621688617011"><span class="annot"><span class="annottext">bindDepend :: WriterA w arr (DependT m a) a
+</span><a href="#local-6989586621688617011"><span class="hs-identifier hs-var hs-var hs-var hs-var">bindDepend</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">arr (DependT m a) a -&gt; WriterA w arr (DependT m a) a
+forall (t :: (* -&gt; * -&gt; *) -&gt; * -&gt; * -&gt; *) (arr :: * -&gt; * -&gt; *) a
+       b.
+ArrowTrans t arr =&gt;
+arr a b -&gt; t arr a b
+</span><a href="Control.Arrow.Trans.html#liftA"><span class="hs-identifier hs-var">liftA</span></a></span><span> </span><span class="annot"><span class="annottext">arr (DependT m a) a
+forall (m :: * -&gt; *) (arr :: * -&gt; * -&gt; *) a.
+ArrowCache m arr =&gt;
+arr (DependT m a) a
+</span><a href="Hasura.Incremental.Internal.Cache.html#bindDepend"><span class="hs-identifier hs-var">bindDepend</span></a></span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-pragma">{-# INLINE</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#bindDepend"><span class="hs-pragma hs-type">bindDepend</span></a></span><span> </span><span class="hs-pragma">#-}</span></span></span></span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span id="local-6989586621688617010"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Monad.Unique.html#MonadUnique"><span class="hs-identifier hs-type">MonadUnique</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617010"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#ArrowCache"><span class="hs-identifier hs-type">ArrowCache</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617010"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Rule.html#Rule"><span class="hs-identifier hs-type">Rule</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617010"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-67"></span><span>  </span><span id="local-6989586621688617004"><span class="annot"><span class="annottext">cache :: Rule m a b -&gt; Rule m a b
+</span><a href="#local-6989586621688617004"><span class="hs-identifier hs-var hs-var hs-var hs-var">cache</span></a></span></span><span> </span><span id="local-6989586621688617003"><span class="annot"><span class="annottext">Rule m a b
+</span><a href="#local-6989586621688617003"><span class="hs-identifier hs-var">r0</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(forall r.
+ Accesses -&gt; a -&gt; (Accesses -&gt; b -&gt; Rule m a b -&gt; m r) -&gt; m r)
+-&gt; Rule m a b
+forall (m :: * -&gt; *) a b.
+(forall r.
+ Accesses -&gt; a -&gt; (Accesses -&gt; b -&gt; Rule m a b -&gt; m r) -&gt; m r)
+-&gt; Rule m a b
+</span><a href="Hasura.Incremental.Internal.Rule.html#Rule"><span class="hs-identifier hs-var">Rule</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688617001"><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688617001"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span id="local-6989586621688617000"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688617000"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621688616999"><span class="annot"><span class="annottext">Accesses -&gt; b -&gt; Rule m a b -&gt; m r
+</span><a href="#local-6989586621688616999"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-68"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Rule.html#Rule"><span class="hs-identifier hs-type">Rule</span></a></span><span> </span><span id="local-6989586621688616998"><span class="annot"><span class="annottext">forall r.
+Accesses
+-&gt; a
+-&gt; (Accesses -&gt; (b, Accesses) -&gt; Rule m a (b, Accesses) -&gt; m r)
+-&gt; m r
+</span><a href="#local-6989586621688616998"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Rule m a b -&gt; Rule m a (b, Accesses)
+forall a b. Rule m a b -&gt; Rule m a (b, Accesses)
+</span><a href="#local-6989586621688616997"><span class="hs-identifier hs-var">listenAccesses</span></a></span><span> </span><span class="annot"><span class="annottext">Rule m a b
+</span><a href="#local-6989586621688617003"><span class="hs-identifier hs-var">r0</span></a></span><span>
+</span><span id="line-69"></span><span>    </span><span class="annot"><span class="annottext">Accesses
+-&gt; a
+-&gt; (Accesses -&gt; (b, Accesses) -&gt; Rule m a (b, Accesses) -&gt; m r)
+-&gt; m r
+forall r.
+Accesses
+-&gt; a
+-&gt; (Accesses -&gt; (b, Accesses) -&gt; Rule m a (b, Accesses) -&gt; m r)
+-&gt; m r
+</span><a href="#local-6989586621688616998"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688617001"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688617000"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688616996"><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616996"><span class="hs-identifier hs-var">s'</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688616995"><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621688616995"><span class="hs-identifier hs-var">b</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688616994"><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616994"><span class="hs-identifier hs-var">accesses</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688616993"><span class="annot"><span class="annottext">Rule m a (b, Accesses)
+</span><a href="#local-6989586621688616993"><span class="hs-identifier hs-var">r'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Accesses -&gt; b -&gt; Rule m a b -&gt; m r
+</span><a href="#local-6989586621688616999"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616996"><span class="hs-identifier hs-var">s'</span></a></span><span> </span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621688616995"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Accesses -&gt; a -&gt; b -&gt; Rule m a (b, Accesses) -&gt; Rule m a b
+forall a b (m :: * -&gt; *).
+Cacheable a =&gt;
+Accesses -&gt; a -&gt; b -&gt; Rule m a (b, Accesses) -&gt; Rule m a b
+</span><a href="#local-6989586621688616992"><span class="hs-identifier hs-var">cached</span></a></span><span> </span><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616994"><span class="hs-identifier hs-var">accesses</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688617000"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621688616995"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Rule m a (b, Accesses)
+</span><a href="#local-6989586621688616993"><span class="hs-identifier hs-var">r'</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-70"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-71"></span><span>      </span><span id="local-6989586621688617164"><span id="local-6989586621688617165"><span class="annot"><a href="#local-6989586621688616997"><span class="hs-identifier hs-type">listenAccesses</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Rule.html#Rule"><span class="hs-identifier hs-type">Rule</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617010"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617165"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617164"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Rule.html#Rule"><span class="hs-identifier hs-type">Rule</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617010"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617165"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621688617164"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Accesses"><span class="hs-identifier hs-type">Accesses</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-72"></span><span>      </span><span id="local-6989586621688616997"><span class="annot"><span class="annottext">listenAccesses :: Rule m a b -&gt; Rule m a (b, Accesses)
+</span><a href="#local-6989586621688616997"><span class="hs-identifier hs-var hs-var">listenAccesses</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Rule.html#Rule"><span class="hs-identifier hs-type">Rule</span></a></span><span> </span><span id="local-6989586621688616991"><span class="annot"><span class="annottext">forall r.
+Accesses -&gt; a -&gt; (Accesses -&gt; b -&gt; Rule m a b -&gt; m r) -&gt; m r
+</span><a href="#local-6989586621688616991"><span class="hs-identifier hs-var">r</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(forall r.
+ Accesses
+ -&gt; a
+ -&gt; (Accesses -&gt; (b, Accesses) -&gt; Rule m a (b, Accesses) -&gt; m r)
+ -&gt; m r)
+-&gt; Rule m a (b, Accesses)
+forall (m :: * -&gt; *) a b.
+(forall r.
+ Accesses -&gt; a -&gt; (Accesses -&gt; b -&gt; Rule m a b -&gt; m r) -&gt; m r)
+-&gt; Rule m a b
+</span><a href="Hasura.Incremental.Internal.Rule.html#Rule"><span class="hs-identifier hs-var">Rule</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688616990"><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616990"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span id="local-6989586621688616989"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688616989"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621688616988"><span class="annot"><span class="annottext">Accesses -&gt; (b, Accesses) -&gt; Rule m a (b, Accesses) -&gt; m r
+</span><a href="#local-6989586621688616988"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Accesses -&gt; a -&gt; (Accesses -&gt; b -&gt; Rule m a b -&gt; m r) -&gt; m r
+forall r.
+Accesses -&gt; a -&gt; (Accesses -&gt; b -&gt; Rule m a b -&gt; m r) -&gt; m r
+</span><a href="#local-6989586621688616991"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">Accesses
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688616989"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688616987"><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616987"><span class="hs-identifier hs-var">s'</span></a></span></span><span> </span><span id="local-6989586621688616986"><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621688616986"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621688616985"><span class="annot"><span class="annottext">Rule m a b
+</span><a href="#local-6989586621688616985"><span class="hs-identifier hs-var">r'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-73"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Accesses -&gt; (b, Accesses) -&gt; Rule m a (b, Accesses) -&gt; m r
+</span><a href="#local-6989586621688616988"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">(Accesses -&gt; (b, Accesses) -&gt; Rule m a (b, Accesses) -&gt; m r)
+-&gt; Accesses -&gt; (b, Accesses) -&gt; Rule m a (b, Accesses) -&gt; m r
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$!</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616990"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Accesses -&gt; Accesses -&gt; Accesses
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616987"><span class="hs-identifier hs-var">s'</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621688616986"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616987"><span class="hs-identifier hs-var">s'</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Rule m a b -&gt; Rule m a (b, Accesses)
+forall a b. Rule m a b -&gt; Rule m a (b, Accesses)
+</span><a href="#local-6989586621688616997"><span class="hs-identifier hs-var">listenAccesses</span></a></span><span> </span><span class="annot"><span class="annottext">Rule m a b
+</span><a href="#local-6989586621688616985"><span class="hs-identifier hs-var">r'</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span>      </span><span id="local-6989586621688616992"><span class="annot"><span class="annottext">cached :: Accesses -&gt; a -&gt; b -&gt; Rule m a (b, Accesses) -&gt; Rule m a b
+</span><a href="#local-6989586621688616992"><span class="hs-identifier hs-var hs-var">cached</span></a></span></span><span> </span><span id="local-6989586621688616983"><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616983"><span class="hs-identifier hs-var">accesses</span></a></span></span><span> </span><span id="local-6989586621688616982"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688616982"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621688616981"><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621688616981"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Rule.html#Rule"><span class="hs-identifier hs-type">Rule</span></a></span><span> </span><span id="local-6989586621688616980"><span class="annot"><span class="annottext">forall r.
+Accesses
+-&gt; a
+-&gt; (Accesses -&gt; (b, Accesses) -&gt; Rule m a (b, Accesses) -&gt; m r)
+-&gt; m r
+</span><a href="#local-6989586621688616980"><span class="hs-identifier hs-var">r</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(forall r.
+ Accesses -&gt; a -&gt; (Accesses -&gt; b -&gt; Rule m a b -&gt; m r) -&gt; m r)
+-&gt; Rule m a b
+forall (m :: * -&gt; *) a b.
+(forall r.
+ Accesses -&gt; a -&gt; (Accesses -&gt; b -&gt; Rule m a b -&gt; m r) -&gt; m r)
+-&gt; Rule m a b
+</span><a href="Hasura.Incremental.Internal.Rule.html#Rule"><span class="hs-identifier hs-var">Rule</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688616979"><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616979"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span id="local-6989586621688616978"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688616978"><span class="hs-identifier hs-var">a'</span></a></span></span><span> </span><span id="local-6989586621688616977"><span class="annot"><span class="annottext">Accesses -&gt; b -&gt; Rule m a b -&gt; m r
+</span><a href="#local-6989586621688616977"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-76"></span><span>        </span><span class="hs-keyword">if</span><span>
+</span><span id="line-77"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Accesses -&gt; a -&gt; a -&gt; Bool
+forall a. Cacheable a =&gt; Accesses -&gt; a -&gt; a -&gt; Bool
+</span><a href="Hasura.Incremental.Internal.Dependency.html#unchanged"><span class="hs-identifier hs-var">unchanged</span></a></span><span> </span><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616983"><span class="hs-identifier hs-var">accesses</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688616982"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688616978"><span class="hs-identifier hs-var">a'</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Accesses -&gt; b -&gt; Rule m a b -&gt; m r
+</span><a href="#local-6989586621688616977"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">(Accesses -&gt; b -&gt; Rule m a b -&gt; m r)
+-&gt; Accesses -&gt; b -&gt; Rule m a b -&gt; m r
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$!</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616979"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Accesses -&gt; Accesses -&gt; Accesses
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616983"><span class="hs-identifier hs-var">accesses</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621688616981"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Accesses -&gt; a -&gt; b -&gt; Rule m a (b, Accesses) -&gt; Rule m a b
+</span><a href="#local-6989586621688616992"><span class="hs-identifier hs-var">cached</span></a></span><span> </span><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616983"><span class="hs-identifier hs-var">accesses</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688616982"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621688616981"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall r.
+ Accesses
+ -&gt; a
+ -&gt; (Accesses -&gt; (b, Accesses) -&gt; Rule m a (b, Accesses) -&gt; m r)
+ -&gt; m r)
+-&gt; Rule m a (b, Accesses)
+forall (m :: * -&gt; *) a b.
+(forall r.
+ Accesses -&gt; a -&gt; (Accesses -&gt; b -&gt; Rule m a b -&gt; m r) -&gt; m r)
+-&gt; Rule m a b
+</span><a href="Hasura.Incremental.Internal.Rule.html#Rule"><span class="hs-identifier hs-var">Rule</span></a></span><span> </span><span class="annot"><span class="annottext">forall r.
+Accesses
+-&gt; a
+-&gt; (Accesses -&gt; (b, Accesses) -&gt; Rule m a (b, Accesses) -&gt; m r)
+-&gt; m r
+</span><a href="#local-6989586621688616980"><span class="hs-identifier hs-var">r</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-78"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Accesses
+-&gt; a
+-&gt; (Accesses -&gt; (b, Accesses) -&gt; Rule m a (b, Accesses) -&gt; m r)
+-&gt; m r
+forall r.
+Accesses
+-&gt; a
+-&gt; (Accesses -&gt; (b, Accesses) -&gt; Rule m a (b, Accesses) -&gt; m r)
+-&gt; m r
+</span><a href="#local-6989586621688616980"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616979"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688616978"><span class="hs-identifier hs-var">a'</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688616975"><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616975"><span class="hs-identifier hs-var">s'</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688616974"><span class="annot"><a href="#local-6989586621688616974"><span class="hs-identifier hs-var">b'</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688616973"><span class="annot"><a href="#local-6989586621688616973"><span class="hs-identifier hs-var">accesses'</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688616972"><span class="annot"><span class="annottext">Rule m a (b, Accesses)
+</span><a href="#local-6989586621688616972"><span class="hs-identifier hs-var">r'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Accesses -&gt; b -&gt; Rule m a b -&gt; m r
+</span><a href="#local-6989586621688616977"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616975"><span class="hs-identifier hs-var">s'</span></a></span><span> </span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621688616974"><span class="hs-identifier hs-var">b'</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Accesses -&gt; a -&gt; b -&gt; Rule m a (b, Accesses) -&gt; Rule m a b
+</span><a href="#local-6989586621688616992"><span class="hs-identifier hs-var">cached</span></a></span><span> </span><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616973"><span class="hs-identifier hs-var">accesses'</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688616978"><span class="hs-identifier hs-var">a'</span></a></span><span> </span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621688616974"><span class="hs-identifier hs-var">b'</span></a></span><span> </span><span class="annot"><span class="annottext">Rule m a (b, Accesses)
+</span><a href="#local-6989586621688616972"><span class="hs-identifier hs-var">r'</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-79"></span><span>
+</span><span id="line-80"></span><span>  </span><span id="local-6989586621688616971"><span class="annot"><span class="annottext">newDependency :: Rule m a (Dependency a)
+</span><a href="#local-6989586621688616971"><span class="hs-identifier hs-var hs-var hs-var hs-var">newDependency</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(forall r.
+ Accesses
+ -&gt; a
+ -&gt; (Accesses -&gt; Dependency a -&gt; Rule m a (Dependency a) -&gt; m r)
+ -&gt; m r)
+-&gt; Rule m a (Dependency a)
+forall (m :: * -&gt; *) a b.
+(forall r.
+ Accesses -&gt; a -&gt; (Accesses -&gt; b -&gt; Rule m a b -&gt; m r) -&gt; m r)
+-&gt; Rule m a b
+</span><a href="Hasura.Incremental.Internal.Rule.html#Rule"><span class="hs-identifier hs-var">Rule</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688616970"><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616970"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span id="local-6989586621688616969"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688616969"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621688616968"><span class="annot"><span class="annottext">Accesses -&gt; Dependency a -&gt; Rule m a (Dependency a) -&gt; m r
+</span><a href="#local-6989586621688616968"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-81"></span><span>    </span><span id="local-6989586621688616967"><span class="annot"><span class="annottext">DependencyKey a
+</span><a href="#local-6989586621688616967"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">UniqueS a -&gt; DependencyKey a
+forall a. UniqueS a -&gt; DependencyKey a
+</span><a href="Hasura.Incremental.Internal.Dependency.html#DependencyRoot"><span class="hs-identifier hs-var">DependencyRoot</span></a></span><span> </span><span class="annot"><span class="annottext">(UniqueS a -&gt; DependencyKey a)
+-&gt; m (UniqueS a) -&gt; m (DependencyKey a)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">m (UniqueS a)
+forall (m :: * -&gt; *) a. MonadUnique m =&gt; m (UniqueS a)
+</span><a href="Hasura.Incremental.Select.html#newUniqueS"><span class="hs-identifier hs-var">newUniqueS</span></a></span><span>
+</span><span id="line-82"></span><span>    </span><span class="annot"><span class="annottext">Accesses -&gt; Dependency a -&gt; Rule m a (Dependency a) -&gt; m r
+</span><a href="#local-6989586621688616968"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616970"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DependencyKey a -&gt; a -&gt; Dependency a
+forall a. DependencyKey a -&gt; a -&gt; Dependency a
+</span><a href="Hasura.Incremental.Internal.Dependency.html#Dependency"><span class="hs-identifier hs-var">Dependency</span></a></span><span> </span><span class="annot"><span class="annottext">DependencyKey a
+</span><a href="#local-6989586621688616967"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688616969"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(a -&gt; Dependency a) -&gt; Rule m a (Dependency a)
+forall (a :: * -&gt; * -&gt; *) b c. Arrow a =&gt; (b -&gt; c) -&gt; a b c
+</span><span class="hs-identifier hs-var">arr</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DependencyKey a -&gt; a -&gt; Dependency a
+forall a. DependencyKey a -&gt; a -&gt; Dependency a
+</span><a href="Hasura.Incremental.Internal.Dependency.html#Dependency"><span class="hs-identifier hs-var">Dependency</span></a></span><span> </span><span class="annot"><span class="annottext">DependencyKey a
+</span><a href="#local-6989586621688616967"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-83"></span><span>  </span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#newDependency"><span class="hs-pragma hs-type">newDependency</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-84"></span><span>
+</span><span id="line-85"></span><span>  </span><span id="local-6989586621688616962"><span class="annot"><span class="annottext">dependOn :: Rule m (Dependency a) a
+</span><a href="#local-6989586621688616962"><span class="hs-identifier hs-var hs-var hs-var hs-var">dependOn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(forall r.
+ Accesses
+ -&gt; Dependency a
+ -&gt; (Accesses -&gt; a -&gt; Rule m (Dependency a) a -&gt; m r)
+ -&gt; m r)
+-&gt; Rule m (Dependency a) a
+forall (m :: * -&gt; *) a b.
+(forall r.
+ Accesses -&gt; a -&gt; (Accesses -&gt; b -&gt; Rule m a b -&gt; m r) -&gt; m r)
+-&gt; Rule m a b
+</span><a href="Hasura.Incremental.Internal.Rule.html#Rule"><span class="hs-identifier hs-var">Rule</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688616961"><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616961"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Dependency"><span class="hs-identifier hs-type">Dependency</span></a></span><span> </span><span id="local-6989586621688616960"><span class="annot"><a href="#local-6989586621688616960"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span id="local-6989586621688616959"><span class="annot"><a href="#local-6989586621688616959"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688616958"><span class="annot"><span class="annottext">Accesses -&gt; a -&gt; Rule m (Dependency a) a -&gt; m r
+</span><a href="#local-6989586621688616958"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Accesses -&gt; a -&gt; Rule m (Dependency a) a -&gt; m r
+</span><a href="#local-6989586621688616958"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">(Accesses -&gt; a -&gt; Rule m (Dependency a) a -&gt; m r)
+-&gt; Accesses -&gt; a -&gt; Rule m (Dependency a) a -&gt; m r
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$!</span></span><span> </span><span class="annot"><span class="annottext">DependencyKey a -&gt; Access a -&gt; Accesses -&gt; Accesses
+forall a. DependencyKey a -&gt; Access a -&gt; Accesses -&gt; Accesses
+</span><a href="Hasura.Incremental.Internal.Dependency.html#recordAccess"><span class="hs-identifier hs-var">recordAccess</span></a></span><span> </span><span class="annot"><span class="annottext">DependencyKey a
+</span><a href="#local-6989586621688616960"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">Access a
+forall a. Cacheable a =&gt; Access a
+</span><a href="Hasura.Incremental.Internal.Dependency.html#AccessedAll"><span class="hs-identifier hs-var">AccessedAll</span></a></span><span> </span><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616961"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688616959"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Rule m (Dependency a) a
+forall (m :: * -&gt; *) (arr :: * -&gt; * -&gt; *) a.
+(ArrowCache m arr, Cacheable a) =&gt;
+arr (Dependency a) a
+</span><a href="Hasura.Incremental.Internal.Cache.html#dependOn"><span class="hs-identifier hs-var">dependOn</span></a></span><span>
+</span><span id="line-86"></span><span>
+</span><span id="line-87"></span><span>  </span><span id="local-6989586621688616955"><span class="annot"><span class="annottext">bindDepend :: Rule m (DependT m a) a
+</span><a href="#local-6989586621688616955"><span class="hs-identifier hs-var hs-var hs-var hs-var">bindDepend</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(forall r.
+ Accesses
+ -&gt; DependT m a
+ -&gt; (Accesses -&gt; a -&gt; Rule m (DependT m a) a -&gt; m r)
+ -&gt; m r)
+-&gt; Rule m (DependT m a) a
+forall (m :: * -&gt; *) a b.
+(forall r.
+ Accesses -&gt; a -&gt; (Accesses -&gt; b -&gt; Rule m a b -&gt; m r) -&gt; m r)
+-&gt; Rule m a b
+</span><a href="Hasura.Incremental.Internal.Rule.html#Rule"><span class="hs-identifier hs-var">Rule</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621688616954"><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616954"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span id="local-6989586621688616953"><span class="annot"><span class="annottext">DependT m a
+</span><a href="#local-6989586621688616953"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span id="local-6989586621688616952"><span class="annot"><span class="annottext">Accesses -&gt; a -&gt; Rule m (DependT m a) a -&gt; m r
+</span><a href="#local-6989586621688616952"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">StateT Accesses m a -&gt; Accesses -&gt; m (a, Accesses)
+forall s (m :: * -&gt; *) a. StateT s m a -&gt; s -&gt; m (a, s)
+</span><span class="hs-identifier hs-var hs-var">runStateT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DependT m a -&gt; StateT Accesses m a
+forall (m :: * -&gt; *) a. DependT m a -&gt; StateT Accesses m a
+</span><a href="Hasura.Incremental.Internal.Cache.html#unDependT"><span class="hs-identifier hs-var hs-var">unDependT</span></a></span><span> </span><span class="annot"><span class="annottext">DependT m a
+</span><a href="#local-6989586621688616953"><span class="hs-identifier hs-var">m</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616954"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">m (a, Accesses) -&gt; ((a, Accesses) -&gt; m r) -&gt; m r
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621688616949"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688616949"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688616948"><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616948"><span class="hs-identifier hs-var">s'</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Accesses -&gt; a -&gt; Rule m (DependT m a) a -&gt; m r
+</span><a href="#local-6989586621688616952"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">Accesses
+</span><a href="#local-6989586621688616948"><span class="hs-identifier hs-var">s'</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688616949"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Rule m (DependT m a) a
+forall (m :: * -&gt; *) (arr :: * -&gt; * -&gt; *) a.
+ArrowCache m arr =&gt;
+arr (DependT m a) a
+</span><a href="Hasura.Incremental.Internal.Cache.html#bindDepend"><span class="hs-identifier hs-var">bindDepend</span></a></span></span><span>
+</span><span id="line-88"></span><span>
+</span><span id="line-89"></span><span class="hs-comment">-- | A restricted, monadic variant of 'ArrowCache' that can only read dependencies, not create new</span><span>
+</span><span id="line-90"></span><span class="hs-comment">-- ones or add local caching. This serves as a limited adapter between arrow and monadic code.</span><span>
+</span><span id="line-91"></span><span class="hs-keyword">class</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621688617115"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="MonadDepend"><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#MonadDepend"><span class="hs-identifier hs-var">MonadDepend</span></a></span></span><span> </span><span id="local-6989586621688617115"><span class="annot"><a href="#local-6989586621688617115"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-92"></span><span>  </span><span id="local-6989586621688617117"><span id="dependOnM"><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#dependOnM"><span class="hs-identifier hs-type">dependOnM</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617117"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Dependency"><span class="hs-identifier hs-type">Dependency</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617117"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688617115"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617117"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-93"></span><span>
+</span><span id="line-94"></span><span id="local-6989586621688616945"><span id="local-6989586621688616946"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#MonadDepend"><span class="hs-identifier hs-type">MonadDepend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688616946"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#MonadDepend"><span class="hs-identifier hs-type">MonadDepend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="#local-6989586621688616945"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688616946"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-95"></span><span>  </span><span id="local-6989586621688616941"><span class="annot"><span class="annottext">dependOnM :: Dependency a -&gt; ExceptT e m a
+</span><a href="#local-6989586621688616941"><span class="hs-identifier hs-var hs-var hs-var hs-var">dependOnM</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m a -&gt; ExceptT e m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(m a -&gt; ExceptT e m a)
+-&gt; (Dependency a -&gt; m a) -&gt; Dependency a -&gt; ExceptT e m a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Dependency a -&gt; m a
+forall (m :: * -&gt; *) a.
+(MonadDepend m, Cacheable a) =&gt;
+Dependency a -&gt; m a
+</span><a href="Hasura.Incremental.Internal.Cache.html#dependOnM"><span class="hs-identifier hs-var">dependOnM</span></a></span></span></span><span>
+</span><span id="line-96"></span><span>
+</span><span id="line-97"></span><span id="local-6989586621688616938"><span class="hs-keyword">newtype</span><span> </span><span id="DependT"><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#DependT"><span class="hs-identifier hs-var">DependT</span></a></span></span><span> </span><span id="local-6989586621688617125"><span class="annot"><a href="#local-6989586621688617125"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688617124"><span class="annot"><a href="#local-6989586621688617124"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DependT"><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#DependT"><span class="hs-identifier hs-var">DependT</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unDependT"><span class="annot"><span class="annottext">DependT m a -&gt; StateT Accesses m a
+</span><a href="Hasura.Incremental.Internal.Cache.html#unDependT"><span class="hs-identifier hs-var hs-var">unDependT</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">StateT</span></span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Accesses"><span class="hs-identifier hs-type">Accesses</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617125"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688617124"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-98"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688616933"><span id="local-6989586621688616935"><span class="annot"><span class="annottext">a -&gt; DependT m b -&gt; DependT m a
+(a -&gt; b) -&gt; DependT m a -&gt; DependT m b
+(forall a b. (a -&gt; b) -&gt; DependT m a -&gt; DependT m b)
+-&gt; (forall a b. a -&gt; DependT m b -&gt; DependT m a)
+-&gt; Functor (DependT m)
+forall a b. a -&gt; DependT m b -&gt; DependT m a
+forall a b. (a -&gt; b) -&gt; DependT m a -&gt; DependT m b
+forall (m :: * -&gt; *) a b.
+Functor m =&gt;
+a -&gt; DependT m b -&gt; DependT m a
+forall (m :: * -&gt; *) a b.
+Functor m =&gt;
+(a -&gt; b) -&gt; DependT m a -&gt; DependT m b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a -&gt; DependT m b -&gt; DependT m a
+$c&lt;$ :: forall (m :: * -&gt; *) a b.
+Functor m =&gt;
+a -&gt; DependT m b -&gt; DependT m a
+fmap :: (a -&gt; b) -&gt; DependT m a -&gt; DependT m b
+$cfmap :: forall (m :: * -&gt; *) a b.
+Functor m =&gt;
+(a -&gt; b) -&gt; DependT m a -&gt; DependT m b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688616921"><span id="local-6989586621688616923"><span id="local-6989586621688616925"><span id="local-6989586621688616927"><span id="local-6989586621688616929"><span class="annot"><span class="annottext">Functor (DependT m)
+a -&gt; DependT m a
+Functor (DependT m)
+-&gt; (forall a. a -&gt; DependT m a)
+-&gt; (forall a b. DependT m (a -&gt; b) -&gt; DependT m a -&gt; DependT m b)
+-&gt; (forall a b c.
+    (a -&gt; b -&gt; c) -&gt; DependT m a -&gt; DependT m b -&gt; DependT m c)
+-&gt; (forall a b. DependT m a -&gt; DependT m b -&gt; DependT m b)
+-&gt; (forall a b. DependT m a -&gt; DependT m b -&gt; DependT m a)
+-&gt; Applicative (DependT m)
+DependT m a -&gt; DependT m b -&gt; DependT m b
+DependT m a -&gt; DependT m b -&gt; DependT m a
+DependT m (a -&gt; b) -&gt; DependT m a -&gt; DependT m b
+(a -&gt; b -&gt; c) -&gt; DependT m a -&gt; DependT m b -&gt; DependT m c
+forall a. a -&gt; DependT m a
+forall a b. DependT m a -&gt; DependT m b -&gt; DependT m a
+forall a b. DependT m a -&gt; DependT m b -&gt; DependT m b
+forall a b. DependT m (a -&gt; b) -&gt; DependT m a -&gt; DependT m b
+forall a b c.
+(a -&gt; b -&gt; c) -&gt; DependT m a -&gt; DependT m b -&gt; DependT m c
+forall (m :: * -&gt; *). Monad m =&gt; Functor (DependT m)
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; DependT m a
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+DependT m a -&gt; DependT m b -&gt; DependT m a
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+DependT m a -&gt; DependT m b -&gt; DependT m b
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+DependT m (a -&gt; b) -&gt; DependT m a -&gt; DependT m b
+forall (m :: * -&gt; *) a b c.
+Monad m =&gt;
+(a -&gt; b -&gt; c) -&gt; DependT m a -&gt; DependT m b -&gt; DependT m c
+forall (f :: * -&gt; *).
+Functor f
+-&gt; (forall a. a -&gt; f a)
+-&gt; (forall a b. f (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b c. (a -&gt; b -&gt; c) -&gt; f a -&gt; f b -&gt; f c)
+-&gt; (forall a b. f a -&gt; f b -&gt; f b)
+-&gt; (forall a b. f a -&gt; f b -&gt; f a)
+-&gt; Applicative f
+&lt;* :: DependT m a -&gt; DependT m b -&gt; DependT m a
+$c&lt;* :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+DependT m a -&gt; DependT m b -&gt; DependT m a
+*&gt; :: DependT m a -&gt; DependT m b -&gt; DependT m b
+$c*&gt; :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+DependT m a -&gt; DependT m b -&gt; DependT m b
+liftA2 :: (a -&gt; b -&gt; c) -&gt; DependT m a -&gt; DependT m b -&gt; DependT m c
+$cliftA2 :: forall (m :: * -&gt; *) a b c.
+Monad m =&gt;
+(a -&gt; b -&gt; c) -&gt; DependT m a -&gt; DependT m b -&gt; DependT m c
+&lt;*&gt; :: DependT m (a -&gt; b) -&gt; DependT m a -&gt; DependT m b
+$c&lt;*&gt; :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+DependT m (a -&gt; b) -&gt; DependT m a -&gt; DependT m b
+pure :: a -&gt; DependT m a
+$cpure :: forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; DependT m a
+$cp1Applicative :: forall (m :: * -&gt; *). Monad m =&gt; Functor (DependT m)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Applicative</span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688616913"><span id="local-6989586621688616915"><span id="local-6989586621688616917"><span class="annot"><span class="annottext">Applicative (DependT m)
+a -&gt; DependT m a
+Applicative (DependT m)
+-&gt; (forall a b. DependT m a -&gt; (a -&gt; DependT m b) -&gt; DependT m b)
+-&gt; (forall a b. DependT m a -&gt; DependT m b -&gt; DependT m b)
+-&gt; (forall a. a -&gt; DependT m a)
+-&gt; Monad (DependT m)
+DependT m a -&gt; (a -&gt; DependT m b) -&gt; DependT m b
+DependT m a -&gt; DependT m b -&gt; DependT m b
+forall a. a -&gt; DependT m a
+forall a b. DependT m a -&gt; DependT m b -&gt; DependT m b
+forall a b. DependT m a -&gt; (a -&gt; DependT m b) -&gt; DependT m b
+forall (m :: * -&gt; *). Monad m =&gt; Applicative (DependT m)
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; DependT m a
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+DependT m a -&gt; DependT m b -&gt; DependT m b
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+DependT m a -&gt; (a -&gt; DependT m b) -&gt; DependT m b
+forall (m :: * -&gt; *).
+Applicative m
+-&gt; (forall a b. m a -&gt; (a -&gt; m b) -&gt; m b)
+-&gt; (forall a b. m a -&gt; m b -&gt; m b)
+-&gt; (forall a. a -&gt; m a)
+-&gt; Monad m
+return :: a -&gt; DependT m a
+$creturn :: forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; DependT m a
+&gt;&gt; :: DependT m a -&gt; DependT m b -&gt; DependT m b
+$c&gt;&gt; :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+DependT m a -&gt; DependT m b -&gt; DependT m b
+&gt;&gt;= :: DependT m a -&gt; (a -&gt; DependT m b) -&gt; DependT m b
+$c&gt;&gt;= :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+DependT m a -&gt; (a -&gt; DependT m b) -&gt; DependT m b
+$cp1Monad :: forall (m :: * -&gt; *). Monad m =&gt; Applicative (DependT m)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monad</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688616910"><span class="annot"><span class="annottext">m a -&gt; DependT m a
+(forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; DependT m a)
+-&gt; MonadTrans DependT
+forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; DependT m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *).
+(forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; t m a) -&gt; MonadTrans t
+lift :: m a -&gt; DependT m a
+$clift :: forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; DependT m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">MonadTrans</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688616904"><span id="local-6989586621688616906"><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="#local-6989586621688616938"><span class="hs-identifier hs-type">e</span></a></span></span></span><span class="hs-special">)</span></span><span>
+</span><span id="line-99"></span><span>
+</span><span id="line-100"></span><span id="local-6989586621688616902"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621688616902"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#MonadDepend"><span class="hs-identifier hs-type">MonadDepend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Cache.html#DependT"><span class="hs-identifier hs-type">DependT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688616902"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-101"></span><span>  </span><span id="local-6989586621688616899"><span class="annot"><span class="annottext">dependOnM :: Dependency a -&gt; DependT m a
+</span><a href="#local-6989586621688616899"><span class="hs-identifier hs-var hs-var hs-var hs-var">dependOnM</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Dependency"><span class="hs-identifier hs-type">Dependency</span></a></span><span> </span><span id="local-6989586621688616898"><span class="annot"><span class="annottext">DependencyKey a
+</span><a href="#local-6989586621688616898"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span id="local-6989586621688616897"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688616897"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StateT Accesses m a -&gt; DependT m a
+forall (m :: * -&gt; *) a. StateT Accesses m a -&gt; DependT m a
+</span><a href="Hasura.Incremental.Internal.Cache.html#DependT"><span class="hs-identifier hs-var">DependT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Accesses -&gt; Accesses) -&gt; StateT Accesses m ()
+forall s (m :: * -&gt; *). MonadState s m =&gt; (s -&gt; s) -&gt; m ()
+</span><span class="hs-identifier hs-var">modify'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DependencyKey a -&gt; Access a -&gt; Accesses -&gt; Accesses
+forall a. DependencyKey a -&gt; Access a -&gt; Accesses -&gt; Accesses
+</span><a href="Hasura.Incremental.Internal.Dependency.html#recordAccess"><span class="hs-identifier hs-var">recordAccess</span></a></span><span> </span><span class="annot"><span class="annottext">DependencyKey a
+</span><a href="#local-6989586621688616898"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">Access a
+forall a. Cacheable a =&gt; Access a
+</span><a href="Hasura.Incremental.Internal.Dependency.html#AccessedAll"><span class="hs-identifier hs-var">AccessedAll</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">StateT Accesses m () -&gt; a -&gt; StateT Accesses m a
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><span class="hs-operator hs-var">$&gt;</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621688616897"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-102"></span></pre></body></html>

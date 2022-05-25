@@ -1,0 +1,536 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.Types.SourceCustomization</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#MkTypename"><span class="hs-identifier">MkTypename</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceTypeCustomization"><span class="hs-identifier">SourceTypeCustomization</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#RootFieldsCustomization"><span class="hs-identifier">RootFieldsCustomization</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#mkCustomizedTypename"><span class="hs-identifier">mkCustomizedTypename</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#emptySourceCustomization"><span class="hs-identifier">emptySourceCustomization</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#getSourceTypeCustomization"><span class="hs-identifier">getSourceTypeCustomization</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#getRootFieldsCustomization"><span class="hs-identifier">getRootFieldsCustomization</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#mkRootFieldName"><span class="hs-identifier">mkRootFieldName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceCustomization"><span class="hs-identifier">SourceCustomization</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#withSourceCustomization"><span class="hs-identifier">withSourceCustomization</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#MkRootFieldName"><span class="hs-identifier">MkRootFieldName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#CustomizeRemoteFieldName"><span class="hs-identifier">CustomizeRemoteFieldName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#withRemoteFieldNameCustomization"><span class="hs-identifier">withRemoteFieldNameCustomization</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Aeson.Extended.html"><span class="hs-identifier">Data.Aeson.Extended</span></a></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Has</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Monoid</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html"><span class="hs-identifier">Hasura.GraphQL.Parser.Schema</span></a></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html"><span class="hs-identifier">Hasura.Incremental.Internal.Dependency</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier">Cacheable</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span id="local-6989586621688627695"><span id="local-6989586621688627696"></span></span><span class="hs-keyword">data</span><span> </span><span id="RootFieldsCustomization"><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#RootFieldsCustomization"><span class="hs-identifier hs-var">RootFieldsCustomization</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RootFieldsCustomization"><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#RootFieldsCustomization"><span class="hs-identifier hs-var">RootFieldsCustomization</span></a></span></span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_rootfcNamespace"><span class="annot"><span class="annottext">RootFieldsCustomization -&gt; Maybe Name
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#_rootfcNamespace"><span class="hs-identifier hs-var hs-var">_rootfcNamespace</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>    </span><span id="_rootfcPrefix"><span class="annot"><span class="annottext">RootFieldsCustomization -&gt; Maybe Name
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#_rootfcPrefix"><span class="hs-identifier hs-var hs-var">_rootfcPrefix</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>    </span><span id="_rootfcSuffix"><span class="annot"><span class="annottext">RootFieldsCustomization -&gt; Maybe Name
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#_rootfcSuffix"><span class="hs-identifier hs-var hs-var">_rootfcSuffix</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688627687"><span id="local-6989586621688627689"><span class="annot"><span class="annottext">RootFieldsCustomization -&gt; RootFieldsCustomization -&gt; Bool
+(RootFieldsCustomization -&gt; RootFieldsCustomization -&gt; Bool)
+-&gt; (RootFieldsCustomization -&gt; RootFieldsCustomization -&gt; Bool)
+-&gt; Eq RootFieldsCustomization
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: RootFieldsCustomization -&gt; RootFieldsCustomization -&gt; Bool
+$c/= :: RootFieldsCustomization -&gt; RootFieldsCustomization -&gt; Bool
+== :: RootFieldsCustomization -&gt; RootFieldsCustomization -&gt; Bool
+$c== :: RootFieldsCustomization -&gt; RootFieldsCustomization -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688627680"><span id="local-6989586621688627682"><span id="local-6989586621688627684"><span class="annot"><span class="annottext">Int -&gt; RootFieldsCustomization -&gt; ShowS
+[RootFieldsCustomization] -&gt; ShowS
+RootFieldsCustomization -&gt; String
+(Int -&gt; RootFieldsCustomization -&gt; ShowS)
+-&gt; (RootFieldsCustomization -&gt; String)
+-&gt; ([RootFieldsCustomization] -&gt; ShowS)
+-&gt; Show RootFieldsCustomization
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [RootFieldsCustomization] -&gt; ShowS
+$cshowList :: [RootFieldsCustomization] -&gt; ShowS
+show :: RootFieldsCustomization -&gt; String
+$cshow :: RootFieldsCustomization -&gt; String
+showsPrec :: Int -&gt; RootFieldsCustomization -&gt; ShowS
+$cshowsPrec :: Int -&gt; RootFieldsCustomization -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x.
+ RootFieldsCustomization -&gt; Rep RootFieldsCustomization x)
+-&gt; (forall x.
+    Rep RootFieldsCustomization x -&gt; RootFieldsCustomization)
+-&gt; Generic RootFieldsCustomization
+forall x. Rep RootFieldsCustomization x -&gt; RootFieldsCustomization
+forall x. RootFieldsCustomization -&gt; Rep RootFieldsCustomization x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep RootFieldsCustomization x -&gt; RootFieldsCustomization
+$cfrom :: forall x. RootFieldsCustomization -&gt; Rep RootFieldsCustomization x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688627673"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#RootFieldsCustomization"><span class="hs-identifier hs-type">RootFieldsCustomization</span></a></span></span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688627665"><span id="local-6989586621688627667"><span id="local-6989586621688627669"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#RootFieldsCustomization"><span class="hs-identifier hs-type">RootFieldsCustomization</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-39"></span><span>  </span><span id="local-6989586621688627663"><span class="annot"><span class="annottext">toJSON :: RootFieldsCustomization -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; RootFieldsCustomization -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">genericToJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688627657"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#RootFieldsCustomization"><span class="hs-identifier hs-type">RootFieldsCustomization</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621688627655"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser RootFieldsCustomization
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser RootFieldsCustomization
+forall a.
+(Generic a, GFromJSON Zero (Rep a)) =&gt;
+Options -&gt; Value -&gt; Parser a
+</span><span class="hs-identifier hs-var">genericParseJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#emptyRootFieldsCustomization"><span class="hs-identifier hs-type">emptyRootFieldsCustomization</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#RootFieldsCustomization"><span class="hs-identifier hs-type">RootFieldsCustomization</span></a></span><span>
+</span><span id="line-45"></span><span id="emptyRootFieldsCustomization"><span class="annot"><span class="annottext">emptyRootFieldsCustomization :: RootFieldsCustomization
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#emptyRootFieldsCustomization"><span class="hs-identifier hs-var hs-var">emptyRootFieldsCustomization</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Name -&gt; Maybe Name -&gt; Maybe Name -&gt; RootFieldsCustomization
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#RootFieldsCustomization"><span class="hs-identifier hs-var">RootFieldsCustomization</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span id="local-6989586621688627650"><span id="local-6989586621688627651"></span></span><span class="hs-keyword">data</span><span> </span><span id="SourceTypeCustomization"><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceTypeCustomization"><span class="hs-identifier hs-var">SourceTypeCustomization</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SourceTypeCustomization"><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceTypeCustomization"><span class="hs-identifier hs-var">SourceTypeCustomization</span></a></span></span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_stcPrefix"><span class="annot"><span class="annottext">SourceTypeCustomization -&gt; Maybe Name
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#_stcPrefix"><span class="hs-identifier hs-var hs-var">_stcPrefix</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>    </span><span id="_stcSuffix"><span class="annot"><span class="annottext">SourceTypeCustomization -&gt; Maybe Name
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#_stcSuffix"><span class="hs-identifier hs-var hs-var">_stcSuffix</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688627643"><span id="local-6989586621688627645"><span class="annot"><span class="annottext">SourceTypeCustomization -&gt; SourceTypeCustomization -&gt; Bool
+(SourceTypeCustomization -&gt; SourceTypeCustomization -&gt; Bool)
+-&gt; (SourceTypeCustomization -&gt; SourceTypeCustomization -&gt; Bool)
+-&gt; Eq SourceTypeCustomization
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: SourceTypeCustomization -&gt; SourceTypeCustomization -&gt; Bool
+$c/= :: SourceTypeCustomization -&gt; SourceTypeCustomization -&gt; Bool
+== :: SourceTypeCustomization -&gt; SourceTypeCustomization -&gt; Bool
+$c== :: SourceTypeCustomization -&gt; SourceTypeCustomization -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688627637"><span id="local-6989586621688627639"><span id="local-6989586621688627641"><span class="annot"><span class="annottext">Int -&gt; SourceTypeCustomization -&gt; ShowS
+[SourceTypeCustomization] -&gt; ShowS
+SourceTypeCustomization -&gt; String
+(Int -&gt; SourceTypeCustomization -&gt; ShowS)
+-&gt; (SourceTypeCustomization -&gt; String)
+-&gt; ([SourceTypeCustomization] -&gt; ShowS)
+-&gt; Show SourceTypeCustomization
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [SourceTypeCustomization] -&gt; ShowS
+$cshowList :: [SourceTypeCustomization] -&gt; ShowS
+show :: SourceTypeCustomization -&gt; String
+$cshow :: SourceTypeCustomization -&gt; String
+showsPrec :: Int -&gt; SourceTypeCustomization -&gt; ShowS
+$cshowsPrec :: Int -&gt; SourceTypeCustomization -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x.
+ SourceTypeCustomization -&gt; Rep SourceTypeCustomization x)
+-&gt; (forall x.
+    Rep SourceTypeCustomization x -&gt; SourceTypeCustomization)
+-&gt; Generic SourceTypeCustomization
+forall x. Rep SourceTypeCustomization x -&gt; SourceTypeCustomization
+forall x. SourceTypeCustomization -&gt; Rep SourceTypeCustomization x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep SourceTypeCustomization x -&gt; SourceTypeCustomization
+$cfrom :: forall x. SourceTypeCustomization -&gt; Rep SourceTypeCustomization x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688627632"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceTypeCustomization"><span class="hs-identifier hs-type">SourceTypeCustomization</span></a></span></span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688627625"><span id="local-6989586621688627627"><span id="local-6989586621688627629"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceTypeCustomization"><span class="hs-identifier hs-type">SourceTypeCustomization</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-56"></span><span>  </span><span id="local-6989586621688627624"><span class="annot"><span class="annottext">toJSON :: SourceTypeCustomization -&gt; Value
+</span><a href="#local-6989586621688627624"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; SourceTypeCustomization -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">genericToJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-57"></span><span>
+</span><span id="line-58"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688627621"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceTypeCustomization"><span class="hs-identifier hs-type">SourceTypeCustomization</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-59"></span><span>  </span><span id="local-6989586621688627620"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser SourceTypeCustomization
+</span><a href="#local-6989586621688627620"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser SourceTypeCustomization
+forall a.
+(Generic a, GFromJSON Zero (Rep a)) =&gt;
+Options -&gt; Value -&gt; Parser a
+</span><span class="hs-identifier hs-var">genericParseJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-60"></span><span>
+</span><span id="line-61"></span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#emptySourceTypeCustomization"><span class="hs-identifier hs-type">emptySourceTypeCustomization</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceTypeCustomization"><span class="hs-identifier hs-type">SourceTypeCustomization</span></a></span><span>
+</span><span id="line-62"></span><span id="emptySourceTypeCustomization"><span class="annot"><span class="annottext">emptySourceTypeCustomization :: SourceTypeCustomization
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#emptySourceTypeCustomization"><span class="hs-identifier hs-var hs-var">emptySourceTypeCustomization</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Name -&gt; Maybe Name -&gt; SourceTypeCustomization
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#SourceTypeCustomization"><span class="hs-identifier hs-var">SourceTypeCustomization</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-63"></span><span>
+</span><span id="line-64"></span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#mkCustomizedTypename"><span class="hs-identifier hs-type">mkCustomizedTypename</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceTypeCustomization"><span class="hs-identifier hs-type">SourceTypeCustomization</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#MkTypename"><span class="hs-identifier hs-type">MkTypename</span></a></span><span>
+</span><span id="line-65"></span><span id="mkCustomizedTypename"><span class="annot"><span class="annottext">mkCustomizedTypename :: Maybe SourceTypeCustomization -&gt; MkTypename
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#mkCustomizedTypename"><span class="hs-identifier hs-var hs-var">mkCustomizedTypename</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe SourceTypeCustomization
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MkTypename
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span>
+</span><span id="line-66"></span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#mkCustomizedTypename"><span class="hs-identifier hs-var">mkCustomizedTypename</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceTypeCustomization"><span class="hs-identifier hs-type">SourceTypeCustomization</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688627617"><span id="local-6989586621688627618"><span class="annot"><span class="annottext">Maybe Name
+_stcSuffix :: Maybe Name
+_stcPrefix :: Maybe Name
+_stcSuffix :: SourceTypeCustomization -&gt; Maybe Name
+_stcPrefix :: SourceTypeCustomization -&gt; Maybe Name
+</span><a href="#local-6989586621688627617"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-67"></span><span>  </span><span class="annot"><span class="annottext">(Name -&gt; Name) -&gt; MkTypename
+</span><a href="Hasura.GraphQL.Parser.Schema.html#MkTypename"><span class="hs-identifier hs-var">MkTypename</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe Name -&gt; Maybe Name -&gt; Name -&gt; Name
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#applyPrefixSuffix"><span class="hs-identifier hs-var">applyPrefixSuffix</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621688627618"><span class="hs-identifier hs-var">_stcPrefix</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621688627617"><span class="hs-identifier hs-var">_stcSuffix</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-68"></span><span>
+</span><span id="line-69"></span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#mkCustomizedFieldName"><span class="hs-identifier hs-type">mkCustomizedFieldName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#RootFieldsCustomization"><span class="hs-identifier hs-type">RootFieldsCustomization</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#MkRootFieldName"><span class="hs-identifier hs-type">MkRootFieldName</span></a></span><span>
+</span><span id="line-70"></span><span id="mkCustomizedFieldName"><span class="annot"><span class="annottext">mkCustomizedFieldName :: Maybe RootFieldsCustomization -&gt; MkRootFieldName
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#mkCustomizedFieldName"><span class="hs-identifier hs-var hs-var">mkCustomizedFieldName</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe RootFieldsCustomization
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MkRootFieldName
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span>
+</span><span id="line-71"></span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#mkCustomizedFieldName"><span class="hs-identifier hs-var">mkCustomizedFieldName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#RootFieldsCustomization"><span class="hs-identifier hs-type">RootFieldsCustomization</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688627611"><span id="local-6989586621688627612"><span id="local-6989586621688627613"><span class="annot"><span class="annottext">Maybe Name
+_rootfcSuffix :: Maybe Name
+_rootfcPrefix :: Maybe Name
+_rootfcNamespace :: Maybe Name
+_rootfcSuffix :: RootFieldsCustomization -&gt; Maybe Name
+_rootfcPrefix :: RootFieldsCustomization -&gt; Maybe Name
+_rootfcNamespace :: RootFieldsCustomization -&gt; Maybe Name
+</span><a href="#local-6989586621688627611"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-72"></span><span>  </span><span class="annot"><span class="annottext">(Name -&gt; Name) -&gt; MkRootFieldName
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#MkRootFieldName"><span class="hs-identifier hs-var">MkRootFieldName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe Name -&gt; Maybe Name -&gt; Name -&gt; Name
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#applyPrefixSuffix"><span class="hs-identifier hs-var">applyPrefixSuffix</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621688627612"><span class="hs-identifier hs-var">_rootfcPrefix</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621688627611"><span class="hs-identifier hs-var">_rootfcSuffix</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#applyPrefixSuffix"><span class="hs-identifier hs-type">applyPrefixSuffix</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
+</span><span id="line-75"></span><span id="applyPrefixSuffix"><span class="annot"><span class="annottext">applyPrefixSuffix :: Maybe Name -&gt; Maybe Name -&gt; Name -&gt; Name
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#applyPrefixSuffix"><span class="hs-identifier hs-var hs-var">applyPrefixSuffix</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span id="local-6989586621688627609"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688627609"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688627609"><span class="hs-identifier hs-var">name</span></a></span><span>
+</span><span id="line-76"></span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#applyPrefixSuffix"><span class="hs-identifier hs-var">applyPrefixSuffix</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688627608"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688627608"><span class="hs-identifier hs-var">prefix</span></a></span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span id="local-6989586621688627607"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688627607"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688627608"><span class="hs-identifier hs-var">prefix</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688627607"><span class="hs-identifier hs-var">name</span></a></span><span>
+</span><span id="line-77"></span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#applyPrefixSuffix"><span class="hs-identifier hs-var">applyPrefixSuffix</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688627606"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688627606"><span class="hs-identifier hs-var">suffix</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688627605"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688627605"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688627605"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688627606"><span class="hs-identifier hs-var">suffix</span></a></span><span>
+</span><span id="line-78"></span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#applyPrefixSuffix"><span class="hs-identifier hs-var">applyPrefixSuffix</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688627604"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688627604"><span class="hs-identifier hs-var">prefix</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621688627603"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688627603"><span class="hs-identifier hs-var">suffix</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621688627602"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688627602"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688627604"><span class="hs-identifier hs-var">prefix</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688627602"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688627603"><span class="hs-identifier hs-var">suffix</span></a></span><span>
+</span><span id="line-79"></span><span>
+</span><span id="line-80"></span><span id="local-6989586621688627600"><span id="local-6989586621688627601"></span></span><span class="hs-keyword">data</span><span> </span><span id="SourceCustomization"><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceCustomization"><span class="hs-identifier hs-var">SourceCustomization</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SourceCustomization"><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceCustomization"><span class="hs-identifier hs-var">SourceCustomization</span></a></span></span><span>
+</span><span id="line-81"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_scRootFields"><span class="annot"><span class="annottext">SourceCustomization -&gt; Maybe RootFieldsCustomization
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#_scRootFields"><span class="hs-identifier hs-var hs-var">_scRootFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#RootFieldsCustomization"><span class="hs-identifier hs-type">RootFieldsCustomization</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-82"></span><span>    </span><span id="_scTypeNames"><span class="annot"><span class="annottext">SourceCustomization -&gt; Maybe SourceTypeCustomization
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#_scTypeNames"><span class="hs-identifier hs-var hs-var">_scTypeNames</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceTypeCustomization"><span class="hs-identifier hs-type">SourceTypeCustomization</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-83"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688627593"><span id="local-6989586621688627595"><span class="annot"><span class="annottext">SourceCustomization -&gt; SourceCustomization -&gt; Bool
+(SourceCustomization -&gt; SourceCustomization -&gt; Bool)
+-&gt; (SourceCustomization -&gt; SourceCustomization -&gt; Bool)
+-&gt; Eq SourceCustomization
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: SourceCustomization -&gt; SourceCustomization -&gt; Bool
+$c/= :: SourceCustomization -&gt; SourceCustomization -&gt; Bool
+== :: SourceCustomization -&gt; SourceCustomization -&gt; Bool
+$c== :: SourceCustomization -&gt; SourceCustomization -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688627587"><span id="local-6989586621688627589"><span id="local-6989586621688627591"><span class="annot"><span class="annottext">Int -&gt; SourceCustomization -&gt; ShowS
+[SourceCustomization] -&gt; ShowS
+SourceCustomization -&gt; String
+(Int -&gt; SourceCustomization -&gt; ShowS)
+-&gt; (SourceCustomization -&gt; String)
+-&gt; ([SourceCustomization] -&gt; ShowS)
+-&gt; Show SourceCustomization
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [SourceCustomization] -&gt; ShowS
+$cshowList :: [SourceCustomization] -&gt; ShowS
+show :: SourceCustomization -&gt; String
+$cshow :: SourceCustomization -&gt; String
+showsPrec :: Int -&gt; SourceCustomization -&gt; ShowS
+$cshowsPrec :: Int -&gt; SourceCustomization -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. SourceCustomization -&gt; Rep SourceCustomization x)
+-&gt; (forall x. Rep SourceCustomization x -&gt; SourceCustomization)
+-&gt; Generic SourceCustomization
+forall x. Rep SourceCustomization x -&gt; SourceCustomization
+forall x. SourceCustomization -&gt; Rep SourceCustomization x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep SourceCustomization x -&gt; SourceCustomization
+$cfrom :: forall x. SourceCustomization -&gt; Rep SourceCustomization x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688627582"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceCustomization"><span class="hs-identifier hs-type">SourceCustomization</span></a></span></span><span>
+</span><span id="line-87"></span><span>
+</span><span id="line-88"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688627575"><span id="local-6989586621688627577"><span id="local-6989586621688627579"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceCustomization"><span class="hs-identifier hs-type">SourceCustomization</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-89"></span><span>  </span><span id="local-6989586621688627574"><span class="annot"><span class="annottext">toJSON :: SourceCustomization -&gt; Value
+</span><a href="#local-6989586621688627574"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; SourceCustomization -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">genericToJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-90"></span><span>
+</span><span id="line-91"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621688627571"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceCustomization"><span class="hs-identifier hs-type">SourceCustomization</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-92"></span><span>  </span><span id="local-6989586621688627570"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser SourceCustomization
+</span><a href="#local-6989586621688627570"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser SourceCustomization
+forall a.
+(Generic a, GFromJSON Zero (Rep a)) =&gt;
+Options -&gt; Value -&gt; Parser a
+</span><span class="hs-identifier hs-var">genericParseJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-93"></span><span>
+</span><span id="line-94"></span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#emptySourceCustomization"><span class="hs-identifier hs-type">emptySourceCustomization</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceCustomization"><span class="hs-identifier hs-type">SourceCustomization</span></a></span><span>
+</span><span id="line-95"></span><span id="emptySourceCustomization"><span class="annot"><span class="annottext">emptySourceCustomization :: SourceCustomization
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#emptySourceCustomization"><span class="hs-identifier hs-var hs-var">emptySourceCustomization</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe RootFieldsCustomization
+-&gt; Maybe SourceTypeCustomization -&gt; SourceCustomization
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#SourceCustomization"><span class="hs-identifier hs-var">SourceCustomization</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RootFieldsCustomization
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe SourceTypeCustomization
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-96"></span><span>
+</span><span id="line-97"></span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#getRootFieldsCustomization"><span class="hs-identifier hs-type">getRootFieldsCustomization</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceCustomization"><span class="hs-identifier hs-type">SourceCustomization</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#RootFieldsCustomization"><span class="hs-identifier hs-type">RootFieldsCustomization</span></a></span><span>
+</span><span id="line-98"></span><span id="getRootFieldsCustomization"><span class="annot"><span class="annottext">getRootFieldsCustomization :: SourceCustomization -&gt; RootFieldsCustomization
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#getRootFieldsCustomization"><span class="hs-identifier hs-var hs-var">getRootFieldsCustomization</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RootFieldsCustomization
+-&gt; Maybe RootFieldsCustomization -&gt; RootFieldsCustomization
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">RootFieldsCustomization
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#emptyRootFieldsCustomization"><span class="hs-identifier hs-var">emptyRootFieldsCustomization</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe RootFieldsCustomization -&gt; RootFieldsCustomization)
+-&gt; (SourceCustomization -&gt; Maybe RootFieldsCustomization)
+-&gt; SourceCustomization
+-&gt; RootFieldsCustomization
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SourceCustomization -&gt; Maybe RootFieldsCustomization
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#_scRootFields"><span class="hs-identifier hs-var hs-var">_scRootFields</span></a></span><span>
+</span><span id="line-99"></span><span>
+</span><span id="line-100"></span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#getSourceTypeCustomization"><span class="hs-identifier hs-type">getSourceTypeCustomization</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceCustomization"><span class="hs-identifier hs-type">SourceCustomization</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceTypeCustomization"><span class="hs-identifier hs-type">SourceTypeCustomization</span></a></span><span>
+</span><span id="line-101"></span><span id="getSourceTypeCustomization"><span class="annot"><span class="annottext">getSourceTypeCustomization :: SourceCustomization -&gt; SourceTypeCustomization
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#getSourceTypeCustomization"><span class="hs-identifier hs-var hs-var">getSourceTypeCustomization</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceTypeCustomization
+-&gt; Maybe SourceTypeCustomization -&gt; SourceTypeCustomization
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">SourceTypeCustomization
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#emptySourceTypeCustomization"><span class="hs-identifier hs-var">emptySourceTypeCustomization</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe SourceTypeCustomization -&gt; SourceTypeCustomization)
+-&gt; (SourceCustomization -&gt; Maybe SourceTypeCustomization)
+-&gt; SourceCustomization
+-&gt; SourceTypeCustomization
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SourceCustomization -&gt; Maybe SourceTypeCustomization
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#_scTypeNames"><span class="hs-identifier hs-var hs-var">_scTypeNames</span></a></span><span>
+</span><span id="line-102"></span><span>
+</span><span id="line-103"></span><span class="hs-comment">-- | Function to apply root field name customizations.</span><span>
+</span><span id="line-104"></span><span class="hs-keyword">newtype</span><span> </span><span id="MkRootFieldName"><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#MkRootFieldName"><span class="hs-identifier hs-var">MkRootFieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkRootFieldName"><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#MkRootFieldName"><span class="hs-identifier hs-var">MkRootFieldName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="runMkRootFieldName"><span class="annot"><span class="annottext">MkRootFieldName -&gt; Name -&gt; Name
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#runMkRootFieldName"><span class="hs-identifier hs-var hs-var">runMkRootFieldName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">}</span><span>
+</span><span id="line-105"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688627561"><span id="local-6989586621688627563"><span id="local-6989586621688627565"><span class="annot"><span class="annottext">b -&gt; MkRootFieldName -&gt; MkRootFieldName
+NonEmpty MkRootFieldName -&gt; MkRootFieldName
+MkRootFieldName -&gt; MkRootFieldName -&gt; MkRootFieldName
+(MkRootFieldName -&gt; MkRootFieldName -&gt; MkRootFieldName)
+-&gt; (NonEmpty MkRootFieldName -&gt; MkRootFieldName)
+-&gt; (forall b.
+    Integral b =&gt;
+    b -&gt; MkRootFieldName -&gt; MkRootFieldName)
+-&gt; Semigroup MkRootFieldName
+forall b. Integral b =&gt; b -&gt; MkRootFieldName -&gt; MkRootFieldName
+forall a.
+(a -&gt; a -&gt; a)
+-&gt; (NonEmpty a -&gt; a)
+-&gt; (forall b. Integral b =&gt; b -&gt; a -&gt; a)
+-&gt; Semigroup a
+stimes :: b -&gt; MkRootFieldName -&gt; MkRootFieldName
+$cstimes :: forall b. Integral b =&gt; b -&gt; MkRootFieldName -&gt; MkRootFieldName
+sconcat :: NonEmpty MkRootFieldName -&gt; MkRootFieldName
+$csconcat :: NonEmpty MkRootFieldName -&gt; MkRootFieldName
+&lt;&gt; :: MkRootFieldName -&gt; MkRootFieldName -&gt; MkRootFieldName
+$c&lt;&gt; :: MkRootFieldName -&gt; MkRootFieldName -&gt; MkRootFieldName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Semigroup</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688627553"><span id="local-6989586621688627555"><span id="local-6989586621688627557"><span class="annot"><span class="annottext">Semigroup MkRootFieldName
+MkRootFieldName
+Semigroup MkRootFieldName
+-&gt; MkRootFieldName
+-&gt; (MkRootFieldName -&gt; MkRootFieldName -&gt; MkRootFieldName)
+-&gt; ([MkRootFieldName] -&gt; MkRootFieldName)
+-&gt; Monoid MkRootFieldName
+[MkRootFieldName] -&gt; MkRootFieldName
+MkRootFieldName -&gt; MkRootFieldName -&gt; MkRootFieldName
+forall a.
+Semigroup a -&gt; a -&gt; (a -&gt; a -&gt; a) -&gt; ([a] -&gt; a) -&gt; Monoid a
+mconcat :: [MkRootFieldName] -&gt; MkRootFieldName
+$cmconcat :: [MkRootFieldName] -&gt; MkRootFieldName
+mappend :: MkRootFieldName -&gt; MkRootFieldName -&gt; MkRootFieldName
+$cmappend :: MkRootFieldName -&gt; MkRootFieldName -&gt; MkRootFieldName
+mempty :: MkRootFieldName
+$cmempty :: MkRootFieldName
+$cp1Monoid :: Semigroup MkRootFieldName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monoid</span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Endo</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">)</span><span>
+</span><span id="line-106"></span><span>
+</span><span id="line-107"></span><span class="hs-comment">-- | Inject a new root field name customization function into the environment.</span><span>
+</span><span id="line-108"></span><span class="hs-comment">-- This can be used by schema-building code (with @MonadBuildSchema@ constraint) to ensure</span><span>
+</span><span id="line-109"></span><span class="hs-comment">-- the correct root field name customizations are applied.</span><span>
+</span><span id="line-110"></span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#withRootFieldNameCustomization"><span class="hs-identifier hs-type">withRootFieldNameCustomization</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688627710"><span class="annot"><a href="#local-6989586621688627710"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688627711"><span class="annot"><a href="#local-6989586621688627711"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621688627709"><span class="annot"><a href="#local-6989586621688627709"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621688627711"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688627710"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#MkRootFieldName"><span class="hs-identifier hs-type">MkRootFieldName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688627711"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#MkRootFieldName"><span class="hs-identifier hs-type">MkRootFieldName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688627710"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688627709"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688627710"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688627709"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-111"></span><span id="withRootFieldNameCustomization"><span class="annot"><span class="annottext">withRootFieldNameCustomization :: MkRootFieldName -&gt; m a -&gt; m a
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#withRootFieldNameCustomization"><span class="hs-identifier hs-var hs-var">withRootFieldNameCustomization</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(r -&gt; r) -&gt; m a -&gt; m a
+forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; r) -&gt; m a -&gt; m a
+</span><span class="hs-identifier hs-var">local</span></span><span> </span><span class="annot"><span class="annottext">((r -&gt; r) -&gt; m a -&gt; m a)
+-&gt; (MkRootFieldName -&gt; r -&gt; r) -&gt; MkRootFieldName -&gt; m a -&gt; m a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ASetter r r MkRootFieldName MkRootFieldName
+-&gt; MkRootFieldName -&gt; r -&gt; r
+forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">set</span></span><span> </span><span class="annot"><span class="annottext">ASetter r r MkRootFieldName MkRootFieldName
+forall a t. Has a t =&gt; Lens t a
+</span><span class="hs-identifier hs-var">hasLens</span></span><span>
+</span><span id="line-112"></span><span>
+</span><span id="line-113"></span><span class="hs-comment">-- | Apply the root field name customization function from the current environment.</span><span>
+</span><span id="line-114"></span><span id="local-6989586621688627545"><span id="local-6989586621688627546"><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#mkRootFieldName"><span class="hs-identifier hs-type">mkRootFieldName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621688627546"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688627545"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#MkRootFieldName"><span class="hs-identifier hs-type">MkRootFieldName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688627546"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688627545"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span></span></span><span>
+</span><span id="line-115"></span><span id="mkRootFieldName"><span class="annot"><span class="annottext">mkRootFieldName :: Name -&gt; m Name
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#mkRootFieldName"><span class="hs-identifier hs-var hs-var">mkRootFieldName</span></a></span></span><span> </span><span id="local-6989586621688627544"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688627544"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-116"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Name -&gt; Name) -&gt; Name -&gt; Name
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621688627544"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((Name -&gt; Name) -&gt; Name)
+-&gt; (MkRootFieldName -&gt; Name -&gt; Name) -&gt; MkRootFieldName -&gt; Name
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">MkRootFieldName -&gt; Name -&gt; Name
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#runMkRootFieldName"><span class="hs-identifier hs-var hs-var">runMkRootFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">(MkRootFieldName -&gt; Name) -&gt; m MkRootFieldName -&gt; m Name
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(r -&gt; MkRootFieldName) -&gt; m MkRootFieldName
+forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
+</span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; MkRootFieldName
+forall a t. Has a t =&gt; t -&gt; a
+</span><span class="hs-identifier hs-var">getter</span></span><span>
+</span><span id="line-117"></span><span>
+</span><span id="line-118"></span><span class="hs-comment">-- | Inject typename and root field name customizations from @SourceCustomization@ into</span><span>
+</span><span id="line-119"></span><span class="hs-comment">-- the environment.</span><span>
+</span><span id="line-120"></span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#withSourceCustomization"><span class="hs-identifier hs-type">withSourceCustomization</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-121"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688627540"><span class="annot"><a href="#local-6989586621688627540"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688627539"><span class="annot"><a href="#local-6989586621688627539"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621688627538"><span class="annot"><a href="#local-6989586621688627538"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-122"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621688627539"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688627540"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#MkTypename"><span class="hs-identifier hs-type">MkTypename</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688627539"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#MkRootFieldName"><span class="hs-identifier hs-type">MkRootFieldName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688627539"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-123"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceCustomization"><span class="hs-identifier hs-type">SourceCustomization</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-124"></span><span>  </span><span class="annot"><a href="#local-6989586621688627540"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688627538"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-125"></span><span>  </span><span class="annot"><a href="#local-6989586621688627540"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688627538"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-126"></span><span id="withSourceCustomization"><span class="annot"><span class="annottext">withSourceCustomization :: SourceCustomization -&gt; m a -&gt; m a
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#withSourceCustomization"><span class="hs-identifier hs-var hs-var">withSourceCustomization</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceCustomization"><span class="hs-identifier hs-type">SourceCustomization</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621688627536"><span id="local-6989586621688627537"><span class="annot"><span class="annottext">Maybe SourceTypeCustomization
+Maybe RootFieldsCustomization
+_scTypeNames :: Maybe SourceTypeCustomization
+_scRootFields :: Maybe RootFieldsCustomization
+_scTypeNames :: SourceCustomization -&gt; Maybe SourceTypeCustomization
+_scRootFields :: SourceCustomization -&gt; Maybe RootFieldsCustomization
+</span><a href="#local-6989586621688627536"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-127"></span><span>  </span><span class="annot"><span class="annottext">MkTypename -&gt; m a -&gt; m a
+forall (m :: * -&gt; *) r a.
+(MonadReader r m, Has MkTypename r) =&gt;
+MkTypename -&gt; m a -&gt; m a
+</span><a href="Hasura.GraphQL.Parser.Schema.html#withTypenameCustomization"><span class="hs-identifier hs-var">withTypenameCustomization</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe SourceTypeCustomization -&gt; MkTypename
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#mkCustomizedTypename"><span class="hs-identifier hs-var">mkCustomizedTypename</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe SourceTypeCustomization
+</span><a href="#local-6989586621688627536"><span class="hs-identifier hs-var">_scTypeNames</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-128"></span><span>    </span><span class="annot"><span class="annottext">(m a -&gt; m a) -&gt; (m a -&gt; m a) -&gt; m a -&gt; m a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">MkRootFieldName -&gt; m a -&gt; m a
+forall (m :: * -&gt; *) r a.
+(MonadReader r m, Has MkRootFieldName r) =&gt;
+MkRootFieldName -&gt; m a -&gt; m a
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#withRootFieldNameCustomization"><span class="hs-identifier hs-var">withRootFieldNameCustomization</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe RootFieldsCustomization -&gt; MkRootFieldName
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#mkCustomizedFieldName"><span class="hs-identifier hs-var">mkCustomizedFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RootFieldsCustomization
+</span><a href="#local-6989586621688627537"><span class="hs-identifier hs-var">_scRootFields</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-129"></span><span>
+</span><span id="line-130"></span><span class="hs-keyword">newtype</span><span> </span><span id="CustomizeRemoteFieldName"><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#CustomizeRemoteFieldName"><span class="hs-identifier hs-var">CustomizeRemoteFieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CustomizeRemoteFieldName"><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#CustomizeRemoteFieldName"><span class="hs-identifier hs-var">CustomizeRemoteFieldName</span></a></span></span><span>
+</span><span id="line-131"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="runCustomizeRemoteFieldName"><span class="annot"><span class="annottext">CustomizeRemoteFieldName -&gt; Name -&gt; Name -&gt; Name
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#runCustomizeRemoteFieldName"><span class="hs-identifier hs-var hs-var">runCustomizeRemoteFieldName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
+</span><span id="line-132"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-133"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688627527"><span id="local-6989586621688627529"><span id="local-6989586621688627531"><span class="annot"><span class="annottext">b -&gt; CustomizeRemoteFieldName -&gt; CustomizeRemoteFieldName
+NonEmpty CustomizeRemoteFieldName -&gt; CustomizeRemoteFieldName
+CustomizeRemoteFieldName
+-&gt; CustomizeRemoteFieldName -&gt; CustomizeRemoteFieldName
+(CustomizeRemoteFieldName
+ -&gt; CustomizeRemoteFieldName -&gt; CustomizeRemoteFieldName)
+-&gt; (NonEmpty CustomizeRemoteFieldName -&gt; CustomizeRemoteFieldName)
+-&gt; (forall b.
+    Integral b =&gt;
+    b -&gt; CustomizeRemoteFieldName -&gt; CustomizeRemoteFieldName)
+-&gt; Semigroup CustomizeRemoteFieldName
+forall b.
+Integral b =&gt;
+b -&gt; CustomizeRemoteFieldName -&gt; CustomizeRemoteFieldName
+forall a.
+(a -&gt; a -&gt; a)
+-&gt; (NonEmpty a -&gt; a)
+-&gt; (forall b. Integral b =&gt; b -&gt; a -&gt; a)
+-&gt; Semigroup a
+stimes :: b -&gt; CustomizeRemoteFieldName -&gt; CustomizeRemoteFieldName
+$cstimes :: forall b.
+Integral b =&gt;
+b -&gt; CustomizeRemoteFieldName -&gt; CustomizeRemoteFieldName
+sconcat :: NonEmpty CustomizeRemoteFieldName -&gt; CustomizeRemoteFieldName
+$csconcat :: NonEmpty CustomizeRemoteFieldName -&gt; CustomizeRemoteFieldName
+&lt;&gt; :: CustomizeRemoteFieldName
+-&gt; CustomizeRemoteFieldName -&gt; CustomizeRemoteFieldName
+$c&lt;&gt; :: CustomizeRemoteFieldName
+-&gt; CustomizeRemoteFieldName -&gt; CustomizeRemoteFieldName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Semigroup</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688627520"><span id="local-6989586621688627522"><span id="local-6989586621688627524"><span class="annot"><span class="annottext">Semigroup CustomizeRemoteFieldName
+CustomizeRemoteFieldName
+Semigroup CustomizeRemoteFieldName
+-&gt; CustomizeRemoteFieldName
+-&gt; (CustomizeRemoteFieldName
+    -&gt; CustomizeRemoteFieldName -&gt; CustomizeRemoteFieldName)
+-&gt; ([CustomizeRemoteFieldName] -&gt; CustomizeRemoteFieldName)
+-&gt; Monoid CustomizeRemoteFieldName
+[CustomizeRemoteFieldName] -&gt; CustomizeRemoteFieldName
+CustomizeRemoteFieldName
+-&gt; CustomizeRemoteFieldName -&gt; CustomizeRemoteFieldName
+forall a.
+Semigroup a -&gt; a -&gt; (a -&gt; a -&gt; a) -&gt; ([a] -&gt; a) -&gt; Monoid a
+mconcat :: [CustomizeRemoteFieldName] -&gt; CustomizeRemoteFieldName
+$cmconcat :: [CustomizeRemoteFieldName] -&gt; CustomizeRemoteFieldName
+mappend :: CustomizeRemoteFieldName
+-&gt; CustomizeRemoteFieldName -&gt; CustomizeRemoteFieldName
+$cmappend :: CustomizeRemoteFieldName
+-&gt; CustomizeRemoteFieldName -&gt; CustomizeRemoteFieldName
+mempty :: CustomizeRemoteFieldName
+$cmempty :: CustomizeRemoteFieldName
+$cp1Monoid :: Semigroup CustomizeRemoteFieldName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monoid</span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Endo</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">)</span><span>
+</span><span id="line-134"></span><span>
+</span><span id="line-135"></span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#withRemoteFieldNameCustomization"><span class="hs-identifier hs-type">withRemoteFieldNameCustomization</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621688627519"><span class="annot"><a href="#local-6989586621688627519"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621688627518"><span class="annot"><a href="#local-6989586621688627518"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621688627517"><span class="annot"><a href="#local-6989586621688627517"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621688627518"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688627519"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#CustomizeRemoteFieldName"><span class="hs-identifier hs-type">CustomizeRemoteFieldName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688627518"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#CustomizeRemoteFieldName"><span class="hs-identifier hs-type">CustomizeRemoteFieldName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688627519"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688627517"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688627519"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688627517"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-136"></span><span id="withRemoteFieldNameCustomization"><span class="annot"><span class="annottext">withRemoteFieldNameCustomization :: CustomizeRemoteFieldName -&gt; m a -&gt; m a
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#withRemoteFieldNameCustomization"><span class="hs-identifier hs-var hs-var">withRemoteFieldNameCustomization</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(r -&gt; r) -&gt; m a -&gt; m a
+forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; r) -&gt; m a -&gt; m a
+</span><span class="hs-identifier hs-var">local</span></span><span> </span><span class="annot"><span class="annottext">((r -&gt; r) -&gt; m a -&gt; m a)
+-&gt; (CustomizeRemoteFieldName -&gt; r -&gt; r)
+-&gt; CustomizeRemoteFieldName
+-&gt; m a
+-&gt; m a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ASetter r r CustomizeRemoteFieldName CustomizeRemoteFieldName
+-&gt; CustomizeRemoteFieldName -&gt; r -&gt; r
+forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">set</span></span><span> </span><span class="annot"><span class="annottext">ASetter r r CustomizeRemoteFieldName CustomizeRemoteFieldName
+forall a t. Has a t =&gt; Lens t a
+</span><span class="hs-identifier hs-var">hasLens</span></span><span>
+</span><span id="line-137"></span></pre></body></html>
