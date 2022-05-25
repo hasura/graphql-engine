@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from './Styles.scss';
+import { inputStyles } from '../../constants';
 import Tooltip from './Tooltip';
 
 const editorLabel = 'Name';
@@ -9,22 +9,16 @@ const editorTooltip =
 const NameEditor = ({ value, onChange, className, placeholder }) => {
   return (
     <div className={className || ''}>
-      <h2
-        className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
-      >
+      <h2 className="text-sm font-bold pb-5 mb-1.5">
         {editorLabel}
-        <Tooltip
-          id="action-name"
-          text={editorTooltip}
-          className={styles.add_mar_left_mid}
-        />
+        <Tooltip id="action-name" text={editorTooltip} className="ml-2.5" />
       </h2>
       <input
         type="text"
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className={`form-control ${styles.inputWidth}`}
+        className={`${inputStyles} w-52`}
       />
     </div>
   );

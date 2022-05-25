@@ -57,7 +57,6 @@ import { Header, ActionExecution } from '../Common/stateDefaults';
 import { Nullable } from '../../../Common/utils/tsUtils';
 import { ReduxState } from '../../../../types';
 import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
-import styles from '../../../Common/Common.scss';
 
 interface AddActionProps extends InjectedProps {}
 
@@ -333,11 +332,7 @@ const AddAction: React.FC<AddActionProps> = ({
     <div className="w-full overflow-y-auto bg-gray-50">
       <div className="max-w-6xl">
         <Helmet title="Add Action - Actions | Hasura" />
-        <h2
-          className={`${styles.headerText} ${styles.display_inline} ${styles.add_mar_bottom}`}
-        >
-          Add a new action
-        </h2>
+        <h2 className="font-bold text-xl mb-5">Add a new action</h2>
 
         <ActionEditor
           handler={handler}

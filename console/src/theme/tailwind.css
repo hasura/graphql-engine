@@ -132,7 +132,7 @@ input[id*='react-select'][id$='-input']:focus {
 }
 
 /* Fixes result loading spinner position */
-.graphiql-container .spinner-container{
+.graphiql-container .spinner-container {
   top: 48px !important;
 }
 

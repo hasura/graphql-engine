@@ -5,7 +5,6 @@ import { getLanguageModeFromExtension } from '../../../Common/AceEditor/utils';
 import { getFrameworkCodegen } from './utils';
 import { getFileExtensionFromFilename } from '../../../Common/utils/jsUtils';
 import { Tabs, Tab } from 'react-bootstrap';
-import styles from '../Actions.scss';
 
 const CodeTabs = ({
   framework,
@@ -49,7 +48,7 @@ const CodeTabs = ({
     return (
       <div>
         Error generating code.&nbsp;
-        <a onClick={init} className={styles.cursorPointer}>
+        <a onClick={init} className="cursor-pointer">
           Try again
         </a>
       </div>

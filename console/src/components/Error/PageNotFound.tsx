@@ -4,7 +4,6 @@ import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
 import globals from '../../Globals';
-import styles from './ErrorPage.scss';
 
 export class NotFoundError extends Error {}
 
@@ -18,29 +17,26 @@ const PageNotFound = (props: PageNotFoundProps) => {
   const { resetCallback } = props;
 
   return (
-    <div className={styles.viewContainer}>
+    <div className="h-screen w-screen flex items-center justify-center ">
       <Helmet title="404 - Page Not Found | Hasura" />
-      <div className={`container  ${styles.centerContent}`}>
-        <div className={`row ${styles.message}`}>
-          <div className="col-xs-8">
-            <h1>404</h1>
-            <br />
-            <div>
-              This page does not exist. Head back{' '}
-              <Link to="/" onClick={resetCallback}>
-                Home
-              </Link>
-              .
-            </div>
-          </div>
-          <div className="col-xs-4">
-            <img
-              src={errorImage}
-              className="img-responsive"
-              title="We think you are lost!"
-              alt="Not found"
-            />
-          </div>
+      <div className="flex w-7/12 justify-between">
+        <div className="px-5 md:p-0">
+          <h1 className="font-bold text-6xl">404</h1>
+          <br />
+          <>
+            This page does not exist. Head back{' '}
+            <Link to="/" onClick={resetCallback}>
+              Home
+            </Link>
+            .
+          </>
+        </div>
+        <div className="w-1/3">
+          <img
+            src={errorImage}
+            title="We think you are lost!"
+            alt="Not found"
+          />
         </div>
       </div>
     </div>

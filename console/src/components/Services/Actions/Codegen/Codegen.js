@@ -8,11 +8,11 @@ import {
   getGlitchProjectURL,
 } from './utils';
 import Spinner from '../../../Common/Spinner/Spinner';
-import styles from '../Common/components/Styles.scss';
 import { Icon } from '../../../UIKit/atoms';
 import CodeTabs from './CodeTabs';
 import DerivedFrom from './DerivedFrom';
 import { getPersistedDerivedAction } from '../utils';
+import { inputStyles } from '../constants';
 
 const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
   const [allFrameworks, setAllFrameworks] = React.useState([]);
@@ -56,7 +56,7 @@ const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
     return (
       <div>
         Error fetching codegen assets.&nbsp;
-        <a onClick={init} className={styles.cursorPointer}>
+        <a onClick={init} className={'cursor-pointer'}>
           Try again
         </a>
       </div>
@@ -71,7 +71,7 @@ const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
     const getDrodown = () => {
       return (
         <select
-          className={`form-control ${styles.inputWidth} ${styles.add_mar_right} ${styles.add_mar_right}`}
+          className={`${inputStyles} w-auto`}
           value={selectedFramework}
           onChange={onChange}
         >
@@ -93,7 +93,7 @@ const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
           href={getGlitchProjectURL()}
           target="_blank"
           rel="noopener noreferrer"
-          className={styles.add_mar_right}
+          className={'mr-5'}
         >
           <Icon type="link" /> Try on glitch
         </a>
@@ -117,7 +117,7 @@ const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
             href={getStarterKitDownloadPath(selectedFramework)}
             target="_blank"
             rel="noopener noreferrer"
-            className={styles.add_mar_right}
+            className={'mr-5'}
             title={`Download starter kit for ${selectedFramework}`}
           >
             <Icon type="download" /> Starter-kit.zip
@@ -126,11 +126,9 @@ const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
             href={getStarterKitPath(selectedFramework)}
             target="_blank"
             rel="noopener noreferrer"
-            className={styles.display_flex}
             title={`View the starter kit for ${selectedFramework} on GitHub`}
           >
-            <Icon type="github" className={styles.add_mar_right_small} /> View
-            on GitHub
+            <Icon type="github" className={'mr-1'} /> View on GitHub
           </a>
         </React.Fragment>
       );
@@ -143,13 +141,11 @@ const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
         return null;
       }
       return (
-        <div className={styles.marginLeftAuto}>
-          <div
-            className={`${styles.add_mar_bottom_small} ${styles.textAlignRight}`}
-          >
+        <div className="ml-auto">
+          <div className="mb-25 text-right mb-1.5">
             <b>Need help getting started quickly?</b>
           </div>
-          <div className={`${styles.display_flex}`}>
+          <div className="flex">
             {getGlitchButton()}
             {getStarterKitButton()}
           </div>
@@ -158,7 +154,7 @@ const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
     };
 
     return (
-      <div className={`${styles.add_mar_bottom} ${styles.display_flex}`}>
+      <div className="mb-5 flex">
         {getDrodown()}
         {getHelperToolsSection()}
       </div>
@@ -176,10 +172,10 @@ const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
   };
 
   return (
-    <div style={{ width: '600px' }}>
+    <div className="w-[600px]">
       <Helmet title={`Codegen - ${currentAction.name} - Actions | Hasura`} />
       {getFrameworkActions()}
-      <div className={`${styles.add_mar_bottom}`}>
+      <div className="mb-5">
         <CodeTabs
           framework={selectedFramework}
           actionsSdl={getSdlComplete(allActions, allTypes)}
@@ -189,7 +185,7 @@ const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
           dispatch={dispatch}
         />
       </div>
-      <hr className="my-md" />
+      <hr className="my-5" />
       {getDerivationInfo()}
     </div>
   );

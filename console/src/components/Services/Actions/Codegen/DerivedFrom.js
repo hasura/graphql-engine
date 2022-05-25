@@ -1,5 +1,4 @@
 import React from 'react';
-import styles from '../Common/components/Styles.scss';
 import AceEditor from '../../../Common/AceEditor/BaseEditor';
 import Tooltip from '../Common/components/Tooltip';
 
@@ -10,20 +9,16 @@ const DerivedFrom = ({ shouldDerive, parentMutation, toggleDerivation }) => {
     'This code is generated based on the assumption that operation was derived from another operation. If the assumption is wrong, you can disable the derivation.';
   return (
     <div>
-      <h2 className={`${styles.subheading_text} ${styles.add_mar_bottom}`}>
+      <h2 className="text-sm font-bold mb-md pb-5 mt-0">
         Derived operation
-        <Tooltip
-          id="action-name"
-          text={tooltip}
-          className={styles.add_mar_left_mid}
-        />
+        <Tooltip id="action-name" text={tooltip} className="ml-5" />
       </h2>
-      <div className={`${styles.add_mar_bottom}`}>
-        <label className={`${styles.cursorPointer}`} onClick={toggleDerivation}>
+      <div className="mb-5">
+        <label className="cursor-pointer" onClick={toggleDerivation}>
           <input
             type="checkbox"
             checked={shouldDerive}
-            className={`${styles.cursorPointer} ${styles.add_mar_right_mid} legacy-input-fix`}
+            className="cursor-pointer mr-md legacy-input-fix"
           />
           Generate code with delegation to the derived mutation
         </label>

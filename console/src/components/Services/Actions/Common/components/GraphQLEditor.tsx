@@ -1,7 +1,6 @@
 import React from 'react';
 import { parse as sdlParser } from 'graphql/language/parser';
 import { GraphQLError } from 'graphql';
-import styles from './Styles.scss';
 import Tooltip from './Tooltip';
 import CrossIcon from '../../../../Common/Icons/Cross';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
@@ -77,25 +76,19 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
   return (
     <div className={`${className || ''}`}>
       {label ? (
-        <h2
-          className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
-        >
+        <h2 className="text-lg font-bold pb-5 mb-1.5">
           {label}
           {tooltip ? (
-            <Tooltip
-              id="action-name"
-              text={tooltip}
-              className={styles.add_mar_left_mid}
-            />
+            <Tooltip id="action-name" text={tooltip} className="ml-2.5" />
           ) : (
             <></>
           )}
         </h2>
       ) : null}
-      <div className={`${styles.display_flex} ${styles.add_mar_bottom_small}`}>
+      <div className="flex mb-1.5">
         {error && (
-          <div className={`${styles.display_flex}  ${styles.errorMessage}`}>
-            <CrossIcon className={styles.add_mar_right_small} />
+          <div className="flex text-red-600">
+            <CrossIcon className="mr-1.5" />
             <div>{`${errorMessage} ${errorMessageLine}`}</div>
           </div>
         )}

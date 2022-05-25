@@ -37,15 +37,15 @@ module.exports = {
         sans: ['Gudea', 'ui-sans-serif', 'system-ui'],
       },
       spacing: {
-        xs: '0.571rem',
-        sm: '0.857rem',
-        md: '1.429rem',
-        lg: '2.286rem',
-        xl: '2.857rem',
-        input: '2.5rem',
-        btn: '2.5rem',
-        btnsm: '2rem',
-        formlabel: '0.571rem',
+        xs: '0.571rem', // ~9.5 px
+        sm: '0.857rem', // ~14 px
+        md: '1.429rem', // ~23 px
+        lg: '2.286rem', // 36.5px
+        xl: '2.857rem', // 45.7px
+        input: '2.5rem', // 41.5px
+        btn: '2.5rem', // 41.5px
+        btnsm: '2rem', // 32px
+        formlabel: '0.571rem', // ~9.5 px
       },
       fontSize: {
         sm: ['0.875rem', { lineHeight: '1.25rem' }],

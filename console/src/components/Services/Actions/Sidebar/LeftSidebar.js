@@ -4,6 +4,7 @@ import { Link } from 'react-router';
 
 import LeftSubSidebar from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 import styles from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
+import { inputStyles } from '../constants';
 
 const LeftSidebar = ({
   appPrefix,
@@ -20,7 +21,7 @@ const LeftSidebar = ({
       <input
         type="text"
         onChange={handleSearch}
-        className="form-control"
+        className={inputStyles}
         placeholder="search actions"
         data-test="search-actions"
       />
@@ -54,8 +55,8 @@ const LeftSidebar = ({
     if (actionsList.length === 0) {
       childList = (
         <li
-          className={styles.noChildren}
           data-test="actions-sidebar-no-actions"
+          className="italic font-normal pb-sm pt-xs text-gray-500"
         >
           <i>No actions available</i>
         </li>
@@ -64,18 +65,15 @@ const LeftSidebar = ({
       childList = actionsList.map((a, i) => {
         let activeTableClass = '';
         if (a.name === currentAction) {
-          activeTableClass = styles.activeLink;
+          activeTableClass = '!text-yellow-500';
         }
 
         const actionIcon = getActionIcon(a);
 
         return (
-          <li
-            className={activeTableClass}
-            key={i}
-            data-test={`action-sidebar-links-${i + 1}`}
-          >
+          <li key={i} data-test={`action-sidebar-links-${i + 1}`}>
             <Link
+              className={activeTableClass}
               to={appPrefix + '/manage/' + a.name + '/modify'}
               data-test={a.name}
             >
