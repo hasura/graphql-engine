@@ -124,7 +124,8 @@ buildQueryParsers introspection = do
           mempty :: CustomizeRemoteFieldName,
           mempty :: RemoteSchemaMap,
           mempty :: MkTypename,
-          mempty :: MkRootFieldName
+          mempty :: MkRootFieldName,
+          HasuraCase :: NamingCase
         )
   RemoteSchemaParser query _ _ <-
     runError $

@@ -8,6 +8,7 @@ import Data.ByteString (ByteString)
 import Data.Has
 import Data.HashMap.Strict qualified as HM
 import Data.List.NonEmpty qualified as NE
+import Data.Text.Casing qualified as C
 import Data.Text.Encoding (encodeUtf8)
 import Data.Text.Extended
 import Database.MySQL.Base.Types qualified as MySQL
@@ -29,6 +30,7 @@ import Hasura.RQL.Types.Column as RQL
 import Hasura.RQL.Types.Common as RQL
 import Hasura.RQL.Types.Function as RQL
 import Hasura.RQL.Types.SchemaCache as RQL
+import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -83,7 +85,7 @@ buildTableRelayQueryFields' ::
   SourceName ->
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
-  G.Name ->
+  C.GQLNameIdentifier ->
   NESeq (ColumnInfo 'MySQL) ->
   m [a]
 buildTableRelayQueryFields' _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
@@ -95,7 +97,7 @@ buildTableInsertMutationFields' ::
   SourceName ->
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
-  G.Name ->
+  C.GQLNameIdentifier ->
   m [a]
 buildTableInsertMutationFields' _scenario _sourceName _tableName _tableInfo _gqlName =
   pure []
@@ -105,7 +107,7 @@ buildTableUpdateMutationFields' ::
   SourceName ->
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
-  G.Name ->
+  C.GQLNameIdentifier ->
   m [a]
 buildTableUpdateMutationFields' _sourceName _tableName _tableInfo _gqlName =
   pure []
@@ -115,7 +117,7 @@ buildTableDeleteMutationFields' ::
   SourceName ->
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
-  G.Name ->
+  C.GQLNameIdentifier ->
   m [a]
 buildTableDeleteMutationFields' _sourceName _tableName _tableInfo _gqlName =
   pure []
@@ -212,8 +214,9 @@ scalarSelectionArgumentsParser' ::
   InputFieldsParser n (Maybe (ScalarSelectionArguments 'MySQL))
 scalarSelectionArgumentsParser' _columnType = pure Nothing
 
-orderByOperators' :: NonEmpty (Definition P.EnumValueInfo, (BasicOrderType 'MySQL, NullsOrderType 'MySQL))
-orderByOperators' =
+orderByOperators' :: NamingCase -> NonEmpty (Definition P.EnumValueInfo, (BasicOrderType 'MySQL, NullsOrderType 'MySQL))
+orderByOperators' _tCase =
+  -- NOTE: NamingCase is not being used here as we don't support naming conventions for this DB
   NE.fromList
     [ ( define G._asc "in ascending order, nulls first",
         (MySQL.Asc, MySQL.NullsFirst)
@@ -240,7 +243,7 @@ orderByOperators' =
 -- | TODO: Make this as thorough as the one for MSSQL/PostgreSQL
 comparisonExps' ::
   forall m n r.
-  (BackendSchema 'MySQL, MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
+  (BackendSchema 'MySQL, MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
   ColumnType 'MySQL ->
   m (Parser 'Input n [ComparisonExp 'MySQL])
 comparisonExps' = P.memoize 'comparisonExps $ \columnType -> do

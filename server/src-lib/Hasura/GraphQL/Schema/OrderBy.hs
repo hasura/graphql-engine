@@ -30,8 +30,19 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Language.GraphQL.Draft.Syntax qualified as G
+
+{-# INLINE orderByOperator #-}
+orderByOperator ::
+  forall b n.
+  (BackendSchema b, MonadParse n) =>
+  NamingCase ->
+  Parser 'Both n (Maybe (BasicOrderType b, NullsOrderType b))
+orderByOperator tCase = case tCase of
+  HasuraCase -> orderByOperatorsHasuraCase @b
+  GraphqlCase -> orderByOperatorsGraphqlCase @b
 
 -- | Corresponds to an object type for an order by.
 --
@@ -51,23 +62,28 @@ orderByExp ::
   m (Parser 'Input n [IR.AnnotatedOrderByItemG b (UnpreparedValue b)])
 orderByExp sourceName tableInfo = memoizeOn 'orderByExp (sourceName, tableInfoName tableInfo) $ do
   tableGQLName <- getTableGQLName tableInfo
+  tCase <- asks getter
   name <- P.mkTypename $ tableGQLName <> G.__order_by
   let description =
         G.Description $
           "Ordering options when selecting data from " <> tableInfoName tableInfo <<> "."
   tableFields <- tableSelectFields sourceName tableInfo
-  fieldParsers <- sequenceA . catMaybes <$> traverse mkField tableFields
+  fieldParsers <- sequenceA . catMaybes <$> traverse (mkField tCase) tableFields
   pure $ concat . catMaybes <$> P.object name (Just description) fieldParsers
   where
     mkField ::
+      NamingCase ->
       FieldInfo b ->
       m (Maybe (InputFieldsParser n (Maybe [IR.AnnotatedOrderByItemG b (UnpreparedValue b)])))
-    mkField fieldInfo = runMaybeT $
+    mkField tCase fieldInfo = runMaybeT $
       case fieldInfo of
         FIColumn columnInfo -> do
           let fieldName = ciName columnInfo
           pure $
-            P.fieldOptional fieldName Nothing (orderByOperator @b)
+            P.fieldOptional
+              fieldName
+              Nothing
+              (orderByOperator @b tCase)
               <&> fmap (pure . mkOrderByItemG @b (IR.AOCColumn columnInfo)) . join
         FIRelationship relationshipInfo -> do
           remoteTableInfo <- askTableInfo @b sourceName $ riRTable relationshipInfo
@@ -99,7 +115,10 @@ orderByExp sourceName tableInfo = memoizeOn 'orderByExp (sourceName, tableInfoNa
             ReturnsScalar scalarType -> do
               let computedFieldOrderBy = mkComputedFieldOrderBy $ IR.CFOBEScalar scalarType
               pure $
-                P.fieldOptional fieldName Nothing (orderByOperator @b)
+                P.fieldOptional
+                  fieldName
+                  Nothing
+                  (orderByOperator @b tCase)
                   <&> fmap (pure . mkOrderByItemG @b (IR.AOCComputedField computedFieldOrderBy)) . join
             ReturnsTable table -> do
               let aggregateFieldName = fieldName <> G.__aggregate
@@ -137,19 +156,23 @@ orderByAggregation sourceName tableInfo = memoizeOn 'orderByAggregation (sourceN
   -- it might be worth putting some of it in common, just to avoid issues when
   -- we change one but not the other?
   tableGQLName <- getTableGQLName @b tableInfo
+  tCase <- asks getter
   allColumns <- tableSelectColumns sourceName tableInfo
   mkTypename <- asks getter
   let numColumns = onlyNumCols allColumns
       compColumns = onlyComparableCols allColumns
-      numFields = catMaybes <$> traverse mkField numColumns
-      compFields = catMaybes <$> traverse mkField compColumns
+      numFields = catMaybes <$> traverse (mkField tCase) numColumns
+      compFields = catMaybes <$> traverse (mkField tCase) compColumns
       aggFields =
         fmap (concat . catMaybes . concat) $
           sequenceA $
             catMaybes
               [ -- count
                 Just $
-                  P.fieldOptional G._count Nothing (orderByOperator @b)
+                  P.fieldOptional
+                    G._count
+                    Nothing
+                    (orderByOperator @b tCase)
                     <&> pure . fmap (pure . mkOrderByItemG @b IR.AAOCount) . join,
                 -- operators on numeric columns
                 if null numColumns
@@ -170,9 +193,12 @@ orderByAggregation sourceName tableInfo = memoizeOn 'orderByAggregation (sourceN
   where
     tableName = tableInfoName tableInfo
 
-    mkField :: ColumnInfo b -> InputFieldsParser n (Maybe (ColumnInfo b, (BasicOrderType b, NullsOrderType b)))
-    mkField columnInfo =
-      P.fieldOptional (ciName columnInfo) (ciDescription columnInfo) (orderByOperator @b)
+    mkField :: NamingCase -> ColumnInfo b -> InputFieldsParser n (Maybe (ColumnInfo b, (BasicOrderType b, NullsOrderType b)))
+    mkField tCase columnInfo =
+      P.fieldOptional
+        (ciName columnInfo)
+        (ciDescription columnInfo)
+        (orderByOperator @b tCase)
         <&> fmap (columnInfo,) . join
 
     parseOperator ::
@@ -188,12 +214,25 @@ orderByAggregation sourceName tableInfo = memoizeOn 'orderByAggregation (sourceN
        in P.fieldOptional operator Nothing (P.object objectName objectDesc columns)
             `mapField` map (\(col, info) -> mkOrderByItemG (IR.AAOOp opText col) info)
 
-orderByOperator ::
+orderByOperatorsHasuraCase ::
   forall b n.
   (BackendSchema b, MonadParse n) =>
   Parser 'Both n (Maybe (BasicOrderType b, NullsOrderType b))
-orderByOperator =
-  P.nullable $ P.enum G._order_by (Just "column ordering options") $ orderByOperators @b
+orderByOperatorsHasuraCase = orderByOperator' @b HasuraCase
+
+orderByOperatorsGraphqlCase ::
+  forall b n.
+  (BackendSchema b, MonadParse n) =>
+  Parser 'Both n (Maybe (BasicOrderType b, NullsOrderType b))
+orderByOperatorsGraphqlCase = orderByOperator' @b GraphqlCase
+
+orderByOperator' ::
+  forall b n.
+  (BackendSchema b, MonadParse n) =>
+  NamingCase ->
+  Parser 'Both n (Maybe (BasicOrderType b, NullsOrderType b))
+orderByOperator' tCase =
+  P.nullable $ P.enum (applyFieldNameCaseCust tCase G._order_by) (Just "column ordering options") $ orderByOperators @b tCase
 
 mkOrderByItemG :: forall b a. a -> (BasicOrderType b, NullsOrderType b) -> IR.OrderByItemG b a
 mkOrderByItemG column (orderType, nullsOrder) =

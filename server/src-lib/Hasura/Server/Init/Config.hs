@@ -32,6 +32,8 @@ module Hasura.Server.Init.Config
     rawConnDetailsToUrl,
     rawConnDetailsToUrlText,
     readAPIs,
+    readDefaultNamingCase,
+    readDefaultNamingCaseFromEnv,
     readExperimentalFeatures,
     readHookType,
     readJson,
@@ -47,6 +49,7 @@ import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
 import Data.Aeson.TH qualified as J
 import Data.Char (toLower)
+import Data.Environment (Environment, lookupEnv)
 import Data.HashSet qualified as Set
 import Data.String qualified as DataString
 import Data.Text qualified as T
@@ -59,6 +62,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.RemoteSchema
+import Hasura.RQL.Types.SourceCustomization (NamingCase, parseNamingConventionFromText)
 import Hasura.Server.Auth
 import Hasura.Server.Cors
 import Hasura.Server.Logging
@@ -188,8 +192,11 @@ data RawServeOptions impl = RawServeOptions
     rsoEventsFetchBatchSize :: Maybe NonNegativeInt,
     rsoGracefulShutdownTimeout :: Maybe Seconds,
     rsoWebSocketConnectionInitTimeout :: Maybe Int,
-    rsoEnableMetadataQueryLoggingEnv :: Bool
+    rsoEnableMetadataQueryLoggingEnv :: Bool,
     -- see Note [Experimental features]
+
+    -- | stores global default naming convention
+    rsoDefaultNamingConvention :: Maybe NamingCase
   }
 
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
@@ -262,7 +269,8 @@ data ServeOptions impl = ServeOptions
     soWebsocketConnectionInitTimeout :: WSConnectionInitTimeout,
     soEventingMode :: EventingMode,
     soReadOnlyMode :: ReadOnlyMode,
-    soEnableMetadataQueryLogging :: MetadataQueryLoggingMode
+    soEnableMetadataQueryLogging :: MetadataQueryLoggingMode,
+    soDefaultNamingConvention :: Maybe NamingCase
   }
 
 data DowngradeOptions = DowngradeOptions
@@ -375,6 +383,18 @@ readAPIs = mapM readAPI . T.splitOn "," . T.pack
       "CONFIG" -> Right CONFIG
       _ -> Left "Only expecting list of comma separated API types metadata,graphql,pgdump,developer,config"
 
+readDefaultNamingCase :: String -> Either String NamingCase
+readDefaultNamingCase = parseNamingConventionFromText . T.pack
+
+readDefaultNamingCaseFromEnv :: Environment -> Maybe NamingCase
+readDefaultNamingCaseFromEnv env =
+  case lookupEnv env "HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION" of
+    Nothing -> Nothing
+    (Just defaultNC) ->
+      case readDefaultNamingCase defaultNC of
+        Left _ -> Nothing
+        Right nc -> Just nc
+
 readExperimentalFeatures :: String -> Either String [ExperimentalFeature]
 readExperimentalFeatures = mapM readAPI . T.splitOn "," . T.pack
   where
@@ -382,10 +402,11 @@ readExperimentalFeatures = mapM readAPI . T.splitOn "," . T.pack
       "inherited_roles" -> Right EFInheritedRoles
       "streaming_subscriptions" -> Right EFStreamingSubscriptions
       "optimize_permission_filters" -> Right EFOptimizePermissionFilters
+      "naming_conventions" -> Right EFNamingConventions
       _ ->
         Left $
           "Only expecting list of comma separated experimental features, options are:"
-            ++ "inherited_roles, streaming_subscriptions, optimize_permission_filters"
+            ++ "inherited_roles, streaming_subscriptions, optimize_permission_filters, naming_conventions"
 
 readLogLevel :: String -> Either String L.LogLevel
 readLogLevel s = case T.toLower $ T.strip $ T.pack s of
@@ -438,6 +459,9 @@ instance FromEnv CorsConfig where
 
 instance FromEnv [API] where
   fromEnv = readAPIs
+
+instance FromEnv NamingCase where
+  fromEnv = readDefaultNamingCase
 
 instance FromEnv [ExperimentalFeature] where
   fromEnv = readExperimentalFeatures

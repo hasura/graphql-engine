@@ -743,15 +743,15 @@ tableOrderByArg ::
   TableInfo b ->
   m (InputFieldsParser n (Maybe (NonEmpty (IR.AnnotatedOrderByItemG b (UnpreparedValue b)))))
 tableOrderByArg sourceName tableInfo = do
+  tCase <- asks getter
   orderByParser <- orderByExp sourceName tableInfo
+  let orderByName = applyFieldNameCaseCust tCase G._order_by
+      orderByDesc = Just $ G.Description "sort the rows by one or more columns"
   pure $ do
     maybeOrderByExps <-
       fmap join $
         P.fieldOptional orderByName orderByDesc $ P.nullable $ P.list orderByParser
     pure $ maybeOrderByExps >>= NE.nonEmpty . concat
-  where
-    orderByName = G._order_by
-    orderByDesc = Just $ G.Description "sort the rows by one or more columns"
 
 -- | Argument to distinct select on columns returned from table selection
 -- > distinct_on: [table_select_column!]
@@ -762,7 +762,10 @@ tableDistinctArg ::
   TableInfo b ->
   m (InputFieldsParser n (Maybe (NonEmpty (Column b))))
 tableDistinctArg sourceName tableInfo = do
+  tCase <- asks getter
   columnsEnum <- tableSelectColumnsEnum sourceName tableInfo
+  let distinctOnName = applyFieldNameCaseCust tCase G._distinct_on
+      distinctOnDesc = Just $ G.Description "distinct select on columns"
   pure do
     maybeDistinctOnColumns <-
       join . join
@@ -770,9 +773,6 @@ tableDistinctArg sourceName tableInfo = do
           columnsEnum
           (P.fieldOptional distinctOnName distinctOnDesc . P.nullable . P.list)
     pure $ maybeDistinctOnColumns >>= NE.nonEmpty
-  where
-    distinctOnName = G._distinct_on
-    distinctOnDesc = Just $ G.Description "distinct select on columns"
 
 -- | Argument to limit rows returned from table selection
 -- > limit: NonNegativeInt
@@ -966,6 +966,7 @@ tableAggregationFields ::
 tableAggregationFields sourceName tableInfo = memoizeOn 'tableAggregationFields (sourceName, tableInfoName tableInfo) do
   tableGQLName <- getTableGQLName tableInfo
   allColumns <- tableSelectColumns sourceName tableInfo
+  tCase <- asks getter
   let numericColumns = onlyNumCols allColumns
       comparableColumns = onlyComparableCols allColumns
       description = G.Description $ "aggregate fields of " <>> tableInfoName tableInfo
@@ -981,8 +982,9 @@ tableAggregationFields sourceName tableInfo = memoizeOn 'tableAggregationFields 
               then Nothing
               else Just $
                 for numericAggOperators $ \operator -> do
+                  let fieldNameCase = applyFieldNameCaseCust tCase operator
                   numFields <- mkNumericAggFields operator numericColumns
-                  pure $ parseAggOperator mkTypename operator tableGQLName numFields,
+                  pure $ parseAggOperator mkTypename operator fieldNameCase tableGQLName numFields,
             -- operators on comparable columns
             if null comparableColumns
               then Nothing
@@ -990,7 +992,8 @@ tableAggregationFields sourceName tableInfo = memoizeOn 'tableAggregationFields 
                 comparableFields <- traverse mkColumnAggField comparableColumns
                 pure $
                   comparisonAggOperators & map \operator ->
-                    parseAggOperator mkTypename operator tableGQLName comparableFields
+                    let fieldNameCase = applyFieldNameCaseCust tCase operator
+                     in parseAggOperator mkTypename operator fieldNameCase tableGQLName comparableFields
           ]
   let aggregateFields = count : numericAndComparable
   pure $
@@ -1038,16 +1041,17 @@ tableAggregationFields sourceName tableInfo = memoizeOn 'tableAggregationFields 
       P.MkTypename ->
       G.Name ->
       G.Name ->
+      G.Name ->
       [FieldParser n (IR.ColFld b)] ->
       FieldParser n (IR.AggregateField b)
-    parseAggOperator mkTypename operator tableGQLName columns =
+    parseAggOperator mkTypename operator fieldName tableGQLName columns =
       let opText = G.unName operator
           setName = P.runMkTypename mkTypename $ tableGQLName <> G.__ <> operator <> G.__fields
           setDesc = Just $ G.Description $ "aggregate " <> opText <> " on columns"
           subselectionParser =
             P.selectionSet setName setDesc columns
               <&> parsedSelectionsToFields IR.CFExp
-       in P.subselection_ operator Nothing subselectionParser
+       in P.subselection_ fieldName Nothing subselectionParser
             <&> IR.AFOp . IR.AggregateOp opText
 
 -- | An individual field of a table
@@ -1214,6 +1218,7 @@ relationshipField ::
   RelInfo b ->
   m (Maybe [FieldParser n (AnnotatedField b)])
 relationshipField sourceName table ri = runMaybeT do
+  tCase <- asks getter
   optimizePermissionFilters <- asks $ qcOptimizePermissionFilters . getter
   otherTableInfo <- lift $ askTableInfo sourceName $ riRTable ri
   remotePerms <- MaybeT $ tableSelectPermissions otherTableInfo
@@ -1313,7 +1318,7 @@ relationshipField sourceName table ri = runMaybeT do
                 IR.ASSimple $
                   IR.AnnRelationSelectG (riName ri) (riMapping ri) $
                     deduplicatePermissions' selectExp
-          relAggFieldName = relFieldName <> G.__aggregate
+          relAggFieldName = applyFieldNameCaseCust tCase $ relFieldName <> G.__aggregate
           relAggDesc = Just $ G.Description "An aggregate relationship"
       remoteAggField <- lift $ selectTableAggregate sourceName otherTableInfo relAggFieldName relAggDesc
       remoteConnectionField <- runMaybeT $ do
@@ -1657,6 +1662,7 @@ nodePG = memoizeOn 'nodePG () do
       idField = P.selection_ G._id (Just idDescription) P.identifier
       nodeInterfaceDescription = G.Description "An object with globally unique ID"
   sources :: SourceCache <- asks getter
+  tCase <- asks getter
   let allTables = Map.fromList $ do
         -- FIXME? When source name is used in type generation?
         (source, sourceInfo) <- Map.toList sources
@@ -1664,13 +1670,13 @@ nodePG = memoizeOn 'nodePG () do
         sourceConfig <- maybeToList $ unsafeSourceConfiguration @('Postgres 'Vanilla) sourceInfo
         pure (tableName, (source, sourceConfig, AB.runBackend sourceInfo _siCustomization))
   tables <-
-    Map.catMaybes <$> flip Map.traverseWithKey allTables \table (source, sourceConfig, sourceCustomization) -> runMaybeT do
+    Map.catMaybes <$> flip Map.traverseWithKey allTables \table (source, sourceConfig, SourceCustomization {..}) -> runMaybeT do
       tableInfo <- lift $ askTableInfo source table
       tablePkeyColumns <- hoistMaybe $ tableInfo ^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns
       selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
       annotatedFieldsParser <-
         MaybeT $
-          P.withTypenameCustomization (mkCustomizedTypename $ _scTypeNames sourceCustomization) $
+          P.withTypenameCustomization (mkCustomizedTypename _scTypeNames tCase) $
             tableSelectionSet source tableInfo
       pure $ (source,sourceConfig,selectPermissions,tablePkeyColumns,) <$> annotatedFieldsParser
   pure $

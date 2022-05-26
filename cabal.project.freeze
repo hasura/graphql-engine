@@ -7,6 +7,8 @@ constraints: any.Cabal ==3.2.1.0,
              any.HUnit ==1.6.2.0,
              any.OneTuple ==0.3,
              any.Only ==0.1,
+             any.PyF ==0.10.2.0,
+             PyF -python_test,
              any.QuickCheck ==2.14.2,
              QuickCheck -old-random +templatehaskell,
              any.RSA ==2.4.1,
@@ -469,4 +471,4 @@ constraints: any.Cabal ==3.2.1.0,
              yaml +no-examples +no-exe,
              any.zlib ==0.6.2.3,
              zlib -bundled-c-zlib -non-blocking-ffi -pkg-config
-index-state: hackage.haskell.org 2022-04-06T04:57:40Z
+index-state: hackage.haskell.org 2022-05-10T04:52:26Z

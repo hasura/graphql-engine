@@ -561,7 +561,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                                     rawfunctionInfo <- bindErrorA -< handleMultipleFunctions @b qf funcDefs
                                     let metadataPermissions = mapFromL _fpmRole functionPermissions
                                         permissionsMap = mkBooleanPermissionMap FunctionPermissionInfo metadataPermissions orderedRoles
-                                    (functionInfo, dep) <- bindErrorA -< buildFunctionInfo sourceName qf systemDefined config permissionsMap rawfunctionInfo comment
+                                    (functionInfo, dep) <- bindErrorA -< buildFunctionInfo sourceName qf systemDefined config permissionsMap rawfunctionInfo comment (getNamingConvention sourceCustomization)
                                     recordDependencies -< (metadataObject, schemaObject, [dep])
                                     returnA -< functionInfo
                                 )
@@ -669,7 +669,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                                   _rsConfig source,
                                   _rsTables source,
                                   tableInputs,
-                                  metadataInvalidationKey
+                                  metadataInvalidationKey,
+                                  (getNamingConvention (_smCustomization sourceMetadata))
                                 )
                           returnA
                             -<

@@ -10,12 +10,14 @@ module Hasura.GraphQL.Schema.Table
     tableColumns,
     tableSelectColumns,
     tableUpdateColumns,
+    getTableIdentifierName,
   )
 where
 
 import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
+import Data.Text.Casing
 import Data.Text.Extended
 import Hasura.Base.Error (QErr)
 import Hasura.GraphQL.Parser (Kind (..), Parser)
@@ -55,6 +57,22 @@ getTableGQLName tableInfo = do
   tableCustomName
     `onNothing` tableGraphQLName @b tableName
     `onLeft` throwError
+
+-- | similar to @getTableGQLName@ but returns table name as a list with name pieces
+--   instead of concatenating schema and table name together.
+getTableIdentifierName ::
+  forall b m.
+  (Backend b, MonadError QErr m) =>
+  TableInfo b ->
+  m (GQLNameIdentifier)
+getTableIdentifierName tableInfo =
+  let coreInfo = _tiCoreInfo tableInfo
+      tableName = _tciName coreInfo
+      tableCustomName = _tcCustomName $ _tciCustomConfig coreInfo
+   in maybe
+        (liftEither $ getTableIdentifier @b tableName)
+        (pure . (`Identifier` []))
+        tableCustomName
 
 -- | Table select columns enum
 --

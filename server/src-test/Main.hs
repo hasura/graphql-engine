@@ -194,6 +194,7 @@ buildPostgresSpecs = do
                 mempty
                 EventingEnabled
                 readOnlyMode
+                (readDefaultNamingCaseFromEnv envMap)
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver serverConfigCtx
             pgLogger = print
 

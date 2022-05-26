@@ -32,8 +32,10 @@ module Hasura.Backends.Postgres.SQL.Types
     FunctionName (..),
     ConstraintName (..),
     QualifiedObject (..),
+    getIdentifierQualifiedObject,
     qualifiedObjectToText,
     snakeCaseQualifiedObject,
+    namingConventionSupport,
     qualifiedObjectToName,
     PGScalarType (..),
     textToPGScalarType,
@@ -52,13 +54,16 @@ import Data.Aeson
 import Data.Aeson.Encoding (text)
 import Data.Aeson.TH
 import Data.Aeson.Types (toJSONKeyText)
+import Data.List (uncons)
 import Data.Text qualified as T
+import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Database.PG.Query qualified as Q
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
+import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function
 import Hasura.SQL.Types
@@ -239,6 +244,27 @@ snakeCaseQualifiedObject :: ToTxt a => QualifiedObject a -> Text
 snakeCaseQualifiedObject (QualifiedObject sn o)
   | sn == publicSchema = toTxt o
   | otherwise = getSchemaTxt sn <> "_" <> toTxt o
+
+getIdentifierQualifiedObject :: ToTxt a => QualifiedObject a -> Either QErr C.GQLNameIdentifier
+getIdentifierQualifiedObject obj@(QualifiedObject sn o) = do
+  let tLst =
+        if sn == publicSchema
+          then C.fromSnake $ toTxt o
+          else C.fromSnake (getSchemaTxt sn) <> C.fromSnake (toTxt o)
+      gqlIdents = do
+        (pref, suffs) <- uncons tLst
+        prefName <- G.mkName pref
+        suffNames <- traverse G.mkNameSuffix suffs
+        pure $ C.Identifier prefName suffNames
+  gqlIdents
+    `onNothing` throw400
+      ValidationFailed
+      ( "cannot include " <> obj <<> " in the GraphQL schema because " <> C.toSnakeT tLst
+          <<> " is not a valid GraphQL identifier"
+      )
+
+namingConventionSupport :: SupportedNamingCase
+namingConventionSupport = AllConventions
 
 qualifiedObjectToName :: (ToTxt a, MonadError QErr m) => QualifiedObject a -> m G.Name
 qualifiedObjectToName objectName = do

@@ -36,6 +36,7 @@ import Hasura.RQL.IR.Update (AnnotatedUpdateG (..))
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..), isNumCol)
 import Hasura.RQL.Types.Common (SourceName)
+import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.RQL.Types.Table
 import Language.GraphQL.Draft.Syntax (Description (..), Name (..), Nullability (..), litName)
 
@@ -200,6 +201,7 @@ setOp ::
   ( BackendSchema b,
     MonadReader r m,
     Has P.MkTypename r,
+    Has NamingCase r,
     MonadError QErr m,
     P.MonadSchema n m
   ) =>
@@ -230,7 +232,8 @@ incOp ::
     MonadError QErr m,
     P.MonadSchema n m,
     BackendSchema b,
-    Has P.MkTypename r
+    Has P.MkTypename r,
+    Has NamingCase r
   ) =>
   UpdateOperator b m n (P.UnpreparedValue b)
 incOp = UpdateOperator {..}

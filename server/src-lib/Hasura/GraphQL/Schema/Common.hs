@@ -87,7 +87,8 @@ type MonadBuildSchemaBase r m n =
     Has MkTypename r,
     Has MkRootFieldName r,
     Has CustomizeRemoteFieldName r,
-    Has RemoteSchemaMap r
+    Has RemoteSchemaMap r,
+    Has NamingCase r
   )
 
 type SelectExp b = IR.AnnSimpleSelectG b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)

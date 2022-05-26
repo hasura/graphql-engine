@@ -8,12 +8,14 @@ module Hasura.RQL.Types.Backend
     XEnable,
     ComputedFieldReturnType (..),
     _ReturnsScalar,
+    SupportedNamingCase (..),
   )
 where
 
 import Control.Lens.TH (makePrisms)
 import Data.Aeson.Extended
 import Data.Kind (Type)
+import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Extended
 import Data.Typeable (Typeable)
 import Hasura.Base.Error
@@ -37,6 +39,13 @@ data ComputedFieldReturnType (b :: BackendType)
 type XEnable = ()
 
 type XDisable = Void
+
+-- | Used for keeping track of the extent of support of naming convention
+--  across different backends.
+--
+--  @AllConventions@ implies a full support whereas @OnlyHasuraCase@ implies
+--  a partial support of only @HasuraCase@
+data SupportedNamingCase = OnlyHasuraCase | AllConventions
 
 -- | Mapping from abstract types to concrete backend representation
 --
@@ -249,6 +258,7 @@ class
   -- functions on names
   tableGraphQLName :: TableName b -> Either QErr G.Name
   functionGraphQLName :: FunctionName b -> Either QErr G.Name
+  getTableIdentifier :: TableName b -> Either QErr GQLNameIdentifier
 
   -- | This function is used in the validation of a remote relationship where
   -- we check whether the columns that are mapped to arguments of a remote
@@ -257,6 +267,9 @@ class
 
   -- TODO: metadata related functions
   snakeCaseTableName :: TableName b -> Text
+
+  -- Global naming convention
+  namingConventionSupport :: SupportedNamingCase
 
 -- Prisms
 $(makePrisms ''ComputedFieldReturnType)

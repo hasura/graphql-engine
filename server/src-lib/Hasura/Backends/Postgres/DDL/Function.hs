@@ -24,6 +24,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCacheTypes
+import Hasura.RQL.Types.SourceCustomization (NamingCase, applyFieldNameCaseCust)
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Server.Utils
@@ -67,8 +68,9 @@ buildFunctionInfo ::
   FunctionPermissionsMap ->
   RawFunctionInfo ('Postgres pgKind) ->
   Maybe Text ->
+  NamingCase ->
   m (FunctionInfo ('Postgres pgKind), SchemaDependency)
-buildFunctionInfo source qf systemDefined fc@FunctionConfig {..} permissions rawFuncInfo comment =
+buildFunctionInfo source qf systemDefined fc@FunctionConfig {..} permissions rawFuncInfo comment tCase =
   either (throw400 NotSupported . showErrors) pure
     =<< MV.runValidateT validateFunction
   where
@@ -123,13 +125,14 @@ buildFunctionInfo source qf systemDefined fc@FunctionConfig {..} permissions raw
 
       let retTable = typeToTable returnType
           retJsonAggSelect = bool JASSingleObject JASMultipleRows retSet
+          setNamingCase = applyFieldNameCaseCust tCase
 
           functionInfo =
             FunctionInfo
               qf
-              (getFunctionGQLName funcGivenName fc)
-              (getFunctionArgsGQLName funcGivenName fc)
-              (getFunctionAggregateGQLName funcGivenName fc)
+              (getFunctionGQLName funcGivenName fc setNamingCase)
+              (getFunctionArgsGQLName funcGivenName fc setNamingCase)
+              (getFunctionAggregateGQLName funcGivenName fc setNamingCase)
               systemDefined
               funVol
               exposeAs

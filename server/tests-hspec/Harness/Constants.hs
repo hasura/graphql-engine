@@ -263,7 +263,8 @@ serveOptions =
       soWebsocketConnectionInitTimeout = Init.defaultWSConnectionInitTimeout,
       soEventingMode = EventingEnabled,
       soReadOnlyMode = ReadOnlyModeDisabled,
-      soEnableMetadataQueryLogging = MetadataQueryLoggingDisabled
+      soEnableMetadataQueryLogging = MetadataQueryLoggingDisabled,
+      soDefaultNamingConvention = Nothing
     }
 
 -- | What log level should be used by the engine; this is not exported, and

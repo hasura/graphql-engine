@@ -385,6 +385,7 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} serverMetrics = do
           soExperimentalFeatures
           soEventingMode
           soReadOnlyMode
+          soDefaultNamingConvention
 
   schemaCacheHttpManager <- liftIO $ HTTP.newManager HTTP.tlsManagerSettings
   rebuildableSchemaCache <-
@@ -723,6 +724,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
           soExperimentalFeatures
           soEventingMode
           soReadOnlyMode
+          soDefaultNamingConvention
 
   -- Log Warning if deprecated environment variables are used
   sources <- scSources <$> liftIO (getSchemaCache cacheRef)

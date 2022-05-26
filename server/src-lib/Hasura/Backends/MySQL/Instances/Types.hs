@@ -3,6 +3,7 @@
 module Hasura.Backends.MySQL.Instances.Types () where
 
 import Data.Aeson qualified as J
+import Data.Text.Casing qualified as C
 import Database.MySQL.Base.Types qualified as MySQL
 import Hasura.Backends.MySQL.Types qualified as MySQL
 import Hasura.Base.Error
@@ -105,6 +106,17 @@ instance Backend 'MySQL where
   snakeCaseTableName :: TableName 'MySQL -> Text
   snakeCaseTableName MySQL.TableName {name, schema} =
     maybe "" (<> "_") schema <> name
+
+  getTableIdentifier :: TableName 'MySQL -> Either QErr C.GQLNameIdentifier
+  getTableIdentifier MySQL.TableName {..} = do
+    let gName = maybe "" (<> "_") schema <> name
+    gqlTableName <-
+      (G.mkName gName)
+        `onNothing` throw400 ValidationFailed ("TableName " <> gName <> " is not a valid GraphQL identifier")
+    pure $ C.Identifier gqlTableName []
+
+  namingConventionSupport :: SupportedNamingCase
+  namingConventionSupport = OnlyHasuraCase
 
   computedFieldFunction :: ComputedFieldDefinition 'MySQL -> FunctionName 'MySQL
   computedFieldFunction = error "computedFieldFunction: MySQL backend does not support this operation yet"
