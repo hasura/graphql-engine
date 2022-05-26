@@ -6,7 +6,8 @@
 
 - server: do not serialize env vars in logs or errors for remote schemas
 - server: add support for naming conventions for auto generated names (postgres only)
-+ server: add support for configurable naming conventions for auto generated names (postgres only)
+- server: add support for configurable naming conventions for auto generated names (postgres only)
+- server: fix failure when executing consecutive delete mutations on mssql (#8462)
 
 ## v2.7.0
 

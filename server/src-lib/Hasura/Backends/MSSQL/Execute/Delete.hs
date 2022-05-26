@@ -88,4 +88,9 @@ buildDeleteTx deleteOperation stringifyNum queryTags = do
       finalMutationOutputSelect = mutationOutputSelect {selectWith = Just $ With $ pure $ Aliased withSelect withAlias}
       mutationOutputSelectQuery = toQueryFlat $ TQ.fromSelect finalMutationOutputSelect
   -- Execute SELECT query and fetch mutation response
-  encJFromText <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler (mutationOutputSelectQuery `withQueryTags` queryTags)
+  result <- encJFromText <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler (mutationOutputSelectQuery `withQueryTags` queryTags)
+  -- delete the temporary table
+  let dropDeletedTempTableQuery = toQueryFlat $ dropTempTableQuery tempTableNameDeleted
+  Tx.unitQueryE defaultMSSQLTxErrorHandler (dropDeletedTempTableQuery `withQueryTags` queryTags)
+  -- return results
+  pure result
