@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Hasura.RQL.IR.Root
   ( SourceConfigWith (..),
     RootField (..),

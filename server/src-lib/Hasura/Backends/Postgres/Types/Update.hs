@@ -19,7 +19,7 @@ data BackendUpdate v = BackendUpdate
   { -- | The update operations to perform on each colum.
     updateOperations :: !(HashMap PGCol (UpdateOpExpression v))
   }
-  deriving (Functor, Foldable, Traversable, Generic, Data)
+  deriving (Functor, Foldable, Traversable, Generic, Data, Show, Eq)
 
 -- | The various @update operators@ supported by PostgreSQL,
 -- i.e. the @_set@, @_inc@ operators that appear in the schema.
@@ -33,4 +33,4 @@ data UpdateOpExpression v
   | UpdateDeleteKey !v
   | UpdateDeleteElem !v
   | UpdateDeleteAtPath ![v]
-  deriving (Functor, Foldable, Traversable, Generic, Data)
+  deriving (Functor, Foldable, Traversable, Generic, Data, Show, Eq)

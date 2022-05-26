@@ -72,6 +72,7 @@ import Language.GraphQL.Draft.Syntax
     Value (..),
   )
 import Language.GraphQL.Draft.Syntax qualified as G
+import Language.Haskell.TH.Lift qualified as TH
 
 class HasName a where
   getName :: a -> Name
@@ -714,7 +715,7 @@ JSON values, but fortunately, the duplication of logic is minimal. -}
 data InputValue v
   = GraphQLValue (Value v)
   | JSONValue J.Value
-  deriving (Show, Eq, Functor, Generic, Ord)
+  deriving (Show, Eq, Functor, Generic, Ord, TH.Lift)
 
 instance (Hashable v) => Hashable (InputValue v)
 
@@ -727,7 +728,7 @@ data Variable = Variable
     -- non-null default value, this field contains the default value, not 'VNull'.
     vValue :: InputValue Void
   }
-  deriving (Show, Eq, Generic, Ord)
+  deriving (Show, Eq, Generic, Ord, TH.Lift)
 
 instance Hashable Variable
 
@@ -739,7 +740,7 @@ data VariableInfo
     -- default value are indistinguishable from variables with a default value
     -- of null, so we don’t distinguish those cases here.
     VIOptional Name (Value Void)
-  deriving (Show, Eq, Generic, Ord)
+  deriving (Show, Eq, Generic, Ord, TH.Lift)
 
 instance Hashable VariableInfo
 

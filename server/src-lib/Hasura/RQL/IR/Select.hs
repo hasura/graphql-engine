@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -1011,6 +1012,15 @@ data
     -- by the remote
     _rssJoinMapping :: (HM.HashMap FieldName (ScalarType tgt, Column tgt))
   }
+
+deriving stock instance
+  ( Backend tgt,
+    Eq (BooleanOperators tgt (vf tgt)),
+    Eq (FunctionArgumentExp tgt (vf tgt)),
+    Eq (vf tgt),
+    Eq r
+  ) =>
+  Eq (RemoteSourceSelect r vf tgt)
 
 -- Permissions
 
