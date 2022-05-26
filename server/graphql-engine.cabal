@@ -236,6 +236,7 @@ library
                      , template-haskell
                      , text
                      , text-builder >= 0.6
+                     , th-lift
                      , these
                      , time >= 1.9
                      , time-compat
@@ -872,6 +873,7 @@ test-suite graphql-engine-tests
   build-depends:
       aeson
     , async
+    , attoparsec
     , base
     , bytestring
     , case-insensitive
@@ -884,6 +886,7 @@ test-suite graphql-engine-tests
     , free
     , graphql-engine
     , graphql-parser
+    , data-has
     , hedgehog
     , hspec >=2.8.3 && <3
     , hspec-core >=2.8.3 && <3
@@ -973,6 +976,7 @@ test-suite graphql-engine-tests
     Hasura.GraphQL.NamespaceSpec
     Hasura.GraphQL.Parser.DirectivesTest
     Hasura.GraphQL.Parser.TestUtils
+    Hasura.GraphQL.Schema.Build.UpdateSpec
     Hasura.GraphQL.Schema.RemoteTest
     Hasura.IncrementalSpec
     Hasura.StreamingSubscriptionSpec
@@ -995,6 +999,10 @@ test-suite graphql-engine-tests
     Network.HTTP.Client.TransformableSpec
     Test.Aeson.Utils
     Test.Autodocodec.Extended
+    Test.Parser.Field
+    Test.Parser.Monad
+    Test.Parser.Internal
+    Test.Parser.Expectation
     Test.QuickCheck.Extended
 
 test-suite tests-hspec

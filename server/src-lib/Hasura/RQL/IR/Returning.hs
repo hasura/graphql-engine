@@ -31,9 +31,25 @@ data MutFldG (b :: BackendType) (r :: Type) v
   = MCount
   | MExp !Text
   | MRet !(AnnFieldsG b r v)
-  deriving (Functor, Foldable, Traversable)
+  deriving stock (Functor, Foldable, Traversable)
 
-deriving instance (Show r, Backend b, Show (BooleanOperators b a), Show (FunctionArgumentExp b a), Show a) => Show (MutFldG b r a)
+deriving stock instance
+  ( Show r,
+    Backend b,
+    Show (BooleanOperators b a),
+    Show (FunctionArgumentExp b a),
+    Show a
+  ) =>
+  Show (MutFldG b r a)
+
+deriving stock instance
+  ( Backend b,
+    Eq (BooleanOperators b a),
+    Eq (FunctionArgumentExp b a),
+    Eq r,
+    Eq a
+  ) =>
+  Eq (MutFldG b r a)
 
 type MutFld b = MutFldG b Void (SQLExpression b)
 
@@ -44,7 +60,24 @@ data MutationOutputG (b :: BackendType) (r :: Type) v
   | MOutSinglerowObject !(AnnFieldsG b r v)
   deriving (Functor, Foldable, Traversable)
 
-deriving instance (Show (MutFldsG b r a), Show r, Backend b, Show (BooleanOperators b a), Show (FunctionArgumentExp b a), Show a) => Show (MutationOutputG b r a)
+deriving stock instance
+  ( Backend b,
+    Show (BooleanOperators b a),
+    Show (MutFldsG b r a),
+    Show (FunctionArgumentExp b a),
+    Show r,
+    Show a
+  ) =>
+  Show (MutationOutputG b r a)
+
+deriving stock instance
+  ( Backend b,
+    Eq (BooleanOperators b a),
+    Eq (FunctionArgumentExp b a),
+    Eq r,
+    Eq a
+  ) =>
+  Eq (MutationOutputG b r a)
 
 type MutationOutput b = MutationOutputG b Void (SQLExpression b)
 

@@ -7,7 +7,7 @@
 --
 -- Defines a 'Hasura.GraphQL.Schema.Backend.BackendSchema' type class instance for Postgres.
 module Hasura.Backends.Postgres.Instances.Schema
-  (
+  ( updateOperators,
   )
 where
 

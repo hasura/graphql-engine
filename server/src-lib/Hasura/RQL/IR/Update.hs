@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.IR.Update
   ( AnnotatedUpdate,
@@ -30,10 +31,32 @@ data AnnotatedUpdateG (b :: BackendType) (r :: Type) v = AnnotatedUpdateG
     -- we don't prepare the arguments for returning
     -- however the session variable can still be
     -- converted as desired
+
+    -- | Selection set
     _auOutput :: !(MutationOutputG b r v),
     _auAllCols :: ![ColumnInfo b]
   }
-  deriving (Functor, Foldable, Traversable)
+  deriving stock (Functor, Foldable, Traversable)
+
+deriving stock instance
+  ( Backend b,
+    Eq (BooleanOperators b v),
+    Eq (BackendUpdate b v),
+    Eq (FunctionArgumentExp b v),
+    Eq r,
+    Eq v
+  ) =>
+  Eq (AnnotatedUpdateG b r v)
+
+deriving stock instance
+  ( Backend b,
+    Show (BooleanOperators b v),
+    Show (BackendUpdate b v),
+    Show (FunctionArgumentExp b v),
+    Show r,
+    Show v
+  ) =>
+  Show (AnnotatedUpdateG b r v)
 
 type AnnotatedUpdate b = AnnotatedUpdateG b Void (SQLExpression b)
 

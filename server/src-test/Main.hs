@@ -36,6 +36,7 @@ import Hasura.Backends.Postgres.Execute.Types
 import Hasura.EventingSpec qualified as EventingSpec
 import Hasura.GraphQL.NamespaceSpec qualified as NamespaceSpec
 import Hasura.GraphQL.Parser.DirectivesTest qualified as GraphQLDirectivesSpec
+import Hasura.GraphQL.Schema.Build.UpdateSpec qualified as UpdateSpec
 import Hasura.GraphQL.Schema.RemoteTest qualified as GraphRemoteSchemaSpec
 import Hasura.IncrementalSpec qualified as IncrementalSpec
 import Hasura.Logging
@@ -120,6 +121,7 @@ unitSpecs = do
   describe "Hasura.GraphQL.Namespace" NamespaceSpec.spec
   describe "Hasura.GraphQL.Parser.Directives" GraphQLDirectivesSpec.spec
   describe "Hasura.GraphQL.Schema.Remote" GraphRemoteSchemaSpec.spec
+  describe "Hasura.GraphQL.Schema.Build.UpdateSpec" UpdateSpec.spec
   describe "Hasura.Incremental" IncrementalSpec.spec
   describe "Hasura.RQL.IR.SelectSpec" SelectSpec.spec
   describe "Hasura.RQL.MetadataSpec" MetadataSpec.spec
