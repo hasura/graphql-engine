@@ -15,12 +15,12 @@
 </span><span id="line-15"></span><span class="hs-comment">-- This is parameterised over @v@ which enables different phases of IR</span><span>
 </span><span id="line-16"></span><span class="hs-comment">-- transformation to maintain the overall structure while enriching/transforming</span><span>
 </span><span id="line-17"></span><span class="hs-comment">-- the data at the leaves.</span><span>
-</span><span id="line-18"></span><span id="local-6989586621688951840"><span id="local-6989586621688951841"></span></span><span class="hs-keyword">data</span><span> </span><span id="BackendUpdate"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-var">BackendUpdate</span></a></span></span><span> </span><span id="local-6989586621688951839"><span class="annot"><a href="#local-6989586621688951839"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="BackendUpdate"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-var">BackendUpdate</span></a></span></span><span>
+</span><span id="line-18"></span><span id="local-6989586621688967801"><span id="local-6989586621688967802"></span></span><span class="hs-keyword">data</span><span> </span><span id="BackendUpdate"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-var">BackendUpdate</span></a></span></span><span> </span><span id="local-6989586621688967800"><span class="annot"><a href="#local-6989586621688967800"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="BackendUpdate"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-var">BackendUpdate</span></a></span></span><span>
 </span><span id="line-19"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | The update operations to perform on each colum.</span><span>
 </span><span id="line-20"></span><span>    </span><span id="updateOperations"><span class="annot"><span class="annottext">BackendUpdate v -&gt; HashMap PGCol (UpdateOpExpression v)
-</span><a href="Hasura.Backends.Postgres.Types.Update.html#updateOperations"><span class="hs-identifier hs-var hs-var">updateOperations</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateOpExpression"><span class="hs-identifier hs-type">UpdateOpExpression</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688951839"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="Hasura.Backends.Postgres.Types.Update.html#updateOperations"><span class="hs-identifier hs-var hs-var">updateOperations</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateOpExpression"><span class="hs-identifier hs-type">UpdateOpExpression</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688967800"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-21"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-22"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688951833"><span id="local-6989586621688951835"><span class="annot"><span class="annottext">a -&gt; BackendUpdate b -&gt; BackendUpdate a
+</span><span id="line-22"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688967794"><span id="local-6989586621688967796"><span class="annot"><span class="annottext">a -&gt; BackendUpdate b -&gt; BackendUpdate a
 (a -&gt; b) -&gt; BackendUpdate a -&gt; BackendUpdate b
 (forall a b. (a -&gt; b) -&gt; BackendUpdate a -&gt; BackendUpdate b)
 -&gt; (forall a b. a -&gt; BackendUpdate b -&gt; BackendUpdate a)
@@ -34,7 +34,7 @@ forall (f :: * -&gt; *).
 $c&lt;$ :: forall a b. a -&gt; BackendUpdate b -&gt; BackendUpdate a
 fmap :: (a -&gt; b) -&gt; BackendUpdate a -&gt; BackendUpdate b
 $cfmap :: forall a b. (a -&gt; b) -&gt; BackendUpdate a -&gt; BackendUpdate b
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688951798"><span id="local-6989586621688951800"><span id="local-6989586621688951802"><span id="local-6989586621688951804"><span id="local-6989586621688951806"><span id="local-6989586621688951808"><span id="local-6989586621688951810"><span id="local-6989586621688951812"><span id="local-6989586621688951814"><span id="local-6989586621688951816"><span id="local-6989586621688951818"><span id="local-6989586621688951820"><span id="local-6989586621688951822"><span id="local-6989586621688951824"><span id="local-6989586621688951826"><span id="local-6989586621688951828"><span id="local-6989586621688951830"><span class="annot"><span class="annottext">BackendUpdate a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688967759"><span id="local-6989586621688967761"><span id="local-6989586621688967763"><span id="local-6989586621688967765"><span id="local-6989586621688967767"><span id="local-6989586621688967769"><span id="local-6989586621688967771"><span id="local-6989586621688967773"><span id="local-6989586621688967775"><span id="local-6989586621688967777"><span id="local-6989586621688967779"><span id="local-6989586621688967781"><span id="local-6989586621688967783"><span id="local-6989586621688967785"><span id="local-6989586621688967787"><span id="local-6989586621688967789"><span id="local-6989586621688967791"><span class="annot"><span class="annottext">BackendUpdate a -&gt; Bool
 (a -&gt; m) -&gt; BackendUpdate a -&gt; m
 (a -&gt; b -&gt; b) -&gt; b -&gt; BackendUpdate a -&gt; b
 (forall m. Monoid m =&gt; BackendUpdate m -&gt; m)
@@ -119,7 +119,7 @@ foldMap :: (a -&gt; m) -&gt; BackendUpdate a -&gt; m
 $cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; BackendUpdate a -&gt; m
 fold :: BackendUpdate m -&gt; m
 $cfold :: forall m. Monoid m =&gt; BackendUpdate m -&gt; m
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688951787"><span id="local-6989586621688951789"><span id="local-6989586621688951791"><span id="local-6989586621688951793"><span class="annot"><span class="annottext">Functor BackendUpdate
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688967748"><span id="local-6989586621688967750"><span id="local-6989586621688967752"><span id="local-6989586621688967754"><span class="annot"><span class="annottext">Functor BackendUpdate
 Foldable BackendUpdate
 Functor BackendUpdate
 -&gt; Foldable BackendUpdate
@@ -190,7 +190,7 @@ forall v x. Rep (BackendUpdate v) x -&gt; BackendUpdate v
 forall v x. BackendUpdate v -&gt; Rep (BackendUpdate v) x
 $cto :: forall v x. Rep (BackendUpdate v) x -&gt; BackendUpdate v
 $cfrom :: forall v x. BackendUpdate v -&gt; Rep (BackendUpdate v) x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cBackendUpdate"><span id="%24tBackendUpdate"><span id="local-6989586621688951754"><span id="local-6989586621688951756"><span id="local-6989586621688951758"><span id="local-6989586621688951760"><span id="local-6989586621688951762"><span id="local-6989586621688951764"><span id="local-6989586621688951766"><span id="local-6989586621688951768"><span id="local-6989586621688951770"><span id="local-6989586621688951772"><span id="local-6989586621688951774"><span id="local-6989586621688951776"><span id="local-6989586621688951778"><span id="local-6989586621688951780"><span class="annot"><span class="annottext">Typeable (BackendUpdate v)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cBackendUpdate"><span id="%24tBackendUpdate"><span id="local-6989586621688967715"><span id="local-6989586621688967717"><span id="local-6989586621688967719"><span id="local-6989586621688967721"><span id="local-6989586621688967723"><span id="local-6989586621688967725"><span id="local-6989586621688967727"><span id="local-6989586621688967729"><span id="local-6989586621688967731"><span id="local-6989586621688967733"><span id="local-6989586621688967735"><span id="local-6989586621688967737"><span id="local-6989586621688967739"><span id="local-6989586621688967741"><span class="annot"><span class="annottext">Typeable (BackendUpdate v)
 DataType
 Constr
 Typeable (BackendUpdate v)
@@ -419,21 +419,49 @@ Data v =&gt;
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; BackendUpdate v -&gt; c (BackendUpdate v)
 $cp1Data :: forall v. Data v =&gt; Typeable (BackendUpdate v)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688967706"><span id="local-6989586621688967708"><span id="local-6989586621688967710"><span class="annot"><span class="annottext">Int -&gt; BackendUpdate v -&gt; ShowS
+[BackendUpdate v] -&gt; ShowS
+BackendUpdate v -&gt; String
+(Int -&gt; BackendUpdate v -&gt; ShowS)
+-&gt; (BackendUpdate v -&gt; String)
+-&gt; ([BackendUpdate v] -&gt; ShowS)
+-&gt; Show (BackendUpdate v)
+forall v. Show v =&gt; Int -&gt; BackendUpdate v -&gt; ShowS
+forall v. Show v =&gt; [BackendUpdate v] -&gt; ShowS
+forall v. Show v =&gt; BackendUpdate v -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [BackendUpdate v] -&gt; ShowS
+$cshowList :: forall v. Show v =&gt; [BackendUpdate v] -&gt; ShowS
+show :: BackendUpdate v -&gt; String
+$cshow :: forall v. Show v =&gt; BackendUpdate v -&gt; String
+showsPrec :: Int -&gt; BackendUpdate v -&gt; ShowS
+$cshowsPrec :: forall v. Show v =&gt; Int -&gt; BackendUpdate v -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688967701"><span id="local-6989586621688967703"><span class="annot"><span class="annottext">BackendUpdate v -&gt; BackendUpdate v -&gt; Bool
+(BackendUpdate v -&gt; BackendUpdate v -&gt; Bool)
+-&gt; (BackendUpdate v -&gt; BackendUpdate v -&gt; Bool)
+-&gt; Eq (BackendUpdate v)
+forall v. Eq v =&gt; BackendUpdate v -&gt; BackendUpdate v -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: BackendUpdate v -&gt; BackendUpdate v -&gt; Bool
+$c/= :: forall v. Eq v =&gt; BackendUpdate v -&gt; BackendUpdate v -&gt; Bool
+== :: BackendUpdate v -&gt; BackendUpdate v -&gt; Bool
+$c== :: forall v. Eq v =&gt; BackendUpdate v -&gt; BackendUpdate v -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-23"></span><span>
 </span><span id="line-24"></span><span class="hs-comment">-- | The various @update operators@ supported by PostgreSQL,</span><span>
 </span><span id="line-25"></span><span class="hs-comment">-- i.e. the @_set@, @_inc@ operators that appear in the schema.</span><span>
 </span><span id="line-26"></span><span class="hs-comment">--</span><span>
 </span><span id="line-27"></span><span class="hs-comment">-- See &lt;https://hasura.io/docs/latest/graphql/core/databases/postgres/mutations/update.html#postgres-update-mutation Update Mutations User docs&gt;</span><span>
-</span><span id="line-28"></span><span id="local-6989586621688951749"><span id="local-6989586621688951750"></span></span><span class="hs-keyword">data</span><span> </span><span id="UpdateOpExpression"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateOpExpression"><span class="hs-identifier hs-var">UpdateOpExpression</span></a></span></span><span> </span><span id="local-6989586621688951748"><span class="annot"><a href="#local-6989586621688951748"><span class="hs-identifier hs-type">v</span></a></span></span><span>
-</span><span id="line-29"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="UpdateSet"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateSet"><span class="hs-identifier hs-var">UpdateSet</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621688951748"><span class="hs-identifier hs-type">v</span></a></span><span>
-</span><span id="line-30"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdateInc"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateInc"><span class="hs-identifier hs-var">UpdateInc</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621688951748"><span class="hs-identifier hs-type">v</span></a></span><span>
-</span><span id="line-31"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdateAppend"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateAppend"><span class="hs-identifier hs-var">UpdateAppend</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621688951748"><span class="hs-identifier hs-type">v</span></a></span><span>
-</span><span id="line-32"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdatePrepend"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdatePrepend"><span class="hs-identifier hs-var">UpdatePrepend</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621688951748"><span class="hs-identifier hs-type">v</span></a></span><span>
-</span><span id="line-33"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdateDeleteKey"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateDeleteKey"><span class="hs-identifier hs-var">UpdateDeleteKey</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621688951748"><span class="hs-identifier hs-type">v</span></a></span><span>
-</span><span id="line-34"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdateDeleteElem"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateDeleteElem"><span class="hs-identifier hs-var">UpdateDeleteElem</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621688951748"><span class="hs-identifier hs-type">v</span></a></span><span>
-</span><span id="line-35"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdateDeleteAtPath"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateDeleteAtPath"><span class="hs-identifier hs-var">UpdateDeleteAtPath</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621688951748"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-36"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688951737"><span id="local-6989586621688951739"><span class="annot"><span class="annottext">a -&gt; UpdateOpExpression b -&gt; UpdateOpExpression a
+</span><span id="line-28"></span><span id="local-6989586621688967698"><span id="local-6989586621688967699"></span></span><span class="hs-keyword">data</span><span> </span><span id="UpdateOpExpression"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateOpExpression"><span class="hs-identifier hs-var">UpdateOpExpression</span></a></span></span><span> </span><span id="local-6989586621688967697"><span class="annot"><a href="#local-6989586621688967697"><span class="hs-identifier hs-type">v</span></a></span></span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="UpdateSet"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateSet"><span class="hs-identifier hs-var">UpdateSet</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621688967697"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdateInc"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateInc"><span class="hs-identifier hs-var">UpdateInc</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621688967697"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdateAppend"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateAppend"><span class="hs-identifier hs-var">UpdateAppend</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621688967697"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdatePrepend"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdatePrepend"><span class="hs-identifier hs-var">UpdatePrepend</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621688967697"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdateDeleteKey"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateDeleteKey"><span class="hs-identifier hs-var">UpdateDeleteKey</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621688967697"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdateDeleteElem"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateDeleteElem"><span class="hs-identifier hs-var">UpdateDeleteElem</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621688967697"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdateDeleteAtPath"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateDeleteAtPath"><span class="hs-identifier hs-var">UpdateDeleteAtPath</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621688967697"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621688967686"><span id="local-6989586621688967688"><span class="annot"><span class="annottext">a -&gt; UpdateOpExpression b -&gt; UpdateOpExpression a
 (a -&gt; b) -&gt; UpdateOpExpression a -&gt; UpdateOpExpression b
 (forall a b.
  (a -&gt; b) -&gt; UpdateOpExpression a -&gt; UpdateOpExpression b)
@@ -450,7 +478,7 @@ $c&lt;$ :: forall a b. a -&gt; UpdateOpExpression b -&gt; UpdateOpExpression a
 fmap :: (a -&gt; b) -&gt; UpdateOpExpression a -&gt; UpdateOpExpression b
 $cfmap :: forall a b.
 (a -&gt; b) -&gt; UpdateOpExpression a -&gt; UpdateOpExpression b
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688951703"><span id="local-6989586621688951705"><span id="local-6989586621688951707"><span id="local-6989586621688951709"><span id="local-6989586621688951711"><span id="local-6989586621688951713"><span id="local-6989586621688951715"><span id="local-6989586621688951717"><span id="local-6989586621688951719"><span id="local-6989586621688951721"><span id="local-6989586621688951723"><span id="local-6989586621688951725"><span id="local-6989586621688951727"><span id="local-6989586621688951729"><span id="local-6989586621688951731"><span id="local-6989586621688951733"><span id="local-6989586621688951735"><span class="annot"><span class="annottext">UpdateOpExpression a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688967652"><span id="local-6989586621688967654"><span id="local-6989586621688967656"><span id="local-6989586621688967658"><span id="local-6989586621688967660"><span id="local-6989586621688967662"><span id="local-6989586621688967664"><span id="local-6989586621688967666"><span id="local-6989586621688967668"><span id="local-6989586621688967670"><span id="local-6989586621688967672"><span id="local-6989586621688967674"><span id="local-6989586621688967676"><span id="local-6989586621688967678"><span id="local-6989586621688967680"><span id="local-6989586621688967682"><span id="local-6989586621688967684"><span class="annot"><span class="annottext">UpdateOpExpression a -&gt; Bool
 (a -&gt; m) -&gt; UpdateOpExpression a -&gt; m
 (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOpExpression a -&gt; b
 (forall m. Monoid m =&gt; UpdateOpExpression m -&gt; m)
@@ -535,7 +563,7 @@ foldMap :: (a -&gt; m) -&gt; UpdateOpExpression a -&gt; m
 $cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; UpdateOpExpression a -&gt; m
 fold :: UpdateOpExpression m -&gt; m
 $cfold :: forall m. Monoid m =&gt; UpdateOpExpression m -&gt; m
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688951693"><span id="local-6989586621688951695"><span id="local-6989586621688951697"><span id="local-6989586621688951699"><span class="annot"><span class="annottext">Functor UpdateOpExpression
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688967642"><span id="local-6989586621688967644"><span id="local-6989586621688967646"><span id="local-6989586621688967648"><span class="annot"><span class="annottext">Functor UpdateOpExpression
 Foldable UpdateOpExpression
 Functor UpdateOpExpression
 -&gt; Foldable UpdateOpExpression
@@ -606,7 +634,7 @@ forall v x. Rep (UpdateOpExpression v) x -&gt; UpdateOpExpression v
 forall v x. UpdateOpExpression v -&gt; Rep (UpdateOpExpression v) x
 $cto :: forall v x. Rep (UpdateOpExpression v) x -&gt; UpdateOpExpression v
 $cfrom :: forall v x. UpdateOpExpression v -&gt; Rep (UpdateOpExpression v) x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cUpdateDeleteAtPath"><span id="%24cUpdateDeleteElem"><span id="%24cUpdateDeleteKey"><span id="%24cUpdatePrepend"><span id="%24cUpdateAppend"><span id="%24cUpdateInc"><span id="%24cUpdateSet"><span id="%24tUpdateOpExpression"><span id="local-6989586621688951662"><span id="local-6989586621688951664"><span id="local-6989586621688951666"><span id="local-6989586621688951668"><span id="local-6989586621688951670"><span id="local-6989586621688951672"><span id="local-6989586621688951674"><span id="local-6989586621688951676"><span id="local-6989586621688951678"><span id="local-6989586621688951680"><span id="local-6989586621688951682"><span id="local-6989586621688951684"><span id="local-6989586621688951686"><span id="local-6989586621688951688"><span class="annot"><span class="annottext">Typeable (UpdateOpExpression v)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cUpdateDeleteAtPath"><span id="%24cUpdateDeleteElem"><span id="%24cUpdateDeleteKey"><span id="%24cUpdatePrepend"><span id="%24cUpdateAppend"><span id="%24cUpdateInc"><span id="%24cUpdateSet"><span id="%24tUpdateOpExpression"><span id="local-6989586621688967611"><span id="local-6989586621688967613"><span id="local-6989586621688967615"><span id="local-6989586621688967617"><span id="local-6989586621688967619"><span id="local-6989586621688967621"><span id="local-6989586621688967623"><span id="local-6989586621688967625"><span id="local-6989586621688967627"><span id="local-6989586621688967629"><span id="local-6989586621688967631"><span id="local-6989586621688967633"><span id="local-6989586621688967635"><span id="local-6989586621688967637"><span class="annot"><span class="annottext">Typeable (UpdateOpExpression v)
 DataType
 Constr
 Typeable (UpdateOpExpression v)
@@ -858,5 +886,39 @@ Data v =&gt;
 -&gt; UpdateOpExpression v
 -&gt; c (UpdateOpExpression v)
 $cp1Data :: forall v. Data v =&gt; Typeable (UpdateOpExpression v)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688967597"><span id="local-6989586621688967599"><span id="local-6989586621688967601"><span class="annot"><span class="annottext">Int -&gt; UpdateOpExpression v -&gt; ShowS
+[UpdateOpExpression v] -&gt; ShowS
+UpdateOpExpression v -&gt; String
+(Int -&gt; UpdateOpExpression v -&gt; ShowS)
+-&gt; (UpdateOpExpression v -&gt; String)
+-&gt; ([UpdateOpExpression v] -&gt; ShowS)
+-&gt; Show (UpdateOpExpression v)
+forall v. Show v =&gt; Int -&gt; UpdateOpExpression v -&gt; ShowS
+forall v. Show v =&gt; [UpdateOpExpression v] -&gt; ShowS
+forall v. Show v =&gt; UpdateOpExpression v -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [UpdateOpExpression v] -&gt; ShowS
+$cshowList :: forall v. Show v =&gt; [UpdateOpExpression v] -&gt; ShowS
+show :: UpdateOpExpression v -&gt; String
+$cshow :: forall v. Show v =&gt; UpdateOpExpression v -&gt; String
+showsPrec :: Int -&gt; UpdateOpExpression v -&gt; ShowS
+$cshowsPrec :: forall v. Show v =&gt; Int -&gt; UpdateOpExpression v -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688967593"><span id="local-6989586621688967595"><span class="annot"><span class="annottext">UpdateOpExpression v -&gt; UpdateOpExpression v -&gt; Bool
+(UpdateOpExpression v -&gt; UpdateOpExpression v -&gt; Bool)
+-&gt; (UpdateOpExpression v -&gt; UpdateOpExpression v -&gt; Bool)
+-&gt; Eq (UpdateOpExpression v)
+forall v.
+Eq v =&gt;
+UpdateOpExpression v -&gt; UpdateOpExpression v -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: UpdateOpExpression v -&gt; UpdateOpExpression v -&gt; Bool
+$c/= :: forall v.
+Eq v =&gt;
+UpdateOpExpression v -&gt; UpdateOpExpression v -&gt; Bool
+== :: UpdateOpExpression v -&gt; UpdateOpExpression v -&gt; Bool
+$c== :: forall v.
+Eq v =&gt;
+UpdateOpExpression v -&gt; UpdateOpExpression v -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-37"></span></pre></body></html>
